@@ -51,18 +51,7 @@ h1 {
   border: 1px solid #e2e8f0;
 }
 
-.type-list.entry-points {
-  background: #f0f9ff;
-  border-color: #bae6fd;
-}
 
-.type-list.entry-points li.active {
-  background: #0ea5e9;
-}
-
-.type-list.entry-points li:not(.active):hover {
-  background: #e0f2fe;
-}
 
 .type-list li {
   border-bottom: 1px solid #e2e8f0;
@@ -140,11 +129,37 @@ h1 {
   flex-wrap: wrap;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.9rem;
+  position: relative;
+}
+
+/* Ensure fields can be scrolled to without being hidden under fixed elements */
+.field-item {
+  scroll-margin-top: 2rem;
+  transition: background-color 0.2s ease;
 }
 
 .field-name {
   color: #2563eb;
   font-weight: 600;
+  text-decoration: none;
+  position: relative;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  margin: -0.2em 0;
+}
+
+.field-name:hover {
+  text-decoration: underline;
+}
+
+.field-name.highlighted {
+  color: #1e40af;
+  background-color: #fef9c3;
+}
+
+.field-item:has(.field-name.highlighted) {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 .type-link {

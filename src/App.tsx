@@ -37,6 +37,18 @@ const ArgumentDetails: FC<{ arg: any }> = ({ arg }) => (
 const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
   // Cast to any GraphQL type that might have fields
   const fields = 'getFields' in type ? (type as any).getFields() : null
+  const location = useLocation()
+
+  // Scroll to field if hash is present
+  useEffect(() => {
+    if (location.hash) {
+      const fieldId = location.hash.slice(1) // Remove the # from the hash
+      const element = document.getElementById(fieldId)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  }, [location.hash])
 
   return (
     <div className="type-details">
@@ -44,9 +56,15 @@ const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
       {fields ? (
         <div className="fields-list">
           {Object.entries(fields).map(([fieldName, field]: [string, any]) => (
-            <div key={fieldName} className="field-item">
+            <div key={fieldName} id={fieldName} className="field-item">
               <div className="field-header">
-                <span className="field-name">{fieldName}</span>
+                <Link 
+                  to={`#${fieldName}`} 
+                  className={`field-name ${location.hash === `#${fieldName}` ? 'highlighted' : ''}`}
+                  title="Direct link to this field"
+                >
+                  {fieldName}
+                </Link>
                 <TypeLink type={field.type} />
               </div>
               {field.description && (
