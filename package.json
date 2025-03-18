@@ -1,5 +1,5 @@
 {
-  "name": "vite-webapp",
+  "name": "pollen",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,13 +15,17 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@tsconfig/strictest": "^2.0.5",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
+    "typescript": "^5.8.2",
     "vite": "^6.2.0"
   },
   "packageManager": "pnpm@9.15.5+sha512.845196026aab1cc3f098a0474b64dfbab2afe7a1b4e91dd86895d8e4aa32a7a6d03049e2d0ad770bbe4de023a7122fb68c1a1d6e0d033c7076085f9d5d4800d4"
