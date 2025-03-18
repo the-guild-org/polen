@@ -13,9 +13,10 @@ h1 {
 
 .content {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: minmax(300px, auto) 1fr;
   gap: 2rem;
   align-items: start;
+  max-width: 100%;
 }
 
 .type-list {
@@ -51,6 +52,9 @@ h1 {
   padding: 0.75rem 1rem;
   display: block;
   font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .type-list li:not(.active):hover {
@@ -79,6 +83,99 @@ h1 {
   font-size: 0.9rem;
   line-height: 1.5;
   border: 1px solid #e2e8f0;
+}
+
+.fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field-item {
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.field-header {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.field-name {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.field-args {
+  color: #4b5563;
+}
+
+.field-type {
+  color: #059669;
+}
+
+.field-description {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.field-description p {
+  margin: 0.5rem 0;
+}
+
+.field-description p:first-child {
+  margin-top: 0;
+}
+
+.field-description p:last-child {
+  margin-bottom: 0;
+}
+
+.field-description code {
+  background: #e5e7eb;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.field-description a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.field-description a:hover {
+  text-decoration: underline;
+}
+
+.field-description ul, .field-description ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.field-description li {
+  margin: 0.25rem 0;
+}
+
+.field-description strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+.field-description em {
+  font-style: italic;
+}
+
+.field-arg {
+  white-space: nowrap;
 }
 
 .error, .loading {
@@ -137,5 +234,10 @@ h1 {
   .type-list {
     max-height: 300px;
     overflow-y: auto;
+  }
+
+  .type-list a {
+    white-space: normal;
+    word-break: break-word;
   }
 }

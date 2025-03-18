@@ -1,14 +1,45 @@
 import { FC, useEffect, useState } from 'react'
 import { GraphQLNamedType } from 'graphql'
 import { Link, useParams, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import { loadSchema, getTypes } from './utils/schema'
 import './App.css'
 
 const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
+  // Cast to any GraphQL type that might have fields
+  const fields = 'getFields' in type ? (type as any).getFields() : null
+
   return (
     <div className="type-details">
       <h2>{type.name}</h2>
-      <pre>{type.toString()}</pre>
+      {fields ? (
+        <div className="fields-list">
+          {Object.entries(fields).map(([fieldName, field]: [string, any]) => (
+            <div key={fieldName} className="field-item">
+              <div className="field-header">
+                <span className="field-name">{fieldName}</span>
+                {field.args?.length > 0 && (
+                  <span className="field-args">
+                    ({field.args.map((arg: any) => (
+                      <span key={arg.name} className="field-arg">
+                        {arg.name}: {arg.type.toString()}
+                      </span>
+                    )).join(', ')})
+                  </span>
+                )}
+                <span className="field-type">{field.type.toString()}</span>
+              </div>
+              {field.description && (
+                <div className="field-description">
+                  <ReactMarkdown>{field.description}</ReactMarkdown>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <pre>{type.toString()}</pre>
+      )}
     </div>
   )
 }
