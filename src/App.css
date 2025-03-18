@@ -147,12 +147,17 @@ h1 {
   font-weight: 600;
 }
 
-.field-args {
-  color: #4b5563;
+.type-link {
+  color: #059669;
+  text-decoration: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
 }
 
-.field-type {
-  color: #059669;
+.type-link:hover {
+  color: #047857;
+  text-decoration: underline;
 }
 
 .field-description {
@@ -209,9 +214,89 @@ h1 {
   font-style: italic;
 }
 
-.field-arg {
-  white-space: nowrap;
+.arguments-list {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
+
+.arguments-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.argument-item {
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+.argument-item:last-child {
+  margin-bottom: 0;
+}
+
+.argument-header {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.argument-name {
+  color: #9333ea;
+  font-weight: 600;
+}
+
+.argument-type {
+  color: #059669;
+}
+
+.argument-description {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.argument-description p {
+  margin: 0.5rem 0;
+}
+
+.argument-description p:first-child {
+  margin-top: 0;
+}
+
+.argument-description p:last-child {
+  margin-bottom: 0;
+}
+
+.argument-description code {
+  background: #e5e7eb;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.argument-description a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.argument-description a:hover {
+  text-decoration: underline;
+}
+
+
 
 .error, .loading {
   max-width: 600px;

@@ -1,9 +1,38 @@
 import { FC, useEffect, useState } from 'react'
-import { GraphQLNamedType } from 'graphql'
+import { GraphQLNamedType, GraphQLType } from 'graphql'
 import { Link, useParams, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { loadSchema, getTypes } from './utils/schema'
 import './App.css'
+
+const TypeLink: FC<{ type: GraphQLType }> = ({ type }) => {
+  const location = useLocation()
+  const baseType = type.toString().replace(/[!\[\]]/g, '')
+  
+  return (
+    <Link 
+      to={`/type/${baseType}`}
+      state={{ from: location.pathname }}
+      className="type-link"
+    >
+      {type.toString()}
+    </Link>
+  )
+}
+
+const ArgumentDetails: FC<{ arg: any }> = ({ arg }) => (
+  <div className="argument-item">
+    <div className="argument-header">
+      <span className="argument-name">{arg.name}</span>
+      <TypeLink type={arg.type} />
+    </div>
+    {arg.description && (
+      <div className="argument-description">
+        <ReactMarkdown>{arg.description}</ReactMarkdown>
+      </div>
+    )}
+  </div>
+)
 
 const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
   // Cast to any GraphQL type that might have fields
@@ -18,20 +47,19 @@ const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
             <div key={fieldName} className="field-item">
               <div className="field-header">
                 <span className="field-name">{fieldName}</span>
-                {field.args?.length > 0 && (
-                  <span className="field-args">
-                    ({field.args.map((arg: any) => (
-                      <span key={arg.name} className="field-arg">
-                        {arg.name}: {arg.type.toString()}
-                      </span>
-                    )).join(', ')})
-                  </span>
-                )}
-                <span className="field-type">{field.type.toString()}</span>
+                <TypeLink type={field.type} />
               </div>
               {field.description && (
                 <div className="field-description">
                   <ReactMarkdown>{field.description}</ReactMarkdown>
+                </div>
+              )}
+              {field.args?.length > 0 && (
+                <div className="arguments-list">
+                  <h4 className="arguments-title">Arguments</h4>
+                  {field.args.map((arg: any) => (
+                    <ArgumentDetails key={arg.name} arg={arg} />
+                  ))}
                 </div>
               )}
             </div>
