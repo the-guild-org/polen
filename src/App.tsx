@@ -49,22 +49,54 @@ const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
   const location = useLocation()
   const selectedType = types.find(t => t.name === typeName)
 
+  const entryPoints = types.filter(type => [
+    'Query',
+    'Mutation',
+    'Subscription'
+  ].includes(type.name))
+
+  const indexTypes = types.filter(type => ![
+    'Query',
+    'Mutation',
+    'Subscription'
+  ].includes(type.name))
+
   return (
     <div className="container">
       <h1>GraphQL Schema Types</h1>
       <div className="content">
-        <ul className="type-list">
-          {types.map(type => (
-            <li key={type.name} className={type.name === typeName ? 'active' : ''}>
-              <Link 
-                to={`/type/${type.name}`} 
-                state={{ from: location.pathname }}
-              >
-                {type.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="sidebar">
+          <div className="sidebar-section">
+            <h3 className="sidebar-title">Entry Points</h3>
+            <ul className="type-list entry-points">
+              {entryPoints.map(type => (
+                <li key={type.name} className={type.name === typeName ? 'active' : ''}>
+                  <Link 
+                    to={`/type/${type.name}`} 
+                    state={{ from: location.pathname }}
+                  >
+                    {type.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="sidebar-section">
+            <h3 className="sidebar-title">Index</h3>
+            <ul className="type-list">
+              {indexTypes.map(type => (
+                <li key={type.name} className={type.name === typeName ? 'active' : ''}>
+                  <Link 
+                    to={`/type/${type.name}`} 
+                    state={{ from: location.pathname }}
+                  >
+                    {type.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
         {selectedType && <TypeDetails type={selectedType} />}
       </div>
     </div>

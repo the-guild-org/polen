@@ -19,6 +19,28 @@ h1 {
   max-width: 100%;
 }
 
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding: 0 0.5rem;
+}
+
 .type-list {
   list-style: none;
   padding: 0;
@@ -27,6 +49,19 @@ h1 {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
+}
+
+.type-list.entry-points {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.type-list.entry-points li.active {
+  background: #0ea5e9;
+}
+
+.type-list.entry-points li:not(.active):hover {
+  background: #e0f2fe;
 }
 
 .type-list li {
