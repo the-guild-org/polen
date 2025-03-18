@@ -1,42 +1,141 @@
-#root {
-  max-width: 1280px;
+.container {
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+}
+
+h1 {
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-size: 2.5rem;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.type-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: #f8fafc;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.type-list li {
+  border-bottom: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.type-list li:last-child {
+  border-bottom: none;
+}
+
+.type-list li.active {
+  background: #2563eb;
+}
+
+.type-list li.active a {
+  color: white;
+}
+
+.type-list a {
+  color: #2563eb;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  display: block;
+  font-size: 1rem;
+}
+
+.type-list li:not(.active):hover {
+  background: #f1f5f9;
+}
+
+.type-details {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.type-details h2 {
+  color: #1a1a1a;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.8rem;
+}
+
+.type-details pre {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border: 1px solid #e2e8f0;
+}
+
+.error, .loading {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 8px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.error {
+  background: #fee2e2;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.loading {
+  background: #f3f4f6;
+}
+
+.error h1 {
+  color: #dc2626;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.loading h1 {
+  color: #4b5563;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.error p {
+  color: #7f1d1d;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.loading h1 {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .content {
+    grid-template-columns: 1fr;
   }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  
+  .type-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
 }

@@ -1,34 +1,83 @@
-import { FC, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { FC, useEffect, useState } from 'react'
+import { GraphQLNamedType } from 'graphql'
+import { Link, useParams, Routes, Route, Navigate } from 'react-router-dom'
+import { loadSchema, getTypes } from './utils/schema'
 import './App.css'
 
-const App: FC = () => {
-  const [count, setCount] = useState<number>(0)
+const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
+  return (
+    <div className="type-details">
+      <h2>{type.name}</h2>
+      <pre>{type.toString()}</pre>
+    </div>
+  )
+}
+
+const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
+  const { typeName } = useParams()
+  const selectedType = types.find(t => t.name === typeName)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank" rel="noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      <h1>GraphQL Schema Types</h1>
+      <div className="content">
+        <ul className="type-list">
+          {types.map(type => (
+            <li key={type.name} className={type.name === typeName ? 'active' : ''}>
+              <Link to={`/type/${type.name}`}>{type.name}</Link>
+            </li>
+          ))}
+        </ul>
+        {selectedType && <TypeDetails type={selectedType} />}
       </div>
-      <h1>Vite + React + TypeScript</h1>
-      <div className="card">
-        <button onClick={() => setCount((prev) => prev + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+    </div>
+  )
+}
+
+const App: FC = () => {
+  const [types, setTypes] = useState<GraphQLNamedType[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadSchemaTypes = async () => {
+      try {
+        const schema = await loadSchema()
+        const schemaTypes = getTypes(schema)
+        setTypes(schemaTypes)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load schema')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadSchemaTypes()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <h1>Loading Schema...</h1>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="error">
+        <h1>Error Loading Schema</h1>
+        <p>{error}</p>
+      </div>
+    )
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/type" replace />} />
+      <Route path="/type" element={<TypeList types={types} />} />
+      <Route path="/type/:typeName" element={<TypeList types={types} />} />
+    </Routes>
   )
 }
 
