@@ -12,7 +12,15 @@ export default defineConfig({
     port: 5173
   },
   build: {
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'graphql-vendor': ['graphql']
+        }
+      }
+    }
   },
   resolve: {
     alias: {

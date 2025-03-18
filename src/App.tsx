@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import { GraphQLNamedType } from 'graphql'
-import { Link, useParams, Routes, Route, Navigate } from 'react-router-dom'
+import { Link, useParams, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { loadSchema, getTypes } from './utils/schema'
 import './App.css'
 
@@ -15,6 +15,7 @@ const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
 
 const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
   const { typeName } = useParams()
+  const location = useLocation()
   const selectedType = types.find(t => t.name === typeName)
 
   return (
@@ -24,7 +25,12 @@ const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
         <ul className="type-list">
           {types.map(type => (
             <li key={type.name} className={type.name === typeName ? 'active' : ''}>
-              <Link to={`/type/${type.name}`}>{type.name}</Link>
+              <Link 
+                to={`/type/${type.name}`} 
+                state={{ from: location.pathname }}
+              >
+                {type.name}
+              </Link>
             </li>
           ))}
         </ul>
