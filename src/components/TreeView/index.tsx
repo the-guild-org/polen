@@ -6,7 +6,6 @@ import { OutputFields } from './OutputFields';
 
 export interface Props {
   types: readonly GraphQLNamedType[];
-  // schema?: GraphQLSchema
 }
 
 export const TreeView: React.FC<Props> = ({ types }) => {
@@ -80,7 +79,7 @@ export const TreeView: React.FC<Props> = ({ types }) => {
               marginBottom: '1rem',
             }}
           >
-            Other Types
+            Index
           </h2>
           {otherTypes.map(type => (
             <OutputFields
