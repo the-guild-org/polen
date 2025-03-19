@@ -1,82 +1,40 @@
-import React from 'react';
-import { GraphQLField, GraphQLInterfaceType, GraphQLObjectType } from 'graphql';
+import { GraphQLInterfaceType, GraphQLObjectType } from 'graphql';
 import { OutputField } from './OutputField';
 
 export interface Props {
-  type: GraphQLObjectType | GraphQLInterfaceType;
-  isExpanded: boolean;
+  parentType: GraphQLObjectType | GraphQLInterfaceType;
   toggleType: (typeName: string) => void;
   openTypes: ReadonlySet<string>;
 }
 
 /**
- * This component renders the fields of a type as a list.
- * It is used inside the TypeSection component.
- * It is called "OutputFields" because it is used to render the fields of an object type,
- * which are the fields returned by the field resolvers of the type.
+ * Renders a list of fields for a GraphQL type
  */
-export const OutputFields: React.FC<Props> = ({
-  type,
-  isExpanded,
+export const OutputFields = ({
+  parentType,
   toggleType,
   openTypes,
-}) => {
-  const fields = Object.values(type.getFields());
-
+}: Props) => {
   return (
     <div
-      key={type.name}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
-        fontFamily: 'monospace',
-        fontSize: '0.9rem',
-        marginTop: '1rem',
+        marginLeft: '0.5rem',
+        paddingLeft: '1rem',
+        marginTop: '0.5rem',
+        borderLeft: '1px solid #ccc',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <button
-          onClick={() => toggleType(type.name)}
-          style={{
-            border: 'none',
-            background: 'none',
-            padding: '0 0.25rem',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
+      {Object.values(parentType.getFields()).map(field => (
+        <OutputField
+          key={field.name}
+          field={{
+            ...field,
+            parentType,
           }}
-        >
-          {isExpanded ? '▼' : '▶'}
-        </button>
-        <span style={{ fontWeight: 'bold' }}>
-          {type.name}
-        </span>
-      </div>
-      {type.description && (
-        <div
-          style={{
-            marginLeft: '1.75rem',
-            color: '#666',
-            fontSize: '0.9em',
-            fontFamily: 'system-ui',
-            maxWidth: '60ch',
-          }}
-        >
-          {type.description}
-        </div>
-      )}
-      {isExpanded && (
-        <div style={{ marginLeft: '1.5rem' }}>
-          {fields.map((field: GraphQLField<any, any>) => (
-            <OutputField
-              key={field.name}
-              field={{ ...field, parentType: type }}
-              toggleType={toggleType}
-              openTypes={openTypes}
-            />
-          ))}
-        </div>
-      )}
+          toggleType={toggleType}
+          openTypes={openTypes}
+        />
+      ))}
     </div>
   );
 };

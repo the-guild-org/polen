@@ -1,6 +1,7 @@
 import { GraphQLField, GraphQLInterfaceType, GraphQLObjectType } from 'graphql';
 import { Grafaid } from '../../utils/grafaid';
 import { TypeLink } from '../TypeLink';
+import { OutputFields } from './OutputFields';
 
 export type FieldWithType = GraphQLField<any, any> & {
   parentType: GraphQLObjectType | GraphQLInterfaceType,
@@ -25,7 +26,6 @@ export const OutputField = ({
   const typeKey = `${field.parentType.name}.${field.name}`;
   const isExpanded = isExpandable && openTypes.has(typeKey);
 
-  // Get the unwrapped type (removing List and NonNull wrappers)
   const unwrappedType = Grafaid.getUnwrappedType(fieldType);
 
   return (
@@ -44,19 +44,17 @@ export const OutputField = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(auto, max-content) 1fr',
-          alignItems: 'baseline',
           width: '100%',
-          gap: '2rem',
+          gridTemplateColumns: 'min-content 1fr',
+          columnGap: '2rem',
+          alignItems: 'baseline',
         }}
       >
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
             whiteSpace: 'nowrap',
             overflow: 'visible',
+            justifySelf: 'start',
           }}
         >
           <span style={{ display: 'inline-flex', flexWrap: 'nowrap', alignItems: 'baseline' }}>
@@ -77,11 +75,8 @@ export const OutputField = ({
         <div
           style={{
             color: '#059669',
-            justifySelf: 'start',
             whiteSpace: 'nowrap',
-            textAlign: 'left',
-            display: 'flex',
-            alignItems: 'center',
+            justifySelf: 'start',
           }}
         >
           <TypeLink
@@ -115,61 +110,15 @@ export const OutputField = ({
               {field.description}
             </div>
           )}
-          {
-            /* {field.args.length > 0 && (
-              <div
-                style={{
-                  fontSize: '0.9rem',
-                  fontFamily: 'monospace',
-                  backgroundColor: '#f5f5f5',
-                  padding: '0.5rem',
-                  borderRadius: '0.25rem',
-                  maxWidth: '60ch',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.25rem',
-                    marginTop: '0.25rem',
-                  }}
-                >
-                  {field.args.map((arg: GraphQLArgument) => (
-                    <div
-                      key={arg.name}
-                      style={{
-                        display: 'flex',
-                        gap: '0.5rem',
-                        alignItems: 'baseline',
-                      }}
-                    >
-                      <span style={{ color: '#6B7280', minWidth: '8rem' }}>{arg.name}:</span>
-                      <TypeLink type={arg.type} compact />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )} */
-          }
         </div>
       )}
 
-      {/* Render nested fields recursively when expanded */}
       {isExpanded && Grafaid.isObjectOrInterfaceType(unwrappedType) && (
-        <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
-          {Object.values(unwrappedType.getFields()).map(nestedField => (
-            <OutputField
-              key={nestedField.name}
-              field={{
-                ...nestedField,
-                parentType: unwrappedType,
-              }}
-              toggleType={toggleType}
-              openTypes={openTypes}
-            />
-          ))}
-        </div>
+        <OutputFields
+          parentType={unwrappedType}
+          toggleType={toggleType}
+          openTypes={openTypes}
+        />
       )}
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { GraphQLNamedType } from 'graphql';
 import { useSearchParams } from 'react-router-dom';
 import { Grafaid } from '../../utils/grafaid';
-import { OutputFields } from './OutputFields';
+import { RootPositionType } from './RootPositionType';
 
 export interface Props {
   types: readonly GraphQLNamedType[];
@@ -58,7 +58,7 @@ export const TreeView: React.FC<Props> = ({ types }) => {
             Entry Points
           </h2>
           {entryPoints.map(type => (
-            <OutputFields
+            <RootPositionType
               key={type.name}
               type={type}
               isExpanded={openTypes.has(type.name)}
@@ -82,7 +82,7 @@ export const TreeView: React.FC<Props> = ({ types }) => {
             Index
           </h2>
           {otherTypes.map(type => (
-            <OutputFields
+            <RootPositionType
               key={type.name}
               type={type}
               isExpanded={openTypes.has(type.name)}
