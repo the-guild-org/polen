@@ -6,15 +6,22 @@ import {
   isObjectType,
   isInterfaceType
 } from 'graphql'
-import { TypeSectionProps } from './types'
-import { renderField, setRenderType } from './renderField'
+import { OutputField, setRenderType } from './OutputField'
+
+export interface Props {
+  type: GraphQLObjectType | GraphQLInterfaceType
+  isExpanded: boolean
+  toggleType: (typeName: string) => void
+  openTypes: ReadonlySet<string>
+}
+
 
 // Define the renderType implementation and register it
 const renderTypeImpl = (type: GraphQLObjectType | GraphQLInterfaceType): React.ReactNode => {
   const fields = Object.values(type.getFields())
   return (
     <div>
-      {fields.map((field: GraphQLField<any, any>) => renderField({ 
+      {fields.map((field: GraphQLField<any, any>) => OutputField({ 
         field: { 
           ...field, 
           parentType: type 
@@ -29,7 +36,13 @@ const renderTypeImpl = (type: GraphQLObjectType | GraphQLInterfaceType): React.R
 // Register the implementation
 setRenderType(renderTypeImpl)
 
-export const TypeSection: React.FC<TypeSectionProps> = ({ 
+/**
+ * This component renders the fields of a type as a list.
+ * It is used inside the TypeSection component.
+ * It is called "OutputFields" because it is used to render the fields of an object type,
+ * which are the fields returned by the field resolvers of the type.
+ */
+export const OutputFields: React.FC<Props> = ({ 
   type, 
   isExpanded, 
   toggleType,
@@ -100,7 +113,7 @@ export const TypeSection: React.FC<TypeSectionProps> = ({
       </div>
       {isExpanded && (
         <div style={{ marginLeft: '1.5rem' }}>
-          {fields.map((field: GraphQLField<any, any>) => renderField({ 
+          {fields.map((field: GraphQLField<any, any>) => OutputField({ 
             field: { 
               ...field, 
               parentType: type 

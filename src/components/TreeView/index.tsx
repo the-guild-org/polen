@@ -4,13 +4,18 @@ import {
   GraphQLObjectType, 
   GraphQLInterfaceType, 
   isObjectType, 
-  isInterfaceType
+  isInterfaceType,
 } from 'graphql'
 import { useSearchParams } from 'react-router-dom'
-import { Props } from './types'
-import { TypeSection } from './TypeSection'
+import { OutputFields } from './OutputFields'
 
-export const TreeView: React.FC<Props> = ({ types, schema }) => {
+
+export interface Props {
+  types: readonly GraphQLNamedType[]
+  // schema?: GraphQLSchema
+}
+
+export const TreeView: React.FC<Props> = ({ types }) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const openTypes = useMemo(() => 
     new Set(searchParams.get('open')?.split(',').filter(Boolean) || []), 
@@ -66,7 +71,7 @@ export const TreeView: React.FC<Props> = ({ types, schema }) => {
             Entry Points
           </h2>
           {entryPoints.map(type => (
-            <TypeSection 
+            <OutputFields 
               key={type.name} 
               type={type} 
               isExpanded={openTypes.has(type.name)} 
@@ -88,7 +93,7 @@ export const TreeView: React.FC<Props> = ({ types, schema }) => {
             Other Types
           </h2>
           {otherTypes.map(type => (
-            <TypeSection 
+            <OutputFields 
               key={type.name} 
               type={type} 
               isExpanded={openTypes.has(type.name)} 
