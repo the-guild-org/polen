@@ -1,149 +1,48 @@
 import { FC, useEffect, useState } from 'react'
-import { GraphQLNamedType, GraphQLType } from 'graphql'
-import { Link, useParams, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import { GraphQLNamedType } from 'graphql'
+import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { loadSchema, getTypes } from './utils/schema'
+import { TypeList } from './components/TypeList'
+import { TypeDetails } from './components/TypeDetails'
 import './App.css'
 
-const TypeLink: FC<{ type: GraphQLType }> = ({ type }) => {
-  const location = useLocation()
-  const baseType = type.toString().replace(/[!\[\]]/g, '')
-  
-  return (
-    <Link 
-      to={`/type/${baseType}`}
-      state={{ from: location.pathname }}
-      className="type-link"
-    >
-      {type.toString()}
-    </Link>
-  )
+interface Props {
+  types: GraphQLNamedType[]
 }
 
-const ArgumentDetails: FC<{ arg: any }> = ({ arg }) => (
-  <div className="argument-item">
-    <div className="argument-header">
-      <span className="argument-name">{arg.name}</span>
-      <TypeLink type={arg.type} />
-    </div>
-    {arg.description && (
-      <div className="argument-description">
-        <ReactMarkdown>{arg.description}</ReactMarkdown>
-      </div>
-    )}
-  </div>
-)
+const TypeRoute: FC<Props> = ({ types }) => {
+  const { name } = useParams<{ name: string }>()
+  const navigate = useNavigate()
+  const type = name ? types.find(t => t.name === name) : undefined
 
-const TypeDetails: FC<{ type: GraphQLNamedType }> = ({ type }) => {
-  // Cast to any GraphQL type that might have fields
-  const fields = 'getFields' in type ? (type as any).getFields() : null
-  const location = useLocation()
-
-  // Scroll to field if hash is present
   useEffect(() => {
-    if (location.hash) {
-      const fieldId = location.hash.slice(1) // Remove the # from the hash
-      const element = document.getElementById(fieldId)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
-      }
+    if (name && !type) {
+      // If type doesn't exist, redirect to first available type
+      navigate(`/type/${types[0]?.name}`, { replace: true })
     }
-  }, [location.hash])
+  }, [name, type, types, navigate])
 
-  return (
-    <div className="type-details">
-      <h2>{type.name}</h2>
-      {fields ? (
-        <div className="fields-list">
-          {Object.entries(fields).map(([fieldName, field]: [string, any]) => (
-            <div key={fieldName} id={fieldName} className="field-item">
-              <div className="field-header">
-                <Link 
-                  to={`#${fieldName}`} 
-                  className={`field-name ${location.hash === `#${fieldName}` ? 'highlighted' : ''}`}
-                  title="Direct link to this field"
-                >
-                  {fieldName}
-                </Link>
-                <TypeLink type={field.type} />
-              </div>
-              {field.description && (
-                <div className="field-description">
-                  <ReactMarkdown>{field.description}</ReactMarkdown>
-                </div>
-              )}
-              {field.args?.length > 0 && (
-                <div className="arguments-list">
-                  <h4 className="arguments-title">Arguments</h4>
-                  {field.args.map((arg: any) => (
-                    <ArgumentDetails key={arg.name} arg={arg} />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <pre>{type.toString()}</pre>
-      )}
-    </div>
-  )
-}
-
-const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
-  const { typeName } = useParams()
-  const location = useLocation()
-  const selectedType = types.find(t => t.name === typeName)
-
-  const entryPoints = types.filter(type => [
+  const entryPoints = types.filter(t => [
     'Query',
     'Mutation',
     'Subscription'
-  ].includes(type.name))
+  ].includes(t.name))
 
-  const indexTypes = types.filter(type => ![
+  const otherTypes = types.filter(t => ![
     'Query',
     'Mutation',
     'Subscription'
-  ].includes(type.name))
+  ].includes(t.name))
 
   return (
     <div className="container">
-      <h1>GraphQL Schema Types</h1>
+      <h1>GraphQL Schema Explorer</h1>
       <div className="content">
         <div className="sidebar">
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">Entry Points</h3>
-            <ul className="type-list entry-points">
-              {entryPoints.map(type => (
-                <li key={type.name} className={type.name === typeName ? 'active' : ''}>
-                  <Link 
-                    to={`/type/${type.name}`} 
-                    state={{ from: location.pathname }}
-                  >
-                    {type.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">Index</h3>
-            <ul className="type-list">
-              {indexTypes.map(type => (
-                <li key={type.name} className={type.name === typeName ? 'active' : ''}>
-                  <Link 
-                    to={`/type/${type.name}`} 
-                    state={{ from: location.pathname }}
-                  >
-                    {type.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <TypeList types={entryPoints} title="Entry Points" className="entry-points" />
+          <TypeList types={otherTypes} title="Index" />
         </div>
-        {selectedType && <TypeDetails type={selectedType} />}
+        {type && <TypeDetails type={type} />}
       </div>
     </div>
   )
@@ -187,11 +86,22 @@ const App: FC = () => {
     )
   }
 
+  // Ensure we have types before rendering routes
+  if (types.length === 0) {
+    return (
+      <div className="error">
+        <h1>No Schema Types Found</h1>
+        <p>The schema appears to be empty. Please check your GraphQL schema configuration.</p>
+      </div>
+    )
+  }
+
+  // TypeScript will now know that types array is non-empty below this point
+
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/type" replace />} />
-      <Route path="/type" element={<TypeList types={types} />} />
-      <Route path="/type/:typeName" element={<TypeList types={types} />} />
+      <Route path="/" element={<Navigate to={`/type/${types[0]!.name}`} replace />} />
+      <Route path="/type/:name" element={<TypeRoute types={types} />} />
     </Routes>
   )
 }
