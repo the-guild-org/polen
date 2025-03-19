@@ -1,49 +1,29 @@
 import { FC, useEffect, useState } from 'react'
 import { GraphQLNamedType } from 'graphql'
-import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { loadSchema, getTypes } from './utils/schema'
-import { TypeList } from './components/TypeList'
-import { TypeDetails } from './components/TypeDetails'
+import { ViewSelector, ViewType } from './components/ViewSelector'
+import { ColumnView } from './components/ColumnView'
+import { TreeView } from './components/TreeView'
 import './App.css'
 
 interface Props {
   types: GraphQLNamedType[]
 }
 
-const TypeRoute: FC<Props> = ({ types }) => {
-  const { name } = useParams<{ name: string }>()
-  const navigate = useNavigate()
-  const type = name ? types.find(t => t.name === name) : undefined
-
-  useEffect(() => {
-    if (name && !type) {
-      // If type doesn't exist, redirect to first available type
-      navigate(`/type/${types[0]?.name}`, { replace: true })
-    }
-  }, [name, type, types, navigate])
-
-  const entryPoints = types.filter(t => [
-    'Query',
-    'Mutation',
-    'Subscription'
-  ].includes(t.name))
-
-  const otherTypes = types.filter(t => ![
-    'Query',
-    'Mutation',
-    'Subscription'
-  ].includes(t.name))
+const SchemaView: FC<Props> = ({ types }) => {
+  const { viewName = 'column', name } = useParams<{ viewName: ViewType; name: string }>()
 
   return (
     <div className="container">
-      <h1>GraphQL Schema Explorer</h1>
-      <div className="content">
-        <div className="sidebar">
-          <TypeList types={entryPoints} title="Entry Points" className="entry-points" />
-          <TypeList types={otherTypes} title="Index" />
-        </div>
-        {type && <TypeDetails type={type} />}
-      </div>
+      <header className="app-header">
+        <ViewSelector currentTypeName={name} />
+      </header>
+      {viewName === 'column' ? (
+        <ColumnView types={types} />
+      ) : (
+        <TreeView types={types} />
+      )}
     </div>
   )
 }
@@ -86,7 +66,6 @@ const App: FC = () => {
     )
   }
 
-  // Ensure we have types before rendering routes
   if (types.length === 0) {
     return (
       <div className="error">
@@ -96,12 +75,10 @@ const App: FC = () => {
     )
   }
 
-  // TypeScript will now know that types array is non-empty below this point
-
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={`/type/${types[0]!.name}`} replace />} />
-      <Route path="/type/:name" element={<TypeRoute types={types} />} />
+      <Route path="/" element={<Navigate to={`/view/column/type/${types[0]!.name}`} replace />} />
+      <Route path="/view/:viewName/type/:name" element={<SchemaView types={types} />} />
     </Routes>
   )
 }

@@ -8,18 +8,30 @@ export interface Props {
     type: any // GraphQLType but avoiding circular dependency
     description?: string
   }
+  compact?: boolean
 }
 
-export const ArgumentDetails: FC<Props> = ({ arg }) => (
-  <div className="argument-item">
-    <div className="argument-header">
-      <span className="argument-name">{arg.name}</span>
-      <TypeLink type={arg.type} />
-    </div>
-    {arg.description && (
-      <div className="argument-description">
-        <ReactMarkdown>{arg.description}</ReactMarkdown>
+export const ArgumentDetails: FC<Props> = ({ arg, compact = false }) => {
+  if (compact) {
+    return (
+      <span style={{ fontFamily: 'inherit' }}>
+        <span>{arg.name}: </span>
+        <TypeLink type={arg.type} compact />
+      </span>
+    )
+  }
+
+  return (
+    <div className="argument-item">
+      <div className="argument-header">
+        <span className="argument-name">{arg.name}</span>
+        <TypeLink type={arg.type} />
       </div>
-    )}
-  </div>
-)
+      {arg.description && (
+        <div className="argument-description">
+          <ReactMarkdown>{arg.description}</ReactMarkdown>
+        </div>
+      )}
+    </div>
+  )
+}

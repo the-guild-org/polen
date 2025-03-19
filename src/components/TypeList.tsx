@@ -6,9 +6,10 @@ export interface Props {
   types: GraphQLNamedType[]
   title: string
   className?: string
+  viewName?: string
 }
 
-export const TypeList: FC<Props> = ({ types, title, className = '' }) => {
+export const TypeList: FC<Props> = ({ types, title, className = '', viewName = 'column' }) => {
   const location = useLocation()
   const currentPath = location.pathname.split('/').pop()
 
@@ -21,7 +22,7 @@ export const TypeList: FC<Props> = ({ types, title, className = '' }) => {
             key={type.name}
             className={currentPath === type.name ? 'active' : ''}
           >
-            <Link to={`/type/${type.name}`}>{type.name}</Link>
+            <Link to={`/view/${viewName}/type/${type.name}`}>{type.name}</Link>
           </li>
         ))}
       </ul>
