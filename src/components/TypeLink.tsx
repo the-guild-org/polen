@@ -1,33 +1,33 @@
-import { FC } from 'react'
-import { GraphQLType } from 'graphql'
-import { Link, useLocation } from 'react-router-dom'
+import { FC } from 'react';
+import { GraphQLType } from 'graphql';
+import { Link, useLocation } from 'react-router-dom';
 
 export interface Props {
-  type: GraphQLType
-  compact?: boolean
-  isToggleable?: boolean
-  onToggle?: () => void
-  isExpanded?: boolean
+  type: GraphQLType;
+  compact?: boolean;
+  isToggleable?: boolean;
+  onToggle?: () => void;
+  isExpanded?: boolean;
 }
 
-export const TypeLink: FC<Props> = ({ 
-  type, 
-  compact = false, 
+export const TypeLink: FC<Props> = ({
+  type,
+  compact = false,
   isToggleable = false,
   onToggle,
-  isExpanded
+  isExpanded,
 }) => {
-  const location = useLocation()
-  const baseType = type.toString().replace(/[!\[\]]/g, '')
-  const viewName = location.pathname.split('/')[2] || 'column'
-  
+  const location = useLocation();
+  const baseType = type.toString().replace(/[!\[\]]/g, '');
+  const viewName = location.pathname.split('/')[2] || 'column';
+
   if (compact) {
     if (isToggleable && onToggle) {
       return (
         <span style={{ display: 'inline-block', textAlign: 'left' }}>
           <button
             onClick={onToggle}
-            style={{ 
+            style={{
               color: '#059669',
               fontFamily: 'monospace',
               fontSize: '0.9rem',
@@ -40,7 +40,7 @@ export const TypeLink: FC<Props> = ({
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.25rem',
-              textAlign: 'left'
+              textAlign: 'left',
             }}
           >
             {type.toString()}
@@ -51,28 +51,30 @@ export const TypeLink: FC<Props> = ({
             )}
           </button>
         </span>
-      )
+      );
     }
-    
+
     return (
-      <span style={{ 
-        color: '#059669',
-        fontFamily: 'monospace',
-        fontSize: '0.9rem',
-        whiteSpace: 'nowrap'
-      }}>
+      <span
+        style={{
+          color: '#059669',
+          fontFamily: 'monospace',
+          fontSize: '0.9rem',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {type.toString()}
       </span>
-    )
+    );
   }
-  
+
   return (
-    <Link 
+    <Link
       to={`/view/${viewName}/type/${baseType}`}
       state={{ from: location.pathname }}
       className="type-link"
     >
       {type.toString()}
     </Link>
-  )
-}
+  );
+};

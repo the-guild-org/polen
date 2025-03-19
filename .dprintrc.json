@@ -1,0 +1,33 @@
+{
+  "extends": "./dprint.json",
+  "typescript": {
+    "preferSingleLine": true,
+    "functionExpression.spaceBeforeParentheses": false,
+    "functionDeclaration.spaceBeforeParentheses": false,
+    "method.spaceBeforeParentheses": false,
+    "constructor.spaceBeforeParentheses": false,
+    "getAccessor.spaceBeforeParentheses": false,
+    "setAccessor.spaceBeforeParentheses": false,
+    "arrowFunction.spaceBeforeParentheses": false,
+    "binaryExpression.spaceSurroundingBitwiseAndArithmeticOperator": true,
+    "conditionalExpression.spaceSurroundingCondition": true,
+    "conditionalType.spaceSurroundingCondition": true,
+    "constructorType.spaceAfterNewKeyword": true,
+    "constructSignature.spaceAfterNewKeyword": true,
+    "taggedTemplate.spaceBeforeLiteral": true,
+    "typeAnnotation.spaceBeforeColon": false,
+    "typeAnnotation.spaceAfterColon": true,
+    "functionDeclaration.trailingCommas": "never",
+    "functionExpression.trailingCommas": "never",
+    "method.trailingCommas": "never",
+    "constructorType.trailingCommas": "never",
+    "constructSignature.trailingCommas": "never",
+    "callSignature.trailingCommas": "never",
+    "tuple.trailingCommas": "never",
+    "typeLiteral.trailingCommas": "never",
+    "importDeclaration.sortNamedImports": "caseSensitive",
+    "exportDeclaration.sortNamedExports": "caseSensitive",
+    "module.sortImportDeclarations": "maintain",
+    "module.sortExportDeclarations": "maintain"
+  }
+}

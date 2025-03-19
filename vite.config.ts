@@ -1,15 +1,15 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import * as Path from 'node:path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import * as Path from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    open: true
+    open: true,
   },
   preview: {
-    port: 5173
+    port: 5173,
   },
   build: {
     sourcemap: true,
@@ -17,14 +17,14 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'graphql-vendor': ['graphql']
-        }
-      }
-    }
+          'graphql-vendor': ['graphql'],
+        },
+      },
+    },
   },
   resolve: {
     alias: {
-      '@': Path.resolve(__dirname, './src')
-    }
-  }
-})
+      '@': Path.resolve(__dirname, './src'),
+    },
+  },
+});
