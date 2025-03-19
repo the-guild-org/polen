@@ -1,20 +1,14 @@
 import { FC, useMemo } from 'react'
-import { GraphQLNamedType, GraphQLField, GraphQLObjectType, GraphQLInterfaceType, isObjectType, isInterfaceType, GraphQLOutputType, isScalarType, isEnumType, GraphQLArgument } from 'graphql'
+import { GraphQLNamedType, GraphQLField, GraphQLObjectType, GraphQLInterfaceType, isObjectType, isInterfaceType, GraphQLArgument } from 'graphql'
 import { useSearchParams } from 'react-router-dom'
 import { ArgumentDetails } from './ArgumentDetails'
+import { TypeLink } from './TypeLink'
 
 export interface Props {
   types: GraphQLNamedType[]
 }
 
 type FieldWithType = GraphQLField<any, any> & { parentType: string }
-
-const getTypeString = (type: GraphQLOutputType): string => {
-  if (isScalarType(type) || isEnumType(type)) {
-    return type.name
-  }
-  return `${type.toString()}`
-}
 
 export const TreeView: FC<Props> = ({ types }) => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -38,7 +32,6 @@ export const TreeView: FC<Props> = ({ types }) => {
 
   const renderField = (field: FieldWithType) => {
     const fieldType = field.type
-    const typeStr = getTypeString(fieldType)
     const isExpandable = isObjectType(fieldType) || isInterfaceType(fieldType)
     const isExpanded = isExpandable && openTypes.has(`${field.parentType}.${field.name}`)
 
@@ -93,7 +86,7 @@ export const TreeView: FC<Props> = ({ types }) => {
               </span>
             </div>
             <span style={{ color: '#059669' }}>
-              {typeStr}
+              <TypeLink type={fieldType} />
             </span>
           </div>
           {field.description && (
@@ -244,12 +237,18 @@ export const TreeView: FC<Props> = ({ types }) => {
                 <span style={{ fontWeight: 'bold' }}>
                   {type.name}
                 </span>
-                {type.description && (
-                  <span style={{ color: '#666', fontSize: '0.9em', fontFamily: 'system-ui' }}>
-                    {type.description}
-                  </span>
-                )}
               </div>
+              {type.description && (
+                <div style={{ 
+                  marginLeft: '1.75rem',
+                  color: '#666', 
+                  fontSize: '0.9em', 
+                  fontFamily: 'system-ui',
+                  maxWidth: '60ch'
+                }}>
+                  {type.description}
+                </div>
+              )}
               {isExpanded && isObjectType(type) && (
                 <div style={{ marginLeft: '1.5rem' }}>
                   {renderType(type)}
