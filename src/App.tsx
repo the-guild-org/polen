@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { loadSchema, getTypes } from './utils/schema'
 import { ViewSelector, ViewType } from './components/ViewSelector'
 import { ColumnView } from './components/ColumnView'
-import { TreeView } from './components/TreeView'
+import { TreeView } from './components/TreeView/index'
 import './App.css'
 
 interface Props {
