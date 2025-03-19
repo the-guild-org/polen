@@ -31,9 +31,10 @@ export const OutputField = ({
   return (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
+        display: 'grid',
+        gridTemplateColumns: 'subgrid',
+        gridColumnStart: '1',
+        gridColumnEnd: '3',
         padding: '0.25rem 0',
         fontFamily: 'monospace',
         fontSize: '0.9rem',
@@ -43,78 +44,61 @@ export const OutputField = ({
     >
       <div
         style={{
-          display: 'grid',
-          width: '100%',
-          gridTemplateColumns: 'min-content 1fr',
-          columnGap: '2rem',
-          alignItems: 'baseline',
+          gridColumn: '1 / 2',
+          overflow: 'visible',
         }}
       >
-        <div
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'visible',
-            justifySelf: 'start',
-          }}
-        >
-          <span style={{ display: 'inline-flex', flexWrap: 'nowrap', alignItems: 'baseline' }}>
-            <span>{field.name}</span>
-            {field.args.length > 0 && (
-              <span
-                style={{
-                  color: '#6B7280',
-                  fontSize: '0.9rem',
-                  marginLeft: '0.25rem',
-                }}
-              >
-                (...)
-              </span>
-            )}
-          </span>
+        <div>
+          <span>{field.name}</span>
+          {field.args.length > 0 && (
+            <span
+              style={{
+                color: '#6B7280',
+                fontSize: '0.9rem',
+                marginLeft: '0.25rem',
+              }}
+            >
+              (...)
+            </span>
+          )}
         </div>
-        <div
-          style={{
-            color: '#059669',
-            whiteSpace: 'nowrap',
-            justifySelf: 'start',
-          }}
-        >
-          <TypeLink
-            type={fieldType}
-            isToggleable={isExpandable}
-            onToggle={() => isExpandable && toggleType(typeKey)}
-            isExpanded={isExpanded}
-            compact
-          />
-        </div>
-      </div>
-      {(field.description || field.args.length > 0) && (
-        <div
-          style={{
-            marginLeft: '0',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-          }}
-        >
-          {field.description && (
+        {(field.description || field.args.length > 0) && (
+          field.description && (
             <div
               style={{
                 color: '#666',
                 fontSize: '0.9em',
                 fontFamily: 'system-ui',
-                maxWidth: '60ch',
+                maxWidth: '40ch',
                 marginTop: '-0.25rem',
               }}
             >
-              {field.description}
+              {/* {field.description} */}
             </div>
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
+      <div
+        style={{
+          color: '#059669',
+          whiteSpace: 'nowrap',
+          gridColumn: '2 / 3',
+        }}
+      >
+        <TypeLink
+          type={fieldType}
+          isToggleable={isExpandable}
+          onToggle={() => isExpandable && toggleType(typeKey)}
+          isExpanded={isExpanded}
+          compact
+        />
+      </div>
 
       {isExpanded && Grafaid.isObjectOrInterfaceType(unwrappedType) && (
         <OutputFields
+          style={{
+            gridColumn: '1 / 3',
+          }}
           parentType={unwrappedType}
           toggleType={toggleType}
           openTypes={openTypes}
