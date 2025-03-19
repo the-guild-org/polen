@@ -56,6 +56,16 @@ export const getNonEntryPointTypes = (
   );
 
 /**
+ * Gets the unwrapped named type from a GraphQLOutputType by removing any List or NonNull wrappers.
+ *
+ * @param type - The GraphQL output type to unwrap
+ * @returns The unwrapped GraphQLNamedType
+ */
+export const getUnwrappedType = (type: GraphQLOutputType): GraphQLNamedType => {
+  return getNamedType(type);
+};
+
+/**
  * Checks if a GraphQLOutputType is expandable (object or interface type).
  * This handles unwrapping non-null and list types to check the underlying named type.
  *
@@ -64,7 +74,7 @@ export const getNonEntryPointTypes = (
  */
 export const isExpandableType = (type: GraphQLOutputType): boolean => {
   // Get the named type by unwrapping any List or NonNull wrappers
-  const namedType = getNamedType(type);
+  const namedType = getUnwrappedType(type);
 
   // Check if the named type is an object or interface type
   return isObjectType(namedType) || isInterfaceType(namedType);

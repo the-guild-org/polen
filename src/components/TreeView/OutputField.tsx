@@ -12,6 +12,9 @@ export interface Props {
   openTypes: ReadonlySet<string>;
 }
 
+/**
+ * Renders a field and its nested fields recursively when expanded
+ */
 export const OutputField = ({
   field,
   toggleType,
@@ -21,6 +24,9 @@ export const OutputField = ({
   const isExpandable = Grafaid.isExpandableType(fieldType);
   const typeKey = `${field.parentType.name}.${field.name}`;
   const isExpanded = isExpandable && openTypes.has(typeKey);
+
+  // Get the unwrapped type (removing List and NonNull wrappers)
+  const unwrappedType = Grafaid.getUnwrappedType(fieldType);
 
   return (
     <div
@@ -146,6 +152,23 @@ export const OutputField = ({
               </div>
             )} */
           }
+        </div>
+      )}
+
+      {/* Render nested fields recursively when expanded */}
+      {isExpanded && Grafaid.isObjectOrInterfaceType(unwrappedType) && (
+        <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+          {Object.values(unwrappedType.getFields()).map(nestedField => (
+            <OutputField
+              key={nestedField.name}
+              field={{
+                ...nestedField,
+                parentType: unwrappedType,
+              }}
+              toggleType={toggleType}
+              openTypes={openTypes}
+            />
+          ))}
         </div>
       )}
     </div>
