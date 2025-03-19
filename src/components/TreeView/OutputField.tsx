@@ -3,10 +3,9 @@ import {
   GraphQLArgument, 
   GraphQLObjectType, 
   GraphQLInterfaceType, 
-  isObjectType, 
-  isInterfaceType, 
   GraphQLField
 } from 'graphql'
+import { Grafaid } from '../../utils/grafaid'
 import { TypeLink } from '../TypeLink'
 
 export type FieldWithType = GraphQLField<any, any> & { 
@@ -43,7 +42,7 @@ export const OutputField = ({
   longestFieldNameLength = 0
 }: Props & Partial<FieldRenderOptions>) => {
   const fieldType = field.type
-  const isExpandable = isObjectType(fieldType) || isInterfaceType(fieldType)
+  const isExpandable = Grafaid.isExpandableType(fieldType)
   const typeKey = `${field.parentType.name}.${field.name}`
   const isExpanded = isExpandable && openTypes.has(typeKey)
 

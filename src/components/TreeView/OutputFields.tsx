@@ -2,10 +2,9 @@ import React from 'react'
 import { 
   GraphQLObjectType, 
   GraphQLInterfaceType, 
-  GraphQLField,
-  isObjectType,
-  isInterfaceType
+  GraphQLField
 } from 'graphql'
+import { Grafaid } from '../../utils/grafaid'
 import { OutputField, setRenderType } from './OutputField'
 
 export interface Props {
@@ -57,7 +56,7 @@ export const OutputFields: React.FC<Props> = ({
     
     // Add extra space for the expandable button if needed
     const fieldType = field.type
-    const isExpandable = isObjectType(fieldType) || isInterfaceType(fieldType)
+    const isExpandable = Grafaid.isExpandableType(fieldType)
     if (isExpandable) {
       nameLength += 2 // Account for the expand/collapse button
     }

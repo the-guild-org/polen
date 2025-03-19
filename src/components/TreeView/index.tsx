@@ -1,12 +1,9 @@
 import React, { useMemo } from 'react'
 import { 
-  GraphQLNamedType, 
-  GraphQLObjectType, 
-  GraphQLInterfaceType, 
-  isObjectType, 
-  isInterfaceType,
+  GraphQLNamedType
 } from 'graphql'
 import { useSearchParams } from 'react-router-dom'
+import { Grafaid } from '../../utils/grafaid'
 import { OutputFields } from './OutputFields'
 
 
@@ -38,18 +35,8 @@ export const TreeView: React.FC<Props> = ({ types }) => {
     setSearchParams(searchParams)
   }
 
-  const isObjectOrInterfaceType = (type: GraphQLNamedType): type is GraphQLObjectType | GraphQLInterfaceType => 
-    isObjectType(type) || isInterfaceType(type)
-
-  const entryPoints = types.filter((t): t is GraphQLObjectType | GraphQLInterfaceType => 
-    ['Query', 'Mutation', 'Subscription'].includes(t.name) && 
-    isObjectOrInterfaceType(t)
-  )
-
-  const otherTypes = types.filter((t): t is GraphQLObjectType | GraphQLInterfaceType => 
-    isObjectOrInterfaceType(t) && 
-    !entryPoints.includes(t)
-  )
+  const entryPoints = Grafaid.getEntryPointTypes(types)
+  const otherTypes = Grafaid.getNonEntryPointTypes(types, entryPoints)
 
   return (
     <div style={{ 
@@ -106,5 +93,3 @@ export const TreeView: React.FC<Props> = ({ types }) => {
     </div>
   )
 }
-
-export * from './types'
