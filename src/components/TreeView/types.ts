@@ -31,4 +31,5 @@ export interface FieldRenderProps {
 
 export interface FieldRenderOptions {
   isCompact?: boolean
+  longestFieldNameLength?: number
 }

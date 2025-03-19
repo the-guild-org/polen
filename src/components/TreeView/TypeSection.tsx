@@ -2,7 +2,9 @@ import React from 'react'
 import { 
   GraphQLObjectType, 
   GraphQLInterfaceType, 
-  GraphQLField 
+  GraphQLField,
+  isObjectType,
+  isInterfaceType
 } from 'graphql'
 import { TypeSectionProps } from './types'
 import { renderField, setRenderType } from './renderField'
@@ -34,6 +36,29 @@ export const TypeSection: React.FC<TypeSectionProps> = ({
   openTypes
 }) => {
   const fields = Object.values(type.getFields())
+  
+  // Calculate the longest field name for proper alignment
+  const longestFieldNameLength = fields.reduce((maxLength, field) => {
+    // Include space for arguments in the calculation
+    let nameLength = field.name.length
+    
+    // Add extra space for the expandable button if needed
+    const fieldType = field.type
+    const isExpandable = isObjectType(fieldType) || isInterfaceType(fieldType)
+    if (isExpandable) {
+      nameLength += 2 // Account for the expand/collapse button
+    }
+    
+    // Add space for arguments
+    if (field.args.length > 0) {
+      // Add parentheses and commas
+      nameLength += 2 + (field.args.length - 1)
+      // Add argument names
+      nameLength += field.args.reduce((sum, arg) => sum + arg.name.length, 0)
+    }
+    
+    return Math.max(maxLength, nameLength)
+  }, 0)
 
   return (
     <div key={type.name} style={{ marginBottom: '1rem' }}>
@@ -81,7 +106,8 @@ export const TypeSection: React.FC<TypeSectionProps> = ({
               parentType: type 
             },
             toggleType,
-            openTypes
+            openTypes,
+            longestFieldNameLength
           }))}
         </div>
       )}

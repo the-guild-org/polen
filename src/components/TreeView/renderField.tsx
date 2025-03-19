@@ -23,7 +23,8 @@ export const renderField = ({
   field, 
   toggleType, 
   openTypes,
-  isCompact = false
+  isCompact = false,
+  longestFieldNameLength = 0
 }: FieldRenderProps & Partial<FieldRenderOptions>) => {
   const fieldType = field.type
   const isExpandable = isObjectType(fieldType) || isInterfaceType(fieldType)
@@ -40,12 +41,20 @@ export const renderField = ({
         fontFamily: 'monospace',
         fontSize: '0.9rem'
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(200px, auto)', gap: '1rem', alignItems: 'baseline' }}>
+        <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: `minmax(${Math.max(longestFieldNameLength * 0.6, 12)}rem, auto) 1fr`, 
+            columnGap: '2rem', 
+            alignItems: 'baseline',
+            width: '100%'
+          }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '0.5rem',
-            marginLeft: isExpandable ? 0 : '0'
+            marginLeft: isExpandable ? 0 : '0',
+            whiteSpace: 'nowrap',
+            overflow: 'visible'
           }}>
             {isExpandable && (
               <button 
@@ -80,7 +89,11 @@ export const renderField = ({
               {field.args.length > 0 && ')'}
             </span>
           </div>
-          <span style={{ color: '#059669' }}>
+          <span style={{ 
+            color: '#059669',
+            justifySelf: 'start',
+            whiteSpace: 'nowrap'
+          }}>
             <TypeLink type={fieldType} />
           </span>
         </div>
