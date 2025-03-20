@@ -1,9 +1,11 @@
-import { FC, useEffect, useState } from 'react'
-import { GraphQLNamedType } from 'graphql'
+import type { FC } from 'react'
+import { useEffect, useState } from 'react'
+import type { GraphQLNamedType } from 'graphql'
 import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { getTypes } from './utils/schema'
 import { Pollen } from './utils/pollen/_namespace'
-import { ViewSelector, ViewType } from './components/ViewSelector'
+import type { ViewType } from './components/ViewSelector'
+import { ViewSelector } from './components/ViewSelector'
 import { ColumnView } from './components/ColumnView'
 import { TreeView } from './components/TreeView/index'
 import './App.css'
@@ -13,14 +15,14 @@ interface Props {
 }
 
 const SchemaView: FC<Props> = ({ types }) => {
-  const { viewName = 'column', name } = useParams<{ viewName: ViewType, name: string }>()
+  const { viewName = `column`, name } = useParams<{ viewName: ViewType, name: string }>()
 
   return (
     <div className="container">
       <header className="app-header">
         <ViewSelector currentTypeName={name} />
       </header>
-      {viewName === 'column' ? <ColumnView types={types} /> : <TreeView types={types} />}
+      {viewName === `column` ? <ColumnView types={types} /> : <TreeView types={types} />}
     </div>
   )
 }
@@ -31,25 +33,21 @@ const App: FC = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadSchemaTypes = async () => {
-      try {
-        if (!Pollen.isPollenEnabled()) {
-          throw new Error(
-            'Pollen is not enabled. Please run your app using the Pollen CLI with a valid schema file.'
-          )
-        }
-        
-        const schema = Pollen.getSchema()
-        const schemaTypes = getTypes(schema)
-        setTypes(schemaTypes)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load schema')
-      } finally {
-        setLoading(false)
+    try {
+      if (!Pollen.isPollenEnabled()) {
+        throw new Error(
+          `Pollen is not enabled. Please run your app using the Pollen CLI with a valid schema file.`,
+        )
       }
-    }
 
-    void loadSchemaTypes()
+      const schema = Pollen.getSchema()
+      const schemaTypes = getTypes(schema)
+      setTypes(schemaTypes)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to load schema`)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   if (loading) {

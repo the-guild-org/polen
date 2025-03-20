@@ -1,6 +1,6 @@
-import { CliConfig, Command, HelpDoc } from '@effect/cli'
+import { Command } from '@effect/cli'
 import { NodeContext, NodeRuntime } from '@effect/platform-node'
-import { Console, Effect, Option } from 'effect'
+import { Effect, Option } from 'effect'
 
 // Import commands
 import { devCommand } from './commands/dev.js'
@@ -9,8 +9,8 @@ import { buildCommand } from './commands/build.js'
 /**
  * Define the main command with subcommands
  */
-const pollenCommand = Command.make('pollen', {}).pipe(
-  Command.withDescription('Command-line tool for working with the Pollen framework.'),
+const pollenCommand = Command.make(`pollen`, {}).pipe(
+  Command.withDescription(`Command-line tool for working with the Pollen framework.`),
   Command.withSubcommands([devCommand, buildCommand]),
   Command.withHandler(config =>
     Option.match(config.subcommand, {
@@ -20,7 +20,7 @@ const pollenCommand = Command.make('pollen', {}).pipe(
           // yield* Console.log(
           // HelpDoc.toAnsiText(Command.getHelp(pollenCommand, CliConfig.defaultConfig))
           // )
-          return Effect.void
+          return yield* Effect.void
         }),
       onSome: () => Effect.void,
     })
@@ -31,8 +31,8 @@ const pollenCommand = Command.make('pollen', {}).pipe(
  * Configure and run the CLI application
  */
 const cli = Command.run(pollenCommand.pipe(Command.withSubcommands([devCommand, buildCommand])), {
-  name: 'Pollen CLI',
-  version: 'v1.0.0',
+  name: `Pollen CLI`,
+  version: `v1.0.0`,
 })
 
 // Run the CLI application

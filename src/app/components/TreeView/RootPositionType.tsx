@@ -1,12 +1,12 @@
-import React from 'react';
-import { GraphQLInterfaceType, GraphQLObjectType } from 'graphql';
-import { OutputFields } from './OutputFields';
+import React from 'react'
+import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
+import { OutputFields } from './OutputFields'
 
 export interface Props {
-  type: GraphQLObjectType | GraphQLInterfaceType;
-  isExpanded: boolean;
-  toggleType: (typeName: string) => void;
-  openTypes: ReadonlySet<string>;
+  type: GraphQLObjectType | GraphQLInterfaceType
+  isExpanded: boolean
+  toggleType: (typeName: string) => void
+  openTypes: ReadonlySet<string>
 }
 
 /**
@@ -21,44 +21,45 @@ export const RootPositionType: React.FC<Props> = ({
   toggleType,
   openTypes,
 }) => {
-
   return (
     <div
       key={type.name}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
-        fontFamily: 'monospace',
-        fontSize: '0.9rem',
-        marginTop: '1rem',
+        display: `flex`,
+        flexDirection: `column`,
+        gap: `0.25rem`,
+        fontFamily: `monospace`,
+        fontSize: `0.9rem`,
+        marginTop: `1rem`,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ display: `flex`, alignItems: `center`, gap: `0.5rem` }}>
         <button
-          onClick={() => toggleType(type.name)}
+          onClick={() => {
+            toggleType(type.name)
+          }}
           style={{
-            border: 'none',
-            background: 'none',
-            padding: '0 0.25rem',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
+            border: `none`,
+            background: `none`,
+            padding: `0 0.25rem`,
+            cursor: `pointer`,
+            fontFamily: `inherit`,
           }}
         >
-          {isExpanded ? '▼' : '▶'}
+          {isExpanded ? `▼` : `▶`}
         </button>
-        <span style={{ fontWeight: 'bold' }}>
+        <span style={{ fontWeight: `bold` }}>
           {type.name}
         </span>
       </div>
       {type.description && (
         <div
           style={{
-            marginLeft: '1.75rem',
-            color: '#666',
-            fontSize: '0.9em',
-            fontFamily: 'system-ui',
-            maxWidth: '60ch',
+            marginLeft: `1.75rem`,
+            color: `#666`,
+            fontSize: `0.9em`,
+            fontFamily: `system-ui`,
+            maxWidth: `60ch`,
           }}
         >
           {type.description}
@@ -72,5 +73,5 @@ export const RootPositionType: React.FC<Props> = ({
         />
       )}
     </div>
-  );
-};
+  )
+}

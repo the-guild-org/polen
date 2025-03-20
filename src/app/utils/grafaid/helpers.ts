@@ -3,15 +3,13 @@
  * This module provides type-safe helper functions for working with GraphQL types.
  */
 
-import {
+import type {
   GraphQLInterfaceType,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLOutputType,
-  getNamedType,
-  isInterfaceType,
-  isObjectType,
-} from 'graphql';
+} from 'graphql'
+import { getNamedType, isInterfaceType, isObjectType } from 'graphql'
 
 /**
  * Type guard to check if a type is either a GraphQLObjectType or GraphQLInterfaceType.
@@ -21,7 +19,7 @@ import {
  */
 export const isObjectOrInterfaceType = (
   type: GraphQLNamedType,
-): type is GraphQLObjectType | GraphQLInterfaceType => isObjectType(type) || isInterfaceType(type);
+): type is GraphQLObjectType | GraphQLInterfaceType => isObjectType(type) || isInterfaceType(type)
 
 /**
  * Filters an array of GraphQL types to only include entry point types
@@ -34,9 +32,9 @@ export const getEntryPointTypes = (
   types: readonly GraphQLNamedType[],
 ): readonly (GraphQLObjectType | GraphQLInterfaceType)[] =>
   types.filter((t): t is GraphQLObjectType | GraphQLInterfaceType =>
-    ['Query', 'Mutation', 'Subscription'].includes(t.name) &&
+    [`Query`, `Mutation`, `Subscription`].includes(t.name) &&
     isObjectOrInterfaceType(t)
-  );
+  )
 
 /**
  * Filters an array of GraphQL types to only include non-entry point types
@@ -53,7 +51,7 @@ export const getNonEntryPointTypes = (
   types.filter((t): t is GraphQLObjectType | GraphQLInterfaceType =>
     isObjectOrInterfaceType(t) &&
     !entryPoints.includes(t)
-  );
+  )
 
 /**
  * Gets the unwrapped named type from a GraphQLOutputType by removing any List or NonNull wrappers.
@@ -62,8 +60,8 @@ export const getNonEntryPointTypes = (
  * @returns The unwrapped GraphQLNamedType
  */
 export const getUnwrappedType = (type: GraphQLOutputType): GraphQLNamedType => {
-  return getNamedType(type);
-};
+  return getNamedType(type)
+}
 
 /**
  * Checks if a GraphQLOutputType is expandable (object or interface type).
@@ -74,8 +72,14 @@ export const getUnwrappedType = (type: GraphQLOutputType): GraphQLNamedType => {
  */
 export const isExpandableType = (type: GraphQLOutputType): boolean => {
   // Get the named type by unwrapping any List or NonNull wrappers
-  const namedType = getUnwrappedType(type);
+  const namedType = getUnwrappedType(type)
 
   // Check if the named type is an object or interface type
-  return isObjectType(namedType) || isInterfaceType(namedType);
-};
+  return isObjectType(namedType) || isInterfaceType(namedType)
+}
+
+export type TypeWithFields = GraphQLInterfaceType | GraphQLObjectType
+
+export const isTypeWithFields = (type: GraphQLNamedType): type is TypeWithFields => {
+  return isInterfaceType(type) || isObjectType(type)
+}

@@ -18,13 +18,13 @@ export interface CommonViteOptions {
 export interface DevConfigOptions extends CommonViteOptions {
   /**
    * Whether to open the browser automatically
-   * @default true
+   * @defaultValue true
    */
   open?: boolean
 
   /**
    * Port to start the development server on
-   * @default undefined (Vite will use its default port)
+   * @defaultValue undefined (Vite will use its default port)
    */
   port?: number
 }
@@ -35,13 +35,13 @@ export interface DevConfigOptions extends CommonViteOptions {
 export interface BuildConfigOptions extends CommonViteOptions {
   /**
    * Output directory for built files
-   * @default 'dist'
+   * @defaultValue 'dist'
    */
   outDir?: string
 
   /**
    * Whether to minify the output
-   * @default true
+   * @defaultValue true
    */
   minify?: boolean
 }
@@ -53,7 +53,7 @@ const createBaseConfig = (options: CommonViteOptions): UserConfig => {
   const { schemaPath } = options
 
   return {
-    root: 'src/app',
+    root: `src/app`,
     plugins: [
       Plugins.GraphQLSchema({ schemaPath }),
     ],
@@ -79,7 +79,7 @@ export const createDevConfig = (options: DevConfigOptions): InlineConfig => {
  * Create a Vite build configuration
  */
 export const createBuildConfig = (options: BuildConfigOptions): InlineConfig => {
-  const { outDir = 'dist', minify = true, schemaPath } = options
+  const { outDir = `dist`, minify = true, schemaPath } = options
 
   // Ensure output directory is absolute
   const resolvedOutDir = Path.absolutify(outDir)
@@ -88,7 +88,7 @@ export const createBuildConfig = (options: BuildConfigOptions): InlineConfig => 
     ...createBaseConfig({ schemaPath }),
     build: {
       outDir: resolvedOutDir,
-      minify: minify ? 'esbuild' : false,
+      minify: minify ? `esbuild` : false,
       sourcemap: true,
       emptyOutDir: true, // Ensure directory is clean before build
     },

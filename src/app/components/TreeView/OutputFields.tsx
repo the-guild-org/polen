@@ -1,11 +1,11 @@
-import { GraphQLInterfaceType, GraphQLObjectType } from 'graphql';
-import { OutputField } from './OutputField';
+import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
+import { OutputField } from './OutputField'
 
 export interface Props {
-  parentType: GraphQLObjectType | GraphQLInterfaceType;
-  toggleType: (typeName: string) => void;
-  openTypes: ReadonlySet<string>;
-  style?: React.CSSProperties;
+  parentType: GraphQLObjectType | GraphQLInterfaceType
+  toggleType: (typeName: string) => void
+  openTypes: ReadonlySet<string>
+  style?: React.CSSProperties
 }
 
 /**
@@ -20,12 +20,12 @@ export const OutputFields = ({
   return (
     <div
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(1rem,auto) minmax(1rem,auto)',
-        marginLeft: '0.5rem',
-        paddingLeft: '1rem',
-        marginTop: '0.5rem',
-        borderLeft: '1px solid #ccc',
+        display: `grid`,
+        gridTemplateColumns: `minmax(1rem,auto) minmax(1rem,auto)`,
+        marginLeft: `0.5rem`,
+        paddingLeft: `1rem`,
+        marginTop: `0.5rem`,
+        borderLeft: `1px solid #ccc`,
         ...style,
       }}
     >
@@ -41,5 +41,5 @@ export const OutputFields = ({
         />
       ))}
     </div>
-  );
-};
+  )
+}

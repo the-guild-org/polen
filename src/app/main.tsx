@@ -1,14 +1,14 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import './index.css';
-import App from './App';
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import './index.css'
+import App from './App'
 
-const rootElement = document.getElementById('root');
+const rootElement = document.getElementById(`root`)
 
-if (!rootElement) throw new Error('Root element not found');
+if (!rootElement) throw new Error(`Root element not found`)
 
-const root = createRoot(rootElement);
+const root = createRoot(rootElement)
 
 root.render(
   (
@@ -18,4 +18,4 @@ root.render(
       </BrowserRouter>
     </StrictMode>
   ),
-);
+)
