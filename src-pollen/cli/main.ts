@@ -1,39 +1,39 @@
-/**
- * Pollen CLI application using Effect for functional composition and error handling
- * Usage: pnpm pollen <command> [...args]
- */
-import { Command } from "@effect/cli"
-import { NodeContext, NodeRuntime } from "@effect/platform-node"
-import { Console, Effect, pipe } from "effect"
+import { CliConfig, Command, HelpDoc } from '@effect/cli'
+import { NodeContext, NodeRuntime } from '@effect/platform-node'
+import { Console, Effect, Option } from 'effect'
 
 // Import commands
-import { devCommand } from "./commands/dev.js"
+import { devCommand } from './commands/dev.js'
 
 /**
- * Main CLI application definition
+ * Define the main command with subcommands
  */
-const pollenCommand = pipe(
-  Command.make("pollen", {}, () => 
-    pipe(
-      Console.log("Pollen: Vite webapp development toolkit"),
-      Effect.flatMap(() => Console.log("\nAvailable commands:")),
-      Effect.flatMap(() => Console.log("  dev     Start the development server"))
-    )
-  ),
+const pollenCommand = Command.make('pollen', {}).pipe(
+  Command.withDescription('Command-line tool for working with the Pollen framework.'),
   Command.withSubcommands([devCommand]),
-  Command.withDescription("Command-line tools for Vite webapp development and management")
+  Command.withHandler(config =>
+    Option.match(config.subcommand, {
+      onNone: () =>
+        Effect.gen(function*() {
+          yield* Console.log(
+            HelpDoc.toAnsiText(Command.getHelp(pollenCommand, CliConfig.defaultConfig)),
+          )
+        }),
+      onSome: () => Effect.void,
+    })
+  ),
 )
 
 /**
  * Configure and run the CLI application
  */
-const cli = Command.run(pollenCommand, {
-  name: "Pollen CLI",
-  version: "v1.0.0"
+const cli = Command.run(pollenCommand.pipe(Command.withSubcommands([devCommand])), {
+  name: 'Pollen CLI',
+  version: 'v1.0.0',
 })
 
-// Execute with Node.js context and runtime
 cli(process.argv).pipe(
+  // @ts-expect-error fixme
   Effect.provide(NodeContext.layer),
-  NodeRuntime.runMain
+  NodeRuntime.runMain,
 )
