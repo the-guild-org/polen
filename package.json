@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "pollen": "tsx ./src/cli/main.ts",
-    "pollen:github": "tsx ./src/cli/main.ts dev --schema ./tests/fixtures/schemas/github.graphql",
+    "pollen:github:dev": "tsx ./src/cli/main.ts dev --schema ./tests/fixtures/schemas/github.graphql",
+    "pollen:github:build": "tsx ./src/cli/main.ts build --schema ./tests/fixtures/schemas/github.graphql",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
