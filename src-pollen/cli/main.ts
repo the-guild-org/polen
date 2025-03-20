@@ -1,25 +1,39 @@
 /**
- * CLI command dispatcher that dynamically imports and runs commands based on arguments.
- * Usage: tsx main.ts <command> [...args]
+ * Pollen CLI application using Effect for functional composition and error handling
+ * Usage: pnpm pollen <command> [...args]
  */
-import { CommandDispatch } from '../lib/command-dispatch/_namespace.js'
+import { Command } from "@effect/cli"
+import { NodeContext, NodeRuntime } from "@effect/platform-node"
+import { Console, Effect, pipe } from "effect"
+
+// Import commands
+import { devCommand } from "./commands/dev.js"
 
 /**
- * Define the relative path to command modules from this file
+ * Main CLI application definition
  */
-const commandsBasePath = new URL('./commands/', import.meta.url).pathname
+const pollenCommand = pipe(
+  Command.make("pollen", {}, () => 
+    pipe(
+      Console.log("Pollen: Vite webapp development toolkit"),
+      Effect.flatMap(() => Console.log("\nAvailable commands:")),
+      Effect.flatMap(() => Console.log("  dev     Start the development server"))
+    )
+  ),
+  Command.withSubcommands([devCommand]),
+  Command.withDescription("Command-line tools for Vite webapp development and management")
+)
 
 /**
- * Main function that launches the CLI
+ * Configure and run the CLI application
  */
-const main = async (): Promise<void> => {
-  try {
-    await CommandDispatch.run(process.argv, commandsBasePath)
-  } catch (error) {
-    console.error('Unhandled error:', error)
-    process.exit(1)
-  }
-}
+const cli = Command.run(pollenCommand, {
+  name: "Pollen CLI",
+  version: "v1.0.0"
+})
 
-// Execute the main function
-main()
+// Execute with Node.js context and runtime
+cli(process.argv).pipe(
+  Effect.provide(NodeContext.layer),
+  NodeRuntime.runMain
+)
