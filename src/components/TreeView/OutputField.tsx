@@ -38,8 +38,6 @@ export const OutputField = ({
         padding: '0.25rem 0',
         fontFamily: 'monospace',
         fontSize: '0.9rem',
-        marginLeft: '0',
-        marginTop: '0.5rem',
       }}
     >
       <div

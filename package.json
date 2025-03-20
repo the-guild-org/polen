@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "pollen": "tsx ./src-pollen/cli/main.ts",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -12,11 +13,14 @@
     "format:check": "dprint check"
   },
   "dependencies": {
+    "@molt/command": "^0.9.0",
     "graphql": "^16.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.3.0"
+    "react-router-dom": "^7.3.0",
+    "tsx": "^4.19.3",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
