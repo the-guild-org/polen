@@ -1,16 +1,11 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import * as Path from 'node:path';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import * as Path from 'node:path'
 
 export default defineConfig({
   plugins: [react()],
-  server: {
-    port: 5173,
-    open: true,
-  },
-  preview: {
-    port: 5173,
-  },
+  root: './src/app',
+  publicDir: './src/app/public',
   build: {
     sourcemap: true,
     rollupOptions: {
@@ -24,7 +19,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': Path.resolve(__dirname, './src'),
+      '@app': Path.resolve(__dirname, './src/app'),
     },
   },
-});
+})

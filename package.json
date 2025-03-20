@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "pollen": "tsx ./src-pollen/cli/main.ts",
+    "pollen": "tsx ./src/cli/main.ts",
+    "pollen:github": "tsx ./src/cli/main.ts dev --schema ./tests/fixtures/schemas/github.graphql",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
