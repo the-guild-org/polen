@@ -1,6 +1,7 @@
 import React from 'react'
 import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
 import { OutputFields } from './OutputFields'
+import { Box, Flex, Text } from '@radix-ui/themes'
 
 export interface Props {
   type: GraphQLObjectType | GraphQLInterfaceType
@@ -22,18 +23,14 @@ export const RootPositionType: React.FC<Props> = ({
   openTypes,
 }) => {
   return (
-    <div
+    <Box
       key={type.name}
+      mt="3"
       style={{
-        display: `flex`,
-        flexDirection: `column`,
-        gap: `0.25rem`,
         fontFamily: `monospace`,
-        fontSize: `0.9rem`,
-        marginTop: `1rem`,
       }}
     >
-      <div style={{ display: `flex`, alignItems: `center`, gap: `0.5rem` }}>
+      <Flex align="center" gap="2">
         <button
           onClick={() => {
             toggleType(type.name)
@@ -48,22 +45,16 @@ export const RootPositionType: React.FC<Props> = ({
         >
           {isExpanded ? `▼` : `▶`}
         </button>
-        <span style={{ fontWeight: `bold` }}>
+        <Text weight="bold" size="2">
           {type.name}
-        </span>
-      </div>
+        </Text>
+      </Flex>
       {type.description && (
-        <div
-          style={{
-            marginLeft: `1.75rem`,
-            color: `#666`,
-            fontSize: `0.9em`,
-            fontFamily: `system-ui`,
-            maxWidth: `60ch`,
-          }}
-        >
-          {type.description}
-        </div>
+        <Box ml="6" style={{ maxWidth: `60ch` }}>
+          <Text size="1" color="gray" style={{ fontFamily: `system-ui` }}>
+            {type.description}
+          </Text>
+        </Box>
       )}
       {isExpanded && (
         <OutputFields
@@ -72,6 +63,6 @@ export const RootPositionType: React.FC<Props> = ({
           openTypes={openTypes}
         />
       )}
-    </div>
+    </Box>
   )
 }

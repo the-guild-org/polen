@@ -2,6 +2,7 @@ import type { GraphQLField, GraphQLInterfaceType, GraphQLObjectType } from 'grap
 import { Grafaid } from '../../utils/grafaid'
 import { TypeLink } from '../TypeLink'
 import { OutputFields } from './OutputFields'
+import { Box, Flex, Text } from '@radix-ui/themes'
 
 export type FieldWithType = GraphQLField<any, any> & {
   parentType: GraphQLObjectType | GraphQLInterfaceType,
@@ -29,7 +30,7 @@ export const OutputField = ({
   const unwrappedType = Grafaid.getUnwrappedType(fieldType)
 
   return (
-    <div
+    <Box
       style={{
         display: `grid`,
         gridTemplateColumns: `subgrid`,
@@ -37,48 +38,43 @@ export const OutputField = ({
         gridColumnEnd: `3`,
         padding: `0.25rem 0`,
         fontFamily: `monospace`,
-        fontSize: `0.9rem`,
       }}
     >
-      <div
+      <Box
         style={{
           gridColumn: `1 / 2`,
           overflow: `visible`,
         }}
       >
-        <div>
-          <span>{field.name}</span>
+        <Flex>
+          <Text size="2">{field.name}</Text>
           {field.args.length > 0 && (
-            <span
-              style={{
-                color: `#6B7280`,
-                fontSize: `0.9rem`,
-                marginLeft: `0.25rem`,
-              }}
+            <Text
+              size="1"
+              color="gray"
+              ml="1"
             >
               (...)
-            </span>
+            </Text>
           )}
-        </div>
+        </Flex>
         {field.description && (
-          <div
-            style={{
-              color: `#666`,
-              fontSize: `0.9em`,
-              fontFamily: `system-ui`,
-              maxWidth: `40ch`,
-              marginTop: `-0.25rem`,
-            }}
-          >
-            {/* {field.description} */}
-          </div>
+          <Box style={{ maxWidth: `40ch`, marginTop: `-0.25rem` }}>
+            <Text
+              size="1"
+              color="gray"
+              style={{ fontFamily: `system-ui` }}
+            >
+              {/* {field.description} */}
+            </Text>
+          </Box>
         )}
-      </div>
-      <div
+      </Box>
+      <Box
         style={{
-          color: `#059669`,
           whiteSpace: `nowrap`,
           gridColumn: `2 / 3`,
+          color: `var(--green-11)`,
         }}
       >
         <TypeLink
@@ -90,7 +86,7 @@ export const OutputField = ({
           isExpanded={isExpanded}
           compact
         />
-      </div>
+      </Box>
 
       {isExpanded && Grafaid.isObjectOrInterfaceType(unwrappedType) && (
         <OutputFields
@@ -102,6 +98,6 @@ export const OutputField = ({
           openTypes={openTypes}
         />
       )}
-    </div>
+    </Box>
   )
 }

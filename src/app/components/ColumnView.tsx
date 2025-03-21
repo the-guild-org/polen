@@ -3,6 +3,7 @@ import type { GraphQLNamedType } from 'graphql'
 import { useParams } from 'react-router-dom'
 import { TypeList } from './TypeList'
 import { TypeDetails } from './TypeDetails'
+import { Flex, Container, Box } from '@radix-ui/themes'
 
 export interface Props {
   types: GraphQLNamedType[]
@@ -23,21 +24,24 @@ export const ColumnView: FC<Props> = ({ types }) => {
   const otherTypes = types.filter(t => !entryPoints.includes(t))
 
   return (
-    <div className="content">
-      <div className="sidebar">
-        <TypeList
-          types={entryPoints}
-          title="Entry Points"
-          className="entry-points"
-          viewName={viewName}
-        />
-        <TypeList
-          types={otherTypes}
-          title="Index"
-          viewName={viewName}
-        />
-      </div>
-      {type && <TypeDetails type={type} />}
-    </div>
+    <Container size="4" px="5" py="4">
+      <Flex gap="6">
+        <Flex direction="column" gap="6" width="250px">
+          <TypeList
+            types={entryPoints}
+            title="Entry Points"
+            viewName={viewName}
+          />
+          <TypeList
+            types={otherTypes}
+            title="Index"
+            viewName={viewName}
+          />
+        </Flex>
+        <Box flexGrow="1">
+          {type && <TypeDetails type={type} />}
+        </Box>
+      </Flex>
+    </Container>
   )
 }

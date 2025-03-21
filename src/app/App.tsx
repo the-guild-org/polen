@@ -10,6 +10,10 @@ import { ColumnView } from './components/ColumnView'
 import { TreeView } from './components/TreeView/index'
 import './App.css'
 
+// Import Radix UI Theme
+import { Theme, Container, Flex, Heading } from '@radix-ui/themes'
+import '@radix-ui/themes/styles.css'
+
 interface Props {
   types: GraphQLNamedType[]
 }
@@ -18,12 +22,13 @@ const SchemaView: FC<Props> = ({ types }) => {
   const { viewName = `column`, name } = useParams<{ viewName: ViewType, name: string }>()
 
   return (
-    <div className="container">
-      <header className="app-header">
+    <Container size="3" p="4" className="container">
+      <Flex justify="between" align="center" mb="4" className="app-header">
+        <Heading size="4">GraphQL Schema Explorer</Heading>
         <ViewSelector currentTypeName={name} />
-      </header>
+      </Flex>
       {viewName === `column` ? <ColumnView types={types} /> : <TreeView types={types} />}
-    </div>
+    </Container>
   )
 }
 
@@ -77,10 +82,12 @@ const App: FC = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to={`/view/column/type/${types[0]!.name}`} replace />} />
-      <Route path="/view/:viewName/type/:name" element={<SchemaView types={types} />} />
-    </Routes>
+    <Theme>
+      <Routes>
+        <Route path="/" element={<Navigate to={`/view/column/type/${types[0]!.name}`} replace />} />
+        <Route path="/view/:viewName/type/:name" element={<SchemaView types={types} />} />
+      </Routes>
+    </Theme>
   )
 }
 

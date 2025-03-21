@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import { TypeLink } from './TypeLink'
 import { ArgumentDetails } from './ArgumentDetails'
 import { Grafaid } from '../utils/grafaid'
+import { Card, Heading, Box, Text, Flex, Code, ScrollArea } from '@radix-ui/themes'
 
 export interface Props {
   type: GraphQLNamedType
@@ -29,41 +30,58 @@ export const TypeDetails: FC<Props> = ({ type }) => {
   }, [location.hash])
 
   return (
-    <div className="type-details">
-      <h2>{type.name}</h2>
+    <Card variant="surface" size="2">
+      <Heading size="5" mb="4">{type.name}</Heading>
       {fields
         ? (
-          <div className="fields-list">
+          <Box>
             {Object.entries(fields).map(([fieldName, field]) => (
-              <div key={fieldName} id={fieldName} className="field-item">
-                <div className="field-header">
+              <Box key={fieldName} id={fieldName} mb="4" p="3" style={{ borderBottom: `1px solid var(--gray-6)` }}>
+                <Flex justify="between" mb="2">
                   <Link
                     to={`#${fieldName}`}
-                    className={`field-name ${
-                      location.hash === `#${fieldName}` ? `highlighted` : ``
-                    }`}
+                    style={{ 
+                      textDecoration: `none`
+                    }}
                     title="Direct link to this field"
                   >
-                    {fieldName}
+                    <Text 
+                      size="3" 
+                      weight="medium" 
+                      color={location.hash === `#${fieldName}` ? `blue` : `gray`}
+                    >
+                      {fieldName}
+                    </Text>
                   </Link>
                   <TypeLink type={field.type} />
-                </div>
+                </Flex>
                 {field.description && (
-                  <div className="field-description">
-                    <ReactMarkdown>{field.description}</ReactMarkdown>
-                  </div>
+                  <Box mt="2">
+                    <Text as="div" color="gray" size="2">
+                      <ReactMarkdown>{field.description}</ReactMarkdown>
+                    </Text>
+                  </Box>
                 )}
                 {field.args.length > 0 && (
-                  <div className="arguments-list">
-                    <h4 className="arguments-title">Arguments</h4>
+                  <Box mt="3">
+                    <Heading size="2" mb="2">Arguments</Heading>
                     {field.args.map(arg => <ArgumentDetails key={arg.name} arg={arg} />)}
-                  </div>
+                  </Box>
                 )}
-              </div>
+              </Box>
             ))}
-          </div>
+          </Box>
         )
-        : <pre>{type.toString()}</pre>}
-    </div>
+        : (
+          <ScrollArea>
+            <Box p="3">
+              <Code size="2" style={{ display: `block` }}>
+
+              {type.toString()}
+              </Code>
+            </Box>
+          </ScrollArea>
+        )}
+    </Card>
   )
 }

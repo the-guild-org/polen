@@ -1,5 +1,6 @@
 import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
 import { OutputField } from './OutputField'
+import { Box } from '@radix-ui/themes'
 
 export interface Props {
   parentType: GraphQLObjectType | GraphQLInterfaceType
@@ -18,14 +19,14 @@ export const OutputFields = ({
   style,
 }: Props) => {
   return (
-    <div
+    <Box
       style={{
         display: `grid`,
         gridTemplateColumns: `minmax(1rem,auto) minmax(1rem,auto)`,
         marginLeft: `0.5rem`,
         paddingLeft: `1rem`,
         marginTop: `0.5rem`,
-        borderLeft: `1px solid #ccc`,
+        borderLeft: `1px solid var(--gray-6)`,
         ...style,
       }}
     >
@@ -40,6 +41,6 @@ export const OutputFields = ({
           openTypes={openTypes}
         />
       ))}
-    </div>
+    </Box>
   )
 }
