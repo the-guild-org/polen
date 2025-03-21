@@ -15,7 +15,7 @@ export const TypeList: FC<Props> = ({ types, title, viewName = `column` }) => {
 
   return (
     <Box>
-      <Heading size="2" mb="2" weight="medium" color="gray">{title}</Heading>
+      <Heading size="2" mb="2" weight="medium" color="gray" align="left">{title}</Heading>
       <Card variant="surface">
         <Flex direction="column">
           {types.map(type => {

@@ -40,7 +40,7 @@ export const TreeView: React.FC<Props> = ({ types }) => {
       <Flex direction="column" gap="6">
         {entryPoints.length > 0 && (
           <Box>
-            <Heading size="2" weight="medium" color="gray" mb="3">
+            <Heading size="2" weight="medium" color="gray" mb="3" align="left">
               Entry Points
             </Heading>
             {entryPoints.map(type => (
@@ -57,7 +57,7 @@ export const TreeView: React.FC<Props> = ({ types }) => {
 
         {otherTypes.length > 0 && (
           <Box>
-            <Heading size="2" weight="medium" color="gray" mb="3">
+            <Heading size="2" weight="medium" color="gray" mb="3" align="left">
               Index
             </Heading>
             {otherTypes.map(type => (

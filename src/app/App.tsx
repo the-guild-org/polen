@@ -24,7 +24,7 @@ const SchemaView: FC<Props> = ({ types }) => {
   return (
     <Container size="3" p="4" className="container">
       <Flex justify="between" align="center" mb="4" className="app-header">
-        <Heading size="4">GraphQL Schema Explorer</Heading>
+        <Heading size="4" align="left">GraphQL Schema Explorer</Heading>
         <ViewSelector currentTypeName={name} />
       </Flex>
       {viewName === `column` ? <ColumnView types={types} /> : <TreeView types={types} />}
@@ -86,6 +86,7 @@ const App: FC = () => {
       <Routes>
         <Route path="/" element={<Navigate to={`/view/column/type/${types[0]!.name}`} replace />} />
         <Route path="/view/:viewName/type/:name" element={<SchemaView types={types} />} />
+        <Route path="/view/:viewName/type/:name/:fieldName" element={<SchemaView types={types} />} />
       </Routes>
     </Theme>
   )
