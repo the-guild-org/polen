@@ -1,16 +1,16 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
+    // "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    // "noEmit": true,
+    // "allowImportingTsExtensions": true,
+    // "resolveJsonModule": true,
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  // "include": ["src"],
+  // "references": [{ "path": "./tsconfig.node.json" }]
 }

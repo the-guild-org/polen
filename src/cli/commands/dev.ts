@@ -1,19 +1,20 @@
 import { Command, Options } from '@effect/cli'
-import { Console, Effect, Option } from 'effect'
-import * as Vite from 'vite'
-import { ViteController } from '../../vite-controller/_namespace.js'
+import { Effect } from 'effect'
+import { defineConfig } from '@tanstack/react-start/config'
+import tsConfigPaths from 'vite-tsconfig-paths'
+import * as Path from 'node:path'
 
 const options = {
-  open: Options.boolean(`open`).pipe(
-    Options.withDescription(`Open browser window automatically`),
-    Options.withAlias(`o`),
-    Options.withDefault(true),
-  ),
-  port: Options.integer(`port`).pipe(
-    Options.withDescription(`Port to start server on (default: 5173)`),
-    Options.withAlias(`p`),
-    Options.optional,
-  ),
+  // open: Options.boolean(`open`).pipe(
+  //   Options.withDescription(`Open browser window automatically`),
+  //   Options.withAlias(`o`),
+  //   Options.withDefault(true),
+  // ),
+  // port: Options.integer(`port`).pipe(
+  //   Options.withDescription(`Port to start server on (default: 5173)`),
+  //   Options.withAlias(`p`),
+  //   Options.optional,
+  // ),
   schema: Options.text(`schema`).pipe(
     Options.withDescription(`Path to GraphQL schema file`),
     Options.withAlias(`s`),
@@ -24,37 +25,39 @@ const options = {
 export const devCommand = Command.make(
   `dev`,
   options,
-  ({ open, port, schema }) =>
+  ({ schema }) =>
     Effect.gen(function*() {
-      try {
-        // Log startup information
-        yield* Console.log(`Starting Pollen development server...`)
-        yield* Console.log(`Using schema file: ${schema}`)
+      const rootDirectory = Path.join(import.meta.dirname, `../../project`)
+      const appDirectory = Path.join(rootDirectory, `app`)
+      const publicDirectory = Path.join(rootDirectory, `public`)
 
-        // Get port from option
-        const portValue = Option.getOrUndefined(port)
+      const app = yield* Effect.tryPromise(() =>
+        defineConfig({
+          tsr: {
+            appDirectory,
+          },
+          routers: {
+            public: {
+              dir: publicDirectory,
+            },
+          },
+          vite: {
+            plugins: [
+              tsConfigPaths({
+                projects: [`./tsconfig.json`],
+              }),
+            ],
+          },
+        })
+      )
 
-        // Create and configure the server
-        const server = yield* Effect.tryPromise(() =>
-          Vite.createServer(ViteController.createDevConfig({
-            schemaPath: schema,
-            open,
-            ...(portValue !== undefined ? { port: portValue } : {}),
-          }))
-        )
+      // Patch up Vinxi config.
+      // TanStack doesn't configure this or allow one to. Maybe that means this config is useless. Not sure!
+      app.config.name = `Pollen`
+      // app.config.root = rootDirectory
 
-        // Start the server
-        yield* Effect.tryPromise(() => server.listen())
+      // console.log(app.config)
 
-        // Display URLs
-        server.printUrls()
-
-        return server
-      } catch (error) {
-        // Error handling
-        yield* Console.error(`Failed to start development server:`)
-        yield* Console.error(String(error))
-        return yield* Effect.fail(error)
-      }
+      yield* Effect.tryPromise(() => app.dev())
     }),
 )

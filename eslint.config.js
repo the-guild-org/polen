@@ -16,7 +16,7 @@ export default tsEslint.config(
   tsEslint.configs.strictTypeChecked,
   tsEslint.configs.eslintRecommended,
   tsEslint.configs.stylisticTypeChecked,
-  reactRefresh.configs.recommended,
+  // reactRefresh.configs.recommended,
   reactHooks.configs['recommended-latest'],
   {
     languageOptions: {
