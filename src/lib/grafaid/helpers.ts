@@ -4,64 +4,50 @@
  */
 
 import type {
+  GraphQLEnumType,
+  GraphQLField as GraphQLField_graphql,
+  GraphQLInputField,
+  GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLNamedType,
   GraphQLObjectType,
   GraphQLOutputType,
+  GraphQLScalarType,
+  GraphQLSchema,
+  GraphQLUnionType,
+  OperationTypeNode,
 } from 'graphql'
-import { getNamedType, isInterfaceType, isObjectType } from 'graphql'
+import {
+  getNamedType,
+  isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isNonNullType,
+  isObjectType,
+  isScalarType,
+  isUnionType,
+} from 'graphql'
+import { includesUnknown } from '../prelude/main'
 
-/**
- * Type guard to check if a type is either a GraphQLObjectType or GraphQLInterfaceType.
- *
- * @param type - The GraphQL named type to check
- * @returns True if the type is either an object or interface type
- */
-export const isObjectOrInterfaceType = (
-  type: GraphQLNamedType,
-): type is GraphQLObjectType | GraphQLInterfaceType => isObjectType(type) || isInterfaceType(type)
+export type GraphQLOutputField<Source = any, Context = any, Args = any> = GraphQLField_graphql<
+  Source,
+  Context,
+  Args
+>
+export type GraphQLField<Source = any, Context = any, Args = any> =
+  | GraphQLOutputField<Source, Context, Args>
+  | GraphQLInputField
 
-/**
- * Filters an array of GraphQL types to only include entry point types
- * (Query, Mutation, Subscription) that are object or interface types.
- *
- * @param types - Array of GraphQL named types to filter
- * @returns Array of entry point types that are object or interface types
- */
-export const getEntryPointTypes = (
-  types: readonly GraphQLNamedType[],
-): readonly (GraphQLObjectType | GraphQLInterfaceType)[] =>
-  types.filter((t): t is GraphQLObjectType | GraphQLInterfaceType =>
-    [`Query`, `Mutation`, `Subscription`].includes(t.name) &&
-    isObjectOrInterfaceType(t)
-  )
-
-/**
- * Filters an array of GraphQL types to only include non-entry point types
- * that are object or interface types.
- *
- * @param types - Array of GraphQL named types to filter
- * @param entryPoints - Array of entry point types to exclude
- * @returns Array of non-entry point types that are object or interface types
- */
-export const getNonEntryPointTypes = (
-  types: readonly GraphQLNamedType[],
-  entryPoints: readonly (GraphQLObjectType | GraphQLInterfaceType)[],
-): readonly (GraphQLObjectType | GraphQLInterfaceType)[] =>
-  types.filter((t): t is GraphQLObjectType | GraphQLInterfaceType =>
-    isObjectOrInterfaceType(t) &&
-    !entryPoints.includes(t)
-  )
-
-/**
- * Gets the unwrapped named type from a GraphQLOutputType by removing any List or NonNull wrappers.
- *
- * @param type - The GraphQL output type to unwrap
- * @returns The unwrapped GraphQLNamedType
- */
-export const getUnwrappedType = (type: GraphQLOutputType): GraphQLNamedType => {
-  return getNamedType(type)
+export const isOutputField = (field: GraphQLField): field is GraphQLOutputField => {
+  return `args` in field
 }
+
+export const isInputField = (field: GraphQLField): field is GraphQLInputField => {
+  return !isOutputField(field)
+}
+
+export const isEntrypointType = (type: GraphQLNamedType): type is GraphQLObjectType =>
+  [`Query`, `Mutation`, `Subscription`].includes(type.name) && isObjectType(type)
 
 /**
  * Checks if a GraphQLOutputType is expandable (object or interface type).
@@ -71,15 +57,162 @@ export const getUnwrappedType = (type: GraphQLOutputType): GraphQLNamedType => {
  * @returns True if the unwrapped type is either an object or interface type
  */
 export const isExpandableType = (type: GraphQLOutputType): boolean => {
-  // Get the named type by unwrapping any List or NonNull wrappers
-  const namedType = getUnwrappedType(type)
-
-  // Check if the named type is an object or interface type
+  const namedType = getNamedType(type)
   return isObjectType(namedType) || isInterfaceType(namedType)
 }
 
-export type TypeWithFields = GraphQLInterfaceType | GraphQLObjectType
+export type TypeWithFields = OutputTypeWithFields | InputTypeWithFields
+
+export type InputTypeWithFields = GraphQLInputObjectType
+
+export type OutputTypeWithFields = GraphQLInterfaceType | GraphQLObjectType
+
+export const isOutputTypeWithFields = (type: GraphQLNamedType): type is OutputTypeWithFields => {
+  return isInterfaceType(type) || isObjectType(type)
+}
+
+export const isInputTypeWithFields = (type: GraphQLNamedType): type is InputTypeWithFields => {
+  return isInputObjectType(type)
+}
 
 export const isTypeWithFields = (type: GraphQLNamedType): type is TypeWithFields => {
-  return isInterfaceType(type) || isObjectType(type)
+  return isOutputTypeWithFields(type) || isInputTypeWithFields(type)
+}
+
+export const isUsingInputArgumentPattern = (field: GraphQLOutputField): boolean => {
+  if (field.args.length !== 1) return false
+
+  const arg = field.args[0]!
+  if (arg.name !== `input`) return false
+
+  if (isInputObjectType(arg)) return true
+  if (isNonNullType(arg.type) && isInputObjectType(arg.type.ofType)) return true
+
+  return false
+}
+
+export const getIAP = (field: GraphQLOutputField): GraphQLInputObjectType | null => {
+  if (!isUsingInputArgumentPattern(field)) return null
+  // IAP could be non-null or nullable so need to unwrap case of it being non-null
+  return getNamedType(field.args[0]!.type) as GraphQLInputObjectType
+}
+
+export const getFields = (type: TypeWithFields): (GraphQLOutputField | GraphQLInputField)[] => {
+  return Object.values(type.getFields())
+}
+
+export const getKindMap = (schema: GraphQLSchema): KindMap => {
+  const queryType = schema.getQueryType() ?? null
+  const mutationType = schema.getMutationType() ?? null
+  const subscriptionType = schema.getSubscriptionType() ?? null
+  const rootTypeNames = [queryType?.name, mutationType?.name, subscriptionType?.name].filter(_ =>
+    _ !== undefined
+  ) as (OperationTypeNode)[]
+  const typeMap = schema.getTypeMap()
+  const typeMapValues = Object.values(typeMap)
+  const kindMap: KindMap = {
+    index: {
+      Root: {
+        query: queryType,
+        mutation: mutationType,
+        subscription: subscriptionType,
+      },
+      OutputObject: {},
+      InputObject: {},
+      Interface: {},
+      Union: {},
+      Enum: {},
+      ScalarCustom: {},
+      ScalarStandard: {},
+    },
+    list: {
+      Root: [queryType, mutationType, subscriptionType].filter(_ => _ !== null),
+      OutputObject: [],
+      InputObject: [],
+      Interface: [],
+      Union: [],
+      Enum: [],
+      ScalarCustom: [],
+      ScalarStandard: [],
+    },
+  }
+  for (const type of typeMapValues) {
+    if (type.name.startsWith(`__`)) continue
+    switch (true) {
+      case isScalarType(type):
+        if (isScalarTypeCustom(type)) {
+          kindMap.list.ScalarCustom.push(type)
+          kindMap.index.ScalarCustom[type.name] = type
+        } else {
+          kindMap.list.ScalarStandard.push(type)
+          kindMap.index.ScalarStandard[type.name] = type
+        }
+        break
+      case isEnumType(type):
+        kindMap.list.Enum.push(type)
+        kindMap.index.Enum[type.name] = type
+        break
+      case isInputObjectType(type):
+        kindMap.list.InputObject.push(type)
+        kindMap.index.InputObject[type.name] = type
+        break
+      case isInterfaceType(type):
+        kindMap.list.Interface.push(type)
+        kindMap.index.Interface[type.name] = type
+        break
+      case isObjectType(type):
+        if (!includesUnknown(rootTypeNames, type.name)) {
+          kindMap.list.OutputObject.push(type)
+          kindMap.index.OutputObject[type.name] = type
+        }
+        break
+      case isUnionType(type):
+        kindMap.list.Union.push(type)
+        kindMap.index.Union[type.name] = type
+        break
+      default:
+        // skip
+        break
+    }
+  }
+  return kindMap
+}
+
+export interface KindMap {
+  index: {
+    Root: {
+      query: GraphQLObjectType | null,
+      mutation: GraphQLObjectType | null,
+      subscription: GraphQLObjectType | null,
+    },
+    OutputObject: Record<string, GraphQLObjectType>,
+    InputObject: Record<string, GraphQLInputObjectType>,
+    Interface: Record<string, GraphQLInterfaceType>,
+    Union: Record<string, GraphQLUnionType>,
+    Enum: Record<string, GraphQLEnumType>,
+    ScalarCustom: Record<string, GraphQLScalarType>,
+    ScalarStandard: Record<string, GraphQLScalarType>,
+  }
+  list: {
+    Root: GraphQLObjectType[],
+    OutputObject: GraphQLObjectType[],
+    InputObject: GraphQLInputObjectType[],
+    Interface: GraphQLInterfaceType[],
+    Union: GraphQLUnionType[],
+    Enum: GraphQLEnumType[],
+    ScalarCustom: GraphQLScalarType[],
+    ScalarStandard: GraphQLScalarType[],
+  }
+}
+
+export const standardScalarTypeNames = {
+  String: `String`,
+  ID: `ID`,
+  Int: `Int`,
+  Float: `Float`,
+  Boolean: `Boolean`,
+}
+
+export const isScalarTypeCustom = (node: GraphQLScalarType): boolean => {
+  return !(node.name in standardScalarTypeNames)
 }

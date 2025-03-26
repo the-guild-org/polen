@@ -1,33 +1,31 @@
 import type { FC } from 'react'
 import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
 import { Box, Flex, Heading } from '@radix-ui/themes'
-import { Grafaid } from '../../../lib/grafaid'
 import { Link } from '@tanstack/react-router'
+import { LinkRadix } from './RadixLink'
 
 export interface Props {
   type: GraphQLObjectType | GraphQLInterfaceType
-  // viewName?: string
 }
 
 export const TypeFieldsLinkList: FC<Props> = ({ type }) => {
-  const fields = Grafaid.isTypeWithFields(type)
-    ? type.getFields()
-    : null
-
-  if (!fields) return null
-
   return (
     <Box>
       <Heading>{type.name}</Heading>
       <Flex direction="column">
-        {Object.entries(fields).map(([fieldName, field]) => {
-          const fieldPath = `${type.name}.${fieldName}`
-          // Check if current path is the field name or ends with /{fieldName}
-          // const isActive = currentPath === fieldName || location.pathname.endsWith(`/${fieldName}`)
-
+        {Object.values(type.getFields()).map(field => {
           return (
-            <Box key={fieldPath}>
-              <Link to={`/reference/${type.name}/${fieldName}`}>{fieldName}</Link>
+            <Box key={field.name}>
+              <LinkRadix asChild>
+                <Link
+                  to="/reference/$type/$field"
+                  params={{ type: type.name, field: field.name }}
+                  // TODO: can we use styled from Radix?
+                  activeProps={{ style: { fontWeight: `bold` } }}
+                >
+                  {field.name}
+                </Link>
+              </LinkRadix>
             </Box>
           )
         })}

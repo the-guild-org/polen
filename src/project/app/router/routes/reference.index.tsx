@@ -29,11 +29,10 @@ import { Flex } from '@radix-ui/themes'
 const component = () => {
   const data = referenceIndex.useLoaderData()
   const schema = buildASTSchema(data.documentNode)
-  const schemaTypes = Object.values(schema.getTypeMap())
 
   return (
     <Flex direction="row" align="start">
-      <ColumnView types={schemaTypes} />
+      <ColumnView schema={schema} />
       <Outlet />
     </Flex>
   )

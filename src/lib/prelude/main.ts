@@ -1,0 +1,5 @@
+export const includesUnknown = <T>(array: T[], value: unknown): value is T =>
+  array.includes(value as any)
+
+export const entries = <T extends Record<string, any>>(obj: T) =>
+  Object.entries(obj) as [keyof T, T[keyof T]][]

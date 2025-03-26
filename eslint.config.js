@@ -1,11 +1,14 @@
 // import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+// import reactRefresh from 'eslint-plugin-react-refresh'
+import unusedImports from 'eslint-plugin-unused-imports'
 import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import onlyWarn from 'eslint-plugin-only-warn'
 import tsdoc from 'eslint-plugin-tsdoc'
 import tsEslint from 'typescript-eslint'
+
+const x = 'abc'
 
 export default tsEslint.config(
   {
@@ -26,6 +29,7 @@ export default tsEslint.config(
       },
     },
     plugins: {
+      'unused-imports': unusedImports,
       // https://github.com/microsoft/tsdoc/tree/master/eslint-plugin
       tsdoc: tsdoc,
       // https://github.com/bfanger/eslint-plugin-only-warn
@@ -33,6 +37,7 @@ export default tsEslint.config(
       '@stylistic': stylistic,
     },
     rules: {
+      'unused-imports/no-unused-imports': 'warn',
       '@stylistic/quotes': ['warn', 'backtick'],
       '@typescript-eslint/consistent-type-imports': 'warn',
       'tsdoc/syntax': 'warn',

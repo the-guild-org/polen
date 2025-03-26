@@ -1,41 +1,47 @@
 import type { FC } from 'react'
-import type { GraphQLNamedType, GraphQLObjectType } from 'graphql'
-import { Box, Flex } from '@radix-ui/themes'
+import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
+import { Box, Flex, Heading } from '@radix-ui/themes'
 import { Grafaid } from '../../../lib/grafaid'
-import { TypeFieldsLinkList } from './TypeFieldsLinkList'
+import { LinkRadix } from './RadixLink'
+import { Link } from '@tanstack/react-router'
+import { entries } from '../../../lib/prelude/main'
 
 export interface Props {
-  types: GraphQLNamedType[]
+  schema: GraphQLSchema
 }
 
-export const ColumnView: FC<Props> = ({ types }) => {
-  const entryPointTypes = Grafaid.getEntryPointTypes(types)
-  // const otherTypes = Grafaid.getNonEntryPointTypes(types, entryPointTypes)
+export const ColumnView: FC<Props> = ({ schema }) => {
+  const kindMap = Grafaid.getKindMap(schema)
+  const sections = entries(kindMap.list)
 
   return (
-    <Flex gap="6">
-      <Flex direction="column" gap="6" width="350px">
-        {/* Render each entry point type as its own section with fields */}
-        {entryPointTypes.map(entryPointType => (
-          // entryPointType.name
-          <TypeFieldsLinkList
-            key={entryPointType.name}
-            type={entryPointType}
-          />
-        ))}
-
-        {/* Render all other types in an index */}
-        {
-          /* <TypeList
-            types={Array.from(otherTypes)}
-            title="Index"
-            // viewName={viewName}
-          /> */
-        }
-      </Flex>
-      <Box flexGrow="1">
-        {/* {type && <TypeDetails type={type} />} */}
-      </Box>
+    <Flex direction="column" gap="6">
+      {sections.map(([title, types]) => <TypeSection key={title} title={title} types={types} />)}
     </Flex>
+  )
+}
+
+const TypeSection: FC<{ title: string, types: GraphQLNamedType[] }> = ({ title, types }) => {
+  return (
+    <Box>
+      <Heading size="3">{title}</Heading>
+      <TypeList types={types} />
+    </Box>
+  )
+}
+
+const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
+  return (
+    <Box>
+      {types.map(type => (
+        <Box key={type.name}>
+          <LinkRadix asChild>
+            <Link to="/reference/$type" params={{ type: type.name }}>
+              {type.name}
+            </Link>
+          </LinkRadix>
+        </Box>
+      ))}
+    </Box>
   )
 }

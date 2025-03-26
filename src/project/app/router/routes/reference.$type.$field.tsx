@@ -1,7 +1,8 @@
 import { createRoute } from '@tanstack/react-router'
 import { buildASTSchema } from 'graphql'
 import { referenceIndex } from './reference.index'
-import { Heading } from '@radix-ui/themes'
+import { Grafaid } from '../../../../lib/grafaid'
+import { Field } from '../../components/Field'
 
 const component = () => {
   const params = reference$type$field.useParams()
@@ -9,7 +10,11 @@ const component = () => {
   const schema = buildASTSchema(data.documentNode)
   const type = schema.getType(params.type)
   if (!type) return `Could not find type ${params.type}`
-  return <Heading>{params.field}</Heading>
+  if (!Grafaid.isTypeWithFields(type)) return `Type ${params.type} does not have fields`
+  const fields = type.getFields()
+  const field = fields[params.field]
+  if (!field) return `Could not find field ${params.field} on type ${params.type}`
+  return <Field data={field} />
 }
 
 export const reference$type$field = createRoute({

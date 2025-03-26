@@ -1,15 +1,12 @@
-import { Outlet, createRoute } from '@tanstack/react-router'
+import { createRoute } from '@tanstack/react-router'
 import schemaFileContent from '../../../public/schema.graphql?raw'
-import { buildASTSchema, parse } from 'graphql'
-import { getTypes } from '../../../../app-old/utils/schema'
-import { ColumnView } from '../../components/ColumnView'
+import { parse } from 'graphql'
 import { root } from './__root'
-import { Flex } from '@radix-ui/themes'
 
 export const reference = createRoute({
   getParentRoute: () => root,
   path: `reference`,
-  loader: async () => {
+  loader: () => {
     const documentNode = parse(schemaFileContent)
     return {
       documentNode,
