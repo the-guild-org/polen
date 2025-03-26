@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite'
 import * as fs from 'node:fs/promises'
 import { Console } from 'effect'
-import { Path } from '../../lib/path/_namespace.js'
+import { Path } from '../../path/_namespace.js'
 
 // Virtual module identifiers
 const VIRTUAL_SCHEMA_ID = `virtual:pollen-schema`

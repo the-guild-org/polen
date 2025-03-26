@@ -1,6 +1,6 @@
 import type { InlineConfig, UserConfig } from 'vite'
 import { Plugins } from './plugins/_namespace.js'
-import { Path } from '../lib/path/_namespace.js'
+import { Path } from '../path/_namespace.js'
 
 /**
  * Common Vite configuration options

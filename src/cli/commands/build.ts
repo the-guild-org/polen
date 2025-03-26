@@ -1,7 +1,9 @@
 import { Command, Options } from '@effect/cli'
 import { Console, Effect } from 'effect'
-import * as Vite from 'vite'
-import { ViteController } from '../../vite-controller/_namespace.js'
+import { TanStackController } from '../../lib/tan-stack-controller/_namespace.js'
+import Path from 'path'
+
+const rootDirectory = Path.join(import.meta.dirname, `../../project`)
 
 const options = {
   schema: Options.text(`schema`).pipe(
@@ -33,13 +35,12 @@ export const buildCommand = Command.make(
         yield* Console.log(`Output directory: ${outDir}`)
         yield* Console.log(`Minification: ${minify ? `enabled` : `disabled`}`)
 
-        yield* Effect.tryPromise(() =>
-          Vite.build(ViteController.createBuildConfig({
-            schemaPath: schema,
-            outDir,
-            minify,
-          }))
+        const app = yield* Effect.tryPromise(() =>
+          TanStackController.createApp({
+            rootDirectory,
+          })
         )
+        yield* Effect.tryPromise(() => app.build())
 
         yield* Console.log(`Build completed successfully! Output saved to ${outDir}`)
 
