@@ -8,8 +8,6 @@ import onlyWarn from 'eslint-plugin-only-warn'
 import tsdoc from 'eslint-plugin-tsdoc'
 import tsEslint from 'typescript-eslint'
 
-const x = 'abc'
-
 export default tsEslint.config(
   {
     ignores: ['eslint.config.js', 'dist', 'vite.config.ts'],

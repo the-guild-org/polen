@@ -11,6 +11,7 @@
     // "allowImportingTsExtensions": true,
     // "resolveJsonModule": true,
   },
+  "exclude": ["./eslint.config.js"]
   // "include": ["src"],
   // "references": [{ "path": "./tsconfig.node.json" }]
 }
