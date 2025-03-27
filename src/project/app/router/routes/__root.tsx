@@ -1,6 +1,6 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
-import '@radix-ui/themes/styles.css'
 import { Theme } from '@radix-ui/themes'
+import RadixThemesCssUrl from '@radix-ui/themes/styles.css?url'
 
 const component = () => {
   return (
@@ -12,15 +12,21 @@ const component = () => {
         <Theme>
           <Outlet />
         </Theme>
+        <script src="/entry-client.tsx" type="module"></script>
+        <Scripts />
       </body>
-      <script src="/entry-client.tsx" type="module"></script>
-      <Scripts />
     </html>
   )
 }
 
 export const root = createRootRoute({
   head: () => ({
+    links: [
+      {
+        rel: `stylesheet`,
+        href: RadixThemesCssUrl,
+      },
+    ],
     meta: [
       {
         charSet: `utf-8`,
@@ -34,12 +40,5 @@ export const root = createRootRoute({
       },
     ],
   }),
-  // scripts() {
-  //   console.log(1)
-  //   return [
-  //     <script src="/entry-client.tsx" type="module"></script>,
-  //     <script>console.log('Hello world')</script>,
-  //   ]
-  // },
   component,
 })

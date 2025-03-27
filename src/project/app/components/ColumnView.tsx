@@ -2,8 +2,7 @@ import type { FC } from 'react'
 import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import { Grafaid } from '../../../lib/grafaid'
-import { LinkRadix } from './RadixLink'
-import { Link } from '@tanstack/react-router'
+import { Link } from './Link'
 import { entries } from '../../../lib/prelude/main'
 
 export interface Props {
@@ -35,11 +34,9 @@ const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
     <Box>
       {types.map(type => (
         <Box key={type.name}>
-          <LinkRadix asChild>
-            <Link to="/reference/$type" params={{ type: type.name }}>
-              {type.name}
-            </Link>
-          </LinkRadix>
+          <Link to="/reference/$type" params={{ type: type.name }}>
+            {type.name}
+          </Link>
         </Box>
       ))}
     </Box>

@@ -1,9 +1,8 @@
 import type { FC } from 'react'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'
-import { Link } from '@tanstack/react-router'
 import { Text } from '@radix-ui/themes'
-import { LinkRadix } from './RadixLink'
+import { Link } from './Link'
 
 export interface Props {
   type: GraphQLType // Can be either GraphQLInputType or GraphQLOutputType
@@ -41,30 +40,24 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     // Handle input object types
     if (isInputObjectType(namedType)) {
       return (
-        <LinkRadix asChild>
-          <Link
-            to="/reference/$type"
-            params={{ type: namedType.name }}
-            className="type-link"
-          >
-            <Text color="green">{namedType.name}</Text>
-          </Link>
-        </LinkRadix>
+        <Link
+          to="/reference/$type"
+          params={{ type: namedType.name }}
+        >
+          <Text color="green">{namedType.name}</Text>
+        </Link>
       )
     }
 
     // If it's an expandable type (object or interface), make it a link
     // if (Grafaid.isExpandableType(namedType)) {
     return (
-      <LinkRadix asChild>
-        <Link
-          to="/reference/$type"
-          params={{ type: namedType.name }}
-          className="type-link"
-        >
-          <Text color={isScalarType(namedType) ? `purple` : `blue`}>{namedType.name}</Text>
-        </Link>
-      </LinkRadix>
+      <Link
+        to="/reference/$type"
+        params={{ type: namedType.name }}
+      >
+        <Text color={isScalarType(namedType) ? `purple` : `blue`}>{namedType.name}</Text>
+      </Link>
     )
 
     // For scalar and other non-expandable types, just render the name
