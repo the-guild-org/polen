@@ -1,49 +1,85 @@
 import { Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
-import * as Path from 'node:path'
-import { TanStackController } from '../../lib/tan-stack-controller/_namespace'
-
-const rootDirectory = Path.join(import.meta.dirname, `../../project`)
+import { ViteController } from '../../lib/vite-controller/_namespace'
+import { Vite } from '../../lib/vite/_namespace'
+import { createServer as createViteServer } from 'vite'
+import http from 'node:http'
+import { H3 } from '../../lib/h3/_namespace'
+import { Server } from '../../lib/server/_namespace'
 
 const options = {
-  // open: Options.boolean(`open`).pipe(
-  //   Options.withDescription(`Open browser window automatically`),
-  //   Options.withAlias(`o`),
-  //   Options.withDefault(true),
-  // ),
-  // port: Options.integer(`port`).pipe(
-  //   Options.withDescription(`Port to start server on (default: 5173)`),
-  //   Options.withAlias(`p`),
-  //   Options.optional,
-  // ),
   schema: Options.text(`schema`).pipe(
     Options.withDescription(`Path to GraphQL schema file`),
     Options.withAlias(`s`),
     Options.withDefault(`./schema.graphql`),
   ),
+  // ssr: Options.boolean(`ssr`).pipe(
+  //   Options.withDescription(`Enable server-side rendering`),
+  //   Options.withDefault(true),
+  // ),
 }
 
 export const devCommand = Command.make(
   `dev`,
   options,
-  ({ schema }) =>
+  ({ schema: _schema }) =>
     Effect.gen(function*() {
-      // const appDirectory = Path.join(rootDirectory, `app`)
-      // const publicDirectory = Path.join(rootDirectory, `public`)
+      // todo: withDefault(true) above does not work.
+      const ssr = true
+      // console.log(ssr)
+      // eslint-disable-next-line
+      if (ssr) {
+        const config = yield* Effect.tryPromise(() => ViteController.createDevConfig({ ssr }))
 
-      const app = yield* Effect.tryPromise(() =>
-        TanStackController.createApp({
-          rootDirectory,
+        const viteServer = yield* Effect.tryPromise(() => createViteServer(config))
+
+        const h3Server = yield* Effect.tryPromise(() => Server.createServer(viteServer))
+
+        // Start the server
+        const nodeServer = yield* Effect.sync(() => {
+          const listener = H3.toNodeListener(h3Server)
+          const httpServer = http.createServer(listener)
+          httpServer.listen(viteServer.config.server.port, () => {
+            console.log(
+              `  ➜  Server running at: http://localhost:${viteServer.config.server.port.toString()}/`,
+            )
+          })
+          return httpServer
         })
-      )
 
-      // Patch up Vinxi config.
-      // TanStack doesn't configure this or allow one to. Maybe that means this config is useless. Not sure!
-      // app.config.name = `Pollen`
-      // app.config.root = rootDirectory
+        // Handle cleanup when the process is terminated
+        const cleanupEffect = Effect.acquireRelease(
+          Effect.sync(() => ({
+            nodeServer,
+          })),
+          resources =>
+            Effect.sync(() => {
+              resources.nodeServer.close()
+              console.log(`SSR dev server closed`)
+            }),
+        )
 
-      // console.log(app.config)
+        // Run with scope management
+        const effect = cleanupEffect.pipe(
+          Effect.flatMap(() => Effect.never),
+          Effect.scoped,
+        )
 
-      yield* Effect.tryPromise(() => app.dev())
+        yield* effect
+      } else {
+        // Standard dev mode without SSR
+        const config = yield* Effect.tryPromise(() => ViteController.createDevConfig({ ssr }))
+
+        const server = yield* Effect.tryPromise(() =>
+          Vite
+            .createServer(config)
+            .then(server => server.listen())
+        )
+
+        server.printUrls()
+
+        // Keep the process running
+        yield* Effect.never
+      }
     }),
 )

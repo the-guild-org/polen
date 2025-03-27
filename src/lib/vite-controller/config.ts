@@ -1,96 +1,137 @@
-import type { InlineConfig, UserConfig } from 'vite'
-import { Plugins } from './plugins/_namespace.js'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import { Path } from '../path/_namespace.js'
+import type { Vite } from '../vite/_namespace.js'
+// import ReactVite from '@vitejs/plugin-react'
+
+const rootPath = Path.join(import.meta.dirname, `../../project/app`)
 
 /**
  * Common Vite configuration options
  */
-export interface CommonViteOptions {
+export interface ConfigInput {
   /**
    * Path to the GraphQL schema file
    */
-  schemaPath: string
-}
-
-/**
- * Options for development configuration
- */
-export interface DevConfigOptions extends CommonViteOptions {
+  schemaPath?: string
   /**
-   * Whether to open the browser automatically
+   * Whether to enable SSR
+   *
    * @defaultValue true
    */
-  open?: boolean
-
-  /**
-   * Port to start the development server on
-   * @defaultValue undefined (Vite will use its default port)
-   */
+  ssr?: boolean
   port?: number
 }
 
-/**
- * Options for build configuration
- */
-export interface BuildConfigOptions extends CommonViteOptions {
-  /**
-   * Output directory for built files
-   * @defaultValue 'dist'
-   */
-  outDir?: string
-
-  /**
-   * Whether to minify the output
-   * @defaultValue true
-   */
-  minify?: boolean
+export interface Config {
+  // schemaPath: string
+  ssr: boolean
+  port: number
 }
 
-/**
- * Create a base Vite configuration with common plugins and settings
- */
-const createBaseConfig = (options: CommonViteOptions): UserConfig => {
-  const { schemaPath } = options
+const configInputDefaults: Config = {
+  ssr: true,
+  port: 3000,
+}
+
+const normalizeConfigInput = async (options?: ConfigInput): Promise<Config> => {
+  const config: Config = {
+    ...configInputDefaults,
+  }
+
+  for (const [key, value] of entries(options ?? {})) {
+    if (value !== undefined) {
+      // @ts-expect-error
+      config[key] = value
+    }
+  }
+
+  const port = await GetPortPlease.getPort({
+    port: config.port + 1000,
+    portRange: [4000, 4999],
+  })
+
+  config.port = port
+
+  return config
+}
+
+import * as GetPortPlease from 'get-port-please'
+import { entries } from '../prelude/main.js'
+
+const createBaseConfig = async (configInput?: ConfigInput): Promise<Vite.InlineConfig> => {
+  const config = await normalizeConfigInput(configInput)
 
   return {
-    root: `src/app`,
+    configFile: false,
+    root: rootPath,
+    server: {
+      port: config.port,
+      // When SSR is enabled, use middleware mode
+      ...(config.ssr && {
+        middlewareMode: true,
+        hmr: {
+          port: 3000,
+        },
+      }),
+    },
+    // Support for SSR builds
+    appType: config.ssr ? `custom` : `spa`,
+    // Enable sourcemaps in both dev and prod
+    build: {
+      sourcemap: true,
+    },
     plugins: [
-      Plugins.GraphQLSchema({ schemaPath }),
+      // ...ReactVite(),
+      TanStackRouterVite({
+        target: `react`,
+        autoCodeSplitting: true,
+        enableRouteGeneration: false,
+      }),
+      // Plugins.GraphQLSchema({ schemaPath }),
     ],
   }
 }
 
-/**
- * Create a Vite development configuration
- */
-export const createDevConfig = (options: DevConfigOptions): InlineConfig => {
-  const { open = true, port, schemaPath } = options
+export const createDevConfig = async (options?: ConfigInput): Promise<Vite.InlineConfig> => {
+  const { ssr = true } = options ?? {}
+  const baseConfig = await createBaseConfig({ ssr })
 
   return {
-    ...createBaseConfig({ schemaPath }),
-    server: {
-      open,
-      ...(port !== undefined ? { port } : {}),
-    },
+    ...baseConfig,
   }
 }
 
-/**
- * Create a Vite build configuration
- */
-export const createBuildConfig = (options: BuildConfigOptions): InlineConfig => {
-  const { outDir = `dist`, minify = true, schemaPath } = options
+export const createBuildConfig = async (
+  options?: { outDir?: string, minify?: boolean, ssr?: boolean },
+): Promise<Vite.InlineConfig> => {
+  const { outDir = `dist`, minify = true, ssr = false } = options ?? {}
 
-  // Ensure output directory is absolute
-  const resolvedOutDir = Path.absolutify(outDir)
-
-  return {
-    ...createBaseConfig({ schemaPath }),
+  const clientConfig = {
+    ...(await createBaseConfig({ ssr })),
     build: {
-      outDir: resolvedOutDir,
-      minify: minify ? `esbuild` : false,
+      outDir: ssr ? `${outDir}/client` : outDir,
+      minify: minify ? `esbuild` as const : false,
       sourcemap: true,
       emptyOutDir: true, // Ensure directory is clean before build
     },
   }
+
+  return clientConfig
 }
+
+// /**
+//  * Create a Vite SSR build configuration for the server
+//  */
+// export const createSSRBuildConfig = (options?: { outDir?: string; minify?: boolean }): Vite.InlineConfig => {
+//   const { outDir = `dist`, minify = true } = options ?? {}
+
+//   return {
+//     ...createBaseConfig({ ssr: true }),
+//     build: {
+//       outDir: `${outDir}/server`,
+//       minify: minify ? `esbuild` as const : false,
+//       sourcemap: true,
+//       ssr: true,
+//     },
+//   }
+// }

@@ -12,8 +12,9 @@ const component = () => {
         <Theme>
           <Outlet />
         </Theme>
-        <Scripts />
       </body>
+      <script src="/entry-client.tsx" type="module"></script>
+      <Scripts />
     </html>
   )
 }
@@ -29,9 +30,16 @@ export const root = createRootRoute({
         content: `width=device-width, initial-scale=1`,
       },
       {
-        title: `TanStack Start Starter`,
+        title: `My Pollen App`,
       },
     ],
   }),
+  // scripts() {
+  //   console.log(1)
+  //   return [
+  //     <script src="/entry-client.tsx" type="module"></script>,
+  //     <script>console.log('Hello world')</script>,
+  //   ]
+  // },
   component,
 })

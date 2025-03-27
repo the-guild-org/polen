@@ -14,10 +14,12 @@ const routeTree = root.addChildren([
 ])
 
 export const createRouter = () => {
-  return createRouterTanStack({
+  const router = createRouterTanStack({
     routeTree,
     scrollRestoration: true,
   })
+  // router.serverSsr?.injectScript
+  return router
 }
 
 declare module '@tanstack/react-router' {
