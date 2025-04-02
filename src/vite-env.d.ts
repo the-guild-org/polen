@@ -27,3 +27,8 @@ declare module '*.svg' {
   const content: string
   export default content
 }
+
+declare module 'virtual:pollen*' {
+  const content: string
+  export default content
+}

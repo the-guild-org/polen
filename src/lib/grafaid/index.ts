@@ -4,8 +4,8 @@
  */
 
 // Re-export all utilities from the helpers module
-export * from './helpers'
+export * from './helpers.js'
 
 // Import and re-export as a namespace for users who want to use the Grafaid.* syntax
-import * as Grafaid from './helpers'
+import * as Grafaid from './helpers.js'
 export { Grafaid }

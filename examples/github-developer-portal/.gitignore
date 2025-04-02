@@ -22,10 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# dprint cache
-.dprint/
-.nitro
-.output
-/build
-/examples/**/build

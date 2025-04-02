@@ -27,7 +27,7 @@ import {
   isScalarType,
   isUnionType,
 } from 'graphql'
-import { includesUnknown } from '../prelude/main'
+import { includesUnknown } from '../prelude/main.js'
 
 export type GraphQLOutputField<Source = any, Context = any, Args = any> = GraphQLField_graphql<
   Source,

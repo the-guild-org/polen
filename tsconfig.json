@@ -1,17 +1,17 @@
 {
   "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "isolatedModules": true,
-    // "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    // "noEmit": true,
-    // "allowImportingTsExtensions": true,
-    // "resolveJsonModule": true,
+    "rootDir": "src",
+    "outDir": "build",
+    "declaration": true,
   },
-  "exclude": ["./eslint.config.js"]
+  "exclude": ["./eslint.config.js", "build"],
+  "include": ["src"]
   // "include": ["src"],
   // "references": [{ "path": "./tsconfig.node.json" }]
 }
