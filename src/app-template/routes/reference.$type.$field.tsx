@@ -1,12 +1,13 @@
-import { createRoute } from '@tanstack/react-router'
 import { buildASTSchema } from 'graphql'
-import { referenceIndex } from './reference.index.jsx'
-import { Grafaid } from '../../../lib/grafaid/index.js'
-import { Field } from '../../components/Field.jsx'
+import { Grafaid } from '../../lib/grafaid/index.js'
+import { Field } from '../components/Field.jsx'
+import { createRoute } from '../../lib/react-router-helpers.js'
+import { useParams, useRouteLoaderData } from 'react-router'
+import type { reference } from './reference.jsx'
 
-const component = () => {
-  const params = reference$type$field.useParams()
-  const data = reference$type$field.parentRoute.useLoaderData()
+const Component = () => {
+  const params = useParams()
+  const data = useRouteLoaderData<typeof reference.loader>(`/reference`)
   const schema = buildASTSchema(data.documentNode)
   const type = schema.getType(params.type)
   if (!type) return `Could not find type ${params.type}`
@@ -18,7 +19,6 @@ const component = () => {
 }
 
 export const reference$type$field = createRoute({
-  getParentRoute: () => referenceIndex,
-  path: `$type/$field`,
-  component,
+  path: `:type/:field`,
+  Component,
 })

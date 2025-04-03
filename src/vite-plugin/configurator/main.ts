@@ -1,7 +1,7 @@
-import * as GetPortPlease from 'get-port-please'
 import { Path } from '../../lib/path/_namespace.js'
 
 export interface ConfigInput {
+  mode: string
   /**
    * Path to the GraphQL schema file
    */
@@ -16,14 +16,12 @@ export interface ConfigInput {
 }
 
 export interface Config {
+  mode: string
   schema: {
     path: string,
   }
   ssr: {
     enabled: boolean,
-  }
-  server: {
-    port: number,
   }
   aliases: {
     entryServer: string,
@@ -46,17 +44,15 @@ export interface Config {
 const pathAppTemplateDir = Path.join(import.meta.dirname, `../../app-template`)
 const workspaceDir = process.cwd()
 
-const outDir = Path.join(workspaceDir, `build`)
+const outDir = Path.join(workspaceDir, `dist`)
 
 const configInputDefaults: Config = {
+  mode: `client`,
   schema: {
     path: Path.join(workspaceDir, `schema.graphql`),
   },
   ssr: {
     enabled: true,
-  },
-  server: {
-    port: 3000,
   },
   aliases: {
     entryServer: `#pollen/server/entry`,
@@ -71,13 +67,15 @@ const configInputDefaults: Config = {
     workspaceDir,
     // outDirTmp: Path.join(workspaceDir, `.pollen`),
     outDir: Path.join(workspaceDir, `build`),
-    outViteDir: Path.join(outDir, `vite`),
+    outViteDir: Path.join(outDir),
     outNitroDir: Path.join(outDir, `nitro`),
   },
 }
 
-export const normalizeInput = async (configInput?: ConfigInput): Promise<Config> => {
+export const normalizeInput = (configInput?: ConfigInput): Config => {
   const config = structuredClone(configInputDefaults)
+
+  config.mode = configInput?.mode ?? config.mode
 
   if (configInput?.ssr !== undefined) {
     config.ssr.enabled = configInput.ssr
@@ -86,12 +84,6 @@ export const normalizeInput = async (configInput?: ConfigInput): Promise<Config>
   if (configInput?.schemaPath !== undefined) {
     config.schema.path = Path.absolutify(configInput.schemaPath, config.paths.workspaceDir)
   }
-
-  const availablePort = await GetPortPlease.getPort({
-    port: config.server.port,
-    portRange: [3000, 3999],
-  })
-  config.server.port = availablePort
 
   return config
 }

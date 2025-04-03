@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "vite build && vite build --ssr",
+    "preview": "node dist/index.js"
   },
   "devDependencies": {
-    "typescript": "~5.7.2",
-    "vite": "^6.2.0"
+    "typescript": "~5.8.2",
+    "vite": "^6.2.4"
   },
   "dependencies": {
     "pollen": "link:../.."

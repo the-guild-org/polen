@@ -4,6 +4,7 @@
     "jsx": "preserve",
     "target": "ES2022",
     "module": "NodeNext",
+    "exactOptionalPropertyTypes": false,
     "moduleResolution": "nodenext",
     "isolatedModules": true,
     "rootDir": "src",
@@ -11,7 +12,5 @@
     "declaration": true,
   },
   "exclude": ["./eslint.config.js", "build"],
-  "include": ["src"]
-  // "include": ["src"],
-  // "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "vite-env.d.ts"]
 }

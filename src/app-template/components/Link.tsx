@@ -1,10 +1,10 @@
 import type { FC } from 'react'
-import type { LinkProps as LinkPropsTanStack } from '@tanstack/react-router'
-import { Link as LinkTanStack } from '@tanstack/react-router'
 import { LinkRadix } from './RadixLink.jsx'
+import type { LinkProps as LinkPropsReactRouter } from 'react-router'
+import { Link as LinkReactRouter } from 'react-router'
 
-export const Link: FC<LinkPropsTanStack> = props => (
+export const Link: FC<LinkPropsReactRouter> = props => (
   <LinkRadix asChild>
-    <LinkTanStack {...props}></LinkTanStack>
+    <LinkReactRouter {...props}></LinkReactRouter>
   </LinkRadix>
 )

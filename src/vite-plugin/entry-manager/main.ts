@@ -1,4 +1,4 @@
-import type { H3 } from '../../lib/h3/_namespace.js'
+import { H3 } from '../../lib/h3/_namespace.js'
 import type { Vite } from '../../lib/vite/_namespace.js'
 import type { Configurator } from '../configurator/_namespace.js'
 
@@ -13,7 +13,12 @@ export const importModule = async (
   viteServer: Vite.ViteDevServer,
 ): Promise<Module> => {
   const module = await viteServer.ssrLoadModule(config.aliases.entryServer)
+  // const module = {
+  //   default: H3.defineEventHandler(async event => {
+  //     return new Response(`hello world`)
+  //   }),
+  // }
   return {
-    handler: module[`default`] as handler,
+    handler: module.default as handler,
   }
 }

@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { type GraphQLNamedType } from 'graphql'
 import { Box, Heading, Text } from '@radix-ui/themes'
-import ReactMarkdown from 'react-markdown'
+import { Markdown } from './Markdown.jsx'
 import { FieldListSection } from './FieldListSection.jsx'
 
 export interface Props {
@@ -12,7 +12,7 @@ export const NamedType: FC<Props> = ({ data }) => {
   const description = data.description
     ? (
       <Text as="div" color="gray">
-        <ReactMarkdown>{data.description}</ReactMarkdown>
+        <Markdown>{data.description}</Markdown>
       </Text>
     )
     : null

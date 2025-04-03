@@ -28,7 +28,19 @@ declare module '*.svg' {
   export default content
 }
 
-declare module 'virtual:pollen*' {
+declare module 'virtual:pollen/assets/graphql-schema' {
   const content: string
   export default content
+}
+
+/**
+ * Augmentation for the global Window interface
+ */
+
+// import type { RouterState } from 'react-router'
+
+declare global {
+  interface Window {
+    __staticRouterHydrationData?: Partial<Pick<RouterState, `loaderData` | `actionData` | `errors`>>
+  }
 }

@@ -31,14 +31,16 @@ const TypeSection: FC<{ title: string, types: GraphQLNamedType[] }> = ({ title, 
 
 const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
   return (
-    <Box>
-      {types.map(type => (
-        <Box key={type.name}>
-          <Link to="/reference/$type" params={{ type: type.name }}>
-            {type.name}
-          </Link>
-        </Box>
-      ))}
-    </Box>
+    (
+      <Box>
+        {types.map(type => (
+          <Box key={type.name}>
+            <Link to={`/reference/${type.name}`}>
+              {type.name}
+            </Link>
+          </Box>
+        ))}
+      </Box>
+    )
   )
 }
