@@ -1,10 +1,12 @@
+import viteClientAssetManifest from 'virtual:pollen/vite/client/manifest'
 import { Hono } from 'hono'
 import type { StaticHandlerContext } from 'react-router'
 import { StaticRouterProvider, createStaticHandler, createStaticRouter } from 'react-router'
 import { routes } from './routes.jsx'
 import { ReactDomServer } from '../lib/react-dom-server/_namespace.js'
 import { StrictMode } from 'react'
-import { debug } from '../lib/debug/_exports.js'
+import { debug } from '../lib/debug/debug.js'
+import type { Vite } from '../lib/vite/_namespace.js'
 
 const getRouteHeaders = (context: StaticHandlerContext): Headers => {
   const leaf = context.matches[context.matches.length - 1]
@@ -19,6 +21,37 @@ const getRouteHeaders = (context: StaticHandlerContext): Headers => {
     }
   }
   return headers
+}
+
+const getAssetHtmlTags = (manifest: Vite.Manifest): { css: string[], js: string[] } => {
+  // TODO: We could inline this into the generated server.
+  // TODO: this only applies in production
+  // Insert links to assets
+  const css: string[] = []
+  const js: string[] = []
+  for (const manifestChunk of Object.values(manifest)) {
+    if (manifestChunk.isEntry) {
+      js.push(`<script type="module" src="/${manifestChunk.file}"></script>`)
+    }
+    for (const cssItem of manifestChunk.css ?? []) {
+      css.push(`<link rel="stylesheet" href="/${cssItem}">`)
+    }
+  }
+
+  return {
+    css,
+    js,
+  }
+}
+
+const injectAssetHtmlTags = (html: string, htmlTags: { css: string[], js: string[] }): string => {
+  if (htmlTags.css.length > 0) {
+    html = html.replace(`</head>`, `${htmlTags.css.join(``)}</head>`)
+  }
+  if (htmlTags.js.length > 0) {
+    html = html.replace(`</body>`, `${htmlTags.js.join(``)}</body>`)
+  }
+  return html
 }
 
 const app = new Hono()
@@ -52,6 +85,11 @@ app.get(`*`, async ctx => {
     throw new Error(`Failed to server side render the HTML`, { cause })
   }
 
+  if (import.meta.env.PROD) {
+    const htmlTags = getAssetHtmlTags(viteClientAssetManifest)
+    html = injectAssetHtmlTags(html, htmlTags)
+  }
+
   if (import.meta.env.DEV) {
     debug(`transformIndexHtml`)
     // @see https://github.com/honojs/vite-plugins/issues/141
@@ -65,7 +103,6 @@ app.get(`*`, async ctx => {
     status: staticHandlerContext.statusCode,
     headers,
   })
-  // return ctx.text(`Hello Vite!`)
 })
 
 const transformIndexHtml = (html: string): string => {

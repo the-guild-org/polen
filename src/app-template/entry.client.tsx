@@ -1,11 +1,7 @@
-// import { StartClient } from '@tanstack/react-start/client'
-// import { createRouter } from './router.client.jsx'
-// import { ReactDomClient } from '../lib/react-dom-client/_namespace.js'
-
-// const router = createRouter()
-
-// ReactDomClient.hydrateRoot(document, <StartClient router={router} />)
-
+// TODO it seems more logical to have this asset imported in the server entry.
+// But then, we won't get it from the client manifest. But we could get it from the server manifest. Should we do that?
+// But then, that wouldn't work for SPA. Does that matter? Just put a conditional here e.g. if (import.meta.env.PROD) ...?
+import '@radix-ui/themes/styles.css'
 import { RouterProvider, createBrowserRouter } from 'react-router'
 import { routes } from './routes.jsx'
 import { ReactDomClient } from '../lib/react-dom-client/_namespace.js'
@@ -13,12 +9,9 @@ import { StrictMode } from 'react'
 
 // SPA
 
-// const rootElement = document.getElementById(`root`)
-// if (!rootElement) throw new Error(`Root element not found. Looked for element with ID "root"`)
-
 // const router = createBrowserRouter(routes)
 
-// createRoot(rootElement).render(
+// createRoot(document).render(
 //   <RouterProvider router={router} />,
 // )
 

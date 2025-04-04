@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && vite build --ssr",
-    "preview": "node dist/index.js"
+    "build:client": "vite build",
+    "build:server": "vite build --ssr",
+    "build": "vite build --app",
+    "preview": "node dist/entry.js"
   },
   "devDependencies": {
     "typescript": "~5.8.2",

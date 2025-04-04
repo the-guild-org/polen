@@ -21,6 +21,9 @@
     ".": "./build/_namespace.js",
     "./exports": "./build/_exports.js"
   },
+  "files": [
+    "build"
+  ],
   "dependencies": {
     "@effect/cli": "^0.59.5",
     "@effect/platform": "^0.80.5",
@@ -36,6 +39,7 @@
     "@tanstack/start-server-core": "^1.114.33",
     "@types/express": "^5.0.1",
     "consola": "^3.4.2",
+    "defu": "^6.1.4",
     "effect": "^3.14.5",
     "es-toolkit": "^1.34.1",
     "fuse.js": "^7.1.0",
@@ -49,6 +53,7 @@
     "react-dom": "^19.1.0",
     "react-helmet-async": "^2.0.5",
     "react-markdown": "^10.1.0",
+    "react-router": "^7.4.1",
     "rollup": "^4.39.0",
     "tsx": "^4.19.3",
     "vinxi": "^0.5.3",

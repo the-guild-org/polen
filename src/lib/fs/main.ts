@@ -1,6 +1,29 @@
 import { mkdir, rm } from 'node:fs/promises'
 
-export { mkdir, readFile, rename, rm, unlink } from 'node:fs/promises'
+export {
+  access,
+  appendFile,
+  chmod,
+  chown,
+  copyFile,
+  cp,
+  glob,
+  lchown,
+  link,
+  lstat,
+  mkdir,
+  mkdtemp,
+  open,
+  opendir,
+  readFile,
+  readlink,
+  realpath,
+  rename,
+  rm,
+  unlink,
+  watch,
+  writeFile,
+} from 'node:fs/promises'
 
 export const emptyDirIfExists = async (dirPath: string): Promise<void> => {
   await rmDirIfExists(dirPath)

@@ -33,11 +33,8 @@ export interface Config {
       entryClient: string,
       entryServer: string,
     },
-    // outDirTmp: string,
     outDir: string,
     outViteDir: string,
-    outNitroDir: string,
-    // viteIndexHtml: string,
   }
 }
 
@@ -62,13 +59,10 @@ const configInputDefaults: Config = {
       dir: pathAppTemplateDir,
       entryServer: Path.join(pathAppTemplateDir, `entry.server.jsx`),
       entryClient: Path.join(pathAppTemplateDir, `entry.client.jsx`),
-      // viteIndexHtml: Path.join(pathAppTemplateDir, `index.html`),
     },
     workspaceDir,
-    // outDirTmp: Path.join(workspaceDir, `.pollen`),
     outDir: Path.join(workspaceDir, `build`),
     outViteDir: Path.join(outDir),
-    outNitroDir: Path.join(outDir, `nitro`),
   },
 }
 

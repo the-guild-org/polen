@@ -28,7 +28,13 @@ declare module '*.svg' {
   export default content
 }
 
-declare module 'virtual:pollen/assets/graphql-schema' {
+declare module 'virtual:pollen/vite/client/manifest' {
+  // eslint-disable-next-line
+  const manifest: import('vite').Manifest
+  export default manifest
+}
+
+declare module 'virtual:pollen/*' {
   const content: string
   export default content
 }
@@ -37,10 +43,11 @@ declare module 'virtual:pollen/assets/graphql-schema' {
  * Augmentation for the global Window interface
  */
 
-// import type { RouterState } from 'react-router'
-
 declare global {
   interface Window {
-    __staticRouterHydrationData?: Partial<Pick<RouterState, `loaderData` | `actionData` | `errors`>>
+    __staticRouterHydrationData?: Partial<
+      // eslint-disable-next-line
+      Pick<import('react-router').RouterState, `loaderData` | `actionData` | `errors`>
+    >
   }
 }
