@@ -21,9 +21,6 @@ export const Build = (parameters: {
     configResolved(config) {
       viteConfigResolved = config
     },
-    transformIndexHtml() {
-      console.log(`DOING IT NOW`)
-    },
     ...Vite.VirtualIdentifier.toHooks$FromMap(
       new Map([
         [viServerEntry, () => {
