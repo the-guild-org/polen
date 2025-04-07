@@ -1,7 +1,6 @@
 import { Path } from '../../lib/path/_namespace.js'
 
 export interface ConfigInput {
-  mode: string
   /**
    * Path to the GraphQL schema file
    */
@@ -68,8 +67,6 @@ const configInputDefaults: Config = {
 
 export const normalizeInput = (configInput?: ConfigInput): Config => {
   const config = structuredClone(configInputDefaults)
-
-  config.mode = configInput?.mode ?? config.mode
 
   if (configInput?.ssr !== undefined) {
     config.ssr.enabled = configInput.ssr
