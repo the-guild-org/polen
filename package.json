@@ -21,7 +21,8 @@
     "./exports": "./build/_exports.js"
   },
   "files": [
-    "build"
+    "build",
+    "README.md"
   ],
   "dependencies": {
     "@hono/node-server": "^1.14.0",
