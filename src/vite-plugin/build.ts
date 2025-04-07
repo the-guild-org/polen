@@ -21,9 +21,6 @@ export const Build = (parameters: {
     configResolved(config) {
       viteConfigResolved = config
     },
-    transformIndexHtml() {
-      console.log(`DOING IT NOW`)
-    },
     ...Vite.VirtualIdentifier.toHooks$FromMap(
       new Map([
         [viServerEntry, () => {
@@ -104,7 +101,7 @@ export const Build = (parameters: {
           ssr: {
             build: {
               emptyOutDir: false,
-              minify: !config.debug,
+              minify: false,
               rollupOptions: {
                 input: viServerEntry.id,
               },

@@ -1,39 +1,12 @@
-import { Configurator } from './configurator/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
-import ReactVite from '@vitejs/plugin-react'
-import { Fs } from '../lib/fs/_namespace.js'
-import { virtualIdentifier } from './helpers.js'
 import { Build } from './build.js'
-import { nodeAdapter as HonoDevServerNodeAdapter } from '@hono/vite-dev-server/node'
-import HonoDevServer from '@hono/vite-dev-server'
+import { Path } from '../lib/path/_namespace.js'
 
-const virtualIdentifierAssetGraphqlSchema = virtualIdentifier([`assets`, `graphql-schema`])
-
-const codes = {
-  MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
-  CIRCULAR_DEPENDENCY: `CIRCULAR_DEPENDENCY`,
-}
-
-export const VitePlugin = (
-  pollenConfigInput?: Configurator.ConfigInput,
-): Vite.PluginOption[] => {
-  const pollenConfig = Configurator.normalizeInput(pollenConfigInput)
-  const debug = true
+export const VitePlugin = (): Vite.PluginOption[] => {
+  const entryClientPath = Path.join(import.meta.dirname, `../app-template/entry.client.jsx`)
+  const entryServerPath = Path.join(import.meta.dirname, `../app-template/entry.server.jsx`)
 
   return [
-    HonoDevServer({
-      entry: pollenConfig.paths.appTemplate.entryServer,
-      adapter: HonoDevServerNodeAdapter,
-    }),
-    ReactVite(),
-    {
-      name: `pollen-virtual-graphql-schema`,
-      ...Vite.VirtualIdentifier.toHooks(virtualIdentifierAssetGraphqlSchema, async () => {
-        const schema = await Fs.readFile(pollenConfig.schema.path, `utf-8`)
-        const moduleContent = `export default ${JSON.stringify(schema)}`
-        return moduleContent
-      }),
-    },
     {
       name: `pollen-build-client`,
       apply: `build`,
@@ -48,31 +21,25 @@ export const VitePlugin = (
       // 1. Raise issue about having ?url lead to expected build path rewrite?
       // 2. And: Move asset generation to server build?
       // 3. And/or: Use Vite Environments API?
-      generateBundle(_, bundle, isWrite) {
-        if (isWrite) {
-          for (const chunkOrAsset of Object.values(bundle)) {
-            if (chunkOrAsset.type === `asset` && chunkOrAsset.names.includes(`entry.client.jsx`)) {
-              // eslint-disable-next-line
-              delete bundle[chunkOrAsset.fileName]
-            }
-          }
-        }
-      },
-      onLog(level, message) {
-        if (
-          level === `warn` && message.code === codes.MODULE_LEVEL_DIRECTIVE &&
-          message.id?.includes(`@radix-ui`)
-        ) return
-      },
+      // generateBundle(_, bundle, isWrite) {
+      //   if (isWrite) {
+      //     for (const chunkOrAsset of Object.values(bundle)) {
+      //       if (chunkOrAsset.type === `asset` && chunkOrAsset.names.includes(`entry.client.jsx`)) {
+      //         // eslint-disable-next-line
+      //         delete bundle[chunkOrAsset.fileName]
+      //       }
+      //     }
+      //   }
+      // },
       config() {
         return {
           environments: {
             client: {
               build: {
-                minify: !debug,
+                minify: false,
                 manifest: true,
                 rollupOptions: {
-                  input: [pollenConfig.paths.appTemplate.entryClient],
+                  input: [entryClientPath],
                 },
               },
             },
@@ -81,8 +48,7 @@ export const VitePlugin = (
       },
     },
     Build({
-      entryServerPath: pollenConfig.paths.appTemplate.entryServer,
-      debug: debug,
+      entryServerPath: entryServerPath,
     }),
   ]
 }
