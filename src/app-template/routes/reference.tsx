@@ -10,7 +10,6 @@ import { reference$type } from './reference.$type.jsx'
 
 const loader = () => {
   const documentNode = parse(schemaFileContent)
-  // console.log(`running loader`, documentNode)
   return {
     documentNode,
   }

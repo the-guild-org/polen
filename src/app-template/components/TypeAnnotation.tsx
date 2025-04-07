@@ -51,7 +51,7 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     // If it's an expandable type (object or interface), make it a link
     // if (Grafaid.isExpandableType(namedType)) {
     return (
-      <Link to="/reference/${namedType.name}">
+      <Link to={`/reference/${namedType.name}`}>
         <Text color={isScalarType(namedType) ? `purple` : `blue`}>{namedType.name}</Text>
       </Link>
     )
