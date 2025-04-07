@@ -14,7 +14,8 @@
     "check:format": "dprint check",
     "check:lint": "eslint . --max-warnings 0",
     "check:types": "tsc --noEmit",
-    "check:publint": "publint run --strict"
+    "check:publint": "publint run --strict",
+    "prepublishOnly": "pnpm build"
   },
   "exports": {
     ".": "./build/_namespace.js",
