@@ -5,8 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:client": "vite build",
-    "build:server": "vite build --ssr",
     "build": "vite build --app",
     "preview": "node dist/entry.js"
   },

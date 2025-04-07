@@ -9,7 +9,7 @@
     "isolatedModules": true,
     "rootDir": "src",
     "outDir": "build",
-    "declaration": true,
+    "declaration": true
   },
   "exclude": ["./eslint.config.js", "build"],
   "include": ["src", "vite-env.d.ts"]
