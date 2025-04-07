@@ -8,6 +8,23 @@
 4. `pnpm build`
 5. `pnpm preview
 
+## Example of SSR HTML By Build
+
+```
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charSet="utf-8"/>
+    </head>
+    <body>
+        <script type="module" src="data:text/jsx;base64,aW1wb3J0IHsgUm91dGVyUHJvdmlkZXIsIGNyZWF0ZUJyb3dzZXJSb3V0ZXIgfSBmcm9tICdyZWFjdC1yb3V0ZXInOwppbXBvcnQgeyByb3V0ZXMgfSBmcm9tICcuL3JvdXRlcy5qc3gnOwppbXBvcnQgeyBSZWFjdERvbUNsaWVudCB9IGZyb20gJy4uL2xpYi9yZWFjdC1kb20tY2xpZW50L19uYW1lc3BhY2UuanMnOwpjb25zdCByb3V0ZXIgPSBjcmVhdGVCcm93c2VyUm91dGVyKHJvdXRlcywgewogICAgLy8gQHRzLWV4cGVjdC1lcnJvciBpZ25vcmUKICAgIC8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZQogICAgaHlkcmF0aW9uRGF0YTogd2luZG93Ll9fc3RhdGljUm91dGVySHlkcmF0aW9uRGF0YSwKfSk7ClJlYWN0RG9tQ2xpZW50Lmh5ZHJhdGVSb290KGRvY3VtZW50LCA8Um91dGVyUHJvdmlkZXIgcm91dGVyPXtyb3V0ZXJ9Lz4pOwo="></script>
+        <script>
+            window.__staticRouterHydrationData = JSON.parse("{\"loaderData\":{\"/\":null},\"actionData\":null,\"errors\":null}");
+        </script>
+    </body>
+</html>
+```
+
 ## Build Output
 
 <details>
