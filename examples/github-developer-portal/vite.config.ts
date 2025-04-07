@@ -4,6 +4,10 @@ import { Polen } from 'polen'
 
 export default defineConfig({
   plugins: [
-    Polen.VitePlugin() as PluginOption,
+    Polen.VitePlugin({
+      templateVariables: {
+        title: `GitHub GraphQL API`,
+      },
+    }) as PluginOption,
   ],
 })

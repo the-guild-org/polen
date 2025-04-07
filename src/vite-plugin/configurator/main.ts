@@ -1,6 +1,16 @@
 import { Path } from '../../lib/path/_namespace.js'
 
 export interface ConfigInput {
+  templateVariables?: {
+    /**
+     * Title of the app.
+     *
+     * Used in the navigation bar and in the title tag.
+     *
+     * @defaultValue `My Developer Portal`
+     */
+    title?: string,
+  }
   /**
    * Path to the GraphQL schema file
    */
@@ -14,7 +24,12 @@ export interface ConfigInput {
   // port?: number
 }
 
+export interface TemplateVariables {
+  title: string
+}
+
 export interface Config {
+  templateVariables: TemplateVariables
   mode: string
   schema: {
     path: string,
@@ -43,6 +58,9 @@ const workspaceDir = process.cwd()
 const outDir = Path.join(workspaceDir, `dist`)
 
 const configInputDefaults: Config = {
+  templateVariables: {
+    title: `My Developer Portal`,
+  },
   mode: `client`,
   schema: {
     path: Path.join(workspaceDir, `schema.graphql`),
@@ -70,6 +88,11 @@ export const normalizeInput = (configInput?: ConfigInput): Config => {
 
   if (configInput?.ssr !== undefined) {
     config.ssr.enabled = configInput.ssr
+  }
+
+  config.templateVariables = {
+    ...config.templateVariables,
+    ...configInput?.templateVariables,
   }
 
   if (configInput?.schemaPath !== undefined) {

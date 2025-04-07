@@ -1,7 +1,9 @@
-import { Link } from 'react-router'
 import { createRouteIndex } from '../../lib/react-router-helpers.js'
+import { Box } from '@radix-ui/themes'
 
-const Component = () => <Link to="/reference">Reference</Link>
+const Component = () => {
+  return <Box>home todo</Box>
+}
 
 export const index = createRouteIndex({
   Component,

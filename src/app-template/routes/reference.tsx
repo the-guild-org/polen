@@ -1,9 +1,8 @@
 import type { DocumentNode } from 'graphql'
 import { buildASTSchema, parse } from 'graphql'
-import { ColumnView } from '../components/ColumnView.jsx'
-import { Box, Flex } from '@radix-ui/themes'
+import { TypeIndex } from '../components/TypeIndex.jsx'
+import { Container, Flex } from '@radix-ui/themes'
 import { Outlet, useLoaderData } from 'react-router'
-// import { reference$type$field } from './reference.$type.$field.jsx'
 import schemaFileContent from 'virtual:polen/assets/graphql-schema'
 import { createRoute } from '../../lib/react-router-helpers.js'
 import { reference$type } from './reference.$type.jsx'
@@ -21,10 +20,10 @@ const Component = () => {
 
   return (
     <Flex direction="row" align="start">
-      <ColumnView schema={schema} />
-      <Box width="40rem">
+      <TypeIndex schema={schema} />
+      <Container>
         <Outlet />
-      </Box>
+      </Container>
     </Flex>
   )
 }
@@ -35,6 +34,5 @@ export const reference = createRoute({
   Component,
   children: [
     reference$type,
-    // reference$type$field,
   ],
 })

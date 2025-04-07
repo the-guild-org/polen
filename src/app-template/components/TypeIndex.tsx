@@ -9,7 +9,7 @@ export interface Props {
   schema: GraphQLSchema
 }
 
-export const ColumnView: FC<Props> = ({ schema }) => {
+export const TypeIndex: FC<Props> = ({ schema }) => {
   const kindMap = Grafaid.getKindMap(schema)
   const sections = entries(kindMap.list)
 

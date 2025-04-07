@@ -8,6 +8,7 @@ import { nodeAdapter as HonoDevServerNodeAdapter } from '@hono/vite-dev-server/n
 import HonoDevServer from '@hono/vite-dev-server'
 
 const virtualIdentifierAssetGraphqlSchema = virtualIdentifier([`assets`, `graphql-schema`])
+const virtualIdentifierTemplateVariables = virtualIdentifier([`template`, `variables`])
 
 const codes = {
   MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
@@ -27,12 +28,21 @@ export const VitePlugin = (
     }),
     ReactVite(),
     {
-      name: `polen-virtual-graphql-schema`,
-      ...Vite.VirtualIdentifier.toHooks(virtualIdentifierAssetGraphqlSchema, async () => {
-        const schema = await Fs.readFile(polenConfig.schema.path, `utf-8`)
-        const moduleContent = `export default ${JSON.stringify(schema)}`
-        return moduleContent
-      }),
+      name: `polen-virtual`,
+      ...Vite.VirtualIdentifier.toHooks$FromMap(
+        new Map([
+          [virtualIdentifierAssetGraphqlSchema, async () => {
+            const schema = await Fs.readFile(polenConfig.schema.path, `utf-8`)
+            const moduleContent = `export default ${JSON.stringify(schema)}`
+            return moduleContent
+          }],
+          // eslint-disable-next-line
+          [virtualIdentifierTemplateVariables, async () => {
+            const moduleContent = `export default ${JSON.stringify(polenConfig.templateVariables)}`
+            return moduleContent
+          }],
+        ]),
+      ),
     },
     {
       name: `polen-build-client`,
