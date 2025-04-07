@@ -4,7 +4,7 @@ import { ColumnView } from '../components/ColumnView.jsx'
 import { Box, Flex } from '@radix-ui/themes'
 import { Outlet, useLoaderData } from 'react-router'
 // import { reference$type$field } from './reference.$type.$field.jsx'
-import schemaFileContent from 'virtual:pollen/assets/graphql-schema'
+import schemaFileContent from 'virtual:polen/assets/graphql-schema'
 import { createRoute } from '../../lib/react-router-helpers.js'
 import { reference$type } from './reference.$type.jsx'
 

@@ -28,13 +28,13 @@ declare module '*.svg' {
   export default content
 }
 
-declare module 'virtual:pollen/vite/client/manifest' {
+declare module 'virtual:polen/vite/client/manifest' {
   // eslint-disable-next-line
   const manifest: import('vite').Manifest
   export default manifest
 }
 
-declare module 'virtual:pollen/*' {
+declare module 'virtual:polen/*' {
   const content: string
   export default content
 }

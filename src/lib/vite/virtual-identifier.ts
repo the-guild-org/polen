@@ -2,7 +2,7 @@ import { Debug } from '../debug/_namespace.js'
 import type { Vite } from './_namespace.js'
 
 // TODO: use async hooks in debug to get namespace
-const debug = Debug.create(`pollen:vite:build`)
+const debug = Debug.create(`polen:vite:build`)
 
 export const idPrefix = `virtual:`
 

@@ -8,7 +8,7 @@ importers:
 
   .:
     dependencies:
-      pollen:
+      polen:
         specifier: link:../..
         version: link:../..
     devDependencies:

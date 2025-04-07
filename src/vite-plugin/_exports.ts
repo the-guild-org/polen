@@ -15,27 +15,27 @@ const codes = {
 }
 
 export const VitePlugin = (
-  pollenConfigInput?: Configurator.ConfigInput,
+  polenConfigInput?: Configurator.ConfigInput,
 ): Vite.PluginOption[] => {
-  const pollenConfig = Configurator.normalizeInput(pollenConfigInput)
+  const polenConfig = Configurator.normalizeInput(polenConfigInput)
   const debug = true
 
   return [
     HonoDevServer({
-      entry: pollenConfig.paths.appTemplate.entryServer,
+      entry: polenConfig.paths.appTemplate.entryServer,
       adapter: HonoDevServerNodeAdapter,
     }),
     ReactVite(),
     {
-      name: `pollen-virtual-graphql-schema`,
+      name: `polen-virtual-graphql-schema`,
       ...Vite.VirtualIdentifier.toHooks(virtualIdentifierAssetGraphqlSchema, async () => {
-        const schema = await Fs.readFile(pollenConfig.schema.path, `utf-8`)
+        const schema = await Fs.readFile(polenConfig.schema.path, `utf-8`)
         const moduleContent = `export default ${JSON.stringify(schema)}`
         return moduleContent
       }),
     },
     {
-      name: `pollen-build-client`,
+      name: `polen-build-client`,
       apply: `build`,
       applyToEnvironment: Vite.isEnvironmentClient,
       // HACK: For some reason the ?url import doesn't lead to a rewrite in the build.
@@ -72,7 +72,7 @@ export const VitePlugin = (
                 minify: !debug,
                 manifest: true,
                 rollupOptions: {
-                  input: [pollenConfig.paths.appTemplate.entryClient],
+                  input: [polenConfig.paths.appTemplate.entryClient],
                 },
               },
             },
@@ -81,7 +81,7 @@ export const VitePlugin = (
       },
     },
     Build({
-      entryServerPath: pollenConfig.paths.appTemplate.entryServer,
+      entryServerPath: polenConfig.paths.appTemplate.entryServer,
       debug: debug,
     }),
   ]

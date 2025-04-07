@@ -15,7 +15,7 @@ export const Build = (parameters: {
   let viteConfigResolved: Vite.ResolvedConfig
 
   return [Manifest(), {
-    name: `pollen-ssr-build`,
+    name: `polen-ssr-build`,
     apply: `build`,
     applyToEnvironment: Vite.isEnvironmentSsr,
     configResolved(config) {
@@ -142,7 +142,7 @@ const Manifest = (): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv
   let viteConfigResolved: Vite.ResolvedConfig
   return {
-    name: `pollen-manifest`,
+    name: `polen-manifest`,
     config(_, configEnv_) {
       configEnv = configEnv_
     },

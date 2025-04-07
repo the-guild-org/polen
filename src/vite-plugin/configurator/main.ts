@@ -52,7 +52,7 @@ const configInputDefaults: Config = {
     enabled: true,
   },
   aliases: {
-    entryServer: `#pollen/server/entry`,
+    entryServer: `#polen/server/entry`,
   },
   paths: {
     appTemplate: {

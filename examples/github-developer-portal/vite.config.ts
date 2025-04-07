@@ -1,14 +1,14 @@
 import { defineConfig } from 'vite'
-import { Pollen } from 'pollen'
+import { Polen } from 'polen'
 
 export default defineConfig(({ isSsrBuild }) => {
-  const pollenPlugin = Pollen.VitePlugin({
+  const polenPlugin = Polen.VitePlugin({
     mode: isSsrBuild ? `server` : `client`,
   })
 
   return {
     plugins: [
-      ...pollenPlugin,
+      ...polenPlugin,
     ],
   }
 })

@@ -1,4 +1,4 @@
-import viteClientAssetManifest from 'virtual:pollen/vite/client/manifest'
+import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
 import { Hono } from 'hono'
 import type { StaticHandlerContext } from 'react-router'
 import { StaticRouterProvider, createStaticHandler, createStaticRouter } from 'react-router'
