@@ -1,6 +1,6 @@
 {
   "name": "polen",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "build": "tsc",
@@ -15,6 +15,7 @@
     "check:lint": "eslint . --max-warnings 0",
     "check:types": "tsc --noEmit",
     "check:publint": "publint run --strict",
+    "release:version": "changeset version && git commit -am \"chore: release\"",
     "prepublishOnly": "pnpm build"
   },
   "repository": {

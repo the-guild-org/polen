@@ -1,5 +1,11 @@
 # polen
 
+## 0.0.4
+
+### Patch Changes
+
+- improve: link github repo in package manifest
+
 ## 0.0.3
 
 ### Patch Changes
