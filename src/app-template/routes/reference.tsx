@@ -1,10 +1,10 @@
-import { buildASTSchema } from 'graphql'
+import type { DocumentNode } from 'graphql'
+import { buildASTSchema, parse } from 'graphql'
 import { ColumnView } from '../components/ColumnView.jsx'
 import { Box, Flex } from '@radix-ui/themes'
 import { Outlet, useLoaderData } from 'react-router'
 // import { reference$type$field } from './reference.$type.$field.jsx'
 import schemaFileContent from 'virtual:pollen/assets/graphql-schema'
-import { parse } from 'graphql'
 import { createRoute } from '../../lib/react-router-helpers.js'
 import { reference$type } from './reference.$type.jsx'
 
@@ -17,7 +17,7 @@ const loader = () => {
 }
 
 const Component = () => {
-  const data = useLoaderData<typeof loader>()
+  const data = useLoaderData<typeof loader>() as { documentNode: DocumentNode }
   const schema = buildASTSchema(data.documentNode)
 
   return (

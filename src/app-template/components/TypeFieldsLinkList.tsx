@@ -9,24 +9,27 @@ export interface Props {
 
 export const TypeFieldsLinkList: FC<Props> = ({ type }) => {
   return (
-    <Box>
-      <Heading>{type.name}</Heading>
-      <Flex direction="column">
-        {Object.values(type.getFields()).map(field => {
-          return (
-            <Box key={field.name}>
-              <Link
-                to="/reference/$type/$field"
-                params={{ type: type.name, field: field.name }}
-                // TODO: can we use styled from Radix?
-                activeProps={{ style: { fontWeight: `bold` } }}
-              >
-                {field.name}
-              </Link>
-            </Box>
-          )
-        })}
-      </Flex>
-    </Box>
+    (
+      <Box>
+        <Heading>{type.name}</Heading>
+        <Flex direction="column">
+          {Object.values(type.getFields()).map(field => {
+            return (
+              (
+                <Box key={field.name}>
+                  <Link
+                    to={`/reference/${type.name}/${field.name}`}
+                    // TODO: can we use styled from Radix?
+                    // activeProps={{ style: { fontWeight: `bold` } }}
+                  >
+                    {field.name}
+                  </Link>
+                </Box>
+              )
+            )
+          })}
+        </Flex>
+      </Box>
+    )
   )
 }

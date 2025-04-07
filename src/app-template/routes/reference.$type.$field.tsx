@@ -1,3 +1,4 @@
+import type { DocumentNode } from 'graphql'
 import { buildASTSchema } from 'graphql'
 import { Grafaid } from '../../lib/grafaid/index.js'
 import { Field } from '../components/Field.jsx'
@@ -6,8 +7,10 @@ import { useParams, useRouteLoaderData } from 'react-router'
 import type { reference } from './reference.jsx'
 
 const Component = () => {
-  const params = useParams()
-  const data = useRouteLoaderData<typeof reference.loader>(`/reference`)
+  const params = useParams() as any
+  const data = useRouteLoaderData<typeof reference.loader>(`/reference`) as {
+    documentNode: DocumentNode,
+  }
   const schema = buildASTSchema(data.documentNode)
   const type = schema.getType(params.type)
   if (!type) return `Could not find type ${params.type}`

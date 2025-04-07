@@ -41,8 +41,7 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     if (isInputObjectType(namedType)) {
       return (
         <Link
-          to="/reference/$type"
-          params={{ type: namedType.name }}
+          to={`/reference/${namedType.name}`}
         >
           <Text color="green">{namedType.name}</Text>
         </Link>
@@ -52,10 +51,7 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     // If it's an expandable type (object or interface), make it a link
     // if (Grafaid.isExpandableType(namedType)) {
     return (
-      <Link
-        to="/reference/$type"
-        params={{ type: namedType.name }}
-      >
+      <Link to="/reference/${namedType.name}">
         <Text color={isScalarType(namedType) ? `purple` : `blue`}>{namedType.name}</Text>
       </Link>
     )
