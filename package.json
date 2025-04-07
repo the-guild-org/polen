@@ -17,6 +17,10 @@
     "check:publint": "publint run --strict",
     "prepublishOnly": "pnpm build"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the-guild-org/polen.git"
+  },
   "exports": {
     ".": "./build/_namespace.js",
     "./exports": "./build/_exports.js"
