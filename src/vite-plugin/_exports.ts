@@ -17,7 +17,7 @@ const codes = {
 
 export const VitePlugin = (
   polenConfigInput?: Configurator.ConfigInput,
-): Vite.PluginOption[] => {
+): Vite.PluginOption => {
   const polenConfig = Configurator.normalizeInput(polenConfigInput)
   const debug = true
 

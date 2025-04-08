@@ -3,6 +3,7 @@
   "version": "0.0.6",
   "type": "module",
   "scripts": {
+    "dev": "pnpm build:watch:emit",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "build:watch:emit": "tsc --watch --nocheck",
