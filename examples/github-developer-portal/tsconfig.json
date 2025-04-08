@@ -20,5 +20,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["app", "vite.config.ts", "polen.d.ts"]
 }

@@ -10,7 +10,7 @@ export const resolvedPrefix = `\0`
 
 const createResolved = (id: string) => `${resolvedPrefix}${id}`
 
-const createId = (id: string) => `${idPrefix}${id}`
+const createId = (id: string, customIdPrefix?: string) => `${customIdPrefix ?? idPrefix}${id}`
 
 // todo: utility to create sub namesapces
 // const virtualIdentifierAsset = (id: string) => createId(`assets/${id.replace(/^\//, ``)}`)
@@ -29,9 +29,16 @@ const normalizeId = (parameters: { id: string, separator?: string }) => {
   return parameters.id.replace(new RegExp(`^${parameters.separator}`), ``)
 }
 
-export const createNamespaceFactory = (
-  namespace: string,
-  separator = `/`,
+export const createFactory = (
+  {
+    idPrefix,
+    namespace,
+    separator = `/`,
+  }: {
+    idPrefix?: string,
+    namespace?: string,
+    separator?: string,
+  },
 ): (idOrIdSegments: string | string[]) => VirtualIdentifier => {
   return idOrIdSegments => {
     const id = Array.isArray(idOrIdSegments)
@@ -39,6 +46,7 @@ export const createNamespaceFactory = (
       : idOrIdSegments
 
     return create({
+      idPrefix,
       id,
       namespace,
       separator,
@@ -46,17 +54,18 @@ export const createNamespaceFactory = (
   }
 }
 
-const create = (parameters: {
+export const create = (parameters: {
   id: string,
   namespace?: string,
   separator?: string,
+  idPrefix?: string,
 }): VirtualIdentifier => {
   const separator = parameters.separator ?? `/`
   const idNormalized = normalizeId({ id: parameters.id, separator })
   const idNamespaced = parameters.namespace
     ? `${parameters.namespace}${separator}${idNormalized}`
     : idNormalized
-  const id = createId(idNamespaced)
+  const id = createId(idNamespaced, parameters.idPrefix)
   const resolved = createResolved(id)
   return {
     id,

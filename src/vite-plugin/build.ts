@@ -2,10 +2,10 @@ import { CodeBuilder } from '../lib/code-builder/_namespace.js'
 import { Fs } from '../lib/fs/_namespace.js'
 import { Path } from '../lib/path/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
-import { virtualIdentifier } from './helpers.js'
+import { vi } from './helpers.js'
 import { defu } from 'defu'
 
-const viServerEntry = virtualIdentifier([`server`, `entry`])
+const viServerEntry = vi([`server`, `entry`])
 
 export const Build = (parameters: {
   entryServerPath: string,
@@ -136,7 +136,7 @@ export const Build = (parameters: {
   }]
 }
 
-const viClientManifest = virtualIdentifier([`vite`, `client`, `manifest`])
+const viClientManifest = vi([`vite`, `client`, `manifest`])
 
 const Manifest = (): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv

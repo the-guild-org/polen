@@ -2,7 +2,7 @@ import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
 import { Hono } from 'hono'
 import type { StaticHandlerContext } from 'react-router'
 import { StaticRouterProvider, createStaticHandler, createStaticRouter } from 'react-router'
-import { routes } from './routes.jsx'
+import { routes } from 'virtual:polen/template/routes'
 import { ReactDomServer } from '../lib/react-dom-server/_namespace.js'
 import { StrictMode } from 'react'
 import { debug } from '../lib/debug/debug.js'
@@ -60,7 +60,6 @@ const staticHandler = createStaticHandler(routes)
 
 app.get(`*`, async ctx => {
   const staticHandlerContext = await staticHandler.query(ctx.req.raw)
-  // console.log(staticHandlerContext)
 
   if (staticHandlerContext instanceof Response) {
     return staticHandlerContext
