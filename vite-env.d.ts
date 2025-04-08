@@ -34,6 +34,11 @@ declare module 'virtual:polen/vite/client/manifest' {
   export default manifest
 }
 
+declare module 'virtual:polen/template/routes' {
+  // eslint-disable-next-line
+  export const routes: import('react-router').RouteObject[]
+}
+
 declare module 'virtual:polen/template/variables' {
   // eslint-disable-next-line
   const variables: import('./src/vite-plugin/configurator/_exports.ts').TemplateVariables

@@ -3,7 +3,7 @@
 // But then, that wouldn't work for SPA. Does that matter? Just put a conditional here e.g. if (import.meta.env.PROD) ...?
 import '@radix-ui/themes/styles.css'
 import { RouterProvider, createBrowserRouter } from 'react-router'
-import { routes } from './routes.jsx'
+import { routes } from 'virtual:polen/template/routes'
 import { ReactDomClient } from '../lib/react-dom-client/_namespace.js'
 import { StrictMode } from 'react'
 

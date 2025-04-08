@@ -1,4 +1,4 @@
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, readFile, rm } from 'node:fs/promises'
 
 export {
   access,
@@ -38,5 +38,17 @@ export const rmDirIfExists = async (dirPath: string): Promise<void> => {
     if (error.code !== `ENOENT`) {
       throw error
     }
+  }
+}
+
+export const readFileIfExists = async (filePath: string): Promise<string | null> => {
+  try {
+    return await readFile(filePath, `utf-8`)
+  } catch (error_) {
+    const error = error_ as NodeJS.ErrnoException
+    if (error.code !== `ENOENT`) {
+      throw error
+    }
+    return null
   }
 }

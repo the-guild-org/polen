@@ -2,13 +2,16 @@ import { Configurator } from './configurator/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
 import ReactVite from '@vitejs/plugin-react'
 import { Fs } from '../lib/fs/_namespace.js'
-import { virtualIdentifier } from './helpers.js'
+import { vi, viExternal } from './helpers.js'
 import { Build } from './build.js'
 import { nodeAdapter as HonoDevServerNodeAdapter } from '@hono/vite-dev-server/node'
 import HonoDevServer from '@hono/vite-dev-server'
+import { Path } from '../lib/path/_namespace.js'
 
-const virtualIdentifierAssetGraphqlSchema = virtualIdentifier([`assets`, `graphql-schema`])
-const virtualIdentifierTemplateVariables = virtualIdentifier([`template`, `variables`])
+const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
+const viTemplateVariables = vi([`template`, `variables`])
+const viExternalRoutes = viExternal(`app`)
+const viTemplateRoutes = vi([`template`, `routes`])
 
 const codes = {
   MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
@@ -20,6 +23,7 @@ export const VitePlugin = (
 ): Vite.PluginOption => {
   const polenConfig = Configurator.normalizeInput(polenConfigInput)
   const debug = true
+  let viteConfigResolved: Vite.ResolvedConfig
 
   return [
     HonoDevServer({
@@ -31,18 +35,48 @@ export const VitePlugin = (
       name: `polen-virtual`,
       ...Vite.VirtualIdentifier.toHooks$FromMap(
         new Map([
-          [virtualIdentifierAssetGraphqlSchema, async () => {
+          [viAssetGraphqlSchema, async () => {
             const schema = await Fs.readFile(polenConfig.schema.path, `utf-8`)
             const moduleContent = `export default ${JSON.stringify(schema)}`
             return moduleContent
           }],
           // eslint-disable-next-line
-          [virtualIdentifierTemplateVariables, async () => {
+          [viTemplateVariables, async () => {
             const moduleContent = `export default ${JSON.stringify(polenConfig.templateVariables)}`
+            return moduleContent
+          }],
+          [viTemplateRoutes, async () => {
+            // todo make configurable
+            const appRoutesModulePath = Path.join(viteConfigResolved.root, `app/routes.tsx`)
+            console.log(appRoutesModulePath)
+            const appRoutesModuleContent = await Fs.readFileIfExists(appRoutesModulePath)
+            console.log(appRoutesModuleContent)
+
+            if (appRoutesModuleContent) {
+              return appRoutesModuleContent
+            }
+
+            const defaultModuleContent = `
+              export * from '${viExternalRoutes.id}'
+            `
+            return defaultModuleContent
+          }],
+          // eslint-disable-next-line
+          [viExternalRoutes, async () => {
+            const templateRoutesModulePath = Path.join(
+              polenConfig.paths.appTemplate.dir,
+              `routes.jsx`,
+            )
+            const moduleContent = `
+              export { routes } from '${templateRoutesModulePath}'
+            `
             return moduleContent
           }],
         ]),
       ),
+      configResolved(config) {
+        viteConfigResolved = config
+      },
     },
     {
       name: `polen-build-client`,
