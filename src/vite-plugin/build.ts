@@ -152,8 +152,8 @@ const Manifest = (): Vite.Plugin => {
     ...Vite.VirtualIdentifier.toHooks$FromMap(
       new Map([
         [viClientManifest, async () => {
-          // In development or client build just return an empty manifest
-          if (configEnv.mode === Vite.ModeName.dev) {
+          // In development just return an empty manifest
+          if (configEnv.mode === Vite.ModeName.development) {
             return `export default {}`
           }
 

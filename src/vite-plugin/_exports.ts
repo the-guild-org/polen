@@ -1,4 +1,4 @@
-import { Configurator } from './configurator/_namespace.js'
+import { Configurator } from '../configurator/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
 import ReactVite from '@vitejs/plugin-react'
 import { Fs } from '../lib/fs/_namespace.js'
