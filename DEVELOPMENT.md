@@ -15,3 +15,9 @@ changes. to the example projects by running.
 2. In the root directory, run `pnpm run dev`.
 3. When you are done, revert the change to the example's `package.json` in
    regards to the `polen` dependency having become a link.
+
+#### Notes
+
+1. `pnpm link` will result in a `pnpm-workspace.yaml` file in the example
+   project directory. These files are ignored via `.gitignore` and so will never
+   be committed.
