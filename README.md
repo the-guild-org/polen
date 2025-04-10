@@ -10,7 +10,9 @@ npm add polen vite
 
 Vite is a peer dependency of Polen.
 
-## Usage
+## Example
+
+You can find working examples in the [examples](./examples) directory.
 
 The following shows minimal default usage.
 
@@ -50,6 +52,23 @@ The following shows minimal default usage.
    node dist/entry.js
    ```
 
-## Examples
+## Guide
 
-You can find working examples in the [examples](./examples) directory.
+### Package
+
+#### ESM
+
+Polen is an ESM only package. If you are using CJS, then you need
+[NodeJS version `>=22.0.0` to `require` it](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require).
+
+#### Exports
+
+You can import a `Polen` namespace from `polen`. You can import its bare exports
+from `polen/exports`.
+
+```ts
+import { Polen } from 'polen'
+import { VitePlugin } from 'polen/exports'
+
+console.log(Polen.VitePlugin === VitePlugin) // true
+```
