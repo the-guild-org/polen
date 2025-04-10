@@ -2,13 +2,13 @@ import { Configurator } from './configurator/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
 import ReactVite from '@vitejs/plugin-react'
 import { Fs } from '../lib/fs/_namespace.js'
-import { virtualIdentifier } from './helpers.js'
+import { vi } from './helpers.js'
 import { Build } from './build.js'
 import { nodeAdapter as HonoDevServerNodeAdapter } from '@hono/vite-dev-server/node'
 import HonoDevServer from '@hono/vite-dev-server'
 
-const virtualIdentifierAssetGraphqlSchema = virtualIdentifier([`assets`, `graphql-schema`])
-const virtualIdentifierTemplateVariables = virtualIdentifier([`template`, `variables`])
+const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
+const viTemplateVariables = vi([`template`, `variables`])
 
 const codes = {
   MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
@@ -31,13 +31,13 @@ export const VitePlugin = (
       name: `polen-virtual`,
       ...Vite.VirtualIdentifier.toHooks$FromMap(
         new Map([
-          [virtualIdentifierAssetGraphqlSchema, async () => {
+          [viAssetGraphqlSchema, async () => {
             const schema = await Fs.readFile(polenConfig.schema.path, `utf-8`)
             const moduleContent = `export default ${JSON.stringify(schema)}`
             return moduleContent
           }],
           // eslint-disable-next-line
-          [virtualIdentifierTemplateVariables, async () => {
+          [viTemplateVariables, async () => {
             const moduleContent = `export default ${JSON.stringify(polenConfig.templateVariables)}`
             return moduleContent
           }],
