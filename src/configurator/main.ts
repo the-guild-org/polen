@@ -1,6 +1,14 @@
-import { Path } from '../../lib/path/_namespace.js'
+import { Path } from '../lib/path/_namespace.js'
+import type { Vite } from '../lib/vite/_namespace.js'
 
 export interface ConfigInput {
+  /**
+   * Additional {@link Vite.UserConfig} that is merged with the one created by Polen using {@link Vite.mergeConfig}.
+   *
+   * @see https://vite.dev/config/
+   * @see https://vite.dev/guide/api-javascript.html#mergeconfig
+   */
+  vite?: Vite.UserConfig
   templateVariables?: {
     /**
      * Title of the app.
@@ -52,7 +60,7 @@ export interface Config {
   }
 }
 
-const pathAppTemplateDir = Path.join(import.meta.dirname, `../../app-template`)
+const pathAppTemplateDir = Path.join(import.meta.dirname, `../app-template`)
 const workspaceDir = process.cwd()
 
 const outDir = Path.join(workspaceDir, `dist`)

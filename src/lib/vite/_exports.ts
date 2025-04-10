@@ -38,5 +38,10 @@ export const isEnvironmentClient = (environment: PartialEnvironment): boolean =>
 
 export const ModeName = {
   build: `build`,
-  dev: `dev`,
+  development: `development`,
+}
+
+export const CommandName = {
+  serve: `serve`,
+  build: `build`,
 }
