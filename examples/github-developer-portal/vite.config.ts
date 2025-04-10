@@ -1,6 +1,6 @@
 import { Polen } from 'polen'
 
-export default Polen.defineConfiguration({
+export default Polen.createConfiguration({
   templateVariables: {
     title: `GitHub GraphQL API`,
   },

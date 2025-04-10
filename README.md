@@ -27,15 +27,10 @@ The following shows minimal default usage.
 2. Use Polen in your Vite config.
 
    ```ts
-   import { defineConfig } from 'vite'
    import { Polen } from 'polen'
 
-   export default defineConfig({
-     plugins: [
-       Polen.VitePlugin({
-         // options here...
-       }),
-     ],
+   export default Polen.createConfiguration({
+     // options here...
    })
    ```
 
