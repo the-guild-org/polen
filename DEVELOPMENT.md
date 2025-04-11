@@ -36,3 +36,8 @@ changes. to the example projects by running.
 - You can think of these as E2E (end-to-end) tests.
 - Run them manually with `pnpm test:examples`.
 - They are also run in GitHub Actions against pull requests.
+- By default, in CI, tests use the local Polen version (via pnpm file:).
+  Otherwise they use the registry version. This is a
+  [Playwright fixture option](https://playwright.dev/docs/test-fixtures#fixtures-options)
+  that you can override. There is also an option to use a local Polen version
+  via pnpm `link:`.
