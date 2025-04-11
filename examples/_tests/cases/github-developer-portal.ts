@@ -12,8 +12,8 @@ const cwd = exampleDir
 test.use({ cwd })
 
 const testPageHome = async (page: Page) => {
-  await expect(page.getByText(`GitHub GraphQL API`)).toBeVisible()
-  await expect(page.title()).resolves.toContain(`GitHub GraphQL API`)
+  await expect(page.getByText(`GitHub Developer Portal`)).toBeVisible()
+  await expect(page.title()).resolves.toContain(`GitHub Developer Portal`)
 }
 
 test(`development server renders app`, async ({ runDev, page }) => {
