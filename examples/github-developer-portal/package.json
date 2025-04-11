@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --app",
-    "preview": "node dist/entry.js"
+    "start": "node dist/entry.js"
   },
   "devDependencies": {
     "typescript": "~5.8.3",
