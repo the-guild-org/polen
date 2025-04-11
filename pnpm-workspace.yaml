@@ -1,5 +1,2 @@
 ignoredBuiltDependencies:
   - '@playwright/browser-chromium'
-
-overrides:
-  polen: 'link:'
