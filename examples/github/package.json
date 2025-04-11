@@ -1,0 +1,18 @@
+{
+  "name": "github",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --app",
+    "start": "node dist/entry.js"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vite": "^6.2.5"
+  },
+  "dependencies": {
+    "polen": "^0.0.6"
+  }
+}

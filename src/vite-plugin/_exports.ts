@@ -19,6 +19,12 @@ export const VitePlugin = (
   polenConfigInput?: Configurator.ConfigInput,
 ): Vite.PluginOption => {
   const polenConfig = Configurator.normalizeInput(polenConfigInput)
+  return VitePluginInternal(polenConfig)
+}
+
+export const VitePluginInternal = (
+  polenConfig: Configurator.Config,
+): Vite.PluginOption => {
   const debug = true
 
   return [
