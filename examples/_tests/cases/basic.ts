@@ -11,7 +11,7 @@ const testPageHome = async (page: Page, polenConfig: Configurator.Config) => {
   await expect(page.title()).resolves.toContain(polenConfig.templateVariables.title)
 }
 
-test.only(`development server renders app`, async ({ runDev, page, polenConfig }) => {
+test(`development server renders app`, async ({ runDev, page, polenConfig }) => {
   await page.goto(runDev.url)
   await testPageHome(page, polenConfig)
 })
