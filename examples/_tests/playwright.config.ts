@@ -17,7 +17,7 @@ export default defineConfig<Fixtures>({
     //   baseURL: `http://localhost:5173`,
     trace: `on-first-retry`,
     screenshot: `only-on-failure`,
-    polenSource: isCi ? `local-file` : undefined,
+    polenSource: isCi ? `localFile` : undefined,
   },
   projects: [
     {
