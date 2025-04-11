@@ -47,5 +47,4 @@ jobs:
       - name: Install Playwright Binaries
         uses: ./.github/actions/install-playwright-binaries
       - run: pnpm build
-      - run: cd examples/github-developer-portal && pnpm link ../..
       - run: pnpm test:examples

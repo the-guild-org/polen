@@ -1,13 +1,14 @@
 import { test as base } from 'playwright/test'
 import type { ServerProcess } from './run.js'
 import { runBuild, runDev, runStart } from './run.js'
-import type { ProcessOutput } from 'zx'
+import { $, type ProcessOutput } from 'zx'
 import type { Configurator } from '../../../src/configurator/_namespace.js'
 import type { ViteUserConfigWithPolen } from '../../../src/createConfiguration.js'
 
 export interface Fixtures {
   cwd: string
   runDev: ServerProcess
+  installDependencies: ProcessOutput
   runBuild: ProcessOutput
   runStart: ServerProcess
   polenConfig: Configurator.Config
@@ -20,13 +21,18 @@ export const test = base.extend<Fixtures>({
     // eslint-disable-next-line
     await use(config.default._polen.normalized)
   },
-  runDev: async ({ cwd }, use) => {
+  installDependencies: async ({ cwd }, use) => {
+    const output = await $({ cwd })`pnpm install`
+    // eslint-disable-next-line
+    await use(output)
+  },
+  runDev: async ({ installDependencies: _, cwd }, use) => {
     const server = await runDev({ cwd })
     // eslint-disable-next-line
     await use(server)
     await server.process.kill()
   },
-  runBuild: async ({ cwd }, use) => {
+  runBuild: async ({ installDependencies: _, cwd }, use) => {
     const output = await runBuild({ cwd })
     // eslint-disable-next-line
     await use(output)
