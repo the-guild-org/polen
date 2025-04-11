@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "rootDir": "src",
-    "noEmit": false,
+    "noEmit": false
   },
   "extends": "./tsconfig.json",
-  "include": ["src", "vite-env.d.ts"],
+  "include": ["src", "vite-env.d.ts"]
 }
