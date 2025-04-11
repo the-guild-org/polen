@@ -7,6 +7,13 @@ import type { ViteUserConfigWithPolen } from '../../../src/createConfiguration.j
 
 export interface Fixtures {
   cwd: string
+  /**
+   * Should Polen be installed from the local source or from the registry?
+   *
+   * If `local`, the local Polen source will be linked. You are responsible for
+   * having local Polen be built (e.g. You previously ran `pnpm build`).
+   */
+  polenSource: `local` | `registry`
   runDev: ServerProcess
   installDependencies: ProcessOutput
   runBuild: ProcessOutput
@@ -15,14 +22,18 @@ export interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
+  polenSource: [`local`, { option: true }],
   cwd: [process.cwd(), { option: true }],
   polenConfig: async ({ cwd }, use) => {
     const config = await import(`${cwd}/vite.config.js`) as { default: ViteUserConfigWithPolen }
     // eslint-disable-next-line
     await use(config.default._polen.normalized)
   },
-  installDependencies: async ({ cwd }, use) => {
+  installDependencies: async ({ cwd, polenSource }, use) => {
     const output = await $({ cwd })`pnpm install`
+    if (polenSource === `local`) {
+      await $({ cwd })`pnpm link ../..`
+    }
     // eslint-disable-next-line
     await use(output)
   },
