@@ -1,8 +1,9 @@
 import { defineConfig, devices } from 'playwright/test'
+import type { Fixtures } from './helpers/test.js'
 
 const isCi = !!process.env[`CI`]
 
-export default defineConfig({
+export default defineConfig<Fixtures>({
   name: `examples`,
   testDir: `./cases`,
   testMatch: `*.ts`,
@@ -12,11 +13,12 @@ export default defineConfig({
   workers: isCi ? 1 : undefined,
   outputDir: `./__results__`,
   // reporter: `html`,
-  // use: {
-  //   baseURL: `http://localhost:5173`,
-  //   trace: `on-first-retry`,
-  //   screenshot: `only-on-failure`,
-  // },
+  use: {
+    //   baseURL: `http://localhost:5173`,
+    trace: `on-first-retry`,
+    screenshot: `only-on-failure`,
+    polenSource: isCi ? `local-file` : `local-link`,
+  },
   projects: [
     {
       name: `chromium`,
