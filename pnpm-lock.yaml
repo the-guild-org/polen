@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  polen: 'link:'
-
 importers:
 
   .:
@@ -144,19 +141,6 @@ importers:
       zx:
         specifier: ^8.5.2
         version: 8.5.2
-
-  examples/basic:
-    dependencies:
-      polen:
-        specifier: link:../..
-        version: link:../..
-    devDependencies:
-      typescript:
-        specifier: ~5.8.3
-        version: 5.8.3
-      vite:
-        specifier: ^6.2.5
-        version: 6.2.6(@types/node@22.14.0)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.1)
 
 packages:
 
