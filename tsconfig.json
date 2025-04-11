@@ -7,10 +7,10 @@
     "exactOptionalPropertyTypes": false,
     "moduleResolution": "nodenext",
     "isolatedModules": true,
-    "rootDir": "src",
     "outDir": "build",
-    "declaration": true
+    "declaration": true,
+    "noEmit": true
   },
-  "exclude": ["./eslint.config.js", "build"],
-  "include": ["src", "vite-env.d.ts"]
+  "exclude": ["eslint.config.js", "build"],
+  "include": ["src", "vite-env.d.ts", "examples/_tests"]
 }

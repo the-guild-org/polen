@@ -1,0 +1,51 @@
+name: pr
+concurrency:
+  group: ${{github.head_ref}}
+  cancel-in-progress: true
+on:
+  - pull_request
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm add dprint
+      - run: pnpm check:format
+  # Fix lint
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/actions/setup
+  #     - run: pnpm build
+  #     - run: pnpm check:lint
+  publint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - run: pnpm check:package
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm check:types
+  test-examples:
+    strategy:
+      matrix:
+        os: ['ubuntu-latest'] #, 'macos-latest', 'windows-latest'
+        node-version: [22.x]
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{matrix.node-version}}
+      - name: Install Playwright Binaries
+        uses: ./.github/actions/install-playwright-binaries
+      - run: pnpm build
+      - run: cd examples/github-developer-portal && pnpm link ../..
+      - run: pnpm test:examples
