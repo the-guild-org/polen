@@ -1,14 +1,16 @@
 import { Configurator } from '../configurator/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
 import ReactVite from '@vitejs/plugin-react'
-import { Fs } from '../lib/fs/_namespace.js'
 import { vi } from './helpers.js'
 import { Build } from './build.js'
 import { nodeAdapter as HonoDevServerNodeAdapter } from '@hono/vite-dev-server/node'
 import HonoDevServer from '@hono/vite-dev-server'
+import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
+import { readSchemaPointer } from '../configurator/schema-pointer.js'
 
 const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
 const viTemplateVariables = vi([`template`, `variables`])
+const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
 
 const codes = {
   MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
@@ -33,23 +35,25 @@ export const VitePluginInternal = (
       adapter: HonoDevServerNodeAdapter,
     }),
     ReactVite(),
-    {
-      name: `polen-virtual`,
-      ...Vite.VirtualIdentifier.toHooks$FromMap(
-        new Map([
-          [viAssetGraphqlSchema, async () => {
-            const schema = await Fs.readFile(polenConfig.schema.path, `utf-8`)
-            const moduleContent = `export default ${JSON.stringify(schema)}`
-            return moduleContent
-          }],
-          // eslint-disable-next-line
-          [viTemplateVariables, async () => {
-            const moduleContent = `export default ${JSON.stringify(polenConfig.templateVariables)}`
-            return moduleContent
-          }],
-        ]),
-      ),
-    },
+    ViteVirtual.Plugin(
+      [viAssetGraphqlSchema, async () => {
+        const schema = await readSchemaPointer(polenConfig.schema)
+        const moduleContent = `export default ${JSON.stringify(schema)}`
+        return moduleContent
+      }],
+      [viTemplateVariables, () => {
+        const moduleContent = `export const templateVariables = ${
+          JSON.stringify(polenConfig.templateVariables)
+        }`
+        return moduleContent
+      }],
+      [viTemplateSchemaAugmentations, () => {
+        const moduleContent = `export const schemaAugmentations = ${
+          JSON.stringify(polenConfig.schemaAugmentations)
+        }`
+        return moduleContent
+      }],
+    ),
     {
       name: `polen-build-client`,
       apply: `build`,

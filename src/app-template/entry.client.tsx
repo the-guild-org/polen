@@ -18,8 +18,6 @@ import { StrictMode } from 'react'
 // SSR
 
 const router = createBrowserRouter(routes, {
-  // @ts-expect-error
-  // eslint-disable-next-line
   hydrationData: window.__staticRouterHydrationData,
 })
 

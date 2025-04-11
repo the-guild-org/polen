@@ -1,3 +1,3 @@
-import { Vite } from '../lib/vite/_namespace.js'
+import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
 
-export const vi = Vite.VirtualIdentifier.createNamespaceFactory(`polen`)
+export const vi = ViteVirtual.createNamespaceFactory(`polen`)

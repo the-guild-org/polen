@@ -9,7 +9,7 @@ import { createRoute } from '../../lib/react-router-helpers.js'
 import { reference } from './reference.jsx'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import entryClientUrl from '../entry.client.jsx?url'
-import templateVariables from 'virtual:polen/template/variables'
+import { templateVariables } from 'virtual:polen/template/variables'
 
 export const Component = () => {
   return (

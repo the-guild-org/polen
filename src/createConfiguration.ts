@@ -1,4 +1,4 @@
-import { VitePluginInternal } from './vite-plugin/_exports.js'
+import { VitePluginInternal } from './vite-plugin/vite-plugin.js'
 import { Configurator } from './configurator/_namespace.js'
 import { Vite } from './lib/vite/_namespace.js'
 

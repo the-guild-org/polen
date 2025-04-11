@@ -12,5 +12,5 @@
     "noEmit": true
   },
   "exclude": ["eslint.config.js", "build"],
-  "include": ["src", "vite-env.d.ts", "examples/_tests"]
+  "include": ["tests", "src", "vite-env.d.ts", "vite-global.d.ts", "examples/_tests"]
 }

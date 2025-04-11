@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
+    "test:integration": "playwright test --config 'tests/integration/playwright.config.ts'",
     "dev": "pnpm build:watch:emit",
     "build": "tsc --build tsconfig.build.json",
     "build:watch": "tsc --build tsconfig.build.json --watch",
@@ -44,6 +45,7 @@
     "graphql": "^16.10.0",
     "hono": "^4.7.6",
     "marked": "^15.0.8",
+    "polen": "link:../../../Library/pnpm/global/5/node_modules/polen",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.5.0"

@@ -2,8 +2,8 @@ import { createRoute } from '../../lib/react-router-helpers.js'
 import { useParams, useRouteLoaderData } from 'react-router'
 import type { reference } from './reference.jsx'
 import type { DocumentNode } from 'graphql'
-import { buildASTSchema } from 'graphql'
 import { NamedType } from '../components/NamedType.jsx'
+import { getSchema } from '../utilities/getSchema.js'
 
 const Component = () => {
   const params = useParams() as any
@@ -11,7 +11,7 @@ const Component = () => {
     documentNode: DocumentNode,
   }
   // const data = reference$type.parentRoute.useLoaderData()
-  const schema = buildASTSchema(data.documentNode)
+  const schema = getSchema(data.documentNode)
   const type = schema.getType(params.type)
   if (!type) return `Could not find type ${params.type}`
   return <NamedType data={type} />

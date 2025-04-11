@@ -1,2 +1,5 @@
 ignoredBuiltDependencies:
   - '@playwright/browser-chromium'
+
+overrides:
+  polen: link:../../../Library/pnpm/global/5/node_modules/polen

@@ -1,5 +1,8 @@
 import { Path } from '../lib/path/_namespace.js'
+import { casesHandled } from '../lib/prelude/main.js'
 import type { Vite } from '../lib/vite/_namespace.js'
+import type { SchemaAugmentation } from '../schema-augmentation/_namespace.js'
+import { SchemaPointer } from './schema-pointer.js'
 
 export interface ConfigInput {
   /**
@@ -9,6 +12,7 @@ export interface ConfigInput {
    * @see https://vite.dev/guide/api-javascript.html#mergeconfig
    */
   vite?: Vite.UserConfig
+  schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
     /**
      * Title of the app.
@@ -22,7 +26,7 @@ export interface ConfigInput {
   /**
    * Path to the GraphQL schema file
    */
-  schemaPath?: string
+  schema?: SchemaInput
   /**
    * Whether to enable SSR
    *
@@ -32,16 +36,17 @@ export interface ConfigInput {
   // port?: number
 }
 
+type SchemaInput = string | SchemaPointer
+
 export interface TemplateVariables {
   title: string
 }
 
 export interface Config {
   templateVariables: TemplateVariables
+  schemaAugmentations: SchemaAugmentation.Augmentation[]
   mode: string
-  schema: {
-    path: string,
-  }
+  schema: SchemaPointer
   ssr: {
     enabled: boolean,
   }
@@ -69,8 +74,10 @@ const configInputDefaults: Config = {
   templateVariables: {
     title: `My Developer Portal`,
   },
+  schemaAugmentations: [],
   mode: `client`,
   schema: {
+    type: `file`,
     path: Path.join(workspaceDir, `schema.graphql`),
   },
   ssr: {
@@ -98,14 +105,39 @@ export const normalizeInput = (configInput?: ConfigInput): Config => {
     config.ssr.enabled = configInput.ssr
   }
 
+  if (configInput?.schemaAugmentations) {
+    config.schemaAugmentations = configInput.schemaAugmentations
+  }
+
   config.templateVariables = {
     ...config.templateVariables,
     ...configInput?.templateVariables,
   }
 
-  if (configInput?.schemaPath !== undefined) {
-    config.schema.path = Path.absolutify(configInput.schemaPath, config.paths.workspaceDir)
+  if (configInput?.schema !== undefined) {
+    config.schema = resolveInputSchema(configInput.schema, config)
   }
 
   return config
+}
+
+// Resolvers -------------------------------------------------------------
+
+const resolveInputSchema = (input: SchemaInput, config: Config): Config[`schema`] => {
+  if (typeof input === `string`) {
+    return {
+      type: `file`,
+      path: Path.absolutify(input, config.paths.workspaceDir),
+    }
+  } else if (input.type === `file`) {
+    return {
+      ...input,
+      path: Path.absolutify(input.path, config.paths.workspaceDir),
+    }
+    // eslint-disable-next-line
+  } else if (input.type === `inline`) {
+    return input
+  } else {
+    return casesHandled(input)
+  }
 }

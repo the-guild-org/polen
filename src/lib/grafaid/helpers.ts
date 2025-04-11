@@ -29,6 +29,13 @@ import {
 } from 'graphql'
 import { includesUnknown } from '../prelude/main.js'
 
+export type { GraphQLSchema as Schema } from 'graphql'
+
+export namespace Groups {
+  export type Describable = GraphQLNamedType | GraphQLField
+  export type Named = GraphQLNamedType
+}
+
 export type GraphQLOutputField<Source = any, Context = any, Args = any> = GraphQLField_graphql<
   Source,
   Context,

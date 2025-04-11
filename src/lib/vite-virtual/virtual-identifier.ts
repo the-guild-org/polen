@@ -1,5 +1,5 @@
 import { Debug } from '../debug/_namespace.js'
-import type { Vite } from './_namespace.js'
+import type { Vite } from '../vite/_namespace.js'
 
 // TODO: use async hooks in debug to get namespace
 const debug = Debug.create(`polen:vite:build`)
@@ -103,28 +103,18 @@ export const toHooks = (
   }
 }
 
-type VirtualIdentifierToLoaderMap = Map<VirtualIdentifier, Vite.HookLoadFnPure>
+// Entries
 
-export const toHookLoad$FromMap = (
-  virtualIdentifierToLoaderMap: VirtualIdentifierToLoaderMap,
-): Vite.HookLoadFnPure => {
-  const loaderStack = [...virtualIdentifierToLoaderMap.entries()].map(([vi, loader]) =>
-    toHookLoad(vi, loader)
-  )
-  return async (...args) => {
-    for (const loader of loaderStack) {
-      const result = await loader(...args)
-      if (result !== undefined) return result
-    }
-    return undefined
-  }
-}
+export type VirtualIdentifierAndLoader = [
+  virtualIdentifier: VirtualIdentifier,
+  loader: Vite.HookLoadFnPure,
+]
 
-export const toHookResolveId$FromMap = (
-  virtualIdentifierToLoaderMap: VirtualIdentifierToLoaderMap,
+export const toHookResolveId$FromEntries = (
+  virtualIdentifierToLoaderEntries: VirtualIdentifierAndLoader[],
 ): Vite.HookResolveIdFnPure => {
   return async (...args) => {
-    const resolversStack = [...virtualIdentifierToLoaderMap.keys()].map(toHookResolveId)
+    const resolversStack = virtualIdentifierToLoaderEntries.map(([vi]) => toHookResolveId(vi))
     for (const resolver of resolversStack) {
       const result = await resolver(...args)
       if (result !== undefined) return result
@@ -132,6 +122,42 @@ export const toHookResolveId$FromMap = (
     return undefined
   }
 }
+
+export const toHookLoad$FromEntries = (
+  virtualIdentifierToLoaderEntries: VirtualIdentifierAndLoader[],
+): Vite.HookLoadFnPure => {
+  return async (...args) => {
+    const loadersStack = virtualIdentifierToLoaderEntries.map(([vi, loader]) =>
+      toHookLoad(vi, loader)
+    )
+    for (const loader of loadersStack) {
+      const result = await loader(...args)
+      if (result !== undefined) return result
+    }
+    return undefined
+  }
+}
+
+export const toHooks$FromEntries = (
+  ...virtualIdentifierToLoaderEntries: VirtualIdentifierAndLoader[]
+): {
+  resolveId: Vite.HookResolveIdFnPure,
+  load: Vite.HookLoadFnPure,
+} => {
+  return {
+    resolveId: toHookResolveId$FromEntries(virtualIdentifierToLoaderEntries),
+    load: toHookLoad$FromEntries(virtualIdentifierToLoaderEntries),
+  }
+}
+
+// Map
+
+type VirtualIdentifierToLoaderMap = Map<VirtualIdentifier, Vite.HookLoadFnPure>
+
+export const toHookResolveId$FromMap = (
+  virtualIdentifierToLoaderMap: VirtualIdentifierToLoaderMap,
+): Vite.HookResolveIdFnPure =>
+  toHookResolveId$FromEntries([...virtualIdentifierToLoaderMap.entries()])
 
 export const toHooks$FromMap = (
   virtualIdentifierToLoaderMap: VirtualIdentifierToLoaderMap,
@@ -144,3 +170,7 @@ export const toHooks$FromMap = (
     load: toHookLoad$FromMap(virtualIdentifierToLoaderMap),
   }
 }
+
+export const toHookLoad$FromMap = (
+  virtualIdentifierToLoaderMap: VirtualIdentifierToLoaderMap,
+): Vite.HookLoadFnPure => toHookLoad$FromEntries([...virtualIdentifierToLoaderMap.entries()])

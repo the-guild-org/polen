@@ -49,6 +49,34 @@ The following shows minimal default usage.
 
 ## Guide
 
+### Schema Augmentations
+
+#### Schema Descriptions
+
+You can append/prepend/replace descriptions of types and fields in your schema.
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.createConfiguration({
+  templateVariables: {
+    title: `Basic Developer Portal`,
+  },
+  schemaAugmentations: [
+    {
+      type: `description`,
+      on: {
+        type: `TargetType`,
+        name: `Query`,
+      },
+      placement: `over`,
+      content:
+        `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
+    },
+  ],
+})
+```
+
 ### Package
 
 #### ESM
