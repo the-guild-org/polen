@@ -13,6 +13,6 @@
     "vite": "^6.2.5"
   },
   "dependencies": {
-    "polen": "^0.0.6"
+    "polen": "0.0.6"
   }
 }
