@@ -5,7 +5,6 @@ import { StaticRouterProvider, createStaticHandler, createStaticRouter } from 'r
 import { routes } from './routes.jsx'
 import { ReactDomServer } from '../lib/react-dom-server/_namespace.js'
 import { StrictMode } from 'react'
-import { debug } from '../lib/debug/debug.js'
 import type { Vite } from '../lib/vite/_namespace.js'
 
 const getRouteHeaders = (context: StaticHandlerContext): Headers => {
@@ -91,9 +90,9 @@ app.get(`*`, async ctx => {
   }
 
   if (import.meta.env.DEV) {
-    debug(`transformIndexHtml`)
-    // @see https://github.com/honojs/vite-plugins/issues/141
-    html = transformIndexHtml(html)
+    // const env = ctx.env as { viteDevServer: Vite.ViteDevServer }
+    // html = await env.viteDevServer.transformIndexHtml(ctx.req.url, html)
+    // await env.viteDevServer.transformIndexHtml(ctx.req.url, html)
   }
 
   const headers = getRouteHeaders(staticHandlerContext)
@@ -104,20 +103,5 @@ app.get(`*`, async ctx => {
     headers,
   })
 })
-
-const transformIndexHtml = (html: string): string => {
-  const REACT_FAST_REFRESH_PREAMBLE = `import RefreshRuntime from '/@react-refresh'
-RefreshRuntime.injectIntoGlobalHook(window)
-window.$RefreshReg$ = () => {}
-window.$RefreshSig$ = () => (type) => type
-window.__vite_plugin_react_preamble_installed__ = true`
-
-  const scripts = `` +
-    `<script type="module" src="/@vite/client"></script>` +
-    `<script type="module" async>${REACT_FAST_REFRESH_PREAMBLE}</script>`
-  html = html.replace(`</body>`, `${scripts}</body>`)
-
-  return html
-}
 
 export default app

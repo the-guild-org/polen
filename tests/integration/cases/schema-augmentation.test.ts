@@ -39,6 +39,7 @@ const test = base.extend<Fixtures>({
 const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }[] = [
   { placement: `over` },
   { placement: `after` },
+  { placement: `before` },
 ]
 
 cases.forEach(({ placement }) => {
@@ -65,9 +66,13 @@ cases.forEach(({ placement }) => {
           placement,
         },
       ],
+      vite: {
+        customLogger: Vite.createLogger(`silent`, {}),
+      },
     })
     const viteDevServer = await viteDevServerController.run(viteUserConfig)
     await page.goto(new URL(`/reference/Query`, viteDevServer.cannonicalUrl).href)
+
     await expect(page.getByText(augmentedContent)).toBeVisible()
     if (placement !== `over`) {
       await expect(page.getByText(baseContent)).toBeVisible()
