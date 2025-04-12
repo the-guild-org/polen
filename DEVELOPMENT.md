@@ -18,7 +18,7 @@ During local development you can link the source code with examples to try out
 changes. to the example projects by running.
 
 <!-- #### One Time System Setup
-
+TODO: Waiting on https://github.com/orgs/pnpm/discussions/9411
 1. [`pnpm link`](https://pnpm.io/cli/link) in the root directory. -->
 
 #### Session Setup
@@ -29,14 +29,9 @@ changes. to the example projects by running.
    1. Run `pnpm link ../..`
    2. Run `pnpm run dev`
    3. Now open the example app (http://localhost:5173)
-   4. When you are done, revert the changes caused by step 2.1 to
-      `pnpm-lock.yaml`
-
-#### Notes
-
-1. `pnpm link` will result in a `pnpm-workspace.yaml` file in the example
-   project directory. These files are ignored via `.gitignore` and so will never
-   be committed.
+   4. When you are done revert changes caused by step 2.1:
+      1. Change to `pnpm-lock.yaml`
+      2. Created `pnpm-workspace.yaml`
 
 ### Testing
 
