@@ -2,11 +2,15 @@
 
 ## Examples
 
-- We maintain fully working examples under `examples/*` (except directories
-  prefixed with `_` which are for meta purposes like testing).
-- These can help you with:
-  - Your feature development (see [Developing With](#developing-with)).
-  - Your testing of new Polen features (see [Testing](#testing)).
+- We maintain fully working examples under `examples/*`
+- Directories prefixed with `_` are for meta purposes (like testing).
+
+### Why
+
+- Functions as runnable documentation for users
+- Functions as development sandboxes for us (see
+  [Developing With](#developing-with))
+- Functions as sources for end to end tests (see [Testing](#testing))
 
 ### Developing With
 
@@ -19,10 +23,13 @@ changes. to the example projects by running.
 
 #### Session Setup
 
-1. In an example project, run `pnpm link polen`.
-2. In the root directory, run `pnpm run dev`.
-3. When you are done, revert the change to the example's `package.json` in
-   regards to the `polen` dependency having become a link.
+1. In the root directory, run `pnpm run dev` (to have TS source being emitted as
+   JS)
+2. In an example project:
+   1. Run `pnpm link polen`
+   2. Run `pnpm run dev`
+   3. Now open the example app (http://localhost:5173)
+   4. When you are done, revert the changes caused by step 2.1.
 
 #### Notes
 
