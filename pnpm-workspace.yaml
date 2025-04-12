@@ -1,2 +1,3 @@
 ignoredBuiltDependencies:
   - '@playwright/browser-chromium'
+  - esbuild
