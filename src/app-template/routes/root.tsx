@@ -24,8 +24,8 @@ export const Component = () => {
   return (
     <html lang="en">
       <head>
-        <script type="module">{reactRefreshPreamble}</script>
-        <script type="module" src="/@vite/client"></script>
+        {import.meta.env.DEV && <script type="module">{reactRefreshPreamble}</script>}
+        {import.meta.env.DEV && <script type="module" src="/@vite/client"></script>}
         <meta charSet="utf-8" />
         <meta
           name="viewport"
