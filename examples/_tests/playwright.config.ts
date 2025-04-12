@@ -8,12 +8,11 @@ export default defineConfig<Fixtures>({
   testDir: `./cases`,
   fullyParallel: true,
   forbidOnly: isCi,
-  retries: isCi ? 2 : 0,
+  retries: isCi ? 0 : 0,
   workers: isCi ? 1 : undefined,
   outputDir: `./__results__`,
   // reporter: `html`,
   use: {
-    //   baseURL: `http://localhost:5173`,
     trace: `on-first-retry`,
     screenshot: `only-on-failure`,
     polenSource: isCi ? `localFile` : undefined,

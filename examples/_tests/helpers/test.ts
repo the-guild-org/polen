@@ -44,7 +44,11 @@ export const test = base.extend<Fixtures>({
     const output = await $({ cwd })`pnpm install`
     if (polenSource !== PolenSource.registry) {
       const protocol = polenSource === PolenSource.localLink ? `link` : `file`
-      await $({ cwd })`pnpm add polen@${protocol}:../..`
+      if (protocol === `link`) {
+        await $({ cwd })`pnpm link ../..`
+      } else {
+        await $({ cwd })`pnpm add polen@${protocol}:../..`
+      }
     }
     // eslint-disable-next-line
     await use(output)
