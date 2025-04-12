@@ -95,3 +95,15 @@ import { VitePlugin } from 'polen/exports'
 
 console.log(Polen.VitePlugin === VitePlugin) // true
 ```
+
+## Other
+
+### Changelog
+
+Refer to
+[releases on this repo](https://github.com/the-guild-org/polen/releases).
+
+### Development
+
+If you are working on Polen itself, then refer to
+[DEVELOPMENT.md](./DEVELOPMENT.md) for details about workflow, testing, etc.
