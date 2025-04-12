@@ -77,12 +77,12 @@ export const VitePluginInternal = (
         // Add middleware that runs our entry server
 
         return () => {
-          // console.log(server.middlewares.stack)
+          // Remove index.html serving middleware.
           server.middlewares.stack.splice(
+            // @ts-expect-error
             server.middlewares.stack.findIndex(m => m.handle.name === `viteHtmlFallbackMiddleware`),
             1,
           )
-          // console.log(server.middlewares.stack)
           server.middlewares.use((req, res, _next) => {
             void HonoNodeServer.getRequestListener(async request => {
               // request.viteDevServer = server
