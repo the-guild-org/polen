@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  polen: link:../../../Library/pnpm/global/5/node_modules/polen
-
 importers:
 
   .:
@@ -44,9 +41,6 @@ importers:
       marked:
         specifier: ^15.0.8
         version: 15.0.8
-      polen:
-        specifier: link:../../../Library/pnpm/global/5/node_modules/polen
-        version: link:../../../Library/pnpm/global/5/node_modules/polen
       react:
         specifier: ^19.1.0
         version: 19.1.0
