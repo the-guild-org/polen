@@ -29,9 +29,8 @@ TODO: Waiting on https://github.com/orgs/pnpm/discussions/9411
    1. Run `pnpm link ../..`
    2. Run `pnpm run dev`
    3. Now open the example app (http://localhost:5173)
-   4. When you are done revert changes caused by step 2.1:
-      1. Change to `pnpm-lock.yaml`
-      2. Created `pnpm-workspace.yaml`
+   4. When you are done revert changes caused by step 2.1 by running
+      `pnpm run examples:unlink`
 
 ### Testing
 
