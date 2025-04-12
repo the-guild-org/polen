@@ -17,19 +17,20 @@
 During local development you can link the source code with examples to try out
 changes. to the example projects by running.
 
-#### One Time System Setup
+<!-- #### One Time System Setup
 
-1. [`pnpm link`](https://pnpm.io/cli/link) in the root directory.
+1. [`pnpm link`](https://pnpm.io/cli/link) in the root directory. -->
 
 #### Session Setup
 
 1. In the root directory, run `pnpm run dev` (to have TS source being emitted as
    JS)
 2. In an example project:
-   1. Run `pnpm link polen`
+   1. Run `pnpm link ../..`
    2. Run `pnpm run dev`
    3. Now open the example app (http://localhost:5173)
-   4. When you are done, revert the changes caused by step 2.1.
+   4. When you are done, revert the changes caused by step 2.1 to
+      `pnpm-lock.yaml`
 
 #### Notes
 
