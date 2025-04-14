@@ -1,11 +1,11 @@
 import { defineConfig, devices } from 'playwright/test'
 import type { WorkerFixtures } from './helpers/test.js'
 import { type TestFixtures } from './helpers/test.js'
-import { parsePolenSource } from './helpers/polen-source.js'
+import { PolenSource } from './helpers/polen-source.js'
 
 const isCi = !!process.env[`CI`]
 const polenSource = process.env[`POLEN_SOURCE`]
-  ? parsePolenSource(process.env[`POLEN_SOURCE`])
+  ? PolenSource.parse(process.env[`POLEN_SOURCE`])
   : isCi
   ? `localFile`
   : undefined

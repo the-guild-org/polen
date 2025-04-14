@@ -1,12 +1,11 @@
-export const PolenSource = {
+import { z } from 'zod'
+
+export const PolenSourceEnum = {
   localLink: `localLink`,
   localFile: `localFile`,
   registry: `registry`,
 } as const
 
-export type PolenSource = (typeof PolenSource)[keyof typeof PolenSource]
+export type PolenSource = (typeof PolenSourceEnum)[keyof typeof PolenSourceEnum]
 
-export const parsePolenSource = (value: string): PolenSource => {
-  if (value in PolenSource) return value as PolenSource
-  throw new Error(`Invalid Polen source: ${value}`)
-}
+export const PolenSource = z.nativeEnum(PolenSourceEnum)
