@@ -5,13 +5,18 @@ import { $, type ProcessOutput } from 'zx'
 import type { Configurator } from '../../../src/configurator/_namespace.js'
 import type { ViteUserConfigWithPolen } from '../../../src/createConfiguration.js'
 
-const PolenSource = {
+export const PolenSource = {
   localLink: `localLink`,
   localFile: `localFile`,
   registry: `registry`,
 } as const
 
 export type PolenSource = (typeof PolenSource)[keyof typeof PolenSource]
+
+export const parsePolenSource = (value: string): PolenSource => {
+  if (value in PolenSource) return value as PolenSource
+  throw new Error(`Invalid Polen source: ${value}`)
+}
 
 export interface Fixtures {
   cwd: string
@@ -44,7 +49,11 @@ export const test = base.extend<Fixtures>({
     const output = await $({ cwd })`pnpm install`
     if (polenSource !== PolenSource.registry) {
       const protocol = polenSource === PolenSource.localLink ? `link` : `file`
-      await $({ cwd })`pnpm add polen@${protocol}:../..`
+      if (protocol === `link`) {
+        await $({ cwd })`pnpm link ../..`
+      } else {
+        await $({ cwd })`pnpm add polen@${protocol}:../..`
+      }
     }
     // eslint-disable-next-line
     await use(output)

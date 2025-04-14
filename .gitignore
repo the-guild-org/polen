@@ -31,4 +31,5 @@ dist-ssr
 /examples/**/build
 examples/*/pnpm-workspace.yaml
 examples/_tests/__results__
+tests/*/__results__
 tsconfig.build.tsbuildinfo

@@ -1,6 +1,7 @@
 import { CodeBuilder } from '../lib/code-builder/_namespace.js'
 import { Fs } from '../lib/fs/_namespace.js'
 import { Path } from '../lib/path/_namespace.js'
+import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
 import { vi } from './helpers.js'
 import { defu } from 'defu'
@@ -21,57 +22,56 @@ export const Build = (parameters: {
     configResolved(config) {
       viteConfigResolved = config
     },
-    ...Vite.VirtualIdentifier.toHooks$FromMap(
-      new Map([
-        [viServerEntry, () => {
-          const serverPort = viteConfigResolved.server.port + 1
+    ...ViteVirtual.toHooks$FromEntries(
+      [viServerEntry, () => {
+        const serverPort = viteConfigResolved.server.port + 1
 
-          const entryServerPath = Path.absolutify(
-            config.entryServerPath,
-            viteConfigResolved.root,
-          )
-          const entrServeryViteGlobPath = `/` +
-            Path.relative(viteConfigResolved.root, entryServerPath)
-          const staticServingPaths = {
-            // todo
-            // relative from CWD of process that boots node server
-            // can easily break! Use path relative in server??
-            dirPath: `./dist`,
-            routePath: `/${viteConfigResolved.build.assetsDir}/*`,
-          }
+        const entryServerPath = Path.absolutify(
+          config.entryServerPath,
+          viteConfigResolved.root,
+        )
+        const entrServeryViteGlobPath = `/` +
+          Path.relative(viteConfigResolved.root, entryServerPath)
+        const staticServingPaths = {
+          // todo
+          // relative from CWD of process that boots node server
+          // can easily break! Use path relative in server??
+          dirPath: `./dist`,
+          routePath: `/${viteConfigResolved.build.assetsDir}/*`,
+        }
 
-          const code = CodeBuilder.create()
+        const code = CodeBuilder.create()
 
-          const _ = {
-            app: `app`,
-            entry: `entry`,
-            entries: `entries`,
-          }
+        const _ = {
+          app: `app`,
+          entry: `entry`,
+          entries: `entries`,
+        }
 
-          code(`import { Hono } from 'hono'`)
-          code(``)
-          code(`const ${_.app} = new Hono()`)
-          code(``)
-          code(``)
-          code(`// Static Files`)
-          code(``)
-          code(`import { serveStatic } from '@hono/node-server/serve-static'`)
-          code(``)
-          code(`${_.app}.use(
+        code(`import { Hono } from 'hono'`)
+        code(``)
+        code(`const ${_.app} = new Hono()`)
+        code(``)
+        code(``)
+        code(`// Static Files`)
+        code(``)
+        code(`import { serveStatic } from '@hono/node-server/serve-static'`)
+        code(``)
+        code(`${_.app}.use(
     				'${staticServingPaths.routePath}',
     				serveStatic({ root: '${staticServingPaths.dirPath}' })
     			)`)
-          code(``)
-          code(``)
-          code(`// Entries`)
-          code(``)
-          code(`const ${_.entries} = import.meta.glob(
+        code(``)
+        code(``)
+        code(`// Entries`)
+        code(``)
+        code(`const ${_.entries} = import.meta.glob(
     				['${entrServeryViteGlobPath}'],
     				{ import: 'default', eager: true }
     			)`)
-          code(``)
-          code(`/** @see https://github.com/honojs/hono/issues/4051 */`)
-          code(`const delegate = (app1, method, path, app2) => {
+        code(``)
+        code(`/** @see https://github.com/honojs/hono/issues/4051 */`)
+        code(`const delegate = (app1, method, path, app2) => {
 						app1.on(method, path, (c) => {
 							// Throws if executionCtx is not available
 							// https://hono.dev/docs/api/context#executionctx
@@ -81,19 +81,18 @@ export const Build = (parameters: {
 							return app2.fetch(c.req.raw, c.env, maybeExecutionContext)
 						})
 					}`)
-          code(`for (const ${_.entry} of Object.values(${_.entries})) {
+        code(`for (const ${_.entry} of Object.values(${_.entries})) {
 						delegate(${_.app}, 'all', '*', ${_.entry})
     			}`)
-          code(``)
-          code(``)
-          code(`// Start Server`)
-          code(``)
-          code(`import { serve } from '@hono/node-server'`)
-          code(`serve({ fetch: ${_.app}.fetch, port: ${serverPort.toString()} })`)
+        code(``)
+        code(``)
+        code(`// Start Server`)
+        code(``)
+        code(`import { serve } from '@hono/node-server'`)
+        code(`serve({ fetch: ${_.app}.fetch, port: ${serverPort.toString()} })`)
 
-          return code.render()
-        }],
-      ]),
+        return code.render()
+      }],
     ),
     config() {
       return {
@@ -149,27 +148,25 @@ const Manifest = (): Vite.Plugin => {
     configResolved(config) {
       viteConfigResolved = config
     },
-    ...Vite.VirtualIdentifier.toHooks$FromMap(
-      new Map([
-        [viClientManifest, async () => {
-          // In development just return an empty manifest
-          if (configEnv.mode === Vite.ModeName.development) {
-            return `export default {}`
-          }
+    ...ViteVirtual.toHooks$FromEntries(
+      [viClientManifest, async () => {
+        // In development just return an empty manifest
+        if (configEnv.mode === Vite.ModeName.development) {
+          return `export default {}`
+        }
 
-          const manifestPath = Path.join(
-            viteConfigResolved.root,
-            viteConfigResolved.build.outDir,
-            `.vite`,
-            `manifest.json`,
-          )
-          const module = await import(manifestPath, { with: { type: `json` } }) as {
-            default: Vite.Manifest,
-          }
+        const manifestPath = Path.join(
+          viteConfigResolved.root,
+          viteConfigResolved.build.outDir,
+          `.vite`,
+          `manifest.json`,
+        )
+        const module = await import(manifestPath, { with: { type: `json` } }) as {
+          default: Vite.Manifest,
+        }
 
-          return `export default ${JSON.stringify(module.default)}`
-        }],
-      ]),
+        return `export default ${JSON.stringify(module.default)}`
+      }],
     ),
   }
 }

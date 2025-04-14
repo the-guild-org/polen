@@ -5,10 +5,12 @@ A framework for delightful GraphQL developer portals ✨.
 ## Installation
 
 ```
-npm add polen vite
+npm add polen vite react-dom
 ```
 
-Vite is a peer dependency of Polen.
+- `vite` is a peer dependency of Polen.
+- `react-dom` is needed to work around an issue with `react-router`
+  ([1](https://github.com/the-guild-org/polen/pull/9#issuecomment-2801683840))
 
 ## Example
 
@@ -49,6 +51,34 @@ The following shows minimal default usage.
 
 ## Guide
 
+### Schema Augmentations
+
+#### Schema Descriptions
+
+You can append/prepend/replace descriptions of types and fields in your schema.
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.createConfiguration({
+  templateVariables: {
+    title: `Basic Developer Portal`,
+  },
+  schemaAugmentations: [
+    {
+      type: `description`,
+      on: {
+        type: `TargetType`,
+        name: `Query`,
+      },
+      placement: `over`,
+      content:
+        `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
+    },
+  ],
+})
+```
+
 ### Package
 
 #### ESM
@@ -67,3 +97,15 @@ import { VitePlugin } from 'polen/exports'
 
 console.log(Polen.VitePlugin === VitePlugin) // true
 ```
+
+## Other
+
+### Changelog
+
+Refer to
+[releases on this repo](https://github.com/the-guild-org/polen/releases).
+
+### Development
+
+If you are working on Polen itself, then refer to
+[DEVELOPMENT.md](./DEVELOPMENT.md) for details about workflow, testing, etc.

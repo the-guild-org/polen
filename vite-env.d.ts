@@ -35,25 +35,18 @@ declare module 'virtual:polen/vite/client/manifest' {
 }
 
 declare module 'virtual:polen/template/variables' {
-  // eslint-disable-next-line
-  const variables: import('./src/vite-plugin/configurator/_exports.ts').TemplateVariables
-  export default variables
+  export const templateVariables:
+    // eslint-disable-next-line
+    import('./src/vite-plugin/configurator/_exports.ts').TemplateVariables
+}
+
+declare module 'virtual:polen/template/schema-augmentations' {
+  export const schemaAugmentations:
+    // eslint-disable-next-line
+    import('./src/schema-augmentation/schema-augmentation.js').Augmentation[]
 }
 
 declare module 'virtual:polen/*' {
   const content: string
   export default content
-}
-
-/**
- * Augmentation for the global Window interface
- */
-
-declare global {
-  interface Window {
-    __staticRouterHydrationData?: Partial<
-      // eslint-disable-next-line
-      Pick<import('react-router').RouterState, `loaderData` | `actionData` | `errors`>
-    >
-  }
 }

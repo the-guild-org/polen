@@ -9,12 +9,23 @@ import { createRoute } from '../../lib/react-router-helpers.js'
 import { reference } from './reference.jsx'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import entryClientUrl from '../entry.client.jsx?url'
-import templateVariables from 'virtual:polen/template/variables'
+import { templateVariables } from 'virtual:polen/template/variables'
+// console.log(entryClientUrl)
+
+const reactRefreshPreamble = `
+import RefreshRuntime from "/@react-refresh";
+RefreshRuntime.injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;
+window.__vite_plugin_react_preamble_installed__ = true;
+`
 
 export const Component = () => {
   return (
     <html lang="en">
       <head>
+        {import.meta.env.DEV && <script type="module">{reactRefreshPreamble}</script>}
+        {import.meta.env.DEV && <script type="module" src="/@vite/client"></script>}
         <meta charSet="utf-8" />
         <meta
           name="viewport"

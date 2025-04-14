@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       polen:
-        specifier: 0.1.0
+        specifier: ^0.1.0
         version: 0.1.0(vite@6.2.6)
     devDependencies:
       typescript:

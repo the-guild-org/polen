@@ -1,1 +1,1 @@
-export * as Configurator from './main.js'
+export * as Configurator from './configurator.js'

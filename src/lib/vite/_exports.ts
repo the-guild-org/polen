@@ -1,7 +1,5 @@
 import * as Vite from 'vite'
 
-export * as VirtualIdentifier from './virtual-identifier.js'
-
 type AnyFunction = (...args: any[]) => any
 
 export type HookLoadFn = Extract<Vite.Plugin[`load`], AnyFunction>

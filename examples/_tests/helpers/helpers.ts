@@ -14,7 +14,7 @@ export const getPaths = (importMeta: ImportMeta): {
   examples: string,
 } => {
   const testModulePath = Path.parse(Url.fileURLToPath(importMeta.url))
-  const exampleName = testModulePath.name
+  const exampleName = Path.basename(testModulePath.base, `.test.ts`)
   const exampleDir = Path.join(examplesDir, exampleName)
   return {
     examples: examplesDir,
