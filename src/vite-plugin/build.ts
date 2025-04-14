@@ -48,14 +48,18 @@ export const Build = (parameters: {
           entries: `entries`,
         }
 
-        code(`import { Hono } from 'hono'`)
+        const honoPath = import.meta.resolve(`hono`)
+        const honoNodeServerServeStaticPath = import.meta.resolve(`@hono/node-server/serve-static`)
+        const honoNodeServerPath = import.meta.resolve(`@hono/node-server`)
+
+        code(`import { Hono } from '${honoPath}'`)
         code(``)
         code(`const ${_.app} = new Hono()`)
         code(``)
         code(``)
         code(`// Static Files`)
         code(``)
-        code(`import { serveStatic } from '@hono/node-server/serve-static'`)
+        code(`import { serveStatic } from '${honoNodeServerServeStaticPath}'`)
         code(``)
         code(`${_.app}.use(
     				'${staticServingPaths.routePath}',
@@ -88,7 +92,7 @@ export const Build = (parameters: {
         code(``)
         code(`// Start Server`)
         code(``)
-        code(`import { serve } from '@hono/node-server'`)
+        code(`import { serve } from '${honoNodeServerPath}'`)
         code(`serve({ fetch: ${_.app}.fetch, port: ${serverPort.toString()} })`)
 
         return code.render()

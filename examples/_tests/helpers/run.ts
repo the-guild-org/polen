@@ -11,7 +11,8 @@ export const runBuild = async (
 }
 
 export interface ServerProcess {
-  process: ProcessPromise
+  raw: ProcessPromise
+  stop: () => Promise<void>
   url: string
 }
 
@@ -28,7 +29,10 @@ export const runDev = async (
     const url = (logUrlPattern.exec(linePlain))?.[1]
     if (url) {
       return {
-        process: serverProcess,
+        raw: serverProcess,
+        stop: async () => {
+          await stopServerProcess(serverProcess)
+        },
         url,
       }
     }
@@ -42,21 +46,26 @@ export const runStart = async ({ cwd }: { cwd: string }): Promise<ServerProcess>
 
   const serverProcess = $$`pnpm run start`
 
-  // eslint-disable-next-line
-  serverProcess.catch((error: ProcessOutput) => {
-    // We cannot achieve a clean exit for some reason so far.
-    console.log(`runStart server process error -----------------`)
-    console.log(error)
-    console.log(`runStart server process error -----------------`)
-    // silence
-    // throw error
-  })
-
   // todo: If we give some log output from server then we can use that to detect when the server is ready.
   await $$`sleep 1`
 
   return {
-    process: serverProcess,
+    raw: serverProcess,
+    stop: async () => {
+      await stopServerProcess(serverProcess)
+    },
     url: `http://localhost:5174`,
   }
+}
+
+const stopServerProcess = async (processPromise: ProcessPromise) => {
+  processPromise.catch((error: unknown) => {
+    // We cannot achieve a clean exit for some reason so far.
+    // console.log(`server process error on kill -----------------`)
+    // console.log(error)
+    // console.log(`server process error on kill -----------------`)
+    // silence
+    // throw error
+  })
+  await processPromise.kill()
 }

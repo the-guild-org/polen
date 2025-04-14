@@ -5,12 +5,13 @@ A framework for delightful GraphQL developer portals ✨.
 ## Installation
 
 ```
-npm add polen vite react-dom
+npm add polen vite react react-dom
 ```
 
-- `vite` is a peer dependency of Polen.
-- `react-dom` is needed to work around an issue with `react-router`
-  ([1](https://github.com/the-guild-org/polen/pull/9#issuecomment-2801683840))
+- `vite`, `react`, `react-dom` are peer dependencies of Polen.
+- We would like to remove `react` and `react-dom` as peers deps in the future to
+  simplify this for you.
+  ([see](https://github.com/the-guild-org/polen/pull/9#issuecomment-2801683840))
 
 ## Example
 

@@ -9,8 +9,10 @@ export const VerEnum = {
   file: `file`,
 } as const
 
-export const Ver = z.union([
+export const VerForMoltCommand = z.union([
   z.literal(VerEnum.link),
   z.literal(VerEnum.file),
   z.string().regex(npmVerPattern),
-]).transform(v => v as Ver)
+])
+
+export const Ver = VerForMoltCommand.transform(v => v as Ver)
