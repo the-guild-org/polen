@@ -1,4 +1,4 @@
-// import globals from 'globals'
+import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 // import reactRefresh from 'eslint-plugin-react-refresh'
 import unusedImports from 'eslint-plugin-unused-imports'
@@ -21,6 +21,9 @@ export default tsEslint.config(
   reactHooks.configs['recommended-latest'],
   {
     languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
