@@ -7,7 +7,7 @@ const args = Command
   .parameter(`name`, ExampleName)
   .parse()
 
-await ExampleController.create({
+const _controller = await ExampleController.create({
   exampleName: args.name,
   debug: true,
 })
