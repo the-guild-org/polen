@@ -34,17 +34,17 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     const server = await runDev({ cwd: project.fs.cwd() })
     // eslint-disable-next-line
     await use(server)
-    await server.process.kill()
+    await server.stop()
   },
   runBuild: async ({ project }, use) => {
     const output = await runBuild({ cwd: project.fs.cwd() })
     // eslint-disable-next-line
     await use(output)
   },
-  runStart: async ({ project }, use) => {
+  runStart: async ({ project, runBuild: _ }, use) => {
     const server = await runStart({ cwd: project.fs.cwd() })
     // eslint-disable-next-line
     await use(server)
-    await server.process.kill()
+    await server.stop()
   },
 })

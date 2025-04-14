@@ -8,7 +8,7 @@ const polenVer = process.env[`POLEN_VER`]
   ? Ver.parse(process.env[`POLEN_VER`])
   : isCi
   ? VerEnum.file
-  : undefined
+  : VerEnum.file
 
 export default defineConfig<TestFixtures, WorkerFixtures>({
   name: `examples`,

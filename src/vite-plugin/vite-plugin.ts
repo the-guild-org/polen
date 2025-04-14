@@ -1,6 +1,8 @@
 import { Configurator } from '../configurator/_namespace.js'
+import * as HonoNodeServer from '@hono/node-server'
+import type { Hono } from '../lib/hono/_namespace.js'
 import { Vite } from '../lib/vite/_namespace.js'
-import ReactVite from '@vitejs/plugin-react'
+import ReactVite from '@vitejs/plugin-react-swc'
 import { vi } from './helpers.js'
 import { Build } from './build.js'
 import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
@@ -22,19 +24,18 @@ export const VitePlugin = (
   return VitePluginInternal(polenConfig)
 }
 
-import * as HonoNodeServer from '@hono/node-server'
-import type { Hono } from '../lib/hono/_namespace.js'
-
 export const VitePluginInternal = (
   polenConfig: Configurator.Config,
 ): Vite.PluginOption => {
   const debug = true
 
   return [
-    // HonoDevServer({
-    //   entry: polenConfig.paths.appTemplate.entryServer,
-    //   adapter: HonoDevServerNodeAdapter,
-    // }),
+    // {
+    //   name: `debug`,
+    //   configResolved(config) {
+    //     dump(config)
+    //   },
+    // },
     ReactVite(),
     ViteVirtual.Plugin(
       [viAssetGraphqlSchema, async () => {
@@ -58,6 +59,7 @@ export const VitePluginInternal = (
     {
       name: `polen-dev-server`,
       apply: `serve`,
+
       async configureServer(server) {
         // Load our entry server
 
@@ -66,6 +68,7 @@ export const VitePluginInternal = (
           const ssrloadedModule = await server.ssrLoadModule(
             polenConfig.paths.appTemplate.entryServer,
           )
+          // console.log(ssrloadedModule)
           honoApp = ssrloadedModule[`default`] as Hono.Hono
         } catch (cause) {
           if (cause instanceof Error) {
@@ -93,7 +96,40 @@ export const VitePluginInternal = (
         }
       },
       config() {
+        // const reactPath = import.meta.resolve(`react`)
+        // const reactJsxRuntimePath = import.meta.resolve(`react/jsx-runtime`)
+        // const reactJsxDevRuntimePath = import.meta.resolve(`react/jsx-dev-runtime`)
         return {
+          optimizeDeps: {
+            include: [
+              `react`,
+              // `react/jsx-runtime`,
+              // `react/jsx-dev-runtime`,
+              // reactPath,
+              // reactJsxRuntimePath,
+              // reactJsxDevRuntimePath,
+            ],
+          },
+          // Make it possible for ReactVite to find react dependency within Polen.
+          resolve: {
+            alias: [
+              // { find: `react`, replacement: reactPath },
+              // { find: `react/jsx-runtime`, replacement: reactJsxRuntimePath },
+              // { find: `react/jsx-dev-runtime`, replacement: reactJsxDevRuntimePath },
+              // {
+              //   find: `react`,
+              //   replacement: `polen/dependencies/react`,
+              // },
+              // {
+              //   find: `react/jsx-runtime`,
+              //   replacement: `polen/dependencies/react/jsx-runtime`,
+              // },
+              // {
+              //   find: `react/jsx-dev-runtime`,
+              //   replacement: `polen/dependencies/react/jsx-dev-runtime`,
+              // },
+            ],
+          },
           // server: {
           // middlewareMode: true,
           // },

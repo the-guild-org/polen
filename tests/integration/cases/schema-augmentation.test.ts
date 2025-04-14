@@ -1,6 +1,6 @@
 import { expect, test as base } from 'playwright/test'
 import { Vite } from '../../../src/lib/vite/_namespace.js'
-import { Polen } from '../../../src/_namespace.js'
+import { Polen } from '../../../src/entrypoints/_namespace.js'
 import type { SchemaAugmentation } from '../../../src/schema-augmentation/_namespace.js'
 
 type ViteDevServerPlus = Vite.ViteDevServer & { cannonicalUrl: URL }
