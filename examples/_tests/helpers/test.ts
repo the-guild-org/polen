@@ -2,7 +2,7 @@ import { test as base } from 'playwright/test'
 import type { ServerProcess } from './run.js'
 import { runBuild, runDev, runStart } from './run.js'
 import { type ProcessOutput } from 'zx'
-import type { PolenSourceEnum } from './polen-source.js'
+import type { PolenSource } from './polen-source.js'
 import { ExampleController } from './example-controller.js'
 import type { ExampleName } from './example-name.js'
 

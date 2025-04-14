@@ -23,6 +23,7 @@ export namespace ExampleController {
     shell: Shell
     fs: FSJetpack
     config: ViteUserConfigWithPolen
+    packageJson: PackageJson
   }
 
   /**
@@ -51,29 +52,23 @@ export namespace ExampleController {
     debug(`copied example`)
 
     const pathToPolenSourceCodeFromExample = `../` + Path.relative(exampleFs.cwd(), projectDir)
-    console.log(`file:` + pathToPolenSourceCodeFromExample)
 
     if (parameters.polenSource && parameters.polenSource !== PolenSourceEnum.registry) {
-      const packageJson = await exampleFs.readAsync(`package.json`, `json`) as PackageJson
-      packageJson.dependencies ??= {}
-
       switch (parameters.polenSource) {
         case PolenSourceEnum.localLink: {
-          packageJson.dependencies[`polen`] = `link:` + pathToPolenSourceCodeFromExample
-          debug(`set polen to be a link dependency`)
+          await exampleShell`pnpm add ${`link:` + pathToPolenSourceCodeFromExample}`
+          debug(`install polen as link dependency`)
           break
         }
         case PolenSourceEnum.localFile: {
-          packageJson.dependencies[`polen`] = `file:` + pathToPolenSourceCodeFromExample
-          debug(`set polen to be a file dependency`)
+          await exampleShell`pnpm add ${`file:` + pathToPolenSourceCodeFromExample}`
+          debug(`install polen as file dependency`)
           break
         }
         default: {
           casesHandled(parameters.polenSource)
         }
       }
-
-      await exampleFs.writeAsync(`package.json`, packageJson)
     }
 
     await exampleShell`pnpm install`
@@ -84,11 +79,14 @@ export namespace ExampleController {
     }
     debug(`loaded configuration`)
 
+    const packageJson = await exampleFs.readAsync(`package.json`, `json`) as PackageJson
+
     return {
       name: parameters.exampleName,
       shell: exampleShell,
       fs: exampleFs,
       config: config.default,
+      packageJson,
     }
   }
 }
