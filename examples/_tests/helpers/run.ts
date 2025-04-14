@@ -21,7 +21,6 @@ export const runDev = async (
   const $$ = $({ cwd })
 
   const serverProcess = $$`pnpm run dev`
-  serverProcess.catch(console.error)
 
   const logUrlPattern = /(https?:\/\/\S+)/
   for await (const line of serverProcess) {

@@ -32,6 +32,18 @@ TODO: Waiting on https://github.com/orgs/pnpm/discussions/9411
    4. When you are done revert changes caused by step 2.1 by running
       `pnpm run examples:unlink`
 
+### Developing With _Strictly_
+
+Because examples are nested within this project it leads to strange beahviours
+like node resolution going into this project's node_modules and thus
+[masking bugs](https://github.com/the-guild-org/polen/issues/11).
+
+To get around this copy the example to a temporary location and develop with it
+there.
+
+There is a project CLI to make this easy, check
+`pnpm run project:example-controller --help`.
+
 ### Testing
 
 #### Overview
@@ -49,9 +61,3 @@ TODO: Waiting on https://github.com/orgs/pnpm/discussions/9411
 - This is a
   [Playwright fixture option](https://playwright.dev/docs/test-fixtures#fixtures-options)
   that you can override.
-
-#### Notes
-
-Keep in mind that if you are doing [Developing With](#developing-with), you will
-necessarily impact that example's test such that it will be using the local
-Polen version.

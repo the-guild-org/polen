@@ -9,8 +9,11 @@
     "isolatedModules": true,
     "outDir": "build",
     "declaration": true,
-    "noEmit": true
+    "noEmit": true,
+    // Rely on ESLint for unused variables
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "exclude": ["eslint.config.js", "build"],
-  "include": ["tests", "src", "vite-env.d.ts", "global.d.ts", "examples/_tests"]
+  "include": ["tests", "src", "vite-env.d.ts", "global.d.ts", "examples/_tests", "scripts"]
 }
