@@ -7,9 +7,7 @@ import { $ } from 'zx'
 import type { FSJetpack } from 'fs-jetpack/types.js'
 import type { ExampleName } from './example-name.js'
 import { debug } from '../../../src/lib/debug/debug.js'
-import type { PolenSource } from './polen-source.js'
-import { PolenSourceEnum } from './polen-source.js'
-import { casesHandled } from '../../../src/lib/prelude/main.js'
+import { type Ver, npmVerPattern } from './ver.js'
 import type { ViteUserConfigWithPolen } from '../../../src/createConfiguration.js'
 
 const selfPath = Url.fileURLToPath(import.meta.url)
@@ -32,7 +30,7 @@ export namespace ExampleController {
   export const create = async (parameters: {
     exampleName: ExampleName,
     debug?: boolean,
-    polenSource?: PolenSource,
+    polenVer?: Ver,
   }) => {
     const debugMode = parameters.debug ?? false
     debug.toggle(debugMode)
@@ -53,20 +51,26 @@ export namespace ExampleController {
 
     const pathToPolenSourceCodeFromExample = `../` + Path.relative(exampleFs.cwd(), projectDir)
 
-    if (parameters.polenSource && parameters.polenSource !== PolenSourceEnum.registry) {
-      switch (parameters.polenSource) {
-        case PolenSourceEnum.localLink: {
+    if (parameters.polenVer) {
+      switch (parameters.polenVer) {
+        case `link`: {
           await exampleShell`pnpm add ${`link:` + pathToPolenSourceCodeFromExample}`
           debug(`install polen as link dependency`)
           break
         }
-        case PolenSourceEnum.localFile: {
+        case `file`: {
           await exampleShell`pnpm add ${`file:` + pathToPolenSourceCodeFromExample}`
           debug(`install polen as file dependency`)
           break
         }
         default: {
-          casesHandled(parameters.polenSource)
+          const npmVer = npmVerPattern.exec(parameters.polenVer)?.[1]
+          if (!npmVer) {
+            throw new Error(`Invalid polenVer: ${parameters.polenVer}`)
+          }
+          await exampleShell`pnpm add ${parameters.polenVer}`
+          debug(`install polen as npm dependency`)
+          break
         }
       }
     }

@@ -2,7 +2,7 @@ import { test as base } from 'playwright/test'
 import type { ServerProcess } from './run.js'
 import { runBuild, runDev, runStart } from './run.js'
 import { type ProcessOutput } from 'zx'
-import type { PolenSource } from './polen-source.js'
+import type { Ver } from './ver.js'
 import { ExampleController } from './example-controller.js'
 import type { ExampleName } from './example-name.js'
 
@@ -14,18 +14,18 @@ export interface TestFixtures {
 
 export interface WorkerFixtures {
   exampleName: ExampleName
-  polenSource: PolenSource
+  polenVer: Ver | undefined
   project: ExampleController.ExampleController
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
-  polenSource: [`registry`, { option: true, scope: `worker` }],
+  polenVer: [undefined, { option: true, scope: `worker` }],
   exampleName: [`basic`, { option: true, scope: `worker` }],
-  project: [async ({ exampleName, polenSource }, use, workerInfo) => {
-    console.log(`run fixture project`, workerInfo.workerIndex, exampleName, polenSource)
+  project: [async ({ exampleName, polenVer }, use, workerInfo) => {
+    console.log(`run fixture project`, workerInfo.workerIndex, exampleName, polenVer)
     const project = await ExampleController.create({
       exampleName,
-      polenSource,
+      polenVer,
       debug: true,
     })
     await use(project)
