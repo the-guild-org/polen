@@ -5,13 +5,18 @@ import { $, type ProcessOutput } from 'zx'
 import type { Configurator } from '../../../src/configurator/_namespace.js'
 import type { ViteUserConfigWithPolen } from '../../../src/createConfiguration.js'
 
-const PolenSource = {
+export const PolenSource = {
   localLink: `localLink`,
   localFile: `localFile`,
   registry: `registry`,
 } as const
 
 export type PolenSource = (typeof PolenSource)[keyof typeof PolenSource]
+
+export const parsePolenSource = (value: string): PolenSource => {
+  if (value in PolenSource) return value as PolenSource
+  throw new Error(`Invalid Polen source: ${value}`)
+}
 
 export interface Fixtures {
   cwd: string
