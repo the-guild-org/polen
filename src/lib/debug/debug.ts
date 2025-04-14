@@ -5,13 +5,18 @@ import { snakeCase } from 'es-toolkit'
 type DebugParameters = [event: string, payload?: unknown]
 
 export const create = (namespace?: string) => {
-  return (...args: DebugParameters) => {
-    const isDebug = process.env[`DEBUG`] === `true` || process.env[`DEBUG`] === `*` ||
-      process.env[`DEBUG`] === `1`
+  const isDebugEnabled = process.env[`DEBUG`] === `true` || process.env[`DEBUG`] === `*` ||
+    process.env[`DEBUG`] === `1`
+
+  const state = {
+    isEnabled: isDebugEnabled,
+  }
+
+  const debug = (...args: DebugParameters) => {
     const isPayloadPassed = args.length === 2
     const [event, payload] = args
 
-    if (isDebug) {
+    if (state.isEnabled) {
       const debugDepth = parseNumberOr(process.env[`DEBUG_DEPTH`], 0)
       const isPayloadDisabled = debugDepth < 0
 
@@ -45,6 +50,12 @@ export const create = (namespace?: string) => {
       console.debug(prefixRendered, payloadRendered)
     }
   }
+
+  debug.toggle = (isEnabled: boolean) => {
+    state.isEnabled = isEnabled
+  }
+
+  return debug
 }
 
 export const debug = create()
