@@ -2,6 +2,15 @@
   "name": "polen",
   "version": "0.0.6",
   "type": "module",
+  "keywords": [
+    "graphql",
+    "polen",
+    "pollen",
+    "developer portal",
+    "api",
+    "docs",
+    "reference"
+  ],
   "scripts": {
     "examples:unlink": "rm -rf examples/{basic,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
     "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
