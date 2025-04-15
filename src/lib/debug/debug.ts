@@ -4,11 +4,15 @@ import { snakeCase } from 'es-toolkit'
 
 type DebugParameters = [event: string, payload?: unknown]
 
-export const create = (namespace?: string) => {
+interface State {
+  isEnabled: boolean
+}
+
+export const create = (namespace?: string, initialState?: State) => {
   const isDebugEnabled = process.env[`DEBUG`] === `true` || process.env[`DEBUG`] === `*` ||
     process.env[`DEBUG`] === `1`
 
-  const state = {
+  const state: State = initialState ?? {
     isEnabled: isDebugEnabled,
   }
 
@@ -53,6 +57,12 @@ export const create = (namespace?: string) => {
 
   debug.toggle = (isEnabled: boolean) => {
     state.isEnabled = isEnabled
+  }
+
+  debug.sub = (subNamespace: string) => {
+    const stateCopy = structuredClone(state)
+    const fullNamespace = namespace ? `${namespace}:${subNamespace}` : subNamespace
+    return create(fullNamespace, stateCopy)
   }
 
   return debug

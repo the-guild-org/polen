@@ -1,15 +1,13 @@
 import { test as base } from 'playwright/test'
-import { runDev } from './run.js'
 import { type ProcessOutput } from 'zx'
 import type { Ver } from './ver.js'
-import type { ServerProcess } from './example-controller.js'
-import { ExampleController } from './example-controller.js'
 import type { ExampleName } from './example-name.js'
+import { ExampleController } from './example-controller/_namespace.js'
 
 export interface TestFixtures {
-  runDev: ServerProcess
+  runDev: ExampleController.ServerProcess
   runBuild: ProcessOutput
-  runStart: ServerProcess
+  runStart: ExampleController.ServerProcess
 }
 
 export interface WorkerFixtures {
@@ -25,24 +23,21 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     const project = await ExampleController.create({
       exampleName,
       polenVer,
-      debug: true,
+      debugMode: true,
     })
     await use(project)
   }, { scope: `worker` }],
   runDev: async ({ project }, use) => {
-    const server = await runDev({ cwd: project.fs.cwd() })
-    // eslint-disable-next-line
+    const server = await project.run.dev()
     await use(server)
     await server.stop()
   },
   runBuild: async ({ project }, use) => {
     const output = await project.run.build()
-    // eslint-disable-next-line
     await use(output)
   },
   runStart: async ({ project, runBuild: _ }, use) => {
     const server = await project.run.start()
-    // eslint-disable-next-line
     await use(server)
     await server.stop()
   },
