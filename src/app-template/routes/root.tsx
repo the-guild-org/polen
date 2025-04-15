@@ -10,6 +10,7 @@ import { reference } from './reference.jsx'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import entryClientUrl from '../entry.client.jsx?url'
 import { templateVariables } from 'virtual:polen/template/variables'
+import { pages } from 'virtual:polen/project/pages.jsx'
 // console.log(entryClientUrl)
 
 const reactRefreshPreamble = `
@@ -80,5 +81,6 @@ export const root = createRoute({
   children: [
     index,
     reference,
+    ...pages,
   ],
 })

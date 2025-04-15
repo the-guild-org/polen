@@ -7,10 +7,12 @@ import { vi } from './helpers.js'
 import { Build } from './build.js'
 import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
 import { readSchemaPointer } from '../configurator/schema-pointer.js'
+import { sourcePaths } from '../source-paths.js'
 
 const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
 const viTemplateVariables = vi([`template`, `variables`])
 const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
+const viProjectPages = vi([`project`, `pages.jsx`])
 
 const codes = {
   MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
@@ -24,18 +26,35 @@ export const VitePlugin = (
   return VitePluginInternal(polenConfig)
 }
 
+// const filePath = Path.join(process.cwd(), `pages/guides/index.md`)
+
+// const pages = [
+//   {
+//     file: `pages/guides/index.md`,
+//     route: {
+//       type: `index`,
+//       path: `/guides`,
+//     },
+//     content: {
+//       markdown: await Fs.readFile(filePath),
+//       js: '',
+//     },
+//   },
+// ]
+
+// todo: rather than current __prop system
+// declare module 'vite' {
+//   interface UserConfig {
+//     polen?: Configurator.ConfigInput
+//   }
+// }
+
 export const VitePluginInternal = (
   polenConfig: Configurator.Config,
 ): Vite.PluginOption => {
   const debug = true
 
   return [
-    // {
-    //   name: `debug`,
-    //   configResolved(config) {
-    //     dump(config)
-    //   },
-    // },
     ReactVite(),
     ViteVirtual.Plugin(
       [viAssetGraphqlSchema, async () => {
@@ -55,11 +74,25 @@ export const VitePluginInternal = (
         }`
         return moduleContent
       }],
+      [viProjectPages, () => {
+        // todo: generate this from the user's pages.
+        const moduleContent = `
+          import { createRoute } from '${sourcePaths.dir}/lib/react-router-helpers.js'
+
+          export const pages = [
+            createRoute({
+              path: '/todo',
+              Component: () => <div>Todo</div>,
+              children: [],
+            })
+          ]
+        `
+        return moduleContent
+      }],
     ),
     {
-      name: `polen-dev-server`,
+      name: `polen:dev-server`,
       apply: `serve`,
-
       async configureServer(server) {
         // Load our entry server
 
@@ -100,36 +133,46 @@ export const VitePluginInternal = (
         // const reactJsxRuntimePath = import.meta.resolve(`react/jsx-runtime`)
         // const reactJsxDevRuntimePath = import.meta.resolve(`react/jsx-dev-runtime`)
         return {
+          server: {
+            fs: {
+              allow: [
+                // todo allow from polen
+              ],
+            },
+          },
           optimizeDeps: {
-            include: [
-              `react`,
-              // `react/jsx-runtime`,
-              // `react/jsx-dev-runtime`,
-              // reactPath,
-              // reactJsxRuntimePath,
-              // reactJsxDevRuntimePath,
-            ],
+            // Polen is already ESM and does not have many internal modules.
+            // https://vite.dev/guide/dep-pre-bundling.html#customizing-the-behavior
+            exclude: [`polen`],
+            // include: [
+            //   // `react`,
+            //   // `react/jsx-runtime`,
+            //   // `react/jsx-dev-runtime`,
+            //   // reactPath,
+            //   // reactJsxRuntimePath,
+            //   // reactJsxDevRuntimePath,
+            // ],
           },
           // Make it possible for ReactVite to find react dependency within Polen.
-          resolve: {
-            alias: [
-              // { find: `react`, replacement: reactPath },
-              // { find: `react/jsx-runtime`, replacement: reactJsxRuntimePath },
-              // { find: `react/jsx-dev-runtime`, replacement: reactJsxDevRuntimePath },
-              // {
-              //   find: `react`,
-              //   replacement: `polen/dependencies/react`,
-              // },
-              // {
-              //   find: `react/jsx-runtime`,
-              //   replacement: `polen/dependencies/react/jsx-runtime`,
-              // },
-              // {
-              //   find: `react/jsx-dev-runtime`,
-              //   replacement: `polen/dependencies/react/jsx-dev-runtime`,
-              // },
-            ],
-          },
+          // resolve: {
+          //   alias: [
+          //     // { find: `react`, replacement: reactPath },
+          //     // { find: `react/jsx-runtime`, replacement: reactJsxRuntimePath },
+          //     // { find: `react/jsx-dev-runtime`, replacement: reactJsxDevRuntimePath },
+          //     // {
+          //     //   find: `react`,
+          //     //   replacement: `polen/dependencies/react`,
+          //     // },
+          //     // {
+          //     //   find: `react/jsx-runtime`,
+          //     //   replacement: `polen/dependencies/react/jsx-runtime`,
+          //     // },
+          //     // {
+          //     //   find: `react/jsx-dev-runtime`,
+          //     //   replacement: `polen/dependencies/react/jsx-dev-runtime`,
+          //     // },
+          //   ],
+          // },
           // server: {
           // middlewareMode: true,
           // },
@@ -137,7 +180,7 @@ export const VitePluginInternal = (
       },
     },
     {
-      name: `polen-build-client`,
+      name: `polen:build-client`,
       apply: `build`,
       applyToEnvironment: Vite.isEnvironmentClient,
 

@@ -40,6 +40,10 @@ declare module 'virtual:polen/template/variables' {
     import('./src/vite-plugin/configurator/_exports.ts').TemplateVariables
 }
 
+declare module 'virtual:polen/project/pages.jsx' {
+  export const pages: any // todo
+}
+
 declare module 'virtual:polen/template/schema-augmentations' {
   export const schemaAugmentations:
     // eslint-disable-next-line
