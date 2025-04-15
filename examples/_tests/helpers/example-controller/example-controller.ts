@@ -14,7 +14,7 @@ import { stripAnsi } from 'consola/utils'
 
 const selfPath = Url.fileURLToPath(import.meta.url)
 const selfDir = Path.dirname(selfPath)
-const projectDir = Path.join(selfDir, `../../../`)
+const projectDir = Path.join(selfDir, `../../../../`)
 const examplesDir = Path.join(projectDir, `/examples`)
 console.log({
   selfPath,
