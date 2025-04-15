@@ -108,6 +108,9 @@ importers:
       fs-jetpack:
         specifier: ^5.1.0
         version: 5.1.0
+      get-port-please:
+        specifier: ^3.1.2
+        version: 3.1.2
       globals:
         specifier: ^16.0.0
         version: 16.0.0
@@ -2009,6 +2012,9 @@ packages:
   get-nonce@1.0.1:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
     engines: {node: '>=6'}
+
+  get-port-please@3.1.2:
+    resolution: {integrity: sha512-Gxc29eLs1fbn6LQ4jSU4vXjlwyZhF5HsGuMAa7gqBP4Rw4yxxltyDUuF5MBclFzDTXO+ACchGQoeela4DSfzdQ==}
 
   get-tsconfig@4.10.0:
     resolution: {integrity: sha512-kGzZ3LWWQcGIAmg6iWvXn0ei6WDtV26wzHRMwDSzmAbcXrTEXxHy6IehI6/4eT6VRKyMP1eF1VqwrVUmE/LR7A==}
@@ -4956,6 +4962,8 @@ snapshots:
   fuse.js@7.1.0: {}
 
   get-nonce@1.0.1: {}
+
+  get-port-please@3.1.2: {}
 
   get-tsconfig@4.10.0:
     dependencies:

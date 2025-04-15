@@ -2,13 +2,14 @@ import type { PackageJson } from 'type-fest'
 import Fsj from 'fs-jetpack'
 import { Path } from '../../../src/lib/path/_namespace.js'
 import { Url } from '../../../src/lib/url/_namespace.js'
-import type { Shell } from 'zx'
+import type { ProcessOutput, ProcessPromise, Shell } from 'zx'
 import { $ } from 'zx'
 import type { FSJetpack } from 'fs-jetpack/types.js'
 import type { ExampleName } from './example-name.js'
 import { debug } from '../../../src/lib/debug/debug.js'
 import { type Ver, npmVerPattern } from './ver.js'
 import type { ViteUserConfigWithPolen } from '../../../src/createConfiguration.js'
+import * as GetPortPlease from 'get-port-please'
 
 const selfPath = Url.fileURLToPath(import.meta.url)
 const selfDir = Path.dirname(selfPath)
@@ -22,6 +23,10 @@ export namespace ExampleController {
     fs: FSJetpack
     config: ViteUserConfigWithPolen
     packageJson: PackageJson
+    run: {
+      build: () => Promise<ProcessOutput>,
+      start: () => Promise<ServerProcess>,
+    }
   }
 
   /**
@@ -31,6 +36,7 @@ export namespace ExampleController {
     exampleName: ExampleName,
     debug?: boolean,
     polenVer?: Ver,
+    portProductionServer?: number,
   }) => {
     const debugMode = parameters.debug ?? false
     debug.toggle(debugMode)
@@ -85,12 +91,55 @@ export namespace ExampleController {
 
     const packageJson = await exampleFs.readAsync(`package.json`, `json`) as PackageJson
 
+    const run = {
+      build: async () => {
+        return await exampleShell`pnpm run build`
+      },
+      start: async () => {
+        const port = await GetPortPlease.getRandomPort()
+
+        const url = `http://localhost:${port.toString()}`
+
+        const serverProcess = exampleShell`PORT=${port} pnpm run start`
+
+        // todo: If we give some log output from server then we can use that to detect when the server is ready.
+        await exampleShell`sleep 1`
+
+        return {
+          raw: serverProcess,
+          stop: async () => {
+            await stopServerProcess(serverProcess)
+          },
+          url,
+        }
+      },
+    }
+
     return {
       name: parameters.exampleName,
       shell: exampleShell,
       fs: exampleFs,
       config: config.default,
       packageJson,
+      run,
     }
   }
+}
+
+export interface ServerProcess {
+  raw: ProcessPromise
+  stop: () => Promise<void>
+  url: string
+}
+
+export const stopServerProcess = async (processPromise: ProcessPromise) => {
+  processPromise.catch((error: unknown) => {
+    // We cannot achieve a clean exit for some reason so far.
+    // console.log(`server process error on kill -----------------`)
+    // console.log(error)
+    // console.log(`server process error on kill -----------------`)
+    // silence
+    // throw error
+  })
+  await processPromise.kill()
 }

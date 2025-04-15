@@ -10,6 +10,7 @@ const viServerEntry = vi([`server`, `entry`])
 
 export const Build = (parameters: {
   entryServerPath: string,
+  port?: number,
   debug?: boolean,
 }): Vite.Plugin[] => {
   const config = defu(parameters, { debug: false })
@@ -24,8 +25,6 @@ export const Build = (parameters: {
     },
     ...ViteVirtual.toHooks$FromEntries(
       [viServerEntry, () => {
-        const serverPort = viteConfigResolved.server.port + 1
-
         const entryServerPath = Path.absolutify(
           config.entryServerPath,
           viteConfigResolved.root,
@@ -52,6 +51,7 @@ export const Build = (parameters: {
         const honoNodeServerServeStaticPath = import.meta.resolve(`@hono/node-server/serve-static`)
         const honoNodeServerPath = import.meta.resolve(`@hono/node-server`)
 
+        // TODO turn this into a file template
         code(`import { Hono } from '${honoPath}'`)
         code(``)
         code(`const ${_.app} = new Hono()`)
@@ -93,7 +93,11 @@ export const Build = (parameters: {
         code(`// Start Server`)
         code(``)
         code(`import { serve } from '${honoNodeServerPath}'`)
-        code(`serve({ fetch: ${_.app}.fetch, port: ${serverPort.toString()} })`)
+        code(``)
+
+        const port = config.port ?? viteConfigResolved.server.port + 1
+        code(`const port = process.env.PORT || ${port.toString()}`)
+        code(`serve({ fetch: ${_.app}.fetch, port })`)
 
         return code.render()
       }],
