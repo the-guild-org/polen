@@ -1,8 +1,8 @@
 import { test as base } from 'playwright/test'
-import type { ServerProcess } from './run.js'
-import { runBuild, runDev, runStart } from './run.js'
+import { runDev } from './run.js'
 import { type ProcessOutput } from 'zx'
 import type { Ver } from './ver.js'
+import type { ServerProcess } from './example-controller.js'
 import { ExampleController } from './example-controller.js'
 import type { ExampleName } from './example-name.js'
 
@@ -21,8 +21,7 @@ export interface WorkerFixtures {
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   polenVer: [undefined, { option: true, scope: `worker` }],
   exampleName: [`basic`, { option: true, scope: `worker` }],
-  project: [async ({ exampleName, polenVer }, use, workerInfo) => {
-    console.log(`run fixture project`, workerInfo.workerIndex, exampleName, polenVer)
+  project: [async ({ exampleName, polenVer }, use) => {
     const project = await ExampleController.create({
       exampleName,
       polenVer,
@@ -37,12 +36,12 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     await server.stop()
   },
   runBuild: async ({ project }, use) => {
-    const output = await runBuild({ cwd: project.fs.cwd() })
+    const output = await project.run.build()
     // eslint-disable-next-line
     await use(output)
   },
   runStart: async ({ project, runBuild: _ }, use) => {
-    const server = await runStart({ cwd: project.fs.cwd() })
+    const server = await project.run.start()
     // eslint-disable-next-line
     await use(server)
     await server.stop()
