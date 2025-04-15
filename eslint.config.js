@@ -1,5 +1,5 @@
 import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
+// import reactHooks from 'eslint-plugin-react-hooks'
 // import reactRefresh from 'eslint-plugin-react-refresh'
 import unusedImports from 'eslint-plugin-unused-imports'
 import js from '@eslint/js'
@@ -18,7 +18,8 @@ export default tsEslint.config(
   tsEslint.configs.eslintRecommended,
   tsEslint.configs.stylisticTypeChecked,
   // reactRefresh.configs.recommended,
-  reactHooks.configs['recommended-latest'],
+  // todo apply to non test files -- messes with playwright fixtures
+  // reactHooks.configs['recommended-latest'],
   {
     languageOptions: {
       globals: {
@@ -38,6 +39,7 @@ export default tsEslint.config(
       '@stylistic': stylistic,
     },
     rules: {
+      'no-empty-pattern': 'off', // incompatible with playwright fixtures
       'unused-imports/no-unused-imports': 'warn',
       '@stylistic/quotes': ['warn', 'backtick'],
       '@typescript-eslint/consistent-type-imports': 'warn',
