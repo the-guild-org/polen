@@ -2,6 +2,14 @@
   "name": "polen",
   "version": "0.0.6",
   "type": "module",
+  "description": "A framework for delightful GraphQL developer portals",
+  "author": {
+    "name": "Jason Kuhrt",
+    "url": "https://kuhrt.me"
+  },
+  "bugs": {
+    "url": "https://github.com/the-guild-org/polen/issues"
+  },
   "keywords": [
     "graphql",
     "polen",
@@ -11,6 +19,7 @@
     "docs",
     "reference"
   ],
+  "license": "MIT",
   "scripts": {
     "examples:unlink": "rm -rf examples/{basic,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
     "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
