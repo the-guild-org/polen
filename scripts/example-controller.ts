@@ -13,6 +13,6 @@ const args = Command
 
 const _controller = await ExampleController.create({
   exampleName: args.name,
-  debug: true,
+  debugMode: true,
   polenVer: args.polenVer as Ver | undefined,
 })

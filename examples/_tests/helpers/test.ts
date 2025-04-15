@@ -23,7 +23,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     const project = await ExampleController.create({
       exampleName,
       polenVer,
-      debug: true,
+      debugMode: true,
     })
     await use(project)
   }, { scope: `worker` }],

@@ -6,7 +6,7 @@ import type { ProcessOutput, ProcessPromise, Shell } from 'zx'
 import { $ } from 'zx'
 import type { FSJetpack } from 'fs-jetpack/types.js'
 import type { ExampleName } from '../example-name.js'
-import { debug } from '../../../../src/lib/debug/debug.js'
+import { debug as debugBase } from '../../../../src/lib/debug/debug.js'
 import { type Ver, npmVerPattern } from '../ver.js'
 import type { ViteUserConfigWithPolen } from '../../../../src/createConfiguration.js'
 import * as GetPortPlease from 'get-port-please'
@@ -16,6 +16,12 @@ const selfPath = Url.fileURLToPath(import.meta.url)
 const selfDir = Path.dirname(selfPath)
 const projectDir = Path.join(selfDir, `../../../`)
 const examplesDir = Path.join(projectDir, `/examples`)
+console.log({
+  selfPath,
+  selfDir,
+  projectDir,
+  examplesDir,
+})
 
 export interface ExampleController {
   name: ExampleName
@@ -35,12 +41,13 @@ export interface ExampleController {
  */
 export const create = async (parameters: {
   exampleName: ExampleName,
-  debug?: boolean,
+  debugMode?: boolean,
   polenVer?: Ver,
   portProductionServer?: number,
 }) => {
-  const debugMode = parameters.debug ?? false
-  debug.toggle(debugMode)
+  const debug = debugBase.sub(parameters.exampleName)
+
+  debug.toggle(parameters.debugMode ?? false)
 
   debug(`creating example`, { name: parameters.exampleName })
 
