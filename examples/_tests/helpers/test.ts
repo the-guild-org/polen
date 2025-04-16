@@ -1,8 +1,8 @@
 import { test as base } from 'playwright/test'
 import { type ProcessOutput } from 'zx'
-import type { Ver } from './ver.js'
 import type { ExampleName } from './example-name.js'
 import { ExampleController } from './example-controller/_namespace.js'
+import type { LinkProtocol } from './link-protocol.js'
 
 export interface TestFixtures {
   runDev: ExampleController.ServerProcess
@@ -12,17 +12,17 @@ export interface TestFixtures {
 
 export interface WorkerFixtures {
   exampleName: ExampleName
-  polenVer: Ver | undefined
+  polenLink: LinkProtocol | undefined
   project: ExampleController.ExampleController
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
-  polenVer: [undefined, { option: true, scope: `worker` }],
+  polenLink: [undefined, { option: true, scope: `worker` }],
   exampleName: [`basic`, { option: true, scope: `worker` }],
-  project: [async ({ exampleName, polenVer }, use) => {
+  project: [async ({ exampleName, polenLink }, use) => {
     const project = await ExampleController.create({
       exampleName,
-      polenVer,
+      polenLink,
       debugMode: true,
     })
     await use(project)

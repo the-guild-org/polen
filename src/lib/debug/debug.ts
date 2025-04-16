@@ -5,18 +5,24 @@ import { calcIsEnabledFromEnv } from './environment-variable.js'
 
 type DebugParameters = [event: string, payload?: unknown]
 
+export interface Debug {
+  (...args: DebugParameters): void
+  toggle: (isEnabled: boolean) => void
+  sub: (subNamespace: string) => Debug
+}
+
 interface State {
   isEnabled: boolean
 }
 
-export const create = (namespace?: string, initialState?: State) => {
+export const create = (namespace?: string, initialState?: State): Debug => {
   const isDebugEnabledFromEnv = calcIsEnabledFromEnv(process.env, namespace)
 
   const state: State = initialState ?? {
     isEnabled: isDebugEnabledFromEnv,
   }
 
-  const debug = (...args: DebugParameters) => {
+  const debug: Debug = (...args) => {
     const isPayloadPassed = args.length === 2
     const [event, payload] = args
 
