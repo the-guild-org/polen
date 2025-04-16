@@ -8,6 +8,8 @@ import { Build } from './build.js'
 import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
 import { readSchemaPointer } from '../configurator/schema-pointer.js'
 import { sourcePaths } from '../source-paths.js'
+import { dump } from '../lib/dump.js'
+import { Page } from '../page/_namespace.js'
 
 const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
 const viTemplateVariables = vi([`template`, `variables`])
@@ -19,28 +21,12 @@ const codes = {
   CIRCULAR_DEPENDENCY: `CIRCULAR_DEPENDENCY`,
 }
 
-export const VitePlugin = (
+export const VitePlugin = async (
   polenConfigInput?: Configurator.ConfigInput,
-): Vite.PluginOption => {
+): Promise<Vite.PluginOption> => {
   const polenConfig = Configurator.normalizeInput(polenConfigInput)
   return VitePluginInternal(polenConfig)
 }
-
-// const filePath = Path.join(process.cwd(), `pages/guides/index.md`)
-
-// const pages = [
-//   {
-//     file: `pages/guides/index.md`,
-//     route: {
-//       type: `index`,
-//       path: `/guides`,
-//     },
-//     content: {
-//       markdown: await Fs.readFile(filePath),
-//       js: '',
-//     },
-//   },
-// ]
 
 // todo: rather than current __prop system
 // declare module 'vite' {
@@ -49,10 +35,12 @@ export const VitePlugin = (
 //   }
 // }
 
-export const VitePluginInternal = (
+export const VitePluginInternal = async (
   polenConfig: Configurator.Config,
-): Vite.PluginOption => {
+): Promise<Vite.PluginOption> => {
   const debug = true
+  const pages = await Page.readAll()
+  dump(pages)
 
   return [
     ReactVite(),
@@ -74,8 +62,7 @@ export const VitePluginInternal = (
         }`
         return moduleContent
       }],
-      [viProjectPages, () => {
-        // todo: generate this from the user's pages.
+      [viProjectPages, async () => {
         const moduleContent = `
           import { createRoute } from '${sourcePaths.dir}/lib/react-router-helpers.js'
 
