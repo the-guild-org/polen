@@ -44,6 +44,11 @@ declare module 'virtual:polen/project/pages.jsx' {
   export const pages: any // todo
 }
 
+declare module 'virtual:polen/project/data' {
+  // eslint-disable-next-line
+  export const PROJECT_DATA: import('./src/project-data.ts').ProjectData
+}
+
 declare module 'virtual:polen/template/schema-augmentations' {
   export const schemaAugmentations:
     // eslint-disable-next-line

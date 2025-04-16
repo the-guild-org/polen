@@ -8,13 +8,15 @@ import { Build } from './build.js'
 import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
 import { readSchemaPointer } from '../configurator/schema-pointer.js'
 import { sourcePaths } from '../source-paths.js'
-import { dump } from '../lib/dump.js'
 import { Page } from '../page/_namespace.js'
+import { casesHandled } from '../lib/prelude/main.js'
+import type { ProjectData } from '../project-data.js'
 
 const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
 const viTemplateVariables = vi([`template`, `variables`])
 const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
 const viProjectPages = vi([`project`, `pages.jsx`])
+const viProjectData = vi([`project`, `data`])
 
 const codes = {
   MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
@@ -39,8 +41,7 @@ export const VitePluginInternal = async (
   polenConfig: Configurator.Config,
 ): Promise<Vite.PluginOption> => {
   const debug = true
-  const pages = await Page.readAll()
-  dump(pages)
+  const DATA_PAGE_BRANCHES = await Page.readAll()
 
   return [
     ReactVite(),
@@ -62,18 +63,83 @@ export const VitePluginInternal = async (
         }`
         return moduleContent
       }],
-      [viProjectPages, async () => {
-        const moduleContent = `
-          import { createRoute } from '${sourcePaths.dir}/lib/react-router-helpers.js'
+      [viProjectData, () => {
+        const titleCase = (str: string) => str.replace(/\b\w/g, l => l.toUpperCase())
+        const siteNavigationItemsFromTopLevelPages = DATA_PAGE_BRANCHES.map(
+          (pageBranch): ProjectData[`siteNavigationItems`][number] => {
+            return {
+              path: pageBranch.route.path.raw,
+              title: titleCase(pageBranch.route.path.raw),
+            }
+          },
+        )
+        const projectData: ProjectData = {
+          siteNavigationItems: [
+            { path: `/reference`, title: `Reference` },
+            ...siteNavigationItemsFromTopLevelPages,
+          ],
+        }
+        const moduleContent = `export const PROJECT_DATA = ${JSON.stringify(projectData)}`
+        return moduleContent
+      }],
+      [viProjectPages, () => {
+        const $ = {
+          pages: `pages`,
+          createRoute: `createRoute`,
+          createRouteIndex: `createRouteIndex`,
+        }
 
-          export const pages = [
-            createRoute({
-              path: '/todo',
-              Component: () => <div>Todo</div>,
-              children: [],
-            })
+        const renderCodePageBranchBranches = (pageBranch: Page.PageBranch): string[] => {
+          return pageBranch.branches.map(renderCodePageBranchRoute)
+        }
+
+        const renderCodePageBranchRoute = (pageBranch: Page.PageBranch): string => {
+          switch (pageBranch.type) {
+            case `PageBranchContent`: {
+              switch (pageBranch.route.type) {
+                case `RouteItem`:
+                  return `
+                ${$.createRoute}({
+                  path: '${pageBranch.route.path.raw}',
+                  Component: () => ${pageBranch.content.html},
+                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
+                })
+              `
+                case `RouteIndex`:
+                  return `
+                    ${$.createRouteIndex}({
+                      Component: () => ${pageBranch.content.html},
+                    })
+                  `
+                default:
+                  return casesHandled(pageBranch.route)
+              }
+            }
+            case `PageBranchSegment`: {
+              return `
+                ${$.createRoute}({
+                  path: '${pageBranch.route.path.raw}',
+                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
+                })
+              `
+            }
+            default: {
+              return casesHandled(pageBranch)
+            }
+          }
+        }
+
+        const moduleContent = `
+          import {
+            ${$.createRoute},
+            ${$.createRouteIndex}
+          } from '${sourcePaths.dir}/lib/react-router-helpers.js'
+          
+          export const ${$.pages} = [
+            ${DATA_PAGE_BRANCHES.map(renderCodePageBranchRoute).join(`,\n`)}
           ]
         `
+
         return moduleContent
       }],
     ),
