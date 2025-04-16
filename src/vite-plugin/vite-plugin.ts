@@ -9,7 +9,7 @@ import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
 import { readSchemaPointer } from '../configurator/schema-pointer.js'
 import { sourcePaths } from '../source-paths.js'
 import { Page } from '../page/_namespace.js'
-import { casesHandled } from '../lib/prelude/main.js'
+import { casesHandled, titleCase } from '../lib/prelude/main.js'
 import type { ProjectData } from '../project-data.js'
 
 const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
@@ -37,11 +37,18 @@ export const VitePlugin = async (
 //   }
 // }
 
-export const VitePluginInternal = async (
+const readPagesCache: { value?: Page.PageBranch[] } = {}
+
+const readPagesCached = async () => {
+  if (readPagesCache.value) return readPagesCache.value
+  readPagesCache.value = await Page.readAll()
+  return readPagesCache.value
+}
+
+export const VitePluginInternal = (
   polenConfig: Configurator.Config,
-): Promise<Vite.PluginOption> => {
+): Vite.PluginOption => {
   const debug = true
-  const DATA_PAGE_BRANCHES = await Page.readAll()
 
   return [
     ReactVite(),
@@ -63,9 +70,9 @@ export const VitePluginInternal = async (
         }`
         return moduleContent
       }],
-      [viProjectData, () => {
-        const titleCase = (str: string) => str.replace(/\b\w/g, l => l.toUpperCase())
-        const siteNavigationItemsFromTopLevelPages = DATA_PAGE_BRANCHES.map(
+      [viProjectData, async () => {
+        const pages = await readPagesCached()
+        const siteNavigationItemsFromTopLevelPages = pages.map(
           (pageBranch): ProjectData[`siteNavigationItems`][number] => {
             return {
               path: pageBranch.route.path.raw,
@@ -82,7 +89,7 @@ export const VitePluginInternal = async (
         const moduleContent = `export const PROJECT_DATA = ${JSON.stringify(projectData)}`
         return moduleContent
       }],
-      [viProjectPages, () => {
+      [viProjectPages, async () => {
         const $ = {
           pages: `pages`,
           createRoute: `createRoute`,
@@ -129,6 +136,7 @@ export const VitePluginInternal = async (
           }
         }
 
+        const pages = await readPagesCached()
         const moduleContent = `
           import {
             ${$.createRoute},
@@ -136,7 +144,7 @@ export const VitePluginInternal = async (
           } from '${sourcePaths.dir}/lib/react-router-helpers.js'
           
           export const ${$.pages} = [
-            ${DATA_PAGE_BRANCHES.map(renderCodePageBranchRoute).join(`,\n`)}
+            ${pages.map(renderCodePageBranchRoute).join(`,\n`)}
           ]
         `
 
