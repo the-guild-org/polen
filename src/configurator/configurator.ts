@@ -2,7 +2,8 @@ import { Path } from '../lib/path/_namespace.js'
 import { casesHandled } from '../lib/prelude/main.js'
 import type { Vite } from '../lib/vite/_namespace.js'
 import type { SchemaAugmentation } from '../schema-augmentation/_namespace.js'
-import { SchemaPointer } from './schema-pointer.js'
+import { sourcePaths } from '../source-paths.js'
+import type { SchemaPointer } from './schema-pointer.js'
 
 export interface ConfigInput {
   /**
@@ -65,7 +66,6 @@ export interface Config {
   }
 }
 
-const pathAppTemplateDir = Path.join(import.meta.dirname, `../app-template`)
 const workspaceDir = process.cwd()
 
 const outDir = Path.join(workspaceDir, `dist`)
@@ -88,9 +88,9 @@ const configInputDefaults: Config = {
   },
   paths: {
     appTemplate: {
-      dir: pathAppTemplateDir,
-      entryServer: Path.join(pathAppTemplateDir, `entry.server.jsx`),
-      entryClient: Path.join(pathAppTemplateDir, `entry.client.jsx`),
+      dir: sourcePaths.template.dir,
+      entryServer: sourcePaths.template.modulePaths.entryServer,
+      entryClient: sourcePaths.template.modulePaths.entryClient,
     },
     workspaceDir,
     outDir: Path.join(workspaceDir, `build`),

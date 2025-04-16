@@ -7,21 +7,42 @@ import { vi } from './helpers.js'
 import { Build } from './build.js'
 import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
 import { readSchemaPointer } from '../configurator/schema-pointer.js'
+import { sourcePaths } from '../source-paths.js'
+import { Page } from '../page/_namespace.js'
+import { casesHandled, titleCase } from '../lib/prelude/main.js'
+import type { ProjectData } from '../project-data.js'
 
 const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
 const viTemplateVariables = vi([`template`, `variables`])
 const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
+const viProjectPages = vi([`project`, `pages.jsx`])
+const viProjectData = vi([`project`, `data`])
 
 const codes = {
   MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
   CIRCULAR_DEPENDENCY: `CIRCULAR_DEPENDENCY`,
 }
 
-export const VitePlugin = (
+export const VitePlugin = async (
   polenConfigInput?: Configurator.ConfigInput,
-): Vite.PluginOption => {
+): Promise<Vite.PluginOption> => {
   const polenConfig = Configurator.normalizeInput(polenConfigInput)
   return VitePluginInternal(polenConfig)
+}
+
+// todo: rather than current __prop system
+// declare module 'vite' {
+//   interface UserConfig {
+//     polen?: Configurator.ConfigInput
+//   }
+// }
+
+const readPagesCache: { value?: Page.PageBranch[] } = {}
+
+const readPagesCached = async () => {
+  if (readPagesCache.value) return readPagesCache.value
+  readPagesCache.value = await Page.readAll()
+  return readPagesCache.value
 }
 
 export const VitePluginInternal = (
@@ -30,12 +51,6 @@ export const VitePluginInternal = (
   const debug = true
 
   return [
-    // {
-    //   name: `debug`,
-    //   configResolved(config) {
-    //     dump(config)
-    //   },
-    // },
     ReactVite(),
     ViteVirtual.Plugin(
       [viAssetGraphqlSchema, async () => {
@@ -55,11 +70,90 @@ export const VitePluginInternal = (
         }`
         return moduleContent
       }],
+      [viProjectData, async () => {
+        const pages = await readPagesCached()
+        const siteNavigationItemsFromTopLevelPages = pages.map(
+          (pageBranch): ProjectData[`siteNavigationItems`][number] => {
+            return {
+              path: pageBranch.route.path.raw,
+              title: titleCase(pageBranch.route.path.raw),
+            }
+          },
+        )
+        const projectData: ProjectData = {
+          siteNavigationItems: [
+            { path: `/reference`, title: `Reference` },
+            ...siteNavigationItemsFromTopLevelPages,
+          ],
+        }
+        const moduleContent = `export const PROJECT_DATA = ${JSON.stringify(projectData)}`
+        return moduleContent
+      }],
+      [viProjectPages, async () => {
+        const $ = {
+          pages: `pages`,
+          createRoute: `createRoute`,
+          createRouteIndex: `createRouteIndex`,
+        }
+
+        const renderCodePageBranchBranches = (pageBranch: Page.PageBranch): string[] => {
+          return pageBranch.branches.map(renderCodePageBranchRoute)
+        }
+
+        const renderCodePageBranchRoute = (pageBranch: Page.PageBranch): string => {
+          switch (pageBranch.type) {
+            case `PageBranchContent`: {
+              switch (pageBranch.route.type) {
+                case `RouteItem`:
+                  return `
+                ${$.createRoute}({
+                  path: '${pageBranch.route.path.raw}',
+                  Component: () => ${pageBranch.content.html},
+                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
+                })
+              `
+                case `RouteIndex`:
+                  return `
+                    ${$.createRouteIndex}({
+                      Component: () => ${pageBranch.content.html},
+                    })
+                  `
+                default:
+                  return casesHandled(pageBranch.route)
+              }
+            }
+            case `PageBranchSegment`: {
+              return `
+                ${$.createRoute}({
+                  path: '${pageBranch.route.path.raw}',
+                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
+                })
+              `
+            }
+            default: {
+              return casesHandled(pageBranch)
+            }
+          }
+        }
+
+        const pages = await readPagesCached()
+        const moduleContent = `
+          import {
+            ${$.createRoute},
+            ${$.createRouteIndex}
+          } from '${sourcePaths.dir}/lib/react-router-helpers.js'
+          
+          export const ${$.pages} = [
+            ${pages.map(renderCodePageBranchRoute).join(`,\n`)}
+          ]
+        `
+
+        return moduleContent
+      }],
     ),
     {
-      name: `polen-dev-server`,
+      name: `polen:dev-server`,
       apply: `serve`,
-
       async configureServer(server) {
         // Load our entry server
 
@@ -100,36 +194,46 @@ export const VitePluginInternal = (
         // const reactJsxRuntimePath = import.meta.resolve(`react/jsx-runtime`)
         // const reactJsxDevRuntimePath = import.meta.resolve(`react/jsx-dev-runtime`)
         return {
+          server: {
+            fs: {
+              allow: [
+                // todo allow from polen
+              ],
+            },
+          },
           optimizeDeps: {
-            include: [
-              `react`,
-              // `react/jsx-runtime`,
-              // `react/jsx-dev-runtime`,
-              // reactPath,
-              // reactJsxRuntimePath,
-              // reactJsxDevRuntimePath,
-            ],
+            // Polen is already ESM and does not have many internal modules.
+            // https://vite.dev/guide/dep-pre-bundling.html#customizing-the-behavior
+            exclude: [`polen`],
+            // include: [
+            //   // `react`,
+            //   // `react/jsx-runtime`,
+            //   // `react/jsx-dev-runtime`,
+            //   // reactPath,
+            //   // reactJsxRuntimePath,
+            //   // reactJsxDevRuntimePath,
+            // ],
           },
           // Make it possible for ReactVite to find react dependency within Polen.
-          resolve: {
-            alias: [
-              // { find: `react`, replacement: reactPath },
-              // { find: `react/jsx-runtime`, replacement: reactJsxRuntimePath },
-              // { find: `react/jsx-dev-runtime`, replacement: reactJsxDevRuntimePath },
-              // {
-              //   find: `react`,
-              //   replacement: `polen/dependencies/react`,
-              // },
-              // {
-              //   find: `react/jsx-runtime`,
-              //   replacement: `polen/dependencies/react/jsx-runtime`,
-              // },
-              // {
-              //   find: `react/jsx-dev-runtime`,
-              //   replacement: `polen/dependencies/react/jsx-dev-runtime`,
-              // },
-            ],
-          },
+          // resolve: {
+          //   alias: [
+          //     // { find: `react`, replacement: reactPath },
+          //     // { find: `react/jsx-runtime`, replacement: reactJsxRuntimePath },
+          //     // { find: `react/jsx-dev-runtime`, replacement: reactJsxDevRuntimePath },
+          //     // {
+          //     //   find: `react`,
+          //     //   replacement: `polen/dependencies/react`,
+          //     // },
+          //     // {
+          //     //   find: `react/jsx-runtime`,
+          //     //   replacement: `polen/dependencies/react/jsx-runtime`,
+          //     // },
+          //     // {
+          //     //   find: `react/jsx-dev-runtime`,
+          //     //   replacement: `polen/dependencies/react/jsx-dev-runtime`,
+          //     // },
+          //   ],
+          // },
           // server: {
           // middlewareMode: true,
           // },
@@ -137,7 +241,7 @@ export const VitePluginInternal = (
       },
     },
     {
-      name: `polen-build-client`,
+      name: `polen:build-client`,
       apply: `build`,
       applyToEnvironment: Vite.isEnvironmentClient,
 
