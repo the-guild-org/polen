@@ -49,9 +49,9 @@ export interface Config {
   ssr: {
     enabled: boolean,
   }
-  aliases: {
-    entryServer: string,
-  }
+  // aliases: {
+  //   entryServer: string,
+  // }
   paths: {
     appTemplate: {
       dir: string,
@@ -78,9 +78,9 @@ const configInputDefaults: Config = {
   ssr: {
     enabled: true,
   },
-  aliases: {
-    entryServer: `#polen/server/entry`,
-  },
+  // aliases: {
+  //   entryServer: `#polen/server/entry`,
+  // },
   paths: {
     appTemplate: {
       dir: sourcePaths.template.dir,
