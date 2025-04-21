@@ -151,6 +151,7 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
       const matching = config.scaffold.match
       await Fsj.copyAsync(dir, fsj.cwd(), {
         matching,
+        overwrite: true,
       })
       debug(`copied template`)
       break
