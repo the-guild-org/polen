@@ -73,15 +73,18 @@ export const VitePluginInternal = (
         return moduleContent
       }],
       [viProjectData, async () => {
-        const pages = await readPages({ dir: config.root })
-        const siteNavigationItemsFromTopLevelPages = pages.map(
-          (pageBranch): ProjectData[`siteNavigationItems`][number] => {
-            return {
-              path: pageBranch.route.path.raw,
-              title: titleCase(pageBranch.route.path.raw),
-            }
-          },
-        )
+        const pages = Page.lint(await readPages({ dir: config.root })).fixed
+        const siteNavigationItemsFromTopLevelPages = pages
+          // todo: test that non-congent page branches aren't shown in navigation bar
+          .filter(_ => _.type === `PageBranchContent`)
+          .map(
+            (pageBranch): ProjectData[`siteNavigationItems`][number] => {
+              return {
+                path: pageBranch.route.path.raw,
+                title: titleCase(pageBranch.route.path.raw),
+              }
+            },
+          )
         const projectData: ProjectData = {
           siteNavigationItems: [
             { path: `/reference`, title: `Reference` },
