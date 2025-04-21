@@ -139,7 +139,7 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
 
   const shell = $({ cwd: fsj.cwd() })
 
-  const pnpmShell = shell({ prefix: `pnpm` })
+  const pnpmShell = shell({ prefix: `pnpm ` })
 
   const fileStorage = FileStorage.create({ jetpack: fsj })
 
