@@ -5,23 +5,30 @@ import type { DirectoryLayout } from '../../../src/lib/project-controller/direct
 import { Vite } from '../../../src/lib/vite/_namespace.js'
 
 interface Case {
+  title?: string
   fixture: DirectoryLayout.Tree
   result: {
     path: string,
-    title: string,
+    navBarTitle: string,
     content: string,
   }
 }
 
 const cases: Case[] = [
   {
-    fixture: { 'pages/a.md': `abc`, 'schema.graphql': `type Query { a: String }` },
-    result: { path: `/a`, title: `a`, content: `abc` },
+    title: `exact page`,
+    fixture: { 'pages/foo.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
+  },
+  {
+    title: `index page`,
+    fixture: { 'pages/foo/index.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
   },
 ]
 
-cases.forEach(({ fixture, result }) => {
-  test(`can render page at "${JSON.stringify(fixture)}"`, async ({ page, viteController, project }) => {
+cases.forEach(({ fixture, result, title }) => {
+  test(title ?? JSON.stringify(fixture), async ({ page, viteController, project }) => {
     await project.fileStorage.set(fixture)
     // todo: all embedded react to be used
     await project.shell`pnpm init && pnpm add react` // adds 1s
