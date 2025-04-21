@@ -30,29 +30,107 @@ export interface ProjectController<
     packageJson: PackageJson,
   }
   run: $ScriptFunctions
+  /**
+   * Directory path to this project.
+   */
+  dir: string
 }
 
-// eslint-disable-next-line
-export const create = async <scriptFunctions extends ScriptRunners = {}>(parameters: {
-  template?: string | {
-    dir: string,
-    /**
-     * @see https://www.npmjs.com/package/fs-jetpack#copyfrom-to-options
-     */
-    match: string[],
-  } | undefined,
-  debug?: Debug.Debug | undefined,
-  scripts?: ((project: ProjectController) => scriptFunctions) | undefined,
+type ScaffoldInput = TemplateScaffoldInput | InitScaffold
+
+interface TemplateScaffoldInput {
+  type: `template`
   /**
-   * @defaultValue `true`
+   * Path to a directory whose contents will be used as the project template.
+   *
+   * Its files will be copied.
    */
-  install?: boolean | undefined,
+  dir: string
+  /**
+   * @see https://www.npmjs.com/package/fs-jetpack#copyfrom-to-options
+   */
+  match?: string[]
+}
+
+interface InitScaffold {
+  type: `init`
+}
+
+interface TemplateScaffold {
+  type: `template`
+  /**
+   * Path to a directory whose contents will be used as the project template.
+   *
+   * Its files will be copied.
+   */
+  dir: string
+  /**
+   * @see https://www.npmjs.com/package/fs-jetpack#copyfrom-to-options
+   */
+  match: string[]
+}
+
+type Scaffold = TemplateScaffold | InitScaffold
+
+interface ConfigInput<$ScriptFunctions extends ScriptRunners = ScriptRunners> {
+  debug?: Debug.Debug | undefined
+  scripts?: ((project: ProjectController<$ScriptFunctions>) => $ScriptFunctions) | undefined
+  /**
+   * By default uses an "init" scaffold. This is akin to running e.g. `pnpm init`.
+   */
+  scaffold?: string | ScaffoldInput | undefined
+  /**
+   * @defaultValue `false`
+   */
+  install?: boolean | undefined
   links?: {
     dir: string,
     protocol: LinkProtocol,
-  }[] | undefined,
-}): Promise<ProjectController<scriptFunctions>> => {
-  const debug = parameters.debug ?? debugBase
+  }[] | undefined
+}
+
+interface Config {
+  debug: Debug.Debug
+  scaffold: Scaffold
+  install: boolean
+}
+
+const resolveConfigInput = (configInput: ConfigInput<any>): Config => {
+  const debug = configInput.debug ?? debugBase
+
+  const scaffold = typeof configInput.scaffold === `string`
+    ? ({
+      type: `template`,
+      dir: configInput.scaffold,
+      match: defaultTemplateMatch,
+    } satisfies TemplateScaffoldInput)
+    : configInput.scaffold?.type === `template`
+    ? {
+      ...configInput.scaffold,
+      match: configInput.scaffold.match ?? defaultTemplateMatch,
+    }
+    : configInput.scaffold?.type === `init`
+    ? ({ type: `init` } satisfies InitScaffold)
+    : ({ type: `init` } satisfies InitScaffold)
+
+  const install = configInput.install ?? false
+
+  return {
+    debug,
+    scaffold,
+    install,
+  }
+}
+
+// const resolveScaffold =
+
+// eslint-disable-next-line
+export const create = async <scriptFunctions extends ScriptRunners = {}>(
+  parameters: ConfigInput<scriptFunctions>,
+): Promise<ProjectController<scriptFunctions>> => {
+  const config = resolveConfigInput(parameters)
+
+  const { debug } = config
 
   // utilities
 
@@ -64,19 +142,30 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
 
   const pnpmShell = shell({ prefix: `pnpm` })
 
-  // template
+  const fileStorage = FileStorage.create({ jetpack: fsj })
 
-  if (parameters.template) {
-    const dir = typeof parameters.template === `string`
-      ? parameters.template
-      : parameters.template.dir
-    const matching = typeof parameters.template === `string`
-      ? defaultTemplateMatch
-      : parameters.template.match
-    await Fsj.copyAsync(dir, fsj.cwd(), {
-      matching,
-    })
-    debug(`copied template`)
+  // scaffold
+
+  switch (config.scaffold.type) {
+    case `template`: {
+      const dir = config.scaffold.dir
+      const matching = config.scaffold.match
+      await Fsj.copyAsync(dir, fsj.cwd(), {
+        matching,
+      })
+      debug(`copied template`)
+      break
+    }
+    case `init`: {
+      const initPackageJson = {
+        name: `project-${fsj.cwd()}`,
+      }
+      await fsj.writeAsync(`package.json`, initPackageJson)
+      break
+    }
+    default: {
+      casesHandled(config.scaffold)
+    }
   }
 
   // files
@@ -87,8 +176,6 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
     packageJson,
   }
 
-  const fileStorage = FileStorage.create({ jetpack: fsj })
-
   // instance
 
   const project: ProjectController<scriptFunctions> = {
@@ -96,6 +183,7 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
     fileStorage,
     files,
     packageManager: pnpmShell,
+    dir: fsj.cwd(),
     // Will be overwritten
     // eslint-disable-next-line
     run: undefined as any,
@@ -129,9 +217,11 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
     }
   }
 
+  // init
+
   // install
 
-  if (parameters.install !== false) {
+  if (parameters.install) {
     await project.packageManager`install`
     debug(`installed dependencies`)
   }

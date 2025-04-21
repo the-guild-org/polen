@@ -73,7 +73,7 @@ export const VitePluginInternal = (
         return moduleContent
       }],
       [viProjectData, async () => {
-        const pages = await readPages({ cwd: config.root })
+        const pages = await readPages({ dir: config.root })
         const siteNavigationItemsFromTopLevelPages = pages.map(
           (pageBranch): ProjectData[`siteNavigationItems`][number] => {
             return {
@@ -138,7 +138,13 @@ export const VitePluginInternal = (
           }
         }
 
-        const pages = await readPages({ cwd: config.root })
+        const pages = Page.lint(await readPages({ dir: config.root }))
+
+        // todo: improve
+        pages.warnings.forEach(_ => {
+          console.log(_.type)
+        })
+
         const moduleContent = `
           import {
             ${$.createRoute},
@@ -146,7 +152,7 @@ export const VitePluginInternal = (
           } from '${sourcePaths.dir}/lib/react-router-helpers.js'
           
           export const ${$.pages} = [
-            ${pages.map(renderCodePageBranchRoute).join(`,\n`)}
+            ${pages.fixed.map(renderCodePageBranchRoute).join(`,\n`)}
           ]
         `
 

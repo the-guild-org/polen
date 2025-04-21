@@ -9,9 +9,7 @@ interface Fixtures {
 
 export const test = base.extend<Fixtures>({
   project: async ({}, use) => {
-    const controller = await ProjectController.create({
-      install: false,
-    })
+    const controller = await ProjectController.create({})
     await use(controller)
   },
   viteController: async ({}, use) => {

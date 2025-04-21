@@ -6,6 +6,8 @@ import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './rou
 import { Marked } from '../dep/marked/_namespace.js'
 import { Debug } from '../lib/debug/_namespace.js'
 
+export * from './lint.js'
+
 const debug = Debug.create(`page`)
 
 export interface Page {
@@ -32,8 +34,10 @@ export interface PageBranchSegment {
 
 export type PageBranch = PageBranchContent | PageBranchSegment
 
-export const readAll = async (parameters: { cwd: string }): Promise<PageBranch[]> => {
-  const projectDir = parameters.cwd
+export type PageTree = PageBranch[]
+
+export const readAll = async (parameters: { dir: string }): Promise<PageTree> => {
+  const projectDir = parameters.dir
   const pagesDir = Path.join(projectDir, `pages`)
   const globPattern = `**/*.md`
   debug(`search page files`, { globPattern, pagesDir })

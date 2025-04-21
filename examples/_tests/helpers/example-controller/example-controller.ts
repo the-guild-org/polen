@@ -30,7 +30,8 @@ export const create = async (parameters: {
 
   const project = await ProjectController.create({
     debug,
-    template: Path.join(examplesDir, parameters.exampleName),
+    install: true,
+    scaffold: Path.join(examplesDir, parameters.exampleName),
     links: parameters.polenLink && [
       {
         dir: projectDir,

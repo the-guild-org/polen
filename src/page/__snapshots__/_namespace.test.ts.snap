@@ -1,0 +1,264 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`file in nested directory 1`] = `
+[
+  {
+    "branches": [
+      {
+        "branches": [],
+        "content": {
+          "html": "<p>foo</p>
+",
+          "markdown": "foo",
+        },
+        "file": {
+          "path": "<VARIABLE>/pages/foo/bar.md",
+        },
+        "route": {
+          "path": {
+            "raw": "foo/bar",
+            "segments": [
+              "foo",
+              "bar",
+            ],
+          },
+          "pathExplicit": "foo/bar",
+          "type": "RouteItem",
+        },
+        "type": "PageBranchContent",
+      },
+    ],
+    "route": {
+      "path": {
+        "raw": "foo",
+        "segments": [
+          "foo",
+        ],
+      },
+      "pathExplicit": "foo",
+      "type": "RouteSegment",
+    },
+    "type": "PageBranchSegment",
+  },
+]
+`;
+
+exports[`file in root directory 1`] = `
+[
+  {
+    "branches": [],
+    "content": {
+      "html": "<p>foo</p>
+",
+      "markdown": "foo",
+    },
+    "file": {
+      "path": "<VARIABLE>/pages/foo.md",
+    },
+    "route": {
+      "path": {
+        "raw": "foo",
+        "segments": [
+          "foo",
+        ],
+      },
+      "pathExplicit": "foo",
+      "type": "RouteItem",
+    },
+    "type": "PageBranchContent",
+  },
+]
+`;
+
+exports[`index file 1`] = `
+[
+  {
+    "branches": [],
+    "content": {
+      "html": "<p>foo</p>
+",
+      "markdown": "foo",
+    },
+    "file": {
+      "path": "<VARIABLE>/pages/index.md",
+    },
+    "route": {
+      "path": {
+        "raw": "index",
+        "segments": [
+          "index",
+        ],
+      },
+      "pathExplicit": "index",
+      "type": "RouteItem",
+    },
+    "type": "PageBranchContent",
+  },
+]
+`;
+
+exports[`index file nested 1`] = `
+[
+  {
+    "branches": [
+      {
+        "branches": [],
+        "content": {
+          "html": "<p>foo</p>
+",
+          "markdown": "foo",
+        },
+        "file": {
+          "path": "<VARIABLE>/pages/about/index.md",
+        },
+        "route": {
+          "path": {
+            "raw": "about",
+            "segments": [
+              "about",
+            ],
+          },
+          "pathExplicit": "about/index",
+          "type": "RouteIndex",
+        },
+        "type": "PageBranchContent",
+      },
+    ],
+    "route": {
+      "path": {
+        "raw": "about",
+        "segments": [
+          "about",
+        ],
+      },
+      "pathExplicit": "about",
+      "type": "RouteSegment",
+    },
+    "type": "PageBranchSegment",
+  },
+]
+`;
+
+exports[`linter > conflicting index and exact are fixed by linter 1`] = `
+[
+  {
+    "exact": {
+      "branches": [
+        {
+          "branches": [],
+          "content": {
+            "html": "<p>about-index</p>
+",
+            "markdown": "about-index",
+          },
+          "file": {
+            "path": "<VARIABLE>/pages/about/index.md",
+          },
+          "route": {
+            "path": {
+              "raw": "about",
+              "segments": [
+                "about",
+              ],
+            },
+            "pathExplicit": "about/index",
+            "type": "RouteIndex",
+          },
+          "type": "PageBranchContent",
+        },
+      ],
+      "content": {
+        "html": "<p>about-exact</p>
+",
+        "markdown": "about-exact",
+      },
+      "file": {
+        "path": "<VARIABLE>/pages/about.md",
+      },
+      "route": {
+        "path": {
+          "raw": "about",
+          "segments": [
+            "about",
+          ],
+        },
+        "pathExplicit": "about",
+        "type": "RouteItem",
+      },
+      "type": "PageBranchContent",
+    },
+    "index": {
+      "branches": [],
+      "content": {
+        "html": "<p>about-index</p>
+",
+        "markdown": "about-index",
+      },
+      "file": {
+        "path": "<VARIABLE>/pages/about/index.md",
+      },
+      "route": {
+        "path": {
+          "raw": "about",
+          "segments": [
+            "about",
+          ],
+        },
+        "pathExplicit": "about/index",
+        "type": "RouteIndex",
+      },
+      "type": "PageBranchContent",
+    },
+    "type": "WarningOfConflictingIndexAndExact",
+  },
+]
+`;
+
+exports[`multiple files 1`] = `
+[
+  {
+    "branches": [],
+    "content": {
+      "html": "<p>bar</p>
+",
+      "markdown": "bar",
+    },
+    "file": {
+      "path": "<VARIABLE>/pages/bar.md",
+    },
+    "route": {
+      "path": {
+        "raw": "bar",
+        "segments": [
+          "bar",
+        ],
+      },
+      "pathExplicit": "bar",
+      "type": "RouteItem",
+    },
+    "type": "PageBranchContent",
+  },
+  {
+    "branches": [],
+    "content": {
+      "html": "<p>foo</p>
+",
+      "markdown": "foo",
+    },
+    "file": {
+      "path": "<VARIABLE>/pages/foo.md",
+    },
+    "route": {
+      "path": {
+        "raw": "foo",
+        "segments": [
+          "foo",
+        ],
+      },
+      "pathExplicit": "foo",
+      "type": "RouteItem",
+    },
+    "type": "PageBranchContent",
+  },
+]
+`;
