@@ -1,12 +1,12 @@
 import Fsj from 'fs-jetpack'
-import type { FSJetpack } from 'fs-jetpack/types.js'
 import type { PackageJson } from 'type-fest'
 import { $, type Shell } from 'zx'
 import { debug as debugBase } from '../debug/debug.js'
 import type { Debug } from '../debug/_namespace.js'
 import { Path } from '../path/_namespace.js'
 import { casesHandled } from '../prelude/main.js'
-import type { LinkProtocol } from '../../../examples/_tests/helpers/link-protocol.js'
+import type { LinkProtocol } from '../link-protocol.js'
+import { FileStorage } from './file-system.js'
 
 type ScriptRunner = (...args: any[]) => Promise<any>
 
@@ -23,8 +23,7 @@ export interface ProjectController<
   // eslint-disable-next-line
   $ScriptFunctions extends ScriptRunners = {},
 > {
-  dir: string
-  fs: FSJetpack
+  fileStorage: FileStorage.FileStorage
   shell: Shell
   packageManager: Shell
   files: {
@@ -57,10 +56,11 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
 
   // utilities
 
-  const fs = await Fsj.tmpDirAsync()
-  debug(`created temporary directory`, { path: fs.cwd() })
+  const fsj = await Fsj.tmpDirAsync()
 
-  const shell = $({ cwd: fs.cwd() })
+  debug(`created temporary directory`, { path: fsj.cwd() })
+
+  const shell = $({ cwd: fsj.cwd() })
 
   const pnpmShell = shell({ prefix: `pnpm` })
 
@@ -73,7 +73,7 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
     const matching = typeof parameters.template === `string`
       ? defaultTemplateMatch
       : parameters.template.match
-    await Fsj.copyAsync(dir, fs.cwd(), {
+    await Fsj.copyAsync(dir, fsj.cwd(), {
       matching,
     })
     debug(`copied template`)
@@ -81,18 +81,19 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
 
   // files
 
-  const packageJson = await fs.readAsync(`package.json`, `json`) as PackageJson
+  const packageJson = await fsj.readAsync(`package.json`, `json`) as PackageJson
 
   const files = {
     packageJson,
   }
 
+  const fileStorage = FileStorage.create({ jetpack: fsj })
+
   // instance
 
   const project: ProjectController<scriptFunctions> = {
-    shell: shell,
-    fs: fs,
-    dir: fs.cwd(),
+    shell,
+    fileStorage,
     files,
     packageManager: pnpmShell,
     // Will be overwritten
@@ -107,7 +108,10 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(paramet
   // links
 
   for (const link of parameters.links ?? []) {
-    const pathToLinkDirFromProject = Path.join(`..`, Path.relative(project.dir, link.dir))
+    const pathToLinkDirFromProject = Path.join(
+      `..`,
+      Path.relative(project.fileStorage.cwd, link.dir),
+    )
     debug(`install link`, link)
 
     switch (link.protocol) {

@@ -32,13 +32,18 @@ export interface PageBranchSegment {
 
 export type PageBranch = PageBranchContent | PageBranchSegment
 
-export const readAll = async (): Promise<PageBranch[]> => {
-  const projectDir = process.cwd()
+export const readAll = async (parameters: { cwd: string }): Promise<PageBranch[]> => {
+  const projectDir = parameters.cwd
   const pagesDir = Path.join(projectDir, `pages`)
-  const globPattern = Path.join(pagesDir, `**/*.md`)
+  const globPattern = `**/*.md`
   debug(`creating glob pattern`, { globPattern })
 
-  const filePaths = await TinyGlobby.glob(globPattern, { absolute: true })
+  const filePaths = await TinyGlobby.glob(globPattern, {
+    absolute: true,
+    cwd: pagesDir,
+    onlyFiles: true,
+    // debug: true,
+  })
   debug(`found page files`, filePaths)
 
   const pages = await Promise.all(

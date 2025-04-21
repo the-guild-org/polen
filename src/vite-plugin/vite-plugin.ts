@@ -11,6 +11,7 @@ import { sourcePaths } from '../source-paths.js'
 import { Page } from '../page/_namespace.js'
 import { casesHandled, titleCase } from '../lib/prelude/main.js'
 import type { ProjectData } from '../project-data.js'
+import { memoize } from '../lib/memoize.js'
 
 const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
 const viTemplateVariables = vi([`template`, `variables`])
@@ -37,24 +38,25 @@ export const VitePlugin = async (
 //   }
 // }
 
-const readPagesCache: { value?: Page.PageBranch[] } = {}
-
-const readPagesCached = async () => {
-  if (readPagesCache.value) return readPagesCache.value
-  readPagesCache.value = await Page.readAll()
-  return readPagesCache.value
-}
-
 export const VitePluginInternal = (
   polenConfig: Configurator.Config,
 ): Vite.PluginOption => {
   const debug = true
+  let config: Vite.ResolvedConfig
+
+  const readPages = memoize(Page.readAll)
 
   return [
     ReactVite(),
+    {
+      name: `pollen:get-config-resolved`,
+      configResolved(config_) {
+        config = config_
+      },
+    },
     ViteVirtual.Plugin(
       [viAssetGraphqlSchema, async () => {
-        const schema = await readSchemaPointer(polenConfig.schema)
+        const schema = await readSchemaPointer(polenConfig.schema, config.root)
         const moduleContent = `export default ${JSON.stringify(schema)}`
         return moduleContent
       }],
@@ -71,7 +73,7 @@ export const VitePluginInternal = (
         return moduleContent
       }],
       [viProjectData, async () => {
-        const pages = await readPagesCached()
+        const pages = await readPages({ cwd: config.root })
         const siteNavigationItemsFromTopLevelPages = pages.map(
           (pageBranch): ProjectData[`siteNavigationItems`][number] => {
             return {
@@ -136,7 +138,7 @@ export const VitePluginInternal = (
           }
         }
 
-        const pages = await readPagesCached()
+        const pages = await readPages({ cwd: config.root })
         const moduleContent = `
           import {
             ${$.createRoute},
@@ -271,6 +273,7 @@ export const VitePluginInternal = (
           message.id?.includes(`@radix-ui`)
         ) return
       },
+
       config() {
         return {
           environments: {
