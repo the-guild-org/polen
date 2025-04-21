@@ -76,7 +76,10 @@ export const VitePluginInternal = (
         const pages = Page.lint(await readPages({ dir: config.root })).fixed
         const siteNavigationItemsFromTopLevelPages = pages
           // todo: test that non-congent page branches aren't shown in navigation bar
-          .filter(_ => _.type === `PageBranchContent`)
+          .filter(_ =>
+            _.type === `PageBranchContent` ||
+            _.branches.find(_ => _.route.type === `RouteIndex`)
+          )
           .map(
             (pageBranch): ProjectData[`siteNavigationItems`][number] => {
               return {
