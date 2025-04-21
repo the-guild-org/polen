@@ -4,5 +4,6 @@
     "noEmit": false
   },
   "extends": "./tsconfig.json",
-  "include": ["src", "vite-env.d.ts", "global.d.ts"]
+  "include": ["src", "vite-env.d.ts", "global.d.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }
