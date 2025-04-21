@@ -9,3 +9,5 @@ export const arrayify = <T>(value: T | T[]): T[] => Array.isArray(value) ? value
 export const casesHandled = (value: never) => {
   throw new Error(`Case not handled: ${String(value)}`)
 }
+
+export const titleCase = (str: string) => str.replace(/\b\w/g, l => l.toUpperCase())

@@ -1,14 +1,14 @@
 import { defineConfig, devices } from 'playwright/test'
 import type { WorkerFixtures } from './helpers/test.js'
 import { type TestFixtures } from './helpers/test.js'
-import { Ver, VerEnum } from './helpers/ver.js'
+import { LinkProtocol } from '../../src/lib/link-protocol.js'
 
 const isCi = !!process.env[`CI`]
-const polenVer = process.env[`POLEN_VER`]
-  ? Ver.parse(process.env[`POLEN_VER`])
+const polenLink = process.env[`POLEN_LINK`]
+  ? LinkProtocol.parse(process.env[`POLEN_LINK`])
   : isCi
-  ? VerEnum.file
-  : VerEnum.file
+  ? LinkProtocol.enum.file
+  : LinkProtocol.enum.file
 
 export default defineConfig<TestFixtures, WorkerFixtures>({
   name: `examples`,
@@ -20,7 +20,7 @@ export default defineConfig<TestFixtures, WorkerFixtures>({
   use: {
     trace: `on-first-retry`,
     screenshot: `only-on-failure`,
-    polenVer,
+    polenLink,
   },
   projects: [
     {

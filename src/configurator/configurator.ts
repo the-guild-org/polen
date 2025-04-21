@@ -1,8 +1,8 @@
-import { Path } from '../lib/path/_namespace.js'
 import { casesHandled } from '../lib/prelude/main.js'
 import type { Vite } from '../lib/vite/_namespace.js'
 import type { SchemaAugmentation } from '../schema-augmentation/_namespace.js'
-import { SchemaPointer } from './schema-pointer.js'
+import { sourcePaths } from '../source-paths.js'
+import type { SchemaPointer } from './schema-pointer.js'
 
 export interface ConfigInput {
   /**
@@ -33,7 +33,6 @@ export interface ConfigInput {
    * @defaultValue true
    */
   ssr?: boolean
-  // port?: number
 }
 
 type SchemaInput = string | SchemaPointer
@@ -50,25 +49,21 @@ export interface Config {
   ssr: {
     enabled: boolean,
   }
-  aliases: {
-    entryServer: string,
-  }
+  // aliases: {
+  //   entryServer: string,
+  // }
   paths: {
-    workspaceDir: string,
     appTemplate: {
       dir: string,
       entryClient: string,
       entryServer: string,
     },
-    outDir: string,
-    outViteDir: string,
   }
 }
 
-const pathAppTemplateDir = Path.join(import.meta.dirname, `../app-template`)
-const workspaceDir = process.cwd()
+// const workspaceDir = process.cwd()
 
-const outDir = Path.join(workspaceDir, `dist`)
+// const outDir = Path.join(workspaceDir, `dist`)
 
 const configInputDefaults: Config = {
   templateVariables: {
@@ -78,23 +73,20 @@ const configInputDefaults: Config = {
   mode: `client`,
   schema: {
     type: `file`,
-    path: Path.join(workspaceDir, `schema.graphql`),
+    path: `schema.graphql`,
   },
   ssr: {
     enabled: true,
   },
-  aliases: {
-    entryServer: `#polen/server/entry`,
-  },
+  // aliases: {
+  //   entryServer: `#polen/server/entry`,
+  // },
   paths: {
     appTemplate: {
-      dir: pathAppTemplateDir,
-      entryServer: Path.join(pathAppTemplateDir, `entry.server.jsx`),
-      entryClient: Path.join(pathAppTemplateDir, `entry.client.jsx`),
+      dir: sourcePaths.template.dir,
+      entryServer: sourcePaths.template.modulePaths.entryServer,
+      entryClient: sourcePaths.template.modulePaths.entryClient,
     },
-    workspaceDir,
-    outDir: Path.join(workspaceDir, `build`),
-    outViteDir: Path.join(outDir),
   },
 }
 
@@ -115,7 +107,7 @@ export const normalizeInput = (configInput?: ConfigInput): Config => {
   }
 
   if (configInput?.schema !== undefined) {
-    config.schema = resolveInputSchema(configInput.schema, config)
+    config.schema = resolveInputSchema(configInput.schema)
   }
 
   return config
@@ -123,17 +115,14 @@ export const normalizeInput = (configInput?: ConfigInput): Config => {
 
 // Resolvers -------------------------------------------------------------
 
-const resolveInputSchema = (input: SchemaInput, config: Config): Config[`schema`] => {
+const resolveInputSchema = (input: SchemaInput): Config[`schema`] => {
   if (typeof input === `string`) {
     return {
       type: `file`,
-      path: Path.absolutify(input, config.paths.workspaceDir),
+      path: input,
     }
   } else if (input.type === `file`) {
-    return {
-      ...input,
-      path: Path.absolutify(input.path, config.paths.workspaceDir),
-    }
+    return input
     // eslint-disable-next-line
   } else if (input.type === `inline`) {
     return input

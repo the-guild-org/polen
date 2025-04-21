@@ -1,34 +1,44 @@
 import { inspect } from 'node:util'
 import { colorize } from 'consola/utils'
 import { snakeCase } from 'es-toolkit'
+import { calcIsEnabledFromEnv } from './environment-variable.js'
 
 type DebugParameters = [event: string, payload?: unknown]
+
+export interface Debug {
+  (...args: DebugParameters): void
+  toggle: (isEnabled: boolean) => void
+  sub: (subNamespace: string) => Debug
+}
 
 interface State {
   isEnabled: boolean
 }
 
-export const create = (namespace?: string, initialState?: State) => {
-  const isDebugEnabled = process.env[`DEBUG`] === `true` || process.env[`DEBUG`] === `*` ||
-    process.env[`DEBUG`] === `1`
+export const create = (namespace?: string, initialState?: State): Debug => {
+  const isDebugEnabledFromEnv = calcIsEnabledFromEnv(process.env, namespace)
 
   const state: State = initialState ?? {
-    isEnabled: isDebugEnabled,
+    isEnabled: isDebugEnabledFromEnv,
   }
 
-  const debug = (...args: DebugParameters) => {
+  const debug: Debug = (...args) => {
     const isPayloadPassed = args.length === 2
     const [event, payload] = args
 
     if (state.isEnabled) {
-      const debugDepth = parseNumberOr(process.env[`DEBUG_DEPTH`], 0)
+      // If a payload is an array then default depth to 1 so that we see its _contents_
+      const isPayloadArray = Array.isArray(payload)
+      const depthBoost = isPayloadArray ? 1 : 0
+      const defaultDepth = 3
+      const debugDepth = parseNumberOr(process.env[`DEBUG_DEPTH`], defaultDepth) + depthBoost
       const isPayloadDisabled = debugDepth < 0
 
       const payloadRendered = isPayloadPassed && !isPayloadDisabled
         ? inspect(payload, {
           colors: true,
           depth: debugDepth,
-          compact: true,
+          // compact: true,
           maxStringLength: 1000,
         })
         : ``
@@ -68,12 +78,16 @@ export const create = (namespace?: string, initialState?: State) => {
   return debug
 }
 
-export const debug = create()
-
 const parseNumberOr = (str: string | undefined, defaultValue: number): number => {
+  if (str === ``) return defaultValue
+
   const parsed = Number(str)
   if (Number.isNaN(parsed)) {
     return defaultValue
   }
   return parsed
 }
+
+// initialize root debug
+
+export const debug = create()

@@ -52,6 +52,30 @@ The following shows minimal default usage.
 
 ## Guide
 
+### Pages
+
+You can add pages to your developer portal by adding markdown files to the
+`pages` directory in your project root directory.
+
+- A file becomes a page.
+- The path to the file is used as the path to the page.
+- _Index Pages_
+  - A file named `index` is an index page.
+  - The file name is elided in the route. For example `foo/index.md` becomes
+    route `/foo` .
+  - If both `foo/index.md` and `foo.md` exist, then the former is used, latter
+    ignored, and warning raised.
+- _Navigation Bar_
+  - Top level pages are listed in the navigation bar.
+
+Example:
+
+| File                 | Route      | Navigation Bar Title |
+| -------------------- | ---------- | -------------------- |
+| `pages/foo.md`       | `/foo`     | `Foo`                |
+| `pages/foo/index.md` | `/foo`     | `Foo`                |
+| `pages/foo/bar.md`   | `/foo/bar` | `Foo`                |
+
 ### Schema Augmentations
 
 #### Schema Descriptions

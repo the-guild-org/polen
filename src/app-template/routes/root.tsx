@@ -10,8 +10,10 @@ import { reference } from './reference.jsx'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import entryClientUrl from '../entry.client.jsx?url'
 import { templateVariables } from 'virtual:polen/template/variables'
-// console.log(entryClientUrl)
+import { pages } from 'virtual:polen/project/pages.jsx'
+import { PROJECT_DATA } from 'virtual:polen/project/data'
 
+// todo: not needed anymore because not using hono dev vite plugin right?
 const reactRefreshPreamble = `
 import RefreshRuntime from "/@react-refresh";
 RefreshRuntime.injectIntoGlobalHook(window);
@@ -63,7 +65,9 @@ const Layout = () => {
             </Flex>
           </LinkReactRouter>
           <Flex direction="row" gap="4">
-            <Link color="gray" to="/reference">Reference</Link>
+            {PROJECT_DATA.siteNavigationItems.map((item, key) => (
+              <Link key={key} color="gray" to={item.path}>{item.title}</Link>
+            ))}
           </Flex>
         </Flex>
         <Box>
@@ -80,5 +84,6 @@ export const root = createRoute({
   children: [
     index,
     reference,
+    ...pages,
   ],
 })

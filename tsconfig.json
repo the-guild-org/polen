@@ -15,5 +15,13 @@
     "noUnusedParameters": false
   },
   "exclude": ["eslint.config.js", "build"],
-  "include": ["tests", "src", "vite-env.d.ts", "global.d.ts", "examples/_tests", "scripts"]
+  "include": [
+    "tests",
+    "src",
+    "vite-env.d.ts",
+    "global.d.ts",
+    "examples/_tests",
+    "scripts",
+    "vitest.config.ts"
+  ]
 }

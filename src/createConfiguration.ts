@@ -16,6 +16,7 @@ export const createConfiguration = (
   configInput: Configurator.ConfigInput,
 ): ViteUserConfigWithPolen => {
   const polenConfig = Configurator.normalizeInput(configInput)
+  // polenConfig
 
   const baseConfig = Vite.defineConfig({
     plugins: [VitePluginInternal(polenConfig)],
