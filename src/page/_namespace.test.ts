@@ -38,12 +38,6 @@ unit(`index file nested`, async ({ project }) => {
   expect(stabilzeFilePath(pageBranches)).toMatchSnapshot()
 })
 
-// unit(`index file nested with others`, async ({ project }) => {
-//   await project.fileStorage.set({ 'pages/about/index.md': `foo`, 'pages/about/legal.md': `foo` })
-//   const pageBranches = await Page.readAll({ dir: project.dir })
-//   expect(stabilzeFilePath(pageBranches)).toMatchSnapshot()
-// })
-
 describe(`linter`, () => {
   unit(`conflicting index and exact are fixed by linter`, async ({ project, project2 }) => {
     await project.fileStorage.set({

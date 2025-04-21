@@ -159,6 +159,7 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(
     case `init`: {
       const initPackageJson = {
         name: `project-${fsj.cwd()}`,
+        packageManager: `pnpm@10.8.0`,
       }
       await fsj.writeAsync(`package.json`, initPackageJson)
       break
