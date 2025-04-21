@@ -36,7 +36,7 @@ export const readAll = async (parameters: { cwd: string }): Promise<PageBranch[]
   const projectDir = parameters.cwd
   const pagesDir = Path.join(projectDir, `pages`)
   const globPattern = `**/*.md`
-  debug(`creating glob pattern`, { globPattern })
+  debug(`search page files`, { globPattern, pagesDir })
 
   const filePaths = await TinyGlobby.glob(globPattern, {
     absolute: true,

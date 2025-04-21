@@ -7,7 +7,7 @@ import type { ViteUserConfigWithPolen } from '../../../../src/createConfiguratio
 import * as GetPortPlease from 'get-port-please'
 import { stripAnsi } from 'consola/utils'
 import { ProjectController } from '../../../../src/lib/project-controller/_namespace.js'
-import type { LinkProtocol } from '../link-protocol.js'
+import type { LinkProtocol } from '../../../../src/lib/link-protocol.js'
 
 const selfPath = Url.fileURLToPath(import.meta.url)
 const selfDir = Path.dirname(selfPath)
@@ -84,7 +84,7 @@ export const create = async (parameters: {
     }),
   })
 
-  const config = await import(`${project.dir}/vite.config.js`) as {
+  const config = await import(`${project.fileStorage.cwd}/vite.config.js`) as {
     default: ViteUserConfigWithPolen,
   }
   debug(`loaded configuration`)

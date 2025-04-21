@@ -2,7 +2,7 @@ import { test as base } from 'playwright/test'
 import { type ProcessOutput } from 'zx'
 import type { ExampleName } from './example-name.js'
 import { ExampleController } from './example-controller/_namespace.js'
-import type { LinkProtocol } from './link-protocol.js'
+import type { LinkProtocol } from '../../../src/lib/link-protocol.js'
 
 export interface TestFixtures {
   runDev: ExampleController.ServerProcess
