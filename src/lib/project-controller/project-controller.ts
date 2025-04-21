@@ -21,7 +21,7 @@ export const defaultTemplateMatch = [
 
 export interface ProjectController<
   // eslint-disable-next-line
-  $ScriptFunctions extends ScriptRunners = {},
+  $ScriptRunners extends ScriptRunners = {},
 > {
   fileStorage: FileStorage.FileStorage
   shell: Shell
@@ -29,7 +29,7 @@ export interface ProjectController<
   files: {
     packageJson: PackageJson,
   }
-  run: $ScriptFunctions
+  run: $ScriptRunners
   /**
    * Directory path to this project.
    */
@@ -72,9 +72,9 @@ interface TemplateScaffold {
 
 type Scaffold = TemplateScaffold | InitScaffold
 
-interface ConfigInput<$ScriptFunctions extends ScriptRunners = ScriptRunners> {
+interface ConfigInput<$ScriptRunners extends ScriptRunners = ScriptRunners> {
   debug?: Debug.Debug | undefined
-  scripts?: ((project: ProjectController<$ScriptFunctions>) => $ScriptFunctions) | undefined
+  scripts?: ((project: ProjectController) => $ScriptRunners) | undefined
   /**
    * By default uses an "init" scaffold. This is akin to running e.g. `pnpm init`.
    */
@@ -124,10 +124,9 @@ const resolveConfigInput = (configInput: ConfigInput<any>): Config => {
 
 // const resolveScaffold =
 
-// eslint-disable-next-line
-export const create = async <scriptFunctions extends ScriptRunners = {}>(
-  parameters: ConfigInput<scriptFunctions>,
-): Promise<ProjectController<scriptFunctions>> => {
+export const create = async <scriptRunners extends ScriptRunners = {}>(
+  parameters: ConfigInput<scriptRunners>,
+): Promise<ProjectController<scriptRunners>> => {
   const config = resolveConfigInput(parameters)
 
   const { debug } = config
@@ -179,7 +178,7 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(
 
   // instance
 
-  const project: ProjectController<scriptFunctions> = {
+  const project: ProjectController<scriptRunners> = {
     shell,
     fileStorage,
     files,
@@ -190,7 +189,7 @@ export const create = async <scriptFunctions extends ScriptRunners = {}>(
     run: undefined as any,
   }
 
-  project.run = parameters.scripts?.(project) ?? {} as scriptFunctions
+  project.run = parameters.scripts?.(project) ?? {} as scriptRunners
 
   // Initialize
 
