@@ -11,3 +11,9 @@ export const casesHandled = (value: never) => {
 }
 
 export const titleCase = (str: string) => str.replace(/\b\w/g, l => l.toUpperCase())
+
+export * as Fn from './fn.js'
+
+export * as Undefined from './Undefined.js'
+
+export * as TypeGuard from './type-guard.js'

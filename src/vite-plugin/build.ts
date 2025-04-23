@@ -6,7 +6,7 @@ import { Vite } from '../lib/vite/_namespace.js'
 import { vi } from './helpers.js'
 import { defu } from 'defu'
 
-const viServerEntry = vi([`server`, `entry.jsx`])
+const viServerEntry = vi(`server`, `entry.jsx`)
 
 export const Build = (parameters: {
   entryServerPath: string,
@@ -72,59 +72,63 @@ export const Build = (parameters: {
     configResolved(config) {
       viteConfigResolved = config
     },
-    ...ViteVirtual.toHooks$FromEntries(
-      [viServerEntry, () => {
-        const entryServerPath = Path.absolutify(
-          config.entryServerPath,
-          viteConfigResolved.root,
-        )
-        const entrServeryViteGlobPath = `/` +
-          Path.relative(viteConfigResolved.root, entryServerPath)
-        const staticServingPaths = {
-          // todo
-          // relative from CWD of process that boots node server
-          // can easily break! Use path relative in server??
-          dirPath: `./dist`,
-          routePath: `/${viteConfigResolved.build.assetsDir}/*`,
-        }
+    ...ViteVirtual.IdentifiedLoader.toHooks(
+      {
+        identifier: viServerEntry,
+        loader: () => {
+          const entryServerPath = Path.absolutify(
+            config.entryServerPath,
+            viteConfigResolved.root,
+          )
+          const entrServeryViteGlobPath = `/` +
+            Path.relative(viteConfigResolved.root, entryServerPath)
+          const staticServingPaths = {
+            // todo
+            // relative from CWD of process that boots node server
+            // can easily break! Use path relative in server??
+            dirPath: `./dist`,
+            routePath: `/${viteConfigResolved.build.assetsDir}/*`,
+          }
 
-        const code = CodeBuilder.create()
+          const code = CodeBuilder.create()
 
-        const _ = {
-          app: `app`,
-          entry: `entry`,
-          entries: `entries`,
-        }
+          const _ = {
+            app: `app`,
+            entry: `entry`,
+            entries: `entries`,
+          }
 
-        const honoPath = import.meta.resolve(`hono`)
-        const honoNodeServerServeStaticPath = import.meta.resolve(`@hono/node-server/serve-static`)
-        const honoNodeServerPath = import.meta.resolve(`@hono/node-server`)
+          const honoPath = import.meta.resolve(`hono`)
+          const honoNodeServerServeStaticPath = import.meta.resolve(
+            `@hono/node-server/serve-static`,
+          )
+          const honoNodeServerPath = import.meta.resolve(`@hono/node-server`)
 
-        // TODO turn this into a file template
-        code(`import { Hono } from '${honoPath}'`)
-        code(``)
-        code(`const ${_.app} = new Hono()`)
-        code(``)
-        code(``)
-        code(`// Static Files`)
-        code(``)
-        code(`import { serveStatic } from '${honoNodeServerServeStaticPath}'`)
-        code(``)
-        code(`${_.app}.use(
+          // TODO turn this into a file template
+          code(`import { Hono } from '${honoPath}'`)
+          code(``)
+          code(`const ${_.app} = new Hono()`)
+          code(``)
+          code(``)
+          code(`// Static Files`)
+          code(``)
+          code(`import { serveStatic } from '${honoNodeServerServeStaticPath}'`)
+          code(``)
+          code(`${_.app}.use(
     				'${staticServingPaths.routePath}',
     				serveStatic({ root: '${staticServingPaths.dirPath}' })
     			)`)
-        code(``)
-        code(``)
-        code(`// Entries`)
-        code(``)
-        code(`const ${_.entries} = import.meta.glob(
+          code(``)
+          code(``)
+          code(`// Entries`)
+          code(``)
+          code(`const ${_.entries} = import.meta.glob(
     				['${entrServeryViteGlobPath}'],
     				{ import: 'default', eager: true }
     			)`)
-        code(``)
-        code(`/** @see https://github.com/honojs/hono/issues/4051 */`)
-        code(`const delegate = (app1, method, path, app2) => {
+          code(``)
+          code(`/** @see https://github.com/honojs/hono/issues/4051 */`)
+          code(`const delegate = (app1, method, path, app2) => {
 						app1.on(method, path, (c) => {
 							// Throws if executionCtx is not available
 							// https://hono.dev/docs/api/context#executionctx
@@ -134,22 +138,23 @@ export const Build = (parameters: {
 							return app2.fetch(c.req.raw, c.env, maybeExecutionContext)
 						})
 					}`)
-        code(`for (const ${_.entry} of Object.values(${_.entries})) {
+          code(`for (const ${_.entry} of Object.values(${_.entries})) {
 						delegate(${_.app}, 'all', '*', ${_.entry})
     			}`)
-        code(``)
-        code(``)
-        code(`// Start Server`)
-        code(``)
-        code(`import { serve } from '${honoNodeServerPath}'`)
-        code(``)
+          code(``)
+          code(``)
+          code(`// Start Server`)
+          code(``)
+          code(`import { serve } from '${honoNodeServerPath}'`)
+          code(``)
 
-        const port = config.port ?? viteConfigResolved.server.port + 1
-        code(`const port = process.env.PORT || ${port.toString()}`)
-        code(`serve({ fetch: ${_.app}.fetch, port })`)
+          const port = config.port ?? viteConfigResolved.server.port + 1
+          code(`const port = process.env.PORT || ${port.toString()}`)
+          code(`serve({ fetch: ${_.app}.fetch, port })`)
 
-        return code.render()
-      }],
+          return code.render()
+        },
+      },
     ),
     config() {
       return {
@@ -192,11 +197,12 @@ export const Build = (parameters: {
   }]
 }
 
-const viClientManifest = vi([`vite`, `client`, `manifest`])
+const viClientManifest = vi(`vite`, `client`, `manifest`)
 
 const Manifest = (): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv
   let viteConfigResolved: Vite.ResolvedConfig
+
   return {
     name: `polen-manifest`,
     config(_, configEnv_) {
@@ -205,25 +211,28 @@ const Manifest = (): Vite.Plugin => {
     configResolved(config) {
       viteConfigResolved = config
     },
-    ...ViteVirtual.toHooks$FromEntries(
-      [viClientManifest, async () => {
-        // In development just return an empty manifest
-        if (configEnv.mode === Vite.ModeName.development) {
-          return `export default {}`
-        }
+    ...ViteVirtual.IdentifiedLoader.toHooks(
+      {
+        identifier: viClientManifest,
+        loader: async () => {
+          // In development just return an empty manifest
+          if (configEnv.mode === Vite.ModeName.development) {
+            return `export default {}`
+          }
 
-        const manifestPath = Path.join(
-          viteConfigResolved.root,
-          viteConfigResolved.build.outDir,
-          `.vite`,
-          `manifest.json`,
-        )
-        const module = await import(manifestPath, { with: { type: `json` } }) as {
-          default: Vite.Manifest,
-        }
+          const manifestPath = Path.join(
+            viteConfigResolved.root,
+            viteConfigResolved.build.outDir,
+            `.vite`,
+            `manifest.json`,
+          )
+          const module = await import(manifestPath, { with: { type: `json` } }) as {
+            default: Vite.Manifest,
+          }
 
-        return `export default ${JSON.stringify(module.default)}`
-      }],
+          return `export default ${JSON.stringify(module.default)}`
+        },
+      },
     ),
   }
 }
