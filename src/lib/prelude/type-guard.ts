@@ -3,7 +3,7 @@ export const strictEqual =
     return value === variableValue
   }
 
-export const notStrictEqual =
+export const strictEqualNot =
   <value>(value: value) =>
   <variableValue>(variableValue: variableValue): variableValue is Exclude<variableValue, value> => {
     // @ts-expect-error

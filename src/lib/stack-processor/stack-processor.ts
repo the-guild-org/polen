@@ -15,4 +15,4 @@ export const until = (
   }
 }
 
-export const untilDefined = until(Undefined.is)
+export const untilDefined = until(Undefined.isNot)

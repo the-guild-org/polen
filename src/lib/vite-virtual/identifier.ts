@@ -1,3 +1,5 @@
+import { createId, createResolved, normalizeId } from './id.js'
+
 export interface Identifier {
   id: string
   resolved: string
@@ -5,14 +7,16 @@ export interface Identifier {
   separator: string
 }
 
-import { createId, createResolved, normalizeId } from './id.js'
+export const defaults = {
+  seperator: `/`,
+} as const
 
 export const create = (parameters: {
   id: string,
   namespace?: string,
   separator?: string,
 }): Identifier => {
-  const separator = parameters.separator ?? `/`
+  const separator = parameters.separator ?? defaults.seperator
   const idNormalized = normalizeId({ id: parameters.id, separator })
   const idNamespaced = parameters.namespace
     ? `${parameters.namespace}${separator}${idNormalized}`
@@ -31,7 +35,7 @@ export const createFactory = (parameters: {
   namespace: string,
   separator?: string,
 }): (idOrIdSegments: string | string[]) => Identifier => {
-  const { namespace, separator = `/` } = parameters
+  const { namespace, separator = defaults.seperator } = parameters
 
   return idOrIdSegments => {
     const id = Array.isArray(idOrIdSegments)

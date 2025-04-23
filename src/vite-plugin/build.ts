@@ -202,6 +202,7 @@ const viClientManifest = vi([`vite`, `client`, `manifest`])
 const Manifest = (): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv
   let viteConfigResolved: Vite.ResolvedConfig
+
   return {
     name: `polen-manifest`,
     config(_, configEnv_) {
