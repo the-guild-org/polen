@@ -1,5 +1,4 @@
-export interface GraphQLSchemaChange {
-  date: Date
+export interface GraphQLPatch {
   description?: string
   changes: Change[]
 }
