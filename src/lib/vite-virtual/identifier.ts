@@ -34,13 +34,11 @@ export const create = (parameters: {
 export const createFactory = (parameters: {
   namespace: string,
   separator?: string,
-}): (idOrIdSegments: string | string[]) => Identifier => {
+}): (...idSegments: string[]) => Identifier => {
   const { namespace, separator = defaults.seperator } = parameters
 
-  return idOrIdSegments => {
-    const id = Array.isArray(idOrIdSegments)
-      ? idOrIdSegments.join(separator)
-      : idOrIdSegments
+  return (...idSegments) => {
+    const id = idSegments.flatMap(_ => _.split(separator)).join(separator)
 
     return create({
       id,

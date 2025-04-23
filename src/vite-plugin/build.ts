@@ -6,7 +6,7 @@ import { Vite } from '../lib/vite/_namespace.js'
 import { vi } from './helpers.js'
 import { defu } from 'defu'
 
-const viServerEntry = vi([`server`, `entry.jsx`])
+const viServerEntry = vi(`server`, `entry.jsx`)
 
 export const Build = (parameters: {
   entryServerPath: string,
@@ -197,7 +197,7 @@ export const Build = (parameters: {
   }]
 }
 
-const viClientManifest = vi([`vite`, `client`, `manifest`])
+const viClientManifest = vi(`vite`, `client`, `manifest`)
 
 const Manifest = (): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv

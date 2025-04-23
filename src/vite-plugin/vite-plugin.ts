@@ -13,11 +13,11 @@ import { casesHandled, titleCase } from '../lib/prelude/main.js'
 import type { ProjectData } from '../project-data.js'
 import { memoize } from '../lib/memoize.js'
 
-const viAssetGraphqlSchema = vi([`assets`, `graphql-schema`])
-const viTemplateVariables = vi([`template`, `variables`])
-const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
-const viProjectPages = vi([`project`, `pages.jsx`])
-const viProjectData = vi([`project`, `data`])
+const viAssetGraphqlSchema = vi(`assets`, `graphql-schema`)
+const viTemplateVariables = vi(`template`, `variables`)
+const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
+const viProjectPages = vi(`project`, `pages.jsx`)
+const viProjectData = vi(`project`, `data`)
 
 export const VitePlugin = async (
   polenConfigInput?: Configurator.ConfigInput,
