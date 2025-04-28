@@ -1,20 +1,22 @@
-import { CodeBuilder } from '../lib/code-builder/_namespace.js'
-import { Fs } from '../lib/fs/_namespace.js'
-import { Path } from '../lib/path/_namespace.js'
-import { ViteVirtual } from '../lib/vite-virtual/_namespace.js'
-import { Vite } from '../lib/vite/_namespace.js'
-import { vi } from './helpers.js'
+import { CodeBuilder } from '../../lib/code-builder/_namespace.js'
+import { Fs } from '../../lib/fs/_namespace.js'
+import { Path } from '../../lib/path/_namespace.js'
+import { ViteVirtual } from '../../lib/vite-virtual/_namespace.js'
+import { Vite } from '../../lib/vite/_namespace.js'
+import { vi } from '../helpers.js'
 import { defu } from 'defu'
 
 const viServerEntry = vi(`server`, `entry.jsx`)
 
-export const Build = (parameters: {
-  entryServerPath: string,
-  clientEntryPath: string,
-  port?: number,
-  debug?: boolean,
-}): Vite.Plugin[] => {
-  const config = defu(parameters, { debug: false })
+interface ConfigInput {
+  entryServerPath: string
+  clientEntryPath: string
+  port?: number
+  debug?: boolean
+}
+
+export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
+  const config = defu(configInput, { debug: false })
   let viteConfigResolved: Vite.ResolvedConfig
 
   return [Manifest(), {
@@ -52,10 +54,10 @@ export const Build = (parameters: {
         environments: {
           client: {
             build: {
-              minify: !parameters.debug,
+              minify: !configInput.debug,
               manifest: true,
               rollupOptions: {
-                input: [parameters.clientEntryPath],
+                input: [configInput.clientEntryPath],
                 // jsx: {
                 //   mode: 'automatic',
                 // },
