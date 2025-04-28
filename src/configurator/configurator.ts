@@ -1,6 +1,6 @@
 import { casesHandled } from '../lib/prelude/main.js'
 import type { Vite } from '../lib-dep/vite/index.js'
-import type { SchemaAugmentation } from '../schema-augmentation/_namespace.js'
+import type { SchemaAugmentation } from '../schema-augmentation/index.js'
 import { sourcePaths } from '../source-paths.js'
 import type { SchemaPointer } from './schema-pointer.js'
 

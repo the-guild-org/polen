@@ -1,5 +1,5 @@
 import { expect } from 'playwright/test'
-import { Polen } from '../../../src/exports/_namespace.js'
+import { Polen } from '../../../src/exports/index.js'
 import { test } from '../helpers/test.js'
 import type { DirectoryLayout } from '../../../src/lib/project-controller/directory-layout.js'
 import { Vite } from '../../../src/lib-dep/vite/index.js'

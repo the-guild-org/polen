@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { Marked } from '../../lib-dep/marked/_namespace.js'
+import { Marked } from '../../lib-dep/marked/index.js'
 
 export const Markdown: FC<{ children: string }> = ({ children }) => {
   const html = Marked.parse(children)

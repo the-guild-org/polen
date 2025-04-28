@@ -1,5 +1,5 @@
 import { test as base } from 'playwright/test'
-import { ViteController } from './vite-controller/_namespace.js'
+import { ViteController } from './vite-controller/index.js'
 import { ProjectController } from '../../../src/lib/project-controller/index.js'
 
 interface Fixtures {

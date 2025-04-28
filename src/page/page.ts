@@ -3,7 +3,7 @@ import { Path } from '../lib-dep/path/index.js'
 import { TinyGlobby } from '../lib-dep/tiny-globby/index.js'
 import type { RouteIndex, RouteItem, RouteSegment } from './route.js'
 import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './route.js'
-import { Marked } from '../lib-dep/marked/_namespace.js'
+import { Marked } from '../lib-dep/marked/index.js'
 import { Debug } from '../lib/debug/index.js'
 
 export * from './lint.js'

@@ -1,4 +1,4 @@
-import type { ReactRouter } from './react-router/_namespace.js'
+import type { ReactRouter } from '../lib-dep/react-router/index.js'
 
 export const createRoute = <routeObject extends ReactRouter.RouteObject>(
   routeObject: routeObject,
