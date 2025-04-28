@@ -1,6 +1,6 @@
 import { describe, expect } from 'vitest'
 import { unit } from '../../tests/unit/helpers/test.js'
-import { Page } from './_namespace.js'
+import { Page } from './index.js'
 
 unit(`empty if no applicable files`, async ({ project }) => {
   await project.fileStorage.set({ 'foo.txt': `bar` })

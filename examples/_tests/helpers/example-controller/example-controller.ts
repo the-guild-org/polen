@@ -1,12 +1,12 @@
-import { Path } from '../../../../src/lib/path/_namespace.js'
-import { Url } from '../../../../src/lib/url/_namespace.js'
+import { Path } from '../../../../src/lib-dep/path/index.js'
+import { Url } from '../../../../src/lib-dep/url/index.js'
 import type { ProcessPromise } from 'zx'
 import type { ExampleName } from '../example-name.js'
 import { debug as debugBase } from '../../../../src/lib/debug/debug.js'
-import type { ViteUserConfigWithPolen } from '../../../../src/createConfiguration.js'
+import type { ViteUserConfigWithPolen } from '../../../../src/create-configuration.js'
 import * as GetPortPlease from 'get-port-please'
 import { stripAnsi } from 'consola/utils'
-import { ProjectController } from '../../../../src/lib/project-controller/_namespace.js'
+import { ProjectController } from '../../../../src/lib/project-controller/index.js'
 import type { LinkProtocol } from '../../../../src/lib/link-protocol.js'
 
 const selfPath = Url.fileURLToPath(import.meta.url)

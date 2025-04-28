@@ -1,4 +1,4 @@
-import { Path } from '../lib/path/_namespace.js'
+import { Path } from '../lib-dep/path/index.js'
 import { casesHandled } from '../lib/prelude/main.js'
 
 const indexRegex = /\/index\.\w+$/

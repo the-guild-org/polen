@@ -6,13 +6,16 @@ import { NamedType } from '../components/NamedType.jsx'
 import { getSchema } from '../utilities/getSchema.js'
 
 const Component = () => {
+  // eslint-disable-next-line
   const params = useParams() as any
   const data = useRouteLoaderData<typeof reference.loader>(`/reference`) as {
     documentNode: DocumentNode,
   }
   // const data = reference$type.parentRoute.useLoaderData()
   const schema = getSchema(data.documentNode)
+  // eslint-disable-next-line
   const type = schema.getType(params.type)
+  // eslint-disable-next-line
   if (!type) return `Could not find type ${params.type}`
   return <NamedType data={type} />
 }

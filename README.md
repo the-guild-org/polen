@@ -23,8 +23,8 @@ The following shows minimal default usage.
 
    ```graphql
    type Query {
-      	hello: String
-    	}
+     hello: String
+   }
    ```
 
 2. Use Polen in your Vite config.
