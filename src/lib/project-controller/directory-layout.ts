@@ -1,4 +1,4 @@
-import { Path } from '../path/_namespace.js'
+import { Path } from '../../lib-dep/path/index.js'
 
 export namespace DirectoryLayout {
   // eslint-ignore

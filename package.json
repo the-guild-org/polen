@@ -48,11 +48,11 @@
     "url": "git+https://github.com/the-guild-org/polen.git"
   },
   "exports": {
-    ".": "./build/entrypoints/_namespace.js",
-    "./exports": "./build/entrypoints/_exports.js",
-    "./dependencies/react/jsx-runtime": "./build/entrypoints/dependencies/react/jsx-runtime.js",
-    "./dependencies/react/jsx-dev-runtime": "./build/entrypoints/dependencies/react/jsx-dev-runtime.js",
-    "./dependencies/react": "./build/entrypoints/dependencies/react.js"
+    ".": "./build/exports/index.js",
+    "./exports": "./build/exports/polen.js",
+    "./dependencies/react/jsx-runtime": "./build/exports/dependencies/react/jsx-runtime.js",
+    "./dependencies/react/jsx-dev-runtime": "./build/exports/dependencies/react/jsx-dev-runtime.js",
+    "./dependencies/react": "./build/exports/dependencies/react.js"
   },
   "files": [
     "build",

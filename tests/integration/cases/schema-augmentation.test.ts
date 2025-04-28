@@ -1,7 +1,7 @@
 import { expect } from 'playwright/test'
-import { Vite } from '../../../src/lib/vite/_namespace.js'
-import { Polen } from '../../../src/entrypoints/_namespace.js'
-import type { SchemaAugmentation } from '../../../src/schema-augmentation/_namespace.js'
+import { Vite } from '../../../src/lib-dep/vite/index.js'
+import { Polen } from '../../../src/exports/index.js'
+import type { SchemaAugmentation } from '../../../src/schema-augmentation/index.js'
 import { test } from '../helpers/test.js'
 
 const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }[] = [
