@@ -1,35 +1,23 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# macOS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
-# dprint cache
+# Dependencies
+node_modules
+
+# Tools
 .dprint/
-.nitro
-.output
-/build
-/examples/**/build
+tsconfig.build.tsbuildinfo
+
+# Examples
+examples/**/build
 examples/*/pnpm-workspace.yaml
 examples/_tests/__results__
+
+# Tests
 tests/*/__results__
-tsconfig.build.tsbuildinfo
+
+# Build
+dist
+dist-ssr
+.output
+/build

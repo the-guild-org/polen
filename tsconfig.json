@@ -1,18 +1,31 @@
 {
-  "extends": "@tsconfig/strictest/tsconfig.json",
+  "extends": ["@tsconfig/strictest/tsconfig.json", "@tsconfig/node22/tsconfig.json"],
   "compilerOptions": {
-    "jsx": "preserve",
-    "target": "ES2022",
+    // Package
     "module": "NodeNext",
-    "exactOptionalPropertyTypes": false,
     "moduleResolution": "nodenext",
-    "isolatedModules": true,
-    "outDir": "build",
-    "declaration": true,
+    "jsx": "preserve",
+
+    // DX
+    "tsBuildInfoFile": "node_modules/.cache/.tsbuildinfo",
+    "noErrorTruncation": true,
+    "incremental": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
     "noEmit": true,
-    // Rely on ESLint for unused variables
+
+    // Handled by ESLint:
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+
+    // Downstream DX
+    "isolatedModules": true, // performance
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // Other
+    "exactOptionalPropertyTypes": false
   },
   "exclude": ["eslint.config.js", "build"],
   "include": [
