@@ -1,6 +1,6 @@
 import { memoize } from 'es-toolkit'
 import { readSchemaPointer } from '../../configurator/schema-pointer.js'
-import { casesHandled, titleCase } from '../../lib/prelude/main.js'
+import { titleCase } from '../../lib/prelude/main.js'
 import { ViteVirtual } from '../../lib/vite-virtual/index.js'
 import { Vite } from '../../lib-dep/vite/index.js'
 import { Page } from '../../page/index.js'
@@ -83,69 +83,19 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
       {
         identifier: viProjectPages,
         loader: async () => {
-          const $ = {
-            pages: `pages`,
-            createRoute: `createRoute`,
-            createRouteIndex: `createRouteIndex`,
-          }
-
-          const renderCodePageBranchBranches = (pageBranch: Page.PageBranch): string[] => {
-            return pageBranch.branches.map(renderCodePageBranchRoute)
-          }
-
-          const renderCodePageBranchRoute = (pageBranch: Page.PageBranch): string => {
-            switch (pageBranch.type) {
-              case `PageBranchContent`: {
-                switch (pageBranch.route.type) {
-                  case `RouteItem`:
-                    return `
-                ${$.createRoute}({
-                  path: '${pageBranch.route.path.raw}',
-                  Component: () => ${pageBranch.content.html},
-                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
-                })
-              `
-                  case `RouteIndex`:
-                    return `
-                    ${$.createRouteIndex}({
-                      Component: () => ${pageBranch.content.html},
-                    })
-                  `
-                  default:
-                    return casesHandled(pageBranch.route)
-                }
-              }
-              case `PageBranchSegment`: {
-                return `
-                ${$.createRoute}({
-                  path: '${pageBranch.route.path.raw}',
-                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
-                })
-              `
-              }
-              default: {
-                return casesHandled(pageBranch)
-              }
-            }
-          }
-
           const pages = Page.lint(await readPages({ dir: viteConfig.root }))
+          const moduleContent = Page.ReactRouterAdaptor.render({
+            pageTree: pages.fixed,
+            sourcePaths: {
+              reactRouterHelpers: `${sourcePaths.dir}/lib/react-router-helpers.js`,
+            },
+          })
 
           // todo: improve
           pages.warnings.forEach(_ => {
             console.log(_.type)
           })
 
-          const moduleContent = `
-          import {
-            ${$.createRoute},
-            ${$.createRouteIndex}
-          } from '${sourcePaths.dir}/lib/react-router-helpers.js'
-          
-          export const ${$.pages} = [
-            ${pages.fixed.map(renderCodePageBranchRoute).join(`,\n`)}
-          ]
-        `
           const moduleCotentTransformed = await Vite.transformWithEsbuild(
             moduleContent,
             `ignore.jsx`,
