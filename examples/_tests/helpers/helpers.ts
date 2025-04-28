@@ -1,5 +1,5 @@
-import { Path } from '../../../src/lib/path/_namespace.js'
-import { Url } from '../../../src/lib/url/_namespace.js'
+import { Path } from '../../../src/lib-dep/path/index.js'
+import { Url } from '../../../src/lib-dep/url/index.js'
 import { ExampleName } from './example-name.js'
 import type { WorkerFixtures } from './test.js'
 

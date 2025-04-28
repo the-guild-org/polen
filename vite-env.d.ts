@@ -37,11 +37,12 @@ declare module 'virtual:polen/vite/client/manifest' {
 declare module 'virtual:polen/template/variables' {
   export const templateVariables:
     // eslint-disable-next-line
-    import('./src/vite-plugin/configurator/_exports.ts').TemplateVariables
+    import('./src/configurator/configurator.ts').TemplateVariables
 }
 
 declare module 'virtual:polen/project/pages.jsx' {
-  export const pages: any // todo
+  // eslint-disable-next-line
+  export const pages: import('react-router').RouteObject[]
 }
 
 declare module 'virtual:polen/project/data' {

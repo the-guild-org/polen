@@ -1,5 +1,5 @@
 import type { Identifier } from './identifier.js'
-import type { Vite } from '../vite/_namespace.js'
+import type { Vite } from '../../lib-dep/vite/index.js'
 import type { HookLoad, HookResolveId } from './hooks.js'
 import { debug } from '../debug/debug.js'
 import { StackProcessor } from '../stack-processor/_namespace.js'

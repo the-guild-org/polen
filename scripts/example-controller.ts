@@ -9,7 +9,7 @@ const args = Command
   .parameter(`link`, LinkProtocol.optional())
   .parse()
 
-const _controller = await ExampleController.create({
+const ___controller = await ExampleController.create({
   exampleName: args.name,
   debugMode: true,
   polenLink: args.link,

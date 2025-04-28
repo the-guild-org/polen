@@ -1,10 +1,10 @@
-import { Fs } from '../lib/fs/_namespace.js'
-import { Path } from '../lib/path/_namespace.js'
-import { TinyGlobby } from '../lib/tiny-globby/_namespace.js'
+import { Fs } from '../lib-dep/fs/index.js'
+import { Path } from '../lib-dep/path/index.js'
+import { TinyGlobby } from '../lib-dep/tiny-globby/index.js'
 import type { RouteIndex, RouteItem, RouteSegment } from './route.js'
 import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './route.js'
-import { Marked } from '../dep/marked/_namespace.js'
-import { Debug } from '../lib/debug/_namespace.js'
+import { Marked } from '../lib-dep/marked/_namespace.js'
+import { Debug } from '../lib/debug/index.js'
 
 export * from './lint.js'
 

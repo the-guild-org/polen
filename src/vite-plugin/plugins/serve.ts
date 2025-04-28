@@ -1,6 +1,6 @@
 import * as HonoNodeServer from '@hono/node-server'
-import type { Hono } from '../../lib/hono/_namespace.js'
-import type { Vite } from '../../lib/vite/_namespace.js'
+import type { Hono } from '../../lib-dep/hono/index.js'
+import type { Vite } from '../../lib-dep/vite/index.js'
 
 export const Serve = (
   config: {
@@ -37,7 +37,7 @@ export const Serve = (
           server.middlewares.stack.findIndex(m => m.handle.name === `viteHtmlFallbackMiddleware`),
           1,
         )
-        server.middlewares.use((req, res, _next) => {
+        server.middlewares.use((req, res, ___next) => {
           void HonoNodeServer.getRequestListener(async request => {
             // request.viteDevServer = server
             const response = await honoApp.fetch(request, { viteDevServer: server })

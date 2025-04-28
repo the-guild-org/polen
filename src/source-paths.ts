@@ -1,4 +1,4 @@
-import { Path } from './lib/path/_namespace.js'
+import { Path } from './lib-dep/path/index.js'
 
 export interface SourcePaths {
   dir: string

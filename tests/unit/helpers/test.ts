@@ -1,5 +1,5 @@
 import { test as base } from 'vitest'
-import { ProjectController } from '../../../src/lib/project-controller/_namespace.js'
+import { ProjectController } from '../../../src/lib/project-controller/index.js'
 
 interface Fixtures {
   project: ProjectController.ProjectController

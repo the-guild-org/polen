@@ -2,8 +2,8 @@ import Fsj from 'fs-jetpack'
 import type { PackageJson } from 'type-fest'
 import { $, type Shell } from 'zx'
 import { debug as debugBase } from '../debug/debug.js'
-import type { Debug } from '../debug/_namespace.js'
-import { Path } from '../path/_namespace.js'
+import type { Debug } from '../debug/index.js'
+import { Path } from '../../lib-dep/path/index.js'
 import { casesHandled } from '../prelude/main.js'
 import type { LinkProtocol } from '../link-protocol.js'
 import { FileStorage } from './file-system.js'
@@ -122,8 +122,7 @@ const resolveConfigInput = (configInput: ConfigInput<any>): Config => {
   }
 }
 
-// const resolveScaffold =
-
+// eslint-disable-next-line
 export const create = async <scriptRunners extends ScriptRunners = {}>(
   parameters: ConfigInput<scriptRunners>,
 ): Promise<ProjectController<scriptRunners>> => {

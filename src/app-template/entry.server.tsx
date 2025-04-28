@@ -5,7 +5,7 @@ import { StaticRouterProvider, createStaticHandler, createStaticRouter } from 'r
 import { routes } from './routes.jsx'
 import { ReactDomServer } from '../lib/react-dom-server/_namespace.js'
 import { StrictMode } from 'react'
-import type { Vite } from '../lib/vite/_namespace.js'
+import type { Vite } from '../lib-dep/vite/index.js'
 
 const getRouteHeaders = (context: StaticHandlerContext): Headers => {
   const leaf = context.matches[context.matches.length - 1]
