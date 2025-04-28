@@ -1,6 +1,7 @@
 {
   "extends": ["@tsconfig/strictest/tsconfig.json", "@tsconfig/node22/tsconfig.json"],
   "compilerOptions": {
+    "lib": ["DOM", "es2023", "DOM.Iterable"],
     // Package
     "module": "NodeNext",
     "moduleResolution": "nodenext",
@@ -19,7 +20,7 @@
     "noUnusedParameters": false,
 
     // Downstream DX
-    "isolatedModules": true, // performance
+    // "isolatedModules": true, // performance
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
