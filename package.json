@@ -2,64 +2,6 @@
   "name": "polen",
   "version": "0.0.6",
   "type": "module",
-  "description": "A framework for delightful GraphQL developer portals",
-  "author": {
-    "name": "Jason Kuhrt",
-    "url": "https://kuhrt.me"
-  },
-  "bugs": {
-    "url": "https://github.com/the-guild-org/polen/issues"
-  },
-  "keywords": [
-    "graphql",
-    "polen",
-    "pollen",
-    "developer portal",
-    "api",
-    "docs",
-    "reference"
-  ],
-  "license": "MIT",
-  "scripts": {
-    "examples:unlink": "rm -rf examples/{basic,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
-    "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
-    "test:integration": "playwright test --config 'tests/integration/playwright.config.ts'",
-    "test:integration:ci": "playwright test --config 'tests-build/tests/integration/playwright.config.js'",
-    "test:unit": "vitest",
-    "dev": "pnpm build:watch:emit",
-    "build:clean": "tsc --build tsconfig.build.json --clean && rm -rf build",
-    "build": "tsc --build tsconfig.build.json",
-    "build:watch": "tsc --build tsconfig.build.json --watch",
-    "build:watch:emit": "tsc --build tsconfig.build.json --watch --nocheck",
-    "build:emit": "tsc --build tsconfig.build.json --noCheck",
-    "prebuild": "pnpm pnpm build:clean",
-    "fix": "pnpm fix:lint && pnpm fix:format",
-    "fix:lint": "eslint . --fix",
-    "fix:format": "dprint fmt",
-    "check": "pnpm check:format && pnpm check:lint && pnpm check:types && pnpm check:package",
-    "check:format": "dprint check",
-    "check:lint": "eslint . --max-warnings 0",
-    "check:types": "tsc --noEmit",
-    "check:package": "publint run --strict",
-    "release:version": "changeset version && git commit -am \"chore: release\" && git push",
-    "prepublishOnly": "pnpm build",
-    "project:example-controller": "tsx ./scripts/example-controller.ts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/the-guild-org/polen.git"
-  },
-  "exports": {
-    ".": "./build/exports/index.js",
-    "./exports": "./build/exports/polen.js",
-    "./dependencies/react/jsx-runtime": "./build/exports/dependencies/react/jsx-runtime.js",
-    "./dependencies/react/jsx-dev-runtime": "./build/exports/dependencies/react/jsx-dev-runtime.js",
-    "./dependencies/react": "./build/exports/dependencies/react.js"
-  },
-  "files": [
-    "build",
-    "README.md"
-  ],
   "dependencies": {
     "@hono/node-server": "^1.14.1",
     "@hono/vite-dev-server": "^0.19.0",
@@ -116,10 +58,5 @@
     "vitest": "^3.1.2",
     "zod": "^3.24.3"
   },
-  "packageManager": "pnpm@10.10.0",
-  "peerDependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "vite": "^6.2.5"
-  }
+  "packageManager": "pnpm@10.10.0"
 }
