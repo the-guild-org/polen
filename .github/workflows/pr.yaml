@@ -20,4 +20,5 @@ jobs:
         uses: ./.github/actions/install-playwright-binaries
       - run: node debug.js
       - run: pnpm playwright test debug.test.js
+      - run: pnpm test:integration
   
