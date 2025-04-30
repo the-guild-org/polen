@@ -1,5 +1,5 @@
 import { test } from '../helpers/test.js'
-import type { DirectoryLayout } from '../../../src/lib/project-controller/directory-layout.js'
+import type { DirectoryLayout } from '../../../src/lib/project-controller/index.js'
 
 interface TestCase {
   title?: string
@@ -17,15 +17,15 @@ const testCases: TestCase[] = [
     fixture: { 'pages/foo.md': `abc`, 'schema.graphql': `type Query { a: String }` },
     result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
   },
-  {
-    title: `index page`,
-    fixture: { 'pages/foo/index.md': `abc`, 'schema.graphql': `type Query { a: String }` },
-    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
-  },
+  // {
+  //   title: `index page`,
+  //   fixture: { 'pages/foo/index.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+  //   result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
+  // },
 ]
 
 testCases.forEach(({ fixture, result, title }) => {
-  test(title ?? JSON.stringify(fixture), async ({ page, viteController, project }) => {
+  test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     console.log(`ok`)
     // await project.fileStorage.set(fixture)
     // // todo: all embedded react to be used

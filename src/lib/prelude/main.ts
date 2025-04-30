@@ -17,3 +17,5 @@ export * as Fn from './fn.js'
 export * as Undefined from './Undefined.js'
 
 export * as TypeGuard from './type-guard.js'
+
+export const isPlainObject = (value: unknown) => typeof value === `object` && value !== null

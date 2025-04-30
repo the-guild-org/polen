@@ -11,7 +11,7 @@ const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }
 ]
 
 cases.forEach(({ placement }) => {
-  test(`can augment description with placement of "${placement}"`, async ({ page, viteController }) => {
+  test(`can augment description with placement of "${placement}"`, async ({ page, vite }) => {
     const baseContent = `bar`
     const augmentedContent = `foo`
     const viteUserConfig = Polen.createConfiguration({
@@ -38,7 +38,7 @@ cases.forEach(({ placement }) => {
         customLogger: Vite.createLogger(`silent`, {}),
       },
     })
-    const viteDevServer = await viteController.startDevelopmentServer(viteUserConfig)
+    const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await page.goto(new URL(`/reference/Query`, viteDevServer.cannonicalUrl).href)
 
     await expect(page.getByText(augmentedContent)).toBeVisible()

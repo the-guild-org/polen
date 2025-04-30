@@ -3,18 +3,20 @@ import { ViteController } from './vite-controller/index.js'
 import { ProjectController } from '../../../src/lib/project-controller/index.js'
 
 interface Fixtures {
-  viteController: ViteController.ViteController
+  vite: ViteController.ViteController
   project: ProjectController.ProjectController
 }
 
 export const test = base.extend<Fixtures>({
   project: async ({}, use) => {
-    const controller = await ProjectController.create({})
-    await use(controller)
+    console.log(1)
+    const project = await ProjectController.create({})
+    console.log(2)
+    await use(project)
   },
-  viteController: async ({}, use) => {
-    const controller = ViteController.create()
-    await use(controller)
-    await controller.stopDevelopmentServer()
+  vite: async ({}, use) => {
+    const viteController = ViteController.create()
+    await use(viteController)
+    await viteController.stopDevelopmentServer()
   },
 })
