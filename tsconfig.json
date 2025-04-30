@@ -3,7 +3,7 @@
   "compilerOptions": {
     // Package
     "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
     "jsx": "preserve",
     "lib": ["DOM", "es2023", "DOM.Iterable"],
 
