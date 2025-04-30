@@ -37,5 +37,5 @@
     "examples/_tests",
     "scripts",
     "vitest.config.ts"
-  ]
+ ]
 }
