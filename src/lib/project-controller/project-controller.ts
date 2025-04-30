@@ -138,6 +138,7 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
 
   // import { $ } from 'zx'
   const { $ } = await import(`zx`)
+  // const { $ } = require(`zx`)
   const shell = $({ cwd: fsj.cwd() })
 
   const pnpmShell = shell({ prefix: `pnpm ` })
