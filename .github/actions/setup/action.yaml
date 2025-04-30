@@ -5,6 +5,11 @@ inputs:
     description: Version of Node to use.
     required: false
     default: 22.x
+  cache-version:
+    description: Version of cache to use.
+    required: false
+    default: '1'
+
 runs:
   using: composite
   steps:
@@ -33,8 +38,8 @@ runs:
       name: Setup pnpm cache
       with:
         path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
-        key: ${{ runner.os }}-pnpm-store-${{steps.date-month.outputs.date_month}}-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: ${{ runner.os }}-pnpm-store-${{steps.date-month.outputs.date_month}}
+        key: ${{ runner.os }}-pnpm-store-v${{inputs.cache-version}}-${{steps.date-month.outputs.date_month}}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: ${{ runner.os }}-pnpm-store-v${{inputs.cache-version}}-${{steps.date-month.outputs.date_month}}
     - name: Install Dependencies
       shell: bash 
       run: pnpm install
