@@ -50,6 +50,9 @@ importers:
       tinyglobby:
         specifier: ^0.2.13
         version: 0.2.13
+      zx:
+        specifier: ^8.5.3
+        version: 8.5.3
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.2
@@ -159,9 +162,6 @@ importers:
       zod:
         specifier: ^3.24.3
         version: 3.24.3
-      zx:
-        specifier: ^8.5.3
-        version: 8.5.3
 
   examples/basic:
     dependencies:
