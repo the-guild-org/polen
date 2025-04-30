@@ -48,6 +48,9 @@
     "type": "git",
     "url": "git+https://github.com/the-guild-org/polen.git"
   },
+  "imports": {
+    "#dep/*": "./build/dep/*"
+  },
   "exports": {
     ".": "./build/exports/index.js",
     "./exports": "./build/exports/polen.js",

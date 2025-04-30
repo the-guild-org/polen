@@ -3,9 +3,9 @@ import { Hono } from 'hono'
 import type { StaticHandlerContext } from 'react-router'
 import { StaticRouterProvider, createStaticHandler, createStaticRouter } from 'react-router'
 import { routes } from './routes.jsx'
-import { ReactDomServer } from '../lib-dependencies/react-dom-server/index.js'
+import { ReactDomServer } from '#dep/react-dom-server/index.js'
 import { StrictMode } from 'react'
-import type { Vite } from '../lib-dependencies/vite/index.js'
+import type { Vite } from '#dep/vite/index.js'
 
 const getRouteHeaders = (context: StaticHandlerContext): Headers => {
   const leaf = context.matches[context.matches.length - 1]

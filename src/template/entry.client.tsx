@@ -4,7 +4,7 @@
 import '@radix-ui/themes/styles.css'
 import { RouterProvider, createBrowserRouter } from 'react-router'
 import { routes } from './routes.jsx'
-import { ReactDomClient } from '../lib-dependencies/react-dom-client/index.js'
+import { ReactDomClient } from '#dep/react-dom-client/index.js'
 import { StrictMode } from 'react'
 
 // SPA

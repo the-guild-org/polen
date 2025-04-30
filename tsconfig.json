@@ -26,7 +26,11 @@
     "declarationMap": true,
 
     // Other
-    "exactOptionalPropertyTypes": false
+    "exactOptionalPropertyTypes": false,
+
+    "paths": {
+      "#dep/*": ["./src/dep/*"]
+    }
   },
   "exclude": ["eslint.config.js", "build"],
   "include": [

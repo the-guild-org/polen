@@ -1,4 +1,4 @@
-import { Path } from './lib-dependencies/path/index.js'
+import { Path } from '.#dep/path/index.js'
 
 export interface SourcePaths {
   dir: string

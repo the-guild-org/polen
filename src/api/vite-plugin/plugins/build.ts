@@ -1,8 +1,8 @@
 import { CodeBuilder } from '../../../lib/code-builder/index.js'
-import { Fs } from '../../../lib-dependencies/fs/index.js'
-import { Path } from '../../../lib-dependencies/path/index.js'
+import { Fs } from '#dep/fs/index.js'
+import { Path } from '#dep/path/index.js'
 import { ViteVirtual } from '../../../lib/vite-virtual/index.js'
-import { Vite } from '../../../lib-dependencies/vite/index.js'
+import { Vite } from '#dep/vite/index.js'
 import { vi } from '../helpers.js'
 import { defu } from 'defu'
 

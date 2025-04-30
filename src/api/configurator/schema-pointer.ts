@@ -1,5 +1,5 @@
-import { Fs } from '../../lib-dependencies/fs/index.js'
-import { Path } from '../../lib-dependencies/path/index.js'
+import { Fs } from '#dep/fs/index.js'
+import { Path } from '#dep/path/index.js'
 import { casesHandled } from '../../lib/prelude/main.js'
 
 export interface SchemaPointerFile {

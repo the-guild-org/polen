@@ -1,9 +1,9 @@
-import { Fs } from '../../lib-dependencies/fs/index.js'
-import { Path } from '../../lib-dependencies/path/index.js'
-import { TinyGlobby } from '../../lib-dependencies/tiny-globby/index.js'
+import { Fs } from '#dep/fs/index.js'
+import { Path } from '#dep/path/index.js'
+import { TinyGlobby } from '#dep/tiny-globby/index.js'
 import type { RouteIndex, RouteItem, RouteSegment } from './route.js'
 import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './route.js'
-import { Marked } from '../../lib-dependencies/marked/index.js'
+import { Marked } from '#dep/marked/index.js'
 import { Debug } from '../../lib/debug/index.js'
 
 export * from './lint.js'
