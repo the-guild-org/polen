@@ -13,10 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-      - name: Enable Corepack
-        run: |
-          corepack enable
-          echo "PnPM version is $(pnpm --version)"
+      - run: corepack enable
       - run: pnpm install
       - run: pnpm playwright test
         

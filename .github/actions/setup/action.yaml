@@ -17,8 +17,7 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{inputs.node-version}}
-    - name: Enable Corepack
-      shell: bash
+    - shell: bash
       run: corepack enable
     # https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
     # - name: Get Current Month
