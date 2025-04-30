@@ -9,9 +9,7 @@ interface Fixtures {
 
 export const test = base.extend<Fixtures>({
   project: async ({}, use) => {
-    console.log(1)
     const project = await ProjectController.create({})
-    console.log(2)
     await use(project)
   },
   vite: async ({}, use) => {
