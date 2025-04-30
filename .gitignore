@@ -1,24 +1,2 @@
-# macOS
-.DS_Store
-
-# Dependencies
-node_modules
-
-# Tools
-.dprint/
-tsconfig.build.tsbuildinfo
-
-# Examples
-examples/**/build
-examples/*/pnpm-workspace.yaml
-examples/_tests/__results__
-
-# Tests
 test-results
-
-# Build
-dist
-dist-ssr
-.output
-build
-tests-build
+node_modules
