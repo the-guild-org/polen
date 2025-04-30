@@ -24,6 +24,7 @@
     "examples:unlink": "rm -rf examples/{basic,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
     "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
     "test:integration": "playwright test --config 'tests/integration/playwright.config.ts'",
+    "test:integration:ci": "playwright test --config 'tests-build/tests/integration/playwright.config.js'",
     "test:unit": "vitest",
     "dev": "pnpm build:watch:emit",
     "build:clean": "tsc --build tsconfig.build.json --clean && rm -rf build",

@@ -20,4 +20,5 @@ test-results
 dist
 dist-ssr
 .output
-/build
+build
+tests-build
