@@ -1,5 +1,5 @@
-import { Path } from '../lib-dep/path/index.js'
-import { casesHandled } from '../lib/prelude/main.js'
+import { Path } from '../../lib-dependencies/path/index.js'
+import { casesHandled } from '../../lib/prelude/main.js'
 
 const indexRegex = /\/index\.\w+$/
 

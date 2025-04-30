@@ -2,7 +2,7 @@ import { expect } from 'playwright/test'
 import { Polen } from '../../../src/exports/index.js'
 import { test } from '../helpers/test.js'
 import type { DirectoryLayout } from '../../../src/lib/project-controller/directory-layout.js'
-import { Vite } from '../../../src/lib-dep/vite/index.js'
+import { Vite } from '../../../src/lib-dependencies/vite/index.js'
 
 interface TestCase {
   title?: string

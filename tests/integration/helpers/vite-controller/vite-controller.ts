@@ -1,5 +1,5 @@
 import { URLFactory } from '../../../../src/lib/url-factory.js'
-import { Vite } from '../../../../src/lib-dep/vite/index.js'
+import { Vite } from '../../../../src/lib-dependencies/vite/index.js'
 
 export type ViteDevServerPlus = Vite.ViteDevServer & {
   cannonicalUrl: URL,

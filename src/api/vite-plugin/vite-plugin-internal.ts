@@ -1,5 +1,5 @@
-import type { Configurator } from '../configurator/index.js'
-import type { Vite } from '../lib-dep/vite/index.js'
+import type { Configurator } from '../../api/configurator/index.js'
+import type { Vite } from '../../lib-dependencies/vite/index.js'
 import ReactVite from '@vitejs/plugin-react-swc'
 import { Build } from './plugins/build.js'
 import { Serve } from './plugins/serve.js'

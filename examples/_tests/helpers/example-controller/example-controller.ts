@@ -1,5 +1,5 @@
-import { Path } from '../../../../src/lib-dep/path/index.js'
-import { Url } from '../../../../src/lib-dep/url/index.js'
+import { Path } from '../../../../src/lib-dependencies/path/index.js'
+import { Url } from '../../../../src/lib-dependencies/url/index.js'
 import type { ProcessPromise } from 'zx'
 import type { ExampleName } from '../example-name.js'
 import { debug as debugBase } from '../../../../src/lib/debug/debug.js'

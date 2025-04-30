@@ -1,4 +1,4 @@
-import { Path } from './lib-dep/path/index.js'
+import { Path } from './lib-dependencies/path/index.js'
 
 export interface SourcePaths {
   dir: string
@@ -12,7 +12,7 @@ export interface SourcePaths {
 }
 
 const srcDir = import.meta.dirname
-const templateDir = Path.join(srcDir, `./app-template`)
+const templateDir = Path.join(srcDir, `./template`)
 
 export const sourcePaths: SourcePaths = {
   dir: srcDir,
