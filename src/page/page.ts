@@ -7,6 +7,7 @@ import { Marked } from '../lib-dep/marked/index.js'
 import { Debug } from '../lib/debug/index.js'
 
 export * from './lint.js'
+export * as ReactRouterAdaptor from './react-router-adaptor.js'
 
 const debug = Debug.create(`page`)
 
