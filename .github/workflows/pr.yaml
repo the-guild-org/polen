@@ -2,9 +2,21 @@ name: pr
 on:
   - pull_request
 jobs:
-  test-integration:
+  yes-cache:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm playwright test
+  no-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          echo "PnPM version is $(pnpm --version)"
+      - run: pnpm playwright test
+      - run: pnpm install
+        

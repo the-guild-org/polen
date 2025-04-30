@@ -13,10 +13,10 @@ runs:
       with:
         node-version: ${{inputs.node-version}}
     - name: Enable Corepack
+      shell: bash
       run: |
         corepack enable
         echo "PnPM version is $(pnpm --version)"
-      shell: bash
     # https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
     - name: Get Current Month
       id: date-month
@@ -36,5 +36,5 @@ runs:
         key: ${{ runner.os }}-pnpm-store-${{steps.date-month.outputs.date_month}}-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: ${{ runner.os }}-pnpm-store-${{steps.date-month.outputs.date_month}}
     - name: Install Dependencies
-      run: pnpm install
       shell: bash 
+      run: pnpm install
