@@ -20,11 +20,11 @@ const testCases: TestCase[] = [
     fixture: { 'pages/foo.md': `abc`, 'schema.graphql': `type Query { a: String }` },
     result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
   },
-  // {
-  //   title: `index page`,
-  //   fixture: { 'pages/foo/index.md': `abc`, 'schema.graphql': `type Query { a: String }` },
-  //   result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
-  // },
+  {
+    title: `index page`,
+    fixture: { 'pages/foo/index.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
+  },
 ]
 
 testCases.forEach(({ fixture, result, title }) => {
