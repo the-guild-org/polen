@@ -19,9 +19,7 @@ runs:
         node-version: ${{inputs.node-version}}
     - name: Enable Corepack
       shell: bash
-      run: |
-        corepack enable
-        echo "PnPM version is $(pnpm --version)"
+      run: corepack enable
     # https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
     - name: Get Current Month
       id: date-month
