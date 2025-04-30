@@ -1,6 +1,7 @@
 import Fsj from 'fs-jetpack'
 import type { PackageJson } from 'type-fest'
-import { $, type Shell } from 'zx'
+import { $ } from 'zx'
+import type { Shell } from 'zx'
 import { debug as debugBase } from '../debug/debug.js'
 import type { Debug } from '../debug/index.js'
 import { Path } from '../../lib-dependencies/path/index.js'
