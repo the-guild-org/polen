@@ -37,7 +37,7 @@ declare module 'virtual:polen/vite/client/manifest' {
 declare module 'virtual:polen/template/variables' {
   export const templateVariables:
     // eslint-disable-next-line
-    import('./src/configurator/configurator.ts').TemplateVariables
+    import('./src/api/configurator/configurator.ts').TemplateVariables
 }
 
 declare module 'virtual:polen/project/pages.jsx' {
@@ -53,7 +53,7 @@ declare module 'virtual:polen/project/data' {
 declare module 'virtual:polen/template/schema-augmentations' {
   export const schemaAugmentations:
     // eslint-disable-next-line
-    import('./src/schema-augmentation/schema-augmentation.js').Augmentation[]
+    import('./src/api/schema-augmentation/schema-augmentation.js').Augmentation[]
 }
 
 declare module 'virtual:polen/*' {
