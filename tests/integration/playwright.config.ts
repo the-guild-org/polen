@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: `./cases`,
   fullyParallel: true,
   forbidOnly: isCi,
-  retries: isCi ? 2 : 0,
+  retries: 0, // isCi ? 2 : 0,
   workers: isCi ? 1 : undefined,
   outputDir: `./__results__`,
   use: {
