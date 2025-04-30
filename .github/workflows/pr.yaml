@@ -16,10 +16,10 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           node-version: ${{matrix.node-version}}
-      - name: Install Playwright Binaries
-        uses: ./.github/actions/install-playwright-binaries
+      # - name: Install Playwright Binaries
+        # uses: ./.github/actions/install-playwright-binaries
       # - run: node debug.js
       # - run: pnpm tsx debug.js
-      - run: pnpm playwright test debug.test.js
+      - run: pnpm playwright test
       # - run: pnpm tsc --build tsconfig.build.test.json
       # - run: cd tests-build && pnpm playwright test --config 'tests/integration/playwright.config.js'
