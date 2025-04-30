@@ -14,7 +14,7 @@ examples/*/pnpm-workspace.yaml
 examples/_tests/__results__
 
 # Tests
-tests/*/__results__
+test-results
 
 # Build
 dist
