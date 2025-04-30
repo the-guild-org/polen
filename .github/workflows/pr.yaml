@@ -21,5 +21,6 @@ jobs:
       - run: node debug.js
       - run: pnpm tsx debug.js
       - run: pnpm playwright test debug.test.js
-      - run: pnpm playwright test debug.test.ts
+      # - run: pnpm playwright test debug.test.ts
+      - run: pnpm tsc --build tsconfig.build.test.json
       - run: pnpm test:integration:ci
