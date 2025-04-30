@@ -17,6 +17,6 @@ jobs:
         run: |
           corepack enable
           echo "PnPM version is $(pnpm --version)"
-      - run: pnpm playwright test
       - run: pnpm install
+      - run: pnpm playwright test
         
