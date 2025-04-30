@@ -44,9 +44,6 @@ importers:
       marked:
         specifier: ^15.0.11
         version: 15.0.11
-      playwright:
-        specifier: 1.52.0
-        version: 1.52.0
       react-router:
         specifier: ^7.5.3
         version: 7.5.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -129,6 +126,9 @@ importers:
       globals:
         specifier: ^16.0.0
         version: 16.0.0
+      playwright:
+        specifier: ^1.52.0
+        version: 1.52.0
       publint:
         specifier: ^0.3.12
         version: 0.3.12
