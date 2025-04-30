@@ -1,6 +1,5 @@
 import Fsj from 'fs-jetpack'
 import type { PackageJson } from 'type-fest'
-import { $ } from 'zx'
 import type { Shell } from 'zx'
 import { debug as debugBase } from '../debug/debug.js'
 import type { Debug } from '../debug/index.js'
@@ -137,6 +136,8 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
 
   debug(`created temporary directory`, { path: fsj.cwd() })
 
+  // import { $ } from 'zx'
+  const { $ } = await import(`zx`)
   const shell = $({ cwd: fsj.cwd() })
 
   const pnpmShell = shell({ prefix: `pnpm ` })
