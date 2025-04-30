@@ -7,6 +7,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-        with:
-          node-version: 22.x
       - run: pnpm playwright test
