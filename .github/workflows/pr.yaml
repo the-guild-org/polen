@@ -45,7 +45,8 @@ jobs:
           node-version: ${{matrix.node-version}}
       - name: Install Playwright Binaries
         uses: ./.github/actions/install-playwright-binaries
-      - run: node debug.js
+      - run: node debug.test.js
+      - run: pnpm playwright test debug.test.js
       - run: pnpm test:integration
   test-unit:
     strategy:
