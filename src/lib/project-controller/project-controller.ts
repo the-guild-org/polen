@@ -137,9 +137,6 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
 
   debug(`created temporary directory`, { path: fsj.cwd() })
 
-  console.log(`Node.js version: ${process.version}`)
-  console.log({ $ })
-  console.log(await import(`zx`))
   const shell = $({ cwd: fsj.cwd() })
 
   const pnpmShell = shell({ prefix: `pnpm ` })
