@@ -1,7 +1,7 @@
 import { expect } from 'playwright/test'
-import { Vite } from '../../../src/lib-dep/vite/index.js'
+import { Vite } from '../../../src/lib-dependencies/vite/index.js'
 import { Polen } from '../../../src/exports/index.js'
-import type { SchemaAugmentation } from '../../../src/schema-augmentation/index.js'
+import type { SchemaAugmentation } from '../../../src/api/schema-augmentation/index.js'
 import { test } from '../helpers/test.js'
 
 const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }[] = [
@@ -11,7 +11,7 @@ const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }
 ]
 
 cases.forEach(({ placement }) => {
-  test(`can augment description with placement of "${placement}"`, async ({ page, viteController }) => {
+  test(`can augment description with placement of "${placement}"`, async ({ page, vite }) => {
     const baseContent = `bar`
     const augmentedContent = `foo`
     const viteUserConfig = Polen.createConfiguration({
@@ -38,7 +38,7 @@ cases.forEach(({ placement }) => {
         customLogger: Vite.createLogger(`silent`, {}),
       },
     })
-    const viteDevServer = await viteController.startDevelopmentServer(viteUserConfig)
+    const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await page.goto(new URL(`/reference/Query`, viteDevServer.cannonicalUrl).href)
 
     await expect(page.getByText(augmentedContent)).toBeVisible()

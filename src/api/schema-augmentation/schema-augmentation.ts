@@ -1,5 +1,5 @@
-import type { Grafaid } from '../lib/grafaid/index.js'
-import { casesHandled } from '../lib/prelude/main.js'
+import type { Grafaid } from '../../lib/grafaid/index.js'
+import { casesHandled } from '../../lib/prelude/main.js'
 import * as AugmentationDescription from './augmentations/description.js'
 
 export { AugmentationDescription }

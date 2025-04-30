@@ -1,6 +1,6 @@
 import type { DocumentNode } from 'graphql'
 import { buildASTSchema } from 'graphql'
-import { SchemaAugmentation } from '../../schema-augmentation/index.js'
+import { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { schemaAugmentations } from 'virtual:polen/template/schema-augmentations'
 
 export const getSchema = (documentNode: DocumentNode) => {

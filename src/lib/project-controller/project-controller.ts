@@ -1,9 +1,9 @@
 import Fsj from 'fs-jetpack'
 import type { PackageJson } from 'type-fest'
-import { $, type Shell } from 'zx'
+import type { Shell } from 'zx'
 import { debug as debugBase } from '../debug/debug.js'
 import type { Debug } from '../debug/index.js'
-import { Path } from '../../lib-dep/path/index.js'
+import { Path } from '../../lib-dependencies/path/index.js'
 import { casesHandled } from '../prelude/main.js'
 import type { LinkProtocol } from '../link-protocol.js'
 import { FileStorage } from './file-system.js'
@@ -136,6 +136,9 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
 
   debug(`created temporary directory`, { path: fsj.cwd() })
 
+  // import { $ } from 'zx'
+  const { $ } = await import(`zx`)
+  // const { $ } = require(`zx`)
   const shell = $({ cwd: fsj.cwd() })
 
   const pnpmShell = shell({ prefix: `pnpm ` })

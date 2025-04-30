@@ -1,8 +1,8 @@
-import { expect } from 'playwright/test'
-import { Polen } from '../../../src/exports/index.js'
 import { test } from '../helpers/test.js'
-import type { DirectoryLayout } from '../../../src/lib/project-controller/directory-layout.js'
-import { Vite } from '../../../src/lib-dep/vite/index.js'
+import type { DirectoryLayout } from '../../../src/lib/project-controller/index.js'
+import { Polen } from '../../../src/exports/index.js'
+import { Vite } from '../../../src/lib-dependencies/vite/index.js'
+import { expect } from 'playwright/test'
 
 interface TestCase {
   title?: string
@@ -28,7 +28,7 @@ const testCases: TestCase[] = [
 ]
 
 testCases.forEach(({ fixture, result, title }) => {
-  test(title ?? JSON.stringify(fixture), async ({ page, viteController, project }) => {
+  test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.fileStorage.set(fixture)
     // todo: all embedded react to be used
     await project.shell`pnpm add react` // adds 1s
@@ -38,7 +38,7 @@ testCases.forEach(({ fixture, result, title }) => {
         customLogger: Vite.createLogger(`silent`, {}),
       },
     })
-    const viteDevServer = await viteController.startDevelopmentServer(viteUserConfig)
+    const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await page.goto(viteDevServer.url(`/`).href)
     await page.getByText(result.navBarTitle).click({ timeout: 1000 })
     await expect(page.getByText(result.content)).toBeVisible()
