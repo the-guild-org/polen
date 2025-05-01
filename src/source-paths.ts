@@ -1,7 +1,8 @@
 import { Path } from '#dep/path/index.js'
+import packageJson from '../package.json' with { type: 'json' }
+import { resolve } from 'resolve.imports'
 
 export interface SourcePaths {
-  isTypeScript: boolean
   dir: string
   template: {
     dir: string,
@@ -12,12 +13,10 @@ export interface SourcePaths {
   }
 }
 
-const isTypeScript = import.meta.filename.endsWith(`.ts`)
 const srcDir = import.meta.dirname
 const templateDir = Path.join(srcDir, `./template`)
 
 export const sourcePaths: SourcePaths = {
-  isTypeScript,
   dir: srcDir,
   template: {
     dir: templateDir,
@@ -26,4 +25,32 @@ export const sourcePaths: SourcePaths = {
       entryClient: Path.join(templateDir, `entry.client.jsx`),
     },
   },
+}
+
+const isSrc = import.meta.filename.endsWith(`.ts`)
+
+export const resolveLocalImport = (id: string): string | null => {
+  let resolvedLocalImport = resolve(
+    {
+      content: {
+        imports: packageJson.imports,
+      },
+    },
+    id,
+    // {
+    //   conditions: [`source`],
+    // },
+  )
+
+  if (!resolvedLocalImport) return null
+
+  if (isSrc) {
+    resolvedLocalImport = resolvedLocalImport
+      .replace(`/build/`, `/src/`)
+      .replace(`.js`, `.ts`)
+      .replace(`.jsx`, `.tsx`)
+    resolvedLocalImport = Path.join(sourcePaths.dir, `..`, resolvedLocalImport)
+  }
+
+  return resolvedLocalImport
 }
