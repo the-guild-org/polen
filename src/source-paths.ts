@@ -30,6 +30,8 @@ export const sourcePaths: SourcePaths = {
 const isSrc = import.meta.filename.endsWith(`.ts`)
 
 export const resolveLocalImport = (id: string): string | null => {
+  if (!id.startsWith(`#`)) return null
+
   let resolvedLocalImport = resolve(
     {
       content: {
