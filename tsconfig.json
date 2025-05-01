@@ -29,7 +29,7 @@
     // Other
     "exactOptionalPropertyTypes": false,
 
-    "baseUrl": ".",
+    // "baseUrl": ".",
     "paths": {
       "#dep/*": ["./src/dep/*"]
     }

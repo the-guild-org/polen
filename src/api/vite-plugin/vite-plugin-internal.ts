@@ -5,7 +5,7 @@ import { Build } from './plugins/build.js'
 import { Serve } from './plugins/serve.js'
 import { Core } from './plugins/core.js'
 import { resolve } from 'resolve.imports'
-import { sourcePaths } from 'src/source-paths.js'
+import { sourcePaths } from '../../source-paths.js'
 import { Path } from '#dep/path/index.js'
 
 export const VitePluginInternal = (
