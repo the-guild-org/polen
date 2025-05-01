@@ -6,6 +6,7 @@
     "moduleResolution": "nodenext",
     "jsx": "preserve",
     "lib": ["DOM", "es2023", "DOM.Iterable"],
+    "resolveJsonModule": true,
 
     // DX
     "tsBuildInfoFile": "node_modules/.cache/.tsbuildinfo",
@@ -28,6 +29,7 @@
     // Other
     "exactOptionalPropertyTypes": false,
 
+    "baseUrl": ".",
     "paths": {
       "#dep/*": ["./src/dep/*"]
     }

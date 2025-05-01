@@ -1,6 +1,7 @@
 import { Path } from '#dep/path/index.js'
 
 export interface SourcePaths {
+  isTypeScript: boolean
   dir: string
   template: {
     dir: string,
@@ -11,10 +12,12 @@ export interface SourcePaths {
   }
 }
 
+const isTypeScript = import.meta.filename.endsWith(`.ts`)
 const srcDir = import.meta.dirname
 const templateDir = Path.join(srcDir, `./template`)
 
 export const sourcePaths: SourcePaths = {
+  isTypeScript,
   dir: srcDir,
   template: {
     dir: templateDir,
