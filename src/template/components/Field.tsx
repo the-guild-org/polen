@@ -3,7 +3,7 @@ import type { BoxProps } from '@radix-ui/themes'
 import { Box, Text } from '@radix-ui/themes'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.jsx'
 import { TypeAnnotation } from './TypeAnnotation.jsx'
-import { Grafaid } from '../../lib/grafaid/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 import { DeprecationReason } from './DeprecationReason.jsx'
 import { Description } from './Description.jsx'
 

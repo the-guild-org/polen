@@ -1,4 +1,4 @@
-import { URLFactory } from '../../../../src/lib/url-factory.js'
+import { URLFactory } from '#lib/url-factory.js'
 import { Vite } from '#dep/vite/index.js'
 
 export type ViteDevServerPlus = Vite.ViteDevServer & {

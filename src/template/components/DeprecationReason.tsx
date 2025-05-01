@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { Text } from '@radix-ui/themes'
 import { Markdown } from './Markdown.jsx'
-import type { Grafaid } from '../../lib/grafaid/index.js'
+import type { Grafaid } from '#lib/grafaid/index.js'
 
 export const DeprecationReason: FC<{ data: Grafaid.GraphQLField }> = ({ data }) => {
   if (!data.deprecationReason) return null

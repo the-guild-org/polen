@@ -1,6 +1,6 @@
 import { Fs } from '#dep/fs/index.js'
 import { Path } from '#dep/path/index.js'
-import { casesHandled } from '../../lib/prelude/main.js'
+import { casesHandled } from '#lib/prelude/main.js'
 
 export interface SchemaPointerFile {
   type: `file`

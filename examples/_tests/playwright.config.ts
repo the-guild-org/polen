@@ -1,7 +1,7 @@
 import { defineConfig, devices } from 'playwright/test'
 import type { WorkerFixtures } from './helpers/test.js'
 import { type TestFixtures } from './helpers/test.js'
-import { LinkProtocol } from '../../src/lib/link-protocol.js'
+import { LinkProtocol } from '#lib/link-protocol.js'
 
 const isCi = !!process.env[`CI`]
 const polenLink = process.env[`POLEN_LINK`]

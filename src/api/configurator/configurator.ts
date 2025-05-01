@@ -1,4 +1,4 @@
-import { casesHandled } from '../../lib/prelude/main.js'
+import { casesHandled } from '#lib/prelude/main.js'
 import type { Vite } from '#dep/vite/index.js'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { sourcePaths } from '../../source-paths.js'

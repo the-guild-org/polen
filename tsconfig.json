@@ -31,7 +31,8 @@
 
     // "baseUrl": ".",
     "paths": {
-      "#dep/*": ["./src/dep/*"]
+      "#dep/*": ["./src/dep/*"],
+      "#lib/*": ["./src/lib/*"]
     }
   },
   "exclude": ["eslint.config.js", "build"],

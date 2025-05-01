@@ -1,9 +1,9 @@
 import type { FC } from 'react'
 import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
 import { Box, Flex, Heading } from '@radix-ui/themes'
-import { Grafaid } from '../../lib/grafaid/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 import { Link } from './Link.jsx'
-import { entries } from '../../lib/prelude/main.js'
+import { entries } from '#lib/prelude/main.js'
 
 export interface Props {
   schema: GraphQLSchema
