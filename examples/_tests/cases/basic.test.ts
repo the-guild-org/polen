@@ -2,7 +2,7 @@ import type { Page } from 'playwright/test'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 import { getFixtureOptions } from '../helpers/helpers.js'
-import type { Configurator } from '../../../src/configurator/index.js'
+import type { Configurator } from '../../../src/api/configurator/index.js'
 
 test.use(getFixtureOptions(import.meta))
 

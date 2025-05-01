@@ -1,5 +1,5 @@
 import type { FSJetpack } from 'fs-jetpack/types.js'
-import { DirectoryLayout } from './directory-layout.js'
+import * as DirectoryLayout from './directory-layout.js'
 
 export namespace FileStorage {
   export interface FileStorage {

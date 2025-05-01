@@ -1,6 +1,6 @@
-import { VitePluginInternal } from './vite-plugin/vite-plugin-internal.js'
-import { Configurator } from './configurator/index.js'
-import { Vite } from './lib-dep/vite/index.js'
+import { VitePluginInternal } from './api/vite-plugin/vite-plugin-internal.js'
+import { Configurator } from './api/configurator/index.js'
+import { Vite } from '#dep/vite/index.js'
 
 export interface ViteUserConfigWithPolen extends Vite.UserConfig {
   _polen: {
