@@ -1,5 +1,37 @@
 # Development
 
+## Local Imports
+
+- We use local imports to avoid repeated fragile relative imports of certain
+  modules in our source code.
+- This makes refactoring easier for us.
+- To achieve this we maintain three points of configuration. See next.
+
+### Source of truth, `package.json` (`imports`)
+
+- Since NodeJS has this feature as a standard for the whole community it feels
+  right to make it our source of truth.
+- When the Polen CLI runs or static imports against Polen for the user's Vite
+  config take place then NodeJS's support is going to be handling the resolution
+  process.
+
+### Mirror configuration in `tsconfig.json` (`compilerOptions.paths`)
+
+This configuration is used by tools that run against our source code rather than
+the build such as:
+
+- Playwright
+- Vitest
+- ESLint
+- TypeScript
+
+### Vite Polen plugin
+
+When a user's project uses Vite and the Vite Polen plugin we need Vite to be
+able to resolve our local imports in source code. We canot rely on NodeJS to
+since it is not the process crawling the Polen package. So we resolve the local
+import paths in the Vite Polen plugin using the Rollup `resolveId` hook.
+
 ## Examples
 
 - We maintain fully working examples under `examples/*`
