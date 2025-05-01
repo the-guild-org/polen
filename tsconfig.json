@@ -6,6 +6,7 @@
     "moduleResolution": "nodenext",
     "jsx": "preserve",
     "lib": ["DOM", "es2023", "DOM.Iterable"],
+    "resolveJsonModule": true,
 
     // DX
     "tsBuildInfoFile": "node_modules/.cache/.tsbuildinfo",
@@ -26,7 +27,13 @@
     "declarationMap": true,
 
     // Other
-    "exactOptionalPropertyTypes": false
+    "exactOptionalPropertyTypes": false,
+
+    // "baseUrl": ".",
+    "paths": {
+      "#dep/*": ["./src/dep/*"],
+      "#lib/*": ["./src/lib/*"]
+    }
   },
   "exclude": ["eslint.config.js", "build"],
   "include": [

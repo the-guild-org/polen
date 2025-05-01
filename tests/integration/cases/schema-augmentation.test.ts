@@ -1,5 +1,5 @@
 import { expect } from 'playwright/test'
-import { Vite } from '../../../src/lib-dependencies/vite/index.js'
+import { Vite } from '#dep/vite/index.js'
 import { Polen } from '../../../src/exports/index.js'
 import type { SchemaAugmentation } from '../../../src/api/schema-augmentation/index.js'
 import { test } from '../helpers/test.js'

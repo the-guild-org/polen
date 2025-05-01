@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import type { GraphQLNamedType } from 'graphql'
 import { Box } from '@radix-ui/themes'
-import { Grafaid } from '../../lib/grafaid/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 import { Field } from './Field.jsx'
 
 export interface Props {

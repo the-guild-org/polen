@@ -1,4 +1,4 @@
-import { Grafaid } from '../../lib/grafaid/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 
 export type Target = TargetType | TargetField
 

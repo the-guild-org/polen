@@ -1,4 +1,6 @@
-import { Path } from './lib-dependencies/path/index.js'
+import { Path } from '#dep/path/index.js'
+import packageJson from '../package.json' with { type: 'json' }
+import { resolve } from 'resolve.imports'
 
 export interface SourcePaths {
   dir: string
@@ -23,4 +25,34 @@ export const sourcePaths: SourcePaths = {
       entryClient: Path.join(templateDir, `entry.client.jsx`),
     },
   },
+}
+
+const isSrc = import.meta.filename.endsWith(`.ts`)
+
+export const resolveLocalImport = (id: string): string | null => {
+  if (!id.startsWith(`#`)) return null
+
+  let resolvedLocalImport = resolve(
+    {
+      content: {
+        imports: packageJson.imports,
+      },
+    },
+    id,
+    // {
+    //   conditions: [`source`],
+    // },
+  )
+
+  if (!resolvedLocalImport) return null
+
+  if (isSrc) {
+    resolvedLocalImport = resolvedLocalImport
+      .replace(`/build/`, `/src/`)
+      .replace(`.js`, `.ts`)
+      .replace(`.jsx`, `.tsx`)
+    resolvedLocalImport = Path.join(sourcePaths.dir, `..`, resolvedLocalImport)
+  }
+
+  return resolvedLocalImport
 }

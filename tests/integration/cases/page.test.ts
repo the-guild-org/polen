@@ -1,7 +1,7 @@
 import { test } from '../helpers/test.js'
-import type { DirectoryLayout } from '../../../src/lib/project-controller/index.js'
+import type { DirectoryLayout } from '#lib/project-controller/index.js'
 import { Polen } from '../../../src/exports/index.js'
-import { Vite } from '../../../src/lib-dependencies/vite/index.js'
+import { Vite } from '#dep/vite/index.js'
 import { expect } from 'playwright/test'
 
 interface TestCase {

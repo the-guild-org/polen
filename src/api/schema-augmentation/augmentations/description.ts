@@ -1,6 +1,6 @@
-import type { Grafaid } from '../../../lib/grafaid/index.js'
+import type { Grafaid } from '#lib/grafaid/index.js'
 import type { Target } from '../target.js'
-import { casesHandled } from '../../../lib/prelude/main.js'
+import { casesHandled } from '#lib/prelude/main.js'
 import { locateTargetField, locateTargetType } from '../target.js'
 
 export const Placement = {

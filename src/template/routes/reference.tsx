@@ -4,7 +4,7 @@ import { TypeIndex } from '../components/TypeIndex.jsx'
 import { Container, Flex } from '@radix-ui/themes'
 import { Outlet, useLoaderData } from 'react-router'
 import schemaFileContent from 'virtual:polen/assets/graphql-schema'
-import { createRoute } from '../../lib/react-router-helpers.js'
+import { createRoute } from '#lib/react-router-helpers.js'
 import { reference$type } from './reference.$type.jsx'
 import { getSchema } from '../utilities/getSchema.js'
 

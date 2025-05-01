@@ -1,5 +1,5 @@
 import { isPlainObject } from 'es-toolkit'
-import { Path } from '../../lib-dependencies/path/index.js'
+import { Path } from '#dep/path/index.js'
 
 // eslint-ignore
 export interface Tree {

@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import type { GraphQLField } from 'graphql'
 import { Box, Text } from '@radix-ui/themes'
 import { ArgumentAnnotation } from './ArgumentAnnotation.jsx'
-import { Grafaid } from '../../lib/grafaid/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 import { FieldList } from './FieldList.jsx'
 
 export interface Props {

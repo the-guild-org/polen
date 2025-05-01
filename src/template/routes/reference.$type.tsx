@@ -1,4 +1,4 @@
-import { createRoute } from '../../lib/react-router-helpers.js'
+import { createRoute } from '#lib/react-router-helpers.js'
 import { useParams, useRouteLoaderData } from 'react-router'
 import type { reference } from './reference.jsx'
 import type { DocumentNode } from 'graphql'
