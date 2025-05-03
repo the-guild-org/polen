@@ -1,3 +1,4 @@
+import Restart from 'vite-plugin-restart'
 import { Polen } from 'polen'
 
 export default Polen.createConfiguration({
@@ -7,9 +8,20 @@ export default Polen.createConfiguration({
   schemaAugmentations: [
     {
       type: `description`,
-      on: { type: `TargetField`, name: `hello`, typeTarget: { type: `TargetType`, name: `Query` } },
+      on: {
+        type: `TargetField`,
+        name: `pokemons`,
+        typeTarget: { type: `TargetType`, name: `Query` },
+      },
       placement: `over`,
       content: `**Extra content from [Polen](https://github.com/the-guild-org/polen)**.`,
     },
   ],
+  vite: {
+    plugins: [Restart({
+      restart: [
+        '../../build/**/*',
+      ],
+    })],
+  },
 })

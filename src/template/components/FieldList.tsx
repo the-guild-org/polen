@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import type { GraphQLNamedType } from 'graphql'
 import { Box } from '@radix-ui/themes'
-import { Grafaid } from '#lib/grafaid/index.js'
+import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Field } from './Field.jsx'
 
 export interface Props {
@@ -9,9 +9,9 @@ export interface Props {
 }
 
 export const FieldList: FC<Props> = ({ data }) => {
-  if (!Grafaid.isTypeWithFields(data)) return null
+  if (!GrafaidOld.isTypeWithFields(data)) return null
 
-  const fields = Grafaid.getFields(data)
+  const fields = GrafaidOld.getFields(data)
   if (fields.length === 0) return null
 
   return (

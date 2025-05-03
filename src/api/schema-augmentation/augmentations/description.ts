@@ -1,6 +1,6 @@
-import type { Grafaid } from '#lib/grafaid/index.js'
+import type { GrafaidOld } from '#lib/grafaid-old/index.js'
 import type { Target } from '../target.js'
-import { casesHandled } from '#lib/prelude/main.js'
+import { casesHandled } from '#lib/prelude/prelude.js'
 import { locateTargetField, locateTargetType } from '../target.js'
 
 export const Placement = {
@@ -19,7 +19,7 @@ export interface DescriptionAugmentation {
 }
 
 export const applyDescriptionContent = (
-  type: Grafaid.Groups.Describable,
+  type: GrafaidOld.Groups.Describable,
   augmentation: DescriptionAugmentation,
 ) => {
   const existingDescription = type.description ?? ``
@@ -39,7 +39,7 @@ export const applyDescriptionContent = (
   }
 }
 
-export const apply = (schema: Grafaid.Schema, augmentation: DescriptionAugmentation) => {
+export const apply = (schema: GrafaidOld.Schema.Schema, augmentation: DescriptionAugmentation) => {
   switch (augmentation.on.type) {
     case `TargetType`: {
       const type = locateTargetType(schema, augmentation.on)

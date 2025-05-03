@@ -27,9 +27,9 @@ import {
   isScalarType,
   isUnionType,
 } from 'graphql'
-import { includesUnknown } from '../prelude/main.js'
+import { includesUnknown } from '../prelude/prelude.js'
 
-export type { GraphQLSchema as Schema } from 'graphql'
+export * as Schema from './schema.js'
 
 export namespace Groups {
   export type Describable = GraphQLNamedType | GraphQLField

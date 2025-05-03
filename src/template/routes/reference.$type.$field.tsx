@@ -1,5 +1,5 @@
 import type { DocumentNode } from 'graphql'
-import { Grafaid } from '#lib/grafaid/index.js'
+import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Field } from '../components/Field.jsx'
 import { createRoute } from '#lib/react-router-helpers.js'
 import { useParams, useRouteLoaderData } from 'react-router'
@@ -18,7 +18,7 @@ const Component = () => {
   // eslint-disable-next-line
   if (!type) return `Could not find type ${params.type}`
   // eslint-disable-next-line
-  if (!Grafaid.isTypeWithFields(type)) return `Type ${params.type} does not have fields`
+  if (!GrafaidOld.isTypeWithFields(type)) return `Type ${params.type} does not have fields`
   const fields = type.getFields()
   // eslint-disable-next-line
   const field = fields[params.field]

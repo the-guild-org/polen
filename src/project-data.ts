@@ -1,6 +1,11 @@
+import type { Changelog } from './api/changelog/index.js'
+
 export interface ProjectData {
-  siteNavigationItems: {
-    title: string,
-    path: string,
-  }[]
+  changelog: null | Changelog.Changelog
+  siteNavigationItems: SiteNavigationItem[]
+}
+
+export interface SiteNavigationItem {
+  title: string
+  path: string
 }

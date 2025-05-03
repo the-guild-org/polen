@@ -1,8 +1,9 @@
-import { casesHandled } from '#lib/prelude/main.js'
+import { casesHandled } from '#lib/prelude/prelude.js'
 import type { Vite } from '#dep/vite/index.js'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { sourcePaths } from '../../source-paths.js'
 import type { SchemaPointer } from './schema-pointer.js'
+import type { Changelog } from '../changelog/index.js'
 
 export interface ConfigInput {
   /**
@@ -12,6 +13,7 @@ export interface ConfigInput {
    * @see https://vite.dev/guide/api-javascript.html#mergeconfig
    */
   vite?: Vite.UserConfig
+  changelog?: Changelog.Changelog
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
     /**
@@ -44,14 +46,12 @@ export interface TemplateVariables {
 export interface Config {
   templateVariables: TemplateVariables
   schemaAugmentations: SchemaAugmentation.Augmentation[]
+  changelog: null | Changelog.Changelog
   mode: string
   schema: SchemaPointer
   ssr: {
     enabled: boolean,
   }
-  // aliases: {
-  //   entryServer: string,
-  // }
   paths: {
     appTemplate: {
       dir: string,
@@ -61,14 +61,11 @@ export interface Config {
   }
 }
 
-// const workspaceDir = process.cwd()
-
-// const outDir = Path.join(workspaceDir, `dist`)
-
 const configInputDefaults: Config = {
   templateVariables: {
     title: `My Developer Portal`,
   },
+  changelog: null,
   schemaAugmentations: [],
   mode: `client`,
   schema: {
@@ -108,6 +105,10 @@ export const normalizeInput = (configInput?: ConfigInput): Config => {
 
   if (configInput?.schema !== undefined) {
     config.schema = resolveInputSchema(configInput.schema)
+  }
+
+  if (configInput?.changelog !== undefined) {
+    config.changelog = configInput.changelog
   }
 
   return config
