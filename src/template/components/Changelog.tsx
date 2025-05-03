@@ -20,7 +20,13 @@ export const Changelog: React.FC<{ changelog: ChangelogData.Changelog }> = ({ ch
 const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ changeset }) => {
   return (
     <Box>
-      <h1 title={changeset.date.toISOString()}>{changeset.date.toDateString()}</h1>
+      <h1 title={changeset.date.toISOString()}>
+        {changeset.date.toLocaleString(`default`, {
+          month: `long`,
+          year: `numeric`,
+          day: `numeric`,
+        })}
+      </h1>
       <ul>
         {changeset.changes.map(change => (
           <Change key={change.message} change={change} schema={changeset.after} />
