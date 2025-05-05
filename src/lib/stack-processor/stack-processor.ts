@@ -1,4 +1,4 @@
-import { type Fn, Undefined } from '../prelude/main.js'
+import { type Fn, Undefined } from '../prelude/prelude.js'
 
 export const until = (
   checkMatch: (value: unknown) => boolean,

@@ -1,16 +1,16 @@
 import type { FC } from 'react'
 import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
 import { Box, Flex, Heading } from '@radix-ui/themes'
-import { Grafaid } from '#lib/grafaid/index.js'
+import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Link } from './Link.jsx'
-import { entries } from '#lib/prelude/main.js'
+import { entries } from '#lib/prelude/prelude.js'
 
 export interface Props {
   schema: GraphQLSchema
 }
 
 export const TypeIndex: FC<Props> = ({ schema }) => {
-  const kindMap = Grafaid.getKindMap(schema)
+  const kindMap = GrafaidOld.getKindMap(schema)
   const sections = entries(kindMap.list)
 
   return (

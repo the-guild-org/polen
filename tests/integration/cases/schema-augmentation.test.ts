@@ -1,8 +1,7 @@
 import { expect } from 'playwright/test'
-import { Vite } from '#dep/vite/index.js'
-import { Polen } from '../../../src/exports/index.js'
 import type { SchemaAugmentation } from '../../../src/api/schema-augmentation/index.js'
 import { test } from '../helpers/test.js'
+import { configMemorySchema, pc } from '../helpers/polen.js'
 
 const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }[] = [
   { placement: `over` },
@@ -14,18 +13,15 @@ cases.forEach(({ placement }) => {
   test(`can augment description with placement of "${placement}"`, async ({ page, vite }) => {
     const baseContent = `bar`
     const augmentedContent = `foo`
-    const viteUserConfig = Polen.createConfiguration({
-      schema: {
-        type: `inline`,
-        value: `
-				"""
+    const viteUserConfig = pc({
+      schema: configMemorySchema(`
+        """
         ${baseContent}
-				"""
-				type Query {
-					hello: String
-				}
-			`,
-      },
+        """
+        type Query {
+          hello: String
+        }
+      `),
       schemaAugmentations: [
         {
           type: `description`,
@@ -34,12 +30,9 @@ cases.forEach(({ placement }) => {
           placement,
         },
       ],
-      vite: {
-        customLogger: Vite.createLogger(`silent`, {}),
-      },
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
-    await page.goto(new URL(`/reference/Query`, viteDevServer.cannonicalUrl).href)
+    await page.goto(viteDevServer.url(`/reference/Query`).href)
 
     await expect(page.getByText(augmentedContent)).toBeVisible()
     if (placement !== `over`) {

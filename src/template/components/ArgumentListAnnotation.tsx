@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import type { GraphQLField } from 'graphql'
 import { Box, Text } from '@radix-ui/themes'
 import { ArgumentAnnotation } from './ArgumentAnnotation.jsx'
-import { Grafaid } from '#lib/grafaid/index.js'
+import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { FieldList } from './FieldList.jsx'
 
 export interface Props {
@@ -12,7 +12,7 @@ export interface Props {
 export const ArgumentListAnnotation: FC<Props> = ({ field }) => {
   if (field.args.length === 0) return null
 
-  const inputObject = Grafaid.getIAP(field)
+  const inputObject = GrafaidOld.getIAP(field)
   const inputObjectFields = inputObject
     ? (
       <Box pl="3" style={{ borderLeft: `1px solid var(--gray-6)` }}>

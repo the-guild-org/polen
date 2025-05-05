@@ -14,9 +14,9 @@ export interface TargetField {
 }
 
 export const locateTargetType = (
-  schema: Grafaid.Schema,
+  schema: Grafaid.Schema.Schema,
   target: TargetType,
-): Grafaid.Groups.Named => {
+): Grafaid.Schema.TypesLike.Named => {
   const type = schema.getType(target.name)
   if (!type) {
     throw new Error(`Could not find type ${target.name}`)
@@ -25,22 +25,26 @@ export const locateTargetType = (
 }
 
 export const locateTargetField = (
-  schema: Grafaid.Schema,
+  schema: Grafaid.Schema.Schema,
   target: TargetField,
-): Grafaid.GraphQLField => {
+): Grafaid.Schema.NodesLike.Field => {
   const type = schema.getType(target.typeTarget.name)
+
   if (!type) {
     throw new Error(`Could not find type ${target.typeTarget.name}`)
   }
-  if (!Grafaid.isTypeWithFields(type)) {
+
+  if (!Grafaid.Schema.TypesLike.isFielded(type)) {
     throw new Error(`Type ${target.typeTarget.name} does not have fields`)
   }
+
   const fields = type.getFields()
   const field = fields[target.name]
+
   if (!field) {
-    throw new Error(
-      `Could not find field ${target.name} on type ${target.typeTarget.name}`,
-    )
+    // dprint-ignore
+    throw new Error(`Could not find field ${target.name} on type ${target.typeTarget.name}`)
   }
+
   return field
 }

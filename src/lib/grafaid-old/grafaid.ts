@@ -3,6 +3,7 @@
  * This module provides type-safe helper functions for working with GraphQL types.
  */
 
+import { Arr } from '#lib/prelude/prelude.js'
 import type {
   GraphQLEnumType,
   GraphQLField as GraphQLField_graphql,
@@ -27,9 +28,8 @@ import {
   isScalarType,
   isUnionType,
 } from 'graphql'
-import { includesUnknown } from '../prelude/main.js'
 
-export type { GraphQLSchema as Schema } from 'graphql'
+export * as Schema from './schema.js'
 
 export namespace Groups {
   export type Describable = GraphQLNamedType | GraphQLField
@@ -68,23 +68,23 @@ export const isExpandableType = (type: GraphQLOutputType): boolean => {
   return isObjectType(namedType) || isInterfaceType(namedType)
 }
 
-export type TypeWithFields = OutputTypeWithFields | InputTypeWithFields
+// export type TypeWithFields = OutputTypeWithFields | InputTypeWithFields
 
-export type InputTypeWithFields = GraphQLInputObjectType
+// export type InputTypeWithFields = GraphQLInputObjectType
 
-export type OutputTypeWithFields = GraphQLInterfaceType | GraphQLObjectType
+// export type OutputTypeWithFields = GraphQLInterfaceType | GraphQLObjectType
 
-export const isOutputTypeWithFields = (type: GraphQLNamedType): type is OutputTypeWithFields => {
-  return isInterfaceType(type) || isObjectType(type)
-}
+// export const isOutputTypeWithFields = (type: GraphQLNamedType): type is OutputTypeWithFields => {
+//   return isInterfaceType(type) || isObjectType(type)
+// }
 
-export const isInputTypeWithFields = (type: GraphQLNamedType): type is InputTypeWithFields => {
-  return isInputObjectType(type)
-}
+// export const isInputTypeWithFields = (type: GraphQLNamedType): type is InputTypeWithFields => {
+//   return isInputObjectType(type)
+// }
 
-export const isTypeWithFields = (type: GraphQLNamedType): type is TypeWithFields => {
-  return isOutputTypeWithFields(type) || isInputTypeWithFields(type)
-}
+// export const isTypeWithFields = (type: GraphQLNamedType): type is TypeWithFields => {
+//   return isOutputTypeWithFields(type) || isInputTypeWithFields(type)
+// }
 
 export const isUsingInputArgumentPattern = (field: GraphQLOutputField): boolean => {
   if (field.args.length !== 1) return false
@@ -104,9 +104,9 @@ export const getIAP = (field: GraphQLOutputField): GraphQLInputObjectType | null
   return getNamedType(field.args[0]!.type) as GraphQLInputObjectType
 }
 
-export const getFields = (type: TypeWithFields): (GraphQLOutputField | GraphQLInputField)[] => {
-  return Object.values(type.getFields())
-}
+// export const getFields = (type: TypeWithFields): (GraphQLOutputField | GraphQLInputField)[] => {
+//   return Object.values(type.getFields())
+// }
 
 export const getKindMap = (schema: GraphQLSchema): KindMap => {
   const queryType = schema.getQueryType() ?? null
@@ -168,7 +168,7 @@ export const getKindMap = (schema: GraphQLSchema): KindMap => {
         kindMap.index.Interface[type.name] = type
         break
       case isObjectType(type):
-        if (!includesUnknown(rootTypeNames, type.name)) {
+        if (!Arr.includesUnknown(rootTypeNames, type.name)) {
           kindMap.list.OutputObject.push(type)
           kindMap.index.OutputObject[type.name] = type
         }

@@ -3,16 +3,18 @@ import type { BoxProps } from '@radix-ui/themes'
 import { Box, Text } from '@radix-ui/themes'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.jsx'
 import { TypeAnnotation } from './TypeAnnotation.jsx'
-import { Grafaid } from '#lib/grafaid/index.js'
+import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { DeprecationReason } from './DeprecationReason.jsx'
 import { Description } from './Description.jsx'
 
 export type Props = BoxProps & {
-  data: Grafaid.GraphQLField,
+  data: GrafaidOld.GraphQLField,
 }
 
 export const Field: FC<Props> = ({ data, ...boxProps }) => {
-  const argumentList = Grafaid.isOutputField(data) ? <ArgumentListAnnotation field={data} /> : null
+  const argumentList = GrafaidOld.isOutputField(data)
+    ? <ArgumentListAnnotation field={data} />
+    : null
 
   return (
     <Box {...boxProps}>

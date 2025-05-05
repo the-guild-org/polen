@@ -1,7 +1,6 @@
 import { test } from '../helpers/test.js'
 import type { DirectoryLayout } from '#lib/project-controller/index.js'
 import { Polen } from '../../../src/exports/index.js'
-import { Vite } from '#dep/vite/index.js'
 import { expect } from 'playwright/test'
 
 interface TestCase {
@@ -17,12 +16,12 @@ interface TestCase {
 const testCases: TestCase[] = [
   {
     title: `exact page`,
-    fixture: { 'pages/foo.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+    fixture: { 'pages/foo.md': `abc` },
     result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
   },
   {
     title: `index page`,
-    fixture: { 'pages/foo/index.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+    fixture: { 'pages/foo/index.md': `abc` },
     result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
   },
 ]
@@ -35,7 +34,6 @@ testCases.forEach(({ fixture, result, title }) => {
     const viteUserConfig = Polen.createConfiguration({
       vite: {
         root: project.fileStorage.cwd,
-        customLogger: Vite.createLogger(`silent`, {}),
       },
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)

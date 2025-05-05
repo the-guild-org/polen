@@ -4,7 +4,7 @@ import type { Shell } from 'zx'
 import { debug as debugBase } from '../debug/debug.js'
 import type { Debug } from '../debug/index.js'
 import { Path } from '#dep/path/index.js'
-import { casesHandled } from '../prelude/main.js'
+import { casesHandled } from '../prelude/prelude.js'
 import type { LinkProtocol } from '../link-protocol.js'
 import { FileStorage } from './file-system.js'
 

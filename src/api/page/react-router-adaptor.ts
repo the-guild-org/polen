@@ -1,4 +1,4 @@
-import { casesHandled } from '#lib/prelude/main.js'
+import { casesHandled } from '#lib/prelude/prelude.js'
 import type { PageBranch, PageTree } from './page.js'
 
 const $ = {

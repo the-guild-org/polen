@@ -2,10 +2,10 @@ import type { FC } from 'react'
 import { Text } from '@radix-ui/themes'
 import { Markdown } from './Markdown.jsx'
 // import type { Grafaid } from '#lib/grafaid'
-import type { Grafaid } from '#lib/grafaid/index.js'
+import type { GrafaidOld } from '#lib/grafaid-old/index.js'
 import type { GraphQLNamedType } from 'graphql'
 
-export const Description: FC<{ data: GraphQLNamedType | Grafaid.GraphQLField }> = ({ data }) => {
+export const Description: FC<{ data: GraphQLNamedType | GrafaidOld.GraphQLField }> = ({ data }) => {
   if (!data.description) return null
 
   return (
