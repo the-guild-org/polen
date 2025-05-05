@@ -62,6 +62,9 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
         loader: async () => {
           const schema = await readSchema()
           const pages = Page.lint(await readPages({ dir: viteConfig.root })).fixed
+
+          const siteNavigationItems: SiteNavigationItem[] = []
+
           const siteNavigationItemsFromTopLevelPages = pages
             // todo: test that non-congent page branches aren't shown in navigation bar
             .filter(_ =>
@@ -77,12 +80,10 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
               },
             )
 
-          const siteNavigationItems: SiteNavigationItem[] = [
-            { path: `/reference`, title: `Reference` },
-            ...siteNavigationItemsFromTopLevelPages,
-          ]
+          siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
 
-          if (schema && schema.versions.length > 1) {
+          if (schema) {
+            siteNavigationItems.push({ path: `/reference`, title: `Reference` })
             siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
           }
 

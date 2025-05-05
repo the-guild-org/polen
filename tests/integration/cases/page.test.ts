@@ -1,7 +1,6 @@
 import { test } from '../helpers/test.js'
 import type { DirectoryLayout } from '#lib/project-controller/index.js'
 import { Polen } from '../../../src/exports/index.js'
-import { Vite } from '#dep/vite/index.js'
 import { expect } from 'playwright/test'
 
 interface TestCase {
@@ -35,7 +34,6 @@ testCases.forEach(({ fixture, result, title }) => {
     const viteUserConfig = Polen.createConfiguration({
       vite: {
         root: project.fileStorage.cwd,
-        customLogger: Vite.createLogger(`silent`, {}),
       },
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
