@@ -25,3 +25,19 @@ export const configMemorySchema = (sdl: string): Polen.ConfigInput[`schema`] => 
     },
   }
 }
+
+export const configMemorySchemaVersions = (
+  versions: { date: Date; sdl: string }[]
+): Polen.ConfigInput[`schema`] => {
+  return {
+    useDataSources: `memory`,
+    dataSources: {
+      memory: {
+        versions: versions.map(version => ({
+          date: version.date,
+          value: version.sdl,
+        })),
+      },
+    },
+  }
+}

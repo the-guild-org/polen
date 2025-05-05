@@ -5,14 +5,22 @@ import { configMemorySchema, pc } from '../helpers/polen.js'
 
 const sdl = `type Query { hello: String }\ntype Mutation { hello: String }`
 
-test(`no reference when schema is omitted or disabled`, async ({ page, vite }) => {
+test(`no reference or changelog when schema is omitted or disabled`, async ({ page, vite }) => {
   let viteDevServer: ViteController.ViteDevServerPlus
   const tests = async () => {
-    const response = await page.goto(viteDevServer!.url(`/reference`).href)
-    expect(response?.status()).toBe(404)
+    {
+      const response = await page.goto(viteDevServer!.url(`/reference`).href)
+      expect(response?.status()).toBe(404)
+    }
+
+    {
+      const response = await page.goto(viteDevServer!.url(`/changelog`).href)
+      expect(response?.status()).toBe(404)
+    }
 
     await page.goto(viteDevServer!.url(`/`).href)
-    await expect(page.getByText(`reference`, { exact: false })).not.toBeVisible()
+    await expect(page.getByText(`reference`)).not.toBeVisible()
+    await expect(page.getByText(`changelog`)).not.toBeVisible()
   }
   {
     const viteUserConfig = pc()

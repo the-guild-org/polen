@@ -7,6 +7,15 @@ import type { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Graphql } from './graphql/index.js'
 import { Grafaid } from '#lib/grafaid/index.js'
 
+export const renderDate = (date: Date) => {
+  return date.toLocaleString(`default`, {
+    month: `long`,
+    year: `numeric`,
+    day: `numeric`,
+    timeZone: `utc`,
+  })
+}
+
 export const Changelog: React.FC<{ schema: ChangelogData.Schema }> = ({ schema }) => {
   return (
     <Box>
@@ -21,11 +30,7 @@ const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ change
   return (
     <Box>
       <h1 title={changeset.date.toISOString()}>
-        {changeset.date.toLocaleString(`default`, {
-          month: `long`,
-          year: `numeric`,
-          day: `numeric`,
-        })}
+        {renderDate(changeset.date)}
       </h1>
       <ul>
         {changeset.changes.map(change => (
