@@ -111,7 +111,7 @@
     "vite": "^6.2.5"
   },
   "scripts": {
-    "examples:unlink": "rm -rf examples/{basic,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
+    "examples:unlink": "rm -rf examples/{pokemon,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
     "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
     "test:integration": "playwright test --config 'tests/integration/playwright.config.ts'",
     "test:unit": "vitest",
