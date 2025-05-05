@@ -1,6 +1,4 @@
 import { memoize } from 'es-toolkit'
-import { readSchemaPointer } from '../../configurator/schema-pointer.js'
-import { titleCase } from '#lib/prelude/prelude.js'
 import jsesc from 'jsesc'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Vite } from '#dep/vite/index.js'
@@ -11,8 +9,9 @@ import { vi } from '../helpers.js'
 import type { Configurator } from '../../configurator/index.js'
 import { Schema } from '../../schema/index.js'
 import { Superjson } from '#lib/superjson/index.js'
+import { Str } from '#lib/prelude/prelude.js'
+import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 
-const viAssetGraphqlSchema = vi(`assets`, `graphql-schema`)
 const viTemplateVariables = vi(`template`, `variables`)
 const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
 const viProjectPages = vi(`project`, `pages.jsx`)
@@ -22,7 +21,12 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
   const readPages = memoize(Page.readAll)
   const readSchema = memoize(async () => {
     const schema = await Schema.readOrThrow({
+      ...config.schema,
       projectRoot: viteConfig.root,
+    })
+    // todo: augmentations scoped to a version
+    schema?.versions.forEach(version => {
+      SchemaAugmentation.apply(version.after, config.schemaAugmentations)
     })
     return schema
   })
@@ -35,14 +39,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
       viteConfig = config_
     },
     ...ViteVirtual.IdentifiedLoader.toHooks(
-      {
-        identifier: viAssetGraphqlSchema,
-        loader: async () => {
-          const schema = await readSchemaPointer(config.schema, viteConfig.root)
-          const moduleContent = `export default ${JSON.stringify(schema)}`
-          return moduleContent
-        },
-      },
       {
         identifier: viTemplateVariables,
         loader: () => {
@@ -76,7 +72,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
               (pageBranch): ProjectData[`siteNavigationItems`][number] => {
                 return {
                   path: pageBranch.route.path.raw,
-                  title: titleCase(pageBranch.route.path.raw),
+                  title: Str.titleCase(pageBranch.route.path.raw),
                 }
               },
             )

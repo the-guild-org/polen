@@ -3,6 +3,7 @@
  * This module provides type-safe helper functions for working with GraphQL types.
  */
 
+import { Arr } from '#lib/prelude/prelude.js'
 import type {
   GraphQLEnumType,
   GraphQLField as GraphQLField_graphql,
@@ -27,7 +28,6 @@ import {
   isScalarType,
   isUnionType,
 } from 'graphql'
-import { includesUnknown } from '../prelude/prelude.js'
 
 export * as Schema from './schema.js'
 
@@ -168,7 +168,7 @@ export const getKindMap = (schema: GraphQLSchema): KindMap => {
         kindMap.index.Interface[type.name] = type
         break
       case isObjectType(type):
-        if (!includesUnknown(rootTypeNames, type.name)) {
+        if (!Arr.includesUnknown(rootTypeNames, type.name)) {
           kindMap.list.OutputObject.push(type)
           kindMap.index.OutputObject[type.name] = type
         }

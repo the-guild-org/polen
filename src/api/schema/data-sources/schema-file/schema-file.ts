@@ -4,16 +4,33 @@ import { GraphqlChange } from '#lib/graphql-change/index.js'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
 import type { Schema } from '../../schema.js'
 
-const paths = {
+const defaultPaths = {
   schemaFile: `./schema.graphql`,
 }
 
-export const readOrThrow = async (
-  parameters: { path: string },
-): Promise<null | Schema> => {
-  const filePath = Path.join(parameters.path, paths.schemaFile)
+export interface ConfigInput {
+  path?: string
+  projectRoot?: string
+}
 
-  const schemaFile = await Grafaid.Schema.read(filePath)
+export interface Config {
+  path: string
+}
+
+export const normalizeConfig = (configInput: ConfigInput): Config => {
+  const config: Config = {
+    path: Path.absolutify(configInput.path ?? defaultPaths.schemaFile, configInput.projectRoot),
+  }
+
+  return config
+}
+
+export const readOrThrow = async (
+  configInput: ConfigInput,
+): Promise<null | Schema> => {
+  const config = normalizeConfig(configInput)
+
+  const schemaFile = await Grafaid.Schema.read(config.path)
   if (!schemaFile) return null
 
   const date = new Date()

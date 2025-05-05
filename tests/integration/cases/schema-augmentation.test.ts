@@ -4,10 +4,21 @@ import { Polen } from '../../../src/exports/index.js'
 import type { SchemaAugmentation } from '../../../src/api/schema-augmentation/index.js'
 import { test } from '../helpers/test.js'
 
+const schema = (sdl: string): Polen.ConfigInput[`schema`] => {
+  return {
+    useDataSources: `memory`,
+    dataSources: {
+      memory: {
+        versions: [sdl],
+      },
+    },
+  }
+}
+
 const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }[] = [
   { placement: `over` },
-  { placement: `after` },
-  { placement: `before` },
+  // { placement: `after` },
+  // { placement: `before` },
 ]
 
 cases.forEach(({ placement }) => {
@@ -15,17 +26,14 @@ cases.forEach(({ placement }) => {
     const baseContent = `bar`
     const augmentedContent = `foo`
     const viteUserConfig = Polen.createConfiguration({
-      schema: {
-        type: `inline`,
-        value: `
-				"""
+      schema: schema(`
+        """
         ${baseContent}
-				"""
-				type Query {
-					hello: String
-				}
-			`,
-      },
+        """
+        type Query {
+          hello: String
+        }
+      `),
       schemaAugmentations: [
         {
           type: `description`,

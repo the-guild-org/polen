@@ -6,32 +6,54 @@ import { GraphqlChange } from '#lib/graphql-change/index.js'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
 import { Path } from '#dep/path/index.js'
 import { Grafaid } from '#lib/grafaid/index.js'
-import type { NonEmptyArray } from '#lib/prelude/prelude.js'
+import { Arr } from '#lib/prelude/prelude.js'
 
-const debug = Debug.create(`polen:changelog:data-source-sdl-files`)
+const debug = Debug.create(`polen:schema:data-source-schema-directory`)
 
-const paths = {
+const defaultPaths = {
   schemaDirectory: `./schema`,
 }
 
-export const readOrThrow = async (parameters: { path: string }): Promise<null | Schema> => {
-  const directoryPath = Path.join(parameters.path, paths.schemaDirectory)
+export interface ConfigInput {
+  path?: string
+  projectRoot?: string
+}
 
-  debug(`will search`, parameters)
+export interface Config {
+  path: string
+}
+
+export const normalizeConfig = (configInput: ConfigInput): Config => {
+  const config: Config = {
+    path: Path.absolutify(
+      configInput.path ?? defaultPaths.schemaDirectory,
+      configInput.projectRoot,
+    ),
+  }
+
+  return config
+}
+
+export const readOrThrow = async (configInput: ConfigInput): Promise<null | Schema> => {
+  const config = normalizeConfig(configInput)
+
+  debug(`will search`, config)
   const filePaths = await glob({
-    cwd: directoryPath,
+    cwd: config.path,
     absolute: true,
     onlyFiles: true,
     patterns: [`*.graphql`],
   })
   debug(`did find`, filePaths)
 
-  if (filePaths.length === 0) return null
+  if (!Arr.isNotEmpty(filePaths)) {
+    return null
+  }
 
-  const fileNameExpressions = filePaths.map(FileNameExpression.parseOrThrow)
+  const fileNameExpressions = Arr.map(filePaths, FileNameExpression.parseOrThrow)
   debug(`parsed file names`, fileNameExpressions)
 
-  const iterations = await Promise.all(fileNameExpressions.map(async fileNameExpression => {
+  const versions = await Promise.all(Arr.map(fileNameExpressions, async fileNameExpression => {
     const schemaFile = await Grafaid.Schema.read(fileNameExpression.filePath)
     // Should never happen since these paths come from the glob.
     if (!schemaFile) throw new Error(`Failed to read schema file: ${fileNameExpression.filePath}`)
@@ -43,12 +65,12 @@ export const readOrThrow = async (parameters: { path: string }): Promise<null | 
   }))
   debug(`read schemas`)
 
-  iterations.sort((a, b) => a.date.getTime() - b.date.getTime())
+  versions.sort((a, b) => a.date.getTime() - b.date.getTime())
 
   const changesets = await Promise.all(
-    iterations.map(async (iteration, index): Promise<GraphqlChangeset.ChangeSet> => {
-      const current = iteration
-      const previous = iterations[index - 1]
+    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSet> => {
+      const current = version
+      const previous = versions[index - 1]
 
       const before = previous?.schema ?? Grafaid.Schema.empty
       const after = current.schema
@@ -69,14 +91,11 @@ export const readOrThrow = async (parameters: { path: string }): Promise<null | 
 
   changesets.reverse()
 
-  // We check for empty above so cast is safe.
-  const changesetsNotEmpty = changesets as NonEmptyArray<GraphqlChangeset.ChangeSet>
-
-  debug(`computed changelog`)
-
-  const changelog: Schema = {
-    versions: changesetsNotEmpty,
+  const schema: Schema = {
+    versions: changesets,
   }
 
-  return changelog
+  debug(`computed schema`)
+
+  return schema
 }
