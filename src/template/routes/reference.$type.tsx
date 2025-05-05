@@ -1,22 +1,23 @@
 import { createRoute } from '#lib/react-router-helpers.js'
-import { useParams, useRouteLoaderData } from 'react-router'
+import { useParams } from 'react-router'
 import type { reference } from './reference.jsx'
-import type { DocumentNode } from 'graphql'
 import { NamedType } from '../components/NamedType.jsx'
-import { getSchema } from '../utilities/getSchema.js'
+import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
+import { MissingSchema } from '../components/MissingSchema.jsx'
 
 const Component = () => {
-  // eslint-disable-next-line
-  const params = useParams() as any
-  const data = useRouteLoaderData<typeof reference.loader>(`/reference`) as {
-    documentNode: DocumentNode,
+  const params = useParams() as { type: string }
+
+  const data = useRouteLoaderData<typeof reference.loader>(`/reference`)
+  if (!data.schema) {
+    return <MissingSchema />
   }
-  // const data = reference$type.parentRoute.useLoaderData()
-  const schema = getSchema(data.documentNode)
-  // eslint-disable-next-line
-  const type = schema.getType(params.type)
-  // eslint-disable-next-line
-  if (!type) return `Could not find type ${params.type}`
+
+  const type = data.schema.getType(params.type)
+  if (!type) {
+    return `Could not find type ${params.type}`
+  }
+
   return <NamedType data={type} />
 }
 

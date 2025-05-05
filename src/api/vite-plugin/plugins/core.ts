@@ -9,9 +9,8 @@ import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { sourcePaths } from '../../../source-paths.js'
 import { vi } from '../helpers.js'
 import type { Configurator } from '../../configurator/index.js'
-import { Changelog } from '../../changelog/index.js'
-import * as Superjson from 'superjson'
-import '#lib/super-json-codecs/register.js'
+import { Schema } from '../../schema/index.js'
+import { Superjson } from '#lib/superjson/index.js'
 
 const viAssetGraphqlSchema = vi(`assets`, `graphql-schema`)
 const viTemplateVariables = vi(`template`, `variables`)
@@ -21,11 +20,11 @@ const viProjectData = vi(`project`, `data`)
 
 export const Core = (config: Configurator.Config): Vite.PluginOption => {
   const readPages = memoize(Page.readAll)
-  const readChangelog = memoize(async () => {
-    const changelog = config.changelog ?? await Changelog.DataSources.SDLFiles.readOrThrow({
-      path: viteConfig.root + `/schema`,
+  const readSchema = memoize(async () => {
+    const schema = await Schema.readOrThrow({
+      projectRoot: viteConfig.root,
     })
-    return changelog
+    return schema
   })
 
   let viteConfig: Vite.ResolvedConfig
@@ -65,7 +64,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
       {
         identifier: viProjectData,
         loader: async () => {
-          const changelog = await readChangelog()
+          const schema = await readSchema()
           const pages = Page.lint(await readPages({ dir: viteConfig.root })).fixed
           const siteNavigationItemsFromTopLevelPages = pages
             // todo: test that non-congent page branches aren't shown in navigation bar
@@ -87,20 +86,18 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
             ...siteNavigationItemsFromTopLevelPages,
           ]
 
-          if (changelog) {
+          if (schema && schema.versions.length > 1) {
             siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
           }
 
           const projectData: ProjectData = {
-            changelog,
+            schema,
             siteNavigationItems,
           }
 
           const projectDataCode = jsesc(Superjson.stringify(projectData))
           const content = `
-            import * as Superjson from 'superjson'
-
-            import '${sourcePaths.dir}/lib/super-json-codecs/register.js'
+            import { Superjson } from '${sourcePaths.dir}/lib/superjson/index.js'
             
             export const PROJECT_DATA = Superjson.parse('${projectDataCode}')
           `

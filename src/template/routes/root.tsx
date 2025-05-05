@@ -13,7 +13,7 @@ import { templateVariables } from 'virtual:polen/template/variables'
 import { pages } from 'virtual:polen/project/pages.jsx'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
 import type { ReactRouter } from '#dep/react-router/index.js'
-import { Changelog } from '../components/Changelog.jsx'
+import { changelog } from './changelog.jsx'
 
 // todo: not needed anymore because not using hono dev vite plugin right?
 const reactRefreshPreamble = `
@@ -82,21 +82,12 @@ const Layout = () => {
 
 const children: ReactRouter.RouteObject[] = [
   index,
-  reference,
   ...pages,
 ]
 
-if (PROJECT_DATA.changelog) {
-  const { changelog } = PROJECT_DATA
-
-  const changelogRoute = createRoute({
-    path: `/changelog`,
-    Component: () => {
-      return <Changelog changelog={changelog} />
-    },
-  })
-
-  children.push(changelogRoute)
+if (PROJECT_DATA.schema) {
+  children.push(changelog)
+  children.push(reference)
 }
 
 export const root = createRoute({

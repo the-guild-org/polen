@@ -1,26 +1,8 @@
-export {
-  type GraphQLArgument as Argument,
-  GraphQLEnumType as EnumType,
-  type GraphQLEnumValue as EnumValue,
-  type GraphQLField as Field,
-  type GraphQLInputField as InputField,
-  GraphQLInputObjectType as InputObjectType,
-  type GraphQLInputType as InputTypes,
-  GraphQLInterfaceType as InterfaceType,
-  GraphQLList as ListType,
-  type GraphQLNamedType as NamedTypes,
-  GraphQLNonNull as NonNullType,
-  GraphQLObjectType as ObjectType,
-  GraphQLScalarType as ScalarType,
-  GraphQLSchema as Schema,
-  type GraphQLType as Types,
-  GraphQLUnionType as UnionType,
-  buildClientSchema,
-  buildSchema,
-  getNamedType,
-  getNullableType,
-  printSchema as print,
-} from 'graphql'
+import { type GraphQLSchema, buildASTSchema } from 'graphql'
+
+export { GraphQLSchema as Schema, buildASTSchema as fromAST, printSchema as print } from 'graphql'
+
+export * as AST from './ast.js'
 
 export * as Type from './type.js'
 
@@ -47,3 +29,9 @@ export * as CustomScalars from './customScalars.js'
 export * as TypesLike from './types-like.js'
 
 export * as NodesLike from './nodes-like.js'
+
+export * from './read.js'
+
+import * as AST from './ast.js'
+
+export const empty: GraphQLSchema = buildASTSchema(AST.empty)

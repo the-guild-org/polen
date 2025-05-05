@@ -1,7 +1,7 @@
-import type { Changelog } from './api/changelog/index.js'
+import type { Schema } from './api/schema/index.js'
 
 export interface ProjectData {
-  changelog: null | Changelog.Changelog
+  schema: null | Schema.Schema
   siteNavigationItems: SiteNavigationItem[]
 }
 

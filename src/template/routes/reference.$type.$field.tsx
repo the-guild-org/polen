@@ -1,29 +1,26 @@
-import type { DocumentNode } from 'graphql'
-import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Field } from '../components/Field.jsx'
 import { createRoute } from '#lib/react-router-helpers.js'
-import { useParams, useRouteLoaderData } from 'react-router'
+import { useParams } from 'react-router'
 import type { reference } from './reference.jsx'
-import { getSchema } from '../utilities/getSchema.js'
+import { MissingSchema } from '../components/MissingSchema.jsx'
+import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 
 const Component = () => {
-  // eslint-disable-next-line
-  const params = useParams() as any
-  const data = useRouteLoaderData<typeof reference.loader>(`/reference`) as {
-    documentNode: DocumentNode,
+  const params = useParams() as { type: string, field: string }
+  const data = useRouteLoaderData<typeof reference.loader>(`/reference`)
+  if (!data.schema) {
+    return <MissingSchema />
   }
-  const schema = getSchema(data.documentNode)
-  // eslint-disable-next-line
-  const type = schema.getType(params.type)
-  // eslint-disable-next-line
+
+  const type = data.schema.getType(params.type)
   if (!type) return `Could not find type ${params.type}`
-  // eslint-disable-next-line
-  if (!GrafaidOld.isTypeWithFields(type)) return `Type ${params.type} does not have fields`
+  if (!Grafaid.Schema.TypesLike.isFielded(type)) return `Type ${params.type} does not have fields`
+
   const fields = type.getFields()
-  // eslint-disable-next-line
   const field = fields[params.field]
-  // eslint-disable-next-line
   if (!field) return `Could not find field ${params.field} on type ${params.type}`
+
   return <Field data={field} />
 }
 

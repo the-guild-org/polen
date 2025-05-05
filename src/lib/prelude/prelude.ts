@@ -63,3 +63,5 @@ export const partitionErrors = <T>(array: T[]): [Exclude<T, Error>[], Extract<T,
 }
 
 export const isString = (value: unknown): value is string => typeof value === `string`
+
+export type NonEmptyArray<T> = [T, ...T[]]

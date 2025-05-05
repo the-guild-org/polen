@@ -1,5 +1,5 @@
 import type React from 'react'
-import type { Changelog as ChangelogData } from '../../api/changelog/index.js'
+import type { Schema as ChangelogData } from '../../api/schema/index.js'
 import { Box, Code } from '@radix-ui/themes'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
 import type { GraphqlChange } from '#lib/graphql-change/index.js'
@@ -7,10 +7,10 @@ import type { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Graphql } from './graphql/index.js'
 import { Grafaid } from '#lib/grafaid/index.js'
 
-export const Changelog: React.FC<{ changelog: ChangelogData.Changelog }> = ({ changelog }) => {
+export const Changelog: React.FC<{ schema: ChangelogData.Schema }> = ({ schema }) => {
   return (
     <Box>
-      {changelog.changesets.map(changeset => (
+      {schema.versions.map(changeset => (
         <Changeset key={changeset.date.getDate()} changeset={changeset} />
       ))}
     </Box>

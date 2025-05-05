@@ -1,27 +1,29 @@
-import type { DocumentNode } from 'graphql'
-import { parse } from 'graphql'
 import { TypeIndex } from '../components/TypeIndex.jsx'
 import { Container, Flex } from '@radix-ui/themes'
-import { Outlet, useLoaderData } from 'react-router'
-import schemaFileContent from 'virtual:polen/assets/graphql-schema'
+import { Outlet } from 'react-router'
 import { createRoute } from '#lib/react-router-helpers.js'
 import { reference$type } from './reference.$type.jsx'
-import { getSchema } from '../utilities/getSchema.js'
+import { PROJECT_DATA } from 'virtual:polen/project/data'
+import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
+import { MissingSchema } from '../components/MissingSchema.jsx'
 
-const loader = () => {
-  const documentNode = parse(schemaFileContent)
+const loader = createLoader(() => {
+  const latestSchemaVersion = PROJECT_DATA.schema?.versions[0].after ?? null
   return {
-    documentNode,
+    schema: latestSchemaVersion,
   }
-}
+})
 
 const Component = () => {
-  const data = useLoaderData<typeof loader>() as { documentNode: DocumentNode }
-  const schema = getSchema(data.documentNode)
+  const data = useLoaderData<typeof loader>()
+
+  if (!data.schema) {
+    return <MissingSchema />
+  }
 
   return (
     <Flex direction="row" align="start">
-      <TypeIndex schema={schema} />
+      <TypeIndex schema={data.schema} />
       <Container>
         <Outlet />
       </Container>

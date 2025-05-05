@@ -1,23 +1,23 @@
 import * as Superjson from 'superjson'
-import { GrafaidOld } from '#lib/grafaid-old/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 
 export const registerGraphQLSchema = () => {
   Superjson.registerCustom({
-    isApplicable: (value: unknown) => value instanceof GrafaidOld.Schema.Schema,
+    isApplicable: (value: unknown) => value instanceof Grafaid.Schema.Schema,
     serialize: value => {
-      const sdl = GrafaidOld.Schema.print(value)
+      const sdl = Grafaid.Schema.print(value)
 
       if (sdl === ``) {
-        const astJson = JSON.stringify(GrafaidOld.Schema.astEmpty)
+        const astJson = JSON.stringify(Grafaid.Schema.AST.empty)
         return astJson
       }
 
-      const ast = GrafaidOld.Schema.parse(sdl)
+      const ast = Grafaid.Schema.AST.parse(sdl)
       const astJson = JSON.stringify(ast)
       return astJson
     },
     deserialize: astJson => {
-      return GrafaidOld.Schema.fromAST(JSON.parse(astJson))
+      return Grafaid.Schema.fromAST(JSON.parse(astJson))
     },
   }, `GraphQLSchema`)
 }

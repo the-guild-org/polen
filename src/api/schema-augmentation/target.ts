@@ -1,4 +1,4 @@
-import { GrafaidOld } from '#lib/grafaid-old/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
 
 export type Target = TargetType | TargetField
 
@@ -14,9 +14,9 @@ export interface TargetField {
 }
 
 export const locateTargetType = (
-  schema: GrafaidOld.Schema.Schema,
+  schema: Grafaid.Schema.Schema,
   target: TargetType,
-): GrafaidOld.Groups.Named => {
+): Grafaid.Schema.TypesLike.Named => {
   const type = schema.getType(target.name)
   if (!type) {
     throw new Error(`Could not find type ${target.name}`)
@@ -25,22 +25,26 @@ export const locateTargetType = (
 }
 
 export const locateTargetField = (
-  schema: GrafaidOld.Schema.Schema,
+  schema: Grafaid.Schema.Schema,
   target: TargetField,
-): GrafaidOld.GraphQLField => {
+): Grafaid.Schema.NodesLike.Field => {
   const type = schema.getType(target.typeTarget.name)
+
   if (!type) {
     throw new Error(`Could not find type ${target.typeTarget.name}`)
   }
-  if (!GrafaidOld.isTypeWithFields(type)) {
+
+  if (!Grafaid.Schema.TypesLike.isFielded(type)) {
     throw new Error(`Type ${target.typeTarget.name} does not have fields`)
   }
+
   const fields = type.getFields()
   const field = fields[target.name]
+
   if (!field) {
-    throw new Error(
-      `Could not find field ${target.name} on type ${target.typeTarget.name}`,
-    )
+    // dprint-ignore
+    throw new Error(`Could not find field ${target.name} on type ${target.typeTarget.name}`)
   }
+
   return field
 }

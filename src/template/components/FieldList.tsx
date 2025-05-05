@@ -1,17 +1,16 @@
 import type { FC } from 'react'
-import type { GraphQLNamedType } from 'graphql'
 import { Box } from '@radix-ui/themes'
-import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Field } from './Field.jsx'
+import { Grafaid } from '#lib/grafaid/index.js'
 
 export interface Props {
-  data: GraphQLNamedType
+  data: Grafaid.Schema.TypesLike.Named
 }
 
 export const FieldList: FC<Props> = ({ data }) => {
-  if (!GrafaidOld.isTypeWithFields(data)) return null
+  if (!Grafaid.Schema.TypesLike.isFielded(data)) return null
 
-  const fields = GrafaidOld.getFields(data)
+  const fields = Grafaid.Schema.NodesLike.getFields(data)
   if (fields.length === 0) return null
 
   return (

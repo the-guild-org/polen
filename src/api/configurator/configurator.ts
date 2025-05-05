@@ -3,7 +3,7 @@ import type { Vite } from '#dep/vite/index.js'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { sourcePaths } from '../../source-paths.js'
 import type { SchemaPointer } from './schema-pointer.js'
-import type { Changelog } from '../changelog/index.js'
+import type { Schema } from '../schema/index.js'
 
 export interface ConfigInput {
   /**
@@ -13,7 +13,7 @@ export interface ConfigInput {
    * @see https://vite.dev/guide/api-javascript.html#mergeconfig
    */
   vite?: Vite.UserConfig
-  changelog?: Changelog.Changelog
+  changelog?: Schema.Schema
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
     /**
@@ -46,7 +46,7 @@ export interface TemplateVariables {
 export interface Config {
   templateVariables: TemplateVariables
   schemaAugmentations: SchemaAugmentation.Augmentation[]
-  changelog: null | Changelog.Changelog
+  changelog: null | Schema.Schema
   mode: string
   schema: SchemaPointer
   ssr: {

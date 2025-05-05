@@ -6,11 +6,16 @@ import type {
   GraphQLNamedType,
 } from 'graphql'
 import { isOutputField } from './typeGuards.js'
+import type { Fielded } from './types-like.js'
 
 export type Field = GraphQLField<any, any> | GraphQLInputField
 
 export const isField = (value: object): value is GraphQLField<any, any> | InputField => {
   return isOutputField(value) || isInputField(value)
+}
+
+export const getFields = (type: Fielded): Field[] => {
+  return Object.values(type.getFields())
 }
 
 export type Describable =
