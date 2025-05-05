@@ -19,7 +19,7 @@ You can find working examples in the [examples](./examples) directory.
 
 The following shows minimal default usage.
 
-1. Have a GraphQL schema file in the same directory that you run `vite`.
+1. Have a `schema.graphql` GraphQL schema file in your project directory.
 
    ```graphql
    type Query {
@@ -52,35 +52,87 @@ The following shows minimal default usage.
 
 ## Guide
 
-### Pages
+### Providing a Schema
 
-You can add pages to your developer portal by adding markdown files to the
-`pages` directory in your project root directory.
+You can provide a GraphQL schema to Polen in various ways.
 
-- A file becomes a page.
-- The path to the file is used as the path to the page.
-- _Index Pages_
-  - A file named `index` is an index page.
-  - The file name is elided in the route. For example `foo/index.md` becomes
-    route `/foo` .
-  - If both `foo/index.md` and `foo.md` exist, then the former is used, latter
-    ignored, and warning raised.
-- _Navigation Bar_
-  - Top level pages are listed in the navigation bar.
+#### File
 
-Example:
+Have a single `schema.graphql` SDL file in your project directory. Example:
 
-| File                 | Route      | Navigation Bar Title |
-| -------------------- | ---------- | -------------------- |
-| `pages/foo.md`       | `/foo`     | `Foo`                |
-| `pages/foo/index.md` | `/foo`     | `Foo`                |
-| `pages/foo/bar.md`   | `/foo/bar` | `Foo`                |
+```
+schema.graphql
+```
+
+#### Directory
+
+Have a `schema` directory in your project directory with multiple versions of
+your schema as SDL files named using format: `YYYY-MM-DD.graphql`. Example:
+
+```
+schema/
+  2023-01-13.graphql
+  2020-09-26.graphql
+```
+
+This approach allows Polen to render a changelog for your schema. Refer to
+[Changelog](#changelog).
+
+#### Memory
+
+You can provide a schema to Polen in memory via configuration.
+
+You have control to provide one or multiple schemas, with or without dates.
+
+If no dates are given then the current time is assumed.
+
+If you provide multiple versions then Polen can render a changelog for you.
+Refer to [Changelog](#changelog).
+
+Basic example:
+
+```ts
+// vite.config.ts
+import { Polen } from 'polen'
+
+export default Polen.createConfiguration({
+  schema: {
+    useDataSources: `memory`,
+    dataSources: {
+      memory: {
+        versions: [{
+          date: new Date('2023-01-13'),
+          value: `type Query { hello: String }`,
+        }],
+      },
+    },
+  },
+})
+```
+
+### Schema Reference
+
+If you [provide Polen with a schema](#providing-a-schema), Polen will
+automatically render reference documentation for it.
+
+If you provide multiple versions of your schema then the reference is based on
+the schema with the latest date.
+
+### Schema Changelog
+
+Polen can render a changelog for your schema.
+
+This feature is automatically enabled when you provide multiple versions of your
+schema. Refer to [Provide a Schema](#providing-a-schema) for details on how to
+do that.
 
 ### Schema Augmentations
 
-#### Schema Descriptions
+#### Descriptions
 
 You can append/prepend/replace descriptions of types and fields in your schema.
+
+Any Markdown syntax in your content will be automatically rendered.
 
 ```ts
 import { Polen } from 'polen'
@@ -103,6 +155,31 @@ export default Polen.createConfiguration({
   ],
 })
 ```
+
+### Pages
+
+You can add pages to your developer portal by adding markdown files to the
+`pages` directory in your project root directory.
+
+- A file becomes a page.
+- The relative (to `pages` directory) file path becomes the web path.
+- _Navigation Bar_
+  - Top level pages are listed in the navigation bar.
+- _Index Pages_
+  - A file named `index` is an index page.
+  - The file name is elided in the route. For example `foo/index.md` becomes
+    route `/foo` .
+  - Details:
+    - If both `foo/index.md` and `foo.md` exist, then the former is used, latter
+      ignored, and a warning is raised.
+
+Example:
+
+| File                 | Route      | Navigation Bar Title |
+| -------------------- | ---------- | -------------------- |
+| `pages/foo.md`       | `/foo`     | `Foo`                |
+| `pages/foo/index.md` | `/foo`     | `Foo`                |
+| `pages/foo/bar.md`   | `/foo/bar` | `Foo`                |
 
 ### Package
 
