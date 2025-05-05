@@ -17,12 +17,12 @@ interface TestCase {
 const testCases: TestCase[] = [
   {
     title: `exact page`,
-    fixture: { 'pages/foo.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+    fixture: { 'pages/foo.md': `abc` },
     result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
   },
   {
     title: `index page`,
-    fixture: { 'pages/foo/index.md': `abc`, 'schema.graphql': `type Query { a: String }` },
+    fixture: { 'pages/foo/index.md': `abc` },
     result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
   },
 ]
