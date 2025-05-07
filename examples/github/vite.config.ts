@@ -1,6 +1,6 @@
 import { Polen } from 'polen'
 
-export default Polen.createConfiguration({
+export default Polen.defineConfig({
   templateVariables: {
     title: `GitHub Developer Portal`,
   },

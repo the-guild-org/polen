@@ -12,11 +12,10 @@ export interface ViteUserConfigWithPolen extends Vite.UserConfig {
 /**
  * Create a Vite configuration. Thin wrapper around {@link Vite.defineConfig}.
  */
-export const createConfiguration = (
+export const defineConfig = (
   configInput: Configurator.ConfigInput,
 ): ViteUserConfigWithPolen => {
   const polenConfig = Configurator.normalizeInput(configInput)
-  // polenConfig
 
   const baseConfig = Vite.defineConfig({
     plugins: [VitePluginInternal(polenConfig)],

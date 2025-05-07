@@ -32,7 +32,7 @@ The following shows minimal default usage.
    ```ts
    import { Polen } from 'polen'
 
-   export default Polen.createConfiguration({
+   export default Polen.defineConfig({
      // options here...
    })
    ```
@@ -95,7 +95,7 @@ Basic example:
 // vite.config.ts
 import { Polen } from 'polen'
 
-export default Polen.createConfiguration({
+export default Polen.defineConfig({
   schema: {
     useDataSources: `memory`,
     dataSources: {
@@ -137,7 +137,7 @@ Any Markdown syntax in your content will be automatically rendered.
 ```ts
 import { Polen } from 'polen'
 
-export default Polen.createConfiguration({
+export default Polen.defineConfig({
   templateVariables: {
     title: `Pokemon Developer Portal`,
   },

@@ -1,7 +1,7 @@
 import Restart from 'vite-plugin-restart'
 import { Polen } from 'polen'
 
-export default Polen.createConfiguration({
+export default Polen.defineConfig({
   templateVariables: {
     title: `Pokemon Developer Portal`,
   },

@@ -6,7 +6,7 @@ export const defaultViteConfig: Vite.UserConfig = {
 }
 
 export const pc = (config?: Polen.ConfigInput) => {
-  return Polen.createConfiguration({
+  return Polen.defineConfig({
     vite: {
       ...defaultViteConfig,
       ...config?.vite,
@@ -27,7 +27,7 @@ export const configMemorySchema = (sdl: string): Polen.ConfigInput[`schema`] => 
 }
 
 export const configMemorySchemaVersions = (
-  versions: { date: Date; sdl: string }[]
+  versions: { date: Date, sdl: string }[],
 ): Polen.ConfigInput[`schema`] => {
   return {
     useDataSources: `memory`,
