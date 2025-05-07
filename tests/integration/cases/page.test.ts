@@ -31,7 +31,7 @@ testCases.forEach(({ fixture, result, title }) => {
     await project.fileStorage.set(fixture)
     // todo: all embedded react to be used
     await project.shell`pnpm add react` // adds 1s
-    const viteUserConfig = Polen.createConfiguration({
+    const viteUserConfig = Polen.defineConfig({
       vite: {
         root: project.fileStorage.cwd,
       },
