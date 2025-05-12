@@ -3,7 +3,7 @@ import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Link } from './Link.jsx'
-import { entries } from '#lib/prelude/prelude.js'
+import { Obj } from '@wollybeard/kit'
 
 export interface Props {
   schema: GraphQLSchema
@@ -11,7 +11,7 @@ export interface Props {
 
 export const TypeIndex: FC<Props> = ({ schema }) => {
   const kindMap = GrafaidOld.getKindMap(schema)
-  const sections = entries(kindMap.list)
+  const sections = Obj.entries(kindMap.list)
 
   return (
     <Flex direction="column" gap="6">

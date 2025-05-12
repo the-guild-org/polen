@@ -1,4 +1,4 @@
-import { casesHandled } from '#lib/prelude/prelude.js'
+import { neverCase } from '@wollybeard/kit'
 import type { PageBranch, PageTree } from './page.js'
 
 const $ = {
@@ -30,7 +30,7 @@ const renderCodePageBranchRoute = (pageBranch: PageBranch): string => {
                     })
                   `
         default:
-          return casesHandled(pageBranch.route)
+          return neverCase(pageBranch.route)
       }
     }
     case `PageBranchSegment`: {
@@ -42,7 +42,7 @@ const renderCodePageBranchRoute = (pageBranch: PageBranch): string => {
               `
     }
     default: {
-      return casesHandled(pageBranch)
+      return neverCase(pageBranch)
     }
   }
 }

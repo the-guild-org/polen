@@ -9,7 +9,7 @@ import {
 } from 'graphql'
 import type { KindMap } from './schema/schema.js'
 import { isScalarTypeCustom } from './schema/schema.js'
-import { casesHandled } from '#lib/prelude/prelude.js'
+import { neverCase } from '@wollybeard/kit'
 
 export {
   type ExecutionResult,
@@ -79,7 +79,7 @@ export const getTypeAndKind = (
   } else if (isEnumType(node)) {
     kindName = `Enum`
   } else {
-    return casesHandled(node)
+    return neverCase(node)
   }
   return { typeName, kindName }
 }

@@ -3,7 +3,7 @@
  * This module provides type-safe helper functions for working with GraphQL types.
  */
 
-import { Arr } from '#lib/prelude/prelude.js'
+import { Arr } from '@wollybeard/kit'
 import type {
   GraphQLEnumType,
   GraphQLField as GraphQLField_graphql,

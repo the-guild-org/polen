@@ -1,5 +1,5 @@
 import type { GrafaidOld } from '#lib/grafaid-old/index.js'
-import { casesHandled } from '#lib/prelude/prelude.js'
+import { neverCase } from '@wollybeard/kit'
 import * as AugmentationDescription from './augmentations/description.js'
 
 export { AugmentationDescription }
@@ -18,7 +18,7 @@ export const apply = (
         break
       }
       default:
-        casesHandled(augmentation.type)
+        neverCase(augmentation.type)
     }
   }
 

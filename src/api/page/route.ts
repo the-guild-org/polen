@@ -1,5 +1,5 @@
 import { Path } from '#dep/path/index.js'
-import { casesHandled } from '#lib/prelude/prelude.js'
+import { neverCase } from '@wollybeard/kit'
 
 const indexRegex = /\/index\.\w+$/
 
@@ -65,7 +65,7 @@ export const calcParentRoutePath = (route: Route): RoutePath => {
         raw,
       }
     default:
-      return casesHandled(route)
+      return neverCase(route)
   }
 }
 
