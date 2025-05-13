@@ -7,7 +7,8 @@ const args = Command
   .create()
   .parameter(`name`, ExampleName)
   .parameter(`link`, PackageManager.LinkProtocol.optional() as any)
-  .parse()
+  // todo: update `@molt/command`
+  .parse() as { name: ExampleName, link?: PackageManager.LinkProtocol }
 
 const ___controller = await ExampleController.create({
   exampleName: args.name,
