@@ -6,7 +6,7 @@ import { GraphqlChange } from '#lib/graphql-change/index.js'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
 import { Path } from '#dep/path/index.js'
 import { Grafaid } from '#lib/grafaid/index.js'
-import { Arr } from '#lib/prelude/prelude.js'
+import { Arr } from '@wollybeard/kit'
 
 const debug = Debug.create(`polen:schema:data-source-schema-directory`)
 

@@ -9,7 +9,7 @@ import { vi } from '../helpers.js'
 import type { Configurator } from '../../configurator/index.js'
 import { Schema } from '../../schema/index.js'
 import { Superjson } from '#lib/superjson/index.js'
-import { Str } from '#lib/prelude/prelude.js'
+import { Str } from '@wollybeard/kit'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 
 const viTemplateVariables = vi(`template`, `variables`)
