@@ -1,6 +1,6 @@
 import type { GrafaidOld } from '#lib/grafaid-old/index.js'
+import { neverCase } from '@wollybeard/kit'
 import type { Target } from '../target.js'
-import { casesHandled } from '#lib/prelude/prelude.js'
 import { locateTargetField, locateTargetType } from '../target.js'
 
 export const Placement = {
@@ -35,7 +35,7 @@ export const applyDescriptionContent = (
       type.description = augmentation.content
       break
     default:
-      casesHandled(augmentation.placement)
+      neverCase(augmentation.placement)
   }
 }
 
@@ -52,6 +52,6 @@ export const apply = (schema: GrafaidOld.Schema.Schema, augmentation: Descriptio
       break
     }
     default:
-      casesHandled(augmentation.on)
+      neverCase(augmentation.on)
   }
 }

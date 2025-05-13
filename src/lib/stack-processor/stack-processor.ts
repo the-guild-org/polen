@@ -1,4 +1,5 @@
-import { type Fn, Undefined } from '../prelude/prelude.js'
+import type { Fn } from '@wollybeard/kit'
+import { Eq } from '@wollybeard/kit'
 
 export const until = (
   checkMatch: (value: unknown) => boolean,
@@ -15,4 +16,4 @@ export const until = (
   }
 }
 
-export const untilDefined = until(Undefined.isNot)
+export const untilDefined = until(Eq.isNot(undefined))

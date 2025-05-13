@@ -3,7 +3,7 @@ import {
   useRouteLoaderData as useRouteLoaderDataRR,
 } from 'react-router'
 import { Superjson } from '#lib/superjson/index.js'
-import type { Fn } from '#lib/prelude/prelude.js'
+import type { Fn } from '@wollybeard/kit'
 
 type Loader = Fn.Any
 

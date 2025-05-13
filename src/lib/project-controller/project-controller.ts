@@ -4,7 +4,7 @@ import type { Shell } from 'zx'
 import { debug as debugBase } from '../debug/debug.js'
 import type { Debug } from '../debug/index.js'
 import { Path } from '#dep/path/index.js'
-import { casesHandled } from '../prelude/prelude.js'
+import { neverCase } from '@wollybeard/kit'
 import type { LinkProtocol } from '../link-protocol.js'
 import { FileStorage } from './file-system.js'
 
@@ -167,7 +167,7 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
       break
     }
     default: {
-      casesHandled(config.scaffold)
+      neverCase(config.scaffold)
     }
   }
 
@@ -215,7 +215,7 @@ export const create = async <scriptRunners extends ScriptRunners = {}>(
         break
       }
       default: {
-        casesHandled(link.protocol)
+        neverCase(link.protocol)
       }
     }
   }

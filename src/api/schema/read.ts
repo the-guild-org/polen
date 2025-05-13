@@ -1,5 +1,5 @@
 import * as DataSources from './data-sources/data-sources.js'
-import { Arr } from '#lib/prelude/prelude.js'
+import { Arr } from '@wollybeard/kit'
 import type { Schema } from './schema.js'
 
 export type DataSourceType = `file` | `directory` | `memory` | `data`

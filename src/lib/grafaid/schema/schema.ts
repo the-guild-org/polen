@@ -24,8 +24,6 @@ export * from './scalars.js'
 
 export * as Args from './args.js'
 
-export * as CustomScalars from './customScalars.js'
-
 export * as TypesLike from './types-like.js'
 
 export * as NodesLike from './nodes-like.js'

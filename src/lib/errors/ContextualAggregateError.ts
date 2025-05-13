@@ -1,4 +1,4 @@
-import { Arr } from '#lib/prelude/prelude.js'
+import { Arr } from '@wollybeard/kit'
 import { ContextualError } from './ContextualError.js'
 
 /**
