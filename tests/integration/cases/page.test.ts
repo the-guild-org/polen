@@ -28,12 +28,12 @@ const testCases: TestCase[] = [
 
 testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
-    await project.fileStorage.set(fixture)
+    await project.layout.set(fixture)
     // todo: all embedded react to be used
     await project.shell`pnpm add react` // adds 1s
     const viteUserConfig = Polen.defineConfig({
       vite: {
-        root: project.fileStorage.cwd,
+        root: project.layout.cwd,
       },
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)

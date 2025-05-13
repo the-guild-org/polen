@@ -84,7 +84,7 @@ export const create = async (parameters: {
     }),
   })
 
-  const config = await import(`${project.fileStorage.cwd}/vite.config.js`) as {
+  const config = await import(`${project.layout.cwd}/vite.config.js`) as {
     default: ViteUserConfigWithPolen,
   }
   debug(`loaded configuration`)

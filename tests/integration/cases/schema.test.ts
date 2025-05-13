@@ -52,10 +52,10 @@ test(`can loads schema from memory data source`, async ({ page, vite }) => {
 })
 
 test(`can loads schema from schema data source`, async ({ page, vite, project }) => {
-  await project.fileStorage.set({
+  await project.layout.set({
     'schema.graphql': sdl,
   })
-  const viteUserConfig = pc({ vite: { root: project.fileStorage.cwd } })
+  const viteUserConfig = pc({ vite: { root: project.layout.cwd } })
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url(`/`).href)
   await page.getByText(`reference`).click()
@@ -63,10 +63,10 @@ test(`can loads schema from schema data source`, async ({ page, vite, project })
 })
 
 test(`can loads schema from directory data source`, async ({ page, vite, project }) => {
-  await project.fileStorage.set({
+  await project.layout.set({
     'schema/2020-01-01.graphql': sdl,
   })
-  const viteUserConfig = pc({ vite: { root: project.fileStorage.cwd } })
+  const viteUserConfig = pc({ vite: { root: project.layout.cwd } })
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url(`/`).href)
   await page.getByText(`reference`).click()
