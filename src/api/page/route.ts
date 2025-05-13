@@ -1,5 +1,5 @@
-import { Path } from '#dep/path/index.js'
-import { neverCase } from '@wollybeard/kit'
+import { Path } from '@wollybeard/kit'
+import { neverCase } from '@wollybeard/kit/language'
 
 const indexRegex = /\/index\.\w+$/
 

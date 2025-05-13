@@ -1,11 +1,11 @@
 import { test } from '../helpers/test.js'
-import type { DirectoryLayout } from '#lib/project-controller/index.js'
 import { Polen } from '../../../src/exports/index.js'
 import { expect } from 'playwright/test'
+import type { FsLayout } from '@wollybeard/kit'
 
 interface TestCase {
   title?: string
-  fixture: DirectoryLayout.Tree
+  fixture: FsLayout.Tree
   result: {
     path: string,
     navBarTitle: string,

@@ -5,7 +5,7 @@ import {
 import { Superjson } from '#lib/superjson/index.js'
 import type { Fn } from '@wollybeard/kit'
 
-type Loader = Fn.Any
+type Loader = Fn.AnyAny
 
 export const createLoader = <loader extends Loader>(loader: loader): loader => {
   // @ts-expect-error

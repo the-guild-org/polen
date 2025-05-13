@@ -1,10 +1,9 @@
-import { Fs } from '#dep/fs/index.js'
-import { Path } from '#dep/path/index.js'
 import { TinyGlobby } from '#dep/tiny-globby/index.js'
 import type { RouteIndex, RouteItem, RouteSegment } from './route.js'
 import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './route.js'
 import { Marked } from '#dep/marked/index.js'
 import { Debug } from '#lib/debug/index.js'
+import { Fs, Path } from '@wollybeard/kit'
 
 export * from './lint.js'
 export * as ReactRouterAdaptor from './react-router-adaptor.js'
@@ -63,7 +62,7 @@ export const readAll = async (parameters: { dir: string }): Promise<PageTree> =>
 }
 
 export const createPageFromFilePath = async (filePath: string, rootDir: string): Promise<Page> => {
-  const markdown = await Fs.readFile(filePath, `utf-8`)
+  const markdown = await Fs.readOrThrow(filePath)
   const html = await Marked.parse(markdown)
   const route = filePathToPageRoute(filePath, rootDir)
   const page: Page = {

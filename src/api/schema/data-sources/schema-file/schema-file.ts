@@ -1,7 +1,7 @@
-import { Path } from '#dep/path/index.js'
 import { Grafaid } from '#lib/grafaid/index.js'
 import { GraphqlChange } from '#lib/graphql-change/index.js'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
+import { Path } from '@wollybeard/kit'
 import type { Schema } from '../../schema.js'
 
 const defaultPaths = {
@@ -19,7 +19,7 @@ export interface Config {
 
 export const normalizeConfig = (configInput: ConfigInput): Config => {
   const config: Config = {
-    path: Path.absolutify(configInput.path ?? defaultPaths.schemaFile, configInput.projectRoot),
+    path: Path.absolutify(configInput.projectRoot)(configInput.path ?? defaultPaths.schemaFile),
   }
 
   return config

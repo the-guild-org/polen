@@ -4,9 +4,8 @@ import { glob } from 'tinyglobby'
 import { FileNameExpression } from './file-name-expression/index.js'
 import { GraphqlChange } from '#lib/graphql-change/index.js'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
-import { Path } from '#dep/path/index.js'
 import { Grafaid } from '#lib/grafaid/index.js'
-import { Arr } from '@wollybeard/kit'
+import { Arr, Path } from '@wollybeard/kit'
 
 const debug = Debug.create(`polen:schema:data-source-schema-directory`)
 
@@ -24,11 +23,9 @@ export interface Config {
 }
 
 export const normalizeConfig = (configInput: ConfigInput): Config => {
+  const absolutify = Path.absolutify(configInput.projectRoot)
   const config: Config = {
-    path: Path.absolutify(
-      configInput.path ?? defaultPaths.schemaDirectory,
-      configInput.projectRoot,
-    ),
+    path: absolutify(configInput.path ?? defaultPaths.schemaDirectory),
   }
 
   return config

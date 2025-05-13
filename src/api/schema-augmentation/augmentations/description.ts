@@ -1,5 +1,5 @@
 import type { GrafaidOld } from '#lib/grafaid-old/index.js'
-import { neverCase } from '@wollybeard/kit'
+import { neverCase } from '@wollybeard/kit/language'
 import type { Target } from '../target.js'
 import { locateTargetField, locateTargetType } from '../target.js'
 

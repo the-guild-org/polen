@@ -1,4 +1,4 @@
-import { neverCase } from '@wollybeard/kit'
+import { neverCase } from '@wollybeard/kit/language'
 import type { PageBranch, PageTree } from './page.js'
 
 const $ = {

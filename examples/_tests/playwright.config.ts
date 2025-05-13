@@ -1,14 +1,14 @@
 import { defineConfig, devices } from 'playwright/test'
 import type { WorkerFixtures } from './helpers/test.js'
 import { type TestFixtures } from './helpers/test.js'
-import { LinkProtocol } from '#lib/link-protocol.js'
+import { PackageManager } from '@wollybeard/kit'
 
 const isCi = !!process.env[`CI`]
 const polenLink = process.env[`POLEN_LINK`]
-  ? LinkProtocol.parse(process.env[`POLEN_LINK`])
+  ? PackageManager.LinkProtocol.parse(process.env[`POLEN_LINK`])
   : isCi
-  ? LinkProtocol.enum.file
-  : LinkProtocol.enum.file
+  ? PackageManager.LinkProtocol.enum.file
+  : PackageManager.LinkProtocol.enum.file
 
 export default defineConfig<TestFixtures, WorkerFixtures>({
   name: `examples`,

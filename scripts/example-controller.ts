@@ -1,12 +1,12 @@
 import { ExampleName } from '../examples/_tests/helpers/example-name.js'
 import { Command } from '@molt/command'
 import { ExampleController } from '../examples/_tests/helpers/example-controller/index.js'
-import { LinkProtocol } from '#lib/link-protocol.js'
+import { PackageManager } from '@wollybeard/kit'
 
 const args = Command
   .create()
   .parameter(`name`, ExampleName)
-  .parameter(`link`, LinkProtocol.optional())
+  .parameter(`link`, PackageManager.LinkProtocol.optional() as any)
   .parse()
 
 const ___controller = await ExampleController.create({

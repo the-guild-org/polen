@@ -1,10 +1,10 @@
-import { Fs } from '#dep/fs/index.js'
+import { Fs } from '@wollybeard/kit'
 import { type GraphQLSchema, buildASTSchema, parse } from 'graphql'
 
 export const read = async (sdlFilePath: string): Promise<null | Fs.File<GraphQLSchema>> => {
-  const sdlFile = await Fs.read(sdlFilePath)
-  if (!sdlFile) return null
-  const node = parse(sdlFile.content)
+  const content = await Fs.read(sdlFilePath)
+  if (!content) return null
+  const node = parse(content)
   const schema = buildASTSchema(node)
   return {
     path: sdlFilePath,

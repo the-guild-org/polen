@@ -1,4 +1,3 @@
-import { memoize } from 'es-toolkit'
 import jsesc from 'jsesc'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Vite } from '#dep/vite/index.js'
@@ -9,7 +8,7 @@ import { vi } from '../helpers.js'
 import type { Configurator } from '../../configurator/index.js'
 import { Schema } from '../../schema/index.js'
 import { Superjson } from '#lib/superjson/index.js'
-import { Str } from '@wollybeard/kit'
+import { Cache, Str } from '@wollybeard/kit'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 
 const viTemplateVariables = vi(`template`, `variables`)
@@ -18,8 +17,8 @@ const viProjectPages = vi(`project`, `pages.jsx`)
 const viProjectData = vi(`project`, `data`)
 
 export const Core = (config: Configurator.Config): Vite.PluginOption => {
-  const readPages = memoize(Page.readAll)
-  const readSchema = memoize(async () => {
+  const readPages = Cache.memoize(Page.readAll)
+  const readSchema = Cache.memoize(async () => {
     const schema = await Schema.readOrThrow({
       ...config.schema,
       projectRoot: viteConfig.root,
@@ -75,7 +74,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
               (pageBranch): ProjectData[`siteNavigationItems`][number] => {
                 return {
                   path: pageBranch.route.path.raw,
-                  title: Str.titleCase(pageBranch.route.path.raw),
+                  title: Str.Case.title(pageBranch.route.path.raw),
                 }
               },
             )
