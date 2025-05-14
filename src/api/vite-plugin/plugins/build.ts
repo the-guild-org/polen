@@ -5,6 +5,7 @@ import { Vite } from '#dep/vite/index.js'
 import { vi } from '../helpers.js'
 import { defu } from 'defu'
 import { Fs, Path, Str } from '@wollybeard/kit'
+import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 
 const viServerEntry = vi(`server`, `entry.jsx`)
 
@@ -13,25 +14,6 @@ interface ConfigInput {
   clientEntryPath: string
   port?: number
   debug?: boolean
-}
-
-const isKitUnusedExternalImport = (
-  message: Vite.Rollup.RollupLog,
-) => {
-  return (
-    message.code === `UNUSED_EXTERNAL_IMPORT` &&
-    message.exporter === `node:path` &&
-    message.ids?.some(id => id.includes(`/kit/`))
-  )
-}
-
-const isRadixModuleLevelDirective = (
-  message: Vite.Rollup.RollupLog,
-) => {
-  return (
-    message.code === `MODULE_LEVEL_DIRECTIVE` &&
-    message.id?.includes(`@radix-ui`)
-  )
 }
 
 export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
@@ -262,8 +244,4 @@ const Manifest = (): Vite.Plugin => {
       },
     ),
   }
-}
-const codes = {
-  MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
-  CIRCULAR_DEPENDENCY: `CIRCULAR_DEPENDENCY`,
 }

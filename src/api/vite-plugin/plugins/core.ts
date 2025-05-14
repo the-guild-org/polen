@@ -7,7 +7,7 @@ import { sourcePaths } from '../../../source-paths.js'
 import { vi } from '../helpers.js'
 import type { Configurator } from '../../configurator/index.js'
 import { Schema } from '../../schema/index.js'
-import { Superjson } from '#lib/superjson/index.js'
+import { Superjson } from '#dep/superjson/index.js'
 import { Cache, Str } from '@wollybeard/kit'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 
