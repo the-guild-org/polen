@@ -7,9 +7,9 @@ import { sourcePaths } from '../../../source-paths.js'
 import { vi } from '../helpers.js'
 import type { Configurator } from '../../configurator/index.js'
 import { Schema } from '../../schema/index.js'
-import { Superjson } from '#dep/superjson/index.js'
 import { Cache, Str } from '@wollybeard/kit'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
+import { superjson } from '../../../singletons/superjson.js'
 
 const viTemplateVariables = vi(`template`, `variables`)
 const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
@@ -91,11 +91,11 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
             siteNavigationItems,
           }
 
-          const projectDataCode = jsesc(Superjson.stringify(projectData))
+          const projectDataCode = jsesc(superjson.stringify(projectData))
           const content = `
-            import { Superjson } from '${sourcePaths.dir}/lib/superjson/index.js'
+            import { superjson } from '${sourcePaths.dir}/singletons/superjson.js'
             
-            export const PROJECT_DATA = Superjson.parse('${projectDataCode}')
+            export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `
 
           return content

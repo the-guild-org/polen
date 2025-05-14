@@ -2,7 +2,7 @@ import {
   useLoaderData as useLoaderDataRR,
   useRouteLoaderData as useRouteLoaderDataRR,
 } from 'react-router'
-import { Superjson } from '#dep/superjson/index.js'
+import { superjson } from '../../singletons/superjson.js'
 import type { Fn } from '@wollybeard/kit'
 
 type Loader = Fn.AnyAny
@@ -13,23 +13,23 @@ export const createLoader = <loader extends Loader>(loader: loader): loader => {
     // eslint-disable-next-line
     const data = await loader(...args)
     const serialized: Serialized = {
-      superjson: Superjson.stringify(data),
+      superjsonData: superjson.stringify(data),
     }
     return serialized
   }
 }
 
 interface Serialized {
-  superjson: string
+  superjsonData: string
 }
 
 export const useLoaderData = <loader extends Loader>(): Awaited<
   ReturnType<loader>
 > => {
   // eslint-disable-next-line
-  const { superjson } = useLoaderDataRR() as Serialized
+  const { superjsonData } = useLoaderDataRR() as Serialized
 
-  const data = Superjson.parse(superjson)
+  const data = superjson.parse(superjsonData)
 
   return data as any
 }
@@ -38,9 +38,9 @@ export const useRouteLoaderData = <loader extends Loader>(routePath: string): Aw
   ReturnType<loader>
 > => {
   // eslint-disable-next-line
-  const { superjson } = useRouteLoaderDataRR(routePath) as Serialized
+  const { superjsonData } = useRouteLoaderDataRR(routePath) as Serialized
 
-  const data = Superjson.parse(superjson)
+  const data = superjson.parse(superjsonData)
 
   return data as any
 }
