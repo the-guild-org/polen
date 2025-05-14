@@ -50,7 +50,7 @@
     "@radix-ui/themes": "^3.2.1",
     "@types/jsesc": "^3.0.3",
     "@vitejs/plugin-react-swc": "^3.9.0",
-    "@wollybeard/kit": "^0.10.0",
+    "@wollybeard/kit": "^0.10.1",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "es-toolkit": "^1.36.0",

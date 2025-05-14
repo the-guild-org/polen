@@ -15,6 +15,25 @@ interface ConfigInput {
   debug?: boolean
 }
 
+const isKitUnusedExternalImport = (
+  message: Vite.Rollup.RollupLog,
+) => {
+  return (
+    message.code === `UNUSED_EXTERNAL_IMPORT` &&
+    message.exporter === `node:path` &&
+    message.ids?.some(id => id.includes(`/kit/`))
+  )
+}
+
+const isRadixModuleLevelDirective = (
+  message: Vite.Rollup.RollupLog,
+) => {
+  return (
+    message.code === `MODULE_LEVEL_DIRECTIVE` &&
+    message.id?.includes(`@radix-ui`)
+  )
+}
+
 export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
   const config = defu(configInput, { debug: false })
   let viteConfigResolved: Vite.ResolvedConfig
@@ -43,11 +62,9 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
         }
       }
     },
-    onLog(level, message) {
-      if (
-        level === `warn` && message.code === codes.MODULE_LEVEL_DIRECTIVE &&
-        message.id?.includes(`@radix-ui`)
-      ) return
+    onLog(_, message) {
+      if (isRadixModuleLevelDirective(message)) return
+      if (isKitUnusedExternalImport(message)) return
     },
     config() {
       return {
@@ -58,6 +75,11 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
               manifest: true,
               rollupOptions: {
                 input: [configInput.clientEntryPath],
+                treeshake: `smallest`,
+                external: id => (id.startsWith(`node:`)) || id.startsWith(`zx`),
+                onwarn(message) {
+                  if (isKitUnusedExternalImport(message)) return
+                },
                 // jsx: {
                 //   mode: 'automatic',
                 // },
@@ -157,6 +179,9 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
         },
       },
     ),
+    onLog(_, message) {
+      if (isKitUnusedExternalImport(message)) return
+    },
     config() {
       return {
         environments: {
@@ -166,6 +191,7 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
               minify: !config.debug,
               rollupOptions: {
                 input: viServerEntry.id,
+                treeshake: `smallest`,
               },
             },
           },
