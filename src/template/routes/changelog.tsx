@@ -11,7 +11,6 @@ const loader = createLoader(() => {
 
 const Component = () => {
   const data = useLoaderData<typeof loader>()
-  console.log(data)
 
   if (!data.schema) {
     return <div>No data to show. There is no schema is.</div>

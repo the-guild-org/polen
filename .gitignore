@@ -22,3 +22,4 @@ dist
 dist-ssr
 .output
 /build
+.vite-inspect

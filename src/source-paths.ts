@@ -1,4 +1,4 @@
-import { Path } from '#dep/path/index.js'
+import { Path } from '@wollybeard/kit'
 import packageJson from '../package.json' with { type: 'json' }
 import { resolve } from 'resolve.imports'
 

@@ -1,4 +1,4 @@
-import { Path } from '#dep/path/index.js'
+import { Path } from '@wollybeard/kit'
 
 export type Expression = ExpressionPrevious
 

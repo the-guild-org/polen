@@ -1,4 +1,5 @@
 import Restart from 'vite-plugin-restart'
+import Inspect from 'vite-plugin-inspect'
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
@@ -18,10 +19,16 @@ export default Polen.defineConfig({
     },
   ],
   vite: {
-    plugins: [Restart({
-      restart: [
-        '../../build/**/*',
-      ],
-    })],
+    plugins: [
+      Inspect({
+        build: true,
+        outputDir: '.vite-inspect',
+      }),
+      Restart({
+        restart: [
+          '../../build/**/*',
+        ],
+      }),
+    ],
   },
 })

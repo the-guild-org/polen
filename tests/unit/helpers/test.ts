@@ -1,5 +1,5 @@
 import { test as base } from 'vitest'
-import { ProjectController } from '#lib/project-controller/index.js'
+import { ProjectController } from '@wollybeard/kit'
 
 interface Fixtures {
   project: ProjectController.ProjectController

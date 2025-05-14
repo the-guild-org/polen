@@ -1,11 +1,11 @@
 import { test } from '../helpers/test.js'
-import type { DirectoryLayout } from '#lib/project-controller/index.js'
 import { Polen } from '../../../src/exports/index.js'
 import { expect } from 'playwright/test'
+import type { FsLayout } from '@wollybeard/kit'
 
 interface TestCase {
   title?: string
-  fixture: DirectoryLayout.Tree
+  fixture: FsLayout.Tree
   result: {
     path: string,
     navBarTitle: string,
@@ -28,12 +28,12 @@ const testCases: TestCase[] = [
 
 testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
-    await project.fileStorage.set(fixture)
+    await project.layout.set(fixture)
     // todo: all embedded react to be used
     await project.shell`pnpm add react` // adds 1s
     const viteUserConfig = Polen.defineConfig({
       vite: {
-        root: project.fileStorage.cwd,
+        root: project.layout.cwd,
       },
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)

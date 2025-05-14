@@ -1,8 +1,9 @@
-import * as Superjson from 'superjson'
 import { Grafaid } from '#lib/grafaid/index.js'
+import { create } from '../codec.js'
 
-export const registerGraphQLSchema = () => {
-  Superjson.registerCustom({
+export const GraphQLSchema = create({
+  name: `GraphQLSchema`,
+  transformer: {
     isApplicable: (value: unknown) => value instanceof Grafaid.Schema.Schema,
     serialize: value => {
       const sdl = Grafaid.Schema.print(value)
@@ -19,5 +20,5 @@ export const registerGraphQLSchema = () => {
     deserialize: astJson => {
       return Grafaid.Schema.fromAST(JSON.parse(astJson))
     },
-  }, `GraphQLSchema`)
-}
+  },
+})

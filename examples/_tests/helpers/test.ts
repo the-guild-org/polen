@@ -2,7 +2,7 @@ import { test as base } from 'playwright/test'
 import { type ProcessOutput } from 'zx'
 import type { ExampleName } from './example-name.js'
 import { ExampleController } from './example-controller/index.js'
-import type { LinkProtocol } from '#lib/link-protocol.js'
+import { PackageManager } from '@wollybeard/kit'
 
 export interface TestFixtures {
   runDev: ExampleController.ServerProcess
@@ -12,7 +12,7 @@ export interface TestFixtures {
 
 export interface WorkerFixtures {
   exampleName: ExampleName
-  polenLink: LinkProtocol | undefined
+  polenLink: PackageManager.LinkProtocol | undefined
   project: ExampleController.ExampleController
 }
 

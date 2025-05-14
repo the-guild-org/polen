@@ -34,20 +34,19 @@ import paths in the Vite Polen plugin using the Rollup `resolveId` hook.
 
 ## Examples
 
-- We maintain fully working examples under `examples/*`
+- We maintain functional examples under `examples/*`
 - Directories prefixed with `_` are for meta purposes (like testing).
 
 ### Why
 
-- Functions as runnable documentation for users
-- Functions as development sandboxes for us (see
-  [Developing With](#developing-with))
-- Functions as sources for end to end tests (see [Testing](#testing))
+- Acts as runnable documentation for users
+- Acts as development sandboxes for us (see [Developing With](#developing-with))
+- Acts as sources for end to end tests (see [Testing](#testing))
 
 ### Developing With
 
 During local development you can link the source code with examples to try out
-changes. to the example projects by running.
+changes.
 
 <!-- #### One Time System Setup
 TODO: Waiting on https://github.com/orgs/pnpm/discussions/9411

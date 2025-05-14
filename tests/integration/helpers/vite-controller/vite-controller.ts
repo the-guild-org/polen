@@ -1,9 +1,9 @@
-import { URLFactory } from '#lib/url-factory.js'
+import { Url } from '@wollybeard/kit'
 import { Vite } from '#dep/vite/index.js'
 
 export type ViteDevServerPlus = Vite.ViteDevServer & {
   cannonicalUrl: URL,
-  url: URLFactory.URLFactory,
+  url: Url.Factory,
 }
 
 export interface ViteController {
@@ -27,7 +27,7 @@ export const create = (): ViteController => {
       const cannonicalUrl = state.viteDevServer.resolvedUrls?.local[0]
       if (!cannonicalUrl) throw new Error(`No local URL found`)
       state.viteDevServer.cannonicalUrl = new URL(cannonicalUrl)
-      state.viteDevServer.url = URLFactory.create(state.viteDevServer.cannonicalUrl)
+      state.viteDevServer.url = Url.factory(state.viteDevServer.cannonicalUrl)
       return state.viteDevServer
     },
     stopDevelopmentServer: async () => {

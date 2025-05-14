@@ -1,10 +1,11 @@
-import { CodeBuilder } from '#lib/code-builder/index.js'
-import { Fs } from '#dep/fs/index.js'
-import { Path } from '#dep/path/index.js'
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+// TODO make issue that this rule doens't handle case of template literals: https://typescript-eslint.io/rules/no-unused-expressions/
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { vi } from '../helpers.js'
 import { defu } from 'defu'
+import { Fs, Path, Str } from '@wollybeard/kit'
+import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 
 const viServerEntry = vi(`server`, `entry.jsx`)
 
@@ -43,11 +44,9 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
         }
       }
     },
-    onLog(level, message) {
-      if (
-        level === `warn` && message.code === codes.MODULE_LEVEL_DIRECTIVE &&
-        message.id?.includes(`@radix-ui`)
-      ) return
+    onLog(_, message) {
+      if (isRadixModuleLevelDirective(message)) return
+      if (isKitUnusedExternalImport(message)) return
     },
     config() {
       return {
@@ -58,6 +57,11 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
               manifest: true,
               rollupOptions: {
                 input: [configInput.clientEntryPath],
+                treeshake: `smallest`,
+                external: id => (id.startsWith(`node:`)) || id.startsWith(`zx`),
+                onwarn(message) {
+                  if (isKitUnusedExternalImport(message)) return
+                },
                 // jsx: {
                 //   mode: 'automatic',
                 // },
@@ -78,9 +82,8 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
       {
         identifier: viServerEntry,
         loader: () => {
-          const entryServerPath = Path.absolutify(
+          const entryServerPath = Path.absolutify(viteConfigResolved.root)(
             config.entryServerPath,
-            viteConfigResolved.root,
           )
           const entrServeryViteGlobPath = `/` +
             Path.relative(viteConfigResolved.root, entryServerPath)
@@ -92,7 +95,7 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
             routePath: `/${viteConfigResolved.build.assetsDir}/*`,
           }
 
-          const code = CodeBuilder.create()
+          const code = Str.Builder()
 
           const _ = {
             app: `app`,
@@ -107,30 +110,30 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
           const honoNodeServerPath = import.meta.resolve(`@hono/node-server`)
 
           // TODO turn this into a file template
-          code(`import { Hono } from '${honoPath}'`)
-          code(``)
-          code(`const ${_.app} = new Hono()`)
-          code(``)
-          code(``)
-          code(`// Static Files`)
-          code(``)
-          code(`import { serveStatic } from '${honoNodeServerServeStaticPath}'`)
-          code(``)
-          code(`${_.app}.use(
+          code`import { Hono } from '${honoPath}'`
+          code``
+          code`const ${_.app} = new Hono()`
+          code``
+          code``
+          code`// Static Files`
+          code``
+          code`import { serveStatic } from '${honoNodeServerServeStaticPath}'`
+          code``
+          code`${_.app}.use(
     				'${staticServingPaths.routePath}',
     				serveStatic({ root: '${staticServingPaths.dirPath}' })
-    			)`)
-          code(``)
-          code(``)
-          code(`// Entries`)
-          code(``)
-          code(`const ${_.entries} = import.meta.glob(
+    			)`
+          code``
+          code``
+          code`// Entries`
+          code``
+          code`const ${_.entries} = import.meta.glob(
     				['${entrServeryViteGlobPath}'],
     				{ import: 'default', eager: true }
-    			)`)
-          code(``)
-          code(`/** @see https://github.com/honojs/hono/issues/4051 */`)
-          code(`const delegate = (app1, method, path, app2) => {
+    			)`
+          code``
+          code`/** @see https://github.com/honojs/hono/issues/4051 */`
+          code`const delegate = (app1, method, path, app2) => {
 						app1.on(method, path, (c) => {
 							// Throws if executionCtx is not available
 							// https://hono.dev/docs/api/context#executionctx
@@ -139,16 +142,16 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
 							catch {}
 							return app2.fetch(c.req.raw, c.env, maybeExecutionContext)
 						})
-					}`)
-          code(`for (const ${_.entry} of Object.values(${_.entries})) {
+					}`
+          code`for (const ${_.entry} of Object.values(${_.entries})) {
 						delegate(${_.app}, 'all', '*', ${_.entry})
-    			}`)
-          code(``)
-          code(``)
-          code(`// Start Server`)
-          code(``)
-          code(`import { serve } from '${honoNodeServerPath}'`)
-          code(``)
+    			}`
+          code``
+          code``
+          code`// Start Server`
+          code``
+          code`import { serve } from '${honoNodeServerPath}'`
+          code``
 
           const port = config.port ?? viteConfigResolved.server.port + 1
           code(`const port = process.env.PORT || ${port.toString()}`)
@@ -158,6 +161,9 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
         },
       },
     ),
+    onLog(_, message) {
+      if (isKitUnusedExternalImport(message)) return
+    },
     config() {
       return {
         environments: {
@@ -167,6 +173,7 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
               minify: !config.debug,
               rollupOptions: {
                 input: viServerEntry.id,
+                treeshake: `smallest`,
               },
             },
           },
@@ -191,7 +198,7 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
        * clean up the manifest. Was generated by client. For server build. Not needed after (unless debugging).
        */
       if (!config.debug) {
-        await Fs.rmDirIfExists(
+        await Fs.remove(
           Path.join(viteConfigResolved.root, viteConfigResolved.build.outDir, `.vite`),
         )
       }
@@ -237,8 +244,4 @@ const Manifest = (): Vite.Plugin => {
       },
     ),
   }
-}
-const codes = {
-  MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
-  CIRCULAR_DEPENDENCY: `CIRCULAR_DEPENDENCY`,
 }

@@ -1,4 +1,3 @@
-import { Path } from '../../../../src/dep/path/index.js'
 import { Url } from '../../../../src/dep/url/index.js'
 import type { ProcessPromise } from 'zx'
 import type { ExampleName } from '../example-name.js'
@@ -6,8 +5,8 @@ import { debug as debugBase } from '#lib/debug/debug.js'
 import type { ViteUserConfigWithPolen } from '../../../../src/create-configuration.js'
 import * as GetPortPlease from 'get-port-please'
 import { stripAnsi } from 'consola/utils'
-import { ProjectController } from '#lib/project-controller/index.js'
-import type { LinkProtocol } from '#lib/link-protocol.js'
+import { ProjectController } from '@wollybeard/kit'
+import { PackageManager, Path } from '@wollybeard/kit'
 
 const selfPath = Url.fileURLToPath(import.meta.url)
 const selfDir = Path.dirname(selfPath)
@@ -22,7 +21,7 @@ export type ExampleController = Awaited<ReturnType<typeof create>>
 export const create = async (parameters: {
   exampleName: ExampleName,
   debugMode?: boolean,
-  polenLink?: LinkProtocol,
+  polenLink?: PackageManager.LinkProtocol,
   portProductionServer?: number,
 }) => {
   const debug = debugBase.sub(parameters.exampleName)
@@ -85,7 +84,7 @@ export const create = async (parameters: {
     }),
   })
 
-  const config = await import(`${project.fileStorage.cwd}/vite.config.js`) as {
+  const config = await import(`${project.layout.cwd}/vite.config.js`) as {
     default: ViteUserConfigWithPolen,
   }
   debug(`loaded configuration`)

@@ -43,3 +43,9 @@ export const CommandName = {
   serve: `serve`,
   build: `build`,
 }
+
+export const LogCodeEnum = {
+  MODULE_LEVEL_DIRECTIVE: `MODULE_LEVEL_DIRECTIVE`,
+  CIRCULAR_DEPENDENCY: `CIRCULAR_DEPENDENCY`,
+  UNUSED_EXTERNAL_IMPORT: `UNUSED_EXTERNAL_IMPORT`,
+}

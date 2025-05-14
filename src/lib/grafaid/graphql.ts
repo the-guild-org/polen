@@ -9,7 +9,7 @@ import {
 } from 'graphql'
 import type { KindMap } from './schema/schema.js'
 import { isScalarTypeCustom } from './schema/schema.js'
-import { neverCase } from '@wollybeard/kit'
+import { neverCase } from '@wollybeard/kit/language'
 
 export {
   type ExecutionResult,
