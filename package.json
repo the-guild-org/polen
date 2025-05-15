@@ -1,6 +1,6 @@
 {
   "name": "polen",
-  "version": "0.0.6",
+  "version": "0.0.0-dripip",
   "type": "module",
   "description": "A framework for delightful GraphQL developer portals",
   "author": {
@@ -30,10 +30,10 @@
   },
   "exports": {
     ".": "./build/exports/index.js",
-    "./exports": "./build/exports/polen.js",
-    "./dependencies/react/jsx-runtime": "./build/exports/dependencies/react/jsx-runtime.js",
+    "./polen": "./build/exports/polen.js",
+    "./dependencies/react": "./build/exports/dependencies/react.js",
     "./dependencies/react/jsx-dev-runtime": "./build/exports/dependencies/react/jsx-dev-runtime.js",
-    "./dependencies/react": "./build/exports/dependencies/react.js"
+    "./dependencies/react/jsx-runtime": "./build/exports/dependencies/react/jsx-runtime.js"
   },
   "files": [
     "build",
@@ -50,7 +50,7 @@
     "@radix-ui/themes": "^3.2.1",
     "@types/jsesc": "^3.0.3",
     "@vitejs/plugin-react-swc": "^3.9.0",
-    "@wollybeard/kit": "^0.11.0",
+    "@wollybeard/kit": "^0.15.0",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "es-toolkit": "^1.36.0",
@@ -72,6 +72,7 @@
     "@molt/command": "^0.9.0",
     "@playwright/browser-chromium": "^1.52.0",
     "@stylistic/eslint-plugin": "^4.2.0",
+    "@tsconfig/node-lts": "^22.0.1",
     "@tsconfig/node22": "^22.0.1",
     "@tsconfig/strictest": "^2.0.5",
     "@types/node": "^22.15.3",
@@ -112,16 +113,19 @@
     "vite": "^6.2.5"
   },
   "scripts": {
+    "r": "libra refresh && pnpm fix:format",
+    "z": "libra toggle-hiding && pnpm fix:format",
+    "polen": "tsx ./src/cli/index.ts",
     "examples:unlink": "rm -rf examples/{pokemon,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
     "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
     "test:integration": "playwright test --config 'tests/integration/playwright.config.ts'",
     "test:unit": "vitest",
     "dev": "pnpm build:watch:emit",
-    "build:clean": "tsc --build tsconfig.build.json --clean && rm -rf build",
+    "build:clean": "pnpm tsc --build tsconfig.build.json --clean && rm -rf build",
     "build": "tsc --build tsconfig.build.json",
-    "build:watch": "tsc --build tsconfig.build.json --watch",
-    "build:watch:emit": "tsc --build tsconfig.build.json --watch --nocheck",
-    "build:emit": "tsc --build tsconfig.build.json --noCheck",
+    "build:watch": "pnpm build --watch",
+    "build:watch:emit": "pnpm build --noCheck --watch",
+    "build:emit": "pnpm build --noEmit",
     "prebuild": "pnpm pnpm build:clean",
     "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:lint": "eslint . --fix",
@@ -133,6 +137,11 @@
     "check:package": "publint run --strict",
     "release:version": "changeset version && git commit -am \"chore: release\" && git push",
     "prepublishOnly": "pnpm build",
-    "project:example-controller": "tsx ./scripts/example-controller.ts"
-  }
+    "project:example-controller": "tsx ./scripts/example-controller.ts",
+    "prepack": "pnpm build",
+    "build:cli:chmodx": "chmod +x ./build/cli/index.js",
+    "postbuild": "pnpm run build:cli:chmodx",
+    "test": "vitest"
+  },
+  "bin": "./build/cli/index.js"
 }

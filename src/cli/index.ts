@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-import { Cli } from '#lib/cli/index.js'
+import { Cli, Path } from '@wollybeard/kit'
 
-await Cli.dispatch({
-  commandsDir: import.meta.url,
-})
+const commandsDir = Path.join(import.meta.dirname, `commands`)
+await Cli.dispatch(commandsDir)

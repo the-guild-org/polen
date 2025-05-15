@@ -1,48 +1,16 @@
 {
-  "extends": ["@tsconfig/strictest/tsconfig.json", "@tsconfig/node22/tsconfig.json"],
+  "extends": ["./tsconfig.libra.json"],
   "compilerOptions": {
-    // Package
-    "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    // Output
     "jsx": "preserve",
-    "lib": ["DOM", "es2023", "DOM.Iterable"],
-    "resolveJsonModule": true,
-
-    // DX
-    "tsBuildInfoFile": "node_modules/.cache/.tsbuildinfo",
-    "noErrorTruncation": true,
-    "incremental": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "noEmit": true,
-
-    // Handled by ESLint:
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-
-    // Downstream DX
-    "isolatedModules": true, // performance
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
 
     // Other
     "exactOptionalPropertyTypes": false,
-
-    // "baseUrl": ".",
+    "lib": ["DOM", "es2023", "DOM.Iterable"],
     "paths": {
       "#dep/*": ["./src/dep/*"],
       "#lib/*": ["./src/lib/*"]
     }
   },
-  "exclude": ["eslint.config.js", "build"],
-  "include": [
-    "tests",
-    "src",
-    "vite-env.d.ts",
-    "global.d.ts",
-    "examples/_tests",
-    "scripts",
-    "vitest.config.ts"
-  ]
+  "exclude": ["build", "eslint.config.js", "examples/github", "examples/pokemon"]
 }

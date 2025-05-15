@@ -36,8 +36,8 @@ importers:
         specifier: ^3.9.0
         version: 3.9.0(vite@6.3.4(@types/node@22.15.3)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
       '@wollybeard/kit':
-        specifier: ^0.11.0
-        version: 0.11.0
+        specifier: ^0.15.0
+        version: 0.15.0
       consola:
         specifier: ^3.4.2
         version: 3.4.2
@@ -96,6 +96,9 @@ importers:
       '@stylistic/eslint-plugin':
         specifier: ^4.2.0
         version: 4.2.0(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3)
+      '@tsconfig/node-lts':
+        specifier: ^22.0.1
+        version: 22.0.1
       '@tsconfig/node22':
         specifier: ^22.0.1
         version: 22.0.1
@@ -1619,6 +1622,9 @@ packages:
   '@swc/types@0.1.21':
     resolution: {integrity: sha512-2YEtj5HJVbKivud9N4bpPBAyZhj4S2Ipe5LkUG94alTpr7in/GU/EARgPAd3BwU+YOmFVJC2+kjqhGRi3r0ZpQ==}
 
+  '@tsconfig/node-lts@22.0.1':
+    resolution: {integrity: sha512-BwlbLiYurZKrj+Pa6etSE1jXmr3VEDdgJto1jEYKcpBVwZZSWVkCPyFEFYbHdIOaFMlSTtV206DYPlT109aqug==}
+
   '@tsconfig/node22@22.0.1':
     resolution: {integrity: sha512-VkgOa3n6jvs1p+r3DiwBqeEwGAwEvnVCg/hIjiANl5IEcqP3G0u5m8cBJspe1t9qjZRlZ7WFgqq5bJrGdgAKMg==}
 
@@ -1775,8 +1781,8 @@ packages:
     resolution: {integrity: sha512-D+OwTEunoQhVHVToD80dPhfz9xgPLqJyEA3F5jCRM14A2u8tBBQVdZekqfqx6ZAfZ+POT4Hb0dn601UKMsvADw==}
     engines: {node: '>=16.0.0'}
 
-  '@wollybeard/kit@0.11.0':
-    resolution: {integrity: sha512-31PEe7t43QIkHS35FIRuSHk42+II1EocTCeDypA5k+2Dty4Ew2qkDOcKIiDALQZuRFuUfwHRHqHlJn21cXDU7g==}
+  '@wollybeard/kit@0.15.0':
+    resolution: {integrity: sha512-fx8RPTr9IAN0N6HZXrf0i4+JY8vmryx31io6wNTXcosOtLlu2SxSav3Sk3L40cb9iq10067Je+qX53WLavguwQ==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -4823,6 +4829,8 @@ snapshots:
     dependencies:
       '@swc/counter': 0.1.3
 
+  '@tsconfig/node-lts@22.0.1': {}
+
   '@tsconfig/node22@22.0.1': {}
 
   '@tsconfig/strictest@2.0.5': {}
@@ -5029,7 +5037,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@wollybeard/kit@0.11.0':
+  '@wollybeard/kit@0.15.0':
     dependencies:
       '@types/node': 22.15.18
       consola: 3.4.2
