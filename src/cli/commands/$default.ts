@@ -75,10 +75,10 @@ s``
 // ])
 
 if (Arr.isEmpty(commands)) {
-  s`  No commands available yet.`
+  s`No commands available yet.`
 } else {
   commands.forEach(command => {
-    s`  ${$.dim`$ ${cliName}`} ${$.cyanBright(command.name)}`
+    s`${$.dim`$ ${cliName}`} ${$.cyanBright(command.name)}`
   })
 }
 s``
@@ -88,13 +88,13 @@ s``
 s`${h2(`learn more`)}`
 s``
 s`${
-  Str.indent(Str.table({
+  Str.table({
     data: {
       'Source Code': link(repoUrl),
       'Built By': link(`https://the-guild.dev`),
       'Ecosystem': link(`https://graphql.org`),
     },
-  }))
+  })
 }`
 s``
 s``
