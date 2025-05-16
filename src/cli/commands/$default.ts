@@ -18,21 +18,41 @@ const getCommandNames = async (): Promise<string[]> => {
   return names
 }
 
-const commandNames = await getCommandNames()
-
-const codeStyle = (str: string) => {
+const code = (str: string) => {
   if (!$.isSupported()) return `\`${str}\``
   return $.magenta(str)
 }
 
+const link = (str: string) => {
+  if (!$.isSupported()) return $.underline(str)
+  const url = new URL(str)
+  // Split URL into protocol and the rest
+  const protocol = `${url.protocol}//`
+  const rest = str.substring(protocol.length)
+  return `${$.dim(protocol)}${$.blue(rest)}`
+}
+
+const getRepoUrl = (url: string): string => {
+  return url
+    .replace(/^git\+/, ``) // Remove git+ prefix
+    .replace(/\.git$/, ``) // Remove .git suffix
+}
+
+const h2 = (str: string) => {
+  return $.bold.black.bgWhiteBright(` ${str.toUpperCase()} `)
+}
+
 const s = Str.Builder()
+const repoUrl = getRepoUrl(manifest.repository.url)
+const commandNames = await getCommandNames()
 
 s``
 s``
 s`${$.bold.redBright`POLEN 🌺`}`
 s`${$.whiteBright(manifest.description)}.`
 s``
-s`Available Commands:`
+s``
+s`${h2(`commands`)}`
 s``
 if (Arr.isEmpty(commandNames)) {
   s`  No commands available yet.`
@@ -42,8 +62,20 @@ if (Arr.isEmpty(commandNames)) {
   })
 }
 s``
+s`${$.dim`Get help for a command with ${code(`polen <command> --help`)}`}`
 s``
-s`${$.dim`Get help for a command with ${codeStyle(`polen <command> --help`)}`}`
+s``
+s`${h2(`learn more`)}`
+s``
+s`${
+  Str.indent(Str.table({
+    data: {
+      'Source Code': link(repoUrl),
+      'Built By': link(`https://the-guild.dev`),
+      'Ecosystem': link(`https://graphql.org`),
+    },
+  }))
+}`
 s``
 s``
 
