@@ -13,6 +13,30 @@ export interface ConfigInput {
    * @see https://vite.dev/guide/api-javascript.html#mergeconfig
    */
   vite?: Vite.UserConfig
+  /**
+   * Enable a special module explorer for the source code that Polen assembles for your app.
+   *
+   * Powered by [Vite Inspect](https://github.com/antfu-collective/vite-plugin-inspect).
+   *
+   * @defaultValue true
+   */
+  inspect?: boolean
+  /**
+   * Tweak the watch behavior.
+   */
+  watch?: {
+    /**
+     * Restart the development server when some arbitrary files change.
+     *
+     * Use this to restart when files that are not already watched by vite change.
+     *
+     * @see https://github.com/antfu/vite-plugin-restart
+     */
+    /**
+     * File paths to watch and restart the development server when they change.
+     */
+    also?: string[],
+  }
   schema?: SchemaConfigInput
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
@@ -43,6 +67,10 @@ export interface TemplateVariables {
 
 export interface Config {
   mode: string
+  inspect: boolean
+  watch: {
+    also: string[],
+  }
   templateVariables: TemplateVariables
   schemaAugmentations: SchemaAugmentation.Augmentation[]
   schema: null | SchemaConfigInput
@@ -63,6 +91,10 @@ const configInputDefaults: Config = {
     title: `My Developer Portal`,
   },
   schemaAugmentations: [],
+  inspect: true,
+  watch: {
+    also: [],
+  },
   mode: `client`,
   schema: null,
   ssr: {
@@ -95,6 +127,14 @@ export const normalizeInput = (configInput?: ConfigInput): Config => {
 
   if (configInput?.schema) {
     config.schema = configInput.schema
+  }
+
+  if (configInput?.inspect !== undefined) {
+    config.inspect = configInput.inspect
+  }
+
+  if (configInput?.watch?.also) {
+    config.watch.also = configInput.watch.also
   }
 
   return config

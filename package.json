@@ -65,6 +65,8 @@
     "resolve.imports": "^2.0.3",
     "superjson": "^2.2.2",
     "tinyglobby": "^0.2.13",
+    "vite-plugin-inspect": "^11.0.1",
+    "vite-plugin-restart": "^0.4.2",
     "zx": "8.5.4"
   },
   "devDependencies": {
