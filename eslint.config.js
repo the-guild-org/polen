@@ -56,6 +56,7 @@ export default tsEslint.config(
         varsIgnorePattern: '^___',
         argsIgnorePattern: '^___',
       }],
+      '@typescript-eslint/no-unused-expressions': 'false',
       // Useful for organizing Types
       '@typescript-eslint/no-namespace': 'off',
       // Turn training wheels off. When we want these we want these.

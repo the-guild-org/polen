@@ -36,8 +36,11 @@ importers:
         specifier: ^3.9.0
         version: 3.9.0(vite@6.3.4(@types/node@22.15.3)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
       '@wollybeard/kit':
-        specifier: ^0.15.0
-        version: 0.15.0
+        specifier: ^0.16.0
+        version: 0.16.0
+      ansis:
+        specifier: ^4.0.0
+        version: 4.0.0
       consola:
         specifier: ^3.4.2
         version: 3.4.2
@@ -1781,8 +1784,8 @@ packages:
     resolution: {integrity: sha512-D+OwTEunoQhVHVToD80dPhfz9xgPLqJyEA3F5jCRM14A2u8tBBQVdZekqfqx6ZAfZ+POT4Hb0dn601UKMsvADw==}
     engines: {node: '>=16.0.0'}
 
-  '@wollybeard/kit@0.15.0':
-    resolution: {integrity: sha512-fx8RPTr9IAN0N6HZXrf0i4+JY8vmryx31io6wNTXcosOtLlu2SxSav3Sk3L40cb9iq10067Je+qX53WLavguwQ==}
+  '@wollybeard/kit@0.16.0':
+    resolution: {integrity: sha512-LJKZREsw3/r+ukMR+n5zeo/jxq9cUf5IzSi3RXk+TmxkRKAJV1kMtu/rznpikcK1idVQv3mmtJl8xkaDh80obg==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -1818,6 +1821,10 @@ packages:
   ansi-styles@4.3.0:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
+
+  ansis@4.0.0:
+    resolution: {integrity: sha512-P8nrHI1EyW9OfBt1X7hMSwGN2vwRuqHSKJAT1gbLWZRzDa24oHjYwGHvEgHeBepupzk878yS/HBZ0NMPYtbolw==}
+    engines: {node: '>=14'}
 
   argparse@1.0.10:
     resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
@@ -5037,7 +5044,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@wollybeard/kit@0.15.0':
+  '@wollybeard/kit@0.16.0':
     dependencies:
       '@types/node': 22.15.18
       consola: 3.4.2
@@ -5083,6 +5090,8 @@ snapshots:
   ansi-styles@4.3.0:
     dependencies:
       color-convert: 2.0.1
+
+  ansis@4.0.0: {}
 
   argparse@1.0.10:
     dependencies:
