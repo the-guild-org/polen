@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@wollybeard/kit': link:../../../Library/pnpm/global/5/node_modules/@wollybeard/kit
+  polen: link:../../../Library/pnpm/global/5/node_modules/polen
 
 importers:
 
@@ -71,6 +72,9 @@ importers:
       marked:
         specifier: ^15.0.11
         version: 15.0.11
+      polen:
+        specifier: link:../../../Library/pnpm/global/5/node_modules/polen
+        version: link:../../../Library/pnpm/global/5/node_modules/polen
       react-router:
         specifier: ^7.5.3
         version: 7.5.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)

@@ -16,7 +16,7 @@ export const VitePluginInternal = (
 
   // Optional Plugins based on config
 
-  if (config.inspect) {
+  if (config.explorer) {
     const plugin = Inspect({
       build: true,
       outputDir: `./.bundle-explorer`,

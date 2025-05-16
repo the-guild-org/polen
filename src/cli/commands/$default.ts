@@ -1,22 +1,15 @@
 #!/usr/bin/env node
 
-import { Arr, Fs, Path, Str } from '@wollybeard/kit'
+import { Arr, Cli, Path, Str } from '@wollybeard/kit'
 import manifest from '../../../package.json' with { type: 'json' }
-import { isNot } from '@wollybeard/kit/eq'
-import { getWith } from '@wollybeard/kit/obj'
 import $ from 'ansis'
+import console from 'console'
 
 const commandsDir = import.meta.dirname
-const moduleName = Path.parse(import.meta.filename).name
+const thisModuleName = Path.parse(import.meta.filename).name
+const cliName = `polen`
 
-const getCommandNames = async (): Promise<string[]> => {
-  const files = (await Fs.readDirFilesNames(commandsDir)) ?? []
-  const names = files
-    .map(Path.parse)
-    .map(getWith(`name`))
-    .filter(isNot(moduleName))
-  return names
-}
+// Styles
 
 const code = (str: string) => {
   if (!$.isSupported()) return `\`${str}\``
@@ -32,19 +25,22 @@ const link = (str: string) => {
   return `${$.dim(protocol)}${$.blue(rest)}`
 }
 
-const getRepoUrl = (url: string): string => {
-  return url
-    .replace(/^git\+/, ``) // Remove git+ prefix
-    .replace(/\.git$/, ``) // Remove .git suffix
-}
-
 const h2 = (str: string) => {
   return $.bold.black.bgWhiteBright(` ${str.toUpperCase()} `)
 }
 
+// ------
+
+const getRepoUrl = (url: string): string => {
+  return url
+    .replace(/^git\+/, ``)
+    .replace(/\.git$/, ``)
+}
+
 const s = Str.Builder()
 const repoUrl = getRepoUrl(manifest.repository.url)
-const commandNames = await getCommandNames()
+const allCommands = await Cli.discoverCommandPointers(commandsDir)
+const commands = allCommands.filter(_ => _.name !== thisModuleName)
 
 s``
 s``
@@ -54,11 +50,35 @@ s``
 s``
 s`${h2(`commands`)}`
 s``
-if (Arr.isEmpty(commandNames)) {
+
+// todo?
+
+// match(commands)
+//   .empty(() => {
+//     s`  No commands available yet.`
+//   })
+//   .else(commands => {
+//     commands.forEach(command => {
+//       s`  ${$.dim`$ ${cliName}`} ${$.cyanBright(command.name)}`
+//     })
+//   })
+
+// match(commands, [
+//   [[], () => {
+//     s`  No commands available yet.`
+//   }],
+//   commands => {
+//     commands.forEach(command => {
+//       s`  ${$.dim`$ ${cliName}`} ${$.cyanBright(command.name)}`
+//     })
+//   },
+// ])
+
+if (Arr.isEmpty(commands)) {
   s`  No commands available yet.`
 } else {
-  commandNames.forEach(name => {
-    s`  ${$.dim`$ polen`} ${$.cyanBright(name)}`
+  commands.forEach(command => {
+    s`  ${$.dim`$ ${cliName}`} ${$.cyanBright(command.name)}`
   })
 }
 s``

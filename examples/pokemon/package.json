@@ -15,7 +15,6 @@
     "vite-plugin-inspect": "^11.0.1"
   },
   "dependencies": {
-    "@types/jsesc": "^3.0.3",
     "polen": "link:../..",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

@@ -20,7 +20,7 @@ export interface ConfigInput {
    *
    * @defaultValue true
    */
-  inspect?: boolean
+  explorer?: boolean
   /**
    * Tweak the watch behavior.
    */
@@ -67,7 +67,7 @@ export interface TemplateVariables {
 
 export interface Config {
   mode: string
-  inspect: boolean
+  explorer: boolean
   watch: {
     also: string[],
   }
@@ -91,7 +91,7 @@ const configInputDefaults: Config = {
     title: `My Developer Portal`,
   },
   schemaAugmentations: [],
-  inspect: true,
+  explorer: true,
   watch: {
     also: [],
   },
@@ -129,8 +129,8 @@ export const normalizeInput = (configInput?: ConfigInput): Config => {
     config.schema = configInput.schema
   }
 
-  if (configInput?.inspect !== undefined) {
-    config.inspect = configInput.inspect
+  if (configInput?.explorer !== undefined) {
+    config.explorer = configInput.explorer
   }
 
   if (configInput?.watch?.also) {
