@@ -22,7 +22,7 @@ const commandNames = await getCommandNames()
 
 const codeStyle = (str: string) => {
   if (!$.isSupported()) return `\`${str}\``
-  return `${$.magenta(str)}`
+  return $.magenta(str)
 }
 
 const s = Str.Builder()

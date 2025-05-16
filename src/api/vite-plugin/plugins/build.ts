@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-// TODO make issue that this rule doens't handle case of template literals: https://typescript-eslint.io/rules/no-unused-expressions/
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { vi } from '../helpers.js'
