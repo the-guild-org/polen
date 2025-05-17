@@ -212,8 +212,6 @@ importers:
         specifier: ^3.24.3
         version: 3.24.3
 
-  examples/pokemon: {}
-
 packages:
 
   '@0no-co/graphql.web@1.1.2':
