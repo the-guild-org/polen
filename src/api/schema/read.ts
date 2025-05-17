@@ -26,7 +26,7 @@ export const readOrThrow = async (
     return null
   }
 
-  const useDataSources = config.useDataSources ? Arr.ensure(config.useDataSources) : null
+  const useDataSources = config.useDataSources ? Arr.sure(config.useDataSources) : null
   const usingDataSource = (dataSource: DataSourceType) =>
     useDataSources === null || useDataSources.includes(dataSource)
 

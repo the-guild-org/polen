@@ -17,7 +17,7 @@ export interface Config {
 
 export const normalize = (configInput: ConfigInput): Config => {
   const config: Config = {
-    versions: Arr.map(Arr.ensure(configInput.versions), _ => {
+    versions: Arr.map(Arr.sure(configInput.versions), _ => {
       if (typeof _ === `string`) {
         return {
           date: new Date(),

@@ -21,5 +21,7 @@ __results__
 dist
 dist-ssr
 .output
-/build
 .vite-inspect
+
+build
+node_modules/

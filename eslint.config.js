@@ -56,6 +56,8 @@ export default tsEslint.config(
         varsIgnorePattern: '^___',
         argsIgnorePattern: '^___',
       }],
+      // TODO make issue that this rule doens't handle case of template literals: https://typescript-eslint.io/rules/no-unused-expressions/
+      '@typescript-eslint/no-unused-expressions': 'off',
       // Useful for organizing Types
       '@typescript-eslint/no-namespace': 'off',
       // Turn training wheels off. When we want these we want these.
