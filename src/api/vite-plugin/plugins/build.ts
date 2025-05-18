@@ -80,8 +80,9 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
       {
         identifier: viServerEntry,
         loader: () => {
-          const entryServerPath = Path.absolutify(viteConfigResolved.root)(
+          const entryServerPath = Path.ensureAbsolute(
             config.entryServerPath,
+            viteConfigResolved.root,
           )
           const entrServeryViteGlobPath = `/` +
             Path.relative(viteConfigResolved.root, entryServerPath)

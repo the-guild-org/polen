@@ -2,11 +2,8 @@
 
 import { Vite } from '#dep/vite/index.js'
 import { Path } from '@wollybeard/kit'
-import process from 'node:process'
 
-// Get the actual directory where the command was invoked, not where the CLI script is located
-const invokedDir = process.env[`INIT_CWD`] ?? process.cwd()
-const configFilePath = Path.join(invokedDir, `polen.config.ts`)
+const configFilePath = Path.ensureAbsoluteWithCWD(`polen.config.ts`)
 
 const loadedConfig = await Vite.loadConfigFromFile(
   {
@@ -14,7 +11,7 @@ const loadedConfig = await Vite.loadConfigFromFile(
     mode: `development`,
   },
   configFilePath,
-  invokedDir,
+  process.cwd(),
 )
 
 const viteDevServer = await Vite.createServer(

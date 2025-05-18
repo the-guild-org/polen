@@ -25,3 +25,4 @@ dist-ssr
 
 build
 node_modules/
+.bundle-explorer
