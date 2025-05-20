@@ -31,10 +31,8 @@ testCases.forEach(({ fixture, result, title }) => {
     await project.layout.set(fixture)
     // todo: all embedded react to be used
     await project.shell`pnpm add react` // adds 1s
-    const viteUserConfig = Polen.defineConfig({
-      vite: {
-        root: project.layout.cwd,
-      },
+    const viteUserConfig = await Polen.defineConfig({
+      root: project.layout.cwd,
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await page.goto(viteDevServer.url(`/`).href)

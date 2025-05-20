@@ -7,7 +7,6 @@ import { Core } from './plugins/core.js'
 import Inspect from 'vite-plugin-inspect'
 import { Arr } from '@wollybeard/kit'
 import Restart from 'vite-plugin-restart'
-// import { resolveLocalImport } from '../../source-paths.js'
 
 export const VitePluginInternal = (
   config: Configurator.Config,
@@ -31,8 +30,6 @@ export const VitePluginInternal = (
     plugins.push(plugin)
   }
 
-  // Required Plugins
-
   plugins.push(
     // {
     //   name: `debug`,
@@ -41,7 +38,7 @@ export const VitePluginInternal = (
     //   },
     // },
     ReactVite({
-      jsxImportSource: `polen/dependencies/react`,
+      jsxImportSource: config.advanced.jsxImportSource,
     }),
     Core(config),
     Serve({

@@ -1,18 +1,16 @@
 import type { Vite } from '#dep/vite/index.js'
+import { checkIsProjectHasPackageInstalled } from '#lib/helpers.js'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { sourcePaths } from '../../source-paths.js'
 import type { Schema } from '../schema/index.js'
+import type ReactVite from '@vitejs/plugin-react-swc'
+
+type ReactViteOptions = Exclude<Parameters<typeof ReactVite>[0], undefined>
 
 type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
 
 export interface ConfigInput {
-  /**
-   * Additional {@link Vite.UserConfig} that is merged with the one created by Polen using {@link Vite.mergeConfig}.
-   *
-   * @see https://vite.dev/config/
-   * @see https://vite.dev/guide/api-javascript.html#mergeconfig
-   */
-  vite?: Vite.UserConfig
+  root?: string
   /**
    * Enable a special module explorer for the source code that Polen assembles for your app.
    *
@@ -59,6 +57,17 @@ export interface ConfigInput {
    * @defaultValue true
    */
   ssr?: boolean
+  advanced?: {
+    /**
+     * Additional {@link vite.UserConfig} that is merged with the one created by Polen using {@link Vite.mergeConfig}.
+     *
+     * @see https://vite.dev/config/
+     * @see https://vite.dev/guide/api-javascript.html#mergeconfig
+     */
+    vite?: Vite.UserConfig,
+    vitePluginReact?: ReactViteOptions,
+    jsxImportSource?: string,
+  }
 }
 
 export interface TemplateVariables {
@@ -66,6 +75,7 @@ export interface TemplateVariables {
 }
 
 export interface Config {
+  root: string
   mode: string
   explorer: boolean
   watch: {
@@ -84,9 +94,15 @@ export interface Config {
       entryServer: string,
     },
   }
+  advanced: {
+    jsxImportSource?: string,
+    vite?: Vite.UserConfig,
+    vitePluginReact?: ReactViteOptions,
+  }
 }
 
 const configInputDefaults: Config = {
+  root: process.cwd(),
   templateVariables: {
     title: `My Developer Portal`,
   },
@@ -107,10 +123,36 @@ const configInputDefaults: Config = {
       entryClient: sourcePaths.template.modulePaths.entryClient,
     },
   },
+  advanced: {
+    jsxImportSource: `react`,
+  },
 }
 
-export const normalizeInput = (configInput?: ConfigInput): Config => {
+export const normalizeInput = async (configInput?: ConfigInput): Promise<Config> => {
   const config = structuredClone(configInputDefaults)
+
+  if (configInput?.root) {
+    config.root = configInput.root
+  }
+
+  if (configInput?.advanced?.jsxImportSource) {
+    config.advanced.jsxImportSource = configInput.advanced.jsxImportSource
+  } else {
+    const isHasReact = await checkIsProjectHasPackageInstalled(config.root, `react`)
+    if (!isHasReact) {
+      config.advanced.jsxImportSource = `react`
+    } else {
+      config.advanced.jsxImportSource = `polen/dependencies/react`
+    }
+  }
+
+  if (configInput?.advanced?.vite) {
+    config.advanced.vite = configInput.advanced.vite
+  }
+
+  if (configInput?.advanced?.vitePluginReact) {
+    config.advanced.vitePluginReact = configInput.advanced.vitePluginReact
+  }
 
   if (configInput?.ssr !== undefined) {
     config.ssr.enabled = configInput.ssr
