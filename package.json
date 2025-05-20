@@ -142,12 +142,5 @@
     "postbuild": "pnpm run build:cli:chmodx",
     "test": "vitest"
   },
-  "bin": "./build/cli/index.js",
-  "libra": {
-    "visibility": true,
-    "exports": {
-      "include": null
-    },
-    "cli": true
-  }
+  "bin": "./build/cli/index.js"
 }
