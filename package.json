@@ -105,11 +105,11 @@
     "strip-ansi": "^7.1.0",
     "tsx": "^4.19.4",
     "type-fest": "^4.40.1",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.31.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.1.2",
-    "zod": "^3.24.3",
-    "typescript": "^5.8.3"
+    "zod": "^3.24.3"
   },
   "packageManager": "pnpm@10.10.0",
   "scripts": {
@@ -117,7 +117,7 @@
     "z": "libra toggle-hiding && pnpm fix:format",
     "polen": "tsx ./src/cli/index.ts",
     "examples:unlink": "rm -rf examples/{pokemon,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
-    "test:examples": "playwright test --config 'examples/_tests/playwright.config.ts'",
+    "test:examples": "playwright test --config 'tests/examples/playwright.config.ts'",
     "test:integration": "playwright test --config 'tests/integration/playwright.config.ts'",
     "test:unit": "vitest",
     "dev": "pnpm build:watch:emit",

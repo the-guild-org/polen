@@ -1,6 +1,6 @@
-import { ExampleName } from '../examples/_tests/helpers/example-name.js'
+import { ExampleName } from '../tests/examples/helpers/example-name.js'
 import { Command } from '@molt/command'
-import { ExampleController } from '../examples/_tests/helpers/example-controller/index.js'
+import { ExampleController } from '../tests/examples/helpers/example-controller/index.js'
 import { PackageManager } from '@wollybeard/kit'
 
 const args = Command
@@ -10,6 +10,7 @@ const args = Command
   // todo: update `@molt/command`
   .parse() as { name: ExampleName, link?: PackageManager.LinkProtocol }
 
+// eslint-disable-next-line
 const ___controller = await ExampleController.create({
   exampleName: args.name,
   debugMode: true,

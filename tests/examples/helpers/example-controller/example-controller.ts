@@ -6,7 +6,8 @@ import type { ViteUserConfigWithPolen } from '../../../../src/create-configurati
 import * as GetPortPlease from 'get-port-please'
 import { stripAnsi } from 'consola/utils'
 import { ProjectController } from '@wollybeard/kit'
-import { PackageManager, Path } from '@wollybeard/kit'
+import type { PackageManager } from '@wollybeard/kit'
+import { Path } from '@wollybeard/kit'
 
 const selfPath = Url.fileURLToPath(import.meta.url)
 const selfDir = Path.dirname(selfPath)
@@ -29,14 +30,17 @@ export const create = async (parameters: {
 
   const project = await ProjectController.create({
     debug,
-    install: true,
+    package: {
+      install: true,
+      links: parameters.polenLink && [
+        {
+          dir: projectDir,
+          protocol: parameters.polenLink,
+        },
+      ],
+    },
     scaffold: Path.join(examplesDir, parameters.exampleName),
-    links: parameters.polenLink && [
-      {
-        dir: projectDir,
-        protocol: parameters.polenLink,
-      },
-    ],
+
     scripts: project => ({
       build: async () => {
         return await project.packageManager`run build`
@@ -84,7 +88,8 @@ export const create = async (parameters: {
     }),
   })
 
-  const config = await import(`${project.layout.cwd}/vite.config.js`) as {
+  const configFile = Path.join(project.layout.cwd, `polen.config.js`)
+  const config = await import(configFile) as {
     default: ViteUserConfigWithPolen,
   }
   debug(`loaded configuration`)
@@ -112,4 +117,25 @@ export const stopServerProcess = async (processPromise: ProcessPromise) => {
     // throw error
   })
   await processPromise.kill()
+}
+
+export const polenDev = async (project: ExampleController) => {
+  const serverProcess = project.packageManager`polen dev`
+
+  const logUrlPattern = /(https?:\/\/\S+)/
+  for await (const line of serverProcess) {
+    const linePlain = stripAnsi(line)
+    const url = (logUrlPattern.exec(linePlain))?.[1]
+    if (url) {
+      return {
+        raw: serverProcess,
+        stop: async () => {
+          await stopServerProcess(serverProcess)
+        },
+        url,
+      }
+    }
+  }
+
+  throw new Error(`Server process did not output a URL`)
 }
