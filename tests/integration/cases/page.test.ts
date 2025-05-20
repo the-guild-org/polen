@@ -33,6 +33,9 @@ testCases.forEach(({ fixture, result, title }) => {
     await project.shell`pnpm add react` // adds 1s
     const viteUserConfig = await Polen.defineConfig({
       root: project.layout.cwd,
+      advanced: {
+        jsxImportSource: `react`,
+      }
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await page.goto(viteDevServer.url(`/`).href)
