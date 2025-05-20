@@ -5,19 +5,10 @@ A framework for delightful GraphQL developer portals ✨.
 ## Installation
 
 ```
-npm add polen vite react react-dom
+npm add polen
 ```
 
-- `vite`, `react`, `react-dom` are peer dependencies of Polen.
-- We would like to remove `react` and `react-dom` as peers deps in the future to
-  simplify this for you.
-  ([see](https://github.com/the-guild-org/polen/pull/9#issuecomment-2801683840))
-
-## Example
-
-You can find working examples in the [examples](./examples) directory.
-
-The following shows minimal default usage.
+## Quickstart
 
 1. Have a `schema.graphql` GraphQL schema file in your project directory.
 
@@ -27,28 +18,22 @@ The following shows minimal default usage.
    }
    ```
 
-2. Use Polen in your Vite config.
-
-   ```ts
-   import { Polen } from 'polen'
-
-   export default Polen.defineConfig({
-     // options here...
-   })
-   ```
-
-3. Build your developer portal.
+2. Build your developer portal.
 
    ```sh
-   npx vite build --app
+   npx polen build
    ```
 
-4. You now have a deployable developer portal. Try it locally
+3. You now have a deployable developer portal. Try it locally
    (http://localhost:5174):
 
    ```sh
    node dist/entry.js
    ```
+
+## Examples
+
+You can find working examples in the [examples](./examples) directory.
 
 ## Guide
 
@@ -92,7 +77,7 @@ Refer to [Changelog](#changelog).
 Basic example:
 
 ```ts
-// vite.config.ts
+// polen.config.ts
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
@@ -191,13 +176,13 @@ Polen is an ESM only package. If you are using CJS, then you need
 #### Exports
 
 You can import a `Polen` namespace from `polen`. You can import its bare exports
-from `polen/exports`.
+from `polen/polen`.
 
 ```ts
 import { Polen } from 'polen'
-import { VitePlugin } from 'polen/exports'
+import { defineConfig } from 'polen/polen'
 
-console.log(Polen.VitePlugin === VitePlugin) // true
+console.log(Polen.defineConfig === defineConfig) // true
 ```
 
 ## Other
