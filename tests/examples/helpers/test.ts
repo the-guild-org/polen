@@ -2,7 +2,7 @@ import { test as base } from 'playwright/test'
 import { type ProcessOutput } from 'zx'
 import type { ExampleName } from './example-name.js'
 import { ExampleController } from './example-controller/index.js'
-import { PackageManager } from '@wollybeard/kit'
+import type { PackageManager } from '@wollybeard/kit'
 
 export interface TestFixtures {
   runDev: ExampleController.ServerProcess

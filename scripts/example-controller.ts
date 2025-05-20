@@ -10,7 +10,6 @@ const args = Command
   // todo: update `@molt/command`
   .parse() as { name: ExampleName, link?: PackageManager.LinkProtocol }
 
-// eslint-disable-next-line
 const ___controller = await ExampleController.create({
   exampleName: args.name,
   debugMode: true,

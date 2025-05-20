@@ -108,7 +108,7 @@ export interface ServerProcess {
 }
 
 export const stopServerProcess = async (processPromise: ProcessPromise) => {
-  processPromise.catch((_error: unknown) => {
+  processPromise.catch((___error: unknown) => {
     // We cannot achieve a clean exit for some reason so far.
     // console.log(`server process error on kill -----------------`)
     // console.log(error)
