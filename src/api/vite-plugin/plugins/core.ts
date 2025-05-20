@@ -122,6 +122,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
             `ignore.jsx`,
             {
               jsx: `automatic`,
+              jsxImportSource: `polen/dependencies/react`,
             },
           )
 

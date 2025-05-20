@@ -40,7 +40,9 @@ export const VitePluginInternal = (
     //     return resolveLocalImport(id) ?? undefined
     //   },
     // },
-    ReactVite(),
+    ReactVite({
+      jsxImportSource: `polen/dependencies/react`,
+    }),
     Core(config),
     Serve({
       entryServer: config.paths.appTemplate.entryServer,
