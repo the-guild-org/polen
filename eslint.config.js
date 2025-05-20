@@ -21,6 +21,7 @@ export default tsEslint.config(
       'vite.config.ts',
       '**/__snapshots__/**/*',
       'examples',
+      '.bundle-explorer',
     ],
   },
   // reactRefresh.configs.recommended,

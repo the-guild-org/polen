@@ -138,12 +138,7 @@ export const normalizeInput = async (configInput?: ConfigInput): Promise<Config>
   if (configInput?.advanced?.jsxImportSource) {
     config.advanced.jsxImportSource = configInput.advanced.jsxImportSource
   } else {
-    const isHasReact = await checkIsProjectHasPackageInstalled(config.root, `react`)
-    if (!isHasReact) {
-      config.advanced.jsxImportSource = `react`
-    } else {
-      config.advanced.jsxImportSource = `polen/dependencies/react`
-    }
+    config.advanced.jsxImportSource = await resolveJsxImportSource(config.root)
   }
 
   if (configInput?.advanced?.vite) {
@@ -180,4 +175,13 @@ export const normalizeInput = async (configInput?: ConfigInput): Promise<Config>
   }
 
   return config
+}
+
+const resolveJsxImportSource = async (root: string): Promise<string> => {
+  const isHasReact = await checkIsProjectHasPackageInstalled(root, `react`)
+  if (isHasReact) {
+    return `react`
+  } else {
+    return `polen/dependencies/react`
+  }
 }
