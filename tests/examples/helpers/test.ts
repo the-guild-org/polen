@@ -36,7 +36,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     const output = await project.run.build()
     await use(output)
   },
-  runStart: async ({ project, runBuild: _ }, use) => {
+  runStart: async ({ project, runBuild: ___ }, use) => {
     const server = await project.run.start()
     await use(server)
     await server.stop()
