@@ -89,15 +89,16 @@ export const create = async (parameters: {
   })
 
   const configFile = Path.join(project.layout.cwd, `polen.config.js`)
-  const config = await import(configFile) as {
-    default: ViteUserConfigWithPolen,
+  const module = await import(configFile) as {
+    default: Promise<ViteUserConfigWithPolen>,
   }
+  const config = await module.default
   debug(`loaded configuration`)
 
   return {
     ...project,
     name: parameters.exampleName,
-    config: config.default,
+    config,
   }
 }
 
