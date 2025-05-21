@@ -8,6 +8,7 @@ import { Graffle } from 'graffle'
 import { Introspection } from 'graffle/extensions/introspection'
 import { z } from 'zod'
 import { defineConfig } from '../../create-configuration.js'
+import { Fs } from '@wollybeard/kit'
 
 const args = Command
   .create()
@@ -27,6 +28,7 @@ if (!introspectionResult) throw new Error(`Failed to introspect schema.`)
 const schema = Grafaid.Schema.fromIntrospectionQuery(introspectionResult)
 
 const config = await defineConfig({
+  root: await Fs.makeTemporaryDirectory(),
   schema: {
     dataSources: {
       data: {
