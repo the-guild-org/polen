@@ -1,9 +1,9 @@
-import { TinyGlobby } from '#dep/tiny-globby/index.js'
-import type { RouteIndex, RouteItem, RouteSegment } from './route.js'
-import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './route.js'
 import { Marked } from '#dep/marked/index.js'
+import { TinyGlobby } from '#dep/tiny-globby/index.js'
 import { Debug } from '#lib/debug/index.js'
 import { Fs, Path } from '@wollybeard/kit'
+import type { RouteIndex, RouteItem, RouteSegment } from './route.js'
+import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './route.js'
 
 export * from './lint.js'
 export * as ReactRouterAdaptor from './react-router-adaptor.js'
@@ -12,12 +12,12 @@ const debug = Debug.create(`page`)
 
 export interface Page {
   content: {
-    markdown: string,
-    html: string,
+    markdown: string
+    html: string
   }
   route: RouteIndex | RouteItem
   file: {
-    path: string,
+    path: string
   }
 }
 

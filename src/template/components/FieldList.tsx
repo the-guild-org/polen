@@ -1,7 +1,7 @@
-import type { FC } from 'react'
-import { Box } from '@radix-ui/themes'
-import { Field } from './Field.jsx'
 import { Grafaid } from '#lib/grafaid/index.js'
+import { Box } from '@radix-ui/themes'
+import type { FC } from 'react'
+import { Field } from './Field.jsx'
 
 export interface Props {
   data: Grafaid.Schema.TypesLike.Named
@@ -17,7 +17,7 @@ export const FieldList: FC<Props> = ({ data }) => {
     <Box>
       {fields.map(field => (
         <Field
-          mt="3"
+          mt='3'
           key={field.name}
           data={field}
         />

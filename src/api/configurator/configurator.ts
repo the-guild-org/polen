@@ -1,9 +1,9 @@
 import type { Vite } from '#dep/vite/index.js'
 import { checkIsProjectHasPackageInstalled } from '#lib/helpers.js'
+import type ReactVite from '@vitejs/plugin-react-swc'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { sourcePaths } from '../../source-paths.js'
 import type { Schema } from '../schema/index.js'
-import type ReactVite from '@vitejs/plugin-react-swc'
 
 type ReactViteOptions = Exclude<Parameters<typeof ReactVite>[0], undefined>
 
@@ -33,7 +33,7 @@ export interface ConfigInput {
     /**
      * File paths to watch and restart the development server when they change.
      */
-    also?: string[],
+    also?: string[]
   }
   schema?: SchemaConfigInput
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
@@ -45,7 +45,7 @@ export interface ConfigInput {
      *
      * @defaultValue `My Developer Portal`
      */
-    title?: string,
+    title?: string
   }
   /**
    * Path to the GraphQL schema file
@@ -64,9 +64,9 @@ export interface ConfigInput {
      * @see https://vite.dev/config/
      * @see https://vite.dev/guide/api-javascript.html#mergeconfig
      */
-    vite?: Vite.UserConfig,
-    vitePluginReact?: ReactViteOptions,
-    jsxImportSource?: string,
+    vite?: Vite.UserConfig
+    vitePluginReact?: ReactViteOptions
+    jsxImportSource?: string
   }
 }
 
@@ -79,25 +79,25 @@ export interface Config {
   mode: string
   explorer: boolean
   watch: {
-    also: string[],
+    also: string[]
   }
   templateVariables: TemplateVariables
   schemaAugmentations: SchemaAugmentation.Augmentation[]
   schema: null | SchemaConfigInput
   ssr: {
-    enabled: boolean,
+    enabled: boolean
   }
   paths: {
     appTemplate: {
-      dir: string,
-      entryClient: string,
-      entryServer: string,
-    },
+      dir: string
+      entryClient: string
+      entryServer: string
+    }
   }
   advanced: {
-    jsxImportSource?: string,
-    vite?: Vite.UserConfig,
-    vitePluginReact?: ReactViteOptions,
+    jsxImportSource?: string
+    vite?: Vite.UserConfig
+    vitePluginReact?: ReactViteOptions
   }
 }
 
@@ -179,6 +179,8 @@ export const normalizeInput = async (configInput?: ConfigInput): Promise<Config>
 
 const resolveJsxImportSource = async (root: string): Promise<string> => {
   const isHasReact = await checkIsProjectHasPackageInstalled(root, `react`)
+  console.log(import.meta.resolve(``))
+  // return `/Users/jasonkuhrt/projects/the-guild-org/polen/node_modules/.pnpm/react@19.1.0/node_modules/react`
   if (isHasReact) {
     return `react`
   } else {

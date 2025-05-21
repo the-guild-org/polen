@@ -12,9 +12,9 @@ export const defaults = {
 } as const
 
 export const create = (parameters: {
-  id: string,
-  namespace?: string,
-  separator?: string,
+  id: string
+  namespace?: string
+  separator?: string
 }): Identifier => {
   const separator = parameters.separator ?? defaults.seperator
   const idNormalized = normalizeId({ id: parameters.id, separator })
@@ -32,8 +32,8 @@ export const create = (parameters: {
 }
 
 export const createFactory = (parameters: {
-  namespace: string,
-  separator?: string,
+  namespace: string
+  separator?: string
 }): (...idSegments: string[]) => Identifier => {
   const { namespace, separator = defaults.seperator } = parameters
 

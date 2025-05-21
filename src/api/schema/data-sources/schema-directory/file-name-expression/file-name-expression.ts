@@ -40,7 +40,7 @@ const parseExpressionPreviousSerialized = (
 ): Pick<ExpressionPrevious, `date`> | null => {
   const match = expressionPreviousSerializedPattern.exec(serializedExpression)
   if (!match) return null
-  const { year, month, day } = match.groups as { year: string, month: string, day: string }
+  const { year, month, day } = match.groups as { year: string; month: string; day: string }
   const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
   return { date }
 }

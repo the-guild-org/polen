@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { Arr, Cli, Path, Str } from '@wollybeard/kit'
-import manifest from '../../../package.json' with { type: 'json' }
 import $ from 'ansis'
 import console from 'console'
+import manifest from '../../../package.json' with { type: 'json' }
 
 const commandsDir = import.meta.dirname
 const thisModuleName = Path.parse(import.meta.filename).name

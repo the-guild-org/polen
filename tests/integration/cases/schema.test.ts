@@ -1,7 +1,7 @@
 import { expect } from 'playwright/test'
+import { configMemorySchema, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
 import type { ViteController } from '../helpers/vite-controller/index.js'
-import { configMemorySchema, pc } from '../helpers/polen.js'
 
 const sdl = `type Query { hello: String }\ntype Mutation { hello: String }`
 

@@ -1,8 +1,8 @@
-import type { Identifier } from './identifier.js'
 import type { Vite } from '#dep/vite/index.js'
-import type { HookLoad, HookResolveId } from './hooks.js'
 import { debug } from '../debug/debug.js'
 import { StackProcessor } from '../stack-processor/index.js'
+import type { HookLoad, HookResolveId } from './hooks.js'
+import type { Identifier } from './identifier.js'
 
 export interface IdentifiedLoader {
   identifier: Identifier
@@ -36,8 +36,8 @@ export const toHookResolveId = (identifiedLoader: IdentifiedLoader): HookResolve
 export const toHooks = (
   ...identifiedloaders: IdentifiedLoader[]
 ): {
-  resolveId: Vite.HookResolveIdFnPure,
-  load: Vite.HookLoadFnPure,
+  resolveId: Vite.HookResolveIdFnPure
+  load: Vite.HookLoadFnPure
 } => {
   const resolveId = StackProcessor.untilDefined<HookResolveId>(
     identifiedloaders.map(toHookResolveId),

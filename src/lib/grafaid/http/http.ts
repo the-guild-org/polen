@@ -15,11 +15,11 @@ export const parseExecutionResult = (result: unknown): FormattedExecutionResult 
 
   if (`errors` in result) {
     if (
-      !Array.isArray(result.errors) ||
-      result.errors.some(
+      !Array.isArray(result.errors)
+      || result.errors.some(
         error =>
-          !(Rec.is(error) && `message` in error &&
-            typeof error[`message`] === `string`),
+          !(Rec.is(error) && `message` in error
+            && typeof error[`message`] === `string`),
       )
     ) {
       throw new Error(`Invalid execution result: errors is not array of formatted errors`) // prettier-ignore

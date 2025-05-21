@@ -1,11 +1,11 @@
 import globals from 'globals'
 // import reactHooks from 'eslint-plugin-react-hooks'
 // import reactRefresh from 'eslint-plugin-react-refresh'
-import unusedImports from 'eslint-plugin-unused-imports'
 import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import onlyWarn from 'eslint-plugin-only-warn'
 import tsdoc from 'eslint-plugin-tsdoc'
+import unusedImports from 'eslint-plugin-unused-imports'
 import tsEslint from 'typescript-eslint'
 
 export default tsEslint.config(

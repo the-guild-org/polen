@@ -1,6 +1,6 @@
+import { Path, ProjectController } from '@wollybeard/kit'
 import { test as base } from 'playwright/test'
 import { ViteController } from './vite-controller/index.js'
-import { Path, ProjectController } from '@wollybeard/kit'
 
 interface Fixtures {
   vite: ViteController.ViteController

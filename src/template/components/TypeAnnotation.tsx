@@ -1,7 +1,7 @@
-import type { FC } from 'react'
+import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'
-import { Text } from '@radix-ui/themes'
+import type { FC } from 'react'
 import { Link } from './Link.jsx'
 
 export interface Props {
@@ -17,7 +17,7 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     return (
       <>
         <TypeAnnotation type={type.ofType} />
-        <Text color="gray">!</Text>
+        <Text color='gray'>!</Text>
       </>
     )
   }
@@ -26,9 +26,9 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
   if (isListType(type)) {
     return (
       <>
-        <Text color="gray">[</Text>
+        <Text color='gray'>[</Text>
         <TypeAnnotation type={type.ofType} />
-        <Text color="gray">]</Text>
+        <Text color='gray'>]</Text>
       </>
     )
   }
@@ -43,7 +43,7 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
         <Link
           to={`/reference/${namedType.name}`}
         >
-          <Text color="green">{namedType.name}</Text>
+          <Text color='green'>{namedType.name}</Text>
         </Link>
       )
     }

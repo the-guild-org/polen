@@ -15,20 +15,20 @@
     "source.organizeImports": "never"
   },
   "files.exclude": {
-    "tsconfig.json": true,
-    "tsconfig.build.json": true,
-    ".gitignore": true,
-    ".github": true,
-    "pnpm-workspace.yaml": true,
-    "pnpm-lock.yaml": true,
-    "dprint.json": true,
-    "eslint.config.js": true,
-    "build": true,
-    "node_modules/": true,
-    ".dprint/": true,
-    ".vscode": true,
-    ".dprintrc.json": true,
-    "vitest.config.ts": true,
-    "tsconfig.libra.json": true
+    "tsconfig.json": false,
+    "tsconfig.build.json": false,
+    ".gitignore": false,
+    ".github": false,
+    "pnpm-workspace.yaml": false,
+    "pnpm-lock.yaml": false,
+    "dprint.json": false,
+    "eslint.config.js": false,
+    "build": false,
+    "node_modules/": false,
+    ".dprint/": false,
+    ".vscode": false,
+    ".dprintrc.json": false,
+    "vitest.config.ts": false,
+    "tsconfig.libra.json": false
   }
 }

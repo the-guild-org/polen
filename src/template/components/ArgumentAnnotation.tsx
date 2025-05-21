@@ -1,6 +1,6 @@
-import type { FC } from 'react'
-import type { GraphQLArgument } from 'graphql'
 import { Box, Flex, Text } from '@radix-ui/themes'
+import type { GraphQLArgument } from 'graphql'
+import type { FC } from 'react'
 import { TypeAnnotation } from './TypeAnnotation.jsx'
 
 export interface Props {
@@ -12,7 +12,7 @@ export interface Props {
  */
 export const ArgumentAnnotation: FC<Props> = ({ data }) => {
   return (
-    <Box as="div">
+    <Box as='div'>
       <Flex>
         <Text>{data.name}</Text>
         <Text>:&nbsp;</Text>

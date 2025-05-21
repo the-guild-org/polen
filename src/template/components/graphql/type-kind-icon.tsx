@@ -7,5 +7,5 @@ export const TypeKindIcon: React.FC<{ kind: Grafaid.Schema.TypeKindName }> = ({ 
   // eslint-disable-next-line
   const { symbol, color } = typeKindTokensIndex[kind] ?? unknownTypeKindToken
 
-  return <Code color={color} weight="bold" variant="outline">{symbol}</Code>
+  return <Code color={color} weight='bold' variant='outline'>{symbol}</Code>
 }

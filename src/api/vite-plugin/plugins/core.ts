@@ -1,15 +1,15 @@
-import jsesc from 'jsesc'
-import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Vite } from '#dep/vite/index.js'
-import { Page } from '../../page/index.js'
-import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
-import { sourcePaths } from '../../../source-paths.js'
-import { vi } from '../helpers.js'
-import type { Configurator } from '../../configurator/index.js'
-import { Schema } from '../../schema/index.js'
+import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Cache, Str } from '@wollybeard/kit'
-import { SchemaAugmentation } from '../../schema-augmentation/index.js'
+import jsesc from 'jsesc'
+import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
+import { sourcePaths } from '../../../source-paths.js'
+import type { Configurator } from '../../configurator/index.js'
+import { Page } from '../../page/index.js'
+import { SchemaAugmentation } from '../../schema-augmentation/index.js'
+import { Schema } from '../../schema/index.js'
+import { vi } from '../helpers.js'
 
 const viTemplateVariables = vi(`template`, `variables`)
 const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
@@ -41,18 +41,14 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
       {
         identifier: viTemplateVariables,
         loader: () => {
-          const moduleContent = `export const templateVariables = ${
-            JSON.stringify(config.templateVariables)
-          }`
+          const moduleContent = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
           return moduleContent
         },
       },
       {
         identifier: viTemplateSchemaAugmentations,
         loader: () => {
-          const moduleContent = `export const schemaAugmentations = ${
-            JSON.stringify(config.schemaAugmentations)
-          }`
+          const moduleContent = `export const schemaAugmentations = ${JSON.stringify(config.schemaAugmentations)}`
           return moduleContent
         },
       },
@@ -67,8 +63,8 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
           const siteNavigationItemsFromTopLevelPages = pages
             // todo: test that non-congent page branches aren't shown in navigation bar
             .filter(_ =>
-              _.type === `PageBranchContent` ||
-              _.branches.find(_ => _.route.type === `RouteIndex`)
+              _.type === `PageBranchContent`
+              || _.branches.find(_ => _.route.type === `RouteIndex`)
             )
             .map(
               (pageBranch): ProjectData[`siteNavigationItems`][number] => {

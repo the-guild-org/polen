@@ -1,12 +1,12 @@
-import type { ProcessPromise } from 'zx'
-import type { ExampleName } from '../example-name.js'
 import { debug as debugBase } from '#lib/debug/debug.js'
-import type { ViteUserConfigWithPolen } from '../../../../src/create-configuration.js'
-import * as GetPortPlease from 'get-port-please'
-import { stripAnsi } from 'consola/utils'
 import { ProjectController } from '@wollybeard/kit'
 import type { PackageManager } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
+import { stripAnsi } from 'consola/utils'
+import * as GetPortPlease from 'get-port-please'
+import type { ProcessPromise } from 'zx'
+import type { ViteUserConfigWithPolen } from '../../../../src/create-configuration.js'
+import type { ExampleName } from '../example-name.js'
 
 const projectDir = Path.join(import.meta.dirname, `../../../../`)
 const examplesDir = Path.join(projectDir, `/examples`)
@@ -17,10 +17,10 @@ export type ExampleController = Awaited<ReturnType<typeof create>>
  * Create a temporary directory with the contents of the chosen example.
  */
 export const create = async (parameters: {
-  exampleName: ExampleName,
-  debugMode?: boolean,
-  polenLink?: PackageManager.LinkProtocol,
-  portProductionServer?: number,
+  exampleName: ExampleName
+  debugMode?: boolean
+  polenLink?: PackageManager.LinkProtocol
+  portProductionServer?: number
 }) => {
   const debug = debugBase.sub(parameters.exampleName)
   debug.toggle(parameters.debugMode ?? false)
@@ -87,7 +87,7 @@ export const create = async (parameters: {
 
   const configFile = Path.join(project.layout.cwd, `polen.config.js`)
   const module = await import(configFile) as {
-    default: Promise<ViteUserConfigWithPolen>,
+    default: Promise<ViteUserConfigWithPolen>
   }
   const config = await module.default
   debug(`loaded configuration`)

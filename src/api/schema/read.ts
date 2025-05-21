@@ -1,5 +1,5 @@
-import * as DataSources from './data-sources/data-sources.js'
 import { Arr } from '@wollybeard/kit'
+import * as DataSources from './data-sources/data-sources.js'
 import type { Schema } from './schema.js'
 
 export type DataSourceType = `file` | `directory` | `memory` | `data`
@@ -11,10 +11,10 @@ export interface Config {
   enabled?: boolean
   useDataSources?: Arr.Maybe<DataSourceType>
   dataSources?: {
-    file?: DataSources.SchemaFile.ConfigInput,
-    directory?: DataSources.SchemaDirectory.ConfigInput,
-    memory?: DataSources.Memory.ConfigInput,
-    data?: Schema,
+    file?: DataSources.SchemaFile.ConfigInput
+    directory?: DataSources.SchemaDirectory.ConfigInput
+    memory?: DataSources.Memory.ConfigInput
+    data?: Schema
   }
   projectRoot: string
 }
@@ -27,8 +27,7 @@ export const readOrThrow = async (
   }
 
   const useDataSources = config.useDataSources ? Arr.sure(config.useDataSources) : null
-  const usingDataSource = (dataSource: DataSourceType) =>
-    useDataSources === null || useDataSources.includes(dataSource)
+  const usingDataSource = (dataSource: DataSourceType) => useDataSources === null || useDataSources.includes(dataSource)
 
   let result: null | Schema = null
 

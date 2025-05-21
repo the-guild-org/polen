@@ -27,11 +27,11 @@ const removeConflictsBetweenIndexAndExact = (branches: PageTree): LintResult => 
   const warnings: Warning[] = []
 
   const fixed = branches.map(branch => {
-    const conflictingBranch = branch.type === `PageBranchContent` &&
-      branch.branches.find(subBranch =>
-        subBranch !== branch &&
-        subBranch.type === `PageBranchContent` &&
-        subBranch.route.path.raw === branch.route.path.raw
+    const conflictingBranch = branch.type === `PageBranchContent`
+      && branch.branches.find(subBranch =>
+        subBranch !== branch
+        && subBranch.type === `PageBranchContent`
+        && subBranch.route.path.raw === branch.route.path.raw
       ) as PageBranchContent | undefined
 
     // if (!conflictingBranch) {
