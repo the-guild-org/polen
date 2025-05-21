@@ -1,18 +1,15 @@
 #!/usr/bin/env node
 
 import { Vite } from '#dep/vite/index.js'
-import { Path } from '@wollybeard/kit'
+import { loadConfig } from '../../api/load-config.js'
 
-const configFilePath = Path.ensureAbsoluteWithCWD(`polen.config.ts`)
-
-const loadedConfig = await Vite.loadConfigFromFile(
-  {
-    command: `serve`,
-    mode: `development`,
+const config = await loadConfig({
+  env: {
+    command: `build`,
+    mode: `production`,
   },
-  configFilePath,
-  process.cwd(),
-)
+})
 
-const builder = await Vite.createBuilder(loadedConfig?.config)
+const builder = await Vite.createBuilder(config)
+
 await builder.buildApp()
