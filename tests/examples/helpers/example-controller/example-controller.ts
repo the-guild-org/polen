@@ -1,4 +1,3 @@
-import { Url } from '../../../../src/dep/url/index.js'
 import type { ProcessPromise } from 'zx'
 import type { ExampleName } from '../example-name.js'
 import { debug as debugBase } from '#lib/debug/debug.js'
@@ -9,9 +8,7 @@ import { ProjectController } from '@wollybeard/kit'
 import type { PackageManager } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
 
-const selfPath = Url.fileURLToPath(import.meta.url)
-const selfDir = Path.dirname(selfPath)
-const projectDir = Path.join(selfDir, `../../../../`)
+const projectDir = Path.join(import.meta.dirname, `../../../../`)
 const examplesDir = Path.join(projectDir, `/examples`)
 
 export type ExampleController = Awaited<ReturnType<typeof create>>

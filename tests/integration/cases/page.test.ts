@@ -29,13 +29,8 @@ const testCases: TestCase[] = [
 testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.layout.set(fixture)
-    // todo: all embedded react to be used
-    await project.shell`pnpm add react` // adds 1s
     const viteUserConfig = await Polen.defineConfig({
       root: project.layout.cwd,
-      advanced: {
-        jsxImportSource: `react`,
-      }
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await page.goto(viteDevServer.url(`/`).href)
