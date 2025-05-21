@@ -1,17 +1,18 @@
-import { Path, ProjectController } from '@wollybeard/kit'
+import { Path } from '@wollybeard/kit'
+import { Projector } from '@wollybeard/projector'
 import { test as base } from 'playwright/test'
 import { ViteController } from './vite-controller/index.js'
 
 interface Fixtures {
   vite: ViteController.ViteController
-  project: ProjectController.ProjectController
+  project: Projector.Projector
 }
 
 const projectDir = Path.join(import.meta.dirname, `../../../`)
 
 export const test = base.extend<Fixtures>({
   project: async ({}, use) => {
-    const project = await ProjectController.create({
+    const project = await Projector.create({
       package: {
         install: true,
         links: [

@@ -6,11 +6,7 @@
 
     // Other
     "exactOptionalPropertyTypes": false,
-    "lib": ["DOM", "es2023", "DOM.Iterable"],
-    "paths": {
-      "#dep/*": ["./src/dep/*"],
-      "#lib/*": ["./src/lib/*"]
-    }
+    "lib": ["DOM", "es2023", "DOM.Iterable"]
   },
   "exclude": ["build", "eslint.config.js", "examples/github", "examples/pokemon"]
 }

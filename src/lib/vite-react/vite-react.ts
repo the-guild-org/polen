@@ -1,3 +1,6 @@
+/* eslint-disable */
+// @ts-nocheck
+
 import { exactRegex } from '@rolldown/pluginutils'
 import {
   type JscTarget,

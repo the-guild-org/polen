@@ -1,7 +1,7 @@
 import { debug as debugBase } from '#lib/debug/debug.js'
-import { ProjectController } from '@wollybeard/kit'
 import type { PackageManager } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
+import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
 import * as GetPortPlease from 'get-port-please'
 import type { ProcessPromise } from 'zx'
@@ -25,7 +25,7 @@ export const create = async (parameters: {
   const debug = debugBase.sub(parameters.exampleName)
   debug.toggle(parameters.debugMode ?? false)
 
-  const project = await ProjectController.create({
+  const project = await Projector.create({
     debug,
     package: {
       install: true,
