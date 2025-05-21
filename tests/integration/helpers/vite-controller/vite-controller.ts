@@ -1,9 +1,9 @@
-import { Url } from '@wollybeard/kit'
 import { Vite } from '#dep/vite/index.js'
+import { Url } from '@wollybeard/kit'
 
 export type ViteDevServerPlus = Vite.ViteDevServer & {
-  cannonicalUrl: URL,
-  url: Url.Factory,
+  cannonicalUrl: URL
+  url: Url.Factory
 }
 
 export interface ViteController {

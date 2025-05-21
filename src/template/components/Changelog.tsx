@@ -1,11 +1,11 @@
+import type { GrafaidOld } from '#lib/grafaid-old/index.js'
+import { Grafaid } from '#lib/grafaid/index.js'
+import type { GraphqlChange } from '#lib/graphql-change/index.js'
+import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
+import { Box, Code } from '@radix-ui/themes'
 import type React from 'react'
 import type { Schema as ChangelogData } from '../../api/schema/index.js'
-import { Box, Code } from '@radix-ui/themes'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
-import type { GraphqlChange } from '#lib/graphql-change/index.js'
-import type { GrafaidOld } from '#lib/grafaid-old/index.js'
 import { Graphql } from './graphql/index.js'
-import { Grafaid } from '#lib/grafaid/index.js'
 
 export const renderDate = (date: Date) => {
   return date.toLocaleString(`default`, {
@@ -19,9 +19,7 @@ export const renderDate = (date: Date) => {
 export const Changelog: React.FC<{ schema: ChangelogData.Schema }> = ({ schema }) => {
   return (
     <Box>
-      {schema.versions.map(changeset => (
-        <Changeset key={changeset.date.getDate()} changeset={changeset} />
-      ))}
+      {schema.versions.map(changeset => <Changeset key={changeset.date.getDate()} changeset={changeset} />)}
     </Box>
   )
 }
@@ -33,15 +31,13 @@ const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ change
         {renderDate(changeset.date)}
       </h1>
       <ul>
-        {changeset.changes.map(change => (
-          <Change key={change.message} change={change} schema={changeset.after} />
-        ))}
+        {changeset.changes.map(change => <Change key={change.message} change={change} schema={changeset.after} />)}
       </ul>
     </Box>
   )
 }
 
-const Change: React.FC<{ change: GraphqlChange.Change, schema: GrafaidOld.Schema.Schema }> = (
+const Change: React.FC<{ change: GraphqlChange.Change; schema: GrafaidOld.Schema.Schema }> = (
   { change, schema },
 ) => {
   const getTypeOrThrow = (name: string) => {
@@ -69,8 +65,8 @@ const Change: React.FC<{ change: GraphqlChange.Change, schema: GrafaidOld.Schema
             Added {rootDetails.operationType}
             {` `}
             <Code
-              color="jade"
-              variant="ghost"
+              color='jade'
+              variant='ghost'
               style={{ borderBottom: `1px dotted var(--jade-6)`, borderRadius: `0` }}
             >
               {change.meta.addedFieldName}
@@ -83,8 +79,8 @@ const Change: React.FC<{ change: GraphqlChange.Change, schema: GrafaidOld.Schema
         <li>
           Added field{` `}
           <Code
-            color="gray"
-            variant="ghost"
+            color='gray'
+            variant='ghost'
             style={{ borderBottom: `1px dotted var(--gray-6)`, borderRadius: `0` }}
           >
             {change.meta.addedFieldName}

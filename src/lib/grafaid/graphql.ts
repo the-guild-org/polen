@@ -1,15 +1,8 @@
+import { neverCase } from '@wollybeard/kit/language'
 import type { GraphQLNamedType, GraphQLScalarType } from 'graphql'
-import {
-  isEnumType,
-  isInputObjectType,
-  isInterfaceType,
-  isObjectType,
-  isScalarType,
-  isUnionType,
-} from 'graphql'
+import { isEnumType, isInputObjectType, isInterfaceType, isObjectType, isScalarType, isUnionType } from 'graphql'
 import type { KindMap } from './schema/schema.js'
 import { isScalarTypeCustom } from './schema/schema.js'
-import { neverCase } from '@wollybeard/kit/language'
 
 export {
   type ExecutionResult,
@@ -59,8 +52,8 @@ export const isStandardScalarType = (type: GraphQLScalarType) => {
 export const getTypeAndKind = (
   node: GraphQLNamedType,
 ): {
-  typeName: string,
-  kindName: KindMap.KindName,
+  typeName: string
+  kindName: KindMap.KindName
 } => {
   const typeName = node.name
 

@@ -35,21 +35,18 @@ export const NON_NULL_TYPE = `NonNullType` as GraphQLKind.NON_NULL_TYPE
 
 /** Type System Definitions */
 export const SCHEMA_DEFINITION = `SchemaDefinition` as GraphQLKind.SCHEMA_DEFINITION
-export const OPERATION_TYPE_DEFINITION =
-  `OperationTypeDefinition` as GraphQLKind.OPERATION_TYPE_DEFINITION
+export const OPERATION_TYPE_DEFINITION = `OperationTypeDefinition` as GraphQLKind.OPERATION_TYPE_DEFINITION
 
 /** Type Definitions */
 export const SCALAR_TYPE_DEFINITION = `ScalarTypeDefinition` as GraphQLKind.SCALAR_TYPE_DEFINITION
 export const OBJECT_TYPE_DEFINITION = `ObjectTypeDefinition` as GraphQLKind.OBJECT_TYPE_DEFINITION
 export const FIELD_DEFINITION = `FieldDefinition` as GraphQLKind.FIELD_DEFINITION
 export const INPUT_VALUE_DEFINITION = `InputValueDefinition` as GraphQLKind.INPUT_VALUE_DEFINITION
-export const INTERFACE_TYPE_DEFINITION =
-  `InterfaceTypeDefinition` as GraphQLKind.INTERFACE_TYPE_DEFINITION
+export const INTERFACE_TYPE_DEFINITION = `InterfaceTypeDefinition` as GraphQLKind.INTERFACE_TYPE_DEFINITION
 export const UNION_TYPE_DEFINITION = `UnionTypeDefinition` as GraphQLKind.UNION_TYPE_DEFINITION
 export const ENUM_TYPE_DEFINITION = `EnumTypeDefinition` as GraphQLKind.ENUM_TYPE_DEFINITION
 export const ENUM_VALUE_DEFINITION = `EnumValueDefinition` as GraphQLKind.ENUM_VALUE_DEFINITION
-export const INPUT_OBJECT_TYPE_DEFINITION =
-  `InputObjectTypeDefinition` as GraphQLKind.INPUT_OBJECT_TYPE_DEFINITION
+export const INPUT_OBJECT_TYPE_DEFINITION = `InputObjectTypeDefinition` as GraphQLKind.INPUT_OBJECT_TYPE_DEFINITION
 
 /** Directive Definitions */
 export const DIRECTIVE_DEFINITION = `DirectiveDefinition` as GraphQLKind.DIRECTIVE_DEFINITION
@@ -60,9 +57,7 @@ export const SCHEMA_EXTENSION = `SchemaExtension` as GraphQLKind.SCHEMA_EXTENSIO
 /** Type Extensions */
 export const SCALAR_TYPE_EXTENSION = `ScalarTypeExtension` as GraphQLKind.SCALAR_TYPE_EXTENSION
 export const OBJECT_TYPE_EXTENSION = `ObjectTypeExtension` as GraphQLKind.OBJECT_TYPE_EXTENSION
-export const INTERFACE_TYPE_EXTENSION =
-  `InterfaceTypeExtension` as GraphQLKind.INTERFACE_TYPE_EXTENSION
+export const INTERFACE_TYPE_EXTENSION = `InterfaceTypeExtension` as GraphQLKind.INTERFACE_TYPE_EXTENSION
 export const UNION_TYPE_EXTENSION = `UnionTypeExtension` as GraphQLKind.UNION_TYPE_EXTENSION
 export const ENUM_TYPE_EXTENSION = `EnumTypeExtension` as GraphQLKind.ENUM_TYPE_EXTENSION
-export const INPUT_OBJECT_TYPE_EXTENSION =
-  `InputObjectTypeExtension` as GraphQLKind.INPUT_OBJECT_TYPE_EXTENSION
+export const INPUT_OBJECT_TYPE_EXTENSION = `InputObjectTypeExtension` as GraphQLKind.INPUT_OBJECT_TYPE_EXTENSION

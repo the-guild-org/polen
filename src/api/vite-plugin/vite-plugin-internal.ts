@@ -1,12 +1,12 @@
-import type { Configurator } from '../../api/configurator/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import ReactVite from '@vitejs/plugin-react-swc'
-import { Build } from './plugins/build.js'
-import { Serve } from './plugins/serve.js'
-import { Core } from './plugins/core.js'
-import Inspect from 'vite-plugin-inspect'
 import { Arr } from '@wollybeard/kit'
+import Inspect from 'vite-plugin-inspect'
 import Restart from 'vite-plugin-restart'
+import type { Configurator } from '../../api/configurator/index.js'
+import { Build } from './plugins/build.js'
+import { Core } from './plugins/core.js'
+import { Serve } from './plugins/serve.js'
 
 export const VitePluginInternal = (
   config: Configurator.Config,

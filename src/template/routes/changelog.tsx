@@ -1,7 +1,7 @@
 import { createRoute } from '#lib/react-router-helpers.js'
-import { Changelog } from '../components/Changelog.jsx'
-import { PROJECT_DATA } from 'virtual:polen/project/data'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
+import { PROJECT_DATA } from 'virtual:polen/project/data'
+import { Changelog } from '../components/Changelog.jsx'
 
 const loader = createLoader(() => {
   return {

@@ -1,9 +1,9 @@
 import { createRoute } from '#lib/react-router-helpers.js'
-import { useParams } from 'react-router'
-import type { reference } from './reference.jsx'
-import { NamedType } from '../components/NamedType.jsx'
 import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
+import { useParams } from 'react-router'
 import { MissingSchema } from '../components/MissingSchema.jsx'
+import { NamedType } from '../components/NamedType.jsx'
+import type { reference } from './reference.jsx'
 
 const Component = () => {
   const params = useParams() as { type: string }

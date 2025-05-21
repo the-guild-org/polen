@@ -1,15 +1,15 @@
 import { Path } from '@wollybeard/kit'
-import packageJson from '../package.json' with { type: 'json' }
 import { resolve } from 'resolve.imports'
+import packageJson from '../package.json' with { type: 'json' }
 
 export interface SourcePaths {
   dir: string
   template: {
-    dir: string,
+    dir: string
     modulePaths: {
-      entryServer: string,
-      entryClient: string,
-    },
+      entryServer: string
+      entryClient: string
+    }
   }
 }
 

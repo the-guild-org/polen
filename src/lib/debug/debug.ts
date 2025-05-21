@@ -1,6 +1,6 @@
-import { inspect } from 'node:util'
 import { colorize } from 'consola/utils'
 import { snakeCase } from 'es-toolkit'
+import { inspect } from 'node:util'
 import { calcIsEnabledFromEnv } from './environment-variable.js'
 
 type DebugParameters = [event: string, payload?: unknown]

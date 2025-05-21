@@ -21,6 +21,10 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "#dep/*": ["./src/dep/*"],
+      "#lib/*": ["./src/lib/*"]
+    },
 
     // DX covered by ESLint:
     "noUnusedLocals": false,

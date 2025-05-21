@@ -1,10 +1,10 @@
-import * as HonoNodeServer from '@hono/node-server'
 import type { Hono } from '#dep/hono/index.js'
 import type { Vite } from '#dep/vite/index.js'
+import * as HonoNodeServer from '@hono/node-server'
 
 export const Serve = (
   config: {
-    entryServer: string,
+    entryServer: string
   },
 ): Vite.PluginOption => {
   return {

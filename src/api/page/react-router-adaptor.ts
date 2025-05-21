@@ -48,10 +48,10 @@ const renderCodePageBranchRoute = (pageBranch: PageBranch): string => {
 }
 
 export const render = (parameters: {
-  pageTree: PageTree,
+  pageTree: PageTree
   sourcePaths: {
-    reactRouterHelpers: string,
-  },
+    reactRouterHelpers: string
+  }
 }): string => {
   return `
     import {

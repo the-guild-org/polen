@@ -1,13 +1,13 @@
-import { Field } from '../components/Field.jsx'
-import { createRoute } from '#lib/react-router-helpers.js'
-import { useParams } from 'react-router'
-import type { reference } from './reference.jsx'
-import { MissingSchema } from '../components/MissingSchema.jsx'
-import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { Grafaid } from '#lib/grafaid/index.js'
+import { createRoute } from '#lib/react-router-helpers.js'
+import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
+import { useParams } from 'react-router'
+import { Field } from '../components/Field.jsx'
+import { MissingSchema } from '../components/MissingSchema.jsx'
+import type { reference } from './reference.jsx'
 
 const Component = () => {
-  const params = useParams() as { type: string, field: string }
+  const params = useParams() as { type: string; field: string }
   const data = useRouteLoaderData<typeof reference.loader>(`/reference`)
   if (!data.schema) {
     return <MissingSchema />

@@ -1,11 +1,11 @@
-import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
-import { Hono } from 'hono'
-import type { StaticHandlerContext } from 'react-router'
-import { StaticRouterProvider, createStaticHandler, createStaticRouter } from 'react-router'
-import { routes } from './routes.jsx'
 import { ReactDomServer } from '#dep/react-dom-server/index.js'
-import { StrictMode } from 'react'
 import type { Vite } from '#dep/vite/index.js'
+import { Hono } from 'hono'
+import { StrictMode } from 'react'
+import type { StaticHandlerContext } from 'react-router'
+import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router'
+import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
+import { routes } from './routes.jsx'
 
 const getRouteHeaders = (context: StaticHandlerContext): Headers => {
   const leaf = context.matches[context.matches.length - 1]
@@ -22,7 +22,7 @@ const getRouteHeaders = (context: StaticHandlerContext): Headers => {
   return headers
 }
 
-const getAssetHtmlTags = (manifest: Vite.Manifest): { css: string[], js: string[] } => {
+const getAssetHtmlTags = (manifest: Vite.Manifest): { css: string[]; js: string[] } => {
   // TODO: We could inline this into the generated server.
   // TODO: this only applies in production
   // Insert links to assets
@@ -43,7 +43,7 @@ const getAssetHtmlTags = (manifest: Vite.Manifest): { css: string[], js: string[
   }
 }
 
-const injectAssetHtmlTags = (html: string, htmlTags: { css: string[], js: string[] }): string => {
+const injectAssetHtmlTags = (html: string, htmlTags: { css: string[]; js: string[] }): string => {
   if (htmlTags.css.length > 0) {
     html = html.replace(`</head>`, `${htmlTags.css.join(``)}</head>`)
   }

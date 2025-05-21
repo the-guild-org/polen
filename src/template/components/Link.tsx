@@ -1,8 +1,8 @@
 import type { FC } from 'react'
-import type { LinkPropsRadix } from './RadixLink.jsx'
-import { LinkRadix } from './RadixLink.jsx'
 import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter } from 'react-router'
+import type { LinkPropsRadix } from './RadixLink.jsx'
+import { LinkRadix } from './RadixLink.jsx'
 
 export const Link: FC<LinkPropsReactRouter & LinkPropsRadix> = props => {
   const { underline, color, m, mt, mb, ml, mr, my, mx } = props

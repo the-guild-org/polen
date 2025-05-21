@@ -1,10 +1,10 @@
 import type { GraphQLInterfaceType } from 'graphql'
-import * as Type from '../type.js'
 import { getRootTypeMap } from '../RootTypeMap.js'
+import type { Schema } from '../schema.js'
+import * as Type from '../type.js'
+import { isRoot } from '../type.js'
 import { isScalarTypeCustom } from '../typeGuards.js'
 import type { KindMap } from './__.js'
-import { isRoot } from '../type.js'
-import type { Schema } from '../schema.js'
 
 export const Name = {
   Root: `Root`,
@@ -104,14 +104,10 @@ export const getInterfaceImplementors = (
   interfaceTypeSearch: GraphQLInterfaceType,
 ) => {
   const outputObjectTypes = typeMap.list.OutputObject.filter(objectType =>
-    objectType.getInterfaces().filter(interfaceType =>
-      interfaceType.name === interfaceTypeSearch.name
-    ).length > 0
+    objectType.getInterfaces().filter(interfaceType => interfaceType.name === interfaceTypeSearch.name).length > 0
   )
   const interfaceTypes = typeMap.list.Interface.filter(interfaceType =>
-    interfaceType.getInterfaces().filter(interfaceType =>
-      interfaceType.name === interfaceTypeSearch.name
-    ).length > 0
+    interfaceType.getInterfaces().filter(interfaceType => interfaceType.name === interfaceTypeSearch.name).length > 0
   )
   return [...outputObjectTypes, ...interfaceTypes]
 }

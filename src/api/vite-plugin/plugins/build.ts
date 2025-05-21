@@ -1,8 +1,8 @@
-import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Vite } from '#dep/vite/index.js'
-import { vi } from '../helpers.js'
-import { defu } from 'defu'
+import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Fs, Path, Str } from '@wollybeard/kit'
+import { defu } from 'defu'
+import { vi } from '../helpers.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 
 const viServerEntry = vi(`server`, `entry.jsx`)
@@ -84,8 +84,8 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
             config.entryServerPath,
             viteConfigResolved.root,
           )
-          const entrServeryViteGlobPath = `/` +
-            Path.relative(viteConfigResolved.root, entryServerPath)
+          const entrServeryViteGlobPath = `/`
+            + Path.relative(viteConfigResolved.root, entryServerPath)
           const staticServingPaths = {
             // todo
             // relative from CWD of process that boots node server
@@ -235,7 +235,7 @@ const Manifest = (): Vite.Plugin => {
             `manifest.json`,
           )
           const module = await import(manifestPath, { with: { type: `json` } }) as {
-            default: Vite.Manifest,
+            default: Vite.Manifest
           }
 
           return `export default ${JSON.stringify(module.default)}`

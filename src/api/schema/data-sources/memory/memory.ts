@@ -8,11 +8,11 @@ export interface ConfigInput {
   versions:
     | string
     | string[]
-    | { date: Date, value: string }[]
+    | { date: Date; value: string }[]
 }
 
 export interface Config {
-  versions: { date: Date, value: string }[]
+  versions: { date: Date; value: string }[]
 }
 
 export const normalize = (configInput: ConfigInput): Config => {
