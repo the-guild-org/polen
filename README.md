@@ -185,6 +185,22 @@ import { defineConfig } from 'polen/polen'
 console.log(Polen.defineConfig === defineConfig) // true
 ```
 
+### Instant Schema Explorer
+
+Polen comes with a light-weight command to instantly view any GraphQL schema.
+
+Example:
+
+```sh
+npx polen open --name github
+```
+
+See docs for more details
+
+```sh
+npx polen open --help
+```
+
 ## Other
 
 ### Changelog
