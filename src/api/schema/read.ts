@@ -29,14 +29,16 @@ export const readOrThrow = async (
   const useDataSources = config.useDataSources ? Arr.sure(config.useDataSources) : null
   const usingDataSource = (dataSource: DataSourceType) => useDataSources === null || useDataSources.includes(dataSource)
 
-  let result: null | Schema = null
+  if (usingDataSource(`data`) && config.dataSources?.data) {
+    return config.dataSources.data
+  }
 
   if (usingDataSource(`directory`)) {
     const directoryConfig = {
       projectRoot: config.projectRoot,
       ...config.dataSources?.directory,
     }
-    result = await DataSources.SchemaDirectory.readOrThrow(directoryConfig)
+    const result = await DataSources.SchemaDirectory.readOrThrow(directoryConfig)
     if (result) return result
   }
 
@@ -45,7 +47,7 @@ export const readOrThrow = async (
       projectRoot: config.projectRoot,
       ...config.dataSources?.file,
     }
-    result = await DataSources.SchemaFile.readOrThrow(fileConfig)
+    const result = await DataSources.SchemaFile.readOrThrow(fileConfig)
     if (result) return result
   }
 
@@ -54,7 +56,7 @@ export const readOrThrow = async (
       projectRoot: config.projectRoot,
       ...config.dataSources.memory,
     }
-    result = await DataSources.Memory.read(memoryConfig)
+    const result = await DataSources.Memory.read(memoryConfig)
     if (result) return result
   }
 

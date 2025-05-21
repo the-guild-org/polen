@@ -1,6 +1,11 @@
 import { buildASTSchema, type GraphQLSchema } from 'graphql'
 
-export { buildASTSchema as fromAST, GraphQLSchema as Schema, printSchema as print } from 'graphql'
+export {
+  buildASTSchema as fromAST,
+  buildClientSchema as fromIntrospectionQuery,
+  GraphQLSchema as Schema,
+  printSchema as print,
+} from 'graphql'
 
 export * as AST from './ast.js'
 

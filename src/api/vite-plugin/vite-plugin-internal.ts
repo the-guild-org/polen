@@ -1,5 +1,5 @@
 import type { Vite } from '#dep/vite/index.js'
-import ReactVite from '@vitejs/plugin-react-swc'
+import ReactVite from '#lib/vite-react/vite-react.js'
 import { Arr } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
 import Restart from 'vite-plugin-restart'
