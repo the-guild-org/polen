@@ -2,7 +2,7 @@ import { test as base } from 'playwright/test'
 import { type ProcessOutput } from 'zx'
 import type { ExampleName } from './example-name.js'
 import { ExampleController } from './example-controller/index.js'
-import { PackageManager } from '@wollybeard/kit'
+import type { PackageManager } from '@wollybeard/kit'
 
 export interface TestFixtures {
   runDev: ExampleController.ServerProcess
@@ -36,7 +36,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     const output = await project.run.build()
     await use(output)
   },
-  runStart: async ({ project, runBuild: _ }, use) => {
+  runStart: async ({ project, runBuild: ___ }, use) => {
     const server = await project.run.start()
     await use(server)
     await server.stop()

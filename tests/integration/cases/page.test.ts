@@ -29,11 +29,11 @@ const testCases: TestCase[] = [
 testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.layout.set(fixture)
-    // todo: all embedded react to be used
-    await project.shell`pnpm add react` // adds 1s
-    const viteUserConfig = Polen.defineConfig({
-      vite: {
-        root: project.layout.cwd,
+    const viteUserConfig = await Polen.defineConfig({
+      root: project.layout.cwd,
+      advanced: {
+        // In CI auto-detection does not work. Force it.
+        jsxImportSource: `polen/dependencies/react`,
       },
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)

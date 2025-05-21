@@ -1,24 +1,11 @@
 {
-  "name": "pokemon",
-  "private": true,
-  "version": "0.0.0",
   "type": "module",
-  "packageManager": "pnpm@10.10.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build --app",
-    "start": "node dist/entry.js"
-  },
-  "devDependencies": {
-    "typescript": "~5.8.3",
-    "vite": "^6.2.6",
-    "vite-plugin-inspect": "^11.0.1"
-  },
   "dependencies": {
-    "@types/jsesc": "^3.0.3",
-    "polen": "link:../..",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "vite-plugin-restart": "^0.4.2"
+    "polen": "0.2.0"
+  },
+  "scripts": {
+    "dev": "polen dev",
+    "build": "polen build",
+    "start": "node dist/entry.js"
   }
 }

@@ -5,6 +5,6 @@ import { VitePluginInternal } from './vite-plugin-internal.js'
 export const VitePlugin = async (
   polenConfigInput?: Configurator.ConfigInput,
 ): Promise<Vite.PluginOption> => {
-  const polenConfig = Configurator.normalizeInput(polenConfigInput)
+  const polenConfig = await Configurator.normalizeInput(polenConfigInput)
   return VitePluginInternal(polenConfig)
 }

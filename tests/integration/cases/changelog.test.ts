@@ -25,7 +25,7 @@ test(`shows changelog in navigation bar when multiple schema versions are provid
   }
 
   // Create Polen configuration with multiple schema versions
-  const viteUserConfig = pc({
+  const viteUserConfig = await pc({
     schema: configMemorySchemaVersions([olderSchema, newerSchema]),
   })
 

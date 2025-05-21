@@ -23,13 +23,13 @@ test(`no reference or changelog when schema is omitted or disabled`, async ({ pa
     await expect(page.getByText(`changelog`)).not.toBeVisible()
   }
   {
-    const viteUserConfig = pc()
+    const viteUserConfig = await pc()
     viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await tests()
     await vite.stopDevelopmentServer()
   }
   {
-    const viteUserConfig = pc({
+    const viteUserConfig = await pc({
       schema: {
         ...configMemorySchema(sdl),
         enabled: false,
@@ -42,7 +42,7 @@ test(`no reference or changelog when schema is omitted or disabled`, async ({ pa
 })
 
 test(`can loads schema from memory data source`, async ({ page, vite }) => {
-  const viteUserConfig = pc({
+  const viteUserConfig = await pc({
     schema: configMemorySchema(sdl),
   })
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
@@ -55,7 +55,7 @@ test(`can loads schema from schema data source`, async ({ page, vite, project })
   await project.layout.set({
     'schema.graphql': sdl,
   })
-  const viteUserConfig = pc({ vite: { root: project.layout.cwd } })
+  const viteUserConfig = await pc({ root: project.layout.cwd })
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url(`/`).href)
   await page.getByText(`reference`).click()
@@ -66,7 +66,7 @@ test(`can loads schema from directory data source`, async ({ page, vite, project
   await project.layout.set({
     'schema/2020-01-01.graphql': sdl,
   })
-  const viteUserConfig = pc({ vite: { root: project.layout.cwd } })
+  const viteUserConfig = await pc({ root: project.layout.cwd })
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url(`/`).href)
   await page.getByText(`reference`).click()

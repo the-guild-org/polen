@@ -7,9 +7,14 @@ export const defaultViteConfig: Vite.UserConfig = {
 
 export const pc = (config?: Polen.ConfigInput) => {
   return Polen.defineConfig({
-    vite: {
-      ...defaultViteConfig,
-      ...config?.vite,
+    advanced: {
+      vite: {
+        ...defaultViteConfig,
+        ...config?.advanced?.vite,
+      },
+      vitePluginReact: {
+        jsxImportSource: `react`,
+      },
     },
     ...config,
   })

@@ -19,7 +19,7 @@ export interface Config {
 
 export const normalizeConfig = (configInput: ConfigInput): Config => {
   const config: Config = {
-    path: Path.absolutify(configInput.projectRoot)(configInput.path ?? defaultPaths.schemaFile),
+    path: Path.ensureAbsolute(configInput.path ?? defaultPaths.schemaFile, configInput.projectRoot),
   }
 
   return config

@@ -13,5 +13,22 @@
     "source.addMissingImports": "explicit",
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "never"
+  },
+  "files.exclude": {
+    "tsconfig.json": true,
+    "tsconfig.build.json": true,
+    ".gitignore": true,
+    ".github": true,
+    "pnpm-workspace.yaml": true,
+    "pnpm-lock.yaml": true,
+    "dprint.json": true,
+    "eslint.config.js": true,
+    "build": true,
+    "node_modules/": true,
+    ".dprint/": true,
+    ".vscode": true,
+    ".dprintrc.json": true,
+    "vitest.config.ts": true,
+    "tsconfig.libra.json": true
   }
 }
