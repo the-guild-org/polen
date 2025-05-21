@@ -179,8 +179,6 @@ export const normalizeInput = async (configInput?: ConfigInput): Promise<Config>
 
 const resolveJsxImportSource = async (root: string): Promise<string> => {
   const isHasReact = await checkIsProjectHasPackageInstalled(root, `react`)
-  console.log(import.meta.resolve(``))
-  // return `/Users/jasonkuhrt/projects/the-guild-org/polen/node_modules/.pnpm/react@19.1.0/node_modules/react`
   if (isHasReact) {
     return `react`
   } else {
