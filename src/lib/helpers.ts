@@ -14,6 +14,6 @@ export async function checkIsProjectHasPackageInstalled(
   }
 
   // Check if React is in dependencies or devDependencies
-  return !!(packageJson.dependencies?.[packageName] ??
-    packageJson.devDependencies?.[packageName])
+  return !!(packageJson.dependencies?.[packageName]
+    ?? packageJson.devDependencies?.[packageName])
 }

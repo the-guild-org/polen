@@ -1,5 +1,5 @@
 import { Fs } from '@wollybeard/kit'
-import { type GraphQLSchema, buildASTSchema, parse } from 'graphql'
+import { buildASTSchema, type GraphQLSchema, parse } from 'graphql'
 
 export const read = async (sdlFilePath: string): Promise<null | Fs.File<GraphQLSchema>> => {
   const content = await Fs.read(sdlFilePath)

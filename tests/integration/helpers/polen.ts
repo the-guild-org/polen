@@ -1,5 +1,5 @@
-import { Polen } from '../../../src/exports/index.js'
 import { Vite } from '#dep/vite/index.js'
+import { Polen } from '../../../src/exports/index.js'
 
 export const defaultViteConfig: Vite.UserConfig = {
   customLogger: Vite.createLogger(`silent`, {}),
@@ -32,7 +32,7 @@ export const configMemorySchema = (sdl: string): Polen.ConfigInput[`schema`] => 
 }
 
 export const configMemorySchemaVersions = (
-  versions: { date: Date, sdl: string }[],
+  versions: { date: Date; sdl: string }[],
 ): Polen.ConfigInput[`schema`] => {
   return {
     useDataSources: `memory`,

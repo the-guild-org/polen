@@ -1,10 +1,4 @@
-import type {
-  GraphQLArgument,
-  GraphQLEnumValue,
-  GraphQLField,
-  GraphQLInputField,
-  GraphQLNamedType,
-} from 'graphql'
+import type { GraphQLArgument, GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLNamedType } from 'graphql'
 import { isOutputField } from './typeGuards.js'
 import type { Fielded } from './types-like.js'
 

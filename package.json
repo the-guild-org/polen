@@ -25,8 +25,12 @@
     "url": "git+https://github.com/the-guild-org/polen.git"
   },
   "imports": {
-    "#dep/*": "./build/dep/*",
-    "#lib/*": "./build/lib/*"
+    "#dep/*": {
+      "default": "./build/dep/*"
+    },
+    "#lib/*": {
+      "default": "./build/lib/*"
+    }
   },
   "exports": {
     ".": "./build/exports/index.js",
@@ -50,7 +54,8 @@
     "@radix-ui/themes": "^3.2.1",
     "@types/jsesc": "^3.0.3",
     "@vitejs/plugin-react-swc": "^3.9.0",
-    "@wollybeard/kit": "^0.21.0",
+    "@wollybeard/kit": "^0.22.0",
+    "@wollybeard/projector": "^0.1.0",
     "ansis": "^4.0.0",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
@@ -112,8 +117,6 @@
   },
   "packageManager": "pnpm@10.10.0",
   "scripts": {
-    "r": "libra refresh && pnpm fix:format",
-    "z": "libra toggle-hiding && pnpm fix:format",
     "polen": "tsx ./src/cli/index.ts",
     "examples:unlink": "rm -rf examples/{pokemon,github}/pnpm-workspace.yaml && git checkout examples/*/pnpm-lock.yaml",
     "test:examples": "playwright test --config 'tests/examples/playwright.config.ts'",
@@ -126,10 +129,8 @@
     "build:watch:emit": "pnpm build:watch --noCheck",
     "build:emit": "pnpm build --noCheck",
     "prebuild": "pnpm pnpm build:clean",
-    "fix": "pnpm fix:lint && pnpm fix:format",
     "fix:lint": "eslint . --fix",
     "fix:format": "dprint fmt",
-    "check": "pnpm check:format && pnpm check:types && pnpm check:lint && pnpm check:package",
     "check:format": "dprint check",
     "check:lint": "eslint . --max-warnings 0",
     "check:types": "tsc --noEmit",
@@ -140,7 +141,11 @@
     "prepack": "pnpm build",
     "build:cli:chmodx": "chmod +x ./build/cli/index.js",
     "postbuild": "pnpm run build:cli:chmodx",
-    "test": "vitest"
+    "test": "vitest",
+    "check": "pnpm run '/check:.*/'",
+    "fix": "pnpm run '/fix:.*/'",
+    "fixcheck": "pnpm run '/fix:.*/' && pnpm run '/check:.*/'",
+    "release": "dripip stable"
   },
   "bin": "./build/cli/index.js"
 }

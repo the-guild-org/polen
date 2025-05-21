@@ -1,15 +1,15 @@
-import { test } from '../helpers/test.js'
-import { Polen } from '../../../src/exports/index.js'
-import { expect } from 'playwright/test'
 import type { FsLayout } from '@wollybeard/kit'
+import { expect } from 'playwright/test'
+import { Polen } from '../../../src/exports/index.js'
+import { test } from '../helpers/test.js'
 
 interface TestCase {
   title?: string
   fixture: FsLayout.Tree
   result: {
-    path: string,
-    navBarTitle: string,
-    content: string,
+    path: string
+    navBarTitle: string
+    content: string
   }
 }
 

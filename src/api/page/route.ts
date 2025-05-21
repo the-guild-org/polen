@@ -49,8 +49,7 @@ export const filePathToPageRoute = (filePath: string, rootDir: string): RouteInd
 
 export const pathSegmentSeparator = `/`
 
-export const isRouteTopLevel = (route: Route): boolean =>
-  isRoutePathRoot(calcParentRoutePath(route).raw)
+export const isRouteTopLevel = (route: Route): boolean => isRoutePathRoot(calcParentRoutePath(route).raw)
 
 export const calcParentRoutePath = (route: Route): RoutePath => {
   switch (route.type) {

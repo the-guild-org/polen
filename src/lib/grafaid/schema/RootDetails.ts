@@ -11,17 +11,17 @@ export interface RootDetails {
     /**
      * If alias present then the alias, otherwise the standard.
      */
-    canonical: string,
+    canonical: string
     /**
      * The standard name for this root type.
      */
 
-    standard: StandardRootTypeName,
+    standard: StandardRootTypeName
     /**
      * The custom name given for this root type in this schema, if any.
      */
 
-    alias: string | null,
+    alias: string | null
   }
   type: GraphQLObjectType
   operationType: OperationType

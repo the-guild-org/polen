@@ -9,10 +9,10 @@ const examplesDir = Path.resolve(selfPath.dir, `../../`)
 
 export const getPaths = (importMeta: ImportMeta): {
   example: {
-    name: ExampleName,
-    dir: string,
-  },
-  examples: string,
+    name: ExampleName
+    dir: string
+  }
+  examples: string
 } => {
   const testModulePath = Path.parse(Url.fileURLToPath(importMeta.url))
   const exampleName = ExampleName.parse(Path.basename(testModulePath.base, `.test.ts`))

@@ -10,8 +10,8 @@ import {
   type InlineFragmentNode,
   type IntValueNode,
   type ListValueNode,
-  type NameNode,
   type NamedTypeNode,
+  type NameNode,
   type NullValueNode,
   type ObjectFieldNode,
   type ObjectValueNode,
@@ -129,8 +129,8 @@ export const Document: Constructor<DocumentNode> = document => {
 }
 
 export const isDocumentNode = (value: unknown): value is DocumentNode => {
-  return typeof value === `object` && value !== null && `kind` in value &&
-    value.kind === Kind.DOCUMENT
+  return typeof value === `object` && value !== null && `kind` in value
+    && value.kind === Kind.DOCUMENT
 }
 
 export const OperationDefinition: Constructor<OperationDefinitionNode> = operationDefinition => {
@@ -140,8 +140,8 @@ export const OperationDefinition: Constructor<OperationDefinitionNode> = operati
   }
 }
 export const isOperationDefinitionNode = (value: unknown): value is OperationDefinitionNode => {
-  return typeof value === `object` && value !== null && `kind` in value &&
-    value.kind === Kind.OPERATION_DEFINITION
+  return typeof value === `object` && value !== null && `kind` in value
+    && value.kind === Kind.OPERATION_DEFINITION
 }
 
 export const SelectionSet: Constructor<SelectionSetNode> = selectionSet => {
@@ -173,8 +173,8 @@ export const NamedType: Constructor<NamedTypeNode> = namedType => {
 }
 
 export const isNamedType = (value: unknown): value is NamedTypeNode => {
-  return typeof value === `object` && value !== null && `kind` in value &&
-    value.kind === Kind.NAMED_TYPE
+  return typeof value === `object` && value !== null && `kind` in value
+    && value.kind === Kind.NAMED_TYPE
 }
 
 export const Field: Constructor<FieldNode> = field => {

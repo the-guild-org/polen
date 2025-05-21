@@ -14,5 +14,4 @@ export interface StandardScalarRuntimeTypeMap {
   Boolean: boolean
 }
 
-export type StandardScalarRuntimeTypes =
-  StandardScalarRuntimeTypeMap[keyof StandardScalarRuntimeTypeMap]
+export type StandardScalarRuntimeTypes = StandardScalarRuntimeTypeMap[keyof StandardScalarRuntimeTypeMap]

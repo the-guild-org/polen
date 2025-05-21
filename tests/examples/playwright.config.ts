@@ -1,7 +1,7 @@
+import { PackageManager } from '@wollybeard/kit'
 import { defineConfig, devices } from 'playwright/test'
 import type { WorkerFixtures } from './helpers/test.js'
 import { type TestFixtures } from './helpers/test.js'
-import { PackageManager } from '@wollybeard/kit'
 
 const isCi = !!process.env[`CI`]
 const polenLink = process.env[`POLEN_LINK`]

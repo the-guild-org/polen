@@ -1,8 +1,8 @@
-import type { FC } from 'react'
-import type { GraphQLField } from 'graphql'
-import { Box, Text } from '@radix-ui/themes'
-import { ArgumentAnnotation } from './ArgumentAnnotation.jsx'
 import { GrafaidOld } from '#lib/grafaid-old/index.js'
+import { Box, Text } from '@radix-ui/themes'
+import type { GraphQLField } from 'graphql'
+import type { FC } from 'react'
+import { ArgumentAnnotation } from './ArgumentAnnotation.jsx'
 import { FieldList } from './FieldList.jsx'
 
 export interface Props {
@@ -15,7 +15,7 @@ export const ArgumentListAnnotation: FC<Props> = ({ field }) => {
   const inputObject = GrafaidOld.getIAP(field)
   const inputObjectFields = inputObject
     ? (
-      <Box pl="3" style={{ borderLeft: `1px solid var(--gray-6)` }}>
+      <Box pl='3' style={{ borderLeft: `1px solid var(--gray-6)` }}>
         <FieldList data={inputObject} />
       </Box>
     )
@@ -24,7 +24,7 @@ export const ArgumentListAnnotation: FC<Props> = ({ field }) => {
   return (
     <>
       <Text>(</Text>
-      <Box ml="2">
+      <Box ml='2'>
         {field.args.map(arg => <ArgumentAnnotation key={arg.name} data={arg} />)}
         {inputObjectFields}
       </Box>
