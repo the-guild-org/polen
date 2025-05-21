@@ -2,7 +2,7 @@
 // @ts-nocheck
 
 /* global window */
-/* eslint-disable prefer-const, @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-empty-function */
 
 /*! Copyright (c) Meta Platforms, Inc. and affiliates. **/
 /**
