@@ -32,6 +32,7 @@ testCases.forEach(({ fixture, result, title }) => {
     const viteUserConfig = await Polen.defineConfig({
       root: project.layout.cwd,
       advanced: {
+        // In CI auto-detection does not work. Force it.
         jsxImportSource: `polen/dependencies/react`,
       },
     })
