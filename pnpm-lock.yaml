@@ -217,6 +217,12 @@ importers:
         specifier: ^3.24.3
         version: 3.24.3
 
+  examples/github:
+    dependencies:
+      polen:
+        specifier: link:../..
+        version: link:../..
+
 packages:
 
   '@0no-co/graphql.web@1.1.2':

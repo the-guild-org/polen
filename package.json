@@ -150,12 +150,5 @@
     "fixcheck": "pnpm run '/fix:.*/' && pnpm run '/check:.*/'",
     "release": "dripip stable"
   },
-  "bin": "./build/cli/index.js",
-  "libra": {
-    "visibility": true,
-    "exports": {
-      "include": null
-    },
-    "cli": true
-  }
+  "bin": "./build/cli/index.js"
 }
