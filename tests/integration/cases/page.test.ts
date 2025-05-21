@@ -31,6 +31,9 @@ testCases.forEach(({ fixture, result, title }) => {
     await project.layout.set(fixture)
     const viteUserConfig = await Polen.defineConfig({
       root: project.layout.cwd,
+      advanced: {
+        jsxImportSource: `polen/dependencies/react`,
+      },
     })
     const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await page.goto(viteDevServer.url(`/`).href)
