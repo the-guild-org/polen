@@ -1,9 +1,15 @@
 import { ReactDomServer } from '#dep/react-dom-server/index.js'
 import type { Vite } from '#dep/vite/index.js'
+import { AppleTouchIcon } from '#lib/apple-touch-icon/index.js'
+import { Favicon } from '#lib/favicon/index.js'
+import { Http } from '@wollybeard/kit'
 import { Hono } from 'hono'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { StrictMode } from 'react'
 import type { StaticHandlerContext } from 'react-router'
 import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router'
+import { PROJECT_DATA } from 'virtual:polen/project/data'
 import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
 import { routes } from './routes.jsx'
 
@@ -59,10 +65,34 @@ const staticHandler = createStaticHandler(routes)
 
 app.get(`*`, async ctx => {
   const staticHandlerContext = await staticHandler.query(ctx.req.raw)
-  // console.log(staticHandlerContext)
 
   if (staticHandlerContext instanceof Response) {
     return staticHandlerContext
+  }
+
+  if (
+    ctx.req.path.includes(PROJECT_DATA.faviconPath)
+    || ctx.req.path.includes(PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`))
+  ) {
+    const path = ctx.req.path === PROJECT_DATA.faviconPath
+      ? PROJECT_DATA.faviconPath
+      : PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`)
+    const faviconPath = join(import.meta.dirname, `../../assets`, path)
+    const favicon = await readFile(faviconPath)
+    return new Response(favicon, {
+      headers: [
+        Http.Headers.contentType(path.endsWith(`.ico`) ? `image/x-icon` : `image/svg+xml`),
+        Http.Headers.responseCacheControl({ visibility: `public`, maxAge: 31536000, immutable: true }),
+      ],
+    })
+  }
+
+  if (Favicon.fileNamePattern.test(ctx.req.path)) {
+    return Http.Response.notFound
+  }
+
+  if (AppleTouchIcon.fileNamePattern.test(ctx.req.path)) {
+    return Http.Response.notFound
   }
 
   const router = createStaticRouter(staticHandler.dataRoutes, staticHandlerContext)
