@@ -18,8 +18,7 @@ import { homedir } from 'node:os'
 import { z } from 'zod'
 import { defineConfig } from '../../create-configuration.js'
 
-const args = Command
-  .create()
+const args = Command.create()
   .parameter(
     `--introspection-headers --inh`,
     z
@@ -29,14 +28,15 @@ const args = Command
         `Include headers in the introspection query request sent when using --introspection-url. Format is JSON Object.`,
       ),
   )
-  .parametersExclusive(`source`, $ =>
-    $
-      .parameter(`--introspect --in -i`, {
-        schema: z
-          .string()
-          .url()
-          .describe(`Get the schema by sending a GraphQL introspection query to this URL.`),
-      })
+  .parametersExclusive(`source`, ($) =>
+    $.parameter(`--introspect --in -i`, {
+      schema: z
+        .string()
+        .url()
+        .describe(
+          `Get the schema by sending a GraphQL introspection query to this URL.`,
+        ),
+    })
       .parameter(`--sdl -s`, {
         schema: z
           .string()
@@ -47,13 +47,18 @@ const args = Command
       .parameter(`--name -n`, {
         schema: z
           .enum([`github`, `hive`])
-          .describe(`Pick from a well known public API. Polen already knows how to fetch the schema for these APIs.`),
+          .describe(
+            `Pick from a well known public API. Polen already knows how to fetch the schema for these APIs.`,
+          ),
       }))
   .parameter(
     `--cache`,
-    z.boolean().default(true).describe(
-      `Enable or disable caching. By default this command caches fetched schemas for re-use.`,
-    ),
+    z
+      .boolean()
+      .default(true)
+      .describe(
+        `Enable or disable caching. By default this command caches fetched schemas for re-use.`,
+      ),
   )
   .parse()
 
@@ -103,7 +108,6 @@ const wrapCache = <fn extends Fn.AnyAnyAsync>(fn: fn): fn => {
       return cachedSchema
     }
 
-    // eslint-disable-next-line
     const value = await fn(...args)
 
     await cache.write(cacheKey, value)
@@ -135,7 +139,9 @@ const schema = await load(
     : {
       type: `introspect`,
       url: args.source.value,
-      headers: args.introspectionHeaders ? parseHeaders(args.introspectionHeaders) : undefined,
+      headers: args.introspectionHeaders
+        ? parseHeaders(args.introspectionHeaders)
+        : undefined,
     },
 )
 

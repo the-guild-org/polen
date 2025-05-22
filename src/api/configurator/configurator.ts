@@ -125,7 +125,10 @@ const configInputDefaults: Config = {
   },
 }
 
-export const normalizeInput = async (configInput?: ConfigInput): Promise<Config> => {
+export const normalizeInput = async (
+  configInput?: ConfigInput,
+  // eslint-disable-next-line
+): Promise<Config> => {
   const config = structuredClone(configInputDefaults)
 
   if (configInput?.root) {
