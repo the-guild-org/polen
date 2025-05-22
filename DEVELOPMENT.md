@@ -28,7 +28,7 @@ the build such as:
 ### Vite Polen plugin
 
 When a user's project uses Vite and the Vite Polen plugin we need Vite to be
-able to resolve our local imports in source code. We canot rely on NodeJS to
+able to resolve our local imports in source code. We cannot rely on NodeJS to
 since it is not the process crawling the Polen package. So we resolve the local
 import paths in the Vite Polen plugin using the Rollup `resolveId` hook.
 
@@ -65,7 +65,7 @@ TODO: Waiting on https://github.com/orgs/pnpm/discussions/9411
 
 ### Developing With _Strictly_
 
-Because examples are nested within this project it leads to strange beahviours
+Because examples are nested within this project it leads to strange behaviours
 like node resolution going into this project's node_modules and thus
 [masking bugs](https://github.com/the-guild-org/polen/issues/11).
 
