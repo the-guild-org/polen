@@ -37,6 +37,8 @@ export const Component = () => {
         />
         <title>{templateVariables.title}</title>
         {import.meta.env.DEV && <link rel='stylesheet' href={radixStylesUrl} />}
+        <link rel="icon" href={PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`} sizes='256 x 256' />
+        <link rel="icon" href={PROJECT_DATA.faviconPath + `?v=1`} sizes='any' type='image/svg+xml' />
       </head>
       <body style={{ margin: 0 }}>
         <Layout />

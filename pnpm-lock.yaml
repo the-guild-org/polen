@@ -42,8 +42,8 @@ importers:
         specifier: ^3.9.0
         version: 3.9.0(vite@6.3.5(@types/node@22.15.3)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
       '@wollybeard/kit':
-        specifier: ^0.22.0
-        version: 0.22.0
+        specifier: ^0.23.0
+        version: 0.23.0
       '@wollybeard/projector':
         specifier: ^0.1.0
         version: 0.1.0
@@ -216,12 +216,6 @@ importers:
       zod:
         specifier: ^3.24.3
         version: 3.24.3
-
-  examples/github:
-    dependencies:
-      polen:
-        specifier: link:../..
-        version: link:../..
 
 packages:
 
@@ -1816,6 +1810,9 @@ packages:
 
   '@wollybeard/kit@0.22.0':
     resolution: {integrity: sha512-Hq7PTMKM1Jq5wGCK6YgOjHRNtgeaBrk2guwxY2PvNfyHYVGazmz18K//bR/a3YV5NG8N8oxRkEUVb251NV3AiA==}
+
+  '@wollybeard/kit@0.23.0':
+    resolution: {integrity: sha512-DrR2kLcLHI5G2UMSNtpx3ndyRvFhonh1xw56ILFxEf3zUnpnmHJ4c/V9YDlIAU2mInBHfTmKzPWBR842dMxqnA==}
 
   '@wollybeard/projector@0.1.0':
     resolution: {integrity: sha512-gB4aULR32DTOuevHE2mD1zSCCmPJ3q5TTd6kGHLMqKzKJZoX+XCSf4tP8PMfI6Suaib9U3jVss0K4pehjcYUWA==}
@@ -3446,8 +3443,8 @@ packages:
   zod@3.24.3:
     resolution: {integrity: sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==}
 
-  zod@3.25.17:
-    resolution: {integrity: sha512-8hQzQ/kMOIFbwOgPrm9Sf9rtFHpFUMy4HvN0yEB0spw14aYi0uT5xG5CE2DB9cd51GWNsz+DNO7se1kztHMKnw==}
+  zod@3.25.20:
+    resolution: {integrity: sha512-z03fqpTMDF1G02VLKUMt6vyACE7rNWkh3gpXVHgPTw28NPtDFRGvcpTtPwn2kMKtQ0idtYJUTxchytmnqYswcw==}
 
   zx@8.5.4:
     resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
@@ -5206,7 +5203,16 @@ snapshots:
       es-toolkit: 1.38.0
       jsonc-parser: 3.3.1
       type-fest: 4.41.0
-      zod: 3.25.17
+      zod: 3.25.20
+
+  '@wollybeard/kit@0.23.0':
+    dependencies:
+      '@types/node': 22.15.21
+      consola: 3.4.2
+      es-toolkit: 1.38.0
+      jsonc-parser: 3.3.1
+      type-fest: 4.41.0
+      zod: 3.25.20
 
   '@wollybeard/projector@0.1.0':
     dependencies:
@@ -6794,6 +6800,6 @@ snapshots:
 
   zod@3.24.3: {}
 
-  zod@3.25.17: {}
+  zod@3.25.20: {}
 
   zx@8.5.4: {}

@@ -85,6 +85,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
           const projectData: ProjectData = {
             schema,
             siteNavigationItems,
+            faviconPath: `/logo.svg`,
           }
 
           const projectDataCode = jsesc(superjson.stringify(projectData))
