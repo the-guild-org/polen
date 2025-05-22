@@ -34,7 +34,10 @@
   },
   "exports": {
     ".": "./build/exports/index.js",
-    "./polen": "./build/exports/polen.js"
+    "./polen": "./build/exports/polen.js",
+    "./dependencies/react": "./build/exports/dependencies/react.js",
+    "./dependencies/react/jsx-dev-runtime": "./build/exports/dependencies/react/jsx-dev-runtime.js",
+    "./dependencies/react/jsx-runtime": "./build/exports/dependencies/react/jsx-runtime.js"
   },
   "files": [
     "build",
