@@ -1,5 +1,4 @@
 import type { Vite } from '#dep/vite/index.js'
-import { checkIsProjectHasPackageInstalled } from '#lib/helpers.js'
 import type ReactVite from '@vitejs/plugin-react-swc'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { sourcePaths } from '../../source-paths.js'
@@ -65,8 +64,6 @@ export interface ConfigInput {
      * @see https://vite.dev/guide/api-javascript.html#mergeconfig
      */
     vite?: Vite.UserConfig
-    vitePluginReact?: ReactViteOptions
-    jsxImportSource?: string
   }
 }
 
@@ -135,18 +132,8 @@ export const normalizeInput = async (configInput?: ConfigInput): Promise<Config>
     config.root = configInput.root
   }
 
-  if (configInput?.advanced?.jsxImportSource) {
-    config.advanced.jsxImportSource = configInput.advanced.jsxImportSource
-  } else {
-    config.advanced.jsxImportSource = await resolveJsxImportSource(config.root)
-  }
-
   if (configInput?.advanced?.vite) {
     config.advanced.vite = configInput.advanced.vite
-  }
-
-  if (configInput?.advanced?.vitePluginReact) {
-    config.advanced.vitePluginReact = configInput.advanced.vitePluginReact
   }
 
   if (configInput?.ssr !== undefined) {
@@ -175,13 +162,4 @@ export const normalizeInput = async (configInput?: ConfigInput): Promise<Config>
   }
 
   return config
-}
-
-const resolveJsxImportSource = async (root: string): Promise<string> => {
-  const isHasReact = await checkIsProjectHasPackageInstalled(root, `react`)
-  if (isHasReact) {
-    return `react`
-  } else {
-    return `polen/dependencies/react`
-  }
 }

@@ -5,7 +5,7 @@ import { ExampleName } from '../tests/examples/helpers/example-name.js'
 
 const args = Command
   .create()
-  .parameter(`name`, ExampleName)
+  .parameter(`name`, ExampleName as any)
   .parameter(`link`, PackageManager.LinkProtocol.optional() as any)
   // todo: update `@molt/command`
   .parse() as { name: ExampleName; link?: PackageManager.LinkProtocol }
