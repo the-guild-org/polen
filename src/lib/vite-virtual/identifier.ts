@@ -1,5 +1,20 @@
 import { createId, createResolved, normalizeId } from './id.js'
 
+export interface Options {
+  /**
+   * @defaultValue '/'
+   */
+  separator?: string
+  /**
+   * When false, virtual modules will be prefixed with \\0 to avoid being processed by other plugins.
+
+   * @see https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention
+
+   * @defaultValue false
+   */
+  allowPluginProcessing?: boolean
+}
+
 export interface Identifier {
   id: string
   resolved: string
@@ -8,21 +23,23 @@ export interface Identifier {
 }
 
 export const defaults = {
-  seperator: `/`,
+  allowPluginProcessing: false,
+  separator: `/`,
 } as const
 
 export const create = (parameters: {
   id: string
   namespace?: string
   separator?: string
+  allowPluginProcessing?: boolean
 }): Identifier => {
-  const separator = parameters.separator ?? defaults.seperator
+  const separator = parameters.separator ?? defaults.separator
   const idNormalized = normalizeId({ id: parameters.id, separator })
   const idNamespaced = parameters.namespace
     ? `${parameters.namespace}${separator}${idNormalized}`
     : idNormalized
   const id = createId(idNamespaced)
-  const resolved = createResolved(id)
+  const resolved = parameters.allowPluginProcessing ? id : createResolved(id)
   return {
     id,
     resolved,
@@ -34,16 +51,17 @@ export const create = (parameters: {
 export const createFactory = (parameters: {
   namespace: string
   separator?: string
-}): (...idSegments: string[]) => Identifier => {
-  const { namespace, separator = defaults.seperator } = parameters
+}): (idSegments: string[], options?: Options) => Identifier => {
+  const { namespace, separator = defaults.separator } = parameters
 
-  return (...idSegments) => {
+  return (idSegments, options) => {
     const id = idSegments.flatMap(_ => _.split(separator)).join(separator)
 
     return create({
       id,
       namespace,
       separator,
+      ...options,
     })
   }
 }

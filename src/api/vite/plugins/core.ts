@@ -12,11 +12,10 @@ import { Schema } from '../../schema/index.js'
 import { logger } from '../logger.js'
 import { vi } from '../vi.js'
 
-const viTemplateVariables = vi(`template`, `variables`)
-const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
-const viProjectPages = vi(`project`, `pages.jsx`)
-viProjectPages.resolved = viProjectPages.id
-const viProjectData = vi(`project`, `data`)
+const viTemplateVariables = vi([`template`, `variables`])
+const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
+const viProjectPages = vi([`project`, `pages.jsx`], { allowPluginProcessing: true })
+const viProjectData = vi([`project`, `data`])
 
 export const Core = (config: Configurator.Config): Vite.PluginOption => {
   const readPages = Cache.memoize(Page.readAll)

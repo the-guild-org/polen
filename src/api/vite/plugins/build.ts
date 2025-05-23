@@ -5,7 +5,7 @@ import type { Configurator } from '../../configurator/index.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 import { vi } from '../vi.js'
 
-const viServerEntry = vi(`server`, `entry.jsx`)
+const viServerEntry = vi([`server`, `entry.jsx`])
 
 export const Build = (config: Configurator.Config): Vite.Plugin[] => {
   let viteConfigResolved: Vite.ResolvedConfig
@@ -191,7 +191,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
   }]
 }
 
-const viClientManifest = vi(`vite`, `client`, `manifest`)
+const viClientManifest = vi([`vite`, `client`, `manifest`])
 
 const Manifest = (): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv
