@@ -1,14 +1,19 @@
 import type { Vite } from '#dep/vite/index.js'
-import type ReactVite from '@vitejs/plugin-react-swc'
+import { Path } from '@wollybeard/kit'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
-import { sourcePaths } from '../../source-paths.js'
+import { packagePaths } from '../../package-paths.js'
 import type { Schema } from '../schema/index.js'
-
-type ReactViteOptions = Exclude<Parameters<typeof ReactVite>[0], undefined>
 
 type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
 
 export interface ConfigInput {
+  /**
+   * Path to the root directory of your project.
+   *
+   * Relative paths will be resolved relative to the current working directory.
+   *
+   * @defaultValue process.cwd()
+   */
   root?: string
   /**
    * Enable a special module explorer for the source code that Polen assembles for your app.
@@ -72,7 +77,6 @@ export interface TemplateVariables {
 }
 
 export interface Config {
-  root: string
   mode: string
   explorer: boolean
   watch: {
@@ -85,6 +89,8 @@ export interface Config {
     enabled: boolean
   }
   paths: {
+    project: string
+    framework: string
     appTemplate: {
       dir: string
       entryClient: string
@@ -92,14 +98,11 @@ export interface Config {
     }
   }
   advanced: {
-    jsxImportSource?: string
     vite?: Vite.UserConfig
-    vitePluginReact?: ReactViteOptions
   }
 }
 
 const configInputDefaults: Config = {
-  root: process.cwd(),
   templateVariables: {
     title: `My Developer Portal`,
   },
@@ -114,15 +117,15 @@ const configInputDefaults: Config = {
     enabled: true,
   },
   paths: {
+    project: process.cwd(),
+    framework: packagePaths.sourceDir,
     appTemplate: {
-      dir: sourcePaths.template.dir,
-      entryServer: sourcePaths.template.modulePaths.entryServer,
-      entryClient: sourcePaths.template.modulePaths.entryClient,
+      dir: packagePaths.template.dir,
+      entryServer: packagePaths.template.modulePaths.entryServer,
+      entryClient: packagePaths.template.modulePaths.entryClient,
     },
   },
-  advanced: {
-    jsxImportSource: `react`,
-  },
+  advanced: {},
 }
 
 export const normalizeInput = async (
@@ -132,7 +135,7 @@ export const normalizeInput = async (
   const config = structuredClone(configInputDefaults)
 
   if (configInput?.root) {
-    config.root = configInput.root
+    config.paths.project = Path.ensureAbsoluteWithCWD(configInput.root)
   }
 
   if (configInput?.advanced?.vite) {

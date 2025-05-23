@@ -8,5 +8,10 @@
     "exactOptionalPropertyTypes": false,
     "lib": ["DOM", "es2023", "DOM.Iterable"]
   },
-  "exclude": ["build", "eslint.config.js", "examples/github", "examples/pokemon"]
+  "exclude": [
+    "build",
+    "eslint.config.js",
+    "examples/github",
+    "examples/pokemon"
+  ]
 }

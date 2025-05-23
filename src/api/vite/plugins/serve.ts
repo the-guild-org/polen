@@ -61,7 +61,7 @@ export const Serve = (
         optimizeDeps: {
           // Polen is already ESM and does not have many internal modules.
           // https://vite.dev/guide/dep-pre-bundling.html#customizing-the-behavior
-          exclude: [`polen`],
+          // exclude: [`polen`],
           // include: [
           //   // `react`,
           //   // `react/jsx-runtime`,

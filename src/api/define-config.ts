@@ -1,6 +1,6 @@
 import { Vite } from '#dep/vite/index.js'
-import { Configurator } from './api/configurator/index.js'
-import { VitePluginInternal } from './api/vite-plugin/vite-plugin-internal.js'
+import { Configurator } from './configurator/index.js'
+import { Main } from './vite/plugins/main.js'
 
 export interface ViteUserConfigWithPolen extends Vite.UserConfig {
   _polen: {
@@ -17,17 +17,16 @@ export const defineConfig = async (
 ): Promise<ViteUserConfigWithPolen> => {
   const polenConfig = await Configurator.normalizeInput(configInput)
 
-  const baseConfig = Vite.defineConfig({
-    root: polenConfig.root,
-    plugins: [VitePluginInternal(polenConfig)],
-  })
+  const viteConfigFromPolen: Vite.UserConfig = {
+    plugins: [Main(polenConfig)],
+  }
 
-  const mergedConfig = configInput.advanced?.vite
-    ? Vite.mergeConfig(baseConfig, configInput.advanced.vite)
-    : baseConfig
+  const viteConfigMerged = configInput.advanced?.vite
+    ? Vite.mergeConfig(viteConfigFromPolen, configInput.advanced.vite)
+    : viteConfigFromPolen
 
   return {
-    ...mergedConfig,
+    ...viteConfigMerged,
     _polen: {
       input: configInput,
       normalized: polenConfig,

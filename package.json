@@ -35,9 +35,10 @@
   "exports": {
     ".": "./build/exports/index.js",
     "./polen": "./build/exports/polen.js",
-    "./dependencies/react": "./build/exports/dependencies/react.js",
-    "./dependencies/react/jsx-dev-runtime": "./build/exports/dependencies/react/jsx-dev-runtime.js",
-    "./dependencies/react/jsx-runtime": "./build/exports/dependencies/react/jsx-runtime.js"
+    "./react": "./build/exports/react.js",
+    "./react-dom/server": "./build/exports/react-dom/server.js",
+    "./react/jsx-dev-runtime": "./build/exports/react/jsx-dev-runtime.js",
+    "./react/jsx-runtime": "./build/exports/react/jsx-runtime.js"
   },
   "files": [
     "build",
@@ -55,7 +56,7 @@
     "@rolldown/pluginutils": "1.0.0-beta.9",
     "@swc/core": "^1.11.29",
     "@types/jsesc": "^3.0.3",
-    "@vitejs/plugin-react-swc": "^3.9.0",
+    "@vitejs/plugin-react": "^4.4.1",
     "@wollybeard/kit": "^0.23.0",
     "@wollybeard/projector": "^0.1.0",
     "ansis": "^4.0.0",

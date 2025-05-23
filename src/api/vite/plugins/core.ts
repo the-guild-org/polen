@@ -1,15 +1,16 @@
-import { Vite } from '#dep/vite/index.js'
+import type { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Cache, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
+import { packagePaths } from '../../../package-paths.js'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
-import { sourcePaths } from '../../../source-paths.js'
 import type { Configurator } from '../../configurator/index.js'
 import { Page } from '../../page/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
-import { vi } from '../helpers.js'
+import { logger } from '../logger.js'
+import { vi } from '../vi.js'
 
 const viTemplateVariables = vi(`template`, `variables`)
 const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
@@ -34,6 +35,12 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
 
   return {
     name: `polen:core`,
+    config() {
+      return {
+        root: config.paths.framework,
+        customLogger: logger,
+      }
+    },
     configResolved(config_) {
       viteConfig = config_
     },
@@ -90,8 +97,8 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
 
           const projectDataCode = jsesc(superjson.stringify(projectData))
           const content = `
-            import { superjson } from '${sourcePaths.dir}/singletons/superjson.js'
-            
+            import { superjson } from '${packagePaths.sourceDir}/singletons/superjson.js'
+
             export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `
 
@@ -102,10 +109,11 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
         identifier: viProjectPages,
         loader: async () => {
           const pages = Page.lint(await readPages({ dir: viteConfig.root }))
+          // return `import * as X from 'polen/react/jsx-dev-runtime'; console.log(X); export const pages = [];`
           const moduleContent = Page.ReactRouterAdaptor.render({
             pageTree: pages.fixed,
             sourcePaths: {
-              reactRouterHelpers: `${sourcePaths.dir}/lib/react-router-helpers.js`,
+              reactRouterHelpers: `${packagePaths.dir}/lib/react-router-helpers.js`,
             },
           })
 
@@ -114,16 +122,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
             console.log(_.type)
           })
 
-          const moduleCotentTransformed = await Vite.transformWithEsbuild(
-            moduleContent,
-            `ignore.jsx`,
-            {
-              jsx: `automatic`,
-              jsxImportSource: config.advanced.jsxImportSource,
-            },
-          )
-
-          return moduleCotentTransformed
+          return moduleContent
         },
       },
     ),

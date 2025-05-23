@@ -3,3 +3,6 @@ onlyBuiltDependencies:
   - '@swc/core'
   - esbuild
   - '@playwright/browser-chromium'
+overrides:
+  '@wollybeard/kit': link:../../../Library/pnpm/global/5/node_modules/@wollybeard/kit
+  polen: 'link:'

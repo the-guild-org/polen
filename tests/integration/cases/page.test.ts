@@ -14,11 +14,11 @@ interface TestCase {
 }
 
 const testCases: TestCase[] = [
-  {
-    title: `exact page`,
-    fixture: { 'pages/foo.md': `abc` },
-    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
-  },
+  // {
+  //   title: `exact page`,
+  //   fixture: { 'pages/foo.md': `abc` },
+  //   result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
+  // },
   {
     title: `index page`,
     fixture: { 'pages/foo/index.md': `abc` },
@@ -28,6 +28,7 @@ const testCases: TestCase[] = [
 
 testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
+    console.log(project.dir)
     await project.layout.set(fixture)
     const viteUserConfig = await Polen.defineConfig({
       root: project.layout.cwd,

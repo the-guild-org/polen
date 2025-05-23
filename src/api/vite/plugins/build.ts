@@ -2,8 +2,8 @@ import { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Fs, Path, Str } from '@wollybeard/kit'
 import { defu } from 'defu'
-import { vi } from '../helpers.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
+import { vi } from '../vi.js'
 
 const viServerEntry = vi(`server`, `entry.jsx`)
 
