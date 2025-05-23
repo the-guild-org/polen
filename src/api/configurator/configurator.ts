@@ -1,7 +1,7 @@
 import type { Vite } from '#dep/vite/index.js'
 import { Path } from '@wollybeard/kit'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
-import { packagePaths } from '../../package-paths.js'
+import { type PackagePaths, packagePaths } from '../../package-paths.js'
 import type { Schema } from '../schema/index.js'
 
 type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
@@ -23,22 +23,6 @@ export interface ConfigInput {
    * @defaultValue true
    */
   explorer?: boolean
-  /**
-   * Tweak the watch behavior.
-   */
-  watch?: {
-    /**
-     * Restart the development server when some arbitrary files change.
-     *
-     * Use this to restart when files that are not already watched by vite change.
-     *
-     * @see https://github.com/antfu/vite-plugin-restart
-     */
-    /**
-     * File paths to watch and restart the development server when they change.
-     */
-    also?: string[]
-  }
   schema?: SchemaConfigInput
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
@@ -62,6 +46,32 @@ export interface ConfigInput {
    */
   ssr?: boolean
   advanced?: {
+    /**
+     * Tweak the watch behavior.
+     */
+    watch?: {
+      /**
+       * Restart the development server when some arbitrary files change.
+       *
+       * Use this to restart when files that are not already watched by vite change.
+       *
+       * @see https://github.com/antfu/vite-plugin-restart
+       */
+      /**
+       * File paths to watch and restart the development server when they change.
+       */
+      also?: string[]
+    }
+    /**
+     * Whether to enable debug mode.
+     *
+     * When enabled the following happens:
+     *
+     * - build output is NOT minified.
+     *
+     * @defaultValue false
+     */
+    debug?: boolean
     /**
      * Additional {@link vite.UserConfig} that is merged with the one created by Polen using {@link Vite.mergeConfig}.
      *
@@ -90,14 +100,10 @@ export interface Config {
   }
   paths: {
     project: string
-    framework: string
-    appTemplate: {
-      dir: string
-      entryClient: string
-      entryServer: string
-    }
+    framework: PackagePaths
   }
   advanced: {
+    debug: boolean
     vite?: Vite.UserConfig
   }
 }
@@ -118,14 +124,11 @@ const configInputDefaults: Config = {
   },
   paths: {
     project: process.cwd(),
-    framework: packagePaths.sourceDir,
-    appTemplate: {
-      dir: packagePaths.template.dir,
-      entryServer: packagePaths.template.modulePaths.entryServer,
-      entryClient: packagePaths.template.modulePaths.entryClient,
-    },
+    framework: packagePaths,
   },
-  advanced: {},
+  advanced: {
+    debug: false,
+  },
 }
 
 export const normalizeInput = async (
@@ -133,6 +136,10 @@ export const normalizeInput = async (
   // eslint-disable-next-line
 ): Promise<Config> => {
   const config = structuredClone(configInputDefaults)
+
+  if (configInput?.advanced?.debug !== undefined) {
+    config.advanced.debug = configInput.advanced.debug
+  }
 
   if (configInput?.root) {
     config.paths.project = Path.ensureAbsoluteWithCWD(configInput.root)
@@ -163,8 +170,8 @@ export const normalizeInput = async (
     config.explorer = configInput.explorer
   }
 
-  if (configInput?.watch?.also) {
-    config.watch.also = configInput.watch.also
+  if (configInput?.advanced?.watch?.also) {
+    config.watch.also = configInput.advanced.watch.also
   }
 
   return config

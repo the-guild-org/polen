@@ -30,6 +30,9 @@
     },
     "#lib/*": {
       "default": "./build/lib/*"
+    },
+    "#*": {
+      "default": "./build/*"
     }
   },
   "exports": {

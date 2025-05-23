@@ -30,10 +30,10 @@ testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     console.log(project.dir)
     await project.layout.set(fixture)
-    const viteUserConfig = await Polen.defineConfig({
+    const viteConfig = await Polen.defineConfig({
       root: project.layout.cwd,
     })
-    const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
+    const viteDevServer = await vite.startDevelopmentServer(viteConfig)
     await page.goto(viteDevServer.url(`/`).href)
     await page.getByText(result.navBarTitle).click({ timeout: 1000 })
     await expect(page.getByText(result.content)).toBeVisible()

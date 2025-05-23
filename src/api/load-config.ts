@@ -1,5 +1,6 @@
 import { Vite } from '#dep/vite/index.js'
 import { Fs, Path } from '@wollybeard/kit'
+import { defineConfig } from './define-config.js'
 import { logger } from './vite/logger.js'
 
 export const loadConfig = async (args: {
@@ -12,7 +13,7 @@ export const loadConfig = async (args: {
   const configFilePath = Path.ensureAbsolute(`polen.config.ts`, dir)
 
   if (!await Fs.exists(configFilePath)) {
-    return {}
+    return await defineConfig()
   }
 
   const loaded = await Vite.loadConfigFromFile(
@@ -23,7 +24,7 @@ export const loadConfig = async (args: {
     logger,
   )
 
-  const config = loaded?.config ?? {}
+  const config = loaded?.config ?? await defineConfig()
 
   return config
 }

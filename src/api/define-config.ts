@@ -4,7 +4,7 @@ import { Main } from './vite/plugins/main.js'
 
 export interface ViteUserConfigWithPolen extends Vite.UserConfig {
   _polen: {
-    input: Configurator.ConfigInput
+    input: undefined | Configurator.ConfigInput
     normalized: Configurator.Config
   }
 }
@@ -13,7 +13,7 @@ export interface ViteUserConfigWithPolen extends Vite.UserConfig {
  * Create a Vite configuration. Thin wrapper around {@link Vite.defineConfig}.
  */
 export const defineConfig = async (
-  configInput: Configurator.ConfigInput,
+  configInput?: Configurator.ConfigInput,
 ): Promise<ViteUserConfigWithPolen> => {
   const polenConfig = await Configurator.normalizeInput(configInput)
 
@@ -21,7 +21,7 @@ export const defineConfig = async (
     plugins: [Main(polenConfig)],
   }
 
-  const viteConfigMerged = configInput.advanced?.vite
+  const viteConfigMerged = configInput?.advanced?.vite
     ? Vite.mergeConfig(viteConfigFromPolen, configInput.advanced.vite)
     : viteConfigFromPolen
 

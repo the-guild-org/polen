@@ -37,8 +37,17 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
     name: `polen:core`,
     config() {
       return {
-        root: config.paths.framework,
+        root: config.paths.framework.rootDir,
+        server: {
+          port: 3000,
+        },
         customLogger: logger,
+        resolve: {
+          alias: [
+            // These alias allow virtual modules to use the same #... import paths that our source code does.
+            { find: /^#(?<path>.+)/, replacement: `${packagePaths.sourceDir}/$<path>` },
+          ],
+        },
       }
     },
     configResolved(config_) {
@@ -97,7 +106,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
 
           const projectDataCode = jsesc(superjson.stringify(projectData))
           const content = `
-            import { superjson } from '${packagePaths.sourceDir}/singletons/superjson.js'
+            import { superjson } from '#singletons/superjson.js'
 
             export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `
@@ -109,11 +118,10 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
         identifier: viProjectPages,
         loader: async () => {
           const pages = Page.lint(await readPages({ dir: viteConfig.root }))
-          // return `import * as X from 'polen/react/jsx-dev-runtime'; console.log(X); export const pages = [];`
           const moduleContent = Page.ReactRouterAdaptor.render({
             pageTree: pages.fixed,
             sourcePaths: {
-              reactRouterHelpers: `${packagePaths.dir}/lib/react-router-helpers.js`,
+              reactRouterHelpers: `#lib/react-router-helpers.js`,
             },
           })
 
