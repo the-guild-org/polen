@@ -14,11 +14,11 @@ interface TestCase {
 }
 
 const testCases: TestCase[] = [
-  // {
-  //   title: `exact page`,
-  //   fixture: { 'pages/foo.md': `abc` },
-  //   result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
-  // },
+  {
+    title: `exact page`,
+    fixture: { 'pages/foo.md': `abc` },
+    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
+  },
   {
     title: `index page`,
     fixture: { 'pages/foo/index.md': `abc` },

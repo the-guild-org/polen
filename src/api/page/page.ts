@@ -1,7 +1,7 @@
 import { Marked } from '#dep/marked/index.js'
 import { TinyGlobby } from '#dep/tiny-globby/index.js'
 import { Debug } from '#lib/debug/index.js'
-import { Fs, Path } from '@wollybeard/kit'
+import { Fs } from '@wollybeard/kit'
 import type { RouteIndex, RouteItem, RouteSegment } from './route.js'
 import { calcParentRoutePath, filePathToPageRoute, isRouteTopLevel } from './route.js'
 
@@ -37,21 +37,20 @@ export type PageBranch = PageBranchContent | PageBranchSegment
 export type PageTree = PageBranch[]
 
 export const readAll = async (parameters: { dir: string }): Promise<PageTree> => {
-  const projectDir = parameters.dir
-  const pagesDir = Path.join(projectDir, `pages`)
+  const { dir } = parameters
   const globPattern = `**/*.md`
-  debug(`search page files`, { globPattern, pagesDir })
+  debug(`search page files`, { globPattern, dir })
 
   const filePaths = await TinyGlobby.glob(globPattern, {
     absolute: true,
-    cwd: pagesDir,
+    cwd: dir,
     onlyFiles: true,
     // debug: true,
   })
   debug(`found page files`, filePaths)
 
   const pages = await Promise.all(
-    filePaths.map(filePath => createPageFromFilePath(filePath, pagesDir)),
+    filePaths.map(filePath => createPageFromFilePath(filePath, dir)),
   )
   debug(`created pages`, pages)
 

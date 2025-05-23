@@ -1,6 +1,6 @@
 import type { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Str } from '@wollybeard/kit'
+import { Cache, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import { packagePaths } from '../../../package-paths.js'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
@@ -15,6 +15,7 @@ import { vi } from '../vi.js'
 const viTemplateVariables = vi(`template`, `variables`)
 const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
 const viProjectPages = vi(`project`, `pages.jsx`)
+viProjectPages.resolved = viProjectPages.id
 const viProjectData = vi(`project`, `data`)
 
 export const Core = (config: Configurator.Config): Vite.PluginOption => {
@@ -22,7 +23,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
   const readSchema = Cache.memoize(async () => {
     const schema = await Schema.readOrThrow({
       ...config.schema,
-      projectRoot: viteConfig.root,
+      projectRoot: config.paths.project.rootDir,
     })
     // todo: augmentations scoped to a version
     schema?.versions.forEach(version => {
@@ -30,8 +31,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
     })
     return schema
   })
-
-  let viteConfig: Vite.ResolvedConfig
 
   return {
     name: `polen:core`,
@@ -49,9 +48,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
           ],
         },
       }
-    },
-    configResolved(config_) {
-      viteConfig = config_
     },
     ...ViteVirtual.IdentifiedLoader.toHooks(
       {
@@ -72,7 +68,11 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
         identifier: viProjectData,
         loader: async () => {
           const schema = await readSchema()
-          const pages = Page.lint(await readPages({ dir: viteConfig.root })).fixed
+          const pages = Page.lint(
+            await readPages({
+              dir: Path.ensureAbsolute(config.paths.project.conventions.pagesDir, config.paths.project.rootDir),
+            }),
+          ).fixed
 
           const siteNavigationItems: SiteNavigationItem[] = []
 
@@ -117,7 +117,11 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
       {
         identifier: viProjectPages,
         loader: async () => {
-          const pages = Page.lint(await readPages({ dir: viteConfig.root }))
+          const pages = Page.lint(
+            await readPages({
+              dir: Path.ensureAbsolute(config.paths.project.conventions.pagesDir, config.paths.project.rootDir),
+            }),
+          )
           const moduleContent = Page.ReactRouterAdaptor.render({
             pageTree: pages.fixed,
             sourcePaths: {

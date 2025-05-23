@@ -99,7 +99,12 @@ export interface Config {
     enabled: boolean
   }
   paths: {
-    project: string
+    project: {
+      rootDir: string
+      conventions: {
+        pagesDir: string
+      }
+    }
     framework: PackagePaths
   }
   advanced: {
@@ -123,7 +128,12 @@ const configInputDefaults: Config = {
     enabled: true,
   },
   paths: {
-    project: process.cwd(),
+    project: {
+      rootDir: process.cwd(),
+      conventions: {
+        pagesDir: `pages`,
+      },
+    },
     framework: packagePaths,
   },
   advanced: {
@@ -142,7 +152,7 @@ export const normalizeInput = async (
   }
 
   if (configInput?.root) {
-    config.paths.project = Path.ensureAbsoluteWithCWD(configInput.root)
+    config.paths.project.rootDir = Path.ensureAbsoluteWithCWD(configInput.root)
   }
 
   if (configInput?.advanced?.vite) {
