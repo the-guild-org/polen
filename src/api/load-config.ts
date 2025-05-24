@@ -1,11 +1,13 @@
 import { Vite } from '#dep/vite/index.js'
 import { Fs, Path } from '@wollybeard/kit'
+import type { Configurator } from './configurator/index.js'
 import { defineConfig } from './define-config.js'
 import { logger } from './vite/logger.js'
 
 export const loadConfig = async (args: {
   env: Vite.ConfigEnv
   dir?: string
+  overrides?: Configurator.ConfigInput
 }): Promise<Vite.UserConfig> => {
   const { env } = args
   const dir = Path.ensureAbsoluteWithCWD(args.dir ?? process.cwd())
@@ -13,7 +15,7 @@ export const loadConfig = async (args: {
   const configFilePath = Path.ensureAbsolute(`polen.config.ts`, dir)
 
   if (!await Fs.exists(configFilePath)) {
-    return await defineConfig()
+    return await defineConfig(args.overrides)
   }
 
   const loaded = await Vite.loadConfigFromFile(
@@ -24,7 +26,7 @@ export const loadConfig = async (args: {
     logger,
   )
 
-  const config = loaded?.config ?? await defineConfig()
+  const config = loaded?.config ?? await defineConfig(args.overrides)
 
   return config
 }

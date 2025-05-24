@@ -64,14 +64,17 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
     applyToEnvironment: Vite.isEnvironmentSsr,
     config() {
       return {
+        // Have to configure this here??
+        // @see https://github.com/vitejs/vite/issues/20098
         ssr: {
           noExternal: true,
         },
         environments: {
           ssr: {
             build: {
+              // NO EFFECT (see above)
               // Bundle all dependencies instead of externalizing them
-              noExternal: true,
+              // noExternal: true,
               // The SSR build will follow the client build, and emptying the dir would lose the output of the client build.
               emptyOutDir: false,
               rollupOptions: {
@@ -97,7 +100,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
             // relative from CWD of process that boots node server
             // can easily break! Use path relative in server??
             dirPath: `./dist`,
-            routePath: `./${viteConfigResolved.build.assetsDir}/*`,
+            routePath: `/${viteConfigResolved.build.assetsDir}/*`,
           }
 
           const code = Str.Builder()
