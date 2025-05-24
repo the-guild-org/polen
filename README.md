@@ -25,7 +25,7 @@ npm add polen
    ```
 
 3. You now have a deployable developer portal. Try it locally
-   (http://localhost:5174):
+   (http://localhost:3001):
 
    ```sh
    node dist/entry.js
@@ -34,6 +34,9 @@ npm add polen
 ## Examples
 
 You can find working examples in the [examples](./examples) directory.
+
+> [!NOTE]
+> These examples work against the version of Polen on trunk. Every commit on trunk is available as a pre-release on npm. You may see behaviour in the examples that has not been released in a stable version of Polen yet.
 
 ## Guide
 
@@ -85,10 +88,12 @@ export default Polen.defineConfig({
     useDataSources: `memory`,
     dataSources: {
       memory: {
-        versions: [{
-          date: new Date('2023-01-13'),
-          value: `type Query { hello: String }`,
-        }],
+        versions: [
+          {
+            date: new Date('2023-01-13'),
+            value: `type Query { hello: String }`,
+          },
+        ],
       },
     },
   },

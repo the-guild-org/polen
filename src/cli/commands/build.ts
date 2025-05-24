@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import { Vite } from "#dep/vite/index.js";
-import { Command } from "@molt/command";
-import { loadConfig } from "../../api/load-config.js";
-import { z } from "zod";
+import { Vite } from '#dep/vite/index.js'
+import { Command } from '@molt/command'
+import { z } from 'zod'
+import { loadConfig } from '../../api/load-config.js'
 
 const args = Command.create()
   .parameter(`--debug -d`, z.boolean().default(false))
-  .parse();
+  .parse()
 
 const config = await loadConfig({
   env: {
@@ -19,8 +19,8 @@ const config = await loadConfig({
       debug: args.debug,
     },
   },
-});
+})
 
-const builder = await Vite.createBuilder(config);
+const builder = await Vite.createBuilder(config)
 
-await builder.buildApp();
+await builder.buildApp()
