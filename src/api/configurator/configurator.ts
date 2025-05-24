@@ -101,6 +101,7 @@ export interface Config {
   paths: {
     project: {
       rootDir: string
+      buildDir: string
       conventions: {
         pagesDir: string
       }
@@ -130,8 +131,9 @@ const configInputDefaults: Config = {
   paths: {
     project: {
       rootDir: process.cwd(),
+      buildDir: Path.ensureAbsoluteWithCWD(`dist`),
       conventions: {
-        pagesDir: `pages`,
+        pagesDir: Path.ensureAbsoluteWithCWD(`pages`),
       },
     },
     framework: packagePaths,

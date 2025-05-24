@@ -1,6 +1,6 @@
 import type { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Path, Str } from '@wollybeard/kit'
+import { Cache, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import { packagePaths } from '../../../package-paths.js'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
@@ -40,6 +40,15 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
           port: 3000,
         },
         customLogger: logger,
+        build: {
+          rollupOptions: {
+            treeshake: `smallest`,
+          },
+          minify: !config.advanced.debug,
+          // disables a warning that build dir is not in root dir (since framework is root dir)
+          emptyOutDir: true,
+          outDir: config.paths.project.buildDir,
+        },
         resolve: {
           alias: [
             // These alias allow virtual modules to use the same #... import paths that our source code does.
@@ -69,7 +78,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
           const schema = await readSchema()
           const pages = Page.lint(
             await readPages({
-              dir: Path.ensureAbsolute(config.paths.project.conventions.pagesDir, config.paths.project.rootDir),
+              dir: config.paths.project.conventions.pagesDir,
             }),
           ).fixed
 
@@ -118,7 +127,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
         loader: async () => {
           const pages = Page.lint(
             await readPages({
-              dir: Path.ensureAbsolute(config.paths.project.conventions.pagesDir, config.paths.project.rootDir),
+              dir: config.paths.project.conventions.pagesDir,
             }),
           )
           const moduleContent = Page.ReactRouterAdaptor.render({

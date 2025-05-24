@@ -1,6 +1,6 @@
 import type { Vite } from '#dep/vite/index.js'
 import ViteReact from '@vitejs/plugin-react'
-import { Arr } from '@wollybeard/kit'
+import { Arr, Path } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
 import Restart from 'vite-plugin-restart'
 import type { Configurator } from '../../configurator/index.js'
@@ -18,7 +18,7 @@ export const Main = (
   if (config.explorer) {
     const plugin = Inspect({
       build: true,
-      outputDir: `./.bundle-explorer`,
+      outputDir: Path.join(config.paths.project.rootDir, `.bundle-explorer`),
     })
     plugins.push(plugin)
   }
