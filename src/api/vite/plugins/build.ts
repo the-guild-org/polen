@@ -5,7 +5,7 @@ import type { Configurator } from '../../configurator/index.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 import { vi } from '../vi.js'
 
-const viServerEntry = vi([`server`, `entry.jsx`])
+const viServerEntry = vi([`server`, `entry.jsx`], { allowPluginProcessing: true })
 
 export const Build = (config: Configurator.Config): Vite.Plugin[] => {
   let viteConfigResolved: Vite.ResolvedConfig
@@ -48,12 +48,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
               manifest: true,
               rollupOptions: {
                 input: [config.paths.framework.template.entryClient],
-                // output: {
-                //   dir: outDir,
-                // },
-                // treeshake: `smallest`,
-                // external: id => (id.startsWith(`node:`)) || id.startsWith(`zx`),
-                external: id => (id.startsWith(`node:`)),
+                external: id => id.startsWith(`node:`),
                 onwarn(message) {
                   if (isKitUnusedExternalImport(message)) return
                 },
@@ -67,6 +62,26 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
     name: `polen-ssr-build`,
     apply: `build`,
     applyToEnvironment: Vite.isEnvironmentSsr,
+    config() {
+      return {
+        ssr: {
+          noExternal: true,
+        },
+        environments: {
+          ssr: {
+            build: {
+              // Bundle all dependencies instead of externalizing them
+              noExternal: true,
+              // The SSR build will follow the client build, and emptying the dir would lose the output of the client build.
+              emptyOutDir: false,
+              rollupOptions: {
+                input: viServerEntry.id,
+              },
+            },
+          },
+        },
+      }
+    },
     configResolved(config) {
       viteConfigResolved = config
     },
@@ -74,14 +89,15 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
       {
         identifier: viServerEntry,
         loader: () => {
+          // Globs in Vite virtual modules must start with a slash
           const entrServeryViteGlobPath = `/`
-            + Path.relative(viteConfigResolved.root, config.paths.framework.template.entryServer)
+            + Path.relative(config.paths.framework.rootDir, config.paths.framework.template.entryServer)
           const staticServingPaths = {
             // todo
             // relative from CWD of process that boots node server
             // can easily break! Use path relative in server??
             dirPath: `./dist`,
-            routePath: `/${viteConfigResolved.build.assetsDir}/*`,
+            routePath: `./${viteConfigResolved.build.assetsDir}/*`,
           }
 
           const code = Str.Builder()
@@ -92,11 +108,9 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
             entries: `entries`,
           }
 
-          const honoPath = import.meta.resolve(`hono`)
-          const honoNodeServerServeStaticPath = import.meta.resolve(
-            `@hono/node-server/serve-static`,
-          )
-          const honoNodeServerPath = import.meta.resolve(`@hono/node-server`)
+          const honoPath = `hono`
+          const honoNodeServerServeStaticPath = `@hono/node-server/serve-static`
+          const honoNodeServerPath = `@hono/node-server`
 
           // TODO turn this into a file template
           code`import { Hono } from '${honoPath}'`
@@ -153,26 +167,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
     onLog(_, message) {
       if (isKitUnusedExternalImport(message)) return
     },
-    config() {
-      return {
-        environments: {
-          ssr: {
-            build: {
-              // disables a warning that build dir is not in root dir (since framework is root dir)
-              // emptyOutDir: true,
-              // minify: !config.advanced.debug,
-              rollupOptions: {
-                input: viServerEntry.id,
-                // output: {
-                //   dir: outDir,
-                // },
-                treeshake: `smallest`,
-              },
-            },
-          },
-        },
-      }
-    },
+
     // generateBundle(_, bundle, isWrite) {
     //   if (isWrite) {
     //     for (const chunkOrAsset of Object.values(bundle)) {

@@ -60,21 +60,21 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
     ...ViteVirtual.IdentifiedLoader.toHooks(
       {
         identifier: viTemplateVariables,
-        loader: () => {
+        loader() {
           const moduleContent = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
           return moduleContent
         },
       },
       {
         identifier: viTemplateSchemaAugmentations,
-        loader: () => {
+        loader() {
           const moduleContent = `export const schemaAugmentations = ${JSON.stringify(config.schemaAugmentations)}`
           return moduleContent
         },
       },
       {
         identifier: viProjectData,
-        loader: async () => {
+        async loader() {
           const schema = await readSchema()
           const pages = Page.lint(
             await readPages({
@@ -124,7 +124,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
       },
       {
         identifier: viProjectPages,
-        loader: async () => {
+        async loader() {
           const pages = Page.lint(
             await readPages({
               dir: config.paths.project.conventions.pagesDir,
