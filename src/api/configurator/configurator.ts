@@ -155,6 +155,12 @@ export const normalizeInput = async (
 
   if (configInput?.root) {
     config.paths.project.rootDir = Path.ensureAbsoluteWithCWD(configInput.root)
+    if (config.paths.project.buildDir === configInputDefaults.paths.project.buildDir) {
+      config.paths.project.buildDir = Path.join(config.paths.project.rootDir, `build`)
+    }
+    if (config.paths.project.conventions.pagesDir === configInputDefaults.paths.project.conventions.pagesDir) {
+      config.paths.project.conventions.pagesDir = Path.join(config.paths.project.rootDir, `pages`)
+    }
   }
 
   if (configInput?.advanced?.vite) {

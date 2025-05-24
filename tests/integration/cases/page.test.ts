@@ -28,7 +28,7 @@ const testCases: TestCase[] = [
 
 testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
-    console.log(project.dir)
+    // console.log(project.dir)
     await project.layout.set(fixture)
     const viteConfig = await Polen.defineConfig({
       root: project.layout.cwd,

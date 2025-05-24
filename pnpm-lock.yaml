@@ -3599,6 +3599,9 @@ packages:
   zod@3.25.25:
     resolution: {integrity: sha512-ZIe8jLjydG09F/5joIm10fSKa3pQ64YS1OfhQzNVwbHEd0MeAF3A9CbcKl5/1Pr6Wr37TMJtEWki8X2Y/2MvGQ==}
 
+  zod@3.25.28:
+    resolution: {integrity: sha512-/nt/67WYKnr5by3YS7LroZJbtcCBurDKKPBPWWzaxvVCGuG/NOsiKkrjoOhI8mJ+SQUXEbUzeB3S+6XDUEEj7Q==}
+
   zx@8.5.4:
     resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
     engines: {node: '>= 12.17.0'}
@@ -5501,7 +5504,7 @@ snapshots:
       es-toolkit: 1.38.0
       jsonc-parser: 3.3.1
       type-fest: 4.41.0
-      zod: 3.25.25
+      zod: 3.25.28
 
   '@wollybeard/projector@0.1.0':
     dependencies:
@@ -7131,5 +7134,7 @@ snapshots:
   zod@3.24.3: {}
 
   zod@3.25.25: {}
+
+  zod@3.25.28: {}
 
   zx@8.5.4: {}
