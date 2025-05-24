@@ -1,24 +1,18 @@
 import { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Fs, Path, Str } from '@wollybeard/kit'
-import { defu } from 'defu'
-import { vi } from '../helpers.js'
+import type { Configurator } from '../../configurator/index.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
+import { vi } from '../vi.js'
 
-const viServerEntry = vi(`server`, `entry.jsx`)
+const viServerEntry = vi([`server`, `entry.jsx`], { allowPluginProcessing: true })
 
-interface ConfigInput {
-  entryServerPath: string
-  clientEntryPath: string
-  port?: number
-  debug?: boolean
-}
-
-export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
-  const config = defu(configInput, { debug: false })
+export const Build = (config: Configurator.Config): Vite.Plugin[] => {
   let viteConfigResolved: Vite.ResolvedConfig
 
-  return [Manifest(), {
+  // const outDir = Path.join(config.paths.project.rootDir, `dist`)
+
+  return [Manifest(config), {
     name: `polen:build-client`,
     apply: `build`,
     applyToEnvironment: Vite.isEnvironmentClient,
@@ -51,18 +45,13 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
         environments: {
           client: {
             build: {
-              minify: !configInput.debug,
               manifest: true,
               rollupOptions: {
-                input: [configInput.clientEntryPath],
-                treeshake: `smallest`,
-                external: id => (id.startsWith(`node:`)) || id.startsWith(`zx`),
+                input: [config.paths.framework.template.entryClient],
+                external: id => id.startsWith(`node:`),
                 onwarn(message) {
                   if (isKitUnusedExternalImport(message)) return
                 },
-                // jsx: {
-                //   mode: 'automatic',
-                // },
               },
             },
           },
@@ -73,6 +62,26 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
     name: `polen-ssr-build`,
     apply: `build`,
     applyToEnvironment: Vite.isEnvironmentSsr,
+    config() {
+      return {
+        ssr: {
+          noExternal: true,
+        },
+        environments: {
+          ssr: {
+            build: {
+              // Bundle all dependencies instead of externalizing them
+              noExternal: true,
+              // The SSR build will follow the client build, and emptying the dir would lose the output of the client build.
+              emptyOutDir: false,
+              rollupOptions: {
+                input: viServerEntry.id,
+              },
+            },
+          },
+        },
+      }
+    },
     configResolved(config) {
       viteConfigResolved = config
     },
@@ -80,18 +89,15 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
       {
         identifier: viServerEntry,
         loader: () => {
-          const entryServerPath = Path.ensureAbsolute(
-            config.entryServerPath,
-            viteConfigResolved.root,
-          )
+          // Globs in Vite virtual modules must start with a slash
           const entrServeryViteGlobPath = `/`
-            + Path.relative(viteConfigResolved.root, entryServerPath)
+            + Path.relative(config.paths.framework.rootDir, config.paths.framework.template.entryServer)
           const staticServingPaths = {
             // todo
             // relative from CWD of process that boots node server
             // can easily break! Use path relative in server??
             dirPath: `./dist`,
-            routePath: `/${viteConfigResolved.build.assetsDir}/*`,
+            routePath: `./${viteConfigResolved.build.assetsDir}/*`,
           }
 
           const code = Str.Builder()
@@ -102,11 +108,9 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
             entries: `entries`,
           }
 
-          const honoPath = import.meta.resolve(`hono`)
-          const honoNodeServerServeStaticPath = import.meta.resolve(
-            `@hono/node-server/serve-static`,
-          )
-          const honoNodeServerPath = import.meta.resolve(`@hono/node-server`)
+          const honoPath = `hono`
+          const honoNodeServerServeStaticPath = `@hono/node-server/serve-static`
+          const honoNodeServerPath = `@hono/node-server`
 
           // TODO turn this into a file template
           code`import { Hono } from '${honoPath}'`
@@ -152,7 +156,7 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
           code`import { serve } from '${honoNodeServerPath}'`
           code``
 
-          const port = config.port ?? viteConfigResolved.server.port + 1
+          const port = viteConfigResolved.server.port + 1
           code(`const port = process.env.PORT || ${port.toString()}`)
           code(`serve({ fetch: ${_.app}.fetch, port })`)
 
@@ -163,22 +167,7 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
     onLog(_, message) {
       if (isKitUnusedExternalImport(message)) return
     },
-    config() {
-      return {
-        environments: {
-          ssr: {
-            build: {
-              emptyOutDir: false,
-              minify: !config.debug,
-              rollupOptions: {
-                input: viServerEntry.id,
-                treeshake: `smallest`,
-              },
-            },
-          },
-        },
-      }
-    },
+
     // generateBundle(_, bundle, isWrite) {
     //   if (isWrite) {
     //     for (const chunkOrAsset of Object.values(bundle)) {
@@ -196,28 +185,22 @@ export const Build = (configInput: ConfigInput): Vite.Plugin[] => {
       /**
        * clean up the manifest. Was generated by client. For server build. Not needed after (unless debugging).
        */
-      if (!config.debug) {
-        await Fs.remove(
-          Path.join(viteConfigResolved.root, viteConfigResolved.build.outDir, `.vite`),
-        )
+      if (!config.advanced.debug) {
+        await Fs.remove(Path.join(config.paths.project.buildDir, `.vite`))
       }
     },
   }]
 }
 
-const viClientManifest = vi(`vite`, `client`, `manifest`)
+const viClientManifest = vi([`vite`, `client`, `manifest`])
 
-const Manifest = (): Vite.Plugin => {
+const Manifest = (config: Configurator.Config): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv
-  let viteConfigResolved: Vite.ResolvedConfig
 
   return {
     name: `polen-manifest`,
     config(_, configEnv_) {
       configEnv = configEnv_
-    },
-    configResolved(config) {
-      viteConfigResolved = config
     },
     ...ViteVirtual.IdentifiedLoader.toHooks(
       {
@@ -228,12 +211,7 @@ const Manifest = (): Vite.Plugin => {
             return `export default {}`
           }
 
-          const manifestPath = Path.join(
-            viteConfigResolved.root,
-            viteConfigResolved.build.outDir,
-            `.vite`,
-            `manifest.json`,
-          )
+          const manifestPath = Path.join(config.paths.project.buildDir, `.vite`, `manifest.json`)
           const module = await import(manifestPath, { with: { type: `json` } }) as {
             default: Vite.Manifest
           }

@@ -1,25 +1,19 @@
 import type { Hono } from '#dep/hono/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import * as HonoNodeServer from '@hono/node-server'
+import type { Configurator } from '../../configurator/index.js'
 
 export const Serve = (
-  config: {
-    entryServer: string
-  },
+  config: Configurator.Config,
 ): Vite.PluginOption => {
   return {
     name: `polen:serve`,
     apply: `serve`,
     async configureServer(server) {
-      // Load our entry server
-
       let honoApp: Hono.Hono
+
       try {
-        const ssrloadedModule = await server.ssrLoadModule(
-          config.entryServer,
-          // polenConfig.paths.appTemplate.entryServer,
-        )
-        // console.log(ssrloadedModule)
+        const ssrloadedModule = await server.ssrLoadModule(config.paths.framework.template.entryServer)
         honoApp = ssrloadedModule[`default`] as Hono.Hono
       } catch (cause) {
         if (cause instanceof Error) {
@@ -53,6 +47,7 @@ export const Serve = (
       return {
         server: {
           fs: {
+            strict: false,
             allow: [
               // todo allow from polen
             ],
@@ -61,7 +56,7 @@ export const Serve = (
         optimizeDeps: {
           // Polen is already ESM and does not have many internal modules.
           // https://vite.dev/guide/dep-pre-bundling.html#customizing-the-behavior
-          exclude: [`polen`],
+          // exclude: [`polen`],
           // include: [
           //   // `react`,
           //   // `react/jsx-runtime`,

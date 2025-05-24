@@ -1,7 +1,7 @@
 {
   "type": "module",
   "dependencies": {
-    "polen": "0.2.0"
+    "polen": "link:../.."
   },
   "scripts": {
     "dev": "polen dev",

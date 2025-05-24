@@ -31,14 +31,20 @@ export const Component = () => {
         {import.meta.env.DEV && <script type='module'>{reactRefreshPreamble}</script>}
         {import.meta.env.DEV && <script type='module' src='/@vite/client'></script>}
         <meta charSet='utf-8' />
-        <meta
-          name='viewport'
-          content='width=device-width, initial-scale=1'
-        />
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
         <title>{templateVariables.title}</title>
         {import.meta.env.DEV && <link rel='stylesheet' href={radixStylesUrl} />}
-        <link rel='icon' href={PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`} sizes='256 x 256' />
-        <link rel='icon' href={PROJECT_DATA.faviconPath + `?v=1`} sizes='any' type='image/svg+xml' />
+        <link
+          rel='icon'
+          href={PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`}
+          sizes='256 x 256'
+        />
+        <link
+          rel='icon'
+          href={PROJECT_DATA.faviconPath + `?v=1`}
+          sizes='any'
+          type='image/svg+xml'
+        />
       </head>
       <body style={{ margin: 0 }}>
         <Layout />
@@ -62,15 +68,22 @@ const Layout = () => {
             borderBottom: `1px solid var(--gray-3)`,
           }}
         >
-          <LinkReactRouter to='/' style={{ color: `inherit`, textDecoration: `none` }}>
+          <LinkReactRouter
+            to='/'
+            style={{ color: `inherit`, textDecoration: `none` }}
+          >
             <Flex align='center' gap='2'>
               <GitHubLogoIcon style={{ width: 30, height: 30 }} />
-              <Text size='3' weight='medium'>{templateVariables.title}</Text>
+              <Text size='3' weight='medium'>
+                {templateVariables.title}
+              </Text>
             </Flex>
           </LinkReactRouter>
           <Flex direction='row' gap='4'>
             {PROJECT_DATA.siteNavigationItems.map((item, key) => (
-              <Link key={key} color='gray' to={item.path}>{item.title}</Link>
+              <Link key={key} color='gray' to={item.path}>
+                {item.title}
+              </Link>
             ))}
           </Flex>
         </Flex>
@@ -82,10 +95,7 @@ const Layout = () => {
   )
 }
 
-const children: ReactRouter.RouteObject[] = [
-  index,
-  ...pages,
-]
+const children: ReactRouter.RouteObject[] = [index, ...pages]
 
 if (PROJECT_DATA.schema) {
   children.push(changelog)

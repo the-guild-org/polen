@@ -1,27 +1,28 @@
-import { Vite } from '#dep/vite/index.js'
+import type { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Cache, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
+import { packagePaths } from '../../../package-paths.js'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
-import { sourcePaths } from '../../../source-paths.js'
 import type { Configurator } from '../../configurator/index.js'
 import { Page } from '../../page/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
-import { vi } from '../helpers.js'
+import { logger } from '../logger.js'
+import { vi } from '../vi.js'
 
-const viTemplateVariables = vi(`template`, `variables`)
-const viTemplateSchemaAugmentations = vi(`template`, `schema-augmentations`)
-const viProjectPages = vi(`project`, `pages.jsx`)
-const viProjectData = vi(`project`, `data`)
+const viTemplateVariables = vi([`template`, `variables`])
+const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
+const viProjectPages = vi([`project`, `pages.jsx`], { allowPluginProcessing: true })
+const viProjectData = vi([`project`, `data`])
 
 export const Core = (config: Configurator.Config): Vite.PluginOption => {
   const readPages = Cache.memoize(Page.readAll)
   const readSchema = Cache.memoize(async () => {
     const schema = await Schema.readOrThrow({
       ...config.schema,
-      projectRoot: viteConfig.root,
+      projectRoot: config.paths.project.rootDir,
     })
     // todo: augmentations scoped to a version
     schema?.versions.forEach(version => {
@@ -30,33 +31,56 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
     return schema
   })
 
-  let viteConfig: Vite.ResolvedConfig
-
   return {
     name: `polen:core`,
-    configResolved(config_) {
-      viteConfig = config_
+    config() {
+      return {
+        root: config.paths.framework.rootDir,
+        server: {
+          port: 3000,
+        },
+        customLogger: logger,
+        build: {
+          rollupOptions: {
+            treeshake: `smallest`,
+          },
+          minify: !config.advanced.debug,
+          // disables a warning that build dir is not in root dir (since framework is root dir)
+          emptyOutDir: true,
+          outDir: config.paths.project.buildDir,
+        },
+        resolve: {
+          alias: [
+            // These alias allow virtual modules to use the same #... import paths that our source code does.
+            { find: /^#(?<path>.+)/, replacement: `${packagePaths.sourceDir}/$<path>` },
+          ],
+        },
+      }
     },
     ...ViteVirtual.IdentifiedLoader.toHooks(
       {
         identifier: viTemplateVariables,
-        loader: () => {
+        loader() {
           const moduleContent = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
           return moduleContent
         },
       },
       {
         identifier: viTemplateSchemaAugmentations,
-        loader: () => {
+        loader() {
           const moduleContent = `export const schemaAugmentations = ${JSON.stringify(config.schemaAugmentations)}`
           return moduleContent
         },
       },
       {
         identifier: viProjectData,
-        loader: async () => {
+        async loader() {
           const schema = await readSchema()
-          const pages = Page.lint(await readPages({ dir: viteConfig.root })).fixed
+          const pages = Page.lint(
+            await readPages({
+              dir: config.paths.project.conventions.pagesDir,
+            }),
+          ).fixed
 
           const siteNavigationItems: SiteNavigationItem[] = []
 
@@ -90,8 +114,8 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
 
           const projectDataCode = jsesc(superjson.stringify(projectData))
           const content = `
-            import { superjson } from '${sourcePaths.dir}/singletons/superjson.js'
-            
+            import { superjson } from '#singletons/superjson.js'
+
             export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `
 
@@ -100,12 +124,16 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
       },
       {
         identifier: viProjectPages,
-        loader: async () => {
-          const pages = Page.lint(await readPages({ dir: viteConfig.root }))
+        async loader() {
+          const pages = Page.lint(
+            await readPages({
+              dir: config.paths.project.conventions.pagesDir,
+            }),
+          )
           const moduleContent = Page.ReactRouterAdaptor.render({
             pageTree: pages.fixed,
             sourcePaths: {
-              reactRouterHelpers: `${sourcePaths.dir}/lib/react-router-helpers.js`,
+              reactRouterHelpers: `#lib/react-router-helpers.js`,
             },
           })
 
@@ -114,16 +142,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
             console.log(_.type)
           })
 
-          const moduleCotentTransformed = await Vite.transformWithEsbuild(
-            moduleContent,
-            `ignore.jsx`,
-            {
-              jsx: `automatic`,
-              jsxImportSource: config.advanced.jsxImportSource,
-            },
-          )
-
-          return moduleCotentTransformed
+          return moduleContent
         },
       },
     ),

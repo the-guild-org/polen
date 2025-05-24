@@ -12,9 +12,6 @@ export const pc = (config?: Polen.ConfigInput) => {
         ...defaultViteConfig,
         ...config?.advanced?.vite,
       },
-      vitePluginReact: {
-        jsxImportSource: `react`,
-      },
     },
     ...config,
   })

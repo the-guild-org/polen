@@ -4,37 +4,37 @@ import { Page } from './index.js'
 
 unit(`empty if no applicable files`, async ({ project }) => {
   await project.layout.set({ 'foo.txt': `bar` })
-  const pageBranches = await Page.readAll({ dir: project.dir })
+  const pageBranches = await Page.readAll({ dir: project.dir + `/pages` })
   expect(pageBranches).toEqual([])
 })
 
 unit(`file in root directory`, async ({ project }) => {
   await project.layout.set({ 'pages/foo.md': `foo` })
-  const pageBranches = await Page.readAll({ dir: project.dir })
+  const pageBranches = await Page.readAll({ dir: project.dir + `/pages` })
   expect(stabilzeFilePath(pageBranches)).toMatchSnapshot()
 })
 
 unit(`file in nested directory`, async ({ project }) => {
   await project.layout.set({ 'pages/foo/bar.md': `foo` })
-  const pageBranches = await Page.readAll({ dir: project.dir })
+  const pageBranches = await Page.readAll({ dir: project.dir + `/pages` })
   expect(stabilzeFilePath(pageBranches)).toMatchSnapshot()
 })
 
 unit(`multiple files`, async ({ project }) => {
   await project.layout.set({ 'pages/foo.md': `foo`, 'pages/bar.md': `bar` })
-  const pageBranches = await Page.readAll({ dir: project.dir })
+  const pageBranches = await Page.readAll({ dir: project.dir + `/pages` })
   expect(stabilzeFilePath(pageBranches)).toMatchSnapshot()
 })
 
 unit(`index file`, async ({ project }) => {
   await project.layout.set({ 'pages/index.md': `foo` })
-  const pageBranches = await Page.readAll({ dir: project.dir })
+  const pageBranches = await Page.readAll({ dir: project.dir + `/pages` })
   expect(stabilzeFilePath(pageBranches)).toMatchSnapshot()
 })
 
 unit(`index file nested`, async ({ project }) => {
   await project.layout.set({ 'pages/about/index.md': `foo` })
-  const pageBranches = await Page.readAll({ dir: project.dir })
+  const pageBranches = await Page.readAll({ dir: project.dir + `/pages` })
   expect(stabilzeFilePath(pageBranches)).toMatchSnapshot()
 })
 
@@ -44,14 +44,14 @@ describe(`linter`, () => {
       'pages/about/index.md': `about-index`,
       'pages/about.md': `about-exact`,
     })
-    const pageBranches = await Page.readAll({ dir: project.dir })
+    const pageBranches = await Page.readAll({ dir: project.dir + `/pages` })
     const lintResult = Page.lint(pageBranches)
     const lintResultStable = stabilzeFilePath(lintResult)
     expect(lintResultStable.warnings).toMatchSnapshot()
 
     // Demonstrate that result is as-if the about.md was removed.
     await project2.layout.set({ 'pages/about/index.md': `about-index` })
-    const pageBranches2 = await Page.readAll({ dir: project2.dir })
+    const pageBranches2 = await Page.readAll({ dir: project2.dir + `/pages` })
     const lintResult2 = Page.lint(pageBranches2)
     const lintResultStable2 = stabilzeFilePath(lintResult2)
     expect(lintResultStable.fixed).toEqual(lintResultStable2.fixed)
