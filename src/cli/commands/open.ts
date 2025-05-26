@@ -16,7 +16,7 @@ import type { Fn } from '@wollybeard/kit'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'
 import { homedir } from 'node:os'
 import { z } from 'zod'
-import { defineConfig } from '../../create-configuration.js'
+import { defineConfig } from '../../api/define-config.js'
 
 const args = Command.create()
   .parameter(
