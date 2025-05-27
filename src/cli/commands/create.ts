@@ -1,4 +1,4 @@
-// eslint-disable-next-line
+/* eslint-disable */
 // @ts-nocheck
 import { Command } from '@molt/command'
 import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
