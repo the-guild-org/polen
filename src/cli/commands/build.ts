@@ -7,6 +7,17 @@ import { loadConfig } from '../../api/load-config.js'
 
 const args = Command.create()
   .parameter(`--debug -d`, z.boolean().default(false))
+  .settings({
+    parameters: {
+      environment: {
+        $default: {
+          // todo prfix seting doesn't seem to work with Molt!
+          prefix: `POLEN_CREATE_`,
+          enabled: false,
+        },
+      },
+    },
+  })
   .parse()
 
 const config = await loadConfig({

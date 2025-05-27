@@ -60,6 +60,17 @@ const args = Command.create()
         `Enable or disable caching. By default this command caches fetched schemas for re-use.`,
       ),
   )
+  .settings({
+    parameters: {
+      environment: {
+        $default: {
+          // todo prfix seting doesn't seem to work with Molt!
+          prefix: `POLEN_CREATE_`,
+          enabled: false,
+        },
+      },
+    },
+  })
   .parse()
 
 // cache
