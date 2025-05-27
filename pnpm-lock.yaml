@@ -42,8 +42,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1(vite@6.3.5(@types/node@22.15.3)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
       '@wollybeard/kit':
-        specifier: ^0.26.0
-        version: 0.26.0
+        specifier: ^0.26.1
+        version: 0.26.1
       '@wollybeard/projector':
         specifier: ^0.1.0
         version: 0.1.0
@@ -1907,8 +1907,8 @@ packages:
   '@wollybeard/kit@0.22.0':
     resolution: {integrity: sha512-Hq7PTMKM1Jq5wGCK6YgOjHRNtgeaBrk2guwxY2PvNfyHYVGazmz18K//bR/a3YV5NG8N8oxRkEUVb251NV3AiA==}
 
-  '@wollybeard/kit@0.26.0':
-    resolution: {integrity: sha512-Cuf8DyHoVJuv8dZcBUzpwOZTXza8TTe0iBU3HWXnID7OrMDYsPXV+ROSiLQYGXn5fgJ9IPCYy/NVCHqpGSf3zA==}
+  '@wollybeard/kit@0.26.1':
+    resolution: {integrity: sha512-+sm4qH1KT30dfkOB0jE/yOwz6P+JFJRMvazZM50F5axJcCDhHupauKqcL82iVDLN1wvyAWWQmiI9Tl5eQ7Y3yw==}
 
   '@wollybeard/projector@0.1.0':
     resolution: {integrity: sha512-gB4aULR32DTOuevHE2mD1zSCCmPJ3q5TTd6kGHLMqKzKJZoX+XCSf4tP8PMfI6Suaib9U3jVss0K4pehjcYUWA==}
@@ -3598,6 +3598,9 @@ packages:
 
   zod@3.25.28:
     resolution: {integrity: sha512-/nt/67WYKnr5by3YS7LroZJbtcCBurDKKPBPWWzaxvVCGuG/NOsiKkrjoOhI8mJ+SQUXEbUzeB3S+6XDUEEj7Q==}
+
+  zod@3.25.30:
+    resolution: {integrity: sha512-VolhdEtu6TJr/fzGuHA/SZ5ixvXqA6ADOG9VRcQ3rdOKmF5hkmcJbyaQjUH5BgmpA9gej++zYRX7zjSmdReIwA==}
 
   zx@8.5.4:
     resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
@@ -5494,7 +5497,7 @@ snapshots:
       type-fest: 4.41.0
       zod: 3.25.28
 
-  '@wollybeard/kit@0.26.0':
+  '@wollybeard/kit@0.26.1':
     dependencies:
       '@types/node': 22.15.21
       ansis: 4.0.0
@@ -5502,7 +5505,7 @@ snapshots:
       es-toolkit: 1.38.0
       jsonc-parser: 3.3.1
       type-fest: 4.41.0
-      zod: 3.25.28
+      zod: 3.25.30
 
   '@wollybeard/projector@0.1.0':
     dependencies:
@@ -7132,5 +7135,7 @@ snapshots:
   zod@3.24.3: {}
 
   zod@3.25.28: {}
+
+  zod@3.25.30: {}
 
   zx@8.5.4: {}
