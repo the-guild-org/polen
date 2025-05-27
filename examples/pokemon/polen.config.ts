@@ -4,11 +4,6 @@ export default Polen.defineConfig({
   templateVariables: {
     title: `Pokemon Developer Portal`,
   },
-  watch: {
-    also: [
-      '../../build/**/*',
-    ],
-  },
   schemaAugmentations: [
     {
       type: `description`,

@@ -1,4 +1,4 @@
-// eslint-disable-next-line
+/* eslint-disable */
 // @ts-nocheck
 import { Command } from '@molt/command'
 import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
@@ -28,6 +28,10 @@ const args = Command
     z.boolean().default(false).describe(
       `When installing polen, do so as a link. You must have Polen globally linked on your machine.`,
     ),
+  )
+  .parameter(
+    `version`,
+    z.string().optional().describe(`Version of Polen to use. Defaults to latest release. Ignored if --link is used.`),
   )
   .parameter(`example`, Examples.default(`pokemon`).describe(`The example to use to scaffold your project.`))
   .settings({
@@ -72,7 +76,7 @@ const copyGitRepositoryTemplate = async (input: {
 }): Promise<void> => {
   try {
     const tmpDirPath = await Fs.makeTemporaryDirectory()
-    const cleanup = async () => await $`rm -rf ${tmpDirPath}`
+    const cleanup = async () => await Fs.remove(tmpDirPath)
 
     try {
       // Clone only the specific example directory using sparse checkout
@@ -92,10 +96,10 @@ const copyGitRepositoryTemplate = async (input: {
         process.exit(1)
       }
 
-      await $`mkdir -p ${input.destinationPath}`
-      await $`rsync -av ${templatePath}/ ${projectRoot}/`
-
-      consola.success(`Your project is ready! Get Started:`)
+      await Fs.copyDir({
+        from: templatePath,
+        to: input.destinationPath,
+      })
     } finally {
       await cleanup()
     }
@@ -106,11 +110,14 @@ const copyGitRepositoryTemplate = async (input: {
   }
 }
 
+// -- main
+
 const name = Str.Case.kebab(args.name ?? Name.generate())
 const projectRoot = await getProjectRoot()
+const project$ = $({ cwd: projectRoot })
 
 console.log(``)
-consola.info(`Creating your Polen project "${Ansis.greenBright(Str.Case.title(name))}"`)
+consola.info(`Creating your Polen project "${Ansis.green(Str.Case.title(name))}"`)
 
 consola.info(`Initializing with example "${Ansis.green(Str.Case.title(args.example))}"`)
 await copyGitRepositoryTemplate({
@@ -125,11 +132,17 @@ await Manifest.resource.update((manifest) => {
   manifest.name = name
   manifest.description = `A new project`
   manifest.packageManager = `pnpm@10.11.0`
+  delete manifest.dependencies.polen // Repo uses links, we will install polen next.
 }, projectRoot)
 
 if (args.link) {
-  await $`pnpm link polen`
+  await project$`pnpm link polen`
+} else {
+  const fqpn = `polen${args.ver ? `@${args.ver}` : ''}`
+  consola.info(`Installing ${Ansis.magenta(fqpn)}`)
+  await project$`pnpm add ${fqpn}`
 }
 
+consola.success(`Your project is ready! Get Started:`)
 console.log(``)
 console.log(Ansis.magenta(`  cd ${Path.relative(process.cwd(), projectRoot)} && pnpm dev`))

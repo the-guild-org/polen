@@ -2,7 +2,6 @@ import type { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Cache, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
-import { packagePaths } from '../../../package-paths.js'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
 import type { Configurator } from '../../configurator/index.js'
@@ -10,14 +9,14 @@ import { Page } from '../../page/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
 import { logger } from '../logger.js'
-import { vi } from '../vi.js'
+import { vi as pvi } from '../vi.js'
 
-const viTemplateVariables = vi([`template`, `variables`])
-const viTemplateSchemaAugmentations = vi([`template`, `schema-augmentations`])
-const viProjectPages = vi([`project`, `pages.jsx`], { allowPluginProcessing: true })
-const viProjectData = vi([`project`, `data`])
+const viTemplateVariables = pvi([`template`, `variables`])
+const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
+const viProjectPages = pvi([`project`, `pages.jsx`], { allowPluginProcessing: true })
+const viProjectData = pvi([`project`, `data`])
 
-export const Core = (config: Configurator.Config): Vite.PluginOption => {
+export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
   const readPages = Cache.memoize(Page.readAll)
   const readSchema = Cache.memoize(async () => {
     const schema = await Schema.readOrThrow({
@@ -31,7 +30,19 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
     return schema
   })
 
-  return {
+  return [{
+    name: `polen:core:alias`,
+    resolveId(id, importer) {
+      if (!(importer && pvi.includes(importer))) return null
+
+      const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
+      const match = Str.match(id, find)
+      if (!match) return null
+
+      const replacement = `${config.paths.framework.sourceDir}/${match.groups.path}`
+      return replacement
+    },
+  }, {
     name: `polen:core`,
     config() {
       return {
@@ -51,12 +62,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
         },
         optimizeDeps: {
           include: [`@wollybeard/kit`],
-        },
-        resolve: {
-          alias: [
-            // These alias allow virtual modules to use the same #... import paths that our source code does.
-            { find: /^#(?<path>.+)/, replacement: `${packagePaths.sourceDir}/$<path>` },
-          ],
         },
       }
     },
@@ -149,5 +154,5 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
         },
       },
     ),
-  }
+  }]
 }

@@ -1,11 +1,11 @@
 {
   "type": "module",
-  "dependencies": {
-    "polen": "0.5.0"
-  },
   "scripts": {
     "dev": "polen dev",
     "build": "polen build",
     "start": "node dist/entry.js"
+  },
+  "dependencies": {
+    "polen": "link:../.."
   }
 }

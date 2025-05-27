@@ -1,4 +1,4 @@
-// eslint-disable-next-line
+/* eslint-disable */
 // @ts-nocheck
 import { Vite } from '#dep/vite/index.js'
 import { Command } from '@molt/command'
