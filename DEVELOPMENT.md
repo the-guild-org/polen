@@ -1,94 +1,95 @@
 # Development
 
-## Local Imports
-
-- We use local imports to avoid repeated fragile relative imports of certain
-  modules in our source code.
-- This makes refactoring easier for us.
-- To achieve this we maintain three points of configuration. See next.
-
-### Source of truth, `package.json` (`imports`)
-
-- Since NodeJS has this feature as a standard for the whole community it feels
-  right to make it our source of truth.
-- When the Polen CLI runs or static imports against Polen for the user's Vite
-  config take place then NodeJS's support is going to be handling the resolution
-  process.
-
-### Mirror configuration in `tsconfig.json` (`compilerOptions.paths`)
-
-This configuration is used by tools that run against our source code rather than
-the build such as:
-
-- Playwright
-- Vitest
-- ESLint
-- TypeScript
-
-### Vite Polen plugin
-
-When a user's project uses Vite and the Vite Polen plugin we need Vite to be
-able to resolve our local imports in source code. We canot rely on NodeJS to
-since it is not the process crawling the Polen package. So we resolve the local
-import paths in the Vite Polen plugin using the Rollup `resolveId` hook.
-
 ## Examples
 
-- We maintain functional examples under `examples/*`
-- Directories prefixed with `_` are for meta purposes (like testing).
-
-### Why
-
-- Acts as runnable documentation for users
-- Acts as development sandboxes for us (see [Developing With](#developing-with))
-- Acts as sources for end to end tests (see [Testing](#testing))
+- There are functional examples under `examples/*`
+- These Examples are tested under `tests/examples/*`
+- Motivation:
+  - Runnable documentation for users
+  - Development sandboxes for us (see [Developing With](#developing-with))
+  - Sources for end to end tests (see [Testing](#testing))
 
 ### Developing With
 
-During local development you can link the source code with examples to try out
-changes.
+Use two terminals
 
-<!-- #### One Time System Setup
-TODO: Waiting on https://github.com/orgs/pnpm/discussions/9411
-1. [`pnpm link`](https://pnpm.io/cli/link) in the root directory. -->
+```sh
+pnpm run dev
+```
 
-#### Session Setup
+```sh
+cd examples/<your-choice>
+pnpm run dev
+```
 
-1. In the root directory, run `pnpm run dev` (to have TS source being emitted as
-   JS)
-2. In an example project:
-   1. Run `pnpm link ../..`
-   2. Run `pnpm run dev`
-   3. Now open the example app (http://localhost:5173)
-   4. When you are done revert changes caused by step 2.1 by running
-      `pnpm run examples:unlink`
+## Testing
 
-### Developing With _Strictly_
+- We have three kinds of tests
+- Most should be integration
 
-Because examples are nested within this project it leads to strange beahviours
-like node resolution going into this project's node_modules and thus
-[masking bugs](https://github.com/the-guild-org/polen/issues/11).
+### Unit
 
-To get around this copy the example to a temporary location and develop with it
-there.
+- Sometimes we write unit tests.
+- We co-locate them next to the modules they cover with .test.ts suffix.
 
-There is a project CLI to make this easy, check
-`pnpm run project:example-controller --help`.
+```sh
+pnpm test:integration
+pnpm test:integration --ui
+```
 
-### Testing
+### Integration
 
-#### Overview
+- dynamic on the fly projects to test granular permutations
+- We run Polen via the API instead of CLI
 
-- All examples are tested using Playwright under `examples/_tests/`.
-- You can think of these as E2E (end-to-end) tests.
-- Run them manually with `pnpm test:examples`.
-- They are also run in GitHub Actions against pull requests.
+```sh
+pnpm test:integration
+pnpm test:integration --ui
+```
 
-#### Polen Version
+### E2E
 
-- By default, in CI, tests use the local Polen version (via pnpm file:).
-- Otherwise they use the registry version.
-- There is also an option to use a local Polen version via pnpm `link:`.
-- This is a
-  [Playwright fixture option](https://playwright.dev/docs/test-fixtures#fixtures-options)
-  that you can override.
+- Static projects (reuses examples)
+- Basically as real as a real user
+
+```sh
+pnpm test:examples
+pnpm test:examples --ui
+```
+
+### CI
+
+- `main` branch (trunk)
+  - no checks
+  - automatic pre-release
+- pull requests
+  - many checks
+
+### Releases
+
+- Automated pre-releases on `main` branch commits
+- Manual releases from own machine `pnpm release`
+
+## Internal Subpath Imports (ISI)
+
+- We use [NodeJS internal subpath imports](https://nodejs.org/api/packages.html#subpath-imports).
+- This makes refactoring easier for us.
+- To achieve this we maintain three points of configuration. See next.
+
+### `package.json` (`imports`)
+
+- Used by NodeJS when running Polen CLI
+
+### `tsconfig.json` (`compilerOptions.paths`)
+
+- Used by TypeScript
+- Some tools may refer to these to syncrhonize their path aliases, e.g.:
+  - Playwright
+  - Vitest
+  - ...
+
+### Vite Polen plugin (virtual modules)
+
+- In part Polen is a library whose modules are used in the user's project runtime.
+- Some of these modules are [Vite Virtual Modules](https://vitejs.dev/guide/api-plugin.html#virtual-modules) (dynamic code that is synthesized in memory, does not exist on disk)
+- To allow those modules to use ISI we maintain an internal vite plugin that will resolve the imports correctly.
