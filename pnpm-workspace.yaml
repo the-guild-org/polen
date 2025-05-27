@@ -1,5 +1,7 @@
 onlyBuiltDependencies:
   - dprint
-  - "@swc/core"
+  - '@swc/core'
   - esbuild
-  - "@playwright/browser-chromium"
+  - '@playwright/browser-chromium'
+overrides:
+  polen: 'link:'

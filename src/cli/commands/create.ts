@@ -29,6 +29,10 @@ const args = Command
       `When installing polen, do so as a link. You must have Polen globally linked on your machine.`,
     ),
   )
+  .parameter(
+    `version`,
+    z.string().describe(`Version of Polen to use. Defaults to latest release. Ignored if --link is used.`),
+  )
   .parameter(`example`, Examples.default(`pokemon`).describe(`The example to use to scaffold your project.`))
   .settings({
     parameters: {
@@ -125,10 +129,13 @@ await Manifest.resource.update((manifest) => {
   manifest.name = name
   manifest.description = `A new project`
   manifest.packageManager = `pnpm@10.11.0`
+  delete manifest.dependencies.polen // Repo uses links, we will install polen next.
 }, projectRoot)
 
 if (args.link) {
   await $`pnpm link polen`
+} else {
+  await $`pnpm add polen${args.ver ? `@${args.ver}` : ''}`
 }
 
 console.log(``)
