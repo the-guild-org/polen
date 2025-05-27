@@ -1,4 +1,4 @@
-import { createId, createResolved, normalizeId } from './id.js'
+import { createId, markNoPlugins, normalizeId } from './id.js'
 
 export interface Options {
   /**
@@ -39,7 +39,7 @@ export const create = (parameters: {
     ? `${parameters.namespace}${separator}${idNormalized}`
     : idNormalized
   const id = createId(idNamespaced)
-  const resolved = parameters.allowPluginProcessing ? id : createResolved(id)
+  const resolved = parameters.allowPluginProcessing ? id : markNoPlugins(id)
   return {
     id,
     resolved,
@@ -48,13 +48,25 @@ export const create = (parameters: {
   }
 }
 
+export interface Factory {
+  (idSegments: string[], options?: Options): Identifier
+  /**
+   * The prefix that ids returned from this factory will have.
+   */
+  prefix: string
+  /**
+   * Does the given id have a prefix that matches this factory?
+   */
+  includes: (id: string) => boolean
+}
+
 export const createFactory = (parameters: {
   namespace: string
   separator?: string
-}): (idSegments: string[], options?: Options) => Identifier => {
+}): Factory => {
   const { namespace, separator = defaults.separator } = parameters
 
-  return (idSegments, options) => {
+  const factory: Factory = (idSegments, options) => {
     const id = idSegments.flatMap(_ => _.split(separator)).join(separator)
 
     return create({
@@ -64,4 +76,9 @@ export const createFactory = (parameters: {
       ...options,
     })
   }
+  factory.prefix = createId(parameters.namespace)
+  factory.includes = (id: string) => {
+    return id.startsWith(factory.prefix) || id.startsWith(markNoPlugins(factory.prefix))
+  }
+  return factory
 }

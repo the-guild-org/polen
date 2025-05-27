@@ -1,8 +1,8 @@
 export const idPrefix = `virtual:`
 
-export const resolvedPrefix = `\0`
+export const noPluginsMark = `\0`
 
-export const createResolved = (id: string) => `${resolvedPrefix}${id}`
+export const markNoPlugins = (id: string) => `${noPluginsMark}${id}`
 
 export const createId = (id: string) => `${idPrefix}${id}`
 
