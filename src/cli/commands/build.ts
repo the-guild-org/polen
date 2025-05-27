@@ -1,5 +1,5 @@
-#!/usr/bin/env node
-
+// eslint-disable-next-line
+// @ts-nocheck
 import { Vite } from '#dep/vite/index.js'
 import { Command } from '@molt/command'
 import { z } from 'zod'

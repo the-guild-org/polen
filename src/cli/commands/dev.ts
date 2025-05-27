@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { Vite } from '#dep/vite/index.js'
 import { Err } from '@wollybeard/kit'
 import { loadConfig } from '../../api/load-config.js'

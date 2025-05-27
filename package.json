@@ -1,6 +1,6 @@
 {
   "name": "polen",
-  "version": "0.0.0-dripip",
+  "version": "0.5.1",
   "type": "module",
   "description": "A framework for delightful GraphQL developer portals",
   "author": {
