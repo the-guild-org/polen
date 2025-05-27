@@ -83,6 +83,9 @@ importers:
       marked:
         specifier: ^15.0.11
         version: 15.0.11
+      polen:
+        specifier: 'link:'
+        version: 'link:'
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -219,18 +222,6 @@ importers:
       zod:
         specifier: ^3.24.3
         version: 3.24.3
-
-  examples/github:
-    dependencies:
-      polen:
-        specifier: link:../..
-        version: link:../..
-
-  examples/pokemon:
-    dependencies:
-      polen:
-        specifier: link:../..
-        version: link:../..
 
 packages:
 
