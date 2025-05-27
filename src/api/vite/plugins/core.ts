@@ -60,9 +60,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           emptyOutDir: true,
           outDir: config.paths.project.buildDir,
         },
-        optimizeDeps: {
-          include: [`@wollybeard/kit`],
-        },
       }
     },
     ...ViteVirtual.IdentifiedLoader.toHooks(
