@@ -49,6 +49,9 @@ export const Core = (config: Configurator.Config): Vite.PluginOption => {
           emptyOutDir: true,
           outDir: config.paths.project.buildDir,
         },
+        optimizeDeps: {
+          include: [`@wollybeard/kit`],
+        },
         resolve: {
           alias: [
             // These alias allow virtual modules to use the same #... import paths that our source code does.

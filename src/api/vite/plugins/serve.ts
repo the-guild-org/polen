@@ -53,42 +53,6 @@ export const Serve = (
             ],
           },
         },
-        optimizeDeps: {
-          // Polen is already ESM and does not have many internal modules.
-          // https://vite.dev/guide/dep-pre-bundling.html#customizing-the-behavior
-          // exclude: [`polen`],
-          // include: [
-          //   // `react`,
-          //   // `react/jsx-runtime`,
-          //   // `react/jsx-dev-runtime`,
-          //   // reactPath,
-          //   // reactJsxRuntimePath,
-          //   // reactJsxDevRuntimePath,
-          // ],
-        },
-        // Make it possible for ReactVite to find react dependency within Polen.
-        // resolve: {
-        //   alias: [
-        //     // { find: `react`, replacement: reactPath },
-        //     // { find: `react/jsx-runtime`, replacement: reactJsxRuntimePath },
-        //     // { find: `react/jsx-dev-runtime`, replacement: reactJsxDevRuntimePath },
-        //     // {
-        //     //   find: `react`,
-        //     //   replacement: `polen/dependencies/react`,
-        //     // },
-        //     // {
-        //     //   find: `react/jsx-runtime`,
-        //     //   replacement: `polen/dependencies/react/jsx-runtime`,
-        //     // },
-        //     // {
-        //     //   find: `react/jsx-dev-runtime`,
-        //     //   replacement: `polen/dependencies/react/jsx-dev-runtime`,
-        //     // },
-        //   ],
-        // },
-        // server: {
-        // middlewareMode: true,
-        // },
       }
     },
   }
