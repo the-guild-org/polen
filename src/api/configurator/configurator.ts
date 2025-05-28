@@ -220,7 +220,7 @@ export const normalizeInput = async (
   }
 
   if (configInput?.advanced?.explorer !== undefined) {
-    config.explorer = configInput.advanced.explorer
+    config.advanced.explorer = configInput.advanced.explorer
   }
 
   if (configInput?.advanced?.watch?.also) {

@@ -122,7 +122,7 @@
     "vitest": "^3.1.2",
     "zod": "^3.24.3"
   },
-  "packageManager": "pnpm@10.10.0",
+  "packageManager": "pnpm@10.11.0",
   "scripts": {
     "sandbox": "tsx src/sandbox",
     "sandbox:watch": "tsx --watch src/sandbox",

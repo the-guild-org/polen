@@ -116,7 +116,9 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
 
           if (schema) {
             siteNavigationItems.push({ path: `/reference`, title: `Reference` })
-            siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
+            if (schema.versions.length > 1) {
+              siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
+            }
           }
 
           const projectData: ProjectData = {
@@ -156,7 +158,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           const moduleContent = Page.ReactRouterAdaptor.render({
             pageTree: pages.fixed,
             sourcePaths: {
-              reactRouterHelpers: `#lib/react-router-helpers.js`,
+              reactRouterHelpers: `#lib/react-router-aid/react-router-aid.js`,
             },
           })
 

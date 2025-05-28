@@ -27,7 +27,6 @@ export const EnvironmentName = {
 }
 
 export const isEnvironmentSsr = (environment: PartialEnvironment): boolean => {
-  // console.log(environment.name, EnvironmentName.ssr)
   return environment.name === EnvironmentName.ssr
 }
 

@@ -4,7 +4,7 @@ import { app } from '#template/server/app.js'
 import consola from 'consola'
 import * as NodeFs from 'node:fs/promises'
 import { renderPage } from '../render-page.jsx'
-import { getRoutesPaths } from '../view.js'
+import { getRoutesPaths } from './get-route-paths.js'
 
 export const generate = async (view: ReactRouter.StaticHandler) => {
   const handler: Hono.Handler = async (ctx) => {
