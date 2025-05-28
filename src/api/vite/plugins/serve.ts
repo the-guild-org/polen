@@ -13,8 +13,8 @@ export const Serve = (
       let honoApp: Hono.Hono
 
       try {
-        const ssrloadedModule = await server.ssrLoadModule(config.paths.framework.template.server.entrypoint)
-        honoApp = ssrloadedModule[`default`] as Hono.Hono
+        const module = await server.ssrLoadModule(config.paths.framework.template.server.app) as { app: Hono.Hono }
+        honoApp = module.app
       } catch (cause) {
         if (cause instanceof Error) {
           server.ssrFixStacktrace(cause)
@@ -41,9 +41,6 @@ export const Serve = (
       }
     },
     config() {
-      // const reactPath = import.meta.resolve(`react`)
-      // const reactJsxRuntimePath = import.meta.resolve(`react/jsx-runtime`)
-      // const reactJsxDevRuntimePath = import.meta.resolve(`react/jsx-dev-runtime`)
       return {
         server: {
           fs: {

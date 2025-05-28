@@ -6,6 +6,7 @@ export interface PackagePaths {
   template: {
     rootDir: string
     server: {
+      app: string
       entrypoint: string
     }
     client: {
@@ -27,6 +28,7 @@ export const packagePaths: PackagePaths = {
   template: {
     rootDir: templateDir,
     server: {
+      app: Path.join(templateDir, `server/app.js`),
       entrypoint: Path.join(templateDir, `server/main.js`),
     },
     client: {
