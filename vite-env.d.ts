@@ -1,8 +1,17 @@
 /// <reference types="vite/client" />
+/* eslint-disable */
 
-/**
- * Type declarations for Vite's special import.meta features
- */
+//
+//
+// Type declarations for Vite's special import.meta features
+//
+//
+
+declare const __BUILDING__: boolean
+declare const __BUILD_TYPE_SSG__: boolean
+declare const __BUILD_TYPE__: import('#api/configurator/index.js').Configurator.BuildType
+declare const __SERVING__: boolean
+declare const __COMMAND__: import('#dep/vite/index.js').Vite.ConfigEnv[`command`]
 
 /**
  * Declaration for importing assets as raw strings using the ?raw suffix
@@ -29,31 +38,24 @@ declare module '*.svg' {
 }
 
 declare module 'virtual:polen/vite/client/manifest' {
-  // eslint-disable-next-line
   const manifest: import('vite').Manifest
   export default manifest
 }
 
 declare module 'virtual:polen/template/variables' {
-  export const templateVariables:
-    // eslint-disable-next-line
-    import('./src/api/configurator/configurator.ts').TemplateVariables
+  export const templateVariables: import('#api/configurator/configurator.js').TemplateVariables
 }
 
 declare module 'virtual:polen/project/pages.jsx' {
-  // eslint-disable-next-line
   export const pages: import('react-router').RouteObject[]
 }
 
 declare module 'virtual:polen/project/data' {
-  // eslint-disable-next-line
-  export const PROJECT_DATA: import('./src/project-data.ts').ProjectData
+  export const PROJECT_DATA: import('#project-data.js').ProjectData
 }
 
 declare module 'virtual:polen/template/schema-augmentations' {
-  export const schemaAugmentations:
-    // eslint-disable-next-line
-    import('./src/api/schema-augmentation/schema-augmentation.js').Augmentation[]
+  export const schemaAugmentations: import('#api/schema-augmentation/schema-augmentation.js').Augmentation[]
 }
 
 declare module 'virtual:polen/*' {

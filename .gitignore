@@ -23,6 +23,6 @@ dist-ssr
 .output
 .vite-inspect
 
-build
+/build
 node_modules/
 .bundle-explorer

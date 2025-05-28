@@ -1,5 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
+import { build } from '#api/build/build.js'
+import { Configurator } from '#api/configurator/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { Command } from '@molt/command'
 import { z } from 'zod'
@@ -7,6 +9,10 @@ import { loadConfig } from '../../api/load-config.js'
 
 const args = Command.create()
   .parameter(`--debug -d`, z.boolean().default(false))
+  .parameter(
+    `--mode -m`,
+    z.enum(Configurator.BuildMode).default('ssg').describe('Which kind of application architecture to outut.'),
+  )
   .settings({
     parameters: {
       environment: {
@@ -20,18 +26,6 @@ const args = Command.create()
   })
   .parse()
 
-const config = await loadConfig({
-  env: {
-    command: `build`,
-    mode: `production`,
-  },
-  overrides: {
-    advanced: {
-      debug: args.debug,
-    },
-  },
+await build({
+  ...args,
 })
-
-const builder = await Vite.createBuilder(config)
-
-await builder.buildApp()

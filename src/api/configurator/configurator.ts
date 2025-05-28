@@ -1,8 +1,19 @@
 import type { Vite } from '#dep/vite/index.js'
 import { Path } from '@wollybeard/kit'
+import { z } from 'zod'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { type PackagePaths, packagePaths } from '../../package-paths.js'
 import type { Schema } from '../schema/index.js'
+
+export const BuildModeEnum = {
+  ssg: `ssg`,
+  spa: `spa`,
+  ssr: `ssr`,
+} as const
+
+export const BuildMode = z.nativeEnum(BuildModeEnum)
+
+export type BuildMode = typeof BuildModeEnum[keyof typeof BuildModeEnum]
 
 type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
 
@@ -35,16 +46,9 @@ export interface ConfigInput {
      */
     title?: string
   }
-  /**
-   * Path to the GraphQL schema file
-   */
-  // schema?: SchemaInput
-  /**
-   * Whether to enable SSR
-   *
-   * @defaultValue true
-   */
-  ssr?: boolean
+  build?: {
+    type: BuildMode
+  }
   advanced?: {
     /**
      * Tweak the watch behavior.
@@ -87,7 +91,9 @@ export interface TemplateVariables {
 }
 
 export interface Config {
-  mode: string
+  build: {
+    type: BuildMode
+  }
   explorer: boolean
   watch: {
     also: string[]
@@ -101,9 +107,21 @@ export interface Config {
   paths: {
     project: {
       rootDir: string
-      buildDir: string
-      conventions: {
-        pagesDir: string
+      relative: {
+        build: {
+          root: string
+          relative: {
+            assets: string
+          }
+        }
+        pages: string
+      }
+      absolute: {
+        build: {
+          root: string
+          assets: string
+        }
+        pages: string
       }
     }
     framework: PackagePaths
@@ -123,7 +141,9 @@ const configInputDefaults: Config = {
   watch: {
     also: [],
   },
-  mode: `client`,
+  build: {
+    type: BuildModeEnum.ssg,
+  },
   schema: null,
   ssr: {
     enabled: true,
@@ -131,9 +151,21 @@ const configInputDefaults: Config = {
   paths: {
     project: {
       rootDir: process.cwd(),
-      buildDir: Path.ensureAbsoluteWithCWD(`dist`),
-      conventions: {
-        pagesDir: Path.ensureAbsoluteWithCWD(`pages`),
+      relative: {
+        build: {
+          root: `dist`,
+          relative: {
+            assets: `assets`,
+          },
+        },
+        pages: `pages`,
+      },
+      absolute: {
+        build: {
+          root: Path.ensureAbsoluteWithCWD(`dist`),
+          assets: Path.ensureAbsoluteWithCWD(`dist/assets`),
+        },
+        pages: Path.ensureAbsoluteWithCWD(`pages`),
       },
     },
     framework: packagePaths,
@@ -155,20 +187,23 @@ export const normalizeInput = async (
 
   if (configInput?.root) {
     config.paths.project.rootDir = Path.ensureAbsoluteWithCWD(configInput.root)
-    if (config.paths.project.buildDir === configInputDefaults.paths.project.buildDir) {
-      config.paths.project.buildDir = Path.join(config.paths.project.rootDir, `build`)
-    }
-    if (config.paths.project.conventions.pagesDir === configInputDefaults.paths.project.conventions.pagesDir) {
-      config.paths.project.conventions.pagesDir = Path.join(config.paths.project.rootDir, `pages`)
-    }
+    // Re-compute absolute paths
+    config.paths.project.absolute.build.root = Path.join(
+      config.paths.project.rootDir,
+      config.paths.project.relative.build.root,
+    )
+    config.paths.project.absolute.build.assets = Path.join(
+      config.paths.project.rootDir,
+      config.paths.project.relative.build.relative.assets,
+    )
+    config.paths.project.absolute.pages = Path.join(
+      config.paths.project.rootDir,
+      config.paths.project.relative.pages,
+    )
   }
 
   if (configInput?.advanced?.vite) {
     config.advanced.vite = configInput.advanced.vite
-  }
-
-  if (configInput?.ssr !== undefined) {
-    config.ssr.enabled = configInput.ssr
   }
 
   if (configInput?.schemaAugmentations) {
