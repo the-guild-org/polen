@@ -10,8 +10,8 @@ import { loadConfig } from '../../api/load-config.js'
 const args = Command.create()
   .parameter(`--debug -d`, z.boolean().default(false))
   .parameter(
-    `--mode -m`,
-    z.enum(Configurator.BuildMode).default('ssg').describe('Which kind of application architecture to outut.'),
+    `--architecture -a`,
+    Configurator.BuildArchitecture.default('ssg').describe('Which kind of application architecture to output.'),
   )
   .settings({
     parameters: {

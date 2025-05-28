@@ -1,25 +1,19 @@
 import { Configurator } from '#api/configurator/index.js'
 import { loadConfig } from '#api/load-config.js'
 import { Vite } from '#dep/vite/index.js'
-import consola from 'consola'
 
 const buildDefaults = {
   debug: false,
-  type: Configurator.BuildTypeEnum.ssg,
+  type: Configurator.BuildArchitecture.enum.ssg,
 }
 
 interface BuildConfigInput {
   debug?: boolean
-  type?: Configurator.BuildType
+  type?: Configurator.BuildArchitecture
 }
 
 export const build = async (buildConfigInput: BuildConfigInput) => {
   const buildConfig = { ...buildDefaults, ...buildConfigInput }
-
-  if (buildConfig.type === `spa`) {
-    consola.error(`Sorry, SPA builds are not supported yet.`)
-    process.exit(1)
-  }
 
   const config = await loadConfig({
     env: {

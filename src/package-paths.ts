@@ -5,13 +5,17 @@ export interface PackagePaths {
   sourceDir: string
   template: {
     rootDir: string
-    entryServer: string
-    entryClient: string
+    server: {
+      entrypoint: string
+    }
+    client: {
+      entrypoint: string
+    }
   }
 }
 
 /**
- * Usually build but if running with tsx then src
+ * Usually ./build but if running with tsx then ./src
  */
 const sourceDir = import.meta.dirname
 const templateDir = Path.join(sourceDir, `template`)
@@ -22,7 +26,11 @@ export const packagePaths: PackagePaths = {
   sourceDir,
   template: {
     rootDir: templateDir,
-    entryServer: Path.join(templateDir, `entry.server.jsx`),
-    entryClient: Path.join(templateDir, `entry.client.jsx`),
+    server: {
+      entrypoint: Path.join(templateDir, `server/main.js`),
+    },
+    client: {
+      entrypoint: Path.join(templateDir, `entry.client.jsx`),
+    },
   },
 }

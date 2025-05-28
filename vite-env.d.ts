@@ -8,8 +8,8 @@
 //
 
 declare const __BUILDING__: boolean
-declare const __BUILD_TYPE_SSG__: boolean
-declare const __BUILD_TYPE__: import('#api/configurator/index.js').Configurator.BuildType
+declare const __BUILD_ARCHITECTURE_SSG__: boolean
+declare const __BUILD_ARCHITECTURE__: import('#api/configurator/index.js').Configurator.BuildArchitecture
 declare const __SERVING__: boolean
 declare const __COMMAND__: import('#dep/vite/index.js').Vite.ConfigEnv[`command`]
 

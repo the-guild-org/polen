@@ -5,7 +5,7 @@ import { generate } from './ssg/generate.js'
 import { view } from './view.js'
 
 if (__BUILDING__) {
-  switch (__BUILD_TYPE__) {
+  switch (__BUILD_ARCHITECTURE__) {
     case `ssg`:
       await generate(view)
       break
@@ -16,6 +16,6 @@ if (__BUILDING__) {
     case `spa`:
       throw new Error(`Sorry, SPA build type not supported`)
     default:
-      neverCase(__BUILD_TYPE__)
+      neverCase(__BUILD_ARCHITECTURE__)
   }
 }

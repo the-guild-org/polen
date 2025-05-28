@@ -1,6 +1,14 @@
 import type { Vite } from '#dep/vite/index.js'
 import { Group, Str } from '@wollybeard/kit'
 
+export const injectManifestIntoHtml = (
+  html: string,
+  manifest: Vite.Manifest,
+): string => {
+  const assets = getRelevantAsssetsFromManifest(manifest)
+  return injectAssetsIntoHtml(html, assets)
+}
+
 const getRelevantAsssetsFromManifest = (
   manifest: Vite.Manifest,
 ): HttpAssetGroupSet => {
@@ -16,14 +24,6 @@ const getRelevantAsssetsFromManifest = (
   }
 
   return Group.by(htmlAssets, `type`)
-}
-
-export const injectManifestIntoHtml = (
-  html: string,
-  manifest: Vite.Manifest,
-): string => {
-  const assets = getRelevantAsssetsFromManifest(manifest)
-  return injectAssetsIntoHtml(html, assets)
 }
 
 type HttpAssetGroupSet = Group.by<HttpAsset, `type`>
@@ -53,9 +53,7 @@ const injectAssetsIntoHtml = (
         .join(Str.Char.newline),
   })
 
-  html
-    .replace(`</head>`, `${htmlAssets.css}</head>`)
-    .replace(`</body>`, `${htmlAssets.js}</body>`)
-
   return html
+    .replace(`</head>`, `${htmlAssets.css ?? ``}</head>`)
+    .replace(`</body>`, `${htmlAssets.js ?? ``}</body>`)
 }

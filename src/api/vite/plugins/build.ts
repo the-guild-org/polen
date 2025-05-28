@@ -47,7 +47,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
             build: {
               manifest: true,
               rollupOptions: {
-                input: [config.paths.framework.template.entryClient],
+                input: [config.paths.framework.template.client.entrypoint],
                 external: id => id.startsWith(`node:`),
                 onwarn(message) {
                   if (isKitUnusedExternalImport(message)) return
@@ -78,9 +78,10 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
               // The SSR build will follow the client build, and emptying the dir would lose the output of the client build.
               emptyOutDir: false,
               rollupOptions: {
-                input: [config.paths.framework.template.entryServer],
+                input: [config.paths.framework.template.server.entrypoint],
                 // input: viServerEntry.id,
                 output: {
+                  // todo: do not hardcode name
                   entryFileNames: `entry.js`,
                 },
               },
@@ -89,89 +90,10 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
         },
       }
     },
-    // configResolved(config) {
-    //   viteConfigResolved = config
-    // },
-    // ...ViteVirtual.IdentifiedLoader.toHooks(
-    //   {
-    //     /**
-    //      * In development Vite runs the server entrypoint, providing things like
-    //      * static file serving.
-    //      *
-    //      * This module provides that functionality for production.
-    //      */
-    //     identifier: viServerEntry,
-    //     loader: () => {
-    //       // Globs in Vite virtual modules must start with a slash
-    //       const entrServeryViteGlobPath = `/`
-    //         + Path.relative(config.paths.framework.rootDir, config.paths.framework.template.entryServer)
-    //       const staticServingPaths = {
-    //         // todo
-    //         // relative from CWD of process that boots node server
-    //         // can easily break! Use path relative in server??
-    //         dirPath: `./dist`,
-    //         routePath: `/${viteConfigResolved.build.assetsDir}/*`,
-    //       }
 
-    //       const code = Str.Builder()
-
-    //       const $ = {
-    //         frameworkEntrypoint: `frameworkEntrypoint`,
-    //         projectEntrypoint: `projectEntrypoint`,
-    //         projectEntrypoints: `projectEntrypoints`,
-    //         HonoAid: `HonoAid`,
-    //         serveStatic: `serveStatic`,
-    //         serve: `serve`,
-    //         value: {
-    //           port: String(viteConfigResolved.server.port + 1),
-    //         },
-    //       }
-
-    //       code`import { Hono } from 'hono'`
-    //       code``
-    //       code`const ${$.frameworkEntrypoint} = new Hono()`
-    //       code``
-    //       code``
-    //       code`// Static Files`
-    //       code``
-    //       code`import { ${$.serveStatic} } from '@hono/node-server/serve-static'`
-    //       code`import { ${$.HonoAid} } from '#lib/hono-aid/index.js'`
-    //       code``
-    //       code`${$.frameworkEntrypoint}.use(
-    // 				'${staticServingPaths.routePath}',
-    // 				${$.serveStatic}({ root: '${staticServingPaths.dirPath}' })
-    // 			)`
-    //       code``
-    //       code``
-    //       // todo: why do we support multiple entrypoints?
-    //       code`// Entrypoints`
-    //       code``
-    //       code`const ${$.projectEntrypoints} = import.meta.glob(
-    // 				['${entrServeryViteGlobPath}'],
-    // 				{ import: 'default', eager: true }
-    // 			)`
-    //       code``
-    //       code`for (const ${$.projectEntrypoint} of Object.values(${$.projectEntrypoints})) {
-    // 		${$.HonoAid}.delegate(${$.frameworkEntrypoint}, 'all', '*', ${$.projectEntrypoint})
-    // 			}`
-    //       code``
-    //       code``
-    //       code`// Start Server`
-    //       code``
-    //       code`import { ${$.serve} } from '@hono/node-server'` // TODO: support non-node platforms.
-    //       code``
-    //       code(`const port = process.env.PORT || ${$.value.port}`)
-    //       code``
-    //       code(`${$.serve}({ fetch: ${$.frameworkEntrypoint}.fetch, port })`)
-
-    //       return code.render()
-    //     },
-    //   },
-    // ),
     onLog(_, message) {
       if (isKitUnusedExternalImport(message)) return
     },
-
     // generateBundle(_, bundle, isWrite) {
     //   if (isWrite) {
     //     for (const chunkOrAsset of Object.values(bundle)) {

@@ -5,15 +5,15 @@ import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { type PackagePaths, packagePaths } from '../../package-paths.js'
 import type { Schema } from '../schema/index.js'
 
-export const BuildModeEnum = {
+export const BuildArchitectureEnum = {
   ssg: `ssg`,
   spa: `spa`,
   ssr: `ssr`,
 } as const
 
-export const BuildMode = z.nativeEnum(BuildModeEnum)
+export const BuildArchitecture = z.nativeEnum(BuildArchitectureEnum)
 
-export type BuildMode = typeof BuildModeEnum[keyof typeof BuildModeEnum]
+export type BuildArchitecture = typeof BuildArchitectureEnum[keyof typeof BuildArchitectureEnum]
 
 type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
 
@@ -33,7 +33,6 @@ export interface ConfigInput {
    *
    * @defaultValue true
    */
-  explorer?: boolean
   schema?: SchemaConfigInput
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
@@ -47,9 +46,10 @@ export interface ConfigInput {
     title?: string
   }
   build?: {
-    type: BuildMode
+    type: BuildArchitecture
   }
   advanced?: {
+    explorer?: boolean
     /**
      * Tweak the watch behavior.
      */
@@ -92,9 +92,8 @@ export interface TemplateVariables {
 
 export interface Config {
   build: {
-    type: BuildMode
+    type: BuildArchitecture
   }
-  explorer: boolean
   watch: {
     also: string[]
   }
@@ -127,6 +126,7 @@ export interface Config {
     framework: PackagePaths
   }
   advanced: {
+    explorer: boolean
     debug: boolean
     vite?: Vite.UserConfig
   }
@@ -137,12 +137,11 @@ const configInputDefaults: Config = {
     title: `My Developer Portal`,
   },
   schemaAugmentations: [],
-  explorer: true,
   watch: {
     also: [],
   },
   build: {
-    type: BuildModeEnum.ssg,
+    type: BuildArchitectureEnum.ssg,
   },
   schema: null,
   ssr: {
@@ -172,6 +171,7 @@ const configInputDefaults: Config = {
   },
   advanced: {
     debug: false,
+    explorer: false,
   },
 }
 
@@ -219,8 +219,8 @@ export const normalizeInput = async (
     config.schema = configInput.schema
   }
 
-  if (configInput?.explorer !== undefined) {
-    config.explorer = configInput.explorer
+  if (configInput?.advanced?.explorer !== undefined) {
+    config.explorer = configInput.advanced.explorer
   }
 
   if (configInput?.advanced?.watch?.also) {

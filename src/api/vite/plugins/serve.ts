@@ -13,7 +13,7 @@ export const Serve = (
       let honoApp: Hono.Hono
 
       try {
-        const ssrloadedModule = await server.ssrLoadModule(config.paths.framework.template.entryServer)
+        const ssrloadedModule = await server.ssrLoadModule(config.paths.framework.template.server.entrypoint)
         honoApp = ssrloadedModule[`default`] as Hono.Hono
       } catch (cause) {
         if (cause instanceof Error) {

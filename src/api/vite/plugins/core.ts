@@ -51,8 +51,8 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           __BUILDING__: Json.codec.serialize(command === `build`),
           __SERVING__: Json.codec.serialize(command === `serve`),
           __COMMAND__: Json.codec.serialize(command),
-          __BUILD_TYPE__: Json.codec.serialize(config.build.type),
-          __BUILD_TYPE_SSG__: Json.codec.serialize(config.build.type === `ssg`),
+          __BUILD_ARCHITECTURE__: Json.codec.serialize(config.build.type),
+          __BUILD_ARCHITECTURE_SSG__: Json.codec.serialize(config.build.type === `ssg`),
         },
         server: {
           port: 3000,
