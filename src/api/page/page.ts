@@ -55,7 +55,15 @@ export interface PageBranchSegment {
  * Checks if a segment contains an index page in which case this segment can also be considered like a content page.
  */
 export const isPageBranchSegmentAlsoContent = (segment: PageBranchSegment): boolean => {
-  return segment.branches.some(branch => branch.type === `PageBranchContent` && branch.route.isIndex)
+  return Boolean(getPageBranchSegmentContent(segment))
+}
+
+export const getPageBranchSegmentContent = (segment: PageBranchSegment): undefined | PageBranchContent => {
+  // todo: kit
+  // return arr.find(segment.branches, { type: `PageBranchContent`, route: { isIndex: true } })
+  return segment.branches.find(branch => branch.type === `PageBranchContent` && branch.route.isIndex) as
+    | PageBranchContent
+    | undefined
 }
 
 export type PageBranch = PageBranchContent | PageBranchSegment
@@ -232,18 +240,14 @@ export const pagesToPageBranches = (pages: Page[]): PageBranch[] => {
 
     processedExplicitPaths.add(currentExplicitPath)
 
-    let parentExplicitPath: string
-    let parentPathValue: string // Renamed to avoid conflict with kit.Path
-    let parentSegmentsValue: string[]
-
     if (pageBranch.route.segments.length === 0) {
       if (!finalTopLevelPageTrees.includes(pageBranch)) finalTopLevelPageTrees.push(pageBranch)
       continue
     }
 
-    parentSegmentsValue = pageBranch.route.segments.slice(0, -1)
-    parentPathValue = parentSegmentsValue.join(Path.sep)
-    parentExplicitPath = parentPathValue // For segments, explicit and public paths are the same
+    const parentSegmentsValue = pageBranch.route.segments.slice(0, -1)
+    const parentPathValue = parentSegmentsValue.join(Path.sep)
+    const parentExplicitPath = parentPathValue // For segments, explicit and public paths are the same
 
     if (parentPathValue === ``) {
       if (!finalTopLevelPageTrees.includes(pageBranch)) finalTopLevelPageTrees.push(pageBranch)

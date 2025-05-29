@@ -1,7 +1,7 @@
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Json, Str } from '@wollybeard/kit'
+import { Cache, Json, Null, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
@@ -100,21 +100,22 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
 
           const siteNavigationItemsFromTopLevelPages = pages
             // todo: test that non-congent page branches aren't shown in navigation bar
-            .filter(pageBranch => {
+            .map(pageBranch => {
               switch (pageBranch.type) {
                 case `PageBranchContent`:
                   // Home is handled by clicking on the site logo/title
-                  if (pageBranch.route.isIndex) return false
+                  if (pageBranch.route.isIndex) return null
                   // A top-level content page is a nav item (e.g., /about from about.md, or / from index.md)
-                  return true
+                  return pageBranch
                 case `PageBranchSegment`:
                   // A top-level segment (directory) is a nav item if it contains an index page
                   // (e.g., /docs from docs/index.md, where "docs" is the segment)
-                  return Page.isPageBranchSegmentAlsoContent(pageBranch)
+                  return Page.getPageBranchSegmentContent(pageBranch) ?? null
                 default:
-                  return false
+                  return null
               }
             })
+            .filter(Null.isnt)
             .map(
               (pageBranch): ProjectData[`siteNavigationItems`][number] => {
                 const path = pageBranch.route.path // This is "/" for root index, "foo" for foo.md or foo/index.md

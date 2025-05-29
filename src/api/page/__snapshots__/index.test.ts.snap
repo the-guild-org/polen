@@ -100,41 +100,25 @@ exports[`index file 1`] = `
 exports[`index file nested 1`] = `
 [
   {
-    "branches": [
-      {
-        "branches": [],
-        "content": {
-          "html": "<p>foo</p>
+    "branches": [],
+    "content": {
+      "html": "<p>foo</p>
 ",
-          "markdown": "foo",
-        },
-        "file": {
-          "path": "<VARIABLE>/pages/about/index.md",
-        },
-        "route": {
-          "path": {
-            "raw": "about",
-            "segments": [
-              "about",
-            ],
-          },
-          "pathExplicit": "about/index",
-          "type": "RouteIndex",
-        },
-        "type": "PageBranchContent",
-      },
-    ],
-    "route": {
-      "path": {
-        "raw": "about",
-        "segments": [
-          "about",
-        ],
-      },
-      "pathExplicit": "about",
-      "type": "RouteSegment",
+      "markdown": "foo",
     },
-    "type": "PageBranchSegment",
+    "file": {
+      "path": "<VARIABLE>/pages/about/index.md",
+    },
+    "route": {
+      "isIndex": true,
+      "path": "about",
+      "pathExplicit": "about/index",
+      "segments": [
+        "about",
+      ],
+      "type": "PageContentRoute",
+    },
+    "type": "PageBranchContent",
   },
 ]
 `;

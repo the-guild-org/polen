@@ -42,8 +42,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1(vite@6.3.5(@types/node@22.15.3)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
       '@wollybeard/kit':
-        specifier: ^0.28.0
-        version: 0.28.0
+        specifier: link:../../../Library/pnpm/global/5/node_modules/@wollybeard/kit
+        version: link:../../../Library/pnpm/global/5/node_modules/@wollybeard/kit
       '@wollybeard/projector':
         specifier: ^0.1.1
         version: 0.1.1
@@ -2084,9 +2084,6 @@ packages:
     resolution: {integrity: sha512-Nst5JdK47VIl9UcGwtv2Rcgyn5lWtZ0/mhRQ4G8NN2isxpq2TO30iqHzmwoJycjWuyUfg3GFXqP/gFHXeV57IA==}
     engines: {node: '>=16.0.0'}
 
-  '@wollybeard/kit@0.28.0':
-    resolution: {integrity: sha512-3/iEMpXzhBkwDxkyHJIkzVaqtKq4W6KEMG1PBplwDm+WgtrXNrWG0jE/bevO68uUodS9Q8FJAI48vu0WrR9jfQ==}
-
   '@wollybeard/projector@0.1.1':
     resolution: {integrity: sha512-hQWIT0P+XE7CDIQ96pVQkkMqBoa+fUJuzmP5ipxE+tUT0EjQa0FKLFZlV4yvVEV8kOkvDRTCQACPQYFx2mGhTA==}
 
@@ -3789,9 +3786,6 @@ packages:
 
   zod@3.25.30:
     resolution: {integrity: sha512-VolhdEtu6TJr/fzGuHA/SZ5ixvXqA6ADOG9VRcQ3rdOKmF5hkmcJbyaQjUH5BgmpA9gej++zYRX7zjSmdReIwA==}
-
-  zod@3.25.34:
-    resolution: {integrity: sha512-lZHvSc2PpWdcfpHlyB33HA9nqP16GpC9IpiG4lYq9jZCJVLZNnWd6Y1cj79bcLSBKTkxepfpjckPv5Y5VOPlwA==}
 
   zx@8.5.4:
     resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
@@ -5799,20 +5793,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@wollybeard/kit@0.28.0':
-    dependencies:
-      '@types/node': 22.15.24
-      ansis: 4.0.0
-      consola: 3.4.2
-      es-toolkit: 1.38.0
-      jsonc-parser: 3.3.1
-      type-fest: 4.41.0
-      zod: 3.25.34
-
   '@wollybeard/projector@0.1.1':
     dependencies:
       '@types/node': 22.15.24
-      '@wollybeard/kit': 0.28.0
+      '@wollybeard/kit': link:../../../Library/pnpm/global/5/node_modules/@wollybeard/kit
       zx: 8.5.4
 
   acorn-jsx@5.3.2(acorn@8.14.1):
@@ -7471,6 +7455,5 @@ snapshots:
 
   zod@3.25.30: {}
 
-  zod@3.25.34: {}
-
   zx@8.5.4: {}
+
