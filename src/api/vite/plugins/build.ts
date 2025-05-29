@@ -5,8 +5,6 @@ import type { Configurator } from '../../configurator/index.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 import { vi } from '../vi.js'
 
-// const viServerEntry = vi([`server`, `entry.jsx`], { allowPluginProcessing: true })
-
 export const Build = (config: Configurator.Config): Vite.Plugin[] => {
   // let viteConfigResolved: Vite.ResolvedConfig
 
@@ -79,10 +77,8 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
               emptyOutDir: false,
               rollupOptions: {
                 input: [config.paths.framework.template.server.entrypoint],
-                // input: viServerEntry.id,
                 output: {
-                  // todo: do not hardcode name
-                  entryFileNames: `entry.js`,
+                  entryFileNames: config.paths.project.relative.build.relative.serverEntrypoint,
                 },
               },
             },

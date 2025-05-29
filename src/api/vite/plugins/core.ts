@@ -125,12 +125,13 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
             schema,
             siteNavigationItems,
             faviconPath: `/logo.svg`,
+            paths: config.paths.project,
             server: {
               static: {
                 // todo
                 // relative from CWD of process that boots node server
                 // can easily break! Use path relative in server??
-                directory: `./dist`,
+                directory: `./` + config.paths.project.relative.build.root,
                 // Uses Hono route syntax.
                 route: `/` + config.paths.project.relative.build.relative.assets + `/*`,
               },

@@ -58,7 +58,7 @@ export const _getPathsRecurse = (
     }
 
     const segment = route.path!
-    const path = normalizePath(isTopLevel ? `${sep}${segment}` : `${parentPath}${segment}`)
+    const path = normalizePath(isTopLevel ? `${sep}${segment}` : `${parentPath}${sep}${segment}`)
     collectedPaths.add(path)
 
     if (route.children && route.children.length > 0) {
@@ -98,4 +98,8 @@ export const normalizePath = (path: string) => {
   }
 
   return path
+}
+
+export const isParameterizedPath = (path: string): boolean => {
+  return path.includes(`:`)
 }

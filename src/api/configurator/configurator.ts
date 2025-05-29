@@ -111,6 +111,7 @@ export interface Config {
           root: string
           relative: {
             assets: string
+            serverEntrypoint: string
           }
         }
         pages: string
@@ -119,6 +120,7 @@ export interface Config {
         build: {
           root: string
           assets: string
+          serverEntrypoint: string
         }
         pages: string
       }
@@ -152,8 +154,9 @@ const configInputDefaults: Config = {
       rootDir: process.cwd(),
       relative: {
         build: {
-          root: `dist`,
+          root: `build`,
           relative: {
+            serverEntrypoint: `app.js`,
             assets: `assets`,
           },
         },
@@ -161,8 +164,9 @@ const configInputDefaults: Config = {
       },
       absolute: {
         build: {
-          root: Path.ensureAbsoluteWithCWD(`dist`),
-          assets: Path.ensureAbsoluteWithCWD(`dist/assets`),
+          root: Path.ensureAbsoluteWithCWD(`build`),
+          serverEntrypoint: Path.ensureAbsoluteWithCWD(`build/app.js`),
+          assets: Path.ensureAbsoluteWithCWD(`build/assets`),
         },
         pages: Path.ensureAbsoluteWithCWD(`pages`),
       },

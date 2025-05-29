@@ -5,40 +5,32 @@ import { ReactRouterAid } from '#lib/react-router-aid/index.js'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
 import { routes } from '../../routes.jsx'
 
+// todo: Frameworks tend to colocate ssg data loaders with routes to solve the following
+// problem which is we have to map data loaders to paramterized routes.
+// Maybe we can figure something out too.
+const knownParameterizedRouteExpressions = {
+  reference_type: `/reference/:type`,
+}
+
 export const getRoutesPaths = (): string[] => {
   const paths = new Set<string>()
   const routeExpressions = ReactRouterAid.getRouteExpressions(routes)
 
   for (const exp of routeExpressions) {
-    if (exp.includes(`:`)) {
-      // Handle dynamic segments
-      if (exp.startsWith(`/reference/`) && exp.includes(`:type`)) {
-        if (PROJECT_DATA.schema) {
-          const schema = PROJECT_DATA.schema.versions[0].after
-          const ast = Grafaid.Schema.AST.parse(Grafaid.Schema.print(schema))
-          visit(ast, {
-            NamedType(typeNode) {
-              paths.add(`/reference/${typeNode.name.value}`)
-            },
-          })
-        }
-        // The base path (e.g., /reference) if it's a navigable route on its own
-        // (e.g. has an index child or its own component) would have been added
-        // as a separate static pattern by extractPathsFromRouteObjects.
-      } // TODO: Add handlers for other known dynamic patterns if they exist,
-      // for example, if 'virtual:polen/project/pages.jsx' introduces routes like '/blog/:slug'.
-      // else if (pattern.startsWith('/blog/') && pattern.includes(':slug')) {
-      //   // Fetch all slugs and generate paths: collectedPathsForSSG.add(`/blog/my-post`);
-      // }
-      else if (!exp.startsWith(`/reference/`)) { // Avoid double warning for :type if no schema
-        // Log unhandled dynamic patterns as they won't be SSG'd by default
-        // unless specific data fetching logic is added for them.
-        console.warn(
-          `[SSG] Note: Dynamic path pattern "${exp}" found. Implement data fetching to generate concrete paths.`,
-        )
+    if (exp === knownParameterizedRouteExpressions.reference_type) {
+      if (PROJECT_DATA.schema) {
+        const schema = PROJECT_DATA.schema.versions[0].after
+        const ast = Grafaid.Schema.AST.parse(Grafaid.Schema.print(schema))
+        visit(ast, {
+          NamedType(typeNode) {
+            paths.add(`/reference/${typeNode.name.value}`)
+          },
+        })
       }
+    } else if (ReactRouterAid.isParameterizedPath(exp)) {
+      throw new Error(`Unhandled parameterized path: ${exp}`)
     } else {
-      // Static path, add directly
+      // Static path
       paths.add(exp)
     }
   }
