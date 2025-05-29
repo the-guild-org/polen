@@ -10,7 +10,7 @@ const buildDefaults = {
 
 interface BuildConfigInput {
   debug?: boolean
-  type?: Configurator.BuildArchitecture
+  architecture?: Configurator.BuildArchitecture
 }
 
 export const build = async (buildConfigInput: BuildConfigInput) => {
@@ -34,7 +34,7 @@ export const build = async (buildConfigInput: BuildConfigInput) => {
   const builder = await Vite.createBuilder(config)
   await builder.buildApp()
 
-  if (buildConfig.type === `ssg`) {
+  if (buildConfig.architecture === `ssg`) {
     await import(config._polen.normalized.paths.project.absolute.build.serverEntrypoint)
     // Clean up server file which should now be done being used for SSG geneation.
     await Fs.remove(config._polen.normalized.paths.project.absolute.build.serverEntrypoint)
