@@ -60,7 +60,7 @@
     "@swc/core": "^1.11.29",
     "@types/jsesc": "^3.0.3",
     "@vitejs/plugin-react": "^4.4.1",
-    "@wollybeard/kit": "link:../../../Library/pnpm/global/5/node_modules/@wollybeard/kit",
+    "@wollybeard/kit": "^0.29.0",
     "@wollybeard/projector": "^0.1.1",
     "ansis": "^4.0.0",
     "consola": "^3.4.2",
