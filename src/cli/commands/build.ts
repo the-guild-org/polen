@@ -26,6 +26,13 @@ const args = Command.create()
   })
   .parse()
 
+// HACK:
+// todo
+// we don't want to  lose pretty preting of defaults in Molt but
+// we don't want cli defaults to override explicit inputs in the config file either
+// we need something like setset and/or an ability in molt to show a default but then have undefined internally etc.
+// and now if user passes --no-debug/ --debug false it has no effect which is wrong since its not via default anymore, ... ugh
 await build({
-  ...args,
+  ...(args.debug === false ? {} : { debug: args.debug }),
+  ...(args.architecture === 'ssg' ? {} : { architecture: args.architecture }),
 })

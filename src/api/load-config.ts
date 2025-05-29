@@ -18,6 +18,9 @@ export const loadConfig = async (args: {
     return await defineConfig(args.overrides)
   }
 
+  // We do this for now so we don't have to wrangle importing TS file which may be a pain
+  // since its via CLI, no Vite bundle context, maybe we can use the new nodejs flags for parsing TS...
+  // or just use tsx
   const loaded = await Vite.loadConfigFromFile(
     env,
     configFilePath,
@@ -26,7 +29,27 @@ export const loadConfig = async (args: {
     logger,
   )
 
-  const config = loaded?.config ?? await defineConfig(args.overrides)
+  // console.log(`wtf??`, args)
+  let config: ViteUserConfigWithPolen
+  if (loaded) {
+    // hack: do one read
+    const config_ = loaded.config as ViteUserConfigWithPolen
+    const input = config_._polen.input
+    config = await defineConfig({
+      ...input,
+      build: {
+        ...input?.build,
+        ...args.overrides?.build,
+      },
+      advanced: {
+        ...input?.advanced,
+        ...args.overrides?.advanced,
+      },
+    })
+  } else {
+    config = await defineConfig(args.overrides)
+  }
+  // dump(config)
 
-  return config as ViteUserConfigWithPolen
+  return config
 }

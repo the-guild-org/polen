@@ -46,7 +46,7 @@ export interface ConfigInput {
     title?: string
   }
   build?: {
-    type: BuildArchitecture
+    architecture?: BuildArchitecture
   }
   advanced?: {
     explorer?: boolean
@@ -92,7 +92,7 @@ export interface TemplateVariables {
 
 export interface Config {
   build: {
-    type: BuildArchitecture
+    architecture: BuildArchitecture
   }
   watch: {
     also: string[]
@@ -143,7 +143,7 @@ const configInputDefaults: Config = {
     also: [],
   },
   build: {
-    type: BuildArchitectureEnum.ssg,
+    architecture: BuildArchitecture.enum.ssg,
   },
   schema: null,
   ssr: {
@@ -184,6 +184,10 @@ export const normalizeInput = async (
   // eslint-disable-next-line
 ): Promise<Config> => {
   const config = structuredClone(configInputDefaults)
+
+  if (configInput?.build?.architecture) {
+    config.build.architecture = configInput.build.architecture
+  }
 
   if (configInput?.advanced?.debug !== undefined) {
     config.advanced.debug = configInput.advanced.debug
