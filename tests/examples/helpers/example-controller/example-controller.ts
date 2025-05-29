@@ -40,7 +40,7 @@ export const create = async (parameters: {
 
     scripts: project => ({
       build: async () => {
-        return await project.packageManager`run build`
+        return await project.packageManager`run build --architecture ssr`
       },
       start: async () => {
         const port = await GetPortPlease.getRandomPort()

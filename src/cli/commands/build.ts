@@ -1,5 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
+import { build } from '#api/build/build.js'
+import { Configurator } from '#api/configurator/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { Command } from '@molt/command'
 import { z } from 'zod'
@@ -7,6 +9,10 @@ import { loadConfig } from '../../api/load-config.js'
 
 const args = Command.create()
   .parameter(`--debug -d`, z.boolean().default(false))
+  .parameter(
+    `--architecture -a`,
+    Configurator.BuildArchitecture.default('ssg').describe('Which kind of application architecture to output.'),
+  )
   .settings({
     parameters: {
       environment: {
@@ -20,18 +26,13 @@ const args = Command.create()
   })
   .parse()
 
-const config = await loadConfig({
-  env: {
-    command: `build`,
-    mode: `production`,
-  },
-  overrides: {
-    advanced: {
-      debug: args.debug,
-    },
-  },
+// HACK:
+// todo
+// we don't want to  lose pretty preting of defaults in Molt but
+// we don't want cli defaults to override explicit inputs in the config file either
+// we need something like setset and/or an ability in molt to show a default but then have undefined internally etc.
+// and now if user passes --no-debug/ --debug false it has no effect which is wrong since its not via default anymore, ... ugh
+await build({
+  ...(args.debug === false ? {} : { debug: args.debug }),
+  ...(args.architecture === 'ssg' ? {} : { architecture: args.architecture }),
 })
-
-const builder = await Vite.createBuilder(config)
-
-await builder.buildApp()

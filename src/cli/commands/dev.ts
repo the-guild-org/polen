@@ -12,7 +12,7 @@ const config = await loadConfig({
 const viteDevServer = await Err.tryCatch(() => Vite.createServer(config))
 
 if (Err.is(viteDevServer)) {
-  // Err.log(viteDevServer);
+  // Err.log(viteDevServer)
   process.exit(1)
 }
 

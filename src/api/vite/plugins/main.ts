@@ -15,7 +15,7 @@ export const Main = (
 
   // Optional Plugins based on config
 
-  if (config.explorer) {
+  if (config.advanced.explorer) {
     const outputDir = Path.join(config.paths.project.rootDir, `.bundle-explorer`)
     const plugin = Inspect({
       build: true,

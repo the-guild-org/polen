@@ -1,4 +1,4 @@
-import { createRoute } from '#lib/react-router-helpers.js'
+import { createRoute } from '#lib/react-router-aid/react-router-aid.js'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { Container, Flex } from '@radix-ui/themes'
 import { Outlet } from 'react-router'
@@ -35,7 +35,5 @@ export const reference = createRoute({
   path: `/reference`,
   loader,
   Component,
-  children: [
-    reference$type,
-  ],
+  children: [reference$type],
 })

@@ -1,5 +1,7 @@
 import type { ReactRouter } from '#dep/react-router/index.js'
 
+export * from './get-paths-patterns.js'
+
 export const createRoute = <routeObject extends ReactRouter.RouteObject>(
   routeObject: routeObject,
 ): routeObject => {

@@ -1,4 +1,4 @@
-import { createRoute } from '#lib/react-router-helpers.js'
+import { createRoute } from '#lib/react-router-aid/react-router-aid.js'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
 import { Changelog } from '../components/Changelog.jsx'

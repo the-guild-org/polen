@@ -1,14 +1,12 @@
 import { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Fs, Path, Str } from '@wollybeard/kit'
+import { Fs, Path } from '@wollybeard/kit'
 import type { Configurator } from '../../configurator/index.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 import { vi } from '../vi.js'
 
-const viServerEntry = vi([`server`, `entry.jsx`], { allowPluginProcessing: true })
-
 export const Build = (config: Configurator.Config): Vite.Plugin[] => {
-  let viteConfigResolved: Vite.ResolvedConfig
+  // let viteConfigResolved: Vite.ResolvedConfig
 
   // const outDir = Path.join(config.paths.project.rootDir, `dist`)
 
@@ -47,7 +45,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
             build: {
               manifest: true,
               rollupOptions: {
-                input: [config.paths.framework.template.entryClient],
+                input: [config.paths.framework.template.client.entrypoint],
                 external: id => id.startsWith(`node:`),
                 onwarn(message) {
                   if (isKitUnusedExternalImport(message)) return
@@ -78,99 +76,20 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
               // The SSR build will follow the client build, and emptying the dir would lose the output of the client build.
               emptyOutDir: false,
               rollupOptions: {
-                input: viServerEntry.id,
+                input: [config.paths.framework.template.server.entrypoint],
+                output: {
+                  entryFileNames: config.paths.project.relative.build.relative.serverEntrypoint,
+                },
               },
             },
           },
         },
       }
     },
-    configResolved(config) {
-      viteConfigResolved = config
-    },
-    ...ViteVirtual.IdentifiedLoader.toHooks(
-      {
-        identifier: viServerEntry,
-        loader: () => {
-          // Globs in Vite virtual modules must start with a slash
-          const entrServeryViteGlobPath = `/`
-            + Path.relative(config.paths.framework.rootDir, config.paths.framework.template.entryServer)
-          const staticServingPaths = {
-            // todo
-            // relative from CWD of process that boots node server
-            // can easily break! Use path relative in server??
-            dirPath: `./dist`,
-            routePath: `/${viteConfigResolved.build.assetsDir}/*`,
-          }
 
-          const code = Str.Builder()
-
-          const _ = {
-            app: `app`,
-            entry: `entry`,
-            entries: `entries`,
-          }
-
-          const honoPath = `hono`
-          const honoNodeServerServeStaticPath = `@hono/node-server/serve-static`
-          const honoNodeServerPath = `@hono/node-server`
-
-          // TODO turn this into a file template
-          code`import { Hono } from '${honoPath}'`
-          code``
-          code`const ${_.app} = new Hono()`
-          code``
-          code``
-          code`// Static Files`
-          code``
-          code`import { serveStatic } from '${honoNodeServerServeStaticPath}'`
-          code``
-          code`${_.app}.use(
-    				'${staticServingPaths.routePath}',
-    				serveStatic({ root: '${staticServingPaths.dirPath}' })
-    			)`
-          code``
-          code``
-          code`// Entries`
-          code``
-          code`const ${_.entries} = import.meta.glob(
-    				['${entrServeryViteGlobPath}'],
-    				{ import: 'default', eager: true }
-    			)`
-          code``
-          code`/** @see https://github.com/honojs/hono/issues/4051 */`
-          code`const delegate = (app1, method, path, app2) => {
-						app1.on(method, path, (c) => {
-							// Throws if executionCtx is not available
-							// https://hono.dev/docs/api/context#executionctx
-							let maybeExecutionContext
-							try { maybeExecutionContext = c.executionCtx }
-							catch {}
-							return app2.fetch(c.req.raw, c.env, maybeExecutionContext)
-						})
-					}`
-          code`for (const ${_.entry} of Object.values(${_.entries})) {
-						delegate(${_.app}, 'all', '*', ${_.entry})
-    			}`
-          code``
-          code``
-          code`// Start Server`
-          code``
-          code`import { serve } from '${honoNodeServerPath}'`
-          code``
-
-          const port = viteConfigResolved.server.port + 1
-          code(`const port = process.env.PORT || ${port.toString()}`)
-          code(`serve({ fetch: ${_.app}.fetch, port })`)
-
-          return code.render()
-        },
-      },
-    ),
     onLog(_, message) {
       if (isKitUnusedExternalImport(message)) return
     },
-
     // generateBundle(_, bundle, isWrite) {
     //   if (isWrite) {
     //     for (const chunkOrAsset of Object.values(bundle)) {
@@ -189,7 +108,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
        * clean up the manifest. Was generated by client. For server build. Not needed after (unless debugging).
        */
       if (!config.advanced.debug) {
-        await Fs.remove(Path.join(config.paths.project.buildDir, `.vite`))
+        await Fs.remove(Path.join(config.paths.project.absolute.build.root, `.vite`))
       }
     },
   }]
@@ -214,7 +133,7 @@ const Manifest = (config: Configurator.Config): Vite.Plugin => {
             return `export default {}`
           }
 
-          const manifestPath = Path.join(config.paths.project.buildDir, `.vite`, `manifest.json`)
+          const manifestPath = Path.join(config.paths.project.absolute.build.root, `.vite`, `manifest.json`)
           const module = await import(manifestPath, { with: { type: `json` } }) as {
             default: Vite.Manifest
           }

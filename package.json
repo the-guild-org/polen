@@ -60,8 +60,8 @@
     "@swc/core": "^1.11.29",
     "@types/jsesc": "^3.0.3",
     "@vitejs/plugin-react": "^4.4.1",
-    "@wollybeard/kit": "^0.27.0",
-    "@wollybeard/projector": "^0.1.0",
+    "@wollybeard/kit": "^0.28.0",
+    "@wollybeard/projector": "^0.1.1",
     "ansis": "^4.0.0",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
@@ -122,7 +122,7 @@
     "vitest": "^3.1.2",
     "zod": "^3.24.3"
   },
-  "packageManager": "pnpm@10.10.0",
+  "packageManager": "pnpm@10.11.0",
   "scripts": {
     "sandbox": "tsx src/sandbox",
     "sandbox:watch": "tsx --watch src/sandbox",

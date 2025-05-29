@@ -16,7 +16,6 @@ export const BuildLogger: Plugin = {
     console.log(`shouldTransformCachedModule`, args)
   },
   transform(...args) {
-    // console.log(`transform`)
     console.log(`transform`, args)
     return args[0]
   },

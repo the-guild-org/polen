@@ -28,7 +28,7 @@ npm add polen
    (http://localhost:3001):
 
    ```sh
-   node dist/entry.js
+   node build/app.js
    ```
 
 ## Examples
@@ -39,6 +39,52 @@ You can find working examples in the [examples](./examples) directory.
 > These examples work against the version of Polen on trunk. Every commit on trunk is available as a pre-release on npm. You may see behaviour in the examples that has not been released in a stable version of Polen yet.
 
 ## Guide
+
+### Schema Reference
+
+If you [provide Polen with a schema](#providing-a-schema), Polen will
+automatically render reference documentation for it.
+
+If you provide multiple versions of your schema then the reference is based on
+the schema with the latest date.
+
+### Schema Changelog
+
+Polen can render a changelog for your schema.
+
+This feature is automatically enabled when you provide multiple versions of your
+schema. Refer to [Provide a Schema](#providing-a-schema) for details on how to
+do that.
+
+### Schema Augmentations
+
+#### Descriptions
+
+You can append/prepend/replace descriptions of types and fields in your schema.
+
+Any Markdown syntax in your content will be automatically rendered.
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  templateVariables: {
+    title: `Pokemon Developer Portal`,
+  },
+  schemaAugmentations: [
+    {
+      type: `description`,
+      on: {
+        type: `TargetType`,
+        name: `Query`,
+      },
+      placement: `over`,
+      content:
+        `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
+    },
+  ],
+})
+```
 
 ### Providing a Schema
 
@@ -100,52 +146,6 @@ export default Polen.defineConfig({
 })
 ```
 
-### Schema Reference
-
-If you [provide Polen with a schema](#providing-a-schema), Polen will
-automatically render reference documentation for it.
-
-If you provide multiple versions of your schema then the reference is based on
-the schema with the latest date.
-
-### Schema Changelog
-
-Polen can render a changelog for your schema.
-
-This feature is automatically enabled when you provide multiple versions of your
-schema. Refer to [Provide a Schema](#providing-a-schema) for details on how to
-do that.
-
-### Schema Augmentations
-
-#### Descriptions
-
-You can append/prepend/replace descriptions of types and fields in your schema.
-
-Any Markdown syntax in your content will be automatically rendered.
-
-```ts
-import { Polen } from 'polen'
-
-export default Polen.defineConfig({
-  templateVariables: {
-    title: `Pokemon Developer Portal`,
-  },
-  schemaAugmentations: [
-    {
-      type: `description`,
-      on: {
-        type: `TargetType`,
-        name: `Query`,
-      },
-      placement: `over`,
-      content:
-        `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
-    },
-  ],
-})
-```
-
 ### Pages
 
 You can add pages to your developer portal by adding markdown files to the
@@ -170,6 +170,22 @@ Example:
 | `pages/foo.md`       | `/foo`     | `Foo`                |
 | `pages/foo/index.md` | `/foo`     | `Foo`                |
 | `pages/foo/bar.md`   | `/foo/bar` | `Foo`                |
+
+### Build
+
+When you build you may choose between SSG and SSR. The default is SSG.
+
+#### SSG
+
+```sh
+npx polen build --type ssg
+```
+
+Deploy the contents of the `./build` directory on your favourite static site provider.
+
+#### SSR
+
+In the future Polen will have features that motivate using a server, but for now there is no particular benefit. Use `SSG` instead.
 
 ### Package
 

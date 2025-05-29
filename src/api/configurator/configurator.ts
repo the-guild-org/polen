@@ -1,8 +1,19 @@
 import type { Vite } from '#dep/vite/index.js'
 import { Path } from '@wollybeard/kit'
+import { z } from 'zod'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import { type PackagePaths, packagePaths } from '../../package-paths.js'
 import type { Schema } from '../schema/index.js'
+
+export const BuildArchitectureEnum = {
+  ssg: `ssg`,
+  spa: `spa`,
+  ssr: `ssr`,
+} as const
+
+export const BuildArchitecture = z.nativeEnum(BuildArchitectureEnum)
+
+export type BuildArchitecture = typeof BuildArchitectureEnum[keyof typeof BuildArchitectureEnum]
 
 type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
 
@@ -22,7 +33,6 @@ export interface ConfigInput {
    *
    * @defaultValue true
    */
-  explorer?: boolean
   schema?: SchemaConfigInput
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
@@ -35,17 +45,11 @@ export interface ConfigInput {
      */
     title?: string
   }
-  /**
-   * Path to the GraphQL schema file
-   */
-  // schema?: SchemaInput
-  /**
-   * Whether to enable SSR
-   *
-   * @defaultValue true
-   */
-  ssr?: boolean
+  build?: {
+    architecture?: BuildArchitecture
+  }
   advanced?: {
+    explorer?: boolean
     /**
      * Tweak the watch behavior.
      */
@@ -87,8 +91,9 @@ export interface TemplateVariables {
 }
 
 export interface Config {
-  mode: string
-  explorer: boolean
+  build: {
+    architecture: BuildArchitecture
+  }
   watch: {
     also: string[]
   }
@@ -101,14 +106,29 @@ export interface Config {
   paths: {
     project: {
       rootDir: string
-      buildDir: string
-      conventions: {
-        pagesDir: string
+      relative: {
+        build: {
+          root: string
+          relative: {
+            assets: string
+            serverEntrypoint: string
+          }
+        }
+        pages: string
+      }
+      absolute: {
+        build: {
+          root: string
+          assets: string
+          serverEntrypoint: string
+        }
+        pages: string
       }
     }
     framework: PackagePaths
   }
   advanced: {
+    explorer: boolean
     debug: boolean
     vite?: Vite.UserConfig
   }
@@ -119,11 +139,12 @@ const configInputDefaults: Config = {
     title: `My Developer Portal`,
   },
   schemaAugmentations: [],
-  explorer: true,
   watch: {
     also: [],
   },
-  mode: `client`,
+  build: {
+    architecture: BuildArchitecture.enum.ssg,
+  },
   schema: null,
   ssr: {
     enabled: true,
@@ -131,15 +152,30 @@ const configInputDefaults: Config = {
   paths: {
     project: {
       rootDir: process.cwd(),
-      buildDir: Path.ensureAbsoluteWithCWD(`dist`),
-      conventions: {
-        pagesDir: Path.ensureAbsoluteWithCWD(`pages`),
+      relative: {
+        build: {
+          root: `build`,
+          relative: {
+            serverEntrypoint: `app.js`,
+            assets: `assets`,
+          },
+        },
+        pages: `pages`,
+      },
+      absolute: {
+        build: {
+          root: Path.ensureAbsoluteWithCWD(`build`),
+          serverEntrypoint: Path.ensureAbsoluteWithCWD(`build/app.js`),
+          assets: Path.ensureAbsoluteWithCWD(`build/assets`),
+        },
+        pages: Path.ensureAbsoluteWithCWD(`pages`),
       },
     },
     framework: packagePaths,
   },
   advanced: {
     debug: false,
+    explorer: false,
   },
 }
 
@@ -149,26 +185,33 @@ export const normalizeInput = async (
 ): Promise<Config> => {
   const config = structuredClone(configInputDefaults)
 
+  if (configInput?.build?.architecture) {
+    config.build.architecture = configInput.build.architecture
+  }
+
   if (configInput?.advanced?.debug !== undefined) {
     config.advanced.debug = configInput.advanced.debug
   }
 
   if (configInput?.root) {
     config.paths.project.rootDir = Path.ensureAbsoluteWithCWD(configInput.root)
-    if (config.paths.project.buildDir === configInputDefaults.paths.project.buildDir) {
-      config.paths.project.buildDir = Path.join(config.paths.project.rootDir, `build`)
-    }
-    if (config.paths.project.conventions.pagesDir === configInputDefaults.paths.project.conventions.pagesDir) {
-      config.paths.project.conventions.pagesDir = Path.join(config.paths.project.rootDir, `pages`)
-    }
+    // Re-compute absolute paths
+    config.paths.project.absolute.build.root = Path.join(
+      config.paths.project.rootDir,
+      config.paths.project.relative.build.root,
+    )
+    config.paths.project.absolute.build.assets = Path.join(
+      config.paths.project.rootDir,
+      config.paths.project.relative.build.relative.assets,
+    )
+    config.paths.project.absolute.pages = Path.join(
+      config.paths.project.rootDir,
+      config.paths.project.relative.pages,
+    )
   }
 
   if (configInput?.advanced?.vite) {
     config.advanced.vite = configInput.advanced.vite
-  }
-
-  if (configInput?.ssr !== undefined) {
-    config.ssr.enabled = configInput.ssr
   }
 
   if (configInput?.schemaAugmentations) {
@@ -184,8 +227,8 @@ export const normalizeInput = async (
     config.schema = configInput.schema
   }
 
-  if (configInput?.explorer !== undefined) {
-    config.explorer = configInput.explorer
+  if (configInput?.advanced?.explorer !== undefined) {
+    config.advanced.explorer = configInput.advanced.explorer
   }
 
   if (configInput?.advanced?.watch?.also) {

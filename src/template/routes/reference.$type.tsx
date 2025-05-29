@@ -1,4 +1,4 @@
-import { createRoute } from '#lib/react-router-helpers.js'
+import { createRoute } from '#lib/react-router-aid/react-router-aid.js'
 import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { useParams } from 'react-router'
 import { MissingSchema } from '../components/MissingSchema.jsx'

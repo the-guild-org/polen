@@ -1,6 +1,6 @@
 import type { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Str } from '@wollybeard/kit'
+import { Cache, Json, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
@@ -44,21 +44,29 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
     },
   }, {
     name: `polen:core`,
-    config() {
+    config(_, { command }) {
       return {
         root: config.paths.framework.rootDir,
+        define: {
+          __BUILDING__: Json.codec.serialize(command === `build`),
+          __SERVING__: Json.codec.serialize(command === `serve`),
+          __COMMAND__: Json.codec.serialize(command),
+          __BUILD_ARCHITECTURE__: Json.codec.serialize(config.build.architecture),
+          __BUILD_ARCHITECTURE_SSG__: Json.codec.serialize(config.build.architecture === `ssg`),
+        },
         server: {
           port: 3000,
         },
         customLogger: logger,
         build: {
+          target: `esnext`,
+          assetsDir: config.paths.project.relative.build.relative.assets,
           rollupOptions: {
             treeshake: `smallest`,
           },
           minify: !config.advanced.debug,
-          // disables a warning that build dir is not in root dir (since framework is root dir)
-          emptyOutDir: true,
-          outDir: config.paths.project.buildDir,
+          outDir: config.paths.project.absolute.build.root,
+          emptyOutDir: true, // disables warning that build dir not in root dir; expected b/c root dir = framework package
         },
       }
     },
@@ -83,7 +91,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           const schema = await readSchema()
           const pages = Page.lint(
             await readPages({
-              dir: config.paths.project.conventions.pagesDir,
+              dir: config.paths.project.absolute.pages,
             }),
           ).fixed
 
@@ -108,13 +116,26 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
 
           if (schema) {
             siteNavigationItems.push({ path: `/reference`, title: `Reference` })
-            siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
+            if (schema.versions.length > 1) {
+              siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
+            }
           }
 
           const projectData: ProjectData = {
             schema,
             siteNavigationItems,
             faviconPath: `/logo.svg`,
+            paths: config.paths.project,
+            server: {
+              static: {
+                // todo
+                // relative from CWD of process that boots node server
+                // can easily break! Use path relative in server??
+                directory: `./` + config.paths.project.relative.build.root,
+                // Uses Hono route syntax.
+                route: `/` + config.paths.project.relative.build.relative.assets + `/*`,
+              },
+            },
           }
 
           const projectDataCode = jsesc(superjson.stringify(projectData))
@@ -132,13 +153,13 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
         async loader() {
           const pages = Page.lint(
             await readPages({
-              dir: config.paths.project.conventions.pagesDir,
+              dir: config.paths.project.absolute.pages,
             }),
           )
           const moduleContent = Page.ReactRouterAdaptor.render({
             pageTree: pages.fixed,
             sourcePaths: {
-              reactRouterHelpers: `#lib/react-router-helpers.js`,
+              reactRouterHelpers: `#lib/react-router-aid/react-router-aid.js`,
             },
           })
 

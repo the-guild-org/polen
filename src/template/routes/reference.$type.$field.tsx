@@ -1,5 +1,5 @@
 import { Grafaid } from '#lib/grafaid/index.js'
-import { createRoute } from '#lib/react-router-helpers.js'
+import { ReactRouterAid } from '#lib/react-router-aid/index.js'
 import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { useParams } from 'react-router'
 import { Field } from '../components/Field.jsx'
@@ -15,16 +15,20 @@ const Component = () => {
 
   const type = data.schema.getType(params.type)
   if (!type) return `Could not find type ${params.type}`
-  if (!Grafaid.Schema.TypesLike.isFielded(type)) return `Type ${params.type} does not have fields`
+  if (!Grafaid.Schema.TypesLike.isFielded(type)) {
+    return `Type ${params.type} does not have fields`
+  }
 
   const fields = type.getFields()
   const field = fields[params.field]
-  if (!field) return `Could not find field ${params.field} on type ${params.type}`
+  if (!field) {
+    return `Could not find field ${params.field} on type ${params.type}`
+  }
 
   return <Field data={field} />
 }
 
-export const reference$type$field = createRoute({
+export const reference$type$field = ReactRouterAid.createRoute({
   path: `:type/:field`,
   Component,
 })
