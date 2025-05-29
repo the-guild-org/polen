@@ -36,7 +36,7 @@ export const read = async (
 ): Promise<null | Schema> => {
   const config = normalize(configInput)
 
-  if (!Arr.isNotEmpty(config.versions)) {
+  if (!Arr.isntEmpty(config.versions)) {
     return null
   }
 
