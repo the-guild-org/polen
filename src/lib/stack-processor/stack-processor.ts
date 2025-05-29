@@ -1,5 +1,5 @@
 import type { Bool, Fn, Prom } from '@wollybeard/kit'
-import { Eq } from '@wollybeard/kit'
+import { Undefined } from '@wollybeard/kit'
 
 export const until = (
   predicate: Bool.Predicate,
@@ -16,4 +16,4 @@ export const until = (
   }
 }
 
-export const untilDefined = until(Eq.isNotUndefined)
+export const untilDefined = until(Undefined.isnt)

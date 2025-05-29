@@ -43,7 +43,7 @@ export const readOrThrow = async (configInput: ConfigInput): Promise<null | Sche
   })
   debug(`did find`, filePaths)
 
-  if (!Arr.isNotEmpty(filePaths)) {
+  if (!Arr.isntEmpty(filePaths)) {
     return null
   }
 

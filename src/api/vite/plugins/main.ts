@@ -24,7 +24,7 @@ export const Main = (
     plugins.push(plugin)
   }
 
-  if (Arr.isNotEmpty(config.watch.also)) {
+  if (Arr.isntEmpty(config.watch.also)) {
     const plugin = Restart({
       restart: config.watch.also,
     })
