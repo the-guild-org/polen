@@ -22,8 +22,7 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "#dep/*": ["./src/dep/*"],
-      "#lib/*": ["./src/lib/*"]
+      "#*": ["./src/*"]
     },
 
     // DX covered by ESLint:
