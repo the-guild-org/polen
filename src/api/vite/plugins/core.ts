@@ -1,4 +1,5 @@
 import type { Vite } from '#dep/vite/index.js'
+import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Cache, Json, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
@@ -99,15 +100,27 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
 
           const siteNavigationItemsFromTopLevelPages = pages
             // todo: test that non-congent page branches aren't shown in navigation bar
-            .filter(_ =>
-              _.type === `PageBranchContent`
-              || _.branches.find(_ => _.route.type === `RouteIndex`)
-            )
+            .filter(pageBranch => {
+              switch (pageBranch.type) {
+                case `PageBranchContent`:
+                  // Home is handled by clicking on the site logo/title
+                  if (pageBranch.route.isIndex) return false
+                  // A top-level content page is a nav item (e.g., /about from about.md, or / from index.md)
+                  return true
+                case `PageBranchSegment`:
+                  // A top-level segment (directory) is a nav item if it contains an index page
+                  // (e.g., /docs from docs/index.md, where "docs" is the segment)
+                  return Page.isPageBranchSegmentAlsoContent(pageBranch)
+                default:
+                  return false
+              }
+            })
             .map(
               (pageBranch): ProjectData[`siteNavigationItems`][number] => {
+                const path = pageBranch.route.path // This is "/" for root index, "foo" for foo.md or foo/index.md
                 return {
-                  path: pageBranch.route.path.raw,
-                  title: Str.Case.title(pageBranch.route.path.raw),
+                  path: path === FileRouter.rootPath ? path : `/${path}`, // Root is already "/", others get a leading slash
+                  title: Str.Case.title(path === `/` ? `Home` : path), // "Home" for root, title-cased path otherwise
                 }
               },
             )

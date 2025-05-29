@@ -14,30 +14,30 @@ const renderCodePageBranchBranches = (pageBranch: PageBranch): string[] => {
 const renderCodePageBranchRoute = (pageBranch: PageBranch): string => {
   switch (pageBranch.type) {
     case `PageBranchContent`: {
-      switch (pageBranch.route.type) {
-        case `RouteItem`:
-          return `
+      if (pageBranch.route.isIndex) {
+        // This is an index page, e.g., pages/foo/index.md becomes route /foo (index)
+        return `
+                  ${$.createRouteIndex}({
+                    Component: () => ${pageBranch.content.html},
+                  })
+                `
+      } else {
+        // This is a regular content page, e.g., pages/bar.md becomes route /bar
+        return `
                 ${$.createRoute}({
-                  path: '${pageBranch.route.path.raw}',
+                  path: '${pageBranch.route.path}',
                   Component: () => ${pageBranch.content.html},
-                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
+                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\\n`)}],
                 })
               `
-        case `RouteIndex`:
-          return `
-                    ${$.createRouteIndex}({
-                      Component: () => ${pageBranch.content.html},
-                    })
-                  `
-        default:
-          return neverCase(pageBranch.route)
       }
     }
     case `PageBranchSegment`: {
+      // This is a route segment created for a directory, e.g., pages/foo when foo/index.md doesn't exist but foo/bar.md does
       return `
                 ${$.createRoute}({
-                  path: '${pageBranch.route.path.raw}',
-                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\n`)}],
+                  path: '${pageBranch.route.path}',
+                  children: [${renderCodePageBranchBranches(pageBranch).join(`,\\n`)}],
                 })
               `
     }

@@ -31,7 +31,7 @@ const removeConflictsBetweenIndexAndExact = (branches: PageTree): LintResult => 
       && branch.branches.find(subBranch =>
         subBranch !== branch
         && subBranch.type === `PageBranchContent`
-        && subBranch.route.path.raw === branch.route.path.raw
+        && subBranch.route.path === branch.route.path
       ) as PageBranchContent | undefined
 
     // if (!conflictingBranch) {
@@ -39,7 +39,7 @@ const removeConflictsBetweenIndexAndExact = (branches: PageTree): LintResult => 
     // }
 
     if (conflictingBranch) {
-      if (conflictingBranch.route.type !== `RouteIndex`) {
+      if (!conflictingBranch.route.isIndex) {
         throw new Error(
           `Internal error: conflicting sub branch and is not an index. Unexpected case.`,
         )
@@ -57,9 +57,10 @@ const removeConflictsBetweenIndexAndExact = (branches: PageTree): LintResult => 
       branch = {
         type: `PageBranchSegment`,
         route: {
-          type: `RouteSegment`,
-          path: branch.route.path,
-          pathExplicit: branch.route.pathExplicit,
+          type: `PageSegmentRoute`,
+          path: branch.route.path, // Public path of the segment
+          pathExplicit: branch.route.path, // Explicit path of the segment is its public path
+          segments: branch.route.segments, // Segments of the public path
         },
         branches: branch.branches,
       } satisfies PageBranchSegment
