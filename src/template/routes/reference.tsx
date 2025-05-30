@@ -32,7 +32,7 @@ const Component = () => {
 }
 
 export const reference = createRoute({
-  path: `/reference`,
+  path: `reference`,
   loader,
   Component,
   children: [reference$type],

@@ -1,11 +1,11 @@
+import { Marked } from '#dep/marked/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Json, Str } from '@wollybeard/kit'
+import { Cache, Fs, Json, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
 import type { Configurator } from '../../configurator/index.js'
-import { Page } from '../../page/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
 import { logger } from '../logger.js'
@@ -17,7 +17,7 @@ const viProjectPages = pvi([`project`, `pages.jsx`], { allowPluginProcessing: tr
 const viProjectData = pvi([`project`, `data`])
 
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
-  const readPages = Cache.memoize(Page.readAll)
+  // const readPages = Cache.memoize(Pages.scan)
   const readSchema = Cache.memoize(async () => {
     const schema = await Schema.readOrThrow({
       ...config.schema,
@@ -31,6 +31,24 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
   })
 
   return [{
+    name: `polen:markdown`,
+    resolveId(id) {
+      if (id.endsWith(`.md`)) {
+        return id
+      }
+      return null
+    },
+    async load(id) {
+      if (id.endsWith(`.md`)) {
+        const markdownString = await Fs.read(id)
+        if (!markdownString) return null
+        const htmlString = await Marked.parse(markdownString)
+        const code = `export default ${JSON.stringify(htmlString)}`
+        return code
+      }
+      return null
+    },
+  }, {
     name: `polen:core:alias`,
     resolveId(id, importer) {
       if (!(importer && pvi.includes(importer))) return null
@@ -89,30 +107,30 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
         identifier: viProjectData,
         async loader() {
           const schema = await readSchema()
-          const pages = Page.lint(
-            await readPages({
-              dir: config.paths.project.absolute.pages,
-            }),
-          ).fixed
+          // const pages = Pages.lint(
+          //   await readPages({
+          //     dir: config.paths.project.absolute.pages,
+          //   }),
+          // ).fixed
 
           const siteNavigationItems: SiteNavigationItem[] = []
 
-          const siteNavigationItemsFromTopLevelPages = pages
-            // todo: test that non-congent page branches aren't shown in navigation bar
-            .filter(_ =>
-              _.type === `PageBranchContent`
-              || _.branches.find(_ => _.route.type === `RouteIndex`)
-            )
-            .map(
-              (pageBranch): ProjectData[`siteNavigationItems`][number] => {
-                return {
-                  path: pageBranch.route.path.raw,
-                  title: Str.Case.title(pageBranch.route.path.raw),
-                }
-              },
-            )
+          // const siteNavigationItemsFromTopLevelPages = pages
+          //   // todo: test that non-congent page branches aren't shown in navigation bar
+          //   .filter(_ =>
+          //     _.type === `PageBranchContent`
+          //     || _.branches.find(_ => _.route.type === `RouteIndex`)
+          //   )
+          //   .map(
+          //     (pageBranch): ProjectData[`siteNavigationItems`][number] => {
+          //       return {
+          //         path: pageBranch.route.path.raw,
+          //         title: Str.Case.title(pageBranch.route.path.raw),
+          //       }
+          //     },
+          //   )
 
-          siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
+          // siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
 
           if (schema) {
             siteNavigationItems.push({ path: `/reference`, title: `Reference` })
@@ -129,7 +147,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
             server: {
               static: {
                 // todo
-                // relative from CWD of process that boots node server
+                // relative from CWD of process that boots n1ode server
                 // can easily break! Use path relative in server??
                 directory: `./` + config.paths.project.relative.build.root,
                 // Uses Hono route syntax.
@@ -148,29 +166,31 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           return content
         },
       },
-      {
-        identifier: viProjectPages,
-        async loader() {
-          const pages = Page.lint(
-            await readPages({
-              dir: config.paths.project.absolute.pages,
-            }),
-          )
-          const moduleContent = Page.ReactRouterAdaptor.render({
-            pageTree: pages.fixed,
-            sourcePaths: {
-              reactRouterHelpers: `#lib/react-router-aid/react-router-aid.js`,
-            },
-          })
+      // {
+      //   identifier: viProjectPages,
+      //   async loader() {
+      //     console.log('')
+      //     const pages = Pages.lint(
+      //       await readPages({
+      //         dir: config.paths.project.absolute.pages,
+      //       }),
+      //     )
 
-          // todo: improve
-          pages.warnings.forEach(_ => {
-            console.log(_.type)
-          })
+      //     const moduleContent = Pages.ReactRouterAdaptor.render({
+      //       pageTree: pages.fixed,
+      //       sourcePaths: {
+      //         reactRouterHelpers: `#lib/react-router-aid/react-router-aid.js`,
+      //       },
+      //     })
 
-          return moduleContent
-        },
-      },
+      //     // todo: improve
+      //     pages.warnings.forEach(_ => {
+      //       console.log(_.type)
+      //     })
+
+      //     return moduleContent
+      //   },
+      // },
     ),
   }]
 }

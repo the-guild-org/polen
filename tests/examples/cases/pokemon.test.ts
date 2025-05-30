@@ -11,12 +11,12 @@ const testPageHome = async (page: Page, polenConfig: Configurator.Config) => {
   await expect(page.title()).resolves.toContain(polenConfig.templateVariables.title)
 }
 
-test(`development server renders app`, async ({ project, runDev, page }) => {
+test('development server renders app', async ({ project, runDev, page }) => {
   await page.goto(runDev.url)
   await testPageHome(page, project.config._polen.normalized)
 })
 
-test(`built server renders app`, async ({ project, runStart, page }) => {
+test('built server renders app', async ({ project, runStart, page }) => {
   await page.goto(runStart.url)
   await testPageHome(page, project.config._polen.normalized)
 })

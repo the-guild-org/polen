@@ -20,7 +20,7 @@ const Component = () => {
 }
 
 export const changelog = createRoute({
-  path: `/changelog`,
+  path: `changelog`,
   loader,
   Component,
 })

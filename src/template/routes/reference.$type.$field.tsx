@@ -1,6 +1,6 @@
 import { Grafaid } from '#lib/grafaid/index.js'
 import { ReactRouterAid } from '#lib/react-router-aid/index.js'
-import { useRouteLoaderData } from '#lib/react-router-loader/react-router-loader.js'
+import { useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { useParams } from 'react-router'
 import { Field } from '../components/Field.jsx'
 import { MissingSchema } from '../components/MissingSchema.jsx'
@@ -8,7 +8,7 @@ import type { reference } from './reference.jsx'
 
 const Component = () => {
   const params = useParams() as { type: string; field: string }
-  const data = useRouteLoaderData<typeof reference.loader>(`/reference`)
+  const data = useLoaderData<typeof reference.loader>(`reference`)
   if (!data.schema) {
     return <MissingSchema />
   }

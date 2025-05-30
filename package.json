@@ -138,7 +138,7 @@
     "build:watch": "tsc --build tsconfig.build.json --watch",
     "build:watch:emit": "pnpm build:watch --noCheck",
     "build:emit": "pnpm build --noCheck",
-    "prebuild": "pnpm pnpm build:clean",
+    "prebuild": "pnpm build:clean",
     "fix:lint": "eslint . --fix",
     "fix:format": "dprint fmt",
     "check:format": "dprint check",

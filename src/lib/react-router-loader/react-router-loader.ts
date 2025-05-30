@@ -12,6 +12,7 @@ export const createLoader = <loader extends Loader>(loader: loader): loader => {
     const serialized: Serialized = {
       superjsonData: superjson.stringify(data),
     }
+    // console.log({ serialized })
     return serialized
   }
 }
@@ -20,22 +21,22 @@ interface Serialized {
   superjsonData: string
 }
 
-export const useLoaderData = <loader extends Loader>(): Awaited<
+export const useLoaderData = <loader extends Loader>(routeTarget?: string): Awaited<
   ReturnType<loader>
 > => {
   // eslint-disable-next-line
-  const { superjsonData } = useLoaderDataRR() as Serialized
+  const loaderData = (
+    routeTarget
+      ? useRouteLoaderDataRR(routeTarget)
+      : useLoaderDataRR()
+  ) as Serialized
 
-  const data = superjson.parse(superjsonData)
-
-  return data as any
-}
-
-export const useRouteLoaderData = <loader extends Loader>(routePath: string): Awaited<
-  ReturnType<loader>
-> => {
   // eslint-disable-next-line
-  const { superjsonData } = useRouteLoaderDataRR(routePath) as Serialized
+  if (loaderData === undefined) {
+    throw new Error(`No loader data returned from route ${routeTarget ?? `<direct>`}`)
+  }
+
+  const { superjsonData } = loaderData
 
   const data = superjson.parse(superjsonData)
 
