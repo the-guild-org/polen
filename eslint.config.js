@@ -67,11 +67,40 @@ export default tsEslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/ban-ts-comment': ['warn', { 'ts-expect-error': false }],
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       // Disable dprint conflicts:
       '@stylistic/member-delimiter-style': 'off',
       '@stylistic/no-multi-spaces': 'off',
       '@stylistic/comma-spacing': 'off',
       '@stylistic/quotes': ['warn', 'backtick'],
+    },
+  },
+  /*
+  HACK:
+
+    Temporary quote override for test files.
+
+  CONTEXT:
+
+    I have a config problem with zed.
+
+    Currently Zed TS support does not register backticks in test names as being runnable.
+
+    See this GH issue I created just now: https://github.com/zed-industries/zed/issues/31771
+
+    So for example [@index.test.ts (4-4)](@selection:polen/src/api/page/index.test.ts:4-4)will not receive IDE code action to run with vitest.
+
+    I configure my project to use backticks for strings with ESLint. I really don't want to change this.
+
+    Until Zed fixes their issue, is there a way I could modify my ESLint settings to use single quotes ONLY in files that end in *.test.ts?
+   */
+  {
+    files: ['**/*.test.ts'],
+    plugins: {
+      '@stylistic': stylistic,
+    },
+    rules: {
+      '@stylistic/quotes': ['warn', 'single'],
     },
   },
 )

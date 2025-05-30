@@ -7,12 +7,12 @@ import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
-import { pages } from 'virtual:polen/project/pages.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link } from '../components/Link.jsx'
 import entryClientUrl from '../entry.client.jsx?url'
 import { changelog } from './changelog.jsx'
 import { index } from './index.jsx'
+import { PagesComponent, pagesLoader } from './pages.jsx'
 import { reference } from './reference.jsx'
 
 // todo: not needed anymore because not using hono dev vite plugin right?
@@ -95,15 +95,56 @@ const Layout = () => {
   )
 }
 
-const children: ReactRouter.RouteObject[] = [index, ...pages]
+const children: ReactRouter.RouteObject[] = []
+
+//
+//
+//
+//
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Project Routes
+//
+//
+//
 
 if (PROJECT_DATA.schema) {
   children.push(changelog)
   children.push(reference)
 }
 
+//
+//
+//
+//
+// ━━━━━━━━━━━━━━ • Not Found Route
+//
+//
+//
+
+const notFoundRoute = createRoute({
+  id: `*_not_found`,
+  path: `*`,
+  Component: () => <h1>Not Found</h1>,
+})
+children.push(notFoundRoute)
+
+//
+//
+//
+// ━━━━━━━━━━━━━━ • Root Route
+//
+//
+
 export const root = createRoute({
   path: `/`,
   Component,
-  children,
+  children: [
+    index,
+    createRoute({
+      path: `*`,
+      Component: PagesComponent,
+      // eslint-disable-next-line
+      loader: pagesLoader as any,
+      children,
+    }),
+  ],
 })

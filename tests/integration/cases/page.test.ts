@@ -1,6 +1,6 @@
+import { Polen } from '#/exports/index.js'
 import type { FsLayout } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
-import { Polen } from '../../../src/exports/index.js'
 import { test } from '../helpers/test.js'
 
 interface TestCase {
@@ -15,14 +15,14 @@ interface TestCase {
 
 const testCases: TestCase[] = [
   {
-    title: `exact page`,
-    fixture: { 'pages/foo.md': `abc` },
-    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
+    title: 'exact page',
+    fixture: { 'pages/foo.md': 'abc' },
+    result: { path: '/foo', navBarTitle: 'foo', content: 'abc' },
   },
   {
-    title: `index page`,
-    fixture: { 'pages/foo/index.md': `abc` },
-    result: { path: `/foo`, navBarTitle: `foo`, content: `abc` },
+    title: 'index page',
+    fixture: { 'pages/foo/index.md': 'abc' },
+    result: { path: '/foo', navBarTitle: 'foo', content: 'abc' },
   },
 ]
 
@@ -33,7 +33,7 @@ testCases.forEach(({ fixture, result, title }) => {
       root: project.layout.cwd,
     })
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
-    await page.goto(viteDevServer.url(`/`).href)
+    await page.goto(viteDevServer.url('/').href)
     await page.getByText(result.navBarTitle).click({ timeout: 1000 })
     await expect(page.getByText(result.content)).toBeVisible()
   })

@@ -6,7 +6,7 @@ interface Fixtures {
   project2: Projector.Projector
 }
 
-export const unit = base.extend<Fixtures>({
+export const test = base.extend<Fixtures>({
   project: async ({}, use) => {
     const controller = await Projector.create({})
     await use(controller)
