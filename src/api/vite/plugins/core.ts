@@ -1,5 +1,6 @@
 import { Marked } from '#dep/marked/index.js'
 import type { Vite } from '#dep/vite/index.js'
+import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Cache, Fs, Json, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
@@ -16,7 +17,12 @@ const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
 const viProjectData = pvi([`project`, `data`])
 
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
-  // const readPages = Cache.memoize(Pages.scan)
+  const scanPageRoutes = Cache.memoize(async () =>
+    await FileRouter.scan({
+      dir: config.paths.project.absolute.pages,
+      glob: `**/*.md`,
+    })
+  )
   const readSchema = Cache.memoize(async () => {
     const schema = await Schema.readOrThrow({
       ...config.schema,
@@ -105,31 +111,26 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
       {
         identifier: viProjectData,
         async loader() {
+          // todo: parallel
           const schema = await readSchema()
-          // const pages = Pages.lint(
-          //   await readPages({
-          //     dir: config.paths.project.absolute.pages,
-          //   }),
-          // ).fixed
+          const pagesScanResult = await scanPageRoutes()
 
           const siteNavigationItems: SiteNavigationItem[] = []
 
-          // const siteNavigationItemsFromTopLevelPages = pages
-          //   // todo: test that non-congent page branches aren't shown in navigation bar
-          //   .filter(_ =>
-          //     _.type === `PageBranchContent`
-          //     || _.branches.find(_ => _.route.type === `RouteIndex`)
-          //   )
-          //   .map(
-          //     (pageBranch): ProjectData[`siteNavigationItems`][number] => {
-          //       return {
-          //         path: pageBranch.route.path.raw,
-          //         title: Str.Case.title(pageBranch.route.path.raw),
-          //       }
-          //     },
-          //   )
+          const siteNavigationItemsFromTopLevelPages = pagesScanResult.routes
+            // We exclude home page
+            .filter(route => route.path.segments.length === 1)
+            .map(route => {
+              const path = FileRouter.routeToString(route)
+              console.log(path)
+              const title = Str.titlizeSlug(path)
+              return {
+                path,
+                title,
+              }
+            })
 
-          // siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
+          siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
 
           if (schema) {
             siteNavigationItems.push({ path: `/reference`, title: `Reference` })
