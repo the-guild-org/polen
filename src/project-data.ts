@@ -1,3 +1,4 @@
+import type { FileRouter } from '#lib/file-router/index.js'
 import type { Configurator } from './api/configurator/index.js'
 import type { Schema } from './api/schema/index.js'
 
@@ -6,6 +7,7 @@ export interface ProjectData {
   siteNavigationItems: SiteNavigationItem[]
   faviconPath: string
   paths: Configurator.Config[`paths`][`project`]
+  pagesScanResult: FileRouter.ScanResult
   server: {
     static: {
       directory: string

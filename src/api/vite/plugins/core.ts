@@ -143,6 +143,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
             schema,
             siteNavigationItems,
             faviconPath: `/logo.svg`,
+            pagesScanResult: pagesScanResult,
             paths: config.paths.project,
             server: {
               static: {

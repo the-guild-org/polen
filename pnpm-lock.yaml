@@ -42,8 +42,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1(vite@6.3.5(@types/node@22.15.3)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
       '@wollybeard/kit':
-        specifier: ^0.29.0
-        version: 0.29.0
+        specifier: ^0.30.0
+        version: 0.30.0
       '@wollybeard/projector':
         specifier: ^0.1.1
         version: 0.1.1
@@ -1954,8 +1954,8 @@ packages:
   '@types/node@22.15.24':
     resolution: {integrity: sha512-w9CZGm9RDjzTh/D+hFwlBJ3ziUaVw7oufKA3vOFSOZlzmW9AkZnfjPb+DLnrV6qtgL/LNmP0/2zBNCFHL3F0ng==}
 
-  '@types/node@22.15.26':
-    resolution: {integrity: sha512-lgISkNrqdQ5DAzjBhnDNGKDuXDNo7/1V4FhNzsKREhWLZTOELQAptuAnJMzHtUl1qyEBBy9lNBKQ9WjyiSloTw==}
+  '@types/node@22.15.29':
+    resolution: {integrity: sha512-LNdjOkUDlU1RZb8e1kOIUpN1qQUlzGkEtbVNo53vbrwDg5om6oduhm4SiUaPW5ASTXhAiP0jInWG8Qx9fVlOeQ==}
 
   '@types/node@22.15.3':
     resolution: {integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==}
@@ -2090,8 +2090,8 @@ packages:
   '@wollybeard/kit@0.28.0':
     resolution: {integrity: sha512-3/iEMpXzhBkwDxkyHJIkzVaqtKq4W6KEMG1PBplwDm+WgtrXNrWG0jE/bevO68uUodS9Q8FJAI48vu0WrR9jfQ==}
 
-  '@wollybeard/kit@0.29.0':
-    resolution: {integrity: sha512-ZS25tYSMo7GyzcOwXz8ZgW4ekKmjIuepLOjOfz4ZwWphjzMpeI+EtUSploeJGB7bU9gHICrhPZkGstrsGv7QNA==}
+  '@wollybeard/kit@0.30.0':
+    resolution: {integrity: sha512-H7tlr2dfMpUMwRUdv0yLPoRPgCsxM/+aGXZ/z+zjDZXn3GaJ+a2G+ZrSEV8LSqr6JMhmKGYVi92sARQu/N2HFw==}
 
   '@wollybeard/projector@0.1.1':
     resolution: {integrity: sha512-hQWIT0P+XE7CDIQ96pVQkkMqBoa+fUJuzmP5ipxE+tUT0EjQa0FKLFZlV4yvVEV8kOkvDRTCQACPQYFx2mGhTA==}
@@ -3799,8 +3799,8 @@ packages:
   zod@3.25.34:
     resolution: {integrity: sha512-lZHvSc2PpWdcfpHlyB33HA9nqP16GpC9IpiG4lYq9jZCJVLZNnWd6Y1cj79bcLSBKTkxepfpjckPv5Y5VOPlwA==}
 
-  zod@3.25.39:
-    resolution: {integrity: sha512-yrva2T2x4R+FMFTPBVD/YPS7ct8njqjnV93zNx/MlwqLAxcnxwRGbXWyWF63/nErl3rdRd8KARObon7BiWzabQ==}
+  zod@3.25.48:
+    resolution: {integrity: sha512-0X1mz8FtgEIvaxGjdIImYpZEaZMrund9pGXm3M6vM7Reba0e2eI71KPjSCGXBfwKDPwPoywf6waUKc3/tFvX2Q==}
 
   zx@8.5.4:
     resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
@@ -5620,7 +5620,7 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/node@22.15.26':
+  '@types/node@22.15.29':
     dependencies:
       undici-types: 6.21.0
 
@@ -5822,15 +5822,15 @@ snapshots:
       type-fest: 4.41.0
       zod: 3.25.34
 
-  '@wollybeard/kit@0.29.0':
+  '@wollybeard/kit@0.30.0':
     dependencies:
-      '@types/node': 22.15.26
+      '@types/node': 22.15.29
       ansis: 4.0.0
       consola: 3.4.2
       es-toolkit: 1.38.0
       jsonc-parser: 3.3.1
       type-fest: 4.41.0
-      zod: 3.25.39
+      zod: 3.25.48
 
   '@wollybeard/projector@0.1.1':
     dependencies:
@@ -7496,6 +7496,6 @@ snapshots:
 
   zod@3.25.34: {}
 
-  zod@3.25.39: {}
+  zod@3.25.48: {}
 
   zx@8.5.4: {}
