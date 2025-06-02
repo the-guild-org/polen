@@ -1,6 +1,6 @@
 import { TinyGlobby } from '#dep/tiny-globby/index.js'
 import { Path, Str } from '@wollybeard/kit'
-import { type Diagnostic, lint } from './diagnostic.js'
+import { type Diagnostic, lint } from './linter.js'
 import type { Route, RouteFile, RoutePath } from './route.js'
 
 //
