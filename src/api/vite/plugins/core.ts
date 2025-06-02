@@ -13,7 +13,7 @@ import { vi as pvi } from '../vi.js'
 
 const viTemplateVariables = pvi([`template`, `variables`])
 const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
-const viProjectPages = pvi([`project`, `pages.jsx`], { allowPluginProcessing: true })
+// const viProjectPages = pvi([`project`, `pages.jsx`], { allowPluginProcessing: true })
 const viProjectData = pvi([`project`, `data`])
 
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {

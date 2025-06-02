@@ -50,7 +50,7 @@ export const scan = async (parameters: {
 
   const routes = paths.map(filePath => filePathToRoute(filePath, dir))
 
-  return todo<ScanResult>()
+  return todo<ScanResult>(routes)
 }
 
 const conventions = {
@@ -60,7 +60,7 @@ const conventions = {
 }
 
 export const filePathToRoute = (filePathExpression: string, rootDir: string): Route => {
-  return todo<Route>()
+  return todo<Route>(filePathExpression, rootDir, conventions)
   // const file = {
   //   path: {
   //     absolute: Path.parse(filePathExpression),
@@ -152,6 +152,8 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
 //   return topLevelPageTrees
 // }
 
-const todo = <type>(message = `todo`): type => {
-  throw new Error(message)
+const todo = <type>(...args: any[]): type => {
+  console.log(`TODO`)
+  console.log(...args)
+  throw new Error(`todo`)
 }
