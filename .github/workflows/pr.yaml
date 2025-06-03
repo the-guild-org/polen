@@ -48,7 +48,7 @@ jobs:
       - name: Install Playwright Binaries
         uses: ./.github/actions/install-playwright-binaries
       - run: pnpm build
-      - run: pnpm exec playwright test --config tests/integration/playwright.config.ts --shard=${{matrix.shard}}/${{matrix.total-shards}}
+      - run: pnpm exec playwright test --config tests/playwright.config.ts --project=integration --shard=${{matrix.shard}}/${{matrix.total-shards}}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() && (failure() || success()) }}
         with:
@@ -80,7 +80,7 @@ jobs:
       - name: Install Playwright Binaries
         uses: ./.github/actions/install-playwright-binaries
       - run: pnpm build
-      - run: pnpm exec playwright test --config tests/examples/playwright.config.ts --shard=${{matrix.shard}}/${{matrix.total-shards}}
+      - run: pnpm exec playwright test --config tests/playwright.config.ts --project=examples --shard=${{matrix.shard}}/${{matrix.total-shards}}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() && (failure() || success()) }}
         with:
