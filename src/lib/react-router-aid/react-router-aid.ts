@@ -1,8 +1,24 @@
 import type { ReactRouter } from '#dep/react-router/index.js'
+import type { Http } from '@wollybeard/kit'
 
 export * from './get-paths-patterns.js'
 
-export const createRoute = <routeObject extends ReactRouter.RouteObject>(
+export type RouteObject = RouteObjectIndex | RouteObjectNonIndex
+
+export interface RouteObjectIndex extends ReactRouter.IndexRouteObject {
+  handle?: RouteHandle
+}
+
+export interface RouteObjectNonIndex extends ReactRouter.NonIndexRouteObject {
+  handle?: RouteHandle
+}
+
+// todo: make globally augmentable
+export interface RouteHandle {
+  statusCode?: Http.Status.Code.All
+}
+
+export const createRoute = <routeObject extends RouteObject>(
   routeObject: routeObject,
 ): routeObject => {
   return {
@@ -11,11 +27,11 @@ export const createRoute = <routeObject extends ReactRouter.RouteObject>(
   }
 }
 
-export type IndexRouteObjectInput = Omit<ReactRouter.IndexRouteObject, `index` | `children`>
+export type RouteObjectIndexInput = Omit<RouteObjectIndex, `index` | `children`>
 
 export const createRouteIndex = (
-  indexRouteObjectInput: IndexRouteObjectInput,
-): ReactRouter.IndexRouteObject => {
+  indexRouteObjectInput: RouteObjectIndexInput,
+): RouteObjectIndex => {
   return {
     ...indexRouteObjectInput,
     index: true,

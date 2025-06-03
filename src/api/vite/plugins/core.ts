@@ -1,11 +1,12 @@
+import { Marked } from '#dep/marked/index.js'
 import type { Vite } from '#dep/vite/index.js'
+import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Json, Str } from '@wollybeard/kit'
+import { Cache, Fs, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
 import type { Configurator } from '../../configurator/index.js'
-import { Page } from '../../page/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
 import { logger } from '../logger.js'
@@ -13,11 +14,22 @@ import { vi as pvi } from '../vi.js'
 
 const viTemplateVariables = pvi([`template`, `variables`])
 const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
-const viProjectPages = pvi([`project`, `pages.jsx`], { allowPluginProcessing: true })
 const viProjectData = pvi([`project`, `data`])
 
+const viProjectPages = pvi([`project`, `pages`])
+export interface ProjectPagesModule {
+  data: Record<string, string> | null
+  load: ((routePath: string) => Promise<string | null>) | null
+}
+
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
-  const readPages = Cache.memoize(Page.readAll)
+  let isServing = false
+  const scanPageRoutes = Cache.memoize(async () =>
+    await FileRouter.scan({
+      dir: config.paths.project.absolute.pages,
+      glob: `**/*.md`,
+    })
+  )
   const readSchema = Cache.memoize(async () => {
     const schema = await Schema.readOrThrow({
       ...config.schema,
@@ -31,6 +43,24 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
   })
 
   return [{
+    name: `polen:markdown`,
+    resolveId(id) {
+      if (id.endsWith(`.md`)) {
+        return id
+      }
+      return null
+    },
+    async load(id) {
+      if (id.endsWith(`.md`)) {
+        const markdownString = await Fs.read(id)
+        if (!markdownString) return null
+        const htmlString = await Marked.parse(markdownString)
+        const code = `export default ${JSON.stringify(htmlString)}`
+        return code
+      }
+      return null
+    },
+  }, {
     name: `polen:core:alias`,
     resolveId(id, importer) {
       if (!(importer && pvi.includes(importer))) return null
@@ -45,6 +75,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
   }, {
     name: `polen:core`,
     config(_, { command }) {
+      isServing = command === `serve`
       return {
         root: config.paths.framework.rootDir,
         define: {
@@ -88,29 +119,24 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
       {
         identifier: viProjectData,
         async loader() {
+          // todo: parallel
           const schema = await readSchema()
-          const pages = Page.lint(
-            await readPages({
-              dir: config.paths.project.absolute.pages,
-            }),
-          ).fixed
+          const pagesScanResult = await scanPageRoutes()
 
           const siteNavigationItems: SiteNavigationItem[] = []
 
-          const siteNavigationItemsFromTopLevelPages = pages
-            // todo: test that non-congent page branches aren't shown in navigation bar
-            .filter(_ =>
-              _.type === `PageBranchContent`
-              || _.branches.find(_ => _.route.type === `RouteIndex`)
-            )
-            .map(
-              (pageBranch): ProjectData[`siteNavigationItems`][number] => {
-                return {
-                  path: pageBranch.route.path.raw,
-                  title: Str.Case.title(pageBranch.route.path.raw),
-                }
-              },
-            )
+          const siteNavigationItemsFromTopLevelPages = pagesScanResult.routes
+            // We exclude home page
+            .filter(route => route.path.segments.length === 1)
+            .map(route => {
+              const path = FileRouter.routeToString(route)
+              console.log(path)
+              const title = Str.titlizeSlug(path)
+              return {
+                path,
+                title,
+              }
+            })
 
           siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
 
@@ -125,11 +151,12 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
             schema,
             siteNavigationItems,
             faviconPath: `/logo.svg`,
+            pagesScanResult: pagesScanResult,
             paths: config.paths.project,
             server: {
               static: {
                 // todo
-                // relative from CWD of process that boots node server
+                // relative from CWD of process that boots n1ode server
                 // can easily break! Use path relative in server??
                 directory: `./` + config.paths.project.relative.build.root,
                 // Uses Hono route syntax.
@@ -151,26 +178,74 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
       {
         identifier: viProjectPages,
         async loader() {
-          const pages = Page.lint(
-            await readPages({
-              dir: config.paths.project.absolute.pages,
-            }),
-          )
-          const moduleContent = Page.ReactRouterAdaptor.render({
-            pageTree: pages.fixed,
-            sourcePaths: {
-              reactRouterHelpers: `#lib/react-router-aid/react-router-aid.js`,
-            },
-          })
+          const pagesScanResult = await scanPageRoutes()
 
-          // todo: improve
-          pages.warnings.forEach(_ => {
-            console.log(_.type)
-          })
+          //
+          // ─ Development Module
+          //
 
-          return moduleContent
+          if (isServing) {
+            const routePathsToFilePaths = fromEntries(pagesScanResult.routes.map((route) => {
+              return [FileRouter.routeToString(route), Path.format(route.file.path.absolute)]
+            }))
+
+            const content = `
+              const routePathsToFilePaths = ${JSON.stringify(routePathsToFilePaths)}
+
+              export const load = async (routePath) => {
+                const filePath = routePathsToFilePaths[routePath]
+                if (!filePath) return null
+
+                try {
+                  // Dynamic import of the markdown file - Vite will handle the .md processing
+                  const module = await import(filePath)
+                  return module.default
+                } catch {
+                  return null
+                }
+              }
+
+              export const data = null // Not used in dev mode
+            `
+
+            return content
+          }
+
+          //
+          // ─ Production Module
+          //
+
+          const content = Str.Builder()
+
+          content(`// Production Build of Project Pages`)
+          content(`// All pages are preprocessed into HTML and bundled.`)
+          content(``)
+
+          content(`// Static imports for all markdown files`)
+          pagesScanResult.routes.forEach((route, index) => {
+            const filePath = Path.format(route.file.path.absolute)
+            const importName = `page${index.toString()}`
+
+            content(`import ${importName} from '${filePath}'`)
+          })
+          content()
+          content(`export const data = {`)
+          pagesScanResult.routes.forEach((route, index) => {
+            const routePath = FileRouter.routeToString(route)
+            content(`  '${routePath}': page${index.toString()}`)
+          })
+          content(`}`)
+          content()
+          content(`export const load = null // Not used in production`)
+
+          return content.toString()
         },
       },
     ),
   }]
+}
+
+// todo: to kit
+const fromEntries = <entry extends [PropertyKey, unknown]>(entries: entry[]): Record<entry[0], entry[1]> => {
+  return Object.fromEntries(entries) as any
 }

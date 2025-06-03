@@ -93,3 +93,16 @@ pnpm test:examples --ui
 - In part Polen is a library whose modules are used in the user's project runtime.
 - Some of these modules are [Vite Virtual Modules](https://vitejs.dev/guide/api-plugin.html#virtual-modules) (dynamic code that is synthesized in memory, does not exist on disk)
 - To allow those modules to use ISI we maintain an internal vite plugin that will resolve the imports correctly.
+
+## Global Build Variables
+
+Polen provides global build-time variables that are available within the Polen app runtime (but not the Polen tool itself). These variables are replaced at build time through Vite's `define` configuration and enable conditional logic based on the build context.
+
+The variables allow you to:
+
+- Write code that behaves differently in development vs production
+- Optimize bundle sizes by excluding development-only code
+- Implement architecture-specific code paths (SSG vs SSR)
+- Conditionally load modules based on the build mode
+
+For detailed documentation of each variable, see the type definitions in [`vite-env.d.ts`](./vite-env.d.ts).
