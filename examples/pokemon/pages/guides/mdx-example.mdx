@@ -1,0 +1,64 @@
+# MDX Example Page
+
+This is an MDX page with React components!
+
+export const Button = ({ children, onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: "10px 20px",
+      backgroundColor: "#0070f3",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
+    }}
+  >
+    {children}
+  </button>
+);
+
+## Interactive Component
+
+Here's a button you can click:
+
+<Button onClick={() => alert("Hello from MDX!")}>Click me!</Button>
+
+## Code Example
+
+You can also include code blocks:
+
+```typescript
+interface Pokemon {
+  name: string;
+  type: string[];
+  level: number;
+}
+```
+
+And inline code like `const pokemon = 'Pikachu'`.
+
+## Using Variables
+
+export const pokemonName = "Charizard";
+export const pokemonLevel = 50;
+
+My favorite Pokemon is **{pokemonName}** at level {pokemonLevel}!
+
+## Lists with Components
+
+export const PokemonItem = ({ name, type }) => (
+  <li style={{ marginBottom: "10px" }}>
+    <strong>{name}</strong> - Type: {type.join(", ")}
+  </li>
+);
+
+Here are some Pokemon:
+
+<ul>
+  <PokemonItem name="Bulbasaur" type={["Grass", "Poison"]} />
+  <PokemonItem name="Charmander" type={["Fire"]} />
+  <PokemonItem name="Squirtle" type={["Water"]} />
+</ul>
+
+This demonstrates the power of MDX - mixing Markdown with React components!

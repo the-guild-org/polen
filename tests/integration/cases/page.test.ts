@@ -24,6 +24,21 @@ const testCases: TestCase[] = [
     fixture: { 'pages/foo/index.md': 'abc' },
     result: { path: '/foo', navBarTitle: 'foo', content: 'abc' },
   },
+  {
+    title: 'MDX page with React component',
+    fixture: {
+      'pages/bar.mdx': `
+        # Hello MDX
+
+        export const TestComponent = () => <div>Interactive Component</div>
+
+        This is MDX content with a component:
+
+        <TestComponent />
+      `,
+    },
+    result: { path: '/bar', navBarTitle: 'bar', content: 'Hello MDX' },
+  },
 ]
 
 testCases.forEach(({ fixture, result, title }) => {

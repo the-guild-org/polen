@@ -1,4 +1,4 @@
-import type { React } from '#dep/react/index.js'
+import { React } from '#dep/react/index.js'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { never } from '@wollybeard/kit/language'
 import { Outlet } from 'react-router'
@@ -9,29 +9,48 @@ const normalizeSplat = (splat: string) => `/` + splat.replace(/\/$/, ``)
 export const pagesLoader = createLoader(async ({ params }: { params: { '*': string } }) => {
   const splat = normalizeSplat(params[`*`])
 
-  // todo: switch with __COMMAND__
-  // but check that vite does code elimination on it
-  if (__SERVING__) {
-    const content = await ProjectPages.load!(splat)
-    console.log({ splat, content })
-    return {
-      content,
-    }
-  } else if (__BUILDING__) {
-    const content = ProjectPages.data![splat] ?? null
-    return {
-      content,
-    }
-  } else {
-    never()
+  return {
+    path: splat,
   }
 })
 
 export const PagesComponent: React.FC = () => {
-  const { content } = useLoaderData<typeof pagesLoader>()
+  const { path } = useLoaderData<typeof pagesLoader>()
+  const [content, setContent] = React.useState<React.ReactNode>(null)
+
+  React.useEffect(() => {
+    const loadContent = async () => {
+      if (__SERVING__) {
+        const loaded = await ProjectPages.load!(path)
+        if (loaded) {
+          // Check if it's a React component (MDX) or HTML string (MD)
+          if (typeof loaded === `function`) {
+            const Component = loaded as React.ComponentType
+            setContent(<Component />)
+          } else if (typeof loaded === `string`) {
+            setContent(<div dangerouslySetInnerHTML={{ __html: loaded }} />)
+          }
+        }
+      } else if (__BUILDING__) {
+        const pageContent = ProjectPages.data![path]
+        if (pageContent) {
+          if (typeof pageContent === `function`) {
+            const Component = pageContent as React.ComponentType
+            setContent(<Component />)
+          } else if (typeof pageContent === `string`) {
+            setContent(<div dangerouslySetInnerHTML={{ __html: pageContent }} />)
+          }
+        }
+      } else {
+        never()
+      }
+    }
+    // eslint-disable-next-line
+    loadContent()
+  }, [path])
 
   if (content) {
-    return <div dangerouslySetInnerHTML={{ __html: content }} />
+    return <>{content}</>
   }
 
   // Defer to potential next routes.
