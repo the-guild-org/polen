@@ -48,12 +48,35 @@ jobs:
       - name: Install Playwright Binaries
         uses: ./.github/actions/install-playwright-binaries
       - run: pnpm build
-      - run: pnpm exec playwright test --config tests/playwright.config.ts --project=integration --shard=${{matrix.shard}}/${{matrix.total-shards}}
+      - run: pnpm exec playwright test --config tests/playwright.config.ts --project=integration --shard=${{matrix.shard}}/${{matrix.total-shards}} --reporter=blob
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() && failure() }}
+        if: always()
         with:
-          name: playwright-report-integration-${{matrix.shard}}
-          path: tests/integration/__results__/
+          name: blob-report-integration-${{matrix.shard}}
+          path: blob-report/
+          retention-days: 1
+  test-integration-report:
+    if: always()
+    needs: [test-integration]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: 22.14.x
+      - name: Install Playwright Binaries
+        uses: ./.github/actions/install-playwright-binaries
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-integration-*
+          merge-multiple: true
+      - name: Merge reports
+        run: pnpm exec playwright merge-reports --reporter html ./blob-report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-integration
+          path: playwright-report/
           retention-days: 7
   test-unit:
     runs-on: ubuntu-latest
@@ -79,10 +102,33 @@ jobs:
       - name: Install Playwright Binaries
         uses: ./.github/actions/install-playwright-binaries
       - run: pnpm build
-      - run: pnpm exec playwright test --config tests/playwright.config.ts --project=examples --shard=${{matrix.shard}}/${{matrix.total-shards}}
+      - run: pnpm exec playwright test --config tests/playwright.config.ts --project=examples --shard=${{matrix.shard}}/${{matrix.total-shards}} --reporter=blob
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() && failure() }}
+        if: always()
         with:
-          name: playwright-report-examples-${{matrix.shard}}
-          path: tests/examples/__results__/
+          name: blob-report-examples-${{matrix.shard}}
+          path: blob-report/
+          retention-days: 1
+  test-examples-report:
+    if: always()
+    needs: [test-examples]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: 22.14.x
+      - name: Install Playwright Binaries
+        uses: ./.github/actions/install-playwright-binaries
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-examples-*
+          merge-multiple: true
+      - name: Merge reports
+        run: pnpm exec playwright merge-reports --reporter html ./blob-report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-examples
+          path: playwright-report/
           retention-days: 7
