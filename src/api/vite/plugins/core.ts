@@ -136,6 +136,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           async loader() {
             // todo: parallel
             const schema = await readSchema()
+            console.log({ schema })
             const pagesScanResult = await scanPageRoutes()
 
             const siteNavigationItems: SiteNavigationItem[] = []

@@ -10,3 +10,12 @@ export const parse = async (content: string): Promise<string> => {
 
   return String(result)
 }
+
+export const parseSync = (content: string): string => {
+  const result = Remark.remark()
+    .use(RemarkGfm)
+    .use(RemarkHtml)
+    .processSync(content)
+
+  return String(result)
+}
