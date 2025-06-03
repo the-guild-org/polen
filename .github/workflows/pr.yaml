@@ -33,7 +33,7 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm check:types
   test-integration:
-    uses: ./.github/workflows/reusable/playwright-test.yaml
+    uses: ./.github/workflows/_playwright-test.yaml
     with:
       project-name: integration
   test-unit:
@@ -45,6 +45,6 @@ jobs:
           node-version: 22.14.x
       - run: pnpm test:unit
   test-examples:
-    uses: ./.github/workflows/reusable/playwright-test.yaml
+    uses: ./.github/workflows/_playwright-test.yaml
     with:
       project-name: examples
