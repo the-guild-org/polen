@@ -94,7 +94,10 @@ const Layout = () => {
   )
 }
 
-const children: ReactRouter.RouteObject[] = []
+const children: ReactRouter.RouteObject[] = [
+  index,
+  ...pages,
+]
 
 //
 //
@@ -167,16 +170,5 @@ import { pages } from 'virtual:polen/project/pages.jsx'
 export const root = createRoute({
   path: `/`,
   Component,
-  children: [
-    index,
-    ...pages,
-    ...children,
-    // createRoute({
-    //   path: `*`,
-    //   Component: PagesComponent,
-    //   // eslint-disable-next-line
-    //   loader: pagesLoader as any,
-    //   children,
-    // }),
-  ],
+  children,
 })

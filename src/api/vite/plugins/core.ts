@@ -139,7 +139,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
               .filter(route => route.path.segments.length === 1)
               .map(route => {
                 const path = FileRouter.routeToString(route)
-                // console.log(path)
                 const title = Str.titlizeSlug(path)
                 return {
                   path,
@@ -189,11 +188,11 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           async loader() {
             const pagesScanResult = await scanPageRoutes()
 
-            const s = Str.Builder()
             const $ = {
               pages: `pages`,
             }
 
+            const s = Str.Builder()
             s`export const ${$.pages} = []`
 
             // todo: kit fs should accept parsed file paths
@@ -222,76 +221,9 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
             }
 
             return s.render()
-
-            // todo bring back lazy mode
-
-            // //
-            // // ─ Development Module
-            // //
-
-            // if (isServing) {
-            //   const routePathsToFilePaths = fromEntries(pagesScanResult.routes.map((route) => {
-            //     return [FileRouter.routeToString(route), Path.format(route.file.path.absolute)]
-            //   }))
-
-            //   const content = `
-            //     const routePathsToFilePaths = ${JSON.stringify(routePathsToFilePaths)}
-
-            //     export const load = async (routePath) => {
-            //       const filePath = routePathsToFilePaths[routePath]
-            //       if (!filePath) return null
-
-            //       try {
-            //         // Dynamic import of the markdown file - Vite will handle the .md processing
-            //         const module = await import(filePath)
-            //         return module.default
-            //       } catch {
-            //         return null
-            //       }
-            //     }
-
-            //     export const data = null // Not used in dev mode
-            //   `
-
-            //   return content
-            // }
-
-            //
-            // ─ Production Module
-            //
-
-            // const content = Str.Builder()
-
-            // content(`// Production Build of Project Pages`)
-            // content(`// All pages are preprocessed into HTML and bundled.`)
-            // content(``)
-
-            // content(`// Static imports for all markdown files`)
-            // pagesScanResult.routes.forEach((route, index) => {
-            //   const filePath = Path.format(route.file.path.absolute)
-            //   const importName = `page${index.toString()}`
-
-            //   content(`import ${importName} from '${filePath}'`)
-            // })
-            // content()
-            // content(`export const data = {`)
-            // pagesScanResult.routes.forEach((route, index) => {
-            //   const routePath = FileRouter.routeToString(route)
-            //   content(`  '${routePath}': page${index.toString()}`)
-            // })
-            // content(`}`)
-            // content()
-            // content(`export const load = null // Not used in production`)
-
-            // return content.toString()
           },
         },
       ),
     },
   ]
 }
-
-// todo: to kit
-// const fromEntries = <entry extends [PropertyKey, unknown]>(entries: entry[]): Record<entry[0], entry[1]> => {
-//   return Object.fromEntries(entries) as any
-// }
