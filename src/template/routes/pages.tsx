@@ -16,7 +16,7 @@ export const pagesLoader = createLoader(async ({ params }: { params: { '*': stri
     content = await loadPageContent(splatValueNormalized)
   } else if (pageContent) {
     // Production mode: use pre-built content
-    content = pageContent[splatValueNormalized] || null
+    content = pageContent[splatValueNormalized] ?? null
   }
 
   return {

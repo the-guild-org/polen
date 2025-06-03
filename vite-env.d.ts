@@ -7,10 +7,58 @@
 //
 //
 
+/**
+ * Indicates whether the code is running during a production build.
+ * - `true` when running `polen build` command
+ * - `false` when running `polen dev` command
+ * 
+ * Use this to conditionally execute code only during the build process.
+ * @example
+ * if (__BUILDING__) {
+ *   // Code that only runs during build
+ * }
+ */
 declare const __BUILDING__: boolean
+
+/**
+ * Convenience boolean for checking if using Static Site Generation (SSG) architecture.
+ * - `true` when `__BUILD_ARCHITECTURE__ === 'ssg'`
+ * - `false` otherwise
+ * 
+ * Useful for tree-shaking SSG-specific code.
+ */
 declare const __BUILD_ARCHITECTURE_SSG__: boolean
+
+/**
+ * The build architecture configured for the project.
+ * - `'ssg'` for Static Site Generation (default)
+ * - `'ssr'` for Server-Side Rendering (future support)
+ * 
+ * Defined by the `build.architecture` configuration option in polen.config.ts.
+ */
 declare const __BUILD_ARCHITECTURE__: import('#api/configurator/index.js').Configurator.BuildArchitecture
+
+/**
+ * Indicates whether the code is running in development server mode.
+ * - `true` when running `polen dev` command
+ * - `false` when running `polen build` command
+ * 
+ * Use this to conditionally execute code only during development.
+ * @example
+ * if (__SERVING__) {
+ *   // Development-only code (e.g., debug logging, HMR setup)
+ * }
+ */
 declare const __SERVING__: boolean
+
+/**
+ * The raw Vite command being executed.
+ * - `'build'` for production builds
+ * - `'serve'` for development server
+ * 
+ * Provides the same information as `__BUILDING__` and `__SERVING__` but as a string value.
+ * This is the raw value from Vite's configuration.
+ */
 declare const __COMMAND__: import('#dep/vite/index.js').Vite.ConfigEnv[`command`]
 
 /**
