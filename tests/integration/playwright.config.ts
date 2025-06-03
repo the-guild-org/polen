@@ -8,6 +8,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCi,
   retries: 0, // isCi ? 2 : 0,
+  maxFailures: isCi ? undefined : 1,
   workers: isCi ? 1 : undefined,
   outputDir: `./__results__`,
   use: {
