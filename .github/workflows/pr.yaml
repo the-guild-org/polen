@@ -50,7 +50,7 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright test --config tests/playwright.config.ts --project=integration --shard=${{matrix.shard}}/${{matrix.total-shards}}
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() && (failure() || success()) }}
+        if: ${{ !cancelled() && failure() }}
         with:
           name: playwright-report-integration-${{matrix.shard}}
           path: tests/integration/__results__/
@@ -81,7 +81,7 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright test --config tests/playwright.config.ts --project=examples --shard=${{matrix.shard}}/${{matrix.total-shards}}
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() && (failure() || success()) }}
+        if: ${{ !cancelled() && failure() }}
         with:
           name: playwright-report-examples-${{matrix.shard}}
           path: tests/examples/__results__/
