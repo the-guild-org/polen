@@ -1,4 +1,4 @@
-import { Marked } from '#dep/marked/index.js'
+import { Markdown } from '#api/singletons/markdown/index.js'
 import type { ReactRouter } from '#dep/react-router/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
@@ -61,7 +61,8 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
         if (id.endsWith(`.md`)) {
           const markdownString = await Fs.read(id)
           if (!markdownString) return null
-          const htmlString = await Marked.parse(markdownString)
+          const htmlString = await Markdown.parse(markdownString)
+
           const code = `export default ${JSON.stringify(htmlString)}`
           return code
         }

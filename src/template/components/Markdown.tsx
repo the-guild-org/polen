@@ -1,16 +1,19 @@
-import { Marked } from '#dep/marked/index.js'
+import { Markdown as MarkdownParser } from '#api/singletons/markdown/index.js'
+import { React } from '#dep/react/index.js'
 import type { FC } from 'react'
 
 export const Markdown: FC<{ children: string }> = ({ children }) => {
-  const html = Marked.parse(children)
-  return (
-    <div dangerouslySetInnerHTML={{ __html: html }}></div>
-    // <ReactMarkdown
-    //   components={{
-    //     p: ({ node: _, ...props }) => <p className="rt-Text" {...props} />,
-    //   }}
-    // >
-    //   {children}
-    // </ReactMarkdown>
-  )
+  const [html, setHtml] = React.useState<string>(``)
+
+  React.useEffect(() => {
+    const processMarkdown = async () => {
+      const result = await MarkdownParser.parse(children)
+      setHtml(result)
+    }
+
+    // eslint-disable-next-line
+    processMarkdown()
+  }, [children])
+
+  return <div dangerouslySetInnerHTML={{ __html: html }} />
 }

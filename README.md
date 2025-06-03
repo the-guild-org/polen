@@ -175,35 +175,31 @@ Example:
 | `pages/foo/bar.md`    | `/foo/bar` | `Foo`                |
 | `pages/foo/bar.mdx`   | `/foo/bar` | `Foo`                |
 
-#### Markdown Pages
+#### Markdown
 
-Standard markdown files (`.md`) are supported and will be rendered as HTML using [Marked](https://marked.js.org/).
+Markdown files (`.md`) are supported using [remark](https://remark.js.org/). This is the same underlying engine as [MDX](https://mdxjs.com/) thus you can rely on consistent behavior between your `.md` and `.mdx` files.
 
-Marked supports the following "flavours". For more details refer to [their docs](https://marked.js.org/).
-
-- [Markdown 1.0](https://daringfireball.net/projects/markdown/) (100% compliant)
-- [CommonMark 0.31](https://spec.commonmark.org/0.31/) (98% compliant)
-- [GitHub Flavored Markdown 0.29](https://github.github.com/gfm/) (97% compliant)
+Polen supports [CommonMark](https://commonmark.org/).
 
 If you're new to Markdown, here are some great resources to get started:
 
 - **[CommonMark Tutorial](https://commonmark.org/help/)** - Interactive 10-minute tutorial
 - **[Markdown Guide](https://www.markdownguide.org/)** - Comprehensive reference and cheat sheets
-- **[Marked Documentation](https://marked.js.org/)** - Documentation for the markdown parser used by Polen
+- **[GitHub's Markdown Guide](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)** - Practical guide with examples
 
-Common features include:
+Syntax features available to you include:
 
 - Headers, paragraphs, and line breaks
 - Bold, italic, and code formatting
 - Lists (ordered and unordered)
 - Links and images
 - Code blocks with syntax highlighting
-- Tables
 - Blockquotes
 - Horizontal rules
-- Strikethrough text
 
-#### MDX Pages
+#### MDX
+
+MDX begins where [Markdown](#markdown) ends. So everything stated there such as regarding supported Markdown flavours applies here too.
 
 MDX files (`.mdx`) allow you to use JSX/React components within your markdown content. This enables
 interactive documentation with live examples, custom components, and more.
