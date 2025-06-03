@@ -65,7 +65,7 @@ You can append/prepend/replace descriptions of types and fields in your schema.
 Any Markdown syntax in your content will be automatically rendered.
 
 ```ts
-import { Polen } from "polen";
+import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   templateVariables: {
@@ -79,10 +79,11 @@ export default Polen.defineConfig({
         name: `Query`,
       },
       placement: `over`,
-      content: `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
+      content:
+        `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
     },
   ],
-});
+})
 ```
 
 ### Providing a Schema
@@ -126,7 +127,7 @@ Basic example:
 
 ```ts
 // polen.config.ts
-import { Polen } from "polen";
+import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
@@ -135,14 +136,14 @@ export default Polen.defineConfig({
       memory: {
         versions: [
           {
-            date: new Date("2023-01-13"),
+            date: new Date('2023-01-13'),
             value: `type Query { hello: String }`,
           },
         ],
       },
     },
   },
-});
+})
 ```
 
 ### Pages
@@ -281,10 +282,10 @@ You can import a `Polen` namespace from `polen`. You can import its bare exports
 from `polen/polen`.
 
 ```ts
-import { Polen } from "polen";
-import { defineConfig } from "polen/polen";
+import { Polen } from 'polen'
+import { defineConfig } from 'polen/polen'
 
-console.log(Polen.defineConfig === defineConfig); // true
+console.log(Polen.defineConfig === defineConfig) // true
 ```
 
 ### Instant Schema Explorer
