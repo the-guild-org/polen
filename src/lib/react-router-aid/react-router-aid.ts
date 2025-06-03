@@ -1,4 +1,5 @@
 import type { ReactRouter } from '#dep/react-router/index.js'
+import type { Http } from '@wollybeard/kit'
 
 export * from './get-paths-patterns.js'
 
@@ -14,8 +15,7 @@ export interface RouteObjectNonIndex extends ReactRouter.NonIndexRouteObject {
 
 // todo: make globally augmentable
 export interface RouteHandle {
-  // todo
-  statusCode?: 404 // (typeof Http.Status)[keyof typeof Http.Status][`code`]
+  statusCode?: Http.Status.Code.All
 }
 
 export const createRoute = <routeObject extends RouteObject>(

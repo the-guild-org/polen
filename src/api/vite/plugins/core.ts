@@ -2,7 +2,7 @@ import { Marked } from '#dep/marked/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Fs, Json, Str } from '@wollybeard/kit'
+import { Cache, Fs, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
@@ -15,8 +15,10 @@ import { vi as pvi } from '../vi.js'
 const viTemplateVariables = pvi([`template`, `variables`])
 const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
 const viProjectData = pvi([`project`, `data`])
+const viPageContent = pvi([`project`, `page-content`])
 
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
+  let isServing = false
   const scanPageRoutes = Cache.memoize(async () =>
     await FileRouter.scan({
       dir: config.paths.project.absolute.pages,
@@ -68,6 +70,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
   }, {
     name: `polen:core`,
     config(_, { command }) {
+      isServing = command === `serve`
       return {
         root: config.paths.framework.rootDir,
         define: {
@@ -192,6 +195,64 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
       //     return moduleContent
       //   },
       // },
+      {
+        identifier: viPageContent,
+        async loader() {
+          const pagesScanResult = await scanPageRoutes()
+          
+          // In development, we'll load content lazily
+          if (isServing) {
+            const pageRouteMap: Record<string, string> = {}
+            
+            // Just map routes to file paths for lazy loading
+            for (const route of pagesScanResult.routes) {
+              const routePath = FileRouter.routeToString(route)
+              pageRouteMap[routePath] = Path.format(route.file.path.absolute)
+            }
+            
+            const moduleContent = `
+              import { Marked } from '#dep/marked/index.js'
+              import { Fs } from '@wollybeard/kit'
+              
+              export const pageRouteMap = ${JSON.stringify(pageRouteMap)}
+              
+              export const loadPageContent = async (routePath) => {
+                const filePath = pageRouteMap[routePath]
+                if (!filePath) return null
+                
+                const markdownContent = await Fs.read(filePath)
+                if (!markdownContent) return null
+                
+                return await Marked.parse(markdownContent)
+              }
+              
+              export const pageContent = null // Not used in dev mode
+            `
+            
+            return moduleContent
+          }
+          
+          // In production build, pre-process all content
+          const pageContentMap: Record<string, string> = {}
+          
+          for (const route of pagesScanResult.routes) {
+            const routePath = FileRouter.routeToString(route)
+            const markdownContent = await Fs.read(Path.format(route.file.path.absolute))
+            if (markdownContent) {
+              const htmlContent = await Marked.parse(markdownContent)
+              pageContentMap[routePath] = htmlContent
+            }
+          }
+          
+          const moduleContent = `
+            export const pageContent = ${JSON.stringify(pageContentMap)}
+            export const loadPageContent = null // Not used in production
+            export const pageRouteMap = null // Not used in production
+          `
+          
+          return moduleContent
+        },
+      },
     ),
   }]
 }

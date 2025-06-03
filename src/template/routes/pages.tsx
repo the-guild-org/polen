@@ -1,9 +1,7 @@
 import type { React } from '#dep/react/index.js'
-import { FileRouter } from '#lib/file-router/index.js'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
-import { Err, Path } from '@wollybeard/kit'
 import { Outlet } from 'react-router'
-import { PROJECT_DATA } from 'virtual:polen/project/data'
+import { loadPageContent, pageContent } from 'virtual:polen/project/page-content'
 
 const stripTrailingSeparator = (str: string) => str.replace(/\/$/, ``)
 
@@ -11,17 +9,15 @@ export const pagesLoader = createLoader(async ({ params }: { params: { '*': stri
   const splatValue = params[`*`]
   const splatValueNormalized = `/` + stripTrailingSeparator(splatValue)
 
-  const pagesRoute = PROJECT_DATA.pagesScanResult.routes.find((route) =>
-    FileRouter.routeToString(route) === splatValueNormalized
-  )
+  let content: string | null = null
 
-  if (!pagesRoute) return { content: null }
-
-  const module = await Err.tryCatch(() =>
-    import(Path.format(pagesRoute.file.path.absolute)) as Promise<{ default: string }>
-  )
-
-  const content = Err.is(module) ? null : module.default
+  if (__SERVING__ && loadPageContent) {
+    // Development mode: load content lazily
+    content = await loadPageContent(splatValueNormalized)
+  } else if (pageContent) {
+    // Production mode: use pre-built content
+    content = pageContent[splatValueNormalized] || null
+  }
 
   return {
     content,
