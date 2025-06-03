@@ -170,31 +170,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           return content
         },
       },
-      // {
-      //   identifier: viProjectPages,
-      //   async loader() {
-      //     console.log('')
-      //     const pages = Pages.lint(
-      //       await readPages({
-      //         dir: config.paths.project.absolute.pages,
-      //       }),
-      //     )
-
-      //     const moduleContent = Pages.ReactRouterAdaptor.render({
-      //       pageTree: pages.fixed,
-      //       sourcePaths: {
-      //         reactRouterHelpers: `#lib/react-router-aid/react-router-aid.js`,
-      //       },
-      //     })
-
-      //     // todo: improve
-      //     pages.warnings.forEach(_ => {
-      //       console.log(_.type)
-      //     })
-
-      //     return moduleContent
-      //   },
-      // },
       {
         identifier: viProjectPages,
         async loader() {
