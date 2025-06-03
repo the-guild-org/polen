@@ -15,14 +15,27 @@ interface TestCase {
 
 const testCases: TestCase[] = [
   {
-    title: 'exact page',
+    title: 'md exact page',
     fixture: { 'pages/foo.md': 'abc' },
     result: { path: '/foo', navBarTitle: 'foo', content: 'abc' },
   },
   {
-    title: 'index page',
+    title: 'md index page',
     fixture: { 'pages/foo/index.md': 'abc' },
     result: { path: '/foo', navBarTitle: 'foo', content: 'abc' },
+  },
+  {
+    title: 'mdx exact page',
+    fixture: {
+      'pages/foo/index.mdx': `
+      # hello
+
+      export const Mdx = () => "mdx"
+
+      <Mdx />
+    `,
+    },
+    result: { path: '/foo', navBarTitle: 'foo', content: 'hello mdx' },
   },
 ]
 

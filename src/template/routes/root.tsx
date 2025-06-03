@@ -12,7 +12,6 @@ import { Link } from '../components/Link.jsx'
 import entryClientUrl from '../entry.client.jsx?url'
 import { changelog } from './changelog.jsx'
 import { index } from './index.jsx'
-import { PagesComponent, pagesLoader } from './pages.jsx'
 import { reference } from './reference.jsx'
 
 // todo: not needed anymore because not using hono dev vite plugin right?
@@ -163,17 +162,21 @@ children.push(notFoundRoute)
 //
 //
 
+import { pages } from 'virtual:polen/project/pages.jsx'
+
 export const root = createRoute({
   path: `/`,
   Component,
   children: [
     index,
-    createRoute({
-      path: `*`,
-      Component: PagesComponent,
-      // eslint-disable-next-line
-      loader: pagesLoader as any,
-      children,
-    }),
+    ...pages,
+    ...children,
+    // createRoute({
+    //   path: `*`,
+    //   Component: PagesComponent,
+    //   // eslint-disable-next-line
+    //   loader: pagesLoader as any,
+    //   children,
+    // }),
   ],
 })

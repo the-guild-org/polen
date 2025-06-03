@@ -98,9 +98,8 @@ declare module 'virtual:polen/project/data' {
   export const PROJECT_DATA: import('#project-data.js').ProjectData
 }
 
-declare module 'virtual:polen/project/pages' {
-  export const data: import('#api/vite/plugins/core.js').ProjectPagesModule['data']
-  export const load: import('#api/vite/plugins/core.js').ProjectPagesModule['load']
+declare module 'virtual:polen/project/pages.jsx' {
+  export const pages: import('#api/vite/plugins/core.js').ProjectPagesModule['pages']
 }
 
 declare module 'virtual:polen/template/schema-augmentations' {
