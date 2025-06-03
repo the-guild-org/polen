@@ -42,8 +42,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1(vite@6.3.5(@types/node@22.15.3)(jiti@2.4.2)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
       '@wollybeard/kit':
-        specifier: ^0.30.0
-        version: 0.30.0
+        specifier: ^0.31.0
+        version: 0.31.0
       '@wollybeard/projector':
         specifier: ^0.1.1
         version: 0.1.1
@@ -2090,8 +2090,8 @@ packages:
   '@wollybeard/kit@0.28.0':
     resolution: {integrity: sha512-3/iEMpXzhBkwDxkyHJIkzVaqtKq4W6KEMG1PBplwDm+WgtrXNrWG0jE/bevO68uUodS9Q8FJAI48vu0WrR9jfQ==}
 
-  '@wollybeard/kit@0.30.0':
-    resolution: {integrity: sha512-H7tlr2dfMpUMwRUdv0yLPoRPgCsxM/+aGXZ/z+zjDZXn3GaJ+a2G+ZrSEV8LSqr6JMhmKGYVi92sARQu/N2HFw==}
+  '@wollybeard/kit@0.31.0':
+    resolution: {integrity: sha512-G/pvERdicI/89rw24Qrr1L5fRtX/oT0qDzLdyfY7Kz/yYHXgADNnL06UTCI7IG0uxoZyUW9vK1WYi+euWZncUQ==}
 
   '@wollybeard/projector@0.1.1':
     resolution: {integrity: sha512-hQWIT0P+XE7CDIQ96pVQkkMqBoa+fUJuzmP5ipxE+tUT0EjQa0FKLFZlV4yvVEV8kOkvDRTCQACPQYFx2mGhTA==}
@@ -3799,8 +3799,8 @@ packages:
   zod@3.25.34:
     resolution: {integrity: sha512-lZHvSc2PpWdcfpHlyB33HA9nqP16GpC9IpiG4lYq9jZCJVLZNnWd6Y1cj79bcLSBKTkxepfpjckPv5Y5VOPlwA==}
 
-  zod@3.25.48:
-    resolution: {integrity: sha512-0X1mz8FtgEIvaxGjdIImYpZEaZMrund9pGXm3M6vM7Reba0e2eI71KPjSCGXBfwKDPwPoywf6waUKc3/tFvX2Q==}
+  zod@3.25.49:
+    resolution: {integrity: sha512-JMMPMy9ZBk3XFEdbM3iL1brx4NUSejd6xr3ELrrGEfGb355gjhiAWtG3K5o+AViV/3ZfkIrCzXsZn6SbLwTR8Q==}
 
   zx@8.5.4:
     resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
@@ -5822,7 +5822,7 @@ snapshots:
       type-fest: 4.41.0
       zod: 3.25.34
 
-  '@wollybeard/kit@0.30.0':
+  '@wollybeard/kit@0.31.0':
     dependencies:
       '@types/node': 22.15.29
       ansis: 4.0.0
@@ -5830,7 +5830,7 @@ snapshots:
       es-toolkit: 1.38.0
       jsonc-parser: 3.3.1
       type-fest: 4.41.0
-      zod: 3.25.48
+      zod: 3.25.49
 
   '@wollybeard/projector@0.1.1':
     dependencies:
@@ -7496,6 +7496,6 @@ snapshots:
 
   zod@3.25.34: {}
 
-  zod@3.25.48: {}
+  zod@3.25.49: {}
 
   zx@8.5.4: {}
