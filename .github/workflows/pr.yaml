@@ -50,11 +50,12 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright test --config tests/integration/playwright.config.ts --shard=${{matrix.shard}}/${{matrix.total-shards}}
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (failure() || success()) }}
         with:
           name: playwright-report-integration-${{matrix.shard}}
           path: tests/integration/__results__/
           retention-days: 7
+          if-no-files-found: ignore
   test-unit:
     runs-on: ubuntu-latest
     steps:
@@ -81,8 +82,9 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright test --config tests/examples/playwright.config.ts --shard=${{matrix.shard}}/${{matrix.total-shards}}
       - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (failure() || success()) }}
         with:
           name: playwright-report-examples-${{matrix.shard}}
           path: tests/examples/__results__/
           retention-days: 7
+          if-no-files-found: ignore
