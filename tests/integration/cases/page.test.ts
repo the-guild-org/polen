@@ -28,12 +28,12 @@ const testCases: TestCase[] = [
     title: 'mdx exact page',
     fixture: {
       'pages/foo/index.mdx': `
-      # hello
+# hello
 
-      export const Mdx = () => "mdx"
+export const Mdx = () => "mdx"
 
-      <Mdx />
-    `,
+<Mdx />
+      `,
     },
     result: { path: '/foo', navBarTitle: 'foo', content: 'hello mdx' },
   },
