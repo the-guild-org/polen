@@ -9,16 +9,19 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 ## Essential Commands
 
 ### Development
+
 - `pnpm dev` - Start development mode (watches for changes)
 - `pnpm sandbox` or `pnpm sb` - Run sandbox.ts for quick testing
 
 ### Testing
+
 - `pnpm test:unit` - Run unit tests
 - `pnpm test:integration` - Run integration tests
 - `pnpm test:examples` - Run e2e tests on example projects
 - To run a single test: use Vitest's `-t` flag, e.g., `pnpm test:unit -t "test name"`
 
 ### Build & Quality
+
 - `pnpm build` - Build the TypeScript project
 - `pnpm check` - Run all checks (lint, types, format, package)
 - `pnpm fix` - Auto-fix lint and format issues
@@ -26,6 +29,7 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 - `pnpm check:lint` - Run ESLint
 
 ### CLI Usage
+
 - `npx polen build` - Build a developer portal
 - `npx polen dev` - Start development server
 - `npx polen open <graphql-endpoint>` - Instant schema explorer
@@ -33,6 +37,7 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 ## High-Level Architecture
 
 ### Module Organization
+
 - **src/cli/** - Command-line interface
 - **src/api/** - Core configuration and build system (defineConfig, schema handling, Vite plugins)
 - **src/template/** - React-based UI components and routes
@@ -48,16 +53,19 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 5. **Schema Augmentations**: Allows enhancing GraphQL schema descriptions programmatically
 
 ### Testing Architecture
+
 - Unit tests are co-located with modules (`.test.ts` files)
 - Integration tests test granular features in isolation
 - Example tests verify end-to-end functionality using real example projects
 
 ### Development Workflow
+
 1. Run `pnpm dev` in one terminal for Polen development
 2. Run example project commands in another terminal to test changes
 3. Examples in `examples/` directory serve as both documentation and test sources
 
 ### Code Style Requirements
+
 - Uses dprint for formatting (ASI, single quotes)
 - ESLint with TypeScript rules
 - Backticks for strings (except in test files due to Zed IDE limitation)
