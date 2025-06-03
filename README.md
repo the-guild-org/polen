@@ -179,7 +179,12 @@ Example:
 
 Markdown files (`.md`) are supported using [remark](https://remark.js.org/). This is the same underlying engine as [MDX](https://mdxjs.com/) thus you can rely on consistent behavior between your `.md` and `.mdx` files.
 
-Polen supports [CommonMark](https://commonmark.org/).
+Polen supports:
+
+- [CommonMark](https://commonmark.org/).
+- [GitHub Flavored Markdown](https://github.github.com/gfm/).
+
+In the future you will be able to extend Polen in your project with additional [Remark plugins](https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins). Track this feature in [#64](https://github.com/the-guild-org/polen/issues/64).
 
 If you're new to Markdown, here are some great resources to get started:
 
@@ -189,6 +194,8 @@ If you're new to Markdown, here are some great resources to get started:
 
 Syntax features available to you include:
 
+**Via CommonMark:**
+
 - Headers, paragraphs, and line breaks
 - Bold, italic, and code formatting
 - Lists (ordered and unordered)
@@ -196,6 +203,13 @@ Syntax features available to you include:
 - Code blocks with syntax highlighting
 - Blockquotes
 - Horizontal rules
+
+**Via GitHub Flavored Markdown:**
+
+- Tables
+- Task lists
+- Strikethrough text
+- Autolinks
 
 #### MDX
 

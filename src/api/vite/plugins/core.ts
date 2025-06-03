@@ -6,6 +6,7 @@ import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import mdx from '@mdx-js/rollup'
 import { Cache, Fs, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
+import remarkGfm from 'remark-gfm'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
 import type { Configurator } from '../../configurator/index.js'
@@ -46,7 +47,11 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
     // @see https://mdxjs.com/docs/getting-started/#vite
     {
       enforce: `pre`,
-      ...mdx(),
+      ...mdx({
+        remarkPlugins: [
+          remarkGfm,
+        ],
+      }),
     },
     {
       name: `polen:markdown`,
