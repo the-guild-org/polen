@@ -59,6 +59,7 @@ jobs:
         with:
           pattern: blob-report-${{ inputs.project-name }}-*
           merge-multiple: true
+          path: blob-report
       - name: Merge reports
         run: pnpm exec playwright merge-reports --reporter html ./blob-report
       - uses: actions/upload-artifact@v4
