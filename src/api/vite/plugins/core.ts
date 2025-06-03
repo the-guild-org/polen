@@ -2,7 +2,7 @@ import { Marked } from '#dep/marked/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Fs, Json, Path, Str } from '@wollybeard/kit'
+import { Cache, Fs, Idx, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
@@ -199,57 +199,64 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
         identifier: viProjectPages,
         async loader() {
           const pagesScanResult = await scanPageRoutes()
-          
-          // In development, we'll load content lazily
+
+          //
+          // ─ Development Module
+          //
+
           if (isServing) {
-            const pageRouteMap: Record<string, string> = {}
-            
-            // Just map routes to file paths for lazy loading
-            for (const route of pagesScanResult.routes) {
-              const routePath = FileRouter.routeToString(route)
-              pageRouteMap[routePath] = Path.format(route.file.path.absolute)
-            }
-            
-            const moduleContent = `
-              import { Marked } from '#dep/marked/index.js'
-              import { Fs } from '@wollybeard/kit'
-              
-              const pageRouteMap = ${JSON.stringify(pageRouteMap)}
-              
+            const routesByFilePathAbsolute = Idx.fromArray(pagesScanResult.routes, { toKey: FileRouter.routeToString })
+
+            const content = `
+              const routesByFilePathAbsolute = ${JSON.stringify(routesByFilePathAbsolute)}
+
               export const load = async (routePath) => {
-                const filePath = pageRouteMap[routePath]
+                const filePath = routesByFilePathAbsolute[routePath]?.file.path.absolute
                 if (!filePath) return null
-                
-                const markdownContent = await Fs.read(filePath)
-                if (!markdownContent) return null
-                
-                return await Marked.parse(markdownContent)
+
+                try {
+                  // Dynamic import of the markdown file - Vite will handle the .md processing
+                  const module = await import(filePath)
+                  return module.default
+                } catch {
+                  return null
+                }
               }
-              
+
               export const data = null // Not used in dev mode
             `
-            
-            return moduleContent
+
+            return content
           }
-          
-          // In production build, pre-process all content
-          const pageContentMap: Record<string, string> = {}
-          
-          for (const route of pagesScanResult.routes) {
+
+          //
+          // ─ Production Module
+          //
+
+          const content = Str.Builder()
+
+          content(`// Production Build of Project Pages`)
+          content(`// All pages are preprocessed into HTML and bundled.`)
+          content(``)
+
+          content(`// Static imports for all markdown files`)
+          pagesScanResult.routes.forEach((route, index) => {
+            const filePath = Path.format(route.file.path.absolute)
+            const importName = `page${index.toString()}`
+
+            content(`import ${importName} from '${filePath}'`)
+          })
+          content()
+          content(`export const data = {`)
+          pagesScanResult.routes.forEach((route, index) => {
             const routePath = FileRouter.routeToString(route)
-            const markdownContent = await Fs.read(Path.format(route.file.path.absolute))
-            if (markdownContent) {
-              const htmlContent = await Marked.parse(markdownContent)
-              pageContentMap[routePath] = htmlContent
-            }
-          }
-          
-          const moduleContent = `
-            export const data = ${JSON.stringify(pageContentMap)}
-            export const load = null // Not used in production
-          `
-          
-          return moduleContent
+            content(`  '${routePath}': page${index.toString()}`)
+          })
+          content(`}`)
+          content()
+          content(`export const load = null // Not used in production`)
+
+          return content.toString()
         },
       },
     ),
