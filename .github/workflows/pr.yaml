@@ -33,44 +33,18 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm check:types
   test-integration:
-    strategy:
-      matrix:
-        os: ['ubuntu-latest'] #, 'macos-latest', 'windows-latest'
-        node-version: [22.14.x]
-    runs-on: ${{matrix.os}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{matrix.node-version}}
-      - name: Install Playwright Binaries
-        uses: ./.github/actions/install-playwright-binaries
-      - run: pnpm build
-      - run: pnpm test:integration
+    uses: ./.github/workflows/_playwright-test.yaml
+    with:
+      project-name: integration
   test-unit:
-    strategy:
-      matrix:
-        os: ['ubuntu-latest'] #, 'macos-latest', 'windows-latest'
-        node-version: [22.14.x]
-    runs-on: ${{matrix.os}}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
         with:
-          node-version: ${{matrix.node-version}}
+          node-version: 22.14.x
       - run: pnpm test:unit
   test-examples:
-    strategy:
-      matrix:
-        os: ['ubuntu-latest'] #, 'macos-latest', 'windows-latest'
-        node-version: [22.14.x]
-    runs-on: ${{matrix.os}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: ${{matrix.node-version}}
-      - name: Install Playwright Binaries
-        uses: ./.github/actions/install-playwright-binaries
-      - run: pnpm build
-      - run: pnpm test:examples
+    uses: ./.github/workflows/_playwright-test.yaml
+    with:
+      project-name: examples

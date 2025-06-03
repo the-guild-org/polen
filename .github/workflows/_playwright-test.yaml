@@ -1,0 +1,69 @@
+name: playwright-test
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'Playwright project name (e.g., integration, examples)'
+        required: true
+        type: string
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '22.14.x'
+      os:
+        description: 'Operating system'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: ['${{ inputs.os }}']
+        node-version: ['${{ inputs.node-version }}']
+        shard: [1, 2]
+        total-shards: [2]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install Playwright Binaries
+        uses: ./.github/actions/install-playwright-binaries
+      - run: pnpm build
+      - run: pnpm exec playwright test --config tests/playwright.config.ts --project=${{ inputs.project-name }} --shard=${{ matrix.shard }}/${{ matrix.total-shards }} --reporter=blob
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: .blob-report-${{ inputs.project-name }}-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+  merge-reports:
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Install Playwright Binaries
+        uses: ./.github/actions/install-playwright-binaries
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: .blob-report-${{ inputs.project-name }}-*
+          merge-multiple: true
+          path: blob-report
+      - name: Merge reports
+        run: pnpm exec playwright merge-reports --reporter html ./blob-report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ inputs.project-name }}
+          path: playwright-report/
+          retention-days: 7
