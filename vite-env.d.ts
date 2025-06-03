@@ -94,19 +94,14 @@ declare module 'virtual:polen/template/variables' {
   export const templateVariables: import('#api/configurator/configurator.js').TemplateVariables
 }
 
-declare module 'virtual:polen/project/pages.jsx' {
-  export const pages: import('react-router').RouteObject[]
-}
 
 declare module 'virtual:polen/project/data' {
   export const PROJECT_DATA: import('#project-data.js').ProjectData
 }
 
-// todo: rename: project/pages
-declare module 'virtual:polen/project/page-content' {
-  export const pageContent: Record<string, string> | null
-  export const loadPageContent: ((routePath: string) => Promise<string | null>) | null
-  export const pageRouteMap: Record<string, string> | null
+declare module 'virtual:polen/project/pages' {
+  export const data: Record<string, string> | null
+  export const load: ((routePath: string) => Promise<string | null>) | null
 }
 
 declare module 'virtual:polen/template/schema-augmentations' {

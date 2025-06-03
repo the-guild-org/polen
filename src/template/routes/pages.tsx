@@ -1,7 +1,7 @@
 import type { React } from '#dep/react/index.js'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { Outlet } from 'react-router'
-import { loadPageContent, pageContent } from 'virtual:polen/project/page-content'
+import * as ProjectPages from 'virtual:polen/project/pages'
 
 const stripTrailingSeparator = (str: string) => str.replace(/\/$/, ``)
 
@@ -11,12 +11,12 @@ export const pagesLoader = createLoader(async ({ params }: { params: { '*': stri
 
   let content: string | null = null
 
-  if (__SERVING__ && loadPageContent) {
+  if (__SERVING__ && ProjectPages.load) {
     // Development mode: load content lazily
-    content = await loadPageContent(splatValueNormalized)
-  } else if (pageContent) {
+    content = await ProjectPages.load(splatValueNormalized)
+  } else if (ProjectPages.data) {
     // Production mode: use pre-built content
-    content = pageContent[splatValueNormalized] ?? null
+    content = ProjectPages.data[splatValueNormalized] ?? null
   }
 
   return {

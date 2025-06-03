@@ -15,7 +15,7 @@ import { vi as pvi } from '../vi.js'
 const viTemplateVariables = pvi([`template`, `variables`])
 const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
 const viProjectData = pvi([`project`, `data`])
-const viPageContent = pvi([`project`, `page-content`])
+const viProjectPages = pvi([`project`, `pages`])
 
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
   let isServing = false
@@ -196,7 +196,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
       //   },
       // },
       {
-        identifier: viPageContent,
+        identifier: viProjectPages,
         async loader() {
           const pagesScanResult = await scanPageRoutes()
           
@@ -214,9 +214,9 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
               import { Marked } from '#dep/marked/index.js'
               import { Fs } from '@wollybeard/kit'
               
-              export const pageRouteMap = ${JSON.stringify(pageRouteMap)}
+              const pageRouteMap = ${JSON.stringify(pageRouteMap)}
               
-              export const loadPageContent = async (routePath) => {
+              export const load = async (routePath) => {
                 const filePath = pageRouteMap[routePath]
                 if (!filePath) return null
                 
@@ -226,7 +226,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
                 return await Marked.parse(markdownContent)
               }
               
-              export const pageContent = null // Not used in dev mode
+              export const data = null // Not used in dev mode
             `
             
             return moduleContent
@@ -245,9 +245,8 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           }
           
           const moduleContent = `
-            export const pageContent = ${JSON.stringify(pageContentMap)}
-            export const loadPageContent = null // Not used in production
-            export const pageRouteMap = null // Not used in production
+            export const data = ${JSON.stringify(pageContentMap)}
+            export const load = null // Not used in production
           `
           
           return moduleContent
