@@ -1,7 +1,7 @@
 import type { ReactRouter } from '#dep/react-router/index.js'
 import { createRoute } from '#lib/react-router-aid/react-router-aid.js'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
-import { Box, Text } from '@radix-ui/themes'
+import { Box, Button, Heading, Text } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Link as LinkReactRouter } from 'react-router'
@@ -120,10 +120,39 @@ if (PROJECT_DATA.schema) {
 //
 //
 
+const NotFoundComponent = () => {
+  return (
+    <Flex direction='column' align='center' gap='6' style={{ textAlign: `center`, paddingTop: `4rem` }}>
+      <Heading size='9' style={{ color: `var(--gray-12)` }}>404</Heading>
+      <Box>
+        <Heading size='5' mb='2'>Page Not Found</Heading>
+        <Text size='3' color='gray'>
+          The page you're looking for doesn't exist or has been moved.
+        </Text>
+      </Box>
+      <Flex gap='3'>
+        <LinkReactRouter to='/'>
+          <Button variant='soft' size='3'>
+            Go Home
+          </Button>
+        </LinkReactRouter>
+        <LinkReactRouter to='/reference'>
+          <Button variant='outline' size='3'>
+            View API Reference
+          </Button>
+        </LinkReactRouter>
+      </Flex>
+    </Flex>
+  )
+}
+
 const notFoundRoute = createRoute({
   id: `*_not_found`,
   path: `*`,
-  Component: () => <h1>Not Found</h1>,
+  Component: NotFoundComponent,
+  handle: {
+    statusCode: 404,
+  },
 })
 children.push(notFoundRoute)
 

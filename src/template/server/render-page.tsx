@@ -1,4 +1,6 @@
 import type { ReactRouter } from '#dep/react-router/index.js'
+import type { ReactRouterAid } from '#lib/react-router-aid/index.js'
+import { Arr } from '@wollybeard/kit'
 import { StrictMode } from 'react'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
@@ -37,10 +39,30 @@ export const renderPage = (
   const headers = getRouteHeaders(staticHandlerContext)
   headers.set(`Content-Type`, `text/html; charset=utf-8`)
 
+  // Check for custom status code in route handle
+  const statusCode = getStatusCode(staticHandlerContext)
+
   return new Response(`<!DOCTYPE html>${html}`, {
-    status: staticHandlerContext.statusCode,
+    status: statusCode,
     headers,
   })
+}
+
+const getStatusCode = (
+  context: ReactRouter.StaticHandlerContext,
+): number => {
+  // First check if React Router set a status code
+  if (context.statusCode && context.statusCode !== 200) {
+    return context.statusCode
+  }
+
+  // Then check for custom status in route handle
+  const handle = Arr.last(context.matches)?.route.handle as undefined | ReactRouterAid.RouteHandle
+  if (handle?.statusCode) {
+    return handle.statusCode
+  }
+
+  return 200
 }
 
 const getRouteHeaders = (
