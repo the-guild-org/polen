@@ -99,8 +99,8 @@ declare module 'virtual:polen/project/data' {
 }
 
 declare module 'virtual:polen/project/pages' {
-  export const data: Record<string, string> | null
-  export const load: ((routePath: string) => Promise<string | null>) | null
+  export const data: import('#api/vite/plugins/core.js').ProjectPagesModule['data']
+  export const load: import('#api/vite/plugins/core.js').ProjectPagesModule['load']
 }
 
 declare module 'virtual:polen/template/schema-augmentations' {

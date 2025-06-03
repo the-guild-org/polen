@@ -2,7 +2,7 @@ import { Marked } from '#dep/marked/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
-import { Cache, Fs, Idx, Json, Path, Str } from '@wollybeard/kit'
+import { Cache, Fs, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
@@ -15,7 +15,12 @@ import { vi as pvi } from '../vi.js'
 const viTemplateVariables = pvi([`template`, `variables`])
 const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
 const viProjectData = pvi([`project`, `data`])
+
 const viProjectPages = pvi([`project`, `pages`])
+export interface ProjectPagesModule {
+  data: Record<string, string> | null
+  load: ((routePath: string) => Promise<string | null>) | null
+}
 
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
   let isServing = false
@@ -180,13 +185,15 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           //
 
           if (isServing) {
-            const routesByFilePathAbsolute = Idx.fromArray(pagesScanResult.routes, { toKey: FileRouter.routeToString })
+            const routePathsToFilePaths = fromEntries(pagesScanResult.routes.map((route) => {
+              return [FileRouter.routeToString(route), Path.format(route.file.path.absolute)]
+            }))
 
             const content = `
-              const routesByFilePathAbsolute = ${JSON.stringify(routesByFilePathAbsolute)}
+              const routePathsToFilePaths = ${JSON.stringify(routePathsToFilePaths)}
 
               export const load = async (routePath) => {
-                const filePath = routesByFilePathAbsolute[routePath]?.file.path.absolute
+                const filePath = routePathsToFilePaths[routePath]
                 if (!filePath) return null
 
                 try {
@@ -236,4 +243,9 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
       },
     ),
   }]
+}
+
+// todo: to kit
+const fromEntries = <entry extends [PropertyKey, unknown]>(entries: entry[]): Record<entry[0], entry[1]> => {
+  return Object.fromEntries(entries) as any
 }
