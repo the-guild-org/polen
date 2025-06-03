@@ -36,27 +36,12 @@ jobs:
         uses: ./.github/actions/install-playwright-binaries
       - run: pnpm build
       - run: pnpm exec playwright test --config tests/playwright.config.ts --project=${{ inputs.project-name }} --shard=${{ matrix.shard }}/${{ matrix.total-shards }} --reporter=blob
-      - name: Check blob-report contents
-        if: always()
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          echo "Checking for blob-report directory:"
-          if [ -d "blob-report" ]; then
-            echo "blob-report exists"
-            ls -la blob-report/
-          else
-            echo "blob-report does not exist"
-          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: blob-report-${{ inputs.project-name }}-${{ matrix.shard }}
           path: blob-report/
           retention-days: 1
-          if-no-files-found: warn
 
   merge-reports:
     if: always()
@@ -75,31 +60,8 @@ jobs:
           pattern: blob-report-${{ inputs.project-name }}-*
           merge-multiple: true
           path: blob-report
-      - name: Check downloaded artifacts
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          echo "Checking blob-report directory:"
-          if [ -d "blob-report" ]; then
-            echo "blob-report exists with contents:"
-            ls -la blob-report/
-          else
-            echo "blob-report does not exist"
-            echo "Creating empty blob-report directory"
-            mkdir -p blob-report
-          fi
       - name: Merge reports
-        run: |
-          if [ -n "$(ls -A blob-report 2>/dev/null)" ]; then
-            echo "Merging reports..."
-            pnpm exec playwright merge-reports --reporter html ./blob-report
-          else
-            echo "No blob reports to merge, creating empty report"
-            mkdir -p playwright-report
-            echo "<html><body><h1>No test results</h1></body></html>" > playwright-report/index.html
-          fi
+        run: pnpm exec playwright merge-reports --reporter html ./blob-report
       - uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ inputs.project-name }}
