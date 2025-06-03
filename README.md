@@ -65,7 +65,7 @@ You can append/prepend/replace descriptions of types and fields in your schema.
 Any Markdown syntax in your content will be automatically rendered.
 
 ```ts
-import { Polen } from 'polen'
+import { Polen } from "polen";
 
 export default Polen.defineConfig({
   templateVariables: {
@@ -79,11 +79,10 @@ export default Polen.defineConfig({
         name: `Query`,
       },
       placement: `over`,
-      content:
-        `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
+      content: `**Content from [Polen](https://github.com/the-guild-org/polen)**.`,
     },
   ],
-})
+});
 ```
 
 ### Providing a Schema
@@ -127,7 +126,7 @@ Basic example:
 
 ```ts
 // polen.config.ts
-import { Polen } from 'polen'
+import { Polen } from "polen";
 
 export default Polen.defineConfig({
   schema: {
@@ -136,20 +135,22 @@ export default Polen.defineConfig({
       memory: {
         versions: [
           {
-            date: new Date('2023-01-13'),
+            date: new Date("2023-01-13"),
             value: `type Query { hello: String }`,
           },
         ],
       },
     },
   },
-})
+});
 ```
 
 ### Pages
 
-You can add pages to your developer portal by adding markdown files to the
-`pages` directory in your project root directory.
+You can add pages to your developer portal by adding markdown (`.md`) or MDX (`.mdx`) files to a
+`pages` directory.
+
+#### Routing
 
 - A file becomes a page.
 - The relative (to `pages` directory) file path becomes the web path.
@@ -165,11 +166,57 @@ You can add pages to your developer portal by adding markdown files to the
 
 Example:
 
-| File                 | Route      | Navigation Bar Title |
-| -------------------- | ---------- | -------------------- |
-| `pages/foo.md`       | `/foo`     | `Foo`                |
-| `pages/foo/index.md` | `/foo`     | `Foo`                |
-| `pages/foo/bar.md`   | `/foo/bar` | `Foo`                |
+| File                  | Route      | Navigation Bar Title |
+| --------------------- | ---------- | -------------------- |
+| `pages/foo.md`        | `/foo`     | `Foo`                |
+| `pages/foo.mdx`       | `/foo`     | `Foo`                |
+| `pages/foo/index.md`  | `/foo`     | `Foo`                |
+| `pages/foo/index.mdx` | `/foo`     | `Foo`                |
+| `pages/foo/bar.md`    | `/foo/bar` | `Foo`                |
+| `pages/foo/bar.mdx`   | `/foo/bar` | `Foo`                |
+
+#### Markdown Pages
+
+Standard markdown files (`.md`) are supported and will be rendered as HTML.
+
+#### MDX Pages
+
+MDX files (`.mdx`) allow you to use JSX/React components within your markdown content. This enables
+interactive documentation with live examples, custom components, and more.
+
+Example MDX page:
+
+```mdx
+# Interactive Documentation
+
+import { Button } from "@radix-ui/themes";
+
+This page demonstrates MDX features.
+
+<Button onClick={() => alert("Hello from MDX!")}>Click me!</Button>
+
+## Code Examples
+
+You can mix markdown with React components for powerful documentation:
+
+export const CodeExample = ({ language, code }) => (
+  <pre>
+    <code className={`language-${language}`}>{code}</code>
+  </pre>
+);
+
+<CodeExample
+  language="graphql"
+  code={`
+    query GetUser($id: ID!) {
+      user(id: $id) {
+        name
+        email
+      }
+    }
+  `}
+/>
+```
 
 ### Build
 
@@ -200,10 +247,10 @@ You can import a `Polen` namespace from `polen`. You can import its bare exports
 from `polen/polen`.
 
 ```ts
-import { Polen } from 'polen'
-import { defineConfig } from 'polen/polen'
+import { Polen } from "polen";
+import { defineConfig } from "polen/polen";
 
-console.log(Polen.defineConfig === defineConfig) // true
+console.log(Polen.defineConfig === defineConfig); // true
 ```
 
 ### Instant Schema Explorer
