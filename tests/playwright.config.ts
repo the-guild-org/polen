@@ -24,6 +24,7 @@ export default defineConfig({
     {
       name: `integration`,
       testDir: `./integration/cases`,
+      outputDir: `./integration/__results__`,
       use: {
         ...devices[`Desktop Chrome`],
       },
@@ -32,6 +33,7 @@ export default defineConfig({
     {
       name: `examples`,
       testDir: `./examples/cases`,
+      outputDir: `./examples/__results__`,
       use: {
         ...devices[`Desktop Chrome`],
         // Type assertion needed due to fixture types
