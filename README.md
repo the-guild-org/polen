@@ -177,7 +177,31 @@ Example:
 
 #### Markdown Pages
 
-Standard markdown files (`.md`) are supported and will be rendered as HTML.
+Standard markdown files (`.md`) are supported and will be rendered as HTML using [Marked](https://marked.js.org/).
+
+Marked supports the following "flavours". For more details refer to [their docs](https://marked.js.org/).
+
+- [Markdown 1.0](https://daringfireball.net/projects/markdown/) (100% compliant)
+- [CommonMark 0.31](https://spec.commonmark.org/0.31/) (98% compliant)
+- [GitHub Flavored Markdown 0.29](https://github.github.com/gfm/) (97% compliant)
+
+If you're new to Markdown, here are some great resources to get started:
+
+- **[CommonMark Tutorial](https://commonmark.org/help/)** - Interactive 10-minute tutorial
+- **[Markdown Guide](https://www.markdownguide.org/)** - Comprehensive reference and cheat sheets
+- **[Marked Documentation](https://marked.js.org/)** - Documentation for the markdown parser used by Polen
+
+Common features include:
+
+- Headers, paragraphs, and line breaks
+- Bold, italic, and code formatting
+- Lists (ordered and unordered)
+- Links and images
+- Code blocks with syntax highlighting
+- Tables
+- Blockquotes
+- Horizontal rules
+- Strikethrough text
 
 #### MDX Pages
 
