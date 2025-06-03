@@ -148,8 +148,10 @@ export default Polen.defineConfig({
 
 ### Pages
 
-You can add pages to your developer portal by adding markdown files to the
-`pages` directory in your project root directory.
+You can add pages to your developer portal by adding markdown (`.md`) or MDX (`.mdx`) files to a
+`pages` directory.
+
+#### Routing
 
 - A file becomes a page.
 - The relative (to `pages` directory) file path becomes the web path.
@@ -165,11 +167,91 @@ You can add pages to your developer portal by adding markdown files to the
 
 Example:
 
-| File                 | Route      | Navigation Bar Title |
-| -------------------- | ---------- | -------------------- |
-| `pages/foo.md`       | `/foo`     | `Foo`                |
-| `pages/foo/index.md` | `/foo`     | `Foo`                |
-| `pages/foo/bar.md`   | `/foo/bar` | `Foo`                |
+| File                  | Route      | Navigation Bar Title |
+| --------------------- | ---------- | -------------------- |
+| `pages/foo.md`        | `/foo`     | `Foo`                |
+| `pages/foo.mdx`       | `/foo`     | `Foo`                |
+| `pages/foo/index.md`  | `/foo`     | `Foo`                |
+| `pages/foo/index.mdx` | `/foo`     | `Foo`                |
+| `pages/foo/bar.md`    | `/foo/bar` | `Foo`                |
+| `pages/foo/bar.mdx`   | `/foo/bar` | `Foo`                |
+
+#### Markdown
+
+Markdown files (`.md`) are supported using [remark](https://remark.js.org/). This is the same underlying engine as [MDX](https://mdxjs.com/) thus you can rely on consistent behavior between your `.md` and `.mdx` files.
+
+Polen supports:
+
+- [CommonMark](https://commonmark.org/).
+- [GitHub Flavored Markdown](https://github.github.com/gfm/).
+
+In the future you will be able to extend Polen in your project with additional [Remark plugins](https://github.com/remarkjs/remark/blob/main/doc/plugins.md#list-of-plugins). Track this feature in [#64](https://github.com/the-guild-org/polen/issues/64).
+
+If you're new to Markdown, here are some great resources to get started:
+
+- **[CommonMark Tutorial](https://commonmark.org/help/)** - Interactive 10-minute tutorial
+- **[Markdown Guide](https://www.markdownguide.org/)** - Comprehensive reference and cheat sheets
+- **[GitHub's Markdown Guide](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)** - Practical guide with examples
+
+Syntax features available to you include:
+
+**Via CommonMark:**
+
+- Headers, paragraphs, and line breaks
+- Bold, italic, and code formatting
+- Lists (ordered and unordered)
+- Links and images
+- Code blocks with syntax highlighting
+- Blockquotes
+- Horizontal rules
+
+**Via GitHub Flavored Markdown:**
+
+- Tables
+- Task lists
+- Strikethrough text
+- Autolinks
+
+#### MDX
+
+MDX begins where [Markdown](#markdown) ends. So everything stated there such as regarding supported Markdown flavours applies here too.
+
+MDX files (`.mdx`) allow you to use JSX/React components within your markdown content. This enables
+interactive documentation with live examples, custom components, and more.
+
+Example MDX page:
+
+```mdx
+# Interactive Documentation
+
+import { Button } from "@radix-ui/themes";
+
+This page demonstrates MDX features.
+
+<Button onClick={() => alert("Hello from MDX!")}>Click me!</Button>
+
+## Code Examples
+
+You can mix markdown with React components for powerful documentation:
+
+export const CodeExample = ({ language, code }) => (
+  <pre>
+    <code className={`language-${language}`}>{code}</code>
+  </pre>
+);
+
+<CodeExample
+  language="graphql"
+  code={`
+    query GetUser($id: ID!) {
+      user(id: $id) {
+        name
+        email
+      }
+    }
+  `}
+/>
+```
 
 ### Build
 

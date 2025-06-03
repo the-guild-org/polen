@@ -1,9 +1,12 @@
-import { Marked } from '#dep/marked/index.js'
+import { Markdown } from '#api/singletons/markdown/index.js'
+import type { ReactRouter } from '#dep/react-router/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
+import mdx from '@mdx-js/rollup'
 import { Cache, Fs, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
+import remarkGfm from 'remark-gfm'
 import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
 import type { Configurator } from '../../configurator/index.js'
@@ -16,18 +19,16 @@ const viTemplateVariables = pvi([`template`, `variables`])
 const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
 const viProjectData = pvi([`project`, `data`])
 
-const viProjectPages = pvi([`project`, `pages`])
+const viProjectPages = pvi([`project`, `pages.jsx`], { allowPluginProcessing: true })
 export interface ProjectPagesModule {
-  data: Record<string, string> | null
-  load: ((routePath: string) => Promise<string | null>) | null
+  pages: ReactRouter.RouteObject[]
 }
 
 export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
-  let isServing = false
   const scanPageRoutes = Cache.memoize(async () =>
     await FileRouter.scan({
       dir: config.paths.project.absolute.pages,
-      glob: `**/*.md`,
+      glob: `**/*.{md,mdx}`,
     })
   )
   const readSchema = Cache.memoize(async () => {
@@ -42,210 +43,193 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
     return schema
   })
 
-  return [{
-    name: `polen:markdown`,
-    resolveId(id) {
-      if (id.endsWith(`.md`)) {
-        return id
-      }
-      return null
+  return [
+    // @see https://mdxjs.com/docs/getting-started/#vite
+    {
+      enforce: `pre`,
+      ...mdx({
+        remarkPlugins: [
+          remarkGfm,
+        ],
+      }),
     },
-    async load(id) {
-      if (id.endsWith(`.md`)) {
-        const markdownString = await Fs.read(id)
-        if (!markdownString) return null
-        const htmlString = await Marked.parse(markdownString)
-        const code = `export default ${JSON.stringify(htmlString)}`
-        return code
-      }
-      return null
-    },
-  }, {
-    name: `polen:core:alias`,
-    resolveId(id, importer) {
-      if (!(importer && pvi.includes(importer))) return null
+    {
+      name: `polen:markdown`,
+      enforce: `pre`,
+      resolveId(id) {
+        if (id.endsWith(`.md`)) {
+          return id
+        }
+        return null
+      },
+      async load(id) {
+        if (id.endsWith(`.md`)) {
+          const markdownString = await Fs.read(id)
+          if (!markdownString) return null
+          const htmlString = await Markdown.parse(markdownString)
 
-      const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
-      const match = Str.match(id, find)
-      if (!match) return null
-
-      const replacement = `${config.paths.framework.sourceDir}/${match.groups.path}`
-      return replacement
+          const code = `export default ${JSON.stringify(htmlString)}`
+          return code
+        }
+        return null
+      },
     },
-  }, {
-    name: `polen:core`,
-    config(_, { command }) {
-      isServing = command === `serve`
-      return {
-        root: config.paths.framework.rootDir,
-        define: {
-          __BUILDING__: Json.codec.serialize(command === `build`),
-          __SERVING__: Json.codec.serialize(command === `serve`),
-          __COMMAND__: Json.codec.serialize(command),
-          __BUILD_ARCHITECTURE__: Json.codec.serialize(config.build.architecture),
-          __BUILD_ARCHITECTURE_SSG__: Json.codec.serialize(config.build.architecture === `ssg`),
-        },
-        server: {
-          port: 3000,
-        },
-        customLogger: logger,
-        build: {
-          target: `esnext`,
-          assetsDir: config.paths.project.relative.build.relative.assets,
-          rollupOptions: {
-            treeshake: `smallest`,
+    {
+      name: `polen:core:alias`,
+      resolveId(id, importer) {
+        if (!(importer && pvi.includes(importer))) return null
+
+        const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
+        const match = Str.match(id, find)
+        if (!match) return null
+
+        const replacement = `${config.paths.framework.sourceDir}/${match.groups.path}`
+        return replacement
+      },
+    },
+    {
+      name: `polen:core`,
+      config(_, { command }) {
+        // isServing = command === `serve`
+        return {
+          root: config.paths.framework.rootDir,
+          define: {
+            __BUILDING__: Json.codec.serialize(command === `build`),
+            __SERVING__: Json.codec.serialize(command === `serve`),
+            __COMMAND__: Json.codec.serialize(command),
+            __BUILD_ARCHITECTURE__: Json.codec.serialize(config.build.architecture),
+            __BUILD_ARCHITECTURE_SSG__: Json.codec.serialize(config.build.architecture === `ssg`),
           },
-          minify: !config.advanced.debug,
-          outDir: config.paths.project.absolute.build.root,
-          emptyOutDir: true, // disables warning that build dir not in root dir; expected b/c root dir = framework package
-        },
-      }
-    },
-    ...ViteVirtual.IdentifiedLoader.toHooks(
-      {
-        identifier: viTemplateVariables,
-        loader() {
-          const moduleContent = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
-          return moduleContent
-        },
-      },
-      {
-        identifier: viTemplateSchemaAugmentations,
-        loader() {
-          const moduleContent = `export const schemaAugmentations = ${JSON.stringify(config.schemaAugmentations)}`
-          return moduleContent
-        },
-      },
-      {
-        identifier: viProjectData,
-        async loader() {
-          // todo: parallel
-          const schema = await readSchema()
-          const pagesScanResult = await scanPageRoutes()
-
-          const siteNavigationItems: SiteNavigationItem[] = []
-
-          const siteNavigationItemsFromTopLevelPages = pagesScanResult.routes
-            // We exclude home page
-            .filter(route => route.path.segments.length === 1)
-            .map(route => {
-              const path = FileRouter.routeToString(route)
-              console.log(path)
-              const title = Str.titlizeSlug(path)
-              return {
-                path,
-                title,
-              }
-            })
-
-          siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
-
-          if (schema) {
-            siteNavigationItems.push({ path: `/reference`, title: `Reference` })
-            if (schema.versions.length > 1) {
-              siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
-            }
-          }
-
-          const projectData: ProjectData = {
-            schema,
-            siteNavigationItems,
-            faviconPath: `/logo.svg`,
-            pagesScanResult: pagesScanResult,
-            paths: config.paths.project,
-            server: {
-              static: {
-                // todo
-                // relative from CWD of process that boots n1ode server
-                // can easily break! Use path relative in server??
-                directory: `./` + config.paths.project.relative.build.root,
-                // Uses Hono route syntax.
-                route: `/` + config.paths.project.relative.build.relative.assets + `/*`,
-              },
+          server: {
+            port: 3000,
+          },
+          customLogger: logger,
+          build: {
+            target: `esnext`,
+            assetsDir: config.paths.project.relative.build.relative.assets,
+            rollupOptions: {
+              treeshake: `smallest`,
             },
-          }
+            minify: !config.advanced.debug,
+            outDir: config.paths.project.absolute.build.root,
+            emptyOutDir: true, // disables warning that build dir not in root dir; expected b/c root dir = framework package
+          },
+        }
+      },
+      ...ViteVirtual.IdentifiedLoader.toHooks(
+        {
+          identifier: viTemplateVariables,
+          loader() {
+            const s = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
+            return s
+          },
+        },
+        {
+          identifier: viTemplateSchemaAugmentations,
+          loader() {
+            const s = `export const schemaAugmentations = ${JSON.stringify(config.schemaAugmentations)}`
+            return s
+          },
+        },
+        {
+          identifier: viProjectData,
+          async loader() {
+            // todo: parallel
+            const schema = await readSchema()
+            const pagesScanResult = await scanPageRoutes()
 
-          const projectDataCode = jsesc(superjson.stringify(projectData))
-          const content = `
+            const siteNavigationItems: SiteNavigationItem[] = []
+
+            const siteNavigationItemsFromTopLevelPages = pagesScanResult.routes
+              // We exclude home page
+              .filter(route => route.path.segments.length === 1)
+              .map(route => {
+                const path = FileRouter.routeToString(route)
+                const title = Str.titlizeSlug(path)
+                return {
+                  path,
+                  title,
+                }
+              })
+
+            siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
+
+            if (schema) {
+              siteNavigationItems.push({ path: `/reference`, title: `Reference` })
+              if (schema.versions.length > 1) {
+                siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
+              }
+            }
+
+            const projectData: ProjectData = {
+              schema,
+              siteNavigationItems,
+              faviconPath: `/logo.svg`,
+              pagesScanResult: pagesScanResult,
+              paths: config.paths.project,
+              server: {
+                static: {
+                  // todo
+                  // relative from CWD of process that boots n1ode server
+                  // can easily break! Use path relative in server??
+                  directory: `./` + config.paths.project.relative.build.root,
+                  // Uses Hono route syntax.
+                  route: `/` + config.paths.project.relative.build.relative.assets + `/*`,
+                },
+              },
+            }
+
+            const projectDataCode = jsesc(superjson.stringify(projectData))
+            const content = `
             import { superjson } from '#singletons/superjson.js'
 
             export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `
 
-          return content
-        },
-      },
-      {
-        identifier: viProjectPages,
-        async loader() {
-          const pagesScanResult = await scanPageRoutes()
-
-          //
-          // ─ Development Module
-          //
-
-          if (isServing) {
-            const routePathsToFilePaths = fromEntries(pagesScanResult.routes.map((route) => {
-              return [FileRouter.routeToString(route), Path.format(route.file.path.absolute)]
-            }))
-
-            const content = `
-              const routePathsToFilePaths = ${JSON.stringify(routePathsToFilePaths)}
-
-              export const load = async (routePath) => {
-                const filePath = routePathsToFilePaths[routePath]
-                if (!filePath) return null
-
-                try {
-                  // Dynamic import of the markdown file - Vite will handle the .md processing
-                  const module = await import(filePath)
-                  return module.default
-                } catch {
-                  return null
-                }
-              }
-
-              export const data = null // Not used in dev mode
-            `
-
             return content
-          }
-
-          //
-          // ─ Production Module
-          //
-
-          const content = Str.Builder()
-
-          content(`// Production Build of Project Pages`)
-          content(`// All pages are preprocessed into HTML and bundled.`)
-          content(``)
-
-          content(`// Static imports for all markdown files`)
-          pagesScanResult.routes.forEach((route, index) => {
-            const filePath = Path.format(route.file.path.absolute)
-            const importName = `page${index.toString()}`
-
-            content(`import ${importName} from '${filePath}'`)
-          })
-          content()
-          content(`export const data = {`)
-          pagesScanResult.routes.forEach((route, index) => {
-            const routePath = FileRouter.routeToString(route)
-            content(`  '${routePath}': page${index.toString()}`)
-          })
-          content(`}`)
-          content()
-          content(`export const load = null // Not used in production`)
-
-          return content.toString()
+          },
         },
-      },
-    ),
-  }]
-}
+        {
+          identifier: viProjectPages,
+          async loader() {
+            const pagesScanResult = await scanPageRoutes()
 
-// todo: to kit
-const fromEntries = <entry extends [PropertyKey, unknown]>(entries: entry[]): Record<entry[0], entry[1]> => {
-  return Object.fromEntries(entries) as any
+            const $ = {
+              pages: `pages`,
+            }
+
+            const s = Str.Builder()
+            s`export const ${$.pages} = []`
+
+            // todo: kit fs should accept parsed file paths
+            for (const route of pagesScanResult.routes) {
+              const filePath = Path.format(route.file.path.absolute)
+              const path = FileRouter.routeToString(route)
+              const ident = Str.Case.camel(`page ` + Str.titlizeSlug(path))
+
+              s`
+                import ${ident} from '${filePath}'
+
+                ${$.pages}.push({
+                  path: '${path}',
+                  Component: () => {
+                    if (typeof ${ident} === 'function') {
+                      // ━ MDX
+                      const Component = ${ident}
+                      return <Component />
+                    } else {
+                      // ━ MD
+                      return <div dangerouslySetInnerHTML={{ __html: ${ident} }} />
+                    }
+                  }
+                })
+              `
+            }
+
+            return s.render()
+          },
+        },
+      ),
+    },
+  ]
 }
