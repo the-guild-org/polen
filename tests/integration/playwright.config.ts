@@ -13,7 +13,8 @@ export default defineConfig({
   outputDir: `./__results__`,
   use: {
     trace: `on-first-retry`,
-    screenshot: `only-on-failure`,
+    screenshot: isCi ? `only-on-failure` : `off`,
+    video: isCi ? `retain-on-failure` : `off`,
   },
   projects: [
     {
