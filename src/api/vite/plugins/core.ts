@@ -120,15 +120,15 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
         {
           identifier: viTemplateVariables,
           loader() {
-            const moduleContent = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
-            return moduleContent
+            const s = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
+            return s
           },
         },
         {
           identifier: viTemplateSchemaAugmentations,
           loader() {
-            const moduleContent = `export const schemaAugmentations = ${JSON.stringify(config.schemaAugmentations)}`
-            return moduleContent
+            const s = `export const schemaAugmentations = ${JSON.stringify(config.schemaAugmentations)}`
+            return s
           },
         },
         {

@@ -3,7 +3,7 @@ import { React } from '#dep/react/index.js'
 import type { FC } from 'react'
 
 export const Markdown: FC<{ children: string }> = ({ children }) => {
-  const [html, setHtml] = React.useState<string>(``)
+  const [html, setHtml] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     const processMarkdown = async () => {
@@ -14,6 +14,11 @@ export const Markdown: FC<{ children: string }> = ({ children }) => {
     // eslint-disable-next-line
     processMarkdown()
   }, [children])
+
+  // Show plain text content during initial render (SSR/SSG) and while loading
+  if (html === null) {
+    return <div>{children}</div>
+  }
 
   return <div dangerouslySetInnerHTML={{ __html: html }} />
 }
