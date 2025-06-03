@@ -50,6 +50,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
     },
     {
       name: `polen:markdown`,
+      enforce: `pre`,
       resolveId(id) {
         if (id.endsWith(`.md`)) {
           return id
