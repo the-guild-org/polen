@@ -30,7 +30,7 @@ test('renders markdown as HTML in schema type descriptions', async ({ page, vite
   await expect(page.locator('code').filter({ hasText: 'code' })).toBeVisible()
   await expect(page.locator('li').filter({ hasText: 'A list item' })).toBeVisible()
   await expect(page.locator('li').filter({ hasText: 'Another item' })).toBeVisible()
-  
+
   // Check field description has bold text
   await expect(page.locator('strong').filter({ hasText: 'bold' })).toBeVisible()
 })
@@ -89,14 +89,14 @@ test('renders markdown in field and type descriptions', async ({ page, vite }) =
   })
 
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
-  
+
   // Check Query field description
   await page.goto(viteDevServer.url('/reference/Query').href)
   await expect(page.locator('strong').filter({ hasText: 'status' })).toBeVisible()
-  
+
   // Check enum type description
   await page.goto(viteDevServer.url('/reference/Status').href)
   await expect(page.locator('strong').filter({ hasText: 'markdown' })).toBeVisible()
-  
+
   // Note: Enum value descriptions are not currently rendered in the UI
 })
