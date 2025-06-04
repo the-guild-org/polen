@@ -1,5 +1,5 @@
 import { Idx, Path } from '@wollybeard/kit'
-import { type Route, type RouteFile, routeIsIndex, routeToString } from './route.js'
+import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.js'
 
 export type Diagnostic = DiagnosticIndexConflict
 
@@ -21,7 +21,7 @@ export interface LintResult {
 export const lint = (routes: Route[]): LintResult => {
   const diagnostics: Diagnostic[] = []
 
-  const seen = Idx.create({ toKey: routeToString })
+  const seen = Idx.create({ toKey: routeToPathExpression })
 
   // ━ Check for conflict between index and literal.
   //   Note: There is no other way for paths to conflict so we safely assuming the cause is index+literal.
@@ -31,7 +31,7 @@ export const lint = (routes: Route[]): LintResult => {
 
     if (seenRoute) {
       // Fix - ignore the index
-      const [index, literal] = routeIsIndex(route) ? [route, seenRoute] : [seenRoute, route]
+      const [index, literal] = routeIsFromIndexFile(route) ? [route, seenRoute] : [seenRoute, route]
       if (seenRoute === index) {
         seen.set(route)
       }

@@ -1,13 +1,12 @@
-import { Markdown } from '#api/singletons/markdown/index.js'
 import type { ReactRouter } from '#dep/react-router/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import mdx from '@mdx-js/rollup'
-import { Cache, Fs, Json, Path, Str } from '@wollybeard/kit'
+import { Cache, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import remarkGfm from 'remark-gfm'
-import type { ProjectData, SiteNavigationItem } from '../../../project-data.js'
+import type { ProjectData, Sidebar, SidebarItem, SiteNavigationItem } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
 import type { Configurator } from '../../configurator/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
@@ -53,27 +52,31 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
         ],
       }),
     },
-    {
-      name: `polen:markdown`,
-      enforce: `pre`,
-      resolveId(id) {
-        if (id.endsWith(`.md`)) {
-          return id
-        }
-        return null
-      },
-      async load(id) {
-        if (id.endsWith(`.md`)) {
-          const markdownString = await Fs.read(id)
-          if (!markdownString) return null
-          const htmlString = await Markdown.parse(markdownString)
+    // TODO: We can remove, mdx subsumes this
+    // TODO: First we need to investigate how e can make our api singleton Markdown used by MDX.
+    // If we cannot, then we might want to ditch MDX instead and use our lower level solution here.
+    // It depends in part on how complex our Markdown singleton gets.
+    // {
+    //   name: `polen:markdown`,
+    //   enforce: `pre`,
+    //   resolveId(id) {
+    //     if (id.endsWith(`.md`)) {
+    //       return id
+    //     }
+    //     return null
+    //   },
+    //   async load(id) {
+    //     if (id.endsWith(`.md`)) {
+    //       const markdownString = await Fs.read(id)
+    //       if (!markdownString) return null
+    //       const htmlString = await Markdown.parse(markdownString)
 
-          const code = `export default ${JSON.stringify(htmlString)}`
-          return code
-        }
-        return null
-      },
-    },
+    //       const code = `export default ${JSON.stringify(htmlString)}`
+    //       return code
+    //     }
+    //     return null
+    //   },
+    // },
     {
       name: `polen:core:alias`,
       resolveId(id, importer) {
@@ -136,35 +139,84 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
           async loader() {
             // todo: parallel
             const schema = await readSchema()
-            console.log({ schema })
             const pagesScanResult = await scanPageRoutes()
 
             const siteNavigationItems: SiteNavigationItem[] = []
 
-            const siteNavigationItemsFromTopLevelPages = pagesScanResult.routes
-              // We exclude home page
-              .filter(route => route.path.segments.length === 1)
-              .map(route => {
-                const path = FileRouter.routeToString(route)
-                const title = Str.titlizeSlug(path)
-                return {
-                  path,
-                  title,
-                }
-              })
+            //
+            // ━━ Build Navbar
+            //
 
-            siteNavigationItems.push(...siteNavigationItemsFromTopLevelPages)
+            // ━ Top pages become navigation items
+            const topPages = pagesScanResult.routes.filter(FileRouter.routeIsTopLevel)
 
-            if (schema) {
-              siteNavigationItems.push({ path: `/reference`, title: `Reference` })
-              if (schema.versions.length > 1) {
-                siteNavigationItems.push({ path: `/changelog`, title: `Changelog` })
+            for (const page of topPages) {
+              const path = FileRouter.routeToPathExpression(page)
+              const title = Str.titlizeSlug(path)
+              siteNavigationItems.push({ pathExp: path, title })
+            }
+
+            // ━ Top directories become navigation items
+            const topDirsPaths = pagesScanResult.routes
+              .filter(FileRouter.routeIsSubLevel)
+              // todo: kit, slice that understands non-empty
+              // Arr.slice(route.path.segments, 1)
+              .map(route => [route.logical.path[0]])
+
+            for (const dir of topDirsPaths) {
+              const pathExp = FileRouter.pathToExpression(dir)
+              const title = Str.titlizeSlug(pathExp)
+              // todo: this should never happen, if it does, swarn user
+              // Only add if not already added as a top page
+              if (!siteNavigationItems.some(item => item.pathExp === pathExp)) {
+                siteNavigationItems.push({ pathExp: pathExp, title })
               }
+            }
+
+            // ━ Schema presence causes adding some navbar items
+            if (schema) {
+              siteNavigationItems.push({ pathExp: `/reference`, title: `Reference` })
+              if (schema.versions.length > 1) {
+                siteNavigationItems.push({ pathExp: `/changelog`, title: `Changelog` })
+              }
+            }
+
+            //
+            // ━━ Build Sidebar
+            //
+
+            const sidebar: Sidebar = {}
+
+            for (const dirPath of topDirsPaths) {
+              const childPages = pagesScanResult.routes.filter(page => FileRouter.routeIsSubOf(page, dirPath))
+
+              const sidebarItems: SidebarItem[] = []
+
+              // ━ Pages in this dir become sidebar items
+              for (const childPage of childPages) {
+                const childPageRelative = FileRouter.makeRelativeUnsafe(childPage, dirPath)
+
+                if (FileRouter.routeIsRootLevel(childPageRelative)) {
+                  // We elide root from items. Root represents this whole group of items.
+                  continue
+                }
+
+                if (FileRouter.routeIsTopLevel(childPageRelative)) {
+                  const pathExp = FileRouter.routeToPathExpression(childPage)
+                  const relativePathExp = FileRouter.routeToPathExpression(childPageRelative)
+                  const title = Str.titlizeSlug(relativePathExp)
+                  sidebarItems.push({ pathExp, title })
+                }
+                // TODO: Handle nested directories in phase 3
+              }
+
+              sidebar[FileRouter.pathToExpression(dirPath)] = sidebarItems
             }
 
             const projectData: ProjectData = {
               schema,
               siteNavigationItems,
+              sidebar,
               faviconPath: `/logo.svg`,
               pagesScanResult: pagesScanResult,
               paths: config.paths.project,
@@ -204,25 +256,16 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
 
             // todo: kit fs should accept parsed file paths
             for (const route of pagesScanResult.routes) {
-              const filePath = Path.format(route.file.path.absolute)
-              const path = FileRouter.routeToString(route)
-              const ident = Str.Case.camel(`page ` + Str.titlizeSlug(path))
+              const filePathExp = Path.format(route.file.path.absolute)
+              const pathExp = FileRouter.routeToPathExpression(route)
+              const ident = Str.Case.camel(`page ` + Str.titlizeSlug(pathExp))
 
               s`
-                import ${ident} from '${filePath}'
+                import ${ident} from '${filePathExp}'
 
                 ${$.pages}.push({
-                  path: '${path}',
-                  Component: () => {
-                    if (typeof ${ident} === 'function') {
-                      // ━ MDX
-                      const Component = ${ident}
-                      return <Component />
-                    } else {
-                      // ━ MD
-                      return <div dangerouslySetInnerHTML={{ __html: ${ident} }} />
-                    }
-                  }
+                  path: '${pathExp}',
+                  Component: ${ident}
                 })
               `
             }
