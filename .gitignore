@@ -17,6 +17,9 @@ examples/_tests/__results__
 test-results
 __results__
 
+# AI
+CLAUDE_SESSION.md
+
 # Build
 dist
 dist-ssr
