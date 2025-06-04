@@ -3,10 +3,17 @@ import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import mdx from '@mdx-js/rollup'
-import { Cache, Json, Path, Str } from '@wollybeard/kit'
+import { Cache, Idx, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import remarkGfm from 'remark-gfm'
-import type { ProjectData, Sidebar, SidebarItem, SiteNavigationItem } from '../../../project-data.js'
+import type {
+  ProjectData,
+  Sidebar,
+  SidebarIndex,
+  SidebarNav,
+  SidebarSection,
+  SiteNavigationItem,
+} from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
 import type { Configurator } from '../../configurator/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
@@ -185,38 +192,21 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
             // ━━ Build Sidebar
             //
 
-            const sidebar: Sidebar = {}
+            const sidebarIndex: SidebarIndex = {}
 
             for (const dirPath of topDirsPaths) {
               const childPages = pagesScanResult.routes.filter(page => FileRouter.routeIsSubOf(page, dirPath))
-
-              const sidebarItems: SidebarItem[] = []
-
-              // ━ Pages in this dir become sidebar items
-              for (const childPage of childPages) {
-                const childPageRelative = FileRouter.makeRelativeUnsafe(childPage, dirPath)
-
-                if (FileRouter.routeIsRootLevel(childPageRelative)) {
-                  // We elide root from items. Root represents this whole group of items.
-                  continue
-                }
-
-                if (FileRouter.routeIsTopLevel(childPageRelative)) {
-                  const pathExp = FileRouter.routeToPathExpression(childPage)
-                  const relativePathExp = FileRouter.routeToPathExpression(childPageRelative)
-                  const title = Str.titlizeSlug(relativePathExp)
-                  sidebarItems.push({ pathExp, title })
-                }
-                // TODO: Handle nested directories in phase 3
-              }
-
-              sidebar[FileRouter.pathToExpression(dirPath)] = sidebarItems
+              sidebarIndex[FileRouter.pathToExpression(dirPath)] = buildSidebar(childPages, dirPath)
             }
+
+            //
+            // ━━ Put It All together
+            //
 
             const projectData: ProjectData = {
               schema,
               siteNavigationItems,
-              sidebar,
+              sidebarIndex,
               faviconPath: `/logo.svg`,
               pagesScanResult: pagesScanResult,
               paths: config.paths.project,
@@ -276,4 +266,95 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
       ),
     },
   ]
+}
+
+/**
+ * Helper function to build sidebar items recursively
+ */
+const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sidebar => {
+  const navs: SidebarNav[] = []
+  const sections = Idx.create<SidebarSection, string>({ toKey: (item) => item.pathExp })
+
+  // Items
+  for (const page of pages) {
+    const pageRelative = FileRouter.makeRelativeUnsafe(page, basePath)
+
+    if (FileRouter.routeIsRootLevel(pageRelative)) {
+      continue
+    }
+
+    if (FileRouter.routeIsTopLevel(pageRelative)) {
+      // Section (index)
+      if (FileRouter.routeIsFromIndexFile(pageRelative)) {
+        const sectionPath = page.logical.path
+        const sectionPathExp = FileRouter.pathToExpression(sectionPath)
+
+        let section: SidebarSection | undefined
+        section = sections.getKey(sectionPathExp)
+
+        if (!section) {
+          const sectionTitle = Str.titlizeSlug(FileRouter.pathToExpression(pageRelative.logical.path))
+          section = {
+            type: `SidebarSection`,
+            title: sectionTitle,
+            pathExp: sectionPathExp,
+            isNavToo: false,
+            navs: [],
+          }
+
+          sections.set(section)
+        }
+        section.isNavToo = true
+        continue
+      }
+
+      // Nav
+      navs.push(pageToSidebarNav(page, basePath))
+      continue
+    }
+
+    // Section (sub-page)
+    if (FileRouter.routeIsSubLevel(pageRelative)) {
+      const sectionRelativePath = [pageRelative.logical.path[0]]
+      const sectionPath = [...basePath, ...sectionRelativePath]
+      const sectionPathExp = FileRouter.pathToExpression(sectionPath)
+
+      let section: SidebarSection | undefined
+      section = sections.getKey(sectionPathExp)
+
+      if (!section) {
+        const sectionTitle = Str.titlizeSlug(FileRouter.pathToExpression(sectionRelativePath))
+        section = {
+          type: `SidebarSection`,
+          title: sectionTitle,
+          pathExp: sectionPathExp,
+          isNavToo: false,
+          navs: [],
+        }
+        sections.set(section)
+      }
+      section.navs.push(pageToSidebarNav(page, sectionPath))
+    }
+  }
+
+  const items = [...navs, ...sections.data.array]
+
+  return {
+    items,
+  }
+}
+
+/**
+ * Helper function to build sidebar items recursively
+ */
+const pageToSidebarNav = (page: FileRouter.Route, basePath: FileRouter.Path): SidebarNav => {
+  const pagePathExp = FileRouter.routeToPathExpression(page)
+  const pageRelative = FileRouter.makeRelativeUnsafe(page, basePath)
+  const pageRelativePathExp = FileRouter.routeToPathExpression(pageRelative)
+
+  return {
+    type: `SidebarItem`,
+    pathExp: pagePathExp,
+    title: Str.titlizeSlug(pageRelativePathExp),
+  }
 }

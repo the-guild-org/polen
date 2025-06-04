@@ -70,8 +70,8 @@ const Layout = () => {
   }
 
   const currentNavPathExp = getCurrentNavPathExp()
-  const sidebarItems = currentNavPathExp && PROJECT_DATA.sidebar[currentNavPathExp]
-  const showSidebar = sidebarItems && sidebarItems.length > 0
+  const sidebar = currentNavPathExp && PROJECT_DATA.sidebarIndex[currentNavPathExp]
+  const showSidebar = sidebar && sidebar.items.length > 0
 
   return (
     <Theme asChild>
@@ -107,7 +107,7 @@ const Layout = () => {
         {showSidebar
           ? (
             <Flex gap='8'>
-              <Sidebar items={sidebarItems} />
+              <Sidebar items={sidebar.items} />
               <Box style={{ flex: 1 }}>
                 <Outlet />
               </Box>

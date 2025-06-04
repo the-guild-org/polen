@@ -1,11 +1,8 @@
+import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 import { Box, Flex, Text } from '@radix-ui/themes'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
-
-export interface SidebarItem {
-  title: string
-  pathExp: string
-  children?: SidebarItem[]
-}
+import type { SidebarItem, SidebarNav, SidebarSection } from '../../project-data.js'
 
 interface SidebarProps {
   items: SidebarItem[]
@@ -18,6 +15,8 @@ export const Sidebar = ({ items }: SidebarProps) => {
     <Box
       style={{
         width: `240px`,
+        minWidth: `240px`,
+        flexShrink: 0,
         borderRight: `1px solid var(--gray-3)`,
         height: `100%`,
         paddingRight: `var(--space-4)`,
@@ -25,7 +24,7 @@ export const Sidebar = ({ items }: SidebarProps) => {
     >
       <Flex direction='column' gap='1'>
         {items.map((item) => (
-          <SidebarItem
+          <SidebarItemComponent
             key={item.pathExp}
             item={item}
             currentPathExp={location.pathname}
@@ -36,52 +35,146 @@ export const Sidebar = ({ items }: SidebarProps) => {
   )
 }
 
-interface SidebarItemProps {
+interface SidebarItemComponentProps {
   item: SidebarItem
   currentPathExp: string
   level?: number
 }
 
-const SidebarItem = ({ item, currentPathExp: currentPath, level = 0 }: SidebarItemProps) => {
-  const isActive = currentPath === item.pathExp
-  const hasChildren = item.children && item.children.length > 0
+const SidebarItemComponent = ({ item, currentPathExp, level = 0 }: SidebarItemComponentProps) => {
+  if (item.type === `SidebarItem`) {
+    return <SidebarNavItem nav={item} currentPathExp={currentPathExp} level={level} />
+  }
+
+  return <SidebarSectionItem section={item} currentPathExp={currentPathExp} level={level} />
+}
+
+interface SidebarNavItemProps {
+  nav: SidebarNav
+  currentPathExp: string
+  level: number
+}
+
+const SidebarNavItem = ({ nav, currentPathExp, level }: SidebarNavItemProps) => {
+  const isActive = currentPathExp === nav.pathExp
+
+  return (
+    <Link
+      to={nav.pathExp}
+      style={{
+        textDecoration: `none`,
+        color: isActive ? `var(--accent-11)` : `var(--gray-12)`,
+        padding: `var(--space-2) var(--space-3)`,
+        paddingLeft: `calc(var(--space-3) + ${(level * 16).toString()}px)`,
+        borderRadius: `var(--radius-2)`,
+        display: `block`,
+        backgroundColor: isActive ? `var(--accent-3)` : `transparent`,
+        transition: `background-color 0.2s ease, color 0.2s ease`,
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.backgroundColor = `var(--gray-2)`
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.backgroundColor = `transparent`
+        }
+      }}
+    >
+      <Text size='2' weight={isActive ? `medium` : `regular`}>
+        {nav.title}
+      </Text>
+    </Link>
+  )
+}
+
+interface SidebarSectionItemProps {
+  section: SidebarSection
+  currentPathExp: string
+  level: number
+}
+
+const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionItemProps) => {
+  const [isExpanded, setIsExpanded] = useState(true)
+  const isDirectlyActive = currentPathExp === section.pathExp
+  const hasActiveChild = section.navs.some(nav => currentPathExp === nav.pathExp)
+  const isActiveGroup = isDirectlyActive || hasActiveChild
 
   return (
     <>
-      <Link
-        to={item.pathExp}
+      <Flex
+        align='center'
         style={{
-          textDecoration: `none`,
-          color: isActive ? `var(--accent-11)` : `var(--gray-12)`,
           padding: `var(--space-2) var(--space-3)`,
           paddingLeft: `calc(var(--space-3) + ${(level * 16).toString()}px)`,
           borderRadius: `var(--radius-2)`,
-          display: `block`,
-          backgroundColor: isActive ? `var(--accent-3)` : `transparent`,
-          transition: `background-color 0.2s ease, color 0.2s ease`,
+          backgroundColor: isDirectlyActive ? `var(--accent-3)` : hasActiveChild ? `var(--accent-2)` : `transparent`,
+          transition: `background-color 0.2s ease`,
         }}
         onMouseEnter={(e) => {
-          if (!isActive) {
+          if (!isActiveGroup) {
             e.currentTarget.style.backgroundColor = `var(--gray-2)`
           }
         }}
         onMouseLeave={(e) => {
-          if (!isActive) {
+          if (!isActiveGroup) {
             e.currentTarget.style.backgroundColor = `transparent`
           }
         }}
       >
-        <Text size='2' weight={isActive ? `medium` : `regular`}>
-          {item.title}
-        </Text>
-      </Link>
-      {hasChildren && (
+        <Box
+          onClick={(e) => {
+            e.stopPropagation()
+            console.log(`Chevron clicked!`)
+            setIsExpanded(!isExpanded)
+          }}
+          style={{
+            display: `flex`,
+            alignItems: `center`,
+            cursor: `pointer`,
+            padding: `4px`,
+            marginRight: `4px`,
+            marginLeft: `-4px`,
+          }}
+        >
+          {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+        </Box>
+        {section.isNavToo
+          ? (
+            <Link
+              to={section.pathExp}
+              style={{
+                textDecoration: `none`,
+                color: isDirectlyActive ? `var(--accent-11)` : `var(--gray-12)`,
+                flex: 1,
+              }}
+            >
+              <Text size='2' weight={isDirectlyActive ? `bold` : `medium`}>
+                {section.title}
+              </Text>
+            </Link>
+          )
+          : (
+            <Text
+              size='2'
+              weight={isDirectlyActive ? `bold` : `medium`}
+              style={{
+                flex: 1,
+                color: isDirectlyActive ? `var(--accent-11)` : `var(--gray-12)`,
+              }}
+            >
+              {section.title}
+            </Text>
+          )}
+      </Flex>
+      {isExpanded && (
         <Flex direction='column' gap='1'>
-          {item.children!.map((child) => (
-            <SidebarItem
-              key={child.pathExp}
-              item={child}
-              currentPathExp={currentPath}
+          {section.navs.map((nav) => (
+            <SidebarNavItem
+              key={nav.pathExp}
+              nav={nav}
+              currentPathExp={currentPathExp}
               level={level + 1}
             />
           ))}

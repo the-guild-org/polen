@@ -5,7 +5,7 @@ import type { Schema } from './api/schema/index.js'
 export interface ProjectData {
   schema: null | Schema.Schema
   siteNavigationItems: SiteNavigationItem[]
-  sidebar: Sidebar
+  sidebarIndex: SidebarIndex
   faviconPath: string
   paths: Configurator.Config[`paths`][`project`]
   pagesScanResult: FileRouter.ScanResult
@@ -22,12 +22,26 @@ export interface SiteNavigationItem {
   pathExp: string
 }
 
-export interface Sidebar {
-  [navPath: string]: SidebarItem[]
+export interface SidebarIndex {
+  [pathExpression: string]: Sidebar
 }
 
-export interface SidebarItem {
+export interface Sidebar {
+  items: SidebarItem[]
+}
+
+export type SidebarItem = SidebarNav | SidebarSection
+
+export interface SidebarNav {
+  type: `SidebarItem`
   title: string
   pathExp: string
-  children?: SidebarItem[]
+}
+
+export interface SidebarSection {
+  type: `SidebarSection`
+  title: string
+  pathExp: string
+  isNavToo: boolean
+  navs: SidebarNav[]
 }
