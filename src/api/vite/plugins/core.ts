@@ -10,7 +10,6 @@ import type {
   ProjectData,
   Sidebar,
   SidebarIndex,
-  SidebarItem,
   SidebarNav,
   SidebarSection,
   SiteNavigationItem,
@@ -200,8 +199,6 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
               sidebarIndex[FileRouter.pathToExpression(dirPath)] = buildSidebar(childPages, dirPath)
             }
 
-            console.log(sidebarIndex)
-
             //
             // ━━ Put It All together
             //
@@ -275,7 +272,7 @@ export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
  * Helper function to build sidebar items recursively
  */
 const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sidebar => {
-  const items: SidebarItem[] = []
+  const navs: SidebarNav[] = []
   const sections = Idx.create<SidebarSection, string>({ toKey: (item) => item.pathExp })
 
   // Items
@@ -312,7 +309,7 @@ const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sid
       }
 
       // Nav
-      items.push(pageToSidebarNav(page, basePath))
+      navs.push(pageToSidebarNav(page, basePath))
       continue
     }
 
@@ -334,11 +331,13 @@ const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sid
           isNavToo: false,
           navs: [],
         }
-
         sections.set(section)
       }
+      section.navs.push(pageToSidebarNav(page, sectionPath))
     }
   }
+
+  const items = [...navs, ...sections.data.array]
 
   return {
     items,
