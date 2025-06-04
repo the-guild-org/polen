@@ -5,10 +5,11 @@ import { Box, Button, Heading, Text } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Link as LinkReactRouter } from 'react-router'
-import { Outlet, ScrollRestoration } from 'react-router'
+import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link } from '../components/Link.jsx'
+import { Sidebar } from '../components/Sidebar.jsx'
 import entryClientUrl from '../entry.client.jsx?url'
 import { changelog } from './changelog.jsx'
 import { index } from './index.jsx'
@@ -55,6 +56,23 @@ export const Component = () => {
 }
 
 const Layout = () => {
+  const location = useLocation()
+
+  // Determine if we should show sidebar based on current path
+  const getCurrentNavPathExp = (): string | null => {
+    // todo: general path manipulation lib because we are duplicating logic here found in FileRouter
+    // todo: kit: try a Str.split that returns [] | string[] so that our predicates can refine on it?
+    const segments = location.pathname.split(`/`).filter(Boolean)
+    if (Arr.isntEmpty(segments)) {
+      return `/${segments[0]}`
+    }
+    return null
+  }
+
+  const currentNavPathExp = getCurrentNavPathExp()
+  const sidebarItems = currentNavPathExp && PROJECT_DATA.sidebar[currentNavPathExp]
+  const showSidebar = sidebarItems && sidebarItems.length > 0
+
   return (
     <Theme asChild>
       <Box m='8'>
@@ -80,15 +98,26 @@ const Layout = () => {
           </LinkReactRouter>
           <Flex direction='row' gap='4'>
             {PROJECT_DATA.siteNavigationItems.map((item, key) => (
-              <Link key={key} color='gray' to={item.path}>
+              <Link key={key} color='gray' to={item.pathExp}>
                 {item.title}
               </Link>
             ))}
           </Flex>
         </Flex>
-        <Box>
-          <Outlet />
-        </Box>
+        {showSidebar
+          ? (
+            <Flex gap='8'>
+              <Sidebar items={sidebarItems} />
+              <Box style={{ flex: 1 }}>
+                <Outlet />
+              </Box>
+            </Flex>
+          )
+          : (
+            <Box>
+              <Outlet />
+            </Box>
+          )}
       </Box>
     </Theme>
   )
@@ -165,6 +194,7 @@ children.push(notFoundRoute)
 //
 //
 
+import { Arr } from '@wollybeard/kit'
 import { pages } from 'virtual:polen/project/pages.jsx'
 
 export const root = createRoute({

@@ -21,7 +21,7 @@ describe('.scan', () => {
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
-          path: { segments: ['a'] },
+          logical: { path: ['a'] },
           file: { path: { relative: { dir: '', base: 'a.md' } } },
         }],
       }))
@@ -31,7 +31,7 @@ describe('.scan', () => {
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
-          path: { segments: ['a', 'b'] },
+          logical: { path: ['a', 'b'] },
           file: { path: { relative: { dir: 'a', base: 'b.md' } } },
         }],
       }))
@@ -43,7 +43,7 @@ describe('.scan', () => {
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
-          path: { segments: [] },
+          logical: { path: [] },
           file: { path: { relative: { dir: '', base: 'index.md' } } },
         }],
       }))
@@ -53,7 +53,7 @@ describe('.scan', () => {
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
-          path: { segments: ['a'] },
+          logical: { path: ['a'] },
           file: { path: { relative: { dir: 'a', base: 'index.md' } } },
         }],
       }))
@@ -66,7 +66,7 @@ describe('.scan', () => {
       expect(routes).toMatchObject($({
         diagnostics: [{}],
         routes: [{
-          path: { segments: ['a'] },
+          logical: { path: ['a'] },
           file: { path: { relative: { dir: '', base: 'a.md' } } },
         }],
       }))

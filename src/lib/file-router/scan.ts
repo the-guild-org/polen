@@ -1,7 +1,7 @@
 import { TinyGlobby } from '#dep/tiny-globby/index.js'
 import { Path, Str } from '@wollybeard/kit'
 import { type Diagnostic, lint } from './linter.js'
-import type { Route, RouteFile, RoutePath } from './route.js'
+import type { Route, RouteFile, RouteLogical } from './route.js'
 
 //
 //
@@ -64,26 +64,26 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
       relative: Path.parse(Path.relative(rootDir, filePathExpression)),
     },
   }
-  const path = filePathToRoutePath(file.path.relative)
+  const logical = filePathToRouteLogical(file.path.relative)
 
   return {
-    path,
+    logical,
     file,
   }
 }
 
-export const filePathToRoutePath = (filePath: Path.Parsed): RoutePath => {
-  const dirSegments = Str.split(Str.removeSurrounding(filePath.dir, Path.sep), Path.sep)
+export const filePathToRouteLogical = (filePath: Path.Parsed): RouteLogical => {
+  const dirPath = Str.split(Str.removeSurrounding(filePath.dir, Path.sep), Path.sep)
 
   if (Str.isMatch(filePath.name, conventions.index.name)) {
-    const segments = dirSegments
+    const path = dirPath
     return {
-      segments,
+      path,
     }
   }
 
-  const segments = dirSegments.concat(filePath.name)
+  const path = dirPath.concat(filePath.name)
   return {
-    segments,
+    path,
   }
 }
