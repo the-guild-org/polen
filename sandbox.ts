@@ -1,7 +1,15 @@
-import { AppleTouchIcon } from '#lib/apple-touch-icon/index.js'
-
-const paths = [`/apple-touch-icon.png`, `/apple-touch-icon-precomposed.png`]
-
-for (const path of paths) {
-  console.log(path, AppleTouchIcon.fileNamePattern.test(path))
-}
+//
+//
+//
+//
+//
+// Temporary Work File
+//
+// ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+//
+// – Use freely
+// – Try to remember to not commit changes
+// – Included by development TypeScript configuration
+// – Excluded by build TypeScript configuration
+//
+//
