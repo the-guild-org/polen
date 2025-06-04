@@ -14,23 +14,27 @@ The Pokemon GraphQL API provides a modern, efficient way to access Pokemon data.
 ## Key Features
 
 ### Comprehensive Pokemon Data
+
 - All 1000+ Pokemon species
 - Complete move sets and abilities
 - Evolution chains and requirements
 - Type matchups and effectiveness
 
 ### Battle System
+
 - Create and manage battles
 - Real-time battle updates
 - Damage calculations
 - Status effects
 
 ### Trading Platform
+
 - Secure Pokemon trading
 - Trade history
 - Fair trade suggestions
 
 ### Location Services
+
 - Find Pokemon by location
 - Spawn rate data
 - Regional exclusives
@@ -45,6 +49,7 @@ The Pokemon GraphQL API provides a modern, efficient way to access Pokemon data.
 ## Community
 
 Join our community:
+
 - [Discord](https://discord.gg/pokemon-api)
 - [GitHub](https://github.com/pokemon-api)
 - [Twitter](https://twitter.com/pokemonapi)

@@ -73,16 +73,16 @@ const client = new GraphQLClient({
   cache: new InMemoryCache({
     typePolicies: {
       Pokemon: {
-        keyFields: ["id"],
+        keyFields: ['id'],
         fields: {
           // Species data rarely changes
           name: { read: cachedField },
           types: { read: cachedField },
-          evolutionChain: { read: cachedField }
-        }
-      }
-    }
-  })
+          evolutionChain: { read: cachedField },
+        },
+      },
+    },
+  }),
 })
 ```
 
@@ -93,8 +93,8 @@ Use shorter cache times for battle-related data:
 ```javascript
 const CACHE_TIMES = {
   pokemon: 24 * 60 * 60 * 1000, // 24 hours
-  trainer: 60 * 60 * 1000,       // 1 hour  
-  battle: 0                      // No cache
+  trainer: 60 * 60 * 1000, // 1 hour
+  battle: 0, // No cache
 }
 ```
 

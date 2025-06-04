@@ -38,18 +38,23 @@ For large-scale applications
 ## FAQ
 
 ### What counts as a request?
+
 Each GraphQL query, mutation, or subscription counts as one request, regardless of complexity.
 
 ### Can I change plans?
+
 Yes, you can upgrade or downgrade at any time. Changes take effect immediately.
 
 ### Is there a free trial?
+
 The free tier is always free! For Pro features, we offer a 14-day trial.
 
 ### What happens if I exceed my limit?
+
 Requests will be rate-limited and return a 429 error. Consider upgrading or optimizing your queries.
 
 ### Do you offer educational discounts?
+
 Yes! Students and educators get 50% off Pro tier. [Contact us](mailto:education@pokemon-api.com) with proof of status.
 
 ## Ready to get started?
