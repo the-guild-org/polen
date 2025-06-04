@@ -61,6 +61,8 @@ export default tsEslint.config(
       '@typescript-eslint/no-unused-expressions': 'off',
       // Useful for organizing Types
       '@typescript-eslint/no-namespace': 'off',
+      // I like documenting more useful key names
+      '@typescript-eslint/consistent-indexed-object-style': 'off',
       // Turn training wheels off. When we want these we want these.
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
