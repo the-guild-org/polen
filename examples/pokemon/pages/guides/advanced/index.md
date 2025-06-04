@@ -11,6 +11,7 @@ Deep dive into advanced Pokemon API concepts.
 ## Prerequisites
 
 Before diving into these topics, make sure you're comfortable with:
+
 - Basic GraphQL queries and mutations
 - Pokemon API authentication
 - Error handling
@@ -18,6 +19,7 @@ Before diving into these topics, make sure you're comfortable with:
 ## Need Help?
 
 These are advanced topics. If you get stuck:
+
 - Review the basic guides first
 - Ask in our Discord #advanced channel
 - Book a consultation with our team

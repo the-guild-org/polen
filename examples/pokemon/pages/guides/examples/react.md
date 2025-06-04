@@ -7,7 +7,7 @@ Build amazing Pokemon UIs with React and GraphQL.
 Display a Pokemon with its basic information:
 
 ```jsx
-import { useQuery, gql } from '@apollo/client'
+import { gql, useQuery } from '@apollo/client'
 
 const GET_POKEMON = gql`
   query GetPokemon($name: String!) {
@@ -27,7 +27,7 @@ const GET_POKEMON = gql`
 
 function PokemonCard({ name }) {
   const { loading, error, data } = useQuery(GET_POKEMON, {
-    variables: { name }
+    variables: { name },
   })
 
   if (loading) return <div>Loading...</div>
@@ -36,17 +36,17 @@ function PokemonCard({ name }) {
   const { pokemon } = data
 
   return (
-    <div className="pokemon-card">
+    <div className='pokemon-card'>
       <img src={pokemon.sprite} alt={pokemon.name} />
       <h2>{pokemon.name}</h2>
-      <div className="types">
+      <div className='types'>
         {pokemon.types.map(type => (
           <span key={type} className={`type-${type}`}>
             {type}
           </span>
         ))}
       </div>
-      <div className="stats">
+      <div className='stats'>
         <div>HP: {pokemon.stats.hp}</div>
         <div>Attack: {pokemon.stats.attack}</div>
         <div>Defense: {pokemon.stats.defense}</div>
@@ -61,8 +61,8 @@ function PokemonCard({ name }) {
 Search for Pokemon in real-time:
 
 ```jsx
+import { gql, useLazyQuery } from '@apollo/client'
 import { useState } from 'react'
-import { useLazyQuery, gql } from '@apollo/client'
 
 const SEARCH_POKEMON = gql`
   query SearchPokemon($query: String!) {
@@ -90,14 +90,14 @@ function PokemonSearch() {
   return (
     <div>
       <input
-        type="text"
+        type='text'
         value={query}
         onChange={handleSearch}
-        placeholder="Search Pokemon..."
+        placeholder='Search Pokemon...'
       />
       {loading && <div>Searching...</div>}
       {data && (
-        <div className="search-results">
+        <div className='search-results'>
           {data.searchPokemon.map(pokemon => (
             <PokemonCard key={pokemon.id} pokemon={pokemon} />
           ))}
@@ -136,8 +136,8 @@ function TeamBuilder() {
     const { data } = await createTeam({
       variables: {
         name: teamName,
-        pokemonIds: selectedPokemon.map(p => p.id)
-      }
+        pokemonIds: selectedPokemon.map(p => p.id),
+      },
     })
     console.log('Team created:', data.createTeam)
   }
@@ -147,7 +147,7 @@ function TeamBuilder() {
       <input
         value={teamName}
         onChange={(e) => setTeamName(e.target.value)}
-        placeholder="Team name"
+        placeholder='Team name'
       />
       <PokemonSelector
         onSelect={(pokemon) => {
@@ -156,7 +156,7 @@ function TeamBuilder() {
           }
         }}
       />
-      <div className="selected-team">
+      <div className='selected-team'>
         {selectedPokemon.map(pokemon => (
           <div key={pokemon.id}>
             <img src={pokemon.sprite} alt={pokemon.name} />

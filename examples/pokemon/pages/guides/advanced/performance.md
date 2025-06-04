@@ -53,24 +53,24 @@ const cache = new InMemoryCache({
         effectiveness: {
           read(existing, { readField }) {
             if (existing) return existing
-            
+
             const types = readField('types')
             return calculateTypeEffectiveness(types)
-          }
+          },
         },
         // Cache expensive calculations
         battlePower: {
           read(existing, { readField }) {
             if (existing) return existing
-            
+
             const stats = readField('stats')
             const moves = readField('moves')
             return calculateBattlePower(stats, moves)
-          }
-        }
-      }
-    }
-  }
+          },
+        },
+      },
+    },
+  },
 })
 ```
 
@@ -84,7 +84,7 @@ import { BatchHttpLink } from '@apollo/client/link/batch-http'
 const link = new BatchHttpLink({
   uri: 'https://pokemon-api.example.com/graphql',
   batchMax: 5, // Max 5 queries per batch
-  batchInterval: 20 // Wait 20ms to batch queries
+  batchInterval: 20, // Wait 20ms to batch queries
 })
 
 // These queries will be batched
@@ -92,9 +92,9 @@ async function loadPokemonData() {
   const results = await Promise.all([
     client.query({ query: GET_PIKACHU }),
     client.query({ query: GET_CHARIZARD }),
-    client.query({ query: GET_BLASTOISE })
+    client.query({ query: GET_BLASTOISE }),
   ])
-  
+
   return results.map(r => r.data.pokemon)
 }
 ```
@@ -109,7 +109,7 @@ import { sha256 } from 'crypto-hash'
 
 const link = createPersistedQueryLink({
   sha256,
-  useGETForHashedQueries: true
+  useGETForHashedQueries: true,
 })
 
 // First request sends query + hash
@@ -135,18 +135,20 @@ const resolvers = {
   Pokemon: {
     evolutions: async (parent) => {
       // Separate query for each Pokemon
-      return db.query('SELECT * FROM pokemon WHERE evolves_from = ?', [parent.id])
-    }
-  }
+      return db.query('SELECT * FROM pokemon WHERE evolves_from = ?', [
+        parent.id,
+      ])
+    },
+  },
 }
 
 // ✅ DataLoader solution
 const evolutionLoader = new DataLoader(async (pokemonIds) => {
   const evolutions = await db.query(
     'SELECT * FROM pokemon WHERE evolves_from IN (?)',
-    [pokemonIds]
+    [pokemonIds],
   )
-  
+
   // Group by parent ID
   const grouped = {}
   evolutions.forEach(evo => {
@@ -155,15 +157,15 @@ const evolutionLoader = new DataLoader(async (pokemonIds) => {
     }
     grouped[evo.evolves_from].push(evo)
   })
-  
+
   // Return in same order as input
   return pokemonIds.map(id => grouped[id] || [])
 })
 
 const optimizedResolvers = {
   Pokemon: {
-    evolutions: (parent) => evolutionLoader.load(parent.id)
-  }
+    evolutions: (parent) => evolutionLoader.load(parent.id),
+  },
 }
 ```
 
@@ -179,7 +181,7 @@ app.use(compression({
     // Compress responses > 1KB
     return compression.filter(req, res)
   },
-  threshold: 1024
+  threshold: 1024,
 }))
 ```
 

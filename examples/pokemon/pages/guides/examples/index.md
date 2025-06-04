@@ -9,6 +9,7 @@ Explore practical examples of using the Pokemon GraphQL API.
 - **Python Examples** - Data analysis with Pokemon data
 
 Each example includes:
+
 - Complete source code
 - Step-by-step explanations
 - Live demos (where applicable)
@@ -17,6 +18,7 @@ Each example includes:
 ## Getting Help
 
 If you have questions about any example:
+
 1. Check the example's README
 2. Join our Discord community
 3. Open an issue on GitHub
