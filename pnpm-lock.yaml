@@ -20,9 +20,6 @@ importers:
       '@hono/node-server':
         specifier: ^1.14.1
         version: 1.14.1(hono@4.7.8)
-      '@hono/vite-dev-server':
-        specifier: ^0.19.0
-        version: 0.19.0(hono@4.7.8)
       '@mdx-js/rollup':
         specifier: ^3.1.0
         version: 3.1.0(acorn@8.14.1)(rollup@4.40.1)
@@ -842,19 +839,6 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
-
-  '@hono/vite-dev-server@0.19.0':
-    resolution: {integrity: sha512-myMc4Nm0nFQSPaeE6I/a1ODyDR5KpQ4EHodX4Tu/7qlB31GfUemhUH/WsO91HJjDEpRRpsT4Zbg+PleMlpTljw==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: '*'
-      miniflare: '*'
-      wrangler: '*'
-    peerDependenciesMeta:
-      miniflare:
-        optional: true
-      wrangler:
-        optional: true
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -4997,12 +4981,6 @@ snapshots:
   '@hono/node-server@1.14.1(hono@4.7.8)':
     dependencies:
       hono: 4.7.8
-
-  '@hono/vite-dev-server@0.19.0(hono@4.7.8)':
-    dependencies:
-      '@hono/node-server': 1.14.1(hono@4.7.8)
-      hono: 4.7.8
-      minimatch: 9.0.5
 
   '@humanfs/core@0.19.1': {}
 
