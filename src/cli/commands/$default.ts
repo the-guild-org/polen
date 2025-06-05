@@ -44,7 +44,7 @@ const commands = allCommands.filter(_ => _.name !== thisModuleName)
 
 s``
 s``
-s`${$.bold.redBright`POLEN 🌺`}`
+s`${$.bold.redBright`POLEN 🌺`} ${$.dim(`v${manifest.version}`)}`
 s`${$.whiteBright(manifest.description)}.`
 s``
 s``
