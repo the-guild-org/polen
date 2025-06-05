@@ -1,10 +1,12 @@
 /* eslint-disable */
 // @ts-nocheck
+import { Api } from '#api/index.js'
 import { Vite } from '#dep/vite/index.js'
+import { ensureOptionalAbsolute, ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp.js'
 import { Command } from '@molt/command'
-import { Err } from '@wollybeard/kit'
+import { Err, Path } from '@wollybeard/kit'
 import { z } from 'zod'
-import { loadConfig } from '../../api/load-config.js'
+// import { loadConfig } from '../../api/load-config.js'
 
 const args = Command.create()
   .parameter(
@@ -25,23 +27,14 @@ const args = Command.create()
   })
   .parse()
 
-const dir = args.project as string
+const dir = ensureOptionalAbsoluteWithCwd(args.project) as string
 
-const config = await loadConfig({
-  env: {
-    command: `serve`,
-    mode: `development`,
-  },
-  dir,
-  overrides: {
-    root: dir,
-  },
-})
+const viteUserConfig = await Api.ConfigResolver.fromFile({ dir })
 
-const viteDevServer = await Err.tryCatch(() => Vite.createServer(config))
+const viteDevServer = await Err.tryCatch(() => Vite.createServer(viteUserConfig))
 
 if (Err.is(viteDevServer)) {
-  // Err.log(viteDevServer)
+  Err.log(viteDevServer)
   process.exit(1)
 }
 

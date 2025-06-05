@@ -7,7 +7,7 @@ test('renders markdown as HTML in schema type descriptions', async ({ page, vite
     schema: configMemorySchema(`
       """
       The **Query** type with a [link](https://example.com) and \`code\`.
-      
+
       It also has:
       - A list item
       - Another item
@@ -40,7 +40,7 @@ test('renders GFM features as HTML in descriptions', async ({ page, vite }) => {
     schema: configMemorySchema(`
       """
       A type with ~~strikethrough~~ text.
-      
+
       | Column 1 | Column 2 |
       | -------- | -------- |
       | Cell A   | Cell B   |
@@ -49,7 +49,7 @@ test('renders GFM features as HTML in descriptions', async ({ page, vite }) => {
         id: ID!
         name: String
       }
-      
+
       type Query {
         user: User
       }
@@ -77,7 +77,7 @@ test('renders markdown in field and type descriptions', async ({ page, vite }) =
         """
         status: Status
       }
-      
+
       """
       Status enum with **markdown** descriptions
       """

@@ -1,5 +1,5 @@
+import type { Config } from '#api/config/index.js'
 import type { FileRouter } from '#lib/file-router/index.js'
-import type { Configurator } from './api/configurator/index.js'
 import type { Schema } from './api/schema/index.js'
 
 export interface ProjectData {
@@ -7,7 +7,7 @@ export interface ProjectData {
   siteNavigationItems: SiteNavigationItem[]
   sidebarIndex: SidebarIndex
   faviconPath: string
-  paths: Configurator.Config[`paths`][`project`]
+  paths: Config.Config[`paths`][`project`]
   pagesScanResult: FileRouter.ScanResult
   server: {
     static: {

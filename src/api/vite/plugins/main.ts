@@ -1,15 +1,15 @@
+import type { Config } from '#api/config/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import ViteReact from '@vitejs/plugin-react'
 import { Arr, Path } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
 import Restart from 'vite-plugin-restart'
-import type { Configurator } from '../../configurator/index.js'
 import { Build } from './build.js'
 import { Core } from './core.js'
 import { Serve } from './serve.js'
 
 export const Main = (
-  config: Configurator.Config,
+  config: Config.Config,
 ): Vite.PluginOption => {
   const plugins: Vite.PluginOption = []
 

@@ -5,7 +5,7 @@ import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
 import * as GetPortPlease from 'get-port-please'
 import type { ProcessPromise } from 'zx'
-import type { ViteUserConfigWithPolen } from '../../../../src/api/define-config.js'
+import type { ViteUserConfigWithPolen } from '../../../../src/api/config-resolver/vite.js'
 import type { ExampleName } from '../example-name.js'
 
 const projectDir = Path.join(import.meta.dirname, `../../../../`)

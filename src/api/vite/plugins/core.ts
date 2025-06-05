@@ -1,3 +1,4 @@
+import type { Config } from '#api/config/index.js'
 import type { ReactRouter } from '#dep/react-router/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import { FileRouter } from '#lib/file-router/index.js'
@@ -15,7 +16,6 @@ import type {
   SiteNavigationItem,
 } from '../../../project-data.js'
 import { superjson } from '../../../singletons/superjson.js'
-import type { Configurator } from '../../configurator/index.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
 import { logger } from '../logger.js'
@@ -30,7 +30,7 @@ export interface ProjectPagesModule {
   pages: ReactRouter.RouteObject[]
 }
 
-export const Core = (config: Configurator.Config): Vite.PluginOption[] => {
+export const Core = (config: Config.Config): Vite.PluginOption[] => {
   const scanPageRoutes = Cache.memoize(async () =>
     await FileRouter.scan({
       dir: config.paths.project.absolute.pages,

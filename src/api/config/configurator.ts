@@ -1,4 +1,5 @@
 import type { Vite } from '#dep/vite/index.js'
+import { assertPathAbsolute } from '#lib/kit-temp.js'
 import { Path } from '@wollybeard/kit'
 import { z } from 'zod'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
@@ -21,9 +22,9 @@ export interface ConfigInput {
   /**
    * Path to the root directory of your project.
    *
-   * Relative paths will be resolved relative to the current working directory.
+   * Relative paths will be resolved relative to this config file.
    *
-   * @defaultValue process.cwd()
+   * @defaultValue The directory where the config file is located.
    */
   root?: string
   /**
@@ -90,7 +91,37 @@ export interface TemplateVariables {
   title: string
 }
 
+const buildPaths = (rootDir: string): Config[`paths`] => {
+  if (!Path.isAbsolute(rootDir)) throw new Error(`Root dir path must be absolute: ${rootDir}`)
+  const ensureAbsolute = Path.ensureAbsoluteWith(rootDir)
+  return {
+    project: {
+      rootDir,
+      relative: {
+        build: {
+          root: `build`,
+          relative: {
+            serverEntrypoint: `app.js`,
+            assets: `assets`,
+          },
+        },
+        pages: `pages`,
+      },
+      absolute: {
+        build: {
+          root: ensureAbsolute(`build`),
+          serverEntrypoint: ensureAbsolute(`build/app.js`),
+          assets: ensureAbsolute(`build/assets`),
+        },
+        pages: ensureAbsolute(`pages`),
+      },
+    },
+    framework: packagePaths,
+  }
+}
+
 export interface Config {
+  _input: ConfigInput
   build: {
     architecture: BuildArchitecture
   }
@@ -135,6 +166,7 @@ export interface Config {
 }
 
 const configInputDefaults: Config = {
+  _input: {},
   templateVariables: {
     title: `My Developer Portal`,
   },
@@ -149,30 +181,7 @@ const configInputDefaults: Config = {
   ssr: {
     enabled: true,
   },
-  paths: {
-    project: {
-      rootDir: process.cwd(),
-      relative: {
-        build: {
-          root: `build`,
-          relative: {
-            serverEntrypoint: `app.js`,
-            assets: `assets`,
-          },
-        },
-        pages: `pages`,
-      },
-      absolute: {
-        build: {
-          root: Path.ensureAbsoluteWithCWD(`build`),
-          serverEntrypoint: Path.ensureAbsoluteWithCWD(`build/app.js`),
-          assets: Path.ensureAbsoluteWithCWD(`build/assets`),
-        },
-        pages: Path.ensureAbsoluteWithCWD(`pages`),
-      },
-    },
-    framework: packagePaths,
-  },
+  paths: buildPaths(process.cwd()),
   advanced: {
     debug: false,
     explorer: false,
@@ -180,10 +189,25 @@ const configInputDefaults: Config = {
 }
 
 export const normalizeInput = async (
-  configInput?: ConfigInput,
+  configInput: ConfigInput | undefined,
+  /**
+   * If the input has a relative root path, then resolve it relative to this path.
+   *
+   * We tell users relative paths are resolved to the config file directory.
+   * Config loaders should pass the directory of the config file here to ensure that happens.
+   *
+   * If this is omitted, then relative root paths will throw an error.
+   */
+  baseRootDirPath: string,
   // eslint-disable-next-line
 ): Promise<Config> => {
+  assertPathAbsolute(baseRootDirPath)
+
   const config = structuredClone(configInputDefaults)
+
+  if (configInput) {
+    config._input = configInput
+  }
 
   if (configInput?.build?.architecture) {
     config.build.architecture = configInput.build.architecture
@@ -193,21 +217,16 @@ export const normalizeInput = async (
     config.advanced.debug = configInput.advanced.debug
   }
 
-  if (configInput?.root) {
-    config.paths.project.rootDir = Path.ensureAbsoluteWithCWD(configInput.root)
-    // Re-compute absolute paths
-    config.paths.project.absolute.build.root = Path.join(
-      config.paths.project.rootDir,
-      config.paths.project.relative.build.root,
-    )
-    config.paths.project.absolute.build.assets = Path.join(
-      config.paths.project.rootDir,
-      config.paths.project.relative.build.relative.assets,
-    )
-    config.paths.project.absolute.pages = Path.join(
-      config.paths.project.rootDir,
-      config.paths.project.relative.pages,
-    )
+  if (configInput?.root !== undefined) {
+    if (!baseRootDirPath && !Path.isAbsolute(configInput.root)) {
+      throw new Error(
+        `Root path must be absolute or baseRootPath must be provided to resolve relative root paths. Provided: ${configInput.root}`,
+      )
+    }
+    const root = Path.ensureAbsolute(configInput.root, baseRootDirPath)
+    config.paths = buildPaths(root)
+  } else if (baseRootDirPath) {
+    config.paths = buildPaths(baseRootDirPath)
   }
 
   if (configInput?.advanced?.vite) {

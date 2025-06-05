@@ -1,19 +1,20 @@
+import { Api } from '#api/index.js'
 import { Vite } from '#dep/vite/index.js'
-import { Polen } from '../../../src/exports/index.js'
+import type { Polen } from '#exports/index.js'
 
 export const defaultViteConfig: Vite.UserConfig = {
   customLogger: Vite.createLogger(`silent`, {}),
 }
 
-export const pc = (config?: Polen.ConfigInput) => {
-  return Polen.defineConfig({
+export const pc = (configInput?: Polen.ConfigInput) => {
+  return Api.ConfigResolver.fromMemory({
     advanced: {
       vite: {
         ...defaultViteConfig,
-        ...config?.advanced?.vite,
+        ...configInput?.advanced?.vite,
       },
     },
-    ...config,
+    ...configInput,
   })
 }
 
