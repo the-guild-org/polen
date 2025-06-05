@@ -1,7 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
 import { build } from '#api/build/build.js'
-import { Configurator } from '#api/configurator/index.js'
+import { Configurator } from '#api/config/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { Command } from '@molt/command'
 import { z } from 'zod'
