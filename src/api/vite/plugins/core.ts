@@ -349,9 +349,6 @@ const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sid
   }
 }
 
-/**
- * Helper function to build sidebar items recursively
- */
 const pageToSidebarNav = (page: FileRouter.Route, basePath: FileRouter.Path): SidebarNav => {
   const pagePathExp = FileRouter.routeToPathExpression(page)
   const pageRelative = FileRouter.makeRelativeUnsafe(page, basePath)
