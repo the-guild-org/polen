@@ -18,6 +18,10 @@ export const toHookLoad = (
       debug(`will load`, { identifier: identifiedLoader.identifier })
       const result = await identifiedLoader.loader(...args)
       debug(`did load`, { identifier: identifiedLoader.identifier, result })
+      // Add moduleType for Rolldown compatibility
+      if (result && typeof result === `string`) {
+        return { code: result, moduleType: `js` }
+      }
       return result
     }
     return undefined

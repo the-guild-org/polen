@@ -118,7 +118,12 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             target: `esnext`,
             assetsDir: config.paths.project.relative.build.relative.assets,
             rollupOptions: {
-              treeshake: `smallest`,
+              treeshake: {
+                // Aggressive tree-shaking for smallest bundles
+                moduleSideEffects: false, // Only include code if an export is actually used
+                annotations: true, // Respect @__PURE__ annotations for better dead code elimination
+                unknownGlobalSideEffects: false, // Assume global functions don't have side effects
+              },
             },
             minify: !config.advanced.debug,
             outDir: config.paths.project.absolute.build.root,
