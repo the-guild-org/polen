@@ -36,7 +36,7 @@ declare const __BUILD_ARCHITECTURE_SSG__: boolean
  *
  * Defined by the `build.architecture` configuration option in polen.config.ts.
  */
-declare const __BUILD_ARCHITECTURE__: import('#api/configurator/index.js').Configurator.BuildArchitecture
+declare const __BUILD_ARCHITECTURE__: import('#api/config/index.ts').Config.BuildArchitecture
 
 /**
  * Indicates whether the code is running in development server mode.
@@ -91,7 +91,7 @@ declare module 'virtual:polen/vite/client/manifest' {
 }
 
 declare module 'virtual:polen/template/variables' {
-  export const templateVariables: import('#api/configurator/configurator.js').TemplateVariables
+  export const templateVariables: import('#api/config/configurator.ts').TemplateVariables
 }
 
 declare module 'virtual:polen/project/data' {

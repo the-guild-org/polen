@@ -1,4 +1,4 @@
-import { Polen } from '#/exports/index.js'
+import { Api } from '#api/index.js'
 import type { FsLayout } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
@@ -55,9 +55,7 @@ export const Demo = () => <span>MDX works</span>
 testCases.forEach(({ fixture, result, title }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.layout.set(fixture)
-    const viteConfig = await Polen.defineConfig({
-      root: project.layout.cwd,
-    })
+    const viteConfig = await Api.ConfigResolver.fromMemory({ root: project.layout.cwd })
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
     await page.goto(viteDevServer.url('/').href)
     await page.getByText(result.navBarTitle).click({ timeout: 1000 })

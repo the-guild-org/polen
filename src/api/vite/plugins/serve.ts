@@ -1,10 +1,10 @@
+import type { Config } from '#api/config/index.js'
 import type { Hono } from '#dep/hono/index.js'
 import type { Vite } from '#dep/vite/index.js'
 import * as HonoNodeServer from '@hono/node-server'
-import type { Configurator } from '../../configurator/index.js'
 
 export const Serve = (
-  config: Configurator.Config,
+  config: Config.Config,
 ): Vite.PluginOption => {
   return {
     name: `polen:serve`,

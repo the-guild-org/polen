@@ -1,11 +1,11 @@
+import type { Config } from '#api/config/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { ViteVirtual } from '#lib/vite-virtual/index.js'
 import { Fs, Path } from '@wollybeard/kit'
-import type { Configurator } from '../../configurator/index.js'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 import { vi } from '../vi.js'
 
-export const Build = (config: Configurator.Config): Vite.Plugin[] => {
+export const Build = (config: Config.Config): Vite.Plugin[] => {
   // let viteConfigResolved: Vite.ResolvedConfig
 
   // const outDir = Path.join(config.paths.project.rootDir, `dist`)
@@ -116,7 +116,7 @@ export const Build = (config: Configurator.Config): Vite.Plugin[] => {
 
 const viClientManifest = vi([`vite`, `client`, `manifest`])
 
-const Manifest = (config: Configurator.Config): Vite.Plugin => {
+const Manifest = (config: Config.Config): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv
 
   return {
