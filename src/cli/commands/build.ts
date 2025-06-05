@@ -5,7 +5,6 @@ import { Configurator } from '#api/config/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { Command } from '@molt/command'
 import { z } from 'zod'
-import { loadConfig } from '../../api/load-config.js'
 
 const args = Command.create()
   .parameter(`--debug -d`, z.boolean().default(false))

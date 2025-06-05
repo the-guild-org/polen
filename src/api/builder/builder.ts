@@ -1,5 +1,5 @@
+import { ConfigResolver } from '#api/config-resolver/index.js'
 import { Config } from '#api/config/index.js'
-import { Api } from '#api/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { Fs } from '@wollybeard/kit'
 import consola from 'consola'
@@ -17,7 +17,7 @@ interface BuildConfigInput {
 export const build = async (buildConfigInput: BuildConfigInput) => {
   const buildConfig = { ...buildDefaults, ...buildConfigInput }
 
-  const viteUserConfig = await Api.ConfigResolver.fromFile({
+  const viteUserConfig = await ConfigResolver.fromFile({
     dir: process.cwd(),
     overrides: {
       build: {

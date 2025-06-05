@@ -8,6 +8,7 @@
  * polen open --sdl https://docs.github.com/public/fpt/schema.docs.graphql
  */
 
+import { Api } from '#api/index.js'
 import { Vite } from '#dep/vite/index.js'
 import { Grafaid } from '#lib/grafaid/index.js'
 import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader/index.js'
@@ -16,7 +17,6 @@ import type { Fn } from '@wollybeard/kit'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'
 import { homedir } from 'node:os'
 import { z } from 'zod'
-import { defineConfig } from '../../api/define-config.js'
 
 const args = Command.create()
   .parameter(
@@ -156,7 +156,7 @@ const schema = await load(
     },
 )
 
-const config = await defineConfig({
+const config = await Api.ConfigResolver.fromMemory({
   root: await Fs.makeTemporaryDirectory(),
   schema: {
     dataSources: {

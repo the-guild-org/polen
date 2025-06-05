@@ -1,3 +1,4 @@
+import { Api } from '#api/index.js'
 import { debug as debugBase } from '#lib/debug/debug.js'
 import type { PackageManager } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
@@ -5,7 +6,6 @@ import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
 import * as GetPortPlease from 'get-port-please'
 import type { ProcessPromise } from 'zx'
-import type { ViteUserConfigWithPolen } from '../../../../src/api/config-resolver/vite.js'
 import type { ExampleName } from '../example-name.js'
 
 const projectDir = Path.join(import.meta.dirname, `../../../../`)
@@ -85,11 +85,7 @@ export const create = async (parameters: {
     }),
   })
 
-  const configFile = Path.join(project.layout.cwd, `polen.config.js`)
-  const module = await import(configFile) as {
-    default: Promise<ViteUserConfigWithPolen>
-  }
-  const config = await module.default
+  const config = await Api.ConfigResolver.fromFile({ dir: project.layout.cwd })
   debug(`loaded configuration`)
 
   return {
