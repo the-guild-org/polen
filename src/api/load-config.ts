@@ -29,7 +29,6 @@ export const loadConfig = async (args: {
     logger,
   )
 
-  // console.log(`wtf??`, args)
   let config: ViteUserConfigWithPolen
   if (loaded) {
     // hack: do one read
