@@ -1,6 +1,6 @@
 import type { Config } from '#api/config/index.js'
 import type { Vite } from '#dep/vite/index.js'
-import ViteReact from '@vitejs/plugin-react'
+import ViteReact from '@vitejs/plugin-react-oxc'
 // import { Arr, Path } from '@wollybeard/kit'
 // import Inspect from 'vite-plugin-inspect'
 // import Restart from 'vite-plugin-restart'
@@ -32,49 +32,8 @@ export const Main = (
   //   plugins.push(plugin)
   // }
 
-  // TODO: Remove this wrapper once @vitejs/plugin-react releases the fix for rolldown
-  // The fix is merged but not yet released: https://github.com/vitejs/vite-plugin-react/pull/489
-  const reactPlugin = ViteReact()
-  const reactPlugins = Array.isArray(reactPlugin) ? reactPlugin : [reactPlugin]
-  const wrappedReactPlugins = reactPlugins.map(plugin => {
-    if (!plugin || typeof plugin !== `object` || !(`name` in plugin)) return plugin
-
-    const vitePlugin = plugin as Vite.Plugin
-    return {
-      ...vitePlugin,
-      config: (config: Vite.UserConfig, env: Vite.ConfigEnv) => {
-        const originalConfig = vitePlugin.config
-        let result: any
-
-        if (typeof originalConfig === `function`) {
-          result = originalConfig.call(undefined, config, env)
-        } else if (originalConfig && typeof originalConfig === `object` && `handler` in originalConfig) {
-          result = originalConfig.handler.call(undefined, config, env)
-        }
-
-        if (result && typeof result === `object` && `optimizeDeps` in result) {
-          // eslint-disable-next-line
-          const optimizeDeps = result.optimizeDeps
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          if (optimizeDeps?.esbuildOptions) {
-            // Remove esbuildOptions to suppress rolldown warning
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const { esbuildOptions: ___, ...restOptimizeDeps } = optimizeDeps
-
-            return {
-              ...result,
-              // eslint-disable-next-line
-              optimizeDeps: restOptimizeDeps,
-            }
-          }
-        }
-        return result
-      },
-    } as Vite.Plugin
-  })
-
   plugins.push(
-    ...wrappedReactPlugins,
+    ViteReact(),
     Core(config),
     Serve(config),
     Build(config),

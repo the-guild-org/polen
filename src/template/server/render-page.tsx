@@ -57,7 +57,7 @@ const getStatusCode = (
   }
 
   // Then check for custom status in route handle
-  const handle = Arr.last(context.matches)?.route.handle as undefined | ReactRouterAid.RouteHandle
+  const handle = Arr.getLast(context.matches)?.route.handle as undefined | ReactRouterAid.RouteHandle
   if (handle?.statusCode) {
     return handle.statusCode
   }
