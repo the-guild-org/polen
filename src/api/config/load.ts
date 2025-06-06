@@ -33,7 +33,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
   const isSelfContainedModeEnabled = packagePaths.isRunningFromSource
   if (isSelfContainedModeEnabled && !isSelfContainedModeRegistered) {
     const initializeData: SelfContainedModeHooksData = {
-      projectDirPathExp: packagePaths.rootDir,
+      projectDirPathExp: options.dir,
     }
     _debug(`register node module hooks`, { data: initializeData })
     // TODO: would be simpler to use sync hooks
