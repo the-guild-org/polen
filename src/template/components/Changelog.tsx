@@ -1,11 +1,11 @@
-import type { GrafaidOld } from '#lib/grafaid-old/index.js'
-import { Grafaid } from '#lib/grafaid/index.js'
-import type { GraphqlChange } from '#lib/graphql-change/index.js'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
+import type { GrafaidOld } from '#lib/grafaid-old/index.ts'
+import { Grafaid } from '#lib/grafaid/index.ts'
+import type { GraphqlChange } from '#lib/graphql-change/index.ts'
+import type { GraphqlChangeset } from '#lib/graphql-changeset/index.ts'
 import { Box, Code } from '@radix-ui/themes'
 import type React from 'react'
-import type { Schema as ChangelogData } from '../../api/schema/index.js'
-import { Graphql } from './graphql/index.js'
+import type { Schema as ChangelogData } from '../../api/schema/index.ts'
+import { Graphql } from './graphql/index.ts'
 
 export const renderDate = (date: Date) => {
   return date.toLocaleString(`default`, {

@@ -1,18 +1,39 @@
+import { Arr, Language } from '@wollybeard/kit'
+
 export const enVarName = `DEBUG`
 
-export const enVarEnabledValuesStatic = [`true`, `*`, `1`]
+export const wildcard = `*`
+export const enVarEnabledValuesStatic = [`true`, wildcard, `1`]
 
 export const calcIsEnabledFromEnv = (
   enVars: Record<string, unknown>,
-  namespace?: string,
+  namespace?: string[],
 ): boolean => {
-  const enVar = typeof enVars[enVarName] === `string` ? enVars[enVarName].trim() : undefined
+  const namespace_ = namespace?.map(_ => _.toLowerCase())
+  const pattern = typeof enVars[enVarName] === `string`
+    ? enVars[enVarName]
+      .trim()
+      .toLowerCase()
+      .split(`:`)
+      .map(_ => _.trim())
+    : undefined
 
-  if (!enVar) return false
+  if (!pattern) return false
 
-  if (enVarEnabledValuesStatic.includes(enVar)) return true
+  if (pattern.length === 1 && enVarEnabledValuesStatic.includes(pattern[0]!)) return true
 
-  if (namespace) return enVar.startsWith(namespace)
+  if (!namespace_) return false
 
-  return false
+  if (Arr.getLast(pattern) !== wildcard) {
+    return pattern.join() === namespace_.join()
+  }
+
+  let i = 0
+  for (const segment of pattern) {
+    if (segment === wildcard) return true
+    if (segment !== namespace_[i]) return false
+    i++
+  }
+
+  Language.never()
 }

@@ -1,1 +1,1 @@
-export * from './vite-plugin-mdx.js'
+export * from './vite-plugin-mdx.ts'

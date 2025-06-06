@@ -1,12 +1,12 @@
-import type { Config } from '#api/config/index.js'
-import type { Vite } from '#dep/vite/index.js'
+import type { Config } from '#api/config/index.ts'
+import type { Vite } from '#dep/vite/index.ts'
 import ViteReact from '@vitejs/plugin-react-oxc'
 // import { Arr, Path } from '@wollybeard/kit'
 // import Inspect from 'vite-plugin-inspect'
 // import Restart from 'vite-plugin-restart'
-import { Build } from './build.js'
-import { Core } from './core.js'
-import { Serve } from './serve.js'
+import { Build } from './build.ts'
+import { Core } from './core.ts'
+import { Serve } from './serve.ts'
 
 export const Main = (
   config: Config.Config,

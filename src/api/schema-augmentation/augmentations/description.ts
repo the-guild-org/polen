@@ -1,7 +1,7 @@
-import type { GrafaidOld } from '#lib/grafaid-old/index.js'
+import type { GrafaidOld } from '#lib/grafaid-old/index.ts'
 import { neverCase } from '@wollybeard/kit/language'
-import type { Target } from '../target.js'
-import { locateTargetField, locateTargetType } from '../target.js'
+import type { Target } from '../target.ts'
+import { locateTargetField, locateTargetType } from '../target.ts'
 
 export const Placement = {
   Before: `before`,

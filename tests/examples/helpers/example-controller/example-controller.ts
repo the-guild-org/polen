@@ -1,5 +1,5 @@
 import { Api } from '#api/index.js'
-import { debug as debugBase } from '#lib/debug/debug.js'
+import { debugGlobal } from '#lib/debug/debug.js'
 import type { PackageManager } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
@@ -22,7 +22,7 @@ export const create = async (parameters: {
   polenLink?: PackageManager.LinkProtocol
   portProductionServer?: number
 }) => {
-  const debug = debugBase.sub(parameters.exampleName)
+  const debug = debugGlobal.sub(parameters.exampleName)
   debug.toggle(parameters.debugMode ?? false)
 
   const project = await Projector.create({

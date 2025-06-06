@@ -1,7 +1,14 @@
 import { Path } from '@wollybeard/kit'
 
 export interface PackagePaths {
+  name: string
+  isRunningFromSource: boolean
+  static: {
+    source: string
+    build: string
+  }
   rootDir: string
+  sourceExtension: `.js` | `.ts`
   sourceDir: string
   template: {
     rootDir: string
@@ -15,14 +22,28 @@ export interface PackagePaths {
   }
 }
 
+const sourceDirRelativeExp = `src`
+const buildDirRelativeExp = `build`
+
 /**
- * Usually ./build but if running with tsx then ./src
+ * Usually ./build but if running source then ./src
  */
 const sourceDir = import.meta.dirname
 const templateDir = Path.join(sourceDir, `template`)
 const rootDir = Path.join(sourceDir, `..`)
 
+const isRunningFromSource = sourceDir.endsWith(sourceDirRelativeExp)
+
+const sourceKind = isRunningFromSource ? `.ts` : `.js`
+
 export const packagePaths: PackagePaths = {
+  name: `polen`,
+  isRunningFromSource,
+  static: {
+    source: sourceDir,
+    build: buildDirRelativeExp,
+  },
+  sourceExtension: sourceKind,
   rootDir: rootDir,
   sourceDir,
   template: {

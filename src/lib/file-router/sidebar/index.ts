@@ -1,1 +1,1 @@
-export * as Sidebar from './sidebar.js'
+export * as Sidebar from './sidebar.ts'

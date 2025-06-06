@@ -1,6 +1,6 @@
-import { ConfigResolver } from '#api/config-resolver/index.js'
-import { Config } from '#api/config/index.js'
-import { Vite } from '#dep/vite/index.js'
+import { ConfigResolver } from '#api/config-resolver/index.ts'
+import { Config } from '#api/config/index.ts'
+import { Vite } from '#dep/vite/index.ts'
 import { Fs } from '@wollybeard/kit'
 import consola from 'consola'
 

@@ -1,2 +1,2 @@
-export * from './resolve.js'
-export * from './vite.js'
+export * from './resolve.ts'
+export * from './vite.ts'

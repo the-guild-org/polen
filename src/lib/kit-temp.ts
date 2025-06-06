@@ -13,6 +13,7 @@
 //
 
 import { Fs, Path, Undefined } from '@wollybeard/kit'
+import type { ResolveHookContext } from 'node:module'
 
 export const arrayEquals = (a: any[], b: any[]) => {
   if (a.length !== b.length) return false
@@ -48,4 +49,13 @@ export const assertOptionalPathAbsolute = (pathExpression: string | undefined, m
 export const pickFirstPathExisting = async (paths: string[]): Promise<string | undefined> => {
   const checks = await Promise.all(paths.map(path => Fs.exists(path).then(exists => exists ? path : undefined)))
   return checks.find(maybePath => maybePath !== undefined)
+}
+
+export const isSpecifierFromPackage = (specifier: string, packageName: string): boolean => {
+  return specifier === packageName || specifier.startsWith(packageName + `/`)
+}
+
+export interface ImportEvent {
+  specifier: string
+  context: ResolveHookContext
 }

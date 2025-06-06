@@ -1,1 +1,1 @@
-export * as Vite from './vite.js'
+export * as Vite from './vite.ts'

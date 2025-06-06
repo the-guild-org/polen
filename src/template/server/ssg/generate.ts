@@ -1,10 +1,10 @@
-import { Hono } from '#dep/hono/index.js'
-import type { ReactRouter } from '#dep/react-router/index.js'
-import { app } from '#template/server/app.js'
+import { Hono } from '#dep/hono/index.ts'
+import type { ReactRouter } from '#dep/react-router/index.ts'
+import { app } from '#template/server/app.ts'
 import * as NodeFs from 'node:fs/promises'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
 import { renderPage } from '../render-page.jsx'
-import { getRoutesPaths } from './get-route-paths.js'
+import { getRoutesPaths } from './get-route-paths.ts'
 
 export const generate = async (view: ReactRouter.StaticHandler) => {
   const handler: Hono.Handler = async (ctx) => {

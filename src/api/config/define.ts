@@ -1,5 +1,5 @@
 import { Fn } from '@wollybeard/kit'
-import type { ConfigInput } from './configurator.js'
+import type { ConfigInput } from './configurator.ts'
 
 /**
  * Define a Polen configuration.

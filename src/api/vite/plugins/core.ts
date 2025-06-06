@@ -1,18 +1,22 @@
-import type { Config } from '#api/config/index.js'
-import type { ReactRouter } from '#dep/react-router/index.js'
-import type { Vite } from '#dep/vite/index.js'
-import { FileRouter } from '#lib/file-router/index.js'
-import { ViteVirtual } from '#lib/vite-virtual/index.js'
+import type { Config } from '#api/config/index.ts'
+import { checkIsSelfContainedImport as checkIsSelfContainedImport } from '#cli/_/self-contained-mode.ts'
+import type { ReactRouter } from '#dep/react-router/index.ts'
+import type { Vite } from '#dep/vite/index.ts'
+import { FileRouter } from '#lib/file-router/index.ts'
+import { ViteVirtual } from '#lib/vite-virtual/index.ts'
+import { packagePaths } from '#package-paths.ts'
+import { debug } from '#singletons/debug.ts'
 import mdx from '@mdx-js/rollup'
 import { Cache, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
+import { fileURLToPath } from 'node:url'
 import remarkGfm from 'remark-gfm'
-import type { ProjectData, SidebarIndex, SiteNavigationItem } from '../../../project-data.js'
-import { superjson } from '../../../singletons/superjson.js'
-import { SchemaAugmentation } from '../../schema-augmentation/index.js'
-import { Schema } from '../../schema/index.js'
-import { logger } from '../logger.js'
-import { vi as pvi } from '../vi.js'
+import type { ProjectData, SidebarIndex, SiteNavigationItem } from '../../../project-data.ts'
+import { superjson } from '../../../singletons/superjson.ts'
+import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
+import { Schema } from '../../schema/index.ts'
+import { logger } from '../logger.ts'
+import { vi as pvi } from '../vi.ts'
 
 const viTemplateVariables = pvi([`template`, `variables`])
 const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
@@ -42,7 +46,33 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     return schema
   })
 
+  const plugins: Vite.Plugin[] = []
+
+  if (config.advanced.isSelfContainedMode) {
+    const vitePluginPolenSelfContainedMode: Vite.Plugin = {
+      name: `polen:self-contained-import`,
+      resolveId(id, importer) {
+        const d = debug.sub(`vite-plugin:self-contained-import`)
+        if (
+          checkIsSelfContainedImport({
+            projectDirPathExp: config.paths.project.rootDir,
+            specifier: id,
+            importer: importer ?? ``,
+          })
+        ) {
+          const to = fileURLToPath(import.meta.resolve(id))
+          d(`did resolve`, { from: id, to })
+
+          return to
+        }
+      },
+    }
+    plugins.push(vitePluginPolenSelfContainedMode)
+  }
+
   return [
+    ...plugins,
+
     // @see https://mdxjs.com/docs/getting-started/#vite
     {
       enforce: `pre`,
@@ -80,17 +110,38 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     //     return null
     //   },
     // },
+
+    /**
+     * If a `polen*` import is encountered from the user's project, resolve it to the currently
+     * running source code of Polen rather than the user's node_modules.
+     *
+     * Useful for the following cases:
+     *
+     * 1. Main: Using Polen CLI from the source code against some local example/development project.
+     *
+     * 2. Secondary: Using Polen CLI on a project that does not have Polen installed.
+     *    (User would likely not want to do this because they would not be able to achieve type safety)
+     */
+
     {
-      name: `polen:core:alias`,
+      name: `polen:internal-import-alias`,
       resolveId(id, importer) {
-        if (!(importer && pvi.includes(importer))) return null
+        const d = debug.sub(`vite-plugin:internal-import-alias`)
+        const isPolenImporterViaBuild = Boolean(importer?.includes(importer))
+        const isPolenImporterViaSource = Boolean(importer?.includes(packagePaths.sourceDir))
+        const isPolenImporter = isPolenImporterViaBuild || isPolenImporterViaSource
+        if (!isPolenImporter) return null
+
+        d(`check`)
 
         const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
         const match = Str.match(id, find)
         if (!match) return null
 
-        const replacement = `${config.paths.framework.sourceDir}/${match.groups.path}`
-        return replacement
+        const to = `${config.paths.framework.sourceDir}/${match.groups.path}`
+        d(`did resolve`, { from: id, to })
+
+        return to
       },
     },
     {
@@ -232,7 +283,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const projectDataCode = jsesc(superjson.stringify(projectData))
             const content = `
-            import { superjson } from '#singletons/superjson.js'
+            import { superjson } from '#singletons/superjson.ts'
 
             export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `

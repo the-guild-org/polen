@@ -1,1 +1,1 @@
-export * as GraphqlChangeset from './graphql-changeset.js'
+export * as GraphqlChangeset from './graphql-changeset.ts'

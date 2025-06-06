@@ -1,4 +1,4 @@
-import type { Vite } from '#dep/vite/index.js'
+import type { Vite } from '#dep/vite/index.ts'
 
 export type HookLoad = Vite.HookLoadFnPure
 

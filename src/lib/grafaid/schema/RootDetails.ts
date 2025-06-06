@@ -1,7 +1,7 @@
 import type { GraphQLObjectType } from 'graphql'
-import { type OperationType, RootTypeToOperationType } from '../document.js'
-import type { RootTypeMap } from './RootTypeMap.js'
-import { type StandardRootTypeName } from './StandardRootTypeName.js'
+import { type OperationType, RootTypeToOperationType } from '../document.ts'
+import type { RootTypeMap } from './RootTypeMap.ts'
+import { type StandardRootTypeName } from './StandardRootTypeName.ts'
 
 /**
  * Details about if and how the root type name has been customized in this schema.

@@ -1,3 +1,3 @@
-export { defineConfig } from '#api/config/config.js'
-export { type ConfigInput } from '#api/config/configurator.js'
-export { Main as VitePlugin } from '#api/vite/plugins/main.js'
+export { defineConfig } from '#api/config/config.ts'
+export { type ConfigInput } from '#api/config/configurator.ts'
+export { Main as VitePlugin } from '#api/vite/plugins/main.ts'

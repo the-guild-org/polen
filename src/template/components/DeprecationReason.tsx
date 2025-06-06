@@ -1,4 +1,4 @@
-import type { GrafaidOld } from '#lib/grafaid-old/index.js'
+import type { GrafaidOld } from '#lib/grafaid-old/index.ts'
 import { Text } from '@radix-ui/themes'
 import type { FC } from 'react'
 import { Markdown } from './Markdown.jsx'

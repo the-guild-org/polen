@@ -1,5 +1,5 @@
 import { Idx, Path } from '@wollybeard/kit'
-import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.js'
+import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.ts'
 
 export type Diagnostic = DiagnosticIndexConflict
 

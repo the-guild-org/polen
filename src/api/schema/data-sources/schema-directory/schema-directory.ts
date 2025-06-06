@@ -1,13 +1,13 @@
-import { Debug } from '#lib/debug/index.js'
-import { Grafaid } from '#lib/grafaid/index.js'
-import { GraphqlChange } from '#lib/graphql-change/index.js'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
+import { Grafaid } from '#lib/grafaid/index.ts'
+import { GraphqlChange } from '#lib/graphql-change/index.ts'
+import type { GraphqlChangeset } from '#lib/graphql-changeset/index.ts'
+import { debug as debugPolen } from '#singletons/debug.ts'
 import { Arr, Path } from '@wollybeard/kit'
 import { glob } from 'tinyglobby'
-import type { Schema } from '../../schema.js'
-import { FileNameExpression } from './file-name-expression/index.js'
+import type { Schema } from '../../schema.ts'
+import { FileNameExpression } from './file-name-expression/index.ts'
 
-const debug = Debug.create(`polen:schema:data-source-schema-directory`)
+const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
 
 const defaultPaths = {
   schemaDirectory: `./schema`,

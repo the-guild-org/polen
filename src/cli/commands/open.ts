@@ -8,10 +8,10 @@
  * polen open --sdl https://docs.github.com/public/fpt/schema.docs.graphql
  */
 
-import { Api } from '#api/index.js'
-import { Vite } from '#dep/vite/index.js'
-import { Grafaid } from '#lib/grafaid/index.js'
-import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader/index.js'
+import { Api } from '#api/index.ts'
+import { Vite } from '#dep/vite/index.ts'
+import { Grafaid } from '#lib/grafaid/index.ts'
+import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader/index.ts'
 import { Command } from '@molt/command'
 import type { Fn } from '@wollybeard/kit'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'

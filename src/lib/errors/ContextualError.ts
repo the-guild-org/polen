@@ -1,4 +1,4 @@
-import type { Cause, Context } from './types.js'
+import type { Cause, Context } from './types.ts'
 
 /**
  * Error enhanced with a context object.

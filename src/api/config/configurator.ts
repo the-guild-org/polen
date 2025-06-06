@@ -1,10 +1,10 @@
-import type { Vite } from '#dep/vite/index.js'
-import { assertPathAbsolute } from '#lib/kit-temp.js'
+import type { Vite } from '#dep/vite/index.ts'
+import { assertPathAbsolute } from '#lib/kit-temp.ts'
 import { Path } from '@wollybeard/kit'
 import { z } from 'zod'
-import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
-import { type PackagePaths, packagePaths } from '../../package-paths.js'
-import type { Schema } from '../schema/index.js'
+import type { SchemaAugmentation } from '../../api/schema-augmentation/index.ts'
+import { type PackagePaths, packagePaths } from '../../package-paths.ts'
+import type { Schema } from '../schema/index.ts'
 
 export const BuildArchitectureEnum = {
   ssg: `ssg`,
@@ -51,6 +51,22 @@ export interface ConfigInput {
   }
   advanced?: {
     explorer?: boolean
+    /**
+     * Force the CLI to resolve Polen imports in your project to itself rather than
+     * to what you have installed in your project.
+     *
+     * If you are using a Polen CLI from your local project against your local project
+     * then there can be no effect from this setting.
+     *
+     * This is mostly useful for:
+     *
+     * - Development of Polen itself
+     * - Global CLI usage against ephemeral projects e.g. a directory with just a
+     *   GraphQL Schema file.
+     *
+     * @defaultValue false
+     */
+    isSelfContainedMode?: boolean
     /**
      * Tweak the watch behavior.
      */
@@ -159,6 +175,7 @@ export interface Config {
     framework: PackagePaths
   }
   advanced: {
+    isSelfContainedMode: boolean
     explorer: boolean
     debug: boolean
     vite?: Vite.UserConfig
@@ -183,6 +200,7 @@ const configInputDefaults: Config = {
   },
   paths: buildPaths(process.cwd()),
   advanced: {
+    isSelfContainedMode: false,
     debug: false,
     explorer: false,
   },
@@ -244,6 +262,10 @@ export const normalizeInput = async (
 
   if (configInput?.schema) {
     config.schema = configInput.schema
+  }
+
+  if (configInput?.advanced?.isSelfContainedMode !== undefined) {
+    config.advanced.isSelfContainedMode = configInput.advanced.isSelfContainedMode
   }
 
   if (configInput?.advanced?.explorer !== undefined) {

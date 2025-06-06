@@ -1,7 +1,8 @@
-import { type ConfigInput, normalizeInput } from '../config/configurator.js'
-import { load, type LoadOptions } from '../config/load.js'
-import { mergeInputs } from '../config/merge.js'
-import { toViteUserConfig, type ViteUserConfigWithPolen } from './vite.js'
+import { debug } from '#singletons/debug.ts'
+import { type ConfigInput, normalizeInput } from '../config/configurator.ts'
+import { load, type LoadOptions } from '../config/load.ts'
+import { mergeInputs } from '../config/merge.ts'
+import { toViteUserConfig, type ViteUserConfigWithPolen } from './vite.ts'
 
 interface ResolveFromFileOptions extends LoadOptions {
   overrides?: ConfigInput
@@ -10,7 +11,9 @@ interface ResolveFromFileOptions extends LoadOptions {
 export const fromFile = async (options: ResolveFromFileOptions): Promise<ViteUserConfigWithPolen> => {
   const configInput = await load(options)
   const configInputMerged = mergeInputs(configInput, options.overrides)
-  return fromMemory(configInputMerged, options.dir)
+  const config = await fromMemory(configInputMerged, options.dir)
+  debug(`resolved config`, config)
+  return config
 }
 
 export const fromMemory = async (
