@@ -21,7 +21,7 @@ export interface LintResult {
 export const lint = (routes: Route[]): LintResult => {
   const diagnostics: Diagnostic[] = []
 
-  const seen = Idx.create({ toKey: routeToPathExpression })
+  const seen = Idx.create({ key: routeToPathExpression })
 
   // ━ Check for conflict between index and literal.
   //   Note: There is no other way for paths to conflict so we safely assuming the cause is index+literal.
@@ -58,6 +58,6 @@ export const lint = (routes: Route[]): LintResult => {
 
   return {
     diagnostics,
-    routes: seen.data.array,
+    routes: seen.toArray(),
   }
 }

@@ -53,7 +53,10 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     // @see https://mdxjs.com/docs/getting-started/#vite
     {
       enforce: `pre`,
+      // TODO: Use inline vite-plugin-mdx once transform hooks can change module type
+      // @see https://github.com/rolldown/rolldown/issues/4004
       ...mdx({
+        jsxImportSource: `polen/react`,
         remarkPlugins: [
           remarkGfm,
         ],
@@ -114,11 +117,23 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             port: 3000,
           },
           customLogger: logger,
+          esbuild: false,
+          // oxc: {
+          //   jsx: {
+          //     runtime: 'automatic',
+          //     importSource: 'react',
+          //   },
+          // },
           build: {
             target: `esnext`,
             assetsDir: config.paths.project.relative.build.relative.assets,
             rollupOptions: {
-              treeshake: `smallest`,
+              treeshake: {
+                // Aggressive tree-shaking for smallest bundles
+                moduleSideEffects: false, // Only include code if an export is actually used
+                annotations: true, // Respect @__PURE__ annotations for better dead code elimination
+                unknownGlobalSideEffects: false, // Assume global functions don't have side effects
+              },
             },
             minify: !config.advanced.debug,
             outDir: config.paths.project.absolute.build.root,
@@ -273,7 +288,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
  */
 const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sidebar => {
   const navs: SidebarNav[] = []
-  const sections = Idx.create<SidebarSection, string>({ toKey: (item) => item.pathExp })
+  const sections = Idx.create<SidebarSection, string>({ key: (item) => item.pathExp })
 
   // Items
   for (const page of pages) {
@@ -290,7 +305,7 @@ const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sid
         const sectionPathExp = FileRouter.pathToExpression(sectionPath)
 
         let section: SidebarSection | undefined
-        section = sections.getKey(sectionPathExp)
+        section = sections.getAt(sectionPathExp)
 
         if (!section) {
           const sectionTitle = Str.titlizeSlug(FileRouter.pathToExpression(pageRelative.logical.path))
@@ -320,7 +335,7 @@ const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sid
       const sectionPathExp = FileRouter.pathToExpression(sectionPath)
 
       let section: SidebarSection | undefined
-      section = sections.getKey(sectionPathExp)
+      section = sections.getAt(sectionPathExp)
 
       if (!section) {
         const sectionTitle = Str.titlizeSlug(FileRouter.pathToExpression(sectionRelativePath))
@@ -337,16 +352,13 @@ const buildSidebar = (pages: FileRouter.Route[], basePath: FileRouter.Path): Sid
     }
   }
 
-  const items = [...navs, ...sections.data.array]
+  const items = [...navs, ...sections.toArray()]
 
   return {
     items,
   }
 }
 
-/**
- * Helper function to build sidebar items recursively
- */
 const pageToSidebarNav = (page: FileRouter.Route, basePath: FileRouter.Path): SidebarNav => {
   const pagePathExp = FileRouter.routeToPathExpression(page)
   const pageRelative = FileRouter.makeRelativeUnsafe(page, basePath)
