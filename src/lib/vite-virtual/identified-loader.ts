@@ -1,6 +1,6 @@
 import type { Vite } from '#dep/vite/index.ts'
-import { debugGlobal } from '../debug/debug.ts'
 import { StackProcessor } from '../stack-processor/index.ts'
+import { debug } from './debug.ts'
 import type { HookLoad, HookResolveId } from './hooks.ts'
 import type { Identifier } from './identifier.ts'
 
@@ -15,9 +15,9 @@ export const toHookLoad = (
   return async (...args) => {
     // debug(`load candidate`, { virtualIdentifier, args })
     if (args[0] === identifiedLoader.identifier.resolved) {
-      debugGlobal(`will load`, { identifier: identifiedLoader.identifier })
+      debug(`will load`, { identifier: identifiedLoader.identifier })
       const result = await identifiedLoader.loader(...args)
-      debugGlobal(`did load`, { identifier: identifiedLoader.identifier, result })
+      debug(`did load`, { identifier: identifiedLoader.identifier, result })
       // Add moduleType for Rolldown compatibility
       if (result && typeof result === `string`) {
         return { code: result, moduleType: `js` }
