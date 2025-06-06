@@ -1,7 +1,9 @@
+import type { Vite } from '#dep/vite/index.ts'
 import { type ImportEvent, isSpecifierFromPackage } from '#lib/kit-temp.ts'
 import { packagePaths } from '#package-paths.ts'
 import { debug } from '#singletons/debug.ts'
 import type * as Module from 'node:module'
+import { fileURLToPath } from 'node:url'
 
 export interface SelfContainedModeHooksData {
   projectDirPathExp: string
@@ -24,10 +26,10 @@ export const resolve: Module.ResolveHook = async (specifier, context, nextResolv
   }
 
   if (
-    from.context.parentURL && checkIsSelfContainedImport({
+    from.context.parentURL && checkIsSelfImportFromProject({
       projectDirPathExp: data_.projectDirPathExp,
       specifier,
-      importer: from.context.parentURL,
+      importerPathExpOrFileUrlExp: from.context.parentURL,
     })
   ) {
     _debug(`resolve check`, { specifier, context })
@@ -49,16 +51,35 @@ export const resolve: Module.ResolveHook = async (specifier, context, nextResolv
   return nextResolve(specifier, context)
 }
 
-export const checkIsSelfContainedImport = (input: {
+export const checkIsSelfImportFromProject = (input: {
   specifier: string
-  importer: string
+  importerPathExpOrFileUrlExp: string
   projectDirPathExp: string
 }): boolean => {
   // Not clear it would ever not be the case but we're being careful here.
   // ...would be intersted to know if this is ever false.
-  const isImporterTheProject = input.importer.includes(input.projectDirPathExp)
+  const isImporterTheProject = input.importerPathExpOrFileUrlExp.includes(input.projectDirPathExp)
 
   const isImportMe = isSpecifierFromPackage(input.specifier, packagePaths.name)
 
   return isImporterTheProject && isImportMe
+}
+
+export const VitePluginSelfContainedMode = ({ projectDirPathExp }: { projectDirPathExp: string }): Vite.Plugin => {
+  const d = debug.sub(`vite-plugin:self-contained-import`)
+
+  return {
+    name: `polen:self-contained-import`,
+    resolveId(id, importer) {
+      const isSelfContainedImport = importer
+        && checkIsSelfImportFromProject({ projectDirPathExp, specifier: id, importerPathExpOrFileUrlExp: importer })
+      if (!isSelfContainedImport) return
+
+      const to = fileURLToPath(import.meta.resolve(id))
+
+      d(`did resolve`, { from: id, to })
+
+      return to
+    },
+  }
 }

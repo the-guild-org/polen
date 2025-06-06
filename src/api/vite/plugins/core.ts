@@ -1,5 +1,5 @@
 import type { Config } from '#api/config/index.ts'
-import { checkIsSelfContainedImport as checkIsSelfContainedImport } from '#cli/_/self-contained-mode.ts'
+import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode.ts'
 import type { ReactRouter } from '#dep/react-router/index.ts'
 import type { Vite } from '#dep/vite/index.ts'
 import { FileRouter } from '#lib/file-router/index.ts'
@@ -9,7 +9,6 @@ import { debug } from '#singletons/debug.ts'
 import mdx from '@mdx-js/rollup'
 import { Cache, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
-import { fileURLToPath } from 'node:url'
 import remarkGfm from 'remark-gfm'
 import type { ProjectData, SidebarIndex, SiteNavigationItem } from '../../../project-data.ts'
 import { superjson } from '../../../singletons/superjson.ts'
@@ -48,31 +47,19 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
   const plugins: Vite.Plugin[] = []
 
+  // Note: The main use for this right now is to resolve the react imports
+  // from the mdx vite plugin which have to go through the Polen exports since Polen keeps those deps bundled.
+  //
+  // If we manage to get the mdx vite plugin that defers JSX transform to Rolldown then we can remove this!
+  //
   if (config.advanced.isSelfContainedMode) {
-    const vitePluginPolenSelfContainedMode: Vite.Plugin = {
-      name: `polen:self-contained-import`,
-      resolveId(id, importer) {
-        const d = debug.sub(`vite-plugin:self-contained-import`)
-        if (
-          checkIsSelfContainedImport({
-            projectDirPathExp: config.paths.project.rootDir,
-            specifier: id,
-            importer: importer ?? ``,
-          })
-        ) {
-          const to = fileURLToPath(import.meta.resolve(id))
-          d(`did resolve`, { from: id, to })
-
-          return to
-        }
-      },
-    }
-    plugins.push(vitePluginPolenSelfContainedMode)
+    plugins.push(VitePluginSelfContainedMode({
+      projectDirPathExp: config.paths.project.rootDir,
+    }))
   }
 
   return [
     ...plugins,
-
     // @see https://mdxjs.com/docs/getting-started/#vite
     {
       enforce: `pre`,

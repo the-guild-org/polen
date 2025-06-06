@@ -20,13 +20,13 @@ export interface LoadOptions {
 let isSelfContainedModeRegistered = false
 
 export const load = async (options: LoadOptions): Promise<ConfigInput> => {
-  const d = debug.sub(`load`)
+  const _debug = debug.sub(`load`)
   assertOptionalPathAbsolute(options.dir)
 
   //
   // ━━ Enable Self-Contained Mode
   //
-  //  - When we're running CLI from source code)
+  //  - When we're running CLI from source code
   //  - Do this BEFORE trying to load the config file
   //
 
@@ -35,7 +35,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
     const initializeData: SelfContainedModeHooksData = {
       projectDirPathExp: packagePaths.rootDir,
     }
-    d(`register node module hooks`, { data: initializeData })
+    _debug(`register node module hooks`, { data: initializeData })
     // TODO: would be simpler to use sync hooks
     // https://nodejs.org/api/module.html#synchronous-hooks-accepted-by-moduleregisterhooks
     // Requires NodeJS 22.15+ -- which is not working with PW until its next release.
@@ -67,7 +67,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
       // eslint-disable-next-line
       module = await import(filePath)
     }
-    d(`imported config module`)
+    _debug(`imported config module`)
 
     //       // Use dynamic import with file URL to support Windows
     //       const configUrl = pathToFileURL(configPath).href
@@ -97,7 +97,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
     configInput.advanced.isSelfContainedMode = true
   }
 
-  d(`loaded config input`, configInput)
+  _debug(`loaded config input`, configInput)
 
   return configInput
 }
