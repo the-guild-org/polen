@@ -1,5 +1,5 @@
-import { createRoute } from '#lib/react-router-aid/react-router-aid.ts'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.ts'
+import { createRoute } from '#lib/react-router-aid/react-router-aid.js'
+import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { Container, Flex } from '@radix-ui/themes'
 import { Outlet } from 'react-router'
 import { PROJECT_DATA } from 'virtual:polen/project/data'

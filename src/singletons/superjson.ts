@@ -1,5 +1,5 @@
-import { Superjson } from '#dep/superjson/index.ts'
-import { SuperjsonCodecs } from '#lib/superjson-codec/index.ts'
+import { Superjson } from '#dep/superjson/index.js'
+import { SuperjsonCodecs } from '#lib/superjson-codec/index.js'
 
 const superjson = new Superjson.SuperJSON()
 

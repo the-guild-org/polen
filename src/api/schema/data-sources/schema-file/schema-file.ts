@@ -1,6 +1,6 @@
-import { Grafaid } from '#lib/grafaid/index.ts'
-import { GraphqlChange } from '#lib/graphql-change/index.ts'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index.ts'
+import { Grafaid } from '#lib/grafaid/index.js'
+import { GraphqlChange } from '#lib/graphql-change/index.js'
+import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
 import { Path } from '@wollybeard/kit'
 import type { Schema } from '../../schema.ts'
 

@@ -1,7 +1,7 @@
-import type { Vite } from '#dep/vite/index.ts'
-import { type ImportEvent, isSpecifierFromPackage } from '#lib/kit-temp.ts'
-import { packagePaths } from '#package-paths.ts'
-import { debug } from '#singletons/debug.ts'
+import type { Vite } from '#dep/vite/index.js'
+import { type ImportEvent, isSpecifierFromPackage } from '#lib/kit-temp.js'
+import { packagePaths } from '#package-paths.js'
+import { debug } from '#singletons/debug.js'
 import type * as Module from 'node:module'
 import { fileURLToPath } from 'node:url'
 

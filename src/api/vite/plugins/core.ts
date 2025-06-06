@@ -1,10 +1,10 @@
-import type { Config } from '#api/config/index.ts'
-import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode.ts'
-import type { ReactRouter } from '#dep/react-router/index.ts'
-import type { Vite } from '#dep/vite/index.ts'
-import { FileRouter } from '#lib/file-router/index.ts'
-import { ViteVirtual } from '#lib/vite-virtual/index.ts'
-import { debug } from '#singletons/debug.ts'
+import type { Config } from '#api/config/index.js'
+import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode.js'
+import type { ReactRouter } from '#dep/react-router/index.js'
+import type { Vite } from '#dep/vite/index.js'
+import { FileRouter } from '#lib/file-router/index.js'
+import { ViteVirtual } from '#lib/vite-virtual/index.js'
+import { debug } from '#singletons/debug.js'
 import mdx from '@mdx-js/rollup'
 import { Cache, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
@@ -124,7 +124,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                 Example case:
 
                 POLEN   VITE_PLUGIN_INTERNAL_IMPORT_ALIAS   CHECK  {
-                  id: '#singletons/superjson.ts',
+                  id: '#singletons/superjson',
                   importer: '/Users/jasonkuhrt/projects/the-guild-org/polen/index.html',
                   isPolenImporter: false
                 }
@@ -285,7 +285,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const projectDataCode = jsesc(superjson.stringify(projectData))
             const content = `
-            import { superjson } from '#singletons/superjson.ts'
+            import { superjson } from '#singletons/superjson.js'
 
             export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `

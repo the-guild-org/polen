@@ -1,4 +1,4 @@
-import { debug } from '#singletons/debug.ts'
+import { debug } from '#singletons/debug.js'
 import { type ConfigInput, normalizeInput } from '../config/configurator.ts'
 import { load, type LoadOptions } from '../config/load.ts'
 import { mergeInputs } from '../config/merge.ts'

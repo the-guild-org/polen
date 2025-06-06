@@ -1,4 +1,4 @@
-import type { Vite } from '#dep/vite/index.ts'
+import type { Vite } from '#dep/vite/index.js'
 import { Group, Str } from '@wollybeard/kit'
 
 export const injectManifestIntoHtml = (

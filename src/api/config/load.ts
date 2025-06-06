@@ -1,7 +1,7 @@
-import type { SelfContainedModeHooksData } from '#cli/_/self-contained-mode.ts'
-import { assertOptionalPathAbsolute, pickFirstPathExisting } from '#lib/kit-temp.ts'
-import { packagePaths } from '#package-paths.ts'
-import { debug } from '#singletons/debug.ts'
+import type { SelfContainedModeHooksData } from '#cli/_/self-contained-mode.js'
+import { assertOptionalPathAbsolute, pickFirstPathExisting } from '#lib/kit-temp.js'
+import { packagePaths } from '#package-paths.js'
+import { debug } from '#singletons/debug.js'
 import type { Prom } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
 import * as Module from 'node:module'
@@ -39,7 +39,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
     // TODO: would be simpler to use sync hooks
     // https://nodejs.org/api/module.html#synchronous-hooks-accepted-by-moduleregisterhooks
     // Requires NodeJS 22.15+ -- which is not working with PW until its next release.
-    Module.register(`#cli/_/self-contained-mode.ts`, import.meta.url, { data: initializeData })
+    Module.register(`#cli/_/self-contained-mode.js`, import.meta.url, { data: initializeData })
     isSelfContainedModeRegistered = true
   }
 

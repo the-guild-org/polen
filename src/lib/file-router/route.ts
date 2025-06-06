@@ -1,4 +1,4 @@
-import { arrayEquals } from '#lib/kit-temp.ts'
+import { arrayEquals } from '#lib/kit-temp.js'
 import { type Path } from '@wollybeard/kit'
 
 //

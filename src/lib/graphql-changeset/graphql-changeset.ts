@@ -1,5 +1,5 @@
-import type { GrafaidOld } from '#lib/grafaid-old/index.ts'
-import type { GraphqlChange } from '#lib/graphql-change/index.ts'
+import type { GrafaidOld } from '#lib/grafaid-old/index.js'
+import type { GraphqlChange } from '#lib/graphql-change/index.js'
 
 export interface ChangeSet {
   after: GrafaidOld.Schema.Schema

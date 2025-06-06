@@ -1,7 +1,7 @@
-import { Grafaid } from '#lib/grafaid/index.ts'
+import { Grafaid } from '#lib/grafaid/index.js'
 import { visit } from 'graphql'
 // Or your specific import path for this type
-import { ReactRouterAid } from '#lib/react-router-aid/index.ts'
+import { ReactRouterAid } from '#lib/react-router-aid/index.js'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
 import { routes } from '../../routes.jsx'
 

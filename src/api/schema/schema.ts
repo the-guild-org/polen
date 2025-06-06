@@ -1,4 +1,4 @@
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index.ts'
+import type { GraphqlChangeset } from '#lib/graphql-changeset/index.js'
 
 export * as DataSources from './data-sources/data-sources.ts'
 

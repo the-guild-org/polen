@@ -1,4 +1,4 @@
-import { Grafaid } from '#lib/grafaid/index.ts'
+import { Grafaid } from '#lib/grafaid/index.js'
 import { Box, Heading } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'

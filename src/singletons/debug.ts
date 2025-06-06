@@ -1,3 +1,3 @@
-import { Debug } from '#lib/debug/index.ts'
+import { Debug } from '#lib/debug/index.js'
 
 export const debug = Debug.create(`polen`)

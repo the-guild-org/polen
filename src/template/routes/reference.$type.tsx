@@ -1,5 +1,5 @@
-import { createRoute } from '#lib/react-router-aid/react-router-aid.ts'
-import { useLoaderData } from '#lib/react-router-loader/react-router-loader.ts'
+import { createRoute } from '#lib/react-router-aid/react-router-aid.js'
+import { useLoaderData } from '#lib/react-router-loader/react-router-loader.js'
 import { useParams } from 'react-router'
 import { MissingSchema } from '../components/MissingSchema.jsx'
 import { NamedType } from '../components/NamedType.jsx'
