@@ -4,7 +4,6 @@ import type { ReactRouter } from '#dep/react-router/index.ts'
 import type { Vite } from '#dep/vite/index.ts'
 import { FileRouter } from '#lib/file-router/index.ts'
 import { ViteVirtual } from '#lib/vite-virtual/index.ts'
-import { packagePaths } from '#package-paths.ts'
 import { debug } from '#singletons/debug.ts'
 import mdx from '@mdx-js/rollup'
 import { Cache, Json, Path, Str } from '@wollybeard/kit'
@@ -15,13 +14,13 @@ import { superjson } from '../../../singletons/superjson.ts'
 import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
 import { Schema } from '../../schema/index.ts'
 import { logger } from '../logger.ts'
-import { vi as pvi } from '../vi.ts'
+import { vi as polenVirtual } from '../vi.ts'
 
-const viTemplateVariables = pvi([`template`, `variables`])
-const viTemplateSchemaAugmentations = pvi([`template`, `schema-augmentations`])
-const viProjectData = pvi([`project`, `data`])
+const viTemplateVariables = polenVirtual([`template`, `variables`])
+const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
+const viProjectData = polenVirtual([`project`, `data`])
 
-const viProjectPages = pvi([`project`, `pages.jsx`], { allowPluginProcessing: true })
+const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
 export interface ProjectPagesModule {
   pages: ReactRouter.RouteObject[]
 }
@@ -114,12 +113,28 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       name: `polen:internal-import-alias`,
       resolveId(id, importer) {
         const d = debug.sub(`vite-plugin:internal-import-alias`)
-        const isPolenImporterViaBuild = Boolean(importer?.includes(importer))
-        const isPolenImporterViaSource = Boolean(importer?.includes(packagePaths.sourceDir))
-        const isPolenImporter = isPolenImporterViaBuild || isPolenImporterViaSource
-        if (!isPolenImporter) return null
 
-        d(`check`)
+        const isPolenImporter = Boolean(
+          importer
+            && (
+              importer.startsWith(config.paths.framework.sourceDir)
+              || polenVirtual.includes(importer)
+              /*
+                TODO: can we make index.html be in the source dir?
+                Example case:
+
+                POLEN   VITE_PLUGIN_INTERNAL_IMPORT_ALIAS   CHECK  {
+                  id: '#singletons/superjson.ts',
+                  importer: '/Users/jasonkuhrt/projects/the-guild-org/polen/index.html',
+                  isPolenImporter: false
+                }
+              */
+              || (importer.startsWith(config.paths.framework.rootDir) && importer.endsWith(`index.html`))
+            ),
+        )
+
+        if (!isPolenImporter) return null
+        d(`check candidate`, { id, importer, isPolenImporter })
 
         const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
         const match = Str.match(id, find)
