@@ -25,9 +25,17 @@
     "url": "git+https://github.com/the-guild-org/polen.git"
   },
   "imports": {
-    "#*.js": {
-      "source": "./src/*.ts",
-      "default": "./build/*.js"
+    "#*": {
+      "source": [
+        "./src/*.ts",
+        "./src/*.tsx",
+        "./src/*/index.ts",
+        "./src/*/index.tsx"
+      ],
+      "default": [
+        "./build/*.js",
+        "./build/*/index.js"
+      ]
     }
   },
   "exports": {

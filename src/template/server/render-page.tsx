@@ -1,5 +1,5 @@
-import type { ReactRouter } from '#dep/react-router/index.js'
-import type { ReactRouterAid } from '#lib/react-router-aid/index.js'
+import type { ReactRouter } from '#dep/react-router'
+import type { ReactRouterAid } from '#lib/react-router-aid'
 import { Arr } from '@wollybeard/kit'
 import { StrictMode } from 'react'
 import * as ReactDomServer from 'react-dom/server'

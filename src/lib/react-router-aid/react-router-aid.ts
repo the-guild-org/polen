@@ -1,4 +1,4 @@
-import type { ReactRouter } from '#dep/react-router/index.js'
+import type { ReactRouter } from '#dep/react-router'
 import type { Http } from '@wollybeard/kit'
 
 export * from './get-paths-patterns.ts'

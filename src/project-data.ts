@@ -1,5 +1,5 @@
-import type { Config } from '#api/config/index.js'
-import type { FileRouter } from '#lib/file-router/index.js'
+import type { Config } from '#api/config'
+import type { FileRouter } from '#lib/file-router'
 import type { Schema } from './api/schema/index.ts'
 
 export interface ProjectData {

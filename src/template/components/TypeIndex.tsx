@@ -1,4 +1,4 @@
-import { GrafaidOld } from '#lib/grafaid-old/index.js'
+import { GrafaidOld } from '#lib/grafaid-old'
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import { Obj } from '@wollybeard/kit'
 import type { GraphQLNamedType, GraphQLSchema } from 'graphql'

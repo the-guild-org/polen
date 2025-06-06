@@ -1,5 +1,5 @@
-import type { ReactRouter } from '#dep/react-router/index.js'
-import { createRoute } from '#lib/react-router-aid/react-router-aid.js'
+import type { ReactRouter } from '#dep/react-router'
+import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import { Box, Button, Heading, Text } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'

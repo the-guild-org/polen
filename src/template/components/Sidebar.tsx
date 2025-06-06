@@ -1,4 +1,4 @@
-import type { FileRouter } from '#lib/file-router/index.js'
+import type { FileRouter } from '#lib/file-router'
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import { useState } from 'react'

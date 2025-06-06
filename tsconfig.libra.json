@@ -22,7 +22,10 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "#*.js": ["./src/*.ts"]
+      "#*": [
+        "./src/*",
+        "./src/*/index"
+      ]
     },
 
     // DX covered by ESLint:
