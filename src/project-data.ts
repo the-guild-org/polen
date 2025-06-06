@@ -23,25 +23,5 @@ export interface SiteNavigationItem {
 }
 
 export interface SidebarIndex {
-  [pathExpression: string]: Sidebar
-}
-
-export interface Sidebar {
-  items: SidebarItem[]
-}
-
-export type SidebarItem = SidebarNav | SidebarSection
-
-export interface SidebarNav {
-  type: `SidebarItem`
-  title: string
-  pathExp: string
-}
-
-export interface SidebarSection {
-  type: `SidebarSection`
-  title: string
-  pathExp: string
-  isNavToo: boolean
-  navs: SidebarNav[]
+  [pathExpression: string]: FileRouter.Sidebar.Sidebar
 }
