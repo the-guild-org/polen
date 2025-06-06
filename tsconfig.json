@@ -9,6 +9,7 @@
 
     // Other
     "exactOptionalPropertyTypes": false,
+    "noImplicitReturns": false, // Great for middleware DX
     "lib": ["DOM", "es2023", "DOM.Iterable"]
   },
   "exclude": [
