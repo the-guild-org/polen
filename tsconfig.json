@@ -6,7 +6,7 @@
   "compilerOptions": {
     // Output
     "jsx": "preserve",
-    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
 
     // Other
     "exactOptionalPropertyTypes": false,
