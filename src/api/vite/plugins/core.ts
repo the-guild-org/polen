@@ -56,7 +56,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       // TODO: Use inline vite-plugin-mdx once transform hooks can change module type
       // @see https://github.com/rolldown/rolldown/issues/4004
       ...mdx({
-        // jsxImportSource: `polen/react`,
+        jsxImportSource: `polen/react`,
         remarkPlugins: [
           remarkGfm,
         ],
