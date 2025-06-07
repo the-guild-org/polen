@@ -3,7 +3,8 @@ import { Vite } from '#dep/vite/index'
 import type { Polen } from '#exports/index'
 
 export const defaultViteConfig: Vite.UserConfig = {
-  customLogger: Vite.createLogger(`silent`, {}),
+  // Don't override Polen's custom logger which already filters optimization messages
+  // customLogger: Vite.createLogger(`silent`, {}),
 }
 
 export const pc = (configInput?: Polen.ConfigInput) => {
