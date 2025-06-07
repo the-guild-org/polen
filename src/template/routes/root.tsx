@@ -4,9 +4,11 @@ import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import { Box, Button, Heading, Text } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
+import { Arr } from '@wollybeard/kit'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import { PROJECT_DATA } from 'virtual:polen/project/data'
+import { pages } from 'virtual:polen/project/pages.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link } from '../components/Link.jsx'
 import { Sidebar } from '../components/Sidebar.jsx'
@@ -193,9 +195,6 @@ children.push(notFoundRoute)
 // ━━━━━━━━━━━━━━ • Root Route
 //
 //
-
-import { Arr } from '@wollybeard/kit'
-import { pages } from 'virtual:polen/project/pages.jsx'
 
 export const root = createRoute({
   path: `/`,
