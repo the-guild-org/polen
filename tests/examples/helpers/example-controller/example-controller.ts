@@ -66,21 +66,44 @@ export const create = async (parameters: {
         const serverProcess = project.packageManager`run dev`
 
         const logUrlPattern = /(https?:\/\/\S+)/
-        for await (const line of serverProcess) {
-          const linePlain = stripAnsi(line)
-          const url = (logUrlPattern.exec(linePlain))?.[1]
-          if (url) {
-            return {
-              raw: serverProcess,
-              stop: async () => {
-                await stopServerProcess(serverProcess)
-              },
-              url,
+
+        // Create a promise that resolves when we find the URL
+        const serverReady = new Promise<ServerProcess>((resolve, reject) => {
+          const processIterator = serverProcess[Symbol.asyncIterator]()
+
+          const readLines = async () => {
+            try {
+              for await (const line of { [Symbol.asyncIterator]: () => processIterator }) {
+                const linePlain = stripAnsi(line)
+                const url = (logUrlPattern.exec(linePlain))?.[1]
+                if (url) {
+                  resolve({
+                    raw: serverProcess,
+                    stop: async () => {
+                      await stopServerProcess(serverProcess)
+                    },
+                    url,
+                  })
+                  // Don't break - let the process continue running
+                  return
+                }
+              }
+              reject(new Error(`Server process did not output a URL`))
+            } catch (error) {
+              // Ignore errors after we found the URL
+              // eslint-disable-next-line
+              if (!serverReady) {
+                // eslint-disable-next-line
+                reject(error)
+              }
             }
           }
-        }
 
-        throw new Error(`Server process did not output a URL`)
+          // eslint-disable-next-line
+          readLines()
+        })
+
+        return await serverReady
       },
     }),
   })
