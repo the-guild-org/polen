@@ -91,7 +91,7 @@ declare module 'virtual:polen/vite/client/manifest' {
 }
 
 declare module 'virtual:polen/template/variables' {
-  export const templateVariables: import('#api/config/configurator.js').TemplateVariables
+  export const templateVariables: import('#api/config/configurator').TemplateVariables
 }
 
 declare module 'virtual:polen/project/data' {
@@ -99,11 +99,11 @@ declare module 'virtual:polen/project/data' {
 }
 
 declare module 'virtual:polen/project/pages.jsx' {
-  export const pages: import('#api/vite/plugins/core.js').ProjectPagesModule['pages']
+  export const pages: import('#api/vite/plugins/core').ProjectPagesModule['pages']
 }
 
 declare module 'virtual:polen/template/schema-augmentations' {
-  export const schemaAugmentations: import('#api/schema-augmentation/schema-augmentation.js').Augmentation[]
+  export const schemaAugmentations: import('#api/schema-augmentation/schema-augmentation').Augmentation[]
 }
 
 declare module 'virtual:polen/*' {

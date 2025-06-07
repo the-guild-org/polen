@@ -26,10 +26,7 @@
   },
   "imports": {
     "#*": {
-      "source": [
-        "./src/*.ts",
-        "./src/*.tsx"
-      ],
+      "source": "./src/*.ts",
       "default": "./build/*.js"
     }
   },
