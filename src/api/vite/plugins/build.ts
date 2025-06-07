@@ -3,7 +3,7 @@ import { Vite } from '#dep/vite/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { Fs, Path } from '@wollybeard/kit'
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.ts'
-import { vi } from '../vi.ts'
+import { polenVirtual } from '../vi.ts'
 
 export const Build = (config: Config.Config): Vite.Plugin[] => {
   // let viteConfigResolved: Vite.ResolvedConfig
@@ -114,7 +114,7 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
   }]
 }
 
-const viClientManifest = vi([`vite`, `client`, `manifest`])
+const viClientManifest = polenVirtual([`vite`, `client`, `manifest`])
 
 const Manifest = (config: Config.Config): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv

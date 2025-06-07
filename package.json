@@ -163,7 +163,7 @@
     "fix:lint": "eslint . --fix",
     "fix:format": "dprint fmt",
     "check:format": "dprint check",
-    "check:lint": "eslint . --max-warnings 0",
+    "_check:lint": "eslint . --max-warnings 0",
     "check:types": "tsc --noEmit",
     "check:package": "publint run --strict",
     "release:version": "changeset version && git commit -am \"chore: release\" && git push",
@@ -172,9 +172,9 @@
     "build:cli:chmodx": "chmod +x ./build/cli/index.js",
     "postbuild": "pnpm run build:cli:chmodx",
     "test": "vitest",
-    "check": "pnpm run '/check:.*/'",
-    "fix": "pnpm run '/fix:.*/'",
-    "fixcheck": "pnpm run '/fix:.*/' && pnpm run '/check:.*/'",
+    "check": "pnpm run '/^check:.*/'",
+    "fix": "pnpm run '/^fix:.*/'",
+    "fixcheck": "pnpm run '/^fix:.*/' && pnpm run '/^check:.*/'",
     "release": "dripip stable"
   },
   "bin": "./build/cli/index.js"

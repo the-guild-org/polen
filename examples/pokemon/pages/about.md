@@ -1,4 +1,4 @@
-# About Pokemon API
+# About
 
 Welcome to the Pokemon GraphQL API documentation!
 
