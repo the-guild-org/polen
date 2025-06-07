@@ -28,7 +28,6 @@ export default defineConfig({
       use: {
         ...devices[`Desktop Chrome`],
       },
-      fullyParallel: true,
     },
     {
       name: `examples`,
