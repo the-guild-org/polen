@@ -102,7 +102,7 @@ export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions)
       },
 
       // Hot update handling
-      handleHotUpdate({ file, server }) {
+      async handleHotUpdate({ file, server }) {
         if (!isPageFile(file)) return
 
         _debug(`Page file changed:`, file)
@@ -119,9 +119,8 @@ export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions)
 
         // Notify about pages change (for other plugins that depend on pages)
         if (onPagesChange) {
-          void scanPages().then(pages => {
-            onPagesChange(pages)
-          })
+          const pages = await scanPages()
+          onPagesChange(pages)
         }
 
         // Trigger full reload
