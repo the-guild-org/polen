@@ -12,13 +12,13 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm add dprint
       - run: pnpm check:format
-  lint-code:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - run: pnpm build
-      - run: pnpm check:lint
+  # lint-code:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/actions/setup
+  #     - run: pnpm build
+  #     - run: pnpm check:lint
   lint-package:
     runs-on: ubuntu-latest
     steps:

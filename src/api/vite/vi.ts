@@ -1,5 +1,5 @@
 import { ViteVirtual } from '#lib/vite-virtual/index'
 
-export const vi = ViteVirtual.Identifier.createFactory({
+export const polenVirtual = ViteVirtual.Identifier.createFactory({
   namespace: `polen`,
 })

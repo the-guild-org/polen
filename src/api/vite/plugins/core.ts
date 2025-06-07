@@ -5,44 +5,48 @@ import type { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debug } from '#singletons/debug'
-import mdx from '@mdx-js/rollup'
-import { Cache, Json, Path, Str } from '@wollybeard/kit'
+import { Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
-import remarkGfm from 'remark-gfm'
 import type { ProjectData, SidebarIndex, SiteNavigationItem } from '../../../project-data.ts'
 import { superjson } from '../../../singletons/superjson.ts'
 import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
 import { Schema } from '../../schema/index.ts'
 import { logger } from '../logger.ts'
-import { vi as polenVirtual } from '../vi.ts'
+import { polenVirtual } from '../vi.ts'
+import { createPagesPlugin, ensurePagesLoaded } from './pages.ts'
+
+const _debug = debug.sub(`vite-plugin-core`)
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
 const viProjectData = polenVirtual([`project`, `data`])
 
-const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
 export interface ProjectPagesModule {
   pages: ReactRouter.RouteObject[]
 }
 
 export const Core = (config: Config.Config): Vite.PluginOption[] => {
-  const scanPageRoutes = Cache.memoize(async () =>
-    await FileRouter.scan({
-      dir: config.paths.project.absolute.pages,
-      glob: `**/*.{md,mdx}`,
-    })
-  )
-  const readSchema = Cache.memoize(async () => {
-    const schema = await Schema.readOrThrow({
-      ...config.schema,
-      projectRoot: config.paths.project.rootDir,
-    })
-    // todo: augmentations scoped to a version
-    schema?.versions.forEach(version => {
-      SchemaAugmentation.apply(version.after, config.schemaAugmentations)
-    })
-    return schema
-  })
+  // State for current pages data (updated by pages plugin)
+  let currentPagesData: FileRouter.ScanResult | null = null
+  let viteDevServer: Vite.ViteDevServer | null = null
+
+  // Schema cache management
+  let schemaCache: Awaited<ReturnType<typeof Schema.readOrThrow>> | null = null
+
+  const readSchema = async () => {
+    if (schemaCache === null) {
+      const schema = await Schema.readOrThrow({
+        ...config.schema,
+        projectRoot: config.paths.project.rootDir,
+      })
+      // todo: augmentations scoped to a version
+      schema?.versions.forEach(version => {
+        SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+      })
+      schemaCache = schema
+    }
+    return schemaCache
+  }
 
   const plugins: Vite.Plugin[] = []
 
@@ -59,44 +63,21 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
   return [
     ...plugins,
-    // @see https://mdxjs.com/docs/getting-started/#vite
-    {
-      enforce: `pre`,
-      // TODO: Use inline vite-plugin-mdx once transform hooks can change module type
-      // @see https://github.com/rolldown/rolldown/issues/4004
-      ...mdx({
-        jsxImportSource: `polen/react`,
-        remarkPlugins: [
-          remarkGfm,
-        ],
-      }),
-    },
-    // TODO: We can remove, mdx subsumes this
-    // TODO: First we need to investigate how e can make our api singleton Markdown used by MDX.
-    // If we cannot, then we might want to ditch MDX instead and use our lower level solution here.
-    // It depends in part on how complex our Markdown singleton gets.
-    // {
-    //   name: `polen:markdown`,
-    //   enforce: `pre`,
-    //   resolveId(id) {
-    //     if (id.endsWith(`.md`)) {
-    //       return id
-    //     }
-    //     return null
-    //   },
-    //   async load(id) {
-    //     if (id.endsWith(`.md`)) {
-    //       const markdownString = await Fs.read(id)
-    //       if (!markdownString) return null
-    //       const htmlString = await Markdown.parse(markdownString)
 
-    //       const code = `export default ${JSON.stringify(htmlString)}`
-    //       return code
-    //     }
-    //     return null
-    //   },
-    // },
-
+    // Self-contained pages plugin
+    ...createPagesPlugin({
+      config,
+      onPagesChange: (pages) => {
+        currentPagesData = pages
+        // Invalidate project data virtual module to regenerate navigation/sidebar
+        if (viteDevServer) {
+          const projectDataModule = viteDevServer.moduleGraph.getModuleById(viProjectData.resolved)
+          if (projectDataModule) {
+            viteDevServer.moduleGraph.invalidateModule(projectDataModule)
+          }
+        }
+      },
+    }),
     /**
      * If a `polen*` import is encountered from the user's project, resolve it to the currently
      * running source code of Polen rather than the user's node_modules.
@@ -148,6 +129,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     },
     {
       name: `polen:core`,
+      configureServer(server) {
+        viteDevServer = server
+      },
       config(_, { command }) {
         // isServing = command === `serve`
         return {
@@ -161,15 +145,17 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
           },
           server: {
             port: 3000,
+            fs: {
+              allow: [
+                config.paths.project.rootDir,
+              ],
+            },
+            watch: {
+              disableGlobbing: false,
+            },
           },
           customLogger: logger,
           esbuild: false,
-          // oxc: {
-          //   jsx: {
-          //     runtime: 'automatic',
-          //     importSource: 'react',
-          //   },
-          // },
           build: {
             target: `esnext`,
             assetsDir: config.paths.project.relative.build.relative.assets,
@@ -205,9 +191,17 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         {
           identifier: viProjectData,
           async loader() {
+            _debug(`loadingViProjectDataVirtualModule`)
             // todo: parallel
             const schema = await readSchema()
-            const pagesScanResult = await scanPageRoutes()
+
+            // Get pages data from the pages plugin or load initially
+            if (!currentPagesData) {
+              _debug(`loadingPagesDataInitially`)
+              currentPagesData = await ensurePagesLoaded(config)
+            }
+            const pagesScanResult = currentPagesData
+            _debug(`usingPageRoutesFromPagesPlugin`, pagesScanResult.routes.length)
 
             const siteNavigationItems: SiteNavigationItem[] = []
 
@@ -291,37 +285,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
           `
 
             return content
-          },
-        },
-        {
-          identifier: viProjectPages,
-          async loader() {
-            const pagesScanResult = await scanPageRoutes()
-
-            const $ = {
-              pages: `pages`,
-            }
-
-            const s = Str.Builder()
-            s`export const ${$.pages} = []`
-
-            // todo: kit fs should accept parsed file paths
-            for (const route of pagesScanResult.routes) {
-              const filePathExp = Path.format(route.file.path.absolute)
-              const pathExp = FileRouter.routeToPathExpression(route)
-              const ident = Str.Case.camel(`page ` + Str.titlizeSlug(pathExp))
-
-              s`
-                import ${ident} from '${filePathExp}'
-
-                ${$.pages}.push({
-                  path: '${pathExp}',
-                  Component: ${ident}
-                })
-              `
-            }
-
-            return s.render()
           },
         },
       ),
