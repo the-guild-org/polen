@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm build
-      - run: pnpm check:package
+      - run: pnpm check:pedantic:package
   types:
     runs-on: ubuntu-latest
     steps:
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
         with:
-          node-version: 22.14.x
+          node-version: 24.1.x
       - run: pnpm test:unit
   test-examples:
     uses: ./.github/workflows/_playwright-test.yaml

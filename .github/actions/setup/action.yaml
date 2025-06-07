@@ -4,11 +4,11 @@ inputs:
   node-version:
     description: Version of Node to use.
     required: false
-    default: '22.14.x'
+    default: "24.1.x"
   install-deps:
     description: Should deps be installed?
     required: false
-    default: 'true'
+    default: "true"
 runs:
   using: composite
   steps:
