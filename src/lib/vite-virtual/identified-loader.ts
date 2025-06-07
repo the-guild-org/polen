@@ -1,4 +1,4 @@
-import type { Vite } from '#dep/vite'
+import type { Vite } from '#dep/vite/index.js'
 import { StackProcessor } from '../stack-processor/index.ts'
 import { debug } from './debug.ts'
 import type { HookLoad, HookResolveId } from './hooks.ts'

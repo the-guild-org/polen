@@ -1,4 +1,4 @@
-import { Vite } from '#dep/vite'
+import { Vite } from '#dep/vite/index.js'
 
 export const isKitUnusedExternalImport = (
   message: Vite.Rollup.RollupLog,

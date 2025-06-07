@@ -1,4 +1,4 @@
-import type { Superjson } from '#dep/superjson'
+import type { Superjson } from '#dep/superjson/index.js'
 import type { Json } from '@wollybeard/kit'
 
 export interface Codec<I, O extends Json.Value> {

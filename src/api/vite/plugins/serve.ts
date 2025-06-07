@@ -1,6 +1,6 @@
-import type { Config } from '#api/config'
-import type { Hono } from '#dep/hono'
-import type { Vite } from '#dep/vite'
+import type { Config } from '#api/config/index.js'
+import type { Hono } from '#dep/hono/index.js'
+import type { Vite } from '#dep/vite/index.js'
 import * as HonoNodeServer from '@hono/node-server'
 
 export const Serve = (

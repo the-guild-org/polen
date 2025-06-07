@@ -1,4 +1,4 @@
-import type { Hono } from '#dep/hono'
+import type { Hono } from '#dep/hono/index.js'
 import { Err, type Http } from '@wollybeard/kit'
 
 /** @see https://github.com/honojs/hono/issues/4051 */

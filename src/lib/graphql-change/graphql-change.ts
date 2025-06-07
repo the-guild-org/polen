@@ -1,5 +1,5 @@
-import { GraphqlInspector } from '#dep/graphql-inspector'
-import type { GrafaidOld } from '#lib/grafaid-old'
+import { GraphqlInspector } from '#dep/graphql-inspector/index.js'
+import type { GrafaidOld } from '#lib/grafaid-old/index.js'
 
 export type Change = GraphqlInspector.Core.SerializableChange & {
   message: string

@@ -1,4 +1,4 @@
-import type { Grafaid } from '#lib/grafaid'
+import type { Grafaid } from '#lib/grafaid/index.js'
 import type { colorPropDef } from '@radix-ui/themes/props'
 
 type RadixColor = typeof colorPropDef[`color`][`values`][number]

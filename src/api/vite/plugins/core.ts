@@ -1,10 +1,10 @@
-import type { Config } from '#api/config'
-import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
-import type { ReactRouter } from '#dep/react-router'
-import type { Vite } from '#dep/vite'
-import { FileRouter } from '#lib/file-router'
-import { ViteVirtual } from '#lib/vite-virtual'
-import { debug } from '#singletons/debug'
+import type { Config } from '#api/config/index.js'
+import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode.js'
+import type { ReactRouter } from '#dep/react-router/index.js'
+import type { Vite } from '#dep/vite/index.js'
+import { FileRouter } from '#lib/file-router/index.js'
+import { ViteVirtual } from '#lib/vite-virtual/index.js'
+import { debug } from '#singletons/debug.js'
 import mdx from '@mdx-js/rollup'
 import { Cache, Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
@@ -285,7 +285,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const projectDataCode = jsesc(superjson.stringify(projectData))
             const content = `
-            import { superjson } from '#singletons/superjson'
+            import { superjson } from '#singletons/superjson.js'
 
             export const PROJECT_DATA = superjson.parse('${projectDataCode}')
           `

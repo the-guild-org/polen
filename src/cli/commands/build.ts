@@ -1,7 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
-import { Api } from '#api'
-import { Vite } from '#dep/vite'
+import { Api } from '#api/index.js'
+import { Vite } from '#dep/vite/index.js'
 import { Command } from '@molt/command'
 import { z } from 'zod'
 

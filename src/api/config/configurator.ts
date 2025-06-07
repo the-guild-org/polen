@@ -1,5 +1,5 @@
-import type { Vite } from '#dep/vite'
-import { assertPathAbsolute } from '#lib/kit-temp'
+import type { Vite } from '#dep/vite/index.js'
+import { assertPathAbsolute } from '#lib/kit-temp.js'
 import { Path } from '@wollybeard/kit'
 import { z } from 'zod'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.ts'

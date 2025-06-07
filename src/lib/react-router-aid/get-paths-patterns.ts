@@ -1,4 +1,4 @@
-import type { ReactRouter } from '#dep/react-router'
+import type { ReactRouter } from '#dep/react-router/index.js'
 
 const sep = `/`
 
