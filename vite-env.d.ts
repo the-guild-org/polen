@@ -36,7 +36,7 @@ declare const __BUILD_ARCHITECTURE_SSG__: boolean
  *
  * Defined by the `build.architecture` configuration option in polen.config.ts.
  */
-declare const __BUILD_ARCHITECTURE__: import('#api/config/index.js').Config.BuildArchitecture
+declare const __BUILD_ARCHITECTURE__: import('#api/config/index').Config.BuildArchitecture
 
 /**
  * Indicates whether the code is running in development server mode.
@@ -59,7 +59,7 @@ declare const __SERVING__: boolean
  * Provides the same information as `__BUILDING__` and `__SERVING__` but as a string value.
  * This is the raw value from Vite's configuration.
  */
-declare const __COMMAND__: import('#dep/vite/index.js').Vite.ConfigEnv[`command`]
+declare const __COMMAND__: import('#dep/vite/index').Vite.ConfigEnv[`command`]
 
 /**
  * Declaration for importing assets as raw strings using the ?raw suffix
@@ -95,7 +95,7 @@ declare module 'virtual:polen/template/variables' {
 }
 
 declare module 'virtual:polen/project/data' {
-  export const PROJECT_DATA: import('#project-data.js').ProjectData
+  export const PROJECT_DATA: import('#project-data').ProjectData
 }
 
 declare module 'virtual:polen/project/pages.jsx' {
