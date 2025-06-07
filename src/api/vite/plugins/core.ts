@@ -67,10 +67,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       config,
       onPagesChange: (pages) => {
         currentPagesData = pages
-        // When pages change, we also need to clear schema cache
-        // and invalidate project data virtual module
-        schemaCache = null
-
+        // Invalidate project data virtual module to regenerate navigation/sidebar
         if (viteDevServer) {
           const projectDataModule = viteDevServer.moduleGraph.getModuleById(viProjectData.resolved)
           if (projectDataModule) {
