@@ -22,7 +22,7 @@ export const create = (): ViteController => {
 
   const controller: ViteController = {
     startDevelopmentServer: async viteUserConfig => {
-      state.viteDevServer = await Vite.createServer(viteUserConfig)
+      state.viteDevServer = await Vite.createServer(viteUserConfig) as ViteDevServerPlus
       await state.viteDevServer.listen()
       const cannonicalUrl = state.viteDevServer.resolvedUrls?.local[0]
       if (!cannonicalUrl) throw new Error(`No local URL found`)
