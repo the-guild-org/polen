@@ -5,7 +5,7 @@ import type { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debug } from '#singletons/debug'
-import { Json, Str } from '@wollybeard/kit'
+import { Json, Path, Str } from '@wollybeard/kit'
 import jsesc from 'jsesc'
 import type { ProjectData, SidebarIndex, SiteNavigationItem } from '../../../project-data.ts'
 import { superjson } from '../../../singletons/superjson.ts'
@@ -14,6 +14,8 @@ import { Schema } from '../../schema/index.ts'
 import { logger } from '../logger.ts'
 import { polenVirtual } from '../vi.ts'
 import { createPagesPlugin, ensurePagesLoaded } from './pages.ts'
+
+const _debug = debug.sub(`vite-plugin-core`)
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
@@ -189,17 +191,17 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         {
           identifier: viProjectData,
           async loader() {
-            debug(`Loading viProjectData virtual module`)
+            _debug(`loadingViProjectDataVirtualModule`)
             // todo: parallel
             const schema = await readSchema()
 
             // Get pages data from the pages plugin or load initially
             if (!currentPagesData) {
-              debug(`Loading pages data initially`)
+              _debug(`loadingPagesDataInitially`)
               currentPagesData = await ensurePagesLoaded(config)
             }
             const pagesScanResult = currentPagesData
-            debug(`Using page routes from pages plugin:`, pagesScanResult.routes.length)
+            _debug(`usingPageRoutesFromPagesPlugin`, pagesScanResult.routes.length)
 
             const siteNavigationItems: SiteNavigationItem[] = []
 
