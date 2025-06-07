@@ -25,12 +25,22 @@ test.describe('HMR', () => {
       await Api.ConfigResolver.fromMemory({ root: project.layout.cwd, advanced: { isSelfContainedMode: true } }),
     )
 
+    // Navigate to an existing page first
+    await page.goto(server.url('/home').href)
+    await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible()
+
+    // Set up listener for full reload
+    const reloadPromise = page.waitForEvent('load')
+    
     await project.layout.set({
       'pages/home.md': `# Home`,
       'pages/new.md': `# New`,
     })
-    await page.waitForTimeout(500) // Let file watcher catch up
+    
+    // Wait for HMR to trigger full reload
+    await reloadPromise
 
+    // Now navigate to the new page
     await page.goto(server.url('/new').href)
     await expect(page.getByRole('heading', { name: 'New' })).toBeVisible()
   })
