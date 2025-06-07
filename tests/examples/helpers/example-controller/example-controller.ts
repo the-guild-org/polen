@@ -1,5 +1,5 @@
-import { Api } from '#api/index.js'
-import { debugGlobal } from '#lib/debug/debug.js'
+import { Api } from '#api/index'
+import { debugGlobal } from '#lib/debug/debug'
 import type { PackageManager } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
