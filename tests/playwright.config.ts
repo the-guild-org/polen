@@ -10,11 +10,11 @@ const polenLink = process.env[`POLEN_LINK`]
   : PackageManager.LinkProtocol.enum.file
 
 export default defineConfig({
+  outputDir: `./__results__`,
   forbidOnly: isCi,
   retries: 0,
-  outputDir: `./__results__`,
   maxFailures: isCi ? undefined : 1,
-  workers: isCi ? 1 : undefined,
+  workers: isCi ? 1 : 1,
   use: {
     trace: `on-first-retry`,
     screenshot: isCi ? `only-on-failure` : `off`,
