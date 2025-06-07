@@ -11,7 +11,7 @@ on:
         description: 'Node.js version to use'
         required: false
         type: string
-        default: '22.14.x'
+        default: '24.1.x'
       os:
         description: 'Operating system'
         required: false
