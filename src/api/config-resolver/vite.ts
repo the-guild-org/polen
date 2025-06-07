@@ -1,5 +1,5 @@
-import { Main } from '#api/vite/plugins/main.js'
-import { Vite } from '#dep/vite/index.js'
+import { Main } from '#api/vite/plugins/main'
+import { Vite } from '#dep/vite/index'
 import type { Config } from '../config/configurator.ts'
 
 /**

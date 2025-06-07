@@ -1,4 +1,4 @@
-import { GrafaidOld } from '#lib/grafaid-old/index.js'
+import { GrafaidOld } from '#lib/grafaid-old/index'
 import type { BoxProps } from '@radix-ui/themes'
 import { Box, Text } from '@radix-ui/themes'
 import type { FC } from 'react'

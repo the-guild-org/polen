@@ -1,8 +1,8 @@
-import { Hono } from '#dep/hono/index.js'
+import { Hono } from '#dep/hono/index'
 // import { Hono } from '../../dep/hono/index.ts'
 
-import { AppleTouchIcon } from '#lib/apple-touch-icon/index.js'
-import { Favicon } from '#lib/favicon/index.js'
+import { AppleTouchIcon } from '#lib/apple-touch-icon/index'
+import { Favicon } from '#lib/favicon/index'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Fs, Http, Path } from '@wollybeard/kit'
 import { PROJECT_DATA } from 'virtual:polen/project/data'

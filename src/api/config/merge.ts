@@ -1,4 +1,4 @@
-import { Vite } from '#dep/vite/index.js'
+import { Vite } from '#dep/vite/index'
 import type { ConfigInput } from './configurator.ts'
 
 /**
