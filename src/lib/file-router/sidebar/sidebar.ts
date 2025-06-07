@@ -1,8 +1,8 @@
 import { Idx, Str } from '@wollybeard/kit'
-import * as FileRouter from '../file-router.js'
-import type { ItemLink, ItemSection, Sidebar } from './types.js'
+import * as FileRouter from '../file-router.ts'
+import type { ItemLink, ItemSection, Sidebar } from './types.ts'
 
-export * from './types.js'
+export * from './types.ts'
 
 /**
  * Helper function to build sidebar items recursively

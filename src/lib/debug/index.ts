@@ -1,1 +1,1 @@
-export * as Debug from './debug.js'
+export * as Debug from './debug.ts'

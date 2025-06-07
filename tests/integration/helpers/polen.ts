@@ -1,6 +1,6 @@
-import { Api } from '#api/index.js'
-import { Vite } from '#dep/vite/index.js'
-import type { Polen } from '#exports/index.js'
+import { Api } from '#api/index'
+import { Vite } from '#dep/vite/index'
+import type { Polen } from '#exports/index'
 
 export const defaultViteConfig: Vite.UserConfig = {
   customLogger: Vite.createLogger(`silent`, {}),

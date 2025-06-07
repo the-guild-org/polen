@@ -1,6 +1,6 @@
-import type { Config } from '#api/config/index.js'
-import type { FileRouter } from '#lib/file-router/index.js'
-import type { Schema } from './api/schema/index.js'
+import type { Config } from '#api/config/index'
+import type { FileRouter } from '#lib/file-router/index'
+import type { Schema } from './api/schema/index.ts'
 
 export interface ProjectData {
   schema: null | Schema.Schema

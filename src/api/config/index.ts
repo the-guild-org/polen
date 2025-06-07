@@ -1,1 +1,1 @@
-export * as Config from './config.js'
+export * as Config from './config.ts'

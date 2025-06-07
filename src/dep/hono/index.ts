@@ -1,1 +1,1 @@
-export * as Hono from './hono.js'
+export * as Hono from './hono.ts'

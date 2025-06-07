@@ -1,1 +1,1 @@
-export * as FileNameExpression from './file-name-expression.js'
+export * as FileNameExpression from './file-name-expression.ts'

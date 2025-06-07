@@ -1,4 +1,4 @@
-import { Url } from '#dep/url/index.js'
+import { Url } from '#dep/url/index'
 import { Path } from '@wollybeard/kit'
 import { ExampleName } from './example-name.js'
 import type { WorkerFixtures } from './test.js'

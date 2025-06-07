@@ -1,6 +1,6 @@
 import { Arr } from '@wollybeard/kit'
-import * as DataSources from './data-sources/data-sources.js'
-import type { Schema } from './schema.js'
+import * as DataSources from './data-sources/data-sources.ts'
+import type { Schema } from './schema.ts'
 
 export type DataSourceType = `file` | `directory` | `memory` | `data`
 

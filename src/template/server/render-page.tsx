@@ -1,12 +1,12 @@
-import type { ReactRouter } from '#dep/react-router/index.js'
-import type { ReactRouterAid } from '#lib/react-router-aid/index.js'
+import type { ReactRouter } from '#dep/react-router/index'
+import type { ReactRouterAid } from '#lib/react-router-aid/index'
 import { Arr } from '@wollybeard/kit'
 import { StrictMode } from 'react'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
 import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
-import { injectManifestIntoHtml } from './manifest.js'
-import { view } from './view.js'
+import { injectManifestIntoHtml } from './manifest.ts'
+import { view } from './view.ts'
 
 export const renderPage = (
   staticHandlerContext: ReactRouter.StaticHandlerContext,

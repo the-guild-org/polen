@@ -1,1 +1,1 @@
-export * as Polen from './polen.js'
+export * as Polen from './polen.ts'

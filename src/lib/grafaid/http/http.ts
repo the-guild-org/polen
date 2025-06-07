@@ -1,5 +1,5 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from 'graphql'
-// import { CONTENT_TYPE_GQL, CONTENT_TYPE_JSON } from '../../http.js'
+// import { CONTENT_TYPE_GQL, CONTENT_TYPE_JSON } from '../../http.ts'
 import { Rec } from '@wollybeard/kit'
 
 export interface RequestConfig {

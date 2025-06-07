@@ -1,12 +1,11 @@
 /* eslint-disable */
 // @ts-nocheck
-import { Api } from '#api/index.js'
-import { Vite } from '#dep/vite/index.js'
-import { ensureOptionalAbsolute, ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp.js'
+import { Api } from '#api/index'
+import { Vite } from '#dep/vite/index'
+import { ensureOptionalAbsolute, ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command } from '@molt/command'
 import { Err, Path } from '@wollybeard/kit'
 import { z } from 'zod'
-// import { loadConfig } from '../../api/load-config.js'
 
 const args = Command.create()
   .parameter(

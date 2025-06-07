@@ -1,1 +1,1 @@
-export * as SchemaAugmentation from './schema-augmentation.js'
+export * as SchemaAugmentation from './schema-augmentation.ts'

@@ -1,6 +1,6 @@
-import { Main } from '#api/vite/plugins/main.js'
-import { Vite } from '#dep/vite/index.js'
-import type { Config } from '../config/configurator.js'
+import { Main } from '#api/vite/plugins/main'
+import { Vite } from '#dep/vite/index'
+import type { Config } from '../config/configurator.ts'
 
 /**
  * Transform Polen config input into a Vite configuration.

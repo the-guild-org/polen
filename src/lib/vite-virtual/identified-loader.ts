@@ -1,8 +1,8 @@
-import type { Vite } from '#dep/vite/index.js'
-import { debug } from '../debug/debug.js'
-import { StackProcessor } from '../stack-processor/index.js'
-import type { HookLoad, HookResolveId } from './hooks.js'
-import type { Identifier } from './identifier.js'
+import type { Vite } from '#dep/vite/index'
+import { StackProcessor } from '../stack-processor/index.ts'
+import { debug } from './debug.ts'
+import type { HookLoad, HookResolveId } from './hooks.ts'
+import type { Identifier } from './identifier.ts'
 
 export interface IdentifiedLoader {
   identifier: Identifier

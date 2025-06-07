@@ -7,34 +7,34 @@ export {
   printSchema as print,
 } from 'graphql'
 
-export * as AST from './ast.js'
+export * as AST from './ast.ts'
 
-export * as Type from './type.js'
+export * as Type from './type.ts'
 
-export * from './type-class-name.js'
+export * from './type-class-name.ts'
 
-export * from './type-kind-name.js'
+export * from './type-kind-name.ts'
 
-export * from './RootDetails.js'
+export * from './RootDetails.ts'
 
-export * from './RootTypeMap.js'
+export * from './RootTypeMap.ts'
 
-export * from './StandardRootTypeName.js'
+export * from './StandardRootTypeName.ts'
 
-export * from './KindMap/__.js'
+export * from './KindMap/__.ts'
 
-export * from './typeGuards.js'
+export * from './typeGuards.ts'
 
-export * from './scalars.js'
+export * from './scalars.ts'
 
-export * as Args from './args.js'
+export * as Args from './args.ts'
 
-export * as TypesLike from './types-like.js'
+export * as TypesLike from './types-like.ts'
 
-export * as NodesLike from './nodes-like.js'
+export * as NodesLike from './nodes-like.ts'
 
-export * from './read.js'
+export * from './read.ts'
 
-import * as AST from './ast.js'
+import * as AST from './ast.ts'
 
 export const empty: GraphQLSchema = buildASTSchema(AST.empty)

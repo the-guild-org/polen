@@ -1,1 +1,1 @@
-export * as GraphqlSchemaLoader from './graphql-schema-loader.js'
+export * as GraphqlSchemaLoader from './graphql-schema-loader.ts'

@@ -1,5 +1,5 @@
 import { Arr } from '@wollybeard/kit'
-import { ContextualError } from './ContextualError.js'
+import { ContextualError } from './ContextualError.ts'
 
 /**
  * Aggregation Error enhanced with a context object and types members.

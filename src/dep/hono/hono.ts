@@ -1,2 +1,2 @@
 export * from 'hono'
-export * from './ssg.js'
+export * from './ssg.ts'

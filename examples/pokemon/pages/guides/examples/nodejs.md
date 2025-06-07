@@ -65,20 +65,20 @@ const pokemonLoader = new DataLoader(async (names) => {
   const { pokemons } = await client.request(query, { names })
 
   // DataLoader expects results in the same order as keys
-  return names.map(name => pokemons.find(p => p.name === name))
+  return names.map((name) => pokemons.find((p) => p.name === name))
 })
 
 // Usage
 async function analyzeTeam(pokemonNames) {
   // These will be batched into a single request
   const pokemons = await Promise.all(
-    pokemonNames.map(name => pokemonLoader.load(name)),
+    pokemonNames.map((name) => pokemonLoader.load(name)),
   )
 
   // Analyze team composition
   const typeCount = {}
-  pokemons.forEach(pokemon => {
-    pokemon.types.forEach(type => {
+  pokemons.forEach((pokemon) => {
+    pokemon.types.forEach((type) => {
       typeCount[type] = (typeCount[type] || 0) + 1
     })
   })
@@ -126,7 +126,7 @@ async function exportPokemonData(generation) {
   const { pokemonByGeneration } = await client.request(query, { generation })
 
   // Flatten data for CSV
-  const flatData = pokemonByGeneration.map(pokemon => ({
+  const flatData = pokemonByGeneration.map((pokemon) => ({
     id: pokemon.id,
     dexNumber: pokemon.nationalDexNumber,
     name: pokemon.name,
@@ -139,7 +139,7 @@ async function exportPokemonData(generation) {
     spDefense: pokemon.stats.specialDefense,
     speed: pokemon.stats.speed,
     totalStats: Object.values(pokemon.stats).reduce((a, b) => a + b, 0),
-    abilities: pokemon.abilities.map(a => a.name).join(', '),
+    abilities: pokemon.abilities.map((a) => a.name).join(', '),
   }))
 
   // Convert to CSV

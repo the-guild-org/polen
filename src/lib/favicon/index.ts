@@ -1,1 +1,1 @@
-export * as Favicon from './favicon.js'
+export * as Favicon from './favicon.ts'

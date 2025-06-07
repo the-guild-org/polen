@@ -1,3 +1,3 @@
-export * from './builder/index.js'
-export * from './config-resolver/index.js'
-export * from './config/index.js'
+export * from './builder/index.ts'
+export * from './config-resolver/index.ts'
+export * from './config/index.ts'

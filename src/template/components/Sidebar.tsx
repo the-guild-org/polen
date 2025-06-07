@@ -1,11 +1,11 @@
+import type { FileRouter } from '#lib/file-router/index'
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import type { SidebarItem, SidebarNav, SidebarSection } from '../../project-data.js'
 
 interface SidebarProps {
-  items: SidebarItem[]
+  items: FileRouter.Sidebar.Item[]
 }
 
 export const Sidebar = ({ items }: SidebarProps) => {
@@ -36,13 +36,13 @@ export const Sidebar = ({ items }: SidebarProps) => {
 }
 
 interface SidebarItemComponentProps {
-  item: SidebarItem
+  item: FileRouter.Sidebar.Item
   currentPathExp: string
   level?: number
 }
 
 const SidebarItemComponent = ({ item, currentPathExp, level = 0 }: SidebarItemComponentProps) => {
-  if (item.type === `SidebarItem`) {
+  if (item.type === `ItemLink`) {
     return <SidebarNavItem nav={item} currentPathExp={currentPathExp} level={level} />
   }
 
@@ -50,7 +50,7 @@ const SidebarItemComponent = ({ item, currentPathExp, level = 0 }: SidebarItemCo
 }
 
 interface SidebarNavItemProps {
-  nav: SidebarNav
+  nav: FileRouter.Sidebar.ItemLink
   currentPathExp: string
   level: number
 }
@@ -90,7 +90,7 @@ const SidebarNavItem = ({ nav, currentPathExp, level }: SidebarNavItemProps) => 
 }
 
 interface SidebarSectionItemProps {
-  section: SidebarSection
+  section: FileRouter.Sidebar.ItemSection
   currentPathExp: string
   level: number
 }
