@@ -32,12 +32,26 @@ export const Serve = (
   return {
     name: `polen:serve`,
     apply: `serve`,
-
+    config() {
+      return {
+        server: {
+          port: 3000,
+          watch: {
+            disableGlobbing: false,
+          },
+          fs: {
+            strict: false, // bring back true, with the allow below might already work now
+            allow: [
+              config.paths.project.rootDir,
+            ],
+          },
+        },
+      }
+    },
     handleHotUpdate({ server }) {
       // Reload app server immediately in the background
       appPromise = reloadApp({ server })
     },
-
     async configureServer(server) {
       // Initial load
       appPromise = reloadApp({ server })
@@ -59,18 +73,6 @@ export const Serve = (
             return response
           })(req, res)
         })
-      }
-    },
-    config() {
-      return {
-        server: {
-          fs: {
-            strict: false,
-            allow: [
-              // todo allow from polen
-            ],
-          },
-        },
       }
     },
   }

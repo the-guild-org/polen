@@ -137,22 +137,11 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         return {
           root: config.paths.framework.rootDir,
           define: {
-            __BUILDING__: Json.codec.serialize(command === `build`),
-            __SERVING__: Json.codec.serialize(command === `serve`),
-            __COMMAND__: Json.codec.serialize(command),
-            __BUILD_ARCHITECTURE__: Json.codec.serialize(config.build.architecture),
-            __BUILD_ARCHITECTURE_SSG__: Json.codec.serialize(config.build.architecture === `ssg`),
-          },
-          server: {
-            port: 3000,
-            fs: {
-              allow: [
-                config.paths.project.rootDir,
-              ],
-            },
-            watch: {
-              disableGlobbing: false,
-            },
+            __BUILDING__: Json.encode(command === `build`),
+            __SERVING__: Json.encode(command === `serve`),
+            __COMMAND__: Json.encode(command),
+            __BUILD_ARCHITECTURE__: Json.encode(config.build.architecture),
+            __BUILD_ARCHITECTURE_SSG__: Json.encode(config.build.architecture === `ssg`),
           },
           customLogger: logger,
           esbuild: false,

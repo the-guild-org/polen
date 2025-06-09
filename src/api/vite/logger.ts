@@ -10,10 +10,10 @@ export const logger: Vite.Logger = {
     // Filter out optimization-related messages
     const msgString = typeof msg === 'string' ? msg : String(msg)
     if (
-      msgString.includes('new dependencies optimized') ||
-      msgString.includes('optimized dependencies changed') ||
-      msgString.includes('Re-optimizing dependencies') ||
-      msgString.includes('Forced re-optimization')
+      msgString.includes('new dependencies optimized')
+      || msgString.includes('optimized dependencies changed')
+      || msgString.includes('Re-optimizing dependencies')
+      || msgString.includes('Forced re-optimization')
     ) {
       return
     }
