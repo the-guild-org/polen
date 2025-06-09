@@ -76,7 +76,7 @@
     "@types/jsesc": "^3.0.3",
     "@vitejs/plugin-react": "^4.5.1",
     "@vitejs/plugin-react-oxc": "^0.2.1",
-    "@wollybeard/kit": "^0.34.0",
+    "@wollybeard/kit": "^0.35.0",
     "@wollybeard/projector": "^0.2.0",
     "ansis": "^4.1.0",
     "consola": "^3.4.2",
