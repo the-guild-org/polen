@@ -12,9 +12,9 @@ Initially, Kit had no platform-specific imports at all. It was a regular library
 
 ```typescript
 // Original Kit code - no platform awareness
+import consola from 'consola' // Which imports node:tty
 import { readFile } from 'node:fs/promises'
 import { inspect } from 'node:util'
-import consola from 'consola' // Which imports node:tty
 ```
 
 This caused immediate problems when Kit was used in browser environments.
@@ -31,6 +31,7 @@ We tried adding conditional exports with `.browser.ts` files:
 ```
 
 However, this didn't work because:
+
 - **Vite dev mode does NOT tree-shake** - it pre-bundles dependencies for performance
 - During pre-bundling, Vite was selecting the "default" export which still contained Node.js modules
 - The browser conditions weren't being properly resolved
