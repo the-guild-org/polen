@@ -1,20 +1,24 @@
 import type { Config } from '#api/config/index'
 import type { Hono } from '#dep/hono/index'
 import type { Vite } from '#dep/vite/index'
+import { debug } from '#singletons/debug'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err } from '@wollybeard/kit'
 
+type App = Hono.Hono
+
 interface AppServerModule {
-  app: Hono.Hono
+  app: App
 }
 
 export const Serve = (
   config: Config.Config,
 ): Vite.PluginOption => {
-  let appPromise: Promise<Hono.Hono>
+  let appPromise: Promise<App>
 
-  const reloadApp = ({ server }: { server: Vite.ViteDevServer }) =>
-    appPromise = server.ssrLoadModule(config.paths.framework.template.server.app)
+  const reloadApp = async ({ server }: { server: Vite.ViteDevServer }): Promise<App> => {
+    debug('reloadApp')
+    return await server.ssrLoadModule(config.paths.framework.template.server.app)
       .then(module => module as AppServerModule)
       .then(module => module.app)
       .catch(cause => {
@@ -23,6 +27,7 @@ export const Serve = (
         }
         throw cause
       })
+  }
 
   return {
     name: `polen:serve`,
