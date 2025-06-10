@@ -23,9 +23,19 @@ export const Sidebar = ({ items }: SidebarProps) => {
         paddingRight: `var(--space-4)`,
       }}
     >
+      <style>
+        {`
+        .sidebar-nav-item:hover:not(.active) {
+          background-color: var(--gray-2) !important;
+        }
+        .sidebar-section:hover:not(.active):not(.has-active-child) {
+          background-color: var(--gray-2) !important;
+        }
+      `}
+      </style>
       <Flex direction='column' gap='1'>
         {items.map((item) => (
-          <SidebarItemComponent
+          <SidebarItem
             key={item.pathExp}
             item={item}
             currentPathExp={location.pathname}
@@ -36,27 +46,27 @@ export const Sidebar = ({ items }: SidebarProps) => {
   )
 }
 
-interface SidebarItemComponentProps {
+interface SidebarItemProps {
   item: FileRouter.Sidebar.Item
   currentPathExp: string
   level?: number
 }
 
-const SidebarItemComponent = ({ item, currentPathExp, level = 0 }: SidebarItemComponentProps) => {
+const SidebarItem = ({ item, currentPathExp, level = 0 }: SidebarItemProps) => {
   if (item.type === `ItemLink`) {
-    return <SidebarNavItem nav={item} currentPathExp={currentPathExp} level={level} />
+    return <SidebarItemLink nav={item} currentPathExp={currentPathExp} level={level} />
   }
 
-  return <SidebarSectionItem section={item} currentPathExp={currentPathExp} level={level} />
+  return <SidebarItemSection section={item} currentPathExp={currentPathExp} level={level} />
 }
 
-interface SidebarNavItemProps {
+interface SidebarItemLinkProps {
   nav: FileRouter.Sidebar.ItemLink
   currentPathExp: string
   level: number
 }
 
-const SidebarNavItem = ({ nav, currentPathExp, level }: SidebarNavItemProps) => {
+const SidebarItemLink = ({ nav, currentPathExp, level }: SidebarItemLinkProps) => {
   // Normalize paths for comparison - remove leading slash if present
   const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
   const isActive = normalizedCurrentPath === nav.pathExp
@@ -64,6 +74,7 @@ const SidebarNavItem = ({ nav, currentPathExp, level }: SidebarNavItemProps) => 
   return (
     <Link
       to={`/${nav.pathExp}`}
+      className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
       style={{
         textDecoration: `none`,
         color: isActive ? `var(--accent-11)` : `var(--gray-12)`,
@@ -74,16 +85,6 @@ const SidebarNavItem = ({ nav, currentPathExp, level }: SidebarNavItemProps) => 
         backgroundColor: isActive ? `var(--accent-3)` : `transparent`,
         transition: `background-color 0.2s ease, color 0.2s ease`,
       }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.backgroundColor = `var(--gray-2)`
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.backgroundColor = `transparent`
-        }
-      }}
     >
       <Text size='2' weight={isActive ? `medium` : `regular`}>
         {nav.title}
@@ -92,13 +93,13 @@ const SidebarNavItem = ({ nav, currentPathExp, level }: SidebarNavItemProps) => 
   )
 }
 
-interface SidebarSectionItemProps {
+interface SidebarItemSectionProps {
   section: FileRouter.Sidebar.ItemSection
   currentPathExp: string
   level: number
 }
 
-const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionItemProps) => {
+const SidebarItemSection = ({ section, currentPathExp, level }: SidebarItemSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true)
   // Normalize paths for comparison - remove leading slash if present
   const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
@@ -110,22 +111,13 @@ const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionIt
     <>
       <Flex
         align='center'
+        className={`sidebar-section ${isDirectlyActive ? 'active' : ''} ${hasActiveChild ? 'has-active-child' : ''}`}
         style={{
           padding: `var(--space-2) var(--space-3)`,
           paddingLeft: `calc(var(--space-3) + ${(level * 16).toString()}px)`,
           borderRadius: `var(--radius-2)`,
           backgroundColor: isDirectlyActive ? `var(--accent-3)` : hasActiveChild ? `var(--accent-2)` : `transparent`,
           transition: `background-color 0.2s ease`,
-        }}
-        onMouseEnter={(e) => {
-          if (!isActiveGroup) {
-            e.currentTarget.style.backgroundColor = `var(--gray-2)`
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isActiveGroup) {
-            e.currentTarget.style.backgroundColor = `transparent`
-          }
         }}
       >
         <Box
@@ -174,7 +166,7 @@ const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionIt
       {isExpanded && (
         <Flex direction='column' gap='1'>
           {section.navs.map((nav) => (
-            <SidebarNavItem
+            <SidebarItemLink
               key={nav.pathExp}
               nav={nav}
               currentPathExp={currentPathExp}
