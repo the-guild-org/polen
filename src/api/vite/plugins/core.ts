@@ -196,6 +196,10 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                 dir: config.paths.project.absolute.pages,
                 glob: `**/*.{md,mdx}`,
               })
+              // Report any diagnostics from initial scan
+              currentPagesData.diagnostics.forEach(diagnostic => {
+                console.warn(`\n⚠️  Polen Warning:\n${diagnostic.message}\n`)
+              })
             }
             if (!currentTreeData) {
               _debug(`loadingTreeDataInitially`)

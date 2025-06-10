@@ -96,4 +96,20 @@ describe('linter', () => {
       index: expect.any(Object),
     })
   })
+
+  test('warns about numbered prefix conflicts with same order number', () => {
+    const routes: Route[] = [
+      createRoute(['about'], 10), // 10_about.md
+      createRoute(['about'], 10), // 10-about.md (same order)
+    ]
+
+    const result = lint(routes)
+
+    expect(result.diagnostics).toHaveLength(1)
+    expect(result.diagnostics[0]).toMatchObject({
+      message: expect.stringContaining('Both files have the same order number (10)'),
+      kept: expect.objectContaining({ order: 10 }),
+      dropped: expect.objectContaining({ order: 10 }),
+    })
+  })
 })

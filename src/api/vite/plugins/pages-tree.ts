@@ -10,6 +10,12 @@ import remarkGfm from 'remark-gfm'
 
 const _debug = debug.sub(`vite-plugin-pages-tree`)
 
+const reportDiagnostics = (diagnostics: FileRouter.Diagnostic[]) => {
+  diagnostics.forEach(diagnostic => {
+    console.warn(`\n⚠️  Polen Warning:\n${diagnostic.message}\n`)
+  })
+}
+
 export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
 
 export interface PagesTreePluginOptions {
@@ -136,6 +142,8 @@ export const createPagesTreePlugin = (
         // Notify about pages change (for other plugins that depend on pages)
         if (onPagesChange) {
           const pages = await scanPages()
+          // Report any diagnostics
+          reportDiagnostics(pages.diagnostics)
           onPagesChange(pages)
         }
 
@@ -159,6 +167,9 @@ export const createPagesTreePlugin = (
           const pagesScanResult = await scanPages()
           const tree = await scanTree()
 
+          // Report any diagnostics
+          reportDiagnostics(pagesScanResult.diagnostics)
+          
           // Notify about pages (useful for initial load)
           onPagesChange?.(pagesScanResult)
           onTreeChange?.(tree)

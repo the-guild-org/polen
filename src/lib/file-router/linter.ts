@@ -70,9 +70,13 @@ export const lint = (routes: Route[]): LintResult => {
           seen.set(kept)
         }
 
+        const orderMessage = kept.logical.order === dropped.logical.order
+          ? `Both files have the same order number (${kept.logical.order}). The file processed later is being kept based on processing order.`
+          : `The file with lower order number (${dropped.logical.order}) is being dropped in favor of the one with higher order (${kept.logical.order}).`
+
         const diagnostic: DiagnosticNumberedPrefixConflict = {
           // dprint-ignore
-          message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\nThe file with lower order number (${dropped.logical.order}) is being dropped in favor of the one with higher order (${kept.logical.order}).`,
+          message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\n${orderMessage}`,
           kept: {
             file: kept.file,
             order: kept.logical.order!,
