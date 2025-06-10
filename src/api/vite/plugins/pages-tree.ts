@@ -1,6 +1,7 @@
 import type { Config } from '#api/config/index'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
+import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { FileRouter } from '#lib/file-router/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debug } from '#singletons/debug'
@@ -8,25 +9,25 @@ import mdx from '@mdx-js/rollup'
 import { Path, Str } from '@wollybeard/kit'
 import remarkGfm from 'remark-gfm'
 
-const _debug = debug.sub(`vite-plugin-pages`)
+const _debug = debug.sub(`vite-plugin-pages-tree`)
 
 export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
 
-export interface PagesPluginOptions {
+export interface PagesTreePluginOptions {
   config: Config.Config
   onPagesChange?: (pages: FileRouter.ScanResult) => void
+  onTreeChange?: (tree: FileRouter.RouteTreeNode) => void
 }
 
 /**
- * Self-contained plugin for handling all pages-related functionality:
- * - MDX processing
- * - Virtual module for pages list
- * - File watching and HMR
- * - Cache management
+ * Pages plugin with tree support
  */
-export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions): Vite.Plugin[] => {
+export const createPagesTreePlugin = (
+  { config, onPagesChange, onTreeChange }: PagesTreePluginOptions,
+): Vite.Plugin[] => {
   // State management
   let pagesCache: FileRouter.ScanResult | null = null
+  let treeCache: FileRouter.RouteTreeNode | null = null
 
   // Helper functions
   const scanPages = async () => {
@@ -43,9 +44,25 @@ export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions)
     return pagesCache
   }
 
+  const scanTree = async () => {
+    if (!treeCache) {
+      _debug(`Scanning tree - cache is null, loading fresh data`)
+      const result = await FileRouter.scanTree({
+        dir: config.paths.project.absolute.pages,
+        glob: `**/*.{md,mdx}`,
+      })
+      treeCache = result.routeTree
+      _debug(`Built route tree`)
+    } else {
+      _debug(`Using cached tree`)
+    }
+    return treeCache
+  }
+
   const clearCache = () => {
-    _debug(`Clearing pages cache`)
+    _debug(`Clearing pages and tree cache`)
     pagesCache = null
+    treeCache = null
   }
 
   const isPageFile = (file: string) => {
@@ -92,7 +109,7 @@ export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions)
 
     // Plugin 2: Pages Management
     {
-      name: `polen:pages`,
+      name: `polen:pages-tree`,
 
       // Dev server configuration
       configureServer(server) {
@@ -120,7 +137,15 @@ export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions)
         // Notify about pages change (for other plugins that depend on pages)
         if (onPagesChange) {
           const pages = await scanPages()
+          // Report any diagnostics
+          reportDiagnostics(pages.diagnostics)
           onPagesChange(pages)
+        }
+
+        // Notify about tree change
+        if (onTreeChange) {
+          const tree = await scanTree()
+          onTreeChange(tree)
         }
 
         // Trigger full reload
@@ -135,9 +160,14 @@ export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions)
         async loader() {
           _debug(`Loading viProjectPages virtual module`)
           const pagesScanResult = await scanPages()
+          const tree = await scanTree()
+
+          // Report any diagnostics
+          reportDiagnostics(pagesScanResult.diagnostics)
 
           // Notify about pages (useful for initial load)
           onPagesChange?.(pagesScanResult)
+          onTreeChange?.(tree)
 
           return generatePagesModule(pagesScanResult)
         },
@@ -146,10 +176,11 @@ export const createPagesPlugin = ({ config, onPagesChange }: PagesPluginOptions)
   ]
 }
 
-// Helper to ensure pages are loaded initially
-export const ensurePagesLoaded = async (config: Config.Config): Promise<FileRouter.ScanResult> => {
-  return await FileRouter.scan({
+// Helper to get tree
+export const getRouteTree = async (config: Config.Config): Promise<FileRouter.RouteTreeNode> => {
+  const result = await FileRouter.scanTree({
     dir: config.paths.project.absolute.pages,
     glob: `**/*.{md,mdx}`,
   })
+  return result.routeTree
 }

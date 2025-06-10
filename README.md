@@ -176,6 +176,31 @@ Example:
 | `pages/foo/bar.md`    | `/foo/bar` | `Foo`                |
 | `pages/foo/bar.mdx`   | `/foo/bar` | `Foo`                |
 
+#### Page Ordering
+
+You can control the order of pages in the sidebar by prefixing file names with numbers followed by `_` or `-`. The numeric prefix affects only the sidebar ordering - it does not appear in the page URL or title.
+
+- _Syntax_
+  - Format: `<number>_<name>.md` or `<number>-<name>.md`
+  - Examples: `01_intro.md`, `10_getting-started.md`, `20-configuration.md`
+- _Ordering_
+  - Pages with numeric prefixes appear before pages without prefixes
+  - Pages are sorted by their numeric value (not alphabetically)
+  - Pages without prefixes are sorted alphabetically after numbered pages
+- _Collisions_
+  - If multiple files have the same name after removing the prefix (e.g., `10_about.md` and `20_about.md`), the file with the higher number is used
+  - A warning is shown for collision conflicts
+
+Example:
+
+| File                          | Route              | Sidebar Title     | Order |
+| ----------------------------- | ------------------ | ----------------- | ----- |
+| `pages/10_getting-started.md` | `/getting-started` | `Getting Started` | 1st   |
+| `pages/20_configuration.md`   | `/configuration`   | `Configuration`   | 2nd   |
+| `pages/30_advanced.md`        | `/advanced`        | `Advanced`        | 3rd   |
+| `pages/api-reference.md`      | `/api-reference`   | `Api Reference`   | 4th   |
+| `pages/troubleshooting.md`    | `/troubleshooting` | `Troubleshooting` | 5th   |
+
 #### Markdown
 
 Markdown files (`.md`) are supported using [remark](https://remark.js.org/). This is the same underlying engine as [MDX](https://mdxjs.com/) thus you can rely on consistent behavior between your `.md` and `.mdx` files.

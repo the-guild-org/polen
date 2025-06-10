@@ -40,6 +40,7 @@ export interface Route {
 
 export interface RouteLogical {
   path: Path
+  order?: number
 }
 
 export interface RouteFile {
