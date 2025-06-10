@@ -1,7 +1,9 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
+import { Tree } from '#lib/tree/index'
 import { Path, Str } from '@wollybeard/kit'
 import { type Diagnostic, lint } from './linter.ts'
 import { type Route, type RouteFile, type RouteLogical, routeToPathExpression } from './route.ts'
+import { scanTree } from './scan-tree.ts'
 
 //
 //
@@ -45,31 +47,21 @@ export const scan = async (parameters: {
   dir: string
   glob?: string
 }): Promise<ScanResult> => {
-  const { dir, glob = `**/*` } = parameters
+  // Use tree-based scanner
+  const treeResult = await scanTree(parameters)
 
-  const filePathStrings = await TinyGlobby.glob(glob, {
-    absolute: true,
-    cwd: dir,
-    onlyFiles: true,
+  // Flatten tree to get routes
+  const routes: Route[] = []
+  Tree.visit(treeResult.routeTree, (node) => {
+    if (node.value.type === 'file' && node.value.route) {
+      routes.push(node.value.route)
+    }
   })
 
-  const routes: Route[] = filePathStrings.map(filePath => filePathToRoute(filePath, dir))
-
+  // Apply linting
   const lintResult = lint(routes)
 
-  // Sort routes by order (if present), then by path
-  lintResult.routes.sort((a, b) => {
-    // If both have orders, sort by order
-    if (a.logical.order !== undefined && b.logical.order !== undefined) {
-      return a.logical.order - b.logical.order
-    }
-    // If only one has order, it comes first
-    if (a.logical.order !== undefined) return -1
-    if (b.logical.order !== undefined) return 1
-    // Otherwise sort alphabetically by path
-    return routeToPathExpression(a).localeCompare(routeToPathExpression(b))
-  })
-
+  // Routes are already sorted by the tree structure
   return lintResult
 }
 

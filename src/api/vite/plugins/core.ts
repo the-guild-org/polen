@@ -3,6 +3,7 @@ import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router/index'
+import { Tree } from '#lib/tree/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debug } from '#singletons/debug'
 import { Json, Str } from '@wollybeard/kit'
@@ -13,7 +14,7 @@ import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
 import { Schema } from '../../schema/index.ts'
 import { logger } from '../logger.ts'
 import { polenVirtual } from '../vi.ts'
-import { createPagesPlugin, ensurePagesLoaded } from './pages.ts'
+import { createPagesTreePlugin, getRouteTree } from './pages-tree.ts'
 
 const _debug = debug.sub(`vite-plugin-core`)
 
@@ -28,6 +29,7 @@ export interface ProjectPagesModule {
 export const Core = (config: Config.Config): Vite.PluginOption[] => {
   // State for current pages data (updated by pages plugin)
   let currentPagesData: FileRouter.ScanResult | null = null
+  let currentTreeData: FileRouter.RouteTreeNode | null = null
   let viteDevServer: Vite.ViteDevServer | null = null
 
   // Schema cache management
@@ -65,7 +67,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     ...plugins,
 
     // Self-contained pages plugin
-    ...createPagesPlugin({
+    ...createPagesTreePlugin({
       config,
       onPagesChange: (pages) => {
         currentPagesData = pages
@@ -76,6 +78,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             viteDevServer.moduleGraph.invalidateModule(projectDataModule)
           }
         }
+      },
+      onTreeChange: (tree) => {
+        currentTreeData = tree
       },
     }),
     /**
@@ -187,9 +192,17 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             // Get pages data from the pages plugin or load initially
             if (!currentPagesData) {
               _debug(`loadingPagesDataInitially`)
-              currentPagesData = await ensurePagesLoaded(config)
+              currentPagesData = await FileRouter.scan({
+                dir: config.paths.project.absolute.pages,
+                glob: `**/*.{md,mdx}`,
+              })
+            }
+            if (!currentTreeData) {
+              _debug(`loadingTreeDataInitially`)
+              currentTreeData = await getRouteTree(config)
             }
             const pagesScanResult = currentPagesData
+            const routeTree = currentTreeData
             _debug(`usingPageRoutesFromPagesPlugin`, pagesScanResult.routes.length)
 
             const siteNavigationItems: SiteNavigationItem[] = []
@@ -198,37 +211,24 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             // ━━ Build Navbar
             //
 
-            // ━ Top pages become navigation items
-            const topPages = pagesScanResult.routes.filter(FileRouter.routeIsTopLevel)
-
-            for (const page of topPages) {
-              const path = FileRouter.routeToPathExpression(page)
-              const title = Str.titlizeSlug(path)
-              siteNavigationItems.push({ pathExp: path, title })
-            }
-
-            // ━ Top directories become navigation items
-            const topDirsPaths = pagesScanResult.routes
-              .filter(FileRouter.routeIsSubLevel)
-              // todo: kit, slice that understands non-empty
-              // Arr.slice(route.path.segments, 1)
-              .map(route => [route.logical.path[0]])
-
-            for (const dir of topDirsPaths) {
-              const pathExp = FileRouter.pathToExpression(dir)
-              const title = Str.titlizeSlug(pathExp)
-              // todo: this should never happen, if it does, swarn user
-              // Only add if not already added as a top page
-              if (!siteNavigationItems.some(item => item.pathExp === pathExp)) {
-                siteNavigationItems.push({ pathExp: pathExp, title })
+            // Process first-level children as navigation items
+            for (const child of routeTree.children) {
+              if (child.value.type === 'directory') {
+                const pathExp = FileRouter.pathToExpression([child.value.name])
+                const title = Str.titlizeSlug(child.value.name)
+                siteNavigationItems.push({ pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp, title })
+              } else if (child.value.type === 'file' && child.value.name !== 'index') {
+                const pathExp = FileRouter.pathToExpression([child.value.name])
+                const title = Str.titlizeSlug(child.value.name)
+                siteNavigationItems.push({ pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp, title })
               }
             }
 
             // ━ Schema presence causes adding some navbar items
             if (schema) {
-              siteNavigationItems.push({ pathExp: `/reference`, title: `Reference` })
+              siteNavigationItems.push({ pathExp: `reference`, title: `Reference` })
               if (schema.versions.length > 1) {
-                siteNavigationItems.push({ pathExp: `/changelog`, title: `Changelog` })
+                siteNavigationItems.push({ pathExp: `changelog`, title: `Changelog` })
               }
             }
 
@@ -238,9 +238,16 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const sidebarIndex: SidebarIndex = {}
 
-            for (const dirPath of topDirsPaths) {
-              const childPages = pagesScanResult.routes.filter(page => FileRouter.routeIsSubOf(page, dirPath))
-              sidebarIndex[FileRouter.pathToExpression(dirPath)] = FileRouter.Sidebar.build(childPages, dirPath)
+            // Build sidebar for each top-level directory
+            for (const child of routeTree.children) {
+              if (child.value.type === 'directory') {
+                const pathExp = `/${child.value.name}`
+                // Create a subtree starting from this directory
+                const subtree = Tree.node(child.value, child.children)
+                const sidebar = FileRouter.Sidebar.buildFromTree(subtree, [])
+                _debug(`Built sidebar for ${pathExp}:`, sidebar)
+                sidebarIndex[pathExp] = sidebar
+              }
             }
 
             //

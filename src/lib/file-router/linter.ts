@@ -1,7 +1,7 @@
 import { Idx, Path } from '@wollybeard/kit'
 import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.ts'
 
-export type Diagnostic = DiagnosticIndexConflict | DiagnosticNumberedPrefixConflict
+export type Diagnostic = DiagnosticIndexConflict | DiagnosticNumberedPrefixConflict | DiagnosticNumberedPrefixOnIndex
 
 export interface DiagnosticIndexConflict {
   message: string
@@ -25,6 +25,12 @@ export interface DiagnosticNumberedPrefixConflict {
   }
 }
 
+export interface DiagnosticNumberedPrefixOnIndex {
+  message: string
+  file: RouteFile
+  order: number
+}
+
 export interface LintResult {
   diagnostics: Diagnostic[]
   routes: Route[]
@@ -34,6 +40,20 @@ export const lint = (routes: Route[]): LintResult => {
   const diagnostics: Diagnostic[] = []
 
   const seen = Idx.create({ key: routeToPathExpression })
+
+  // ━ Check for numbered prefix on index files
+  for (const route of routes) {
+    if (routeIsFromIndexFile(route) && route.logical.order !== undefined) {
+      const diagnostic: DiagnosticNumberedPrefixOnIndex = {
+        message: `Numbered prefix on index file has no effect. The file:\n  ${
+          Path.format(route.file.path.relative)
+        }\n\nhas a numbered prefix (${route.logical.order}_) which doesn't affect ordering since index files represent their parent directory.`,
+        file: route.file,
+        order: route.logical.order,
+      }
+      diagnostics.push(diagnostic)
+    }
+  }
 
   // ━ Check for conflicts
   for (const route of routes) {

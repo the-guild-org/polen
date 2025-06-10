@@ -18,12 +18,12 @@ const testCases: TestCase[] = [
   {
     title: 'md exact page',
     fixture: { 'pages/foo.md': 'abc' },
-    result: { path: '/foo', navBarTitle: 'foo', content: 'abc' },
+    result: { path: '/foo', navBarTitle: 'Foo', content: 'abc' },
   },
   {
     title: 'md index page',
     fixture: { 'pages/foo/index.md': 'abc' },
-    result: { path: '/foo', navBarTitle: 'foo', content: 'abc' },
+    result: { path: '/foo', navBarTitle: 'Foo', content: 'abc' },
   },
   {
     title: 'mdx exact page',
@@ -36,7 +36,7 @@ export const Mdx = () => "mdx"
 <Mdx />
       `,
     },
-    result: { path: '/foo', navBarTitle: 'foo', content: 'hello mdx' },
+    result: { path: '/foo', navBarTitle: 'Foo', content: 'hello mdx' },
   },
   {
     title: 'mdx with GFM strikethrough',
@@ -49,12 +49,12 @@ export const Demo = () => <span>MDX works</span>
 <Demo />
       `,
     },
-    result: { path: '/gfm-mdx', navBarTitle: 'gfm mdx', content: { selector: 'del', text: 'strikethrough' } },
+    result: { path: '/gfm-mdx', navBarTitle: 'Gfm Mdx', content: { selector: 'del', text: 'strikethrough' } },
   },
   {
     title: 'sidebar',
     fixture: { 'pages/foo': { 'index.md': '', 'bar.md': '' } },
-    result: { path: '/foo', navBarTitle: 'foo', sidebar: 'bar' },
+    result: { path: '/foo', navBarTitle: 'Foo', sidebar: 'bar' },
   },
   {
     title: 'sidebar with numbered prefixes',
@@ -68,19 +68,19 @@ export const Demo = () => <span>MDX works</span>
     },
     result: {
       path: '/docs',
-      navBarTitle: 'docs',
+      navBarTitle: 'Docs',
       sidebar: ['Installation', 'Configuration', 'Getting Started'],
     },
   },
   {
     title: 'numbered prefix with underscore separator',
     fixture: { 'pages/01_intro.md': '# Introduction' },
-    result: { path: '/intro', navBarTitle: 'intro', content: 'Introduction' },
+    result: { path: '/intro', navBarTitle: 'Intro', content: 'Introduction' },
   },
   {
     title: 'numbered prefix with dash separator',
     fixture: { 'pages/02-overview.md': '# Overview page content' },
-    result: { path: '/overview', navBarTitle: 'overview', content: 'Overview page content' },
+    result: { path: '/overview', navBarTitle: 'Overview', content: 'Overview page content' },
   },
   {
     title: 'numbered prefix collision - higher number wins',
@@ -88,7 +88,7 @@ export const Demo = () => <span>MDX works</span>
       'pages/10_about.md': '# About v1',
       'pages/20_about.md': '# About v2',
     },
-    result: { path: '/about', navBarTitle: 'about', content: 'About v2' },
+    result: { path: '/about', navBarTitle: 'About', content: 'About v2' },
   },
   {
     title: 'sidebar with mixed numbered and non-numbered items',
@@ -104,8 +104,54 @@ export const Demo = () => <span>MDX works</span>
     },
     result: {
       path: '/guide',
-      navBarTitle: 'guide',
+      navBarTitle: 'Guide',
       sidebar: ['Prerequisites', 'Getting Started', 'Advanced', 'Api Reference', 'Troubleshooting'],
+    },
+  },
+  {
+    title: 'sidebar section ordering with numbered prefixes on directories',
+    fixture: {
+      'pages/docs': {
+        'index.md': '# Documentation',
+        '30_tutorials': {
+          'index.md': '# Tutorials',
+          'basic.md': '# Basic Tutorial',
+          'advanced.md': '# Advanced Tutorial',
+        },
+        '10_getting-started': {
+          'index.md': '# Getting Started',
+          'installation.md': '# Installation',
+          'quickstart.md': '# Quick Start',
+        },
+        '20_guides': {
+          'index.md': '# Guides',
+          'configuration.md': '# Configuration',
+          'deployment.md': '# Deployment',
+        },
+        'api-reference': {
+          'index.md': '# API Reference',
+          'core.md': '# Core API',
+        },
+      },
+    },
+    result: {
+      path: '/docs',
+      navBarTitle: 'Docs',
+      // Sections should be ordered by their numeric prefixes
+      // We'll verify this by checking the complete order
+      sidebar: [
+        'Getting Started',
+        'Installation',
+        'Quickstart',
+        'Guides',
+        'Configuration',
+        'Deployment',
+        'Tutorials',
+        'Advanced', // Alphabetically before Basic
+        'Basic',
+        'Api Reference',
+        'Core',
+      ],
     },
   },
 ]
