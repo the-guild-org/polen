@@ -61,168 +61,114 @@ export const Demo = () => <span>MDX works</span>
   {
     title: 'sidebar with numbered prefixes',
     fixture: {
-      'pages/docs': {
-        'index.md': '',
-        '30_getting-started.md': '# Getting Started',
-        '10_installation.md': '# Installation',
-        '20_configuration.md': '# Configuration',
-      },
+      'pages/a': { 'index.md': '', '30_c.md': '', '10_b.md': '', '20_d.md': '' },
     },
     result: {
-      path: '/docs',
-      navBarTitle: 'Docs',
-      sidebar: ['Installation', 'Configuration', 'Getting Started'],
+      path: '/a',
+      navBarTitle: 'A',
+      sidebar: ['B', 'D', 'C'],
     },
   },
   {
     title: 'numbered prefix with underscore separator',
-    fixture: { 'pages/01_intro.md': '# Introduction' },
-    result: { path: '/intro', navBarTitle: 'Intro', content: 'Introduction' },
+    fixture: { 'pages/01_a.md': 'test1' },
+    result: { path: '/a', navBarTitle: 'A', content: 'test1' },
   },
   {
     title: 'numbered prefix with dash separator',
-    fixture: { 'pages/02-overview.md': '# Overview page content' },
-    result: { path: '/overview', navBarTitle: 'Overview', content: 'Overview page content' },
+    fixture: { 'pages/02-b.md': 'test2' },
+    result: { path: '/b', navBarTitle: 'B', content: 'test2' },
   },
   {
     title: 'numbered prefix collision - higher number wins',
     fixture: {
-      'pages/10_about.md': '# About v1',
-      'pages/20_about.md': '# About v2',
+      'pages/10_a.md': 'v1',
+      'pages/20_a.md': 'v2',
     },
-    result: { path: '/about', navBarTitle: 'About', content: 'About v2' },
+    result: { path: '/a', navBarTitle: 'A', content: 'v2' },
   },
   {
     title: 'sidebar with mixed numbered and non-numbered items',
     fixture: {
-      'pages/guide': {
-        'index.md': '',
-        '10_getting-started.md': '',
-        'api-reference.md': '',
-        '05_prerequisites.md': '',
-        'troubleshooting.md': '',
-        '20_advanced.md': '',
-      },
+      'pages/a': { 'index.md': '', '10_c.md': '', 'b.md': '', '05_d.md': '', 'e.md': '', '20_f.md': '' },
     },
     result: {
-      path: '/guide',
-      navBarTitle: 'Guide',
-      sidebar: ['Prerequisites', 'Getting Started', 'Advanced', 'Api Reference', 'Troubleshooting'],
+      path: '/a',
+      navBarTitle: 'A',
+      sidebar: ['D', 'C', 'F', 'B', 'E'],
     },
   },
   {
     title: 'sidebar section ordering with numbered prefixes on directories',
     fixture: {
-      'pages/docs': {
-        'index.md': '# Documentation',
-        '30_tutorials': {
-          'index.md': '# Tutorials',
-          'basic.md': '# Basic Tutorial',
-          'advanced.md': '# Advanced Tutorial',
-        },
-        '10_getting-started': {
-          'index.md': '# Getting Started',
-          'installation.md': '# Installation',
-          'quickstart.md': '# Quick Start',
-        },
-        '20_guides': {
-          'index.md': '# Guides',
-          'configuration.md': '# Configuration',
-          'deployment.md': '# Deployment',
-        },
-        'api-reference': {
-          'index.md': '# API Reference',
-          'core.md': '# Core API',
-        },
+      'pages/a': {
+        'index.md': '',
+        '30_d': { 'index.md': '', 'e.md': '', 'f.md': '' },
+        '10_b': { 'index.md': '', 'g.md': '', 'h.md': '' },
+        '20_c': { 'index.md': '', 'i.md': '', 'j.md': '' },
+        'k': { 'index.md': '', 'l.md': '' },
       },
     },
     result: {
-      path: '/docs',
-      navBarTitle: 'Docs',
-      // Sections should be ordered by their numeric prefixes
-      // We'll verify this by checking the complete order
-      sidebar: [
-        'Getting Started',
-        'Installation',
-        'Quickstart',
-        'Guides',
-        'Configuration',
-        'Deployment',
-        'Tutorials',
-        'Advanced', // Alphabetically before Basic
-        'Basic',
-        'Api Reference',
-        'Core',
-      ],
+      path: '/a',
+      navBarTitle: 'A',
+      sidebar: ['B', 'G', 'H', 'C', 'I', 'J', 'D', 'E', 'F', 'K', 'L'],
     },
   },
   {
     title: 'navigation shows only top-level items',
     fixture: {
       'pages': {
-        'about.md': '# About',
-        'guides': {
-          'index.md': '# Guides',
-          'getting-started.md': '# Getting Started',
-          'advanced': {
-            'index.md': '# Advanced',
-            'performance.md': '# Performance',
-          },
-        },
-        'pricing.md': '# Pricing',
+        'aaa.md': '',
+        'bbb': { 'index.md': '', 'ccc.md': '', 'ddd': { 'index.md': '', 'eee.md': '' } },
+        'fff.md': '',
       },
     },
     result: {
       path: '/',
-      navBarItems: ['About', 'Guides', 'Pricing'],
+      navBarItems: ['Aaa', 'Bbb', 'Fff'],
     },
     additionalChecks: async ({ page }) => {
-      // Verify only top-level items appear in navigation
-      // Should NOT see nested items like "Getting Started" or "Advanced"
-      await expect(page.getByRole('link', { name: 'Getting Started' })).not.toBeVisible()
-      await expect(page.getByRole('link', { name: 'Advanced' })).not.toBeVisible()
-      await expect(page.getByRole('link', { name: 'Performance' })).not.toBeVisible()
+      // Verify only top-level items appear in navigation bar
+      // The nested items should only be visible in sidebar, not in header navigation
+      // Count total links with these names - they should only exist in sidebar (if visible at all)
+      const allCccLinks = page.getByRole('link', { name: 'Ccc' })
+      const allDddLinks = page.getByRole('link', { name: 'Ddd' })
+      const allEeeLinks = page.getByRole('link', { name: 'Eee' })
+
+      // These nested items should not exist in the header navigation
+      // Since we're on root path, sidebar isn't shown, so they shouldn't be visible at all
+      await expect(allCccLinks).toHaveCount(0)
+      await expect(allDddLinks).toHaveCount(0)
+      await expect(allEeeLinks).toHaveCount(0)
     },
   },
   {
     title: 'sidebar sections have correct paths',
     fixture: {
       'pages': {
-        'guides': {
-          'index.md': '# Guides',
-          'getting-started.md': '# Getting Started',
-          'advanced': {
-            'index.md': '# Advanced Guide',
-            'performance.md': '# Performance',
-          },
-        },
+        'a': { 'index.md': '', 'b.md': '', 'c': { 'index.md': 'x', 'd.md': '' } },
       },
     },
     result: {
-      path: '/guides',
-      navBarTitle: 'Guides',
+      path: '/a',
+      navBarTitle: 'A',
     },
     additionalChecks: async ({ page }) => {
-      // Check that sidebar section link has correct full path
       const sidebar = page.getByTestId('sidebar')
-      const advancedLink = sidebar.getByRole('link', { name: 'Advanced' })
-      await expect(advancedLink).toHaveAttribute('href', '/guides/advanced')
+      const cLink = sidebar.getByRole('link', { name: 'C' })
+      await expect(cLink).toHaveAttribute('href', '/a/c')
 
-      // Navigate to the advanced section
-      await advancedLink.click()
-      await expect(page).toHaveURL(/\/guides\/advanced$/)
-      await expect(page.getByText('Advanced Guide')).toBeVisible()
+      await cLink.click()
+      await expect(page).toHaveURL(/\/a\/c$/)
+      await expect(page.getByText('x', { exact: true })).toBeVisible()
 
-      // Check that the active indicator is working
-      const activeLink = sidebar.getByRole('link', { name: 'Advanced' })
-      // Active links should have different styling than inactive ones
-      const performanceLink = sidebar.getByRole('link', { name: 'Performance' })
+      const activeLink = sidebar.getByRole('link', { name: 'C' })
+      const dLink = sidebar.getByRole('link', { name: 'D' })
 
-      // Get the computed styles
       const activeColor = await activeLink.evaluate(el => window.getComputedStyle(el).color)
-      const inactiveColor = await performanceLink.evaluate(el => window.getComputedStyle(el).color)
+      const inactiveColor = await dLink.evaluate(el => window.getComputedStyle(el).color)
 
-      // Active link should have different color than inactive
       expect(activeColor).not.toBe(inactiveColor)
     },
   },
@@ -230,40 +176,29 @@ export const Demo = () => <span>MDX works</span>
     title: 'sidebar active indicator works on navigation',
     fixture: {
       'pages': {
-        'docs': {
-          'index.md': '# Documentation',
-          'getting-started.md': '# Getting Started',
-          'configuration.md': '# Configuration',
-          'advanced.md': '# Advanced Topics',
-        },
+        'a': { 'index.md': '', 'b.md': '', 'c.md': '', 'd.md': '' },
       },
     },
     result: {
-      path: '/docs',
-      navBarTitle: 'Docs',
+      path: '/a',
+      navBarTitle: 'A',
     },
     additionalChecks: async ({ page }) => {
       const sidebar = page.getByTestId('sidebar')
 
-      // Initially no item should be active (we're on /docs which is the index)
-      // Navigate to getting-started
-      await sidebar.getByRole('link', { name: 'Getting Started' }).click()
-      await expect(page).toHaveURL(/\/docs\/getting-started$/)
+      await sidebar.getByRole('link', { name: 'B' }).click()
+      await expect(page).toHaveURL(/\/a\/b$/)
 
-      // Wait a moment for React to update
       await page.waitForTimeout(100)
 
-      // Check that Getting Started is now active
-      const gettingStartedLink = sidebar.getByRole('link', { name: 'Getting Started' })
-      const configLink = sidebar.getByRole('link', { name: 'Configuration' })
+      const bLink = sidebar.getByRole('link', { name: 'B' })
+      const cLink = sidebar.getByRole('link', { name: 'C' })
 
-      // Check using the style attribute which should contain inline styles
-      const gettingStartedStyle = await gettingStartedLink.getAttribute('style')
-      const configStyle = await configLink.getAttribute('style')
+      const bStyle = await bLink.getAttribute('style')
+      const cStyle = await cLink.getAttribute('style')
 
-      // Active links should have different inline styles
-      expect(gettingStartedStyle).toContain('var(--accent-11)')
-      expect(configStyle).toContain('var(--gray-12)')
+      expect(bStyle).toContain('var(--accent-11)')
+      expect(cStyle).toContain('var(--gray-12)')
     },
   },
 ]
@@ -277,7 +212,7 @@ testCases.forEach(({ fixture, result, title, additionalChecks }) => {
     await page.goto(viteDevServer.url('/').href)
 
     if (result.navBarTitle) {
-      await page.getByText(result.navBarTitle).click({ timeout: 1000 })
+      await page.getByRole('link', { name: result.navBarTitle, exact: true }).click({ timeout: 1000 })
       // Wait for navigation to complete
       await page.waitForLoadState('networkidle')
     }
@@ -291,7 +226,7 @@ testCases.forEach(({ fixture, result, title, additionalChecks }) => {
     }
 
     if (typeof result.content === 'string') {
-      await expect(page.getByText(result.content)).toBeVisible()
+      await expect(page.getByText(result.content, { exact: true })).toBeVisible()
     } else if (result.content) {
       const locator = result.content.text
         ? page.locator(result.content.selector).filter({ hasText: result.content.text })
