@@ -131,7 +131,6 @@ const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionIt
         <Box
           onClick={(e) => {
             e.stopPropagation()
-            console.log(`Chevron clicked!`)
             setIsExpanded(!isExpanded)
           }}
           style={{
