@@ -169,7 +169,7 @@ export const createPagesTreePlugin = (
 
           // Report any diagnostics
           reportDiagnostics(pagesScanResult.diagnostics)
-          
+
           // Notify about pages (useful for initial load)
           onPagesChange?.(pagesScanResult)
           onTreeChange?.(tree)
