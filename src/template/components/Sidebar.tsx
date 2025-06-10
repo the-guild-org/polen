@@ -129,8 +129,7 @@ const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionIt
         }}
       >
         <Box
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             setIsExpanded(!isExpanded)
           }}
           style={{
