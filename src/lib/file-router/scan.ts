@@ -1,7 +1,7 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
 import { Path, Str } from '@wollybeard/kit'
 import { type Diagnostic, lint } from './linter.ts'
-import type { Route, RouteFile, RouteLogical } from './route.ts'
+import { type Route, type RouteFile, type RouteLogical, routeToPathExpression } from './route.ts'
 
 //
 //
@@ -14,6 +14,9 @@ import type { Route, RouteFile, RouteLogical } from './route.ts'
 const conventions = {
   index: {
     name: `index`,
+  },
+  numberedPrefix: {
+    pattern: Str.pattern<{ groups: ['order', 'name'] }>(/^(?<order>\d+)[_-](?<name>.+)$/),
   },
 }
 
@@ -54,6 +57,19 @@ export const scan = async (parameters: {
 
   const lintResult = lint(routes)
 
+  // Sort routes by order (if present), then by path
+  lintResult.routes.sort((a, b) => {
+    // If both have orders, sort by order
+    if (a.logical.order !== undefined && b.logical.order !== undefined) {
+      return a.logical.order - b.logical.order
+    }
+    // If only one has order, it comes first
+    if (a.logical.order !== undefined) return -1
+    if (b.logical.order !== undefined) return 1
+    // Otherwise sort alphabetically by path
+    return routeToPathExpression(a).localeCompare(routeToPathExpression(b))
+  })
+
   return lintResult
 }
 
@@ -75,15 +91,22 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
 export const filePathToRouteLogical = (filePath: Path.Parsed): RouteLogical => {
   const dirPath = Str.split(Str.removeSurrounding(filePath.dir, Path.sep), Path.sep)
 
-  if (Str.isMatch(filePath.name, conventions.index.name)) {
+  // Parse numbered prefix from filename
+  const prefixMatch = Str.match(filePath.name, conventions.numberedPrefix.pattern)
+  const order = prefixMatch ? parseInt(prefixMatch.groups.order, 10) : undefined
+  const nameWithoutPrefix = prefixMatch?.groups.name ?? filePath.name
+
+  if (nameWithoutPrefix === conventions.index.name) {
     const path = dirPath
     return {
       path,
+      order,
     }
   }
 
-  const path = dirPath.concat(filePath.name)
+  const path = dirPath.concat(nameWithoutPrefix)
   return {
     path,
+    order,
   }
 }

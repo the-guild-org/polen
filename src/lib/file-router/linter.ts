@@ -1,7 +1,7 @@
 import { Idx, Path } from '@wollybeard/kit'
 import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.ts'
 
-export type Diagnostic = DiagnosticIndexConflict
+export type Diagnostic = DiagnosticIndexConflict | DiagnosticNumberedPrefixConflict
 
 export interface DiagnosticIndexConflict {
   message: string
@@ -10,6 +10,18 @@ export interface DiagnosticIndexConflict {
   }
   index: {
     file: RouteFile
+  }
+}
+
+export interface DiagnosticNumberedPrefixConflict {
+  message: string
+  kept: {
+    file: RouteFile
+    order: number
+  }
+  dropped: {
+    file: RouteFile
+    order: number
   }
 }
 
@@ -23,13 +35,37 @@ export const lint = (routes: Route[]): LintResult => {
 
   const seen = Idx.create({ key: routeToPathExpression })
 
-  // ━ Check for conflict between index and literal.
-  //   Note: There is no other way for paths to conflict so we safely assuming the cause is index+literal.
+  // ━ Check for conflicts
   for (const route of routes) {
     // Detect
     const seenRoute = seen.get(route)
 
     if (seenRoute) {
+      // Check if it's a numbered prefix conflict
+      if (seenRoute.logical.order !== undefined && route.logical.order !== undefined) {
+        // Handle numbered prefix conflict - keep the one with higher order
+        const [kept, dropped] = seenRoute.logical.order > route.logical.order ? [seenRoute, route] : [route, seenRoute]
+
+        if (dropped === seenRoute) {
+          seen.set(kept)
+        }
+
+        const diagnostic: DiagnosticNumberedPrefixConflict = {
+          // dprint-ignore
+          message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\nThe file with lower order number (${dropped.logical.order}) is being dropped in favor of the one with higher order (${kept.logical.order}).`,
+          kept: {
+            file: kept.file,
+            order: kept.logical.order!,
+          },
+          dropped: {
+            file: dropped.file,
+            order: dropped.logical.order!,
+          },
+        }
+        diagnostics.push(diagnostic)
+        continue
+      }
+
       // Fix - ignore the index
       const [index, literal] = routeIsFromIndexFile(route) ? [route, seenRoute] : [seenRoute, route]
       if (seenRoute === index) {
