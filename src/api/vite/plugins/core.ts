@@ -217,13 +217,24 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             // Process first-level children as navigation items
             for (const child of routeTree.children) {
               if (child.value.type === 'directory') {
-                const pathExp = FileRouter.pathToExpression([child.value.name])
-                const title = Str.titlizeSlug(child.value.name)
-                siteNavigationItems.push({ pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp, title })
+                // Check if this directory has an index file
+                const hasIndex = child.children.some(c => c.value.type === 'file' && c.value.name === 'index')
+
+                if (hasIndex) {
+                  const pathExp = FileRouter.pathToExpression([child.value.name])
+                  const title = Str.titlizeSlug(child.value.name)
+                  siteNavigationItems.push({
+                    pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
+                    title,
+                  })
+                }
               } else if (child.value.type === 'file' && child.value.name !== 'index') {
                 const pathExp = FileRouter.pathToExpression([child.value.name])
                 const title = Str.titlizeSlug(child.value.name)
-                siteNavigationItems.push({ pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp, title })
+                siteNavigationItems.push({
+                  pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
+                  title,
+                })
               }
             }
 
@@ -247,7 +258,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                 const pathExp = `/${child.value.name}`
                 // Create a subtree starting from this directory
                 const subtree = Tree.node(child.value, child.children)
-                const sidebar = FileRouter.Sidebar.buildFromTree(subtree, [])
+                // Pass the directory name as base path so paths are built correctly
+                const sidebar = FileRouter.Sidebar.buildFromTree(subtree, [child.value.name])
                 _debug(`Built sidebar for ${pathExp}:`, sidebar)
                 sidebarIndex[pathExp] = sidebar
               }

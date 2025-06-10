@@ -9,9 +9,11 @@ interface TestCase {
   result: {
     path: string
     navBarTitle?: string
+    navBarItems?: string[]
     content?: string | { selector: string; text?: string }
     sidebar?: string | { selector: string; text?: string } | string[]
   }
+  additionalChecks?: (context: { page: any }) => Promise<void>
 }
 
 const testCases: TestCase[] = [
@@ -154,9 +156,67 @@ export const Demo = () => <span>MDX works</span>
       ],
     },
   },
+  {
+    title: 'navigation shows only top-level items',
+    fixture: {
+      'pages': {
+        'about.md': '# About',
+        'guides': {
+          'index.md': '# Guides',
+          'getting-started.md': '# Getting Started',
+          'advanced': {
+            'index.md': '# Advanced',
+            'performance.md': '# Performance',
+          },
+        },
+        'pricing.md': '# Pricing',
+      },
+    },
+    result: {
+      path: '/',
+      navBarItems: ['About', 'Guides', 'Pricing'],
+    },
+    additionalChecks: async ({ page }) => {
+      // Verify only top-level items appear in navigation
+      // Should NOT see nested items like "Getting Started" or "Advanced"
+      await expect(page.getByRole('link', { name: 'Getting Started' })).not.toBeVisible()
+      await expect(page.getByRole('link', { name: 'Advanced' })).not.toBeVisible()
+      await expect(page.getByRole('link', { name: 'Performance' })).not.toBeVisible()
+    },
+  },
+  {
+    title: 'sidebar sections have correct paths',
+    fixture: {
+      'pages': {
+        'guides': {
+          'index.md': '# Guides',
+          'getting-started.md': '# Getting Started',
+          'advanced': {
+            'index.md': '# Advanced Guide',
+            'performance.md': '# Performance',
+          },
+        },
+      },
+    },
+    result: {
+      path: '/guides',
+      navBarTitle: 'Guides',
+    },
+    additionalChecks: async ({ page }) => {
+      // Check that sidebar section link has correct full path
+      const sidebar = page.getByTestId('sidebar')
+      const advancedLink = sidebar.getByRole('link', { name: 'Advanced' })
+      await expect(advancedLink).toHaveAttribute('href', '/guides/advanced')
+
+      // Navigate to the advanced section
+      await advancedLink.click()
+      await expect(page).toHaveURL(/\/guides\/advanced$/)
+      await expect(page.getByText('Advanced Guide')).toBeVisible()
+    },
+  },
 ]
 
-testCases.forEach(({ fixture, result, title }) => {
+testCases.forEach(({ fixture, result, title, additionalChecks }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.layout.set(fixture)
     const viteConfig = await Api.ConfigResolver.fromMemory({ root: project.layout.cwd })
@@ -168,6 +228,14 @@ testCases.forEach(({ fixture, result, title }) => {
       await page.getByText(result.navBarTitle).click({ timeout: 1000 })
       // Wait for navigation to complete
       await page.waitForLoadState('networkidle')
+    }
+
+    if (result.navBarItems) {
+      // Check that all expected navigation items are present
+      // Navigation links are in the header area
+      for (const item of result.navBarItems) {
+        await expect(page.getByRole('link', { name: item, exact: true })).toBeVisible()
+      }
     }
 
     if (typeof result.content === 'string') {
@@ -217,6 +285,11 @@ testCases.forEach(({ fixture, result, title }) => {
 
         await expect(sidebar).toBeVisible()
       }
+    }
+
+    // Run any additional checks
+    if (additionalChecks) {
+      await additionalChecks({ page })
     }
   })
 })
