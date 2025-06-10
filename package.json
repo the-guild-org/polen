@@ -24,6 +24,10 @@
     "type": "git",
     "url": "git+https://github.com/the-guild-org/polen.git"
   },
+  "devEngines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
   "imports": {
     "#*": {
       "source": "./src/*.ts",
