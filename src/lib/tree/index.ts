@@ -1,2 +1,2 @@
-export * as Tree from './tree.js'
-export type { TreeMapper, TreeNode, TreePredicate, TreeVisitor } from './tree.js'
+export * as Tree from './tree.ts'
+export type { TreeMapper, TreeNode, TreePredicate, TreeVisitor } from './tree.ts'

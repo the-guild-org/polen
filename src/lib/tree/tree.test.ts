@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import * as Tree from './tree.js'
+import * as Tree from './tree.ts'
 
 describe('Tree', () => {
   const sampleTree = Tree.node('root', [

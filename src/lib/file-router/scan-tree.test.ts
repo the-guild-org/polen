@@ -1,6 +1,6 @@
 import { Tree } from '#lib/tree/index'
 import { describe, expect, test } from 'vitest'
-import type { RouteTreeNode } from './scan-tree.js'
+import type { RouteTreeNode } from './scan-tree.ts'
 
 // Helper to create a mock route tree structure for testing
 const mockRouteTree = (structure: Record<string, any>): RouteTreeNode => {

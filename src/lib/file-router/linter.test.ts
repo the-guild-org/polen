@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { lint } from './linter.js'
-import type { Route } from './route.js'
+import { lint } from './linter.ts'
+import type { Route } from './route.ts'
 
 const createRoute = (path: string[], order?: number, isIndex = false): Route => {
   const name = isIndex ? 'index' : path[path.length - 1]!

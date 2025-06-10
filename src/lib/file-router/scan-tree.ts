@@ -1,8 +1,8 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
 import { Tree, type TreeNode } from '#lib/tree/index'
 import { Path, Str } from '@wollybeard/kit'
-import type { Diagnostic } from './linter.js'
-import type { Route, RouteFile } from './route.js'
+import type { Diagnostic } from './linter.ts'
+import type { Route, RouteFile } from './route.ts'
 
 //
 // Types
