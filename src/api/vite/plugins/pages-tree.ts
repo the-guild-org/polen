@@ -1,6 +1,7 @@
 import type { Config } from '#api/config/index'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
+import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { FileRouter } from '#lib/file-router/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debug } from '#singletons/debug'
@@ -9,12 +10,6 @@ import { Path, Str } from '@wollybeard/kit'
 import remarkGfm from 'remark-gfm'
 
 const _debug = debug.sub(`vite-plugin-pages-tree`)
-
-const reportDiagnostics = (diagnostics: FileRouter.Diagnostic[]) => {
-  diagnostics.forEach(diagnostic => {
-    console.warn(`\n⚠️  Polen Warning:\n${diagnostic.message}\n`)
-  })
-}
 
 export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
 

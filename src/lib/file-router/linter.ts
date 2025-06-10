@@ -7,6 +7,7 @@ export type Diagnostic = DiagnosticIndexConflict | DiagnosticNumberedPrefixConfl
 
 export interface DiagnosticIndexConflict {
   type: 'index-conflict'
+  severity: DiagnosticSeverity
   message: string
   literal: {
     file: RouteFile
@@ -18,6 +19,7 @@ export interface DiagnosticIndexConflict {
 
 export interface DiagnosticNumberedPrefixConflict {
   type: 'numbered-prefix-conflict'
+  severity: DiagnosticSeverity
   message: string
   kept: {
     file: RouteFile
@@ -31,6 +33,7 @@ export interface DiagnosticNumberedPrefixConflict {
 
 export interface DiagnosticNumberedPrefixOnIndex {
   type: 'numbered-prefix-on-index'
+  severity: DiagnosticSeverity
   message: string
   file: RouteFile
   order: number
@@ -51,6 +54,7 @@ export const lint = (routes: Route[]): LintResult => {
     if (routeIsFromIndexFile(route) && route.logical.order !== undefined) {
       const diagnostic: DiagnosticNumberedPrefixOnIndex = {
         type: 'numbered-prefix-on-index',
+        severity: 'warning',
         message: `Numbered prefix on index file has no effect. The file:\n  ${
           Path.format(route.file.path.relative)
         }\n\nhas a numbered prefix (${route.logical.order}_) which doesn't affect ordering since index files represent their parent directory.`,
@@ -82,6 +86,7 @@ export const lint = (routes: Route[]): LintResult => {
 
         const diagnostic: DiagnosticNumberedPrefixConflict = {
           type: 'numbered-prefix-conflict',
+          severity: 'error',
           // dprint-ignore
           message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\n${orderMessage}`,
           kept: {
@@ -106,6 +111,7 @@ export const lint = (routes: Route[]): LintResult => {
       // Report
       const diagnostic: DiagnosticIndexConflict = {
         type: 'index-conflict',
+        severity: 'error',
         // dprint-ignore
         message: `Your files represent conflicting routes. This index file route:\n  ${Path.format(index.file.path.relative)}\n\nconflicts with this literal file route:\n\n  ${Path.format(literal.file.path.relative)}.\n\nYour index route is being ignored.`,
         literal: {

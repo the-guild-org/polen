@@ -2,6 +2,7 @@ import type { Config } from '#api/config/index'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
+import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { FileRouter } from '#lib/file-router/index'
 import { Tree } from '#lib/tree/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
@@ -197,9 +198,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                 glob: `**/*.{md,mdx}`,
               })
               // Report any diagnostics from initial scan
-              currentPagesData.diagnostics.forEach(diagnostic => {
-                console.warn(`\n⚠️  Polen Warning:\n${diagnostic.message}\n`)
-              })
+              reportDiagnostics(currentPagesData.diagnostics)
             }
             if (!currentTreeData) {
               _debug(`loadingTreeDataInitially`)
