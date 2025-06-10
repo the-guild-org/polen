@@ -8,8 +8,9 @@ interface TestCase {
   fixture: FsLayout.Tree
   result: {
     path: string
-    navBarTitle: string
-    content: string | { selector: string; text?: string }
+    navBarTitle?: string
+    content?: string | { selector: string; text?: string }
+    sidebar?: string | { selector: string; text?: string }
   }
 }
 
@@ -50,6 +51,11 @@ export const Demo = () => <span>MDX works</span>
     },
     result: { path: '/gfm-mdx', navBarTitle: 'gfm mdx', content: { selector: 'del', text: 'strikethrough' } },
   },
+  {
+    title: 'sidebar',
+    fixture: { 'pages/foo': { 'index.md': '', 'bar.md': '' } },
+    result: { path: '/foo', navBarTitle: 'foo', sidebar: 'bar' },
+  },
 ]
 
 testCases.forEach(({ fixture, result, title }) => {
@@ -57,16 +63,28 @@ testCases.forEach(({ fixture, result, title }) => {
     await project.layout.set(fixture)
     const viteConfig = await Api.ConfigResolver.fromMemory({ root: project.layout.cwd })
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
+
     await page.goto(viteDevServer.url('/').href)
-    await page.getByText(result.navBarTitle).click({ timeout: 1000 })
+
+    if (result.navBarTitle) {
+      await page.getByText(result.navBarTitle).click({ timeout: 1000 })
+    }
 
     if (typeof result.content === 'string') {
       await expect(page.getByText(result.content)).toBeVisible()
-    } else {
+    } else if (result.content) {
       const locator = result.content.text
         ? page.locator(result.content.selector).filter({ hasText: result.content.text })
         : page.locator(result.content.selector)
       await expect(locator.first()).toBeVisible()
+    }
+
+    if (result.sidebar) {
+      const sidebar = typeof result.sidebar === 'string'
+        ? page.getByTestId('sidebar').getByText(result.sidebar)
+        : page.getByTestId('sidebar').locator(result.sidebar.selector)
+
+      await expect(sidebar).toBeVisible()
     }
   })
 })

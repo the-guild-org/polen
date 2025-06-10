@@ -13,6 +13,7 @@ export const Sidebar = ({ items }: SidebarProps) => {
 
   return (
     <Box
+      data-testid='sidebar'
       style={{
         width: `240px`,
         minWidth: `240px`,
