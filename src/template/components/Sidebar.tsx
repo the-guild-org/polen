@@ -1,6 +1,6 @@
 import type { FileRouter } from '#lib/file-router/index'
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons'
-import { Box, Flex, Text } from '@radix-ui/themes'
+import { Box, Button, Flex, Text } from '@radix-ui/themes'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
 
@@ -14,6 +14,8 @@ export const Sidebar = ({ items }: SidebarProps) => {
   return (
     <Box
       data-testid='sidebar'
+      role='navigation'
+      aria-label='Site navigation'
       style={{
         width: `240px`,
         minWidth: `240px`,
@@ -33,15 +35,13 @@ export const Sidebar = ({ items }: SidebarProps) => {
             background-color: var(--gray-2) !important;
           }
 
-          /* Alternative with class names (current approach) */
-          /*
-          .sidebar-nav-item:hover:not(.active) {
-            background-color: var(--gray-2) !important;
+          /* Focus styles for keyboard navigation */
+          .sidebar-nav-item:focus-visible {
+            outline: 2px solid var(--accent-8);
+            outline-offset: 2px;
           }
-          .sidebar-section:hover:not(.active):not(.has-active-child) {
-            background-color: var(--gray-2) !important;
-          }
-          */
+
+          /* Radix Button focus styles are handled by the component itself */
         `}
       </style>
       <Flex direction='column' gap='1'>
@@ -87,6 +87,7 @@ const SidebarItemLink = ({ nav, currentPathExp, level }: SidebarItemLinkProps) =
       to={`/${nav.pathExp}`}
       data-active={isActive || undefined}
       className='sidebar-nav-item'
+      aria-current={isActive ? 'page' : undefined}
       style={{
         textDecoration: `none`,
         color: isActive ? `var(--accent-11)` : `var(--gray-12)`,
@@ -113,11 +114,11 @@ interface SidebarItemSectionProps {
 
 const SidebarItemSection = ({ section, currentPathExp, level }: SidebarItemSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true)
+  const toggleExpanded = () => setIsExpanded(!isExpanded)
   // Normalize paths for comparison - remove leading slash if present
   const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
   const isDirectlyActive = normalizedCurrentPath === section.pathExp
   const hasActiveChild = section.navs.some(nav => normalizedCurrentPath === nav.pathExp)
-  const isActiveGroup = isDirectlyActive || hasActiveChild
 
   return (
     <>
@@ -134,25 +135,26 @@ const SidebarItemSection = ({ section, currentPathExp, level }: SidebarItemSecti
           transition: `background-color 0.2s ease`,
         }}
       >
-        <Box
-          onClick={() => {
-            setIsExpanded(!isExpanded)
-          }}
+        <Button
+          variant='ghost'
+          size='1'
+          onClick={toggleExpanded}
+          aria-expanded={isExpanded}
+          aria-controls={`section-${section.pathExp.replace(/\//g, '-')}`}
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${section.title} section`}
           style={{
-            display: `flex`,
-            alignItems: `center`,
-            cursor: `pointer`,
             padding: `4px`,
             marginRight: `4px`,
             marginLeft: `-4px`,
           }}
         >
           {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
-        </Box>
+        </Button>
         {section.isNavToo
           ? (
             <Link
               to={`/${section.pathExp}`}
+              aria-current={isDirectlyActive ? 'page' : undefined}
               style={{
                 textDecoration: `none`,
                 color: isDirectlyActive ? `var(--accent-11)` : `var(--gray-12)`,
@@ -178,7 +180,13 @@ const SidebarItemSection = ({ section, currentPathExp, level }: SidebarItemSecti
           )}
       </Flex>
       {isExpanded && (
-        <Flex direction='column' gap='1'>
+        <Flex
+          direction='column'
+          gap='1'
+          id={`section-${section.pathExp.replace(/\//g, '-')}`}
+          role='group'
+          aria-label={`${section.title} navigation items`}
+        >
           {section.navs.map((nav) => (
             <SidebarItemLink
               key={nav.pathExp}
