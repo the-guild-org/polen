@@ -4,6 +4,10 @@ import { Box, Button, Flex, Text } from '@radix-ui/themes'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
 
+// Following Radix UI Themes best practices:
+// - Using CSS variables for spacing (--space-1 through --space-9)
+// - Sidebar width is fixed at 240px (no token available for this specific width)
+
 interface SidebarProps {
   items: FileRouter.Sidebar.Item[]
 }
@@ -16,13 +20,13 @@ export const Sidebar = ({ items }: SidebarProps) => {
       data-testid='sidebar'
       role='navigation'
       aria-label='Site navigation'
+      width='240px'
+      minWidth='240px'
+      pr='4'
       style={{
-        width: `240px`,
-        minWidth: `240px`,
         flexShrink: 0,
         borderRight: `1px solid var(--gray-3)`,
         height: `100%`,
-        paddingRight: `var(--space-4)`,
       }}
     >
       <style>
@@ -38,7 +42,7 @@ export const Sidebar = ({ items }: SidebarProps) => {
           /* Focus styles for keyboard navigation */
           .sidebar-nav-item:focus-visible {
             outline: 2px solid var(--accent-8);
-            outline-offset: 2px;
+            outline-offset: var(--space-1);
           }
 
           /* Radix Button focus styles are handled by the component itself */
@@ -92,7 +96,7 @@ const SidebarItemLink = ({ nav, currentPathExp, level }: SidebarItemLinkProps) =
         textDecoration: `none`,
         color: isActive ? `var(--accent-11)` : `var(--gray-12)`,
         padding: `var(--space-2) var(--space-3)`,
-        paddingLeft: `calc(var(--space-3) + ${(level * 16).toString()}px)`,
+        paddingLeft: `calc(var(--space-3) + ${level}rem)`,
         borderRadius: `var(--radius-2)`,
         display: `block`,
         backgroundColor: isActive ? `var(--accent-3)` : `transparent`,
@@ -129,7 +133,7 @@ const SidebarItemSection = ({ section, currentPathExp, level }: SidebarItemSecti
         className='sidebar-section'
         style={{
           padding: `var(--space-2) var(--space-3)`,
-          paddingLeft: `calc(var(--space-3) + ${(level * 16).toString()}px)`,
+          paddingLeft: `calc(var(--space-3) + ${level}rem)`,
           borderRadius: `var(--radius-2)`,
           backgroundColor: isDirectlyActive ? `var(--accent-3)` : hasActiveChild ? `var(--accent-2)` : `transparent`,
           transition: `background-color 0.2s ease`,
@@ -142,11 +146,8 @@ const SidebarItemSection = ({ section, currentPathExp, level }: SidebarItemSecti
           aria-expanded={isExpanded}
           aria-controls={`section-${section.pathExp.replace(/\//g, '-')}`}
           aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${section.title} section`}
-          style={{
-            padding: `4px`,
-            marginRight: `4px`,
-            marginLeft: `-4px`,
-          }}
+          mr='1'
+          ml='-1'
         >
           {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
         </Button>

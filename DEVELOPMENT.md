@@ -157,6 +157,7 @@ pnpm test:examples --ui
 - Using Radix UI Themes
 - Guidelines
   - Prefer using Radix UI primitives when available over native HTML elements
+  - Pefer using Radix component props where available (pr='4' instead of style paddingRight)
 
 #### Global Build Variables
 
