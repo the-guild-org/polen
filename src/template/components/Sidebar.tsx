@@ -57,11 +57,13 @@ interface SidebarNavItemProps {
 }
 
 const SidebarNavItem = ({ nav, currentPathExp, level }: SidebarNavItemProps) => {
-  const isActive = currentPathExp === nav.pathExp
+  // Normalize paths for comparison - remove leading slash if present
+  const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
+  const isActive = normalizedCurrentPath === nav.pathExp
 
   return (
     <Link
-      to={nav.pathExp}
+      to={`/${nav.pathExp}`}
       style={{
         textDecoration: `none`,
         color: isActive ? `var(--accent-11)` : `var(--gray-12)`,
@@ -98,8 +100,10 @@ interface SidebarSectionItemProps {
 
 const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionItemProps) => {
   const [isExpanded, setIsExpanded] = useState(true)
-  const isDirectlyActive = currentPathExp === section.pathExp
-  const hasActiveChild = section.navs.some(nav => currentPathExp === nav.pathExp)
+  // Normalize paths for comparison - remove leading slash if present
+  const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
+  const isDirectlyActive = normalizedCurrentPath === section.pathExp
+  const hasActiveChild = section.navs.some(nav => normalizedCurrentPath === nav.pathExp)
   const isActiveGroup = isDirectlyActive || hasActiveChild
 
   return (
@@ -144,7 +148,7 @@ const SidebarSectionItem = ({ section, currentPathExp, level }: SidebarSectionIt
         {section.isNavToo
           ? (
             <Link
-              to={section.pathExp}
+              to={`/${section.pathExp}`}
               style={{
                 textDecoration: `none`,
                 color: isDirectlyActive ? `var(--accent-11)` : `var(--gray-12)`,

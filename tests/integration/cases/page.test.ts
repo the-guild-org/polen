@@ -212,6 +212,58 @@ export const Demo = () => <span>MDX works</span>
       await advancedLink.click()
       await expect(page).toHaveURL(/\/guides\/advanced$/)
       await expect(page.getByText('Advanced Guide')).toBeVisible()
+
+      // Check that the active indicator is working
+      const activeLink = sidebar.getByRole('link', { name: 'Advanced' })
+      // Active links should have different styling than inactive ones
+      const performanceLink = sidebar.getByRole('link', { name: 'Performance' })
+
+      // Get the computed styles
+      const activeColor = await activeLink.evaluate(el => window.getComputedStyle(el).color)
+      const inactiveColor = await performanceLink.evaluate(el => window.getComputedStyle(el).color)
+
+      // Active link should have different color than inactive
+      expect(activeColor).not.toBe(inactiveColor)
+    },
+  },
+  {
+    title: 'sidebar active indicator works on navigation',
+    fixture: {
+      'pages': {
+        'docs': {
+          'index.md': '# Documentation',
+          'getting-started.md': '# Getting Started',
+          'configuration.md': '# Configuration',
+          'advanced.md': '# Advanced Topics',
+        },
+      },
+    },
+    result: {
+      path: '/docs',
+      navBarTitle: 'Docs',
+    },
+    additionalChecks: async ({ page }) => {
+      const sidebar = page.getByTestId('sidebar')
+
+      // Initially no item should be active (we're on /docs which is the index)
+      // Navigate to getting-started
+      await sidebar.getByRole('link', { name: 'Getting Started' }).click()
+      await expect(page).toHaveURL(/\/docs\/getting-started$/)
+
+      // Wait a moment for React to update
+      await page.waitForTimeout(100)
+
+      // Check that Getting Started is now active
+      const gettingStartedLink = sidebar.getByRole('link', { name: 'Getting Started' })
+      const configLink = sidebar.getByRole('link', { name: 'Configuration' })
+
+      // Check using the style attribute which should contain inline styles
+      const gettingStartedStyle = await gettingStartedLink.getAttribute('style')
+      const configStyle = await configLink.getAttribute('style')
+
+      // Active links should have different inline styles
+      expect(gettingStartedStyle).toContain('var(--accent-11)')
+      expect(configStyle).toContain('var(--gray-12)')
     },
   },
 ]
