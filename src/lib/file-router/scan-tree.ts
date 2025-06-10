@@ -108,10 +108,10 @@ const buildRouteTreeFromPaths = async (paths: string[], rootDir: string): Promis
         currentNode.children.push(childNode)
       } else if (isLast && childNode.value.type === 'file') {
         // Handle collision for files with same name
-        // If new file has higher order, replace the existing one
+        // If new file has higher or equal order, replace the existing one (last wins for ties)
         if (
           parsed.order !== undefined
-          && (childNode.value.order === undefined || parsed.order > childNode.value.order)
+          && (childNode.value.order === undefined || parsed.order >= childNode.value.order)
         ) {
           const route = filePathToRoute(filePath, rootDir)
           const newNode = Tree.node<RouteTreeNodeValue>({
@@ -123,7 +123,7 @@ const buildRouteTreeFromPaths = async (paths: string[], rootDir: string): Promis
           currentNode.children[existingChildIndex] = newNode
           childNode = newNode
         }
-        // Otherwise keep the existing node
+        // Otherwise keep the existing node (when existing has higher order)
       }
 
       currentNode = childNode
