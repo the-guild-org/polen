@@ -25,13 +25,24 @@ export const Sidebar = ({ items }: SidebarProps) => {
     >
       <style>
         {`
-        .sidebar-nav-item:hover:not(.active) {
-          background-color: var(--gray-2) !important;
-        }
-        .sidebar-section:hover:not(.active):not(.has-active-child) {
-          background-color: var(--gray-2) !important;
-        }
-      `}
+          /* Using data attributes - more idiomatic for Radix UI */
+          .sidebar-nav-item:hover:not([data-active]) {
+            background-color: var(--gray-2) !important;
+          }
+          .sidebar-section:hover:not([data-active]):not([data-active-child]) {
+            background-color: var(--gray-2) !important;
+          }
+
+          /* Alternative with class names (current approach) */
+          /*
+          .sidebar-nav-item:hover:not(.active) {
+            background-color: var(--gray-2) !important;
+          }
+          .sidebar-section:hover:not(.active):not(.has-active-child) {
+            background-color: var(--gray-2) !important;
+          }
+          */
+        `}
       </style>
       <Flex direction='column' gap='1'>
         {items.map((item) => (
@@ -74,7 +85,8 @@ const SidebarItemLink = ({ nav, currentPathExp, level }: SidebarItemLinkProps) =
   return (
     <Link
       to={`/${nav.pathExp}`}
-      className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+      data-active={isActive || undefined}
+      className='sidebar-nav-item'
       style={{
         textDecoration: `none`,
         color: isActive ? `var(--accent-11)` : `var(--gray-12)`,
@@ -111,7 +123,9 @@ const SidebarItemSection = ({ section, currentPathExp, level }: SidebarItemSecti
     <>
       <Flex
         align='center'
-        className={`sidebar-section ${isDirectlyActive ? 'active' : ''} ${hasActiveChild ? 'has-active-child' : ''}`}
+        data-active={isDirectlyActive || undefined}
+        data-active-child={hasActiveChild || undefined}
+        className='sidebar-section'
         style={{
           padding: `var(--space-2) var(--space-3)`,
           paddingLeft: `calc(var(--space-3) + ${(level * 16).toString()}px)`,
