@@ -2,7 +2,7 @@ import type { React } from '#dep/react/index'
 import type { FileRouter } from '#lib/file-router/index'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import { useLocation } from 'react-router'
-import { Link } from '../Link.tsx'
+import { getPathActiveReport, Link } from '../Link.tsx'
 
 export const Items: React.FC<{ items: FileRouter.Sidebar.Item[] }> = ({ items }) => {
   return (
@@ -50,7 +50,7 @@ const SBLink: React.FC<{
 }> = ({ link }) => {
   const location = useLocation()
   const currentPathExp = location.pathname
-  const active = getActiveInfo(link, currentPathExp)
+  const active = getPathActiveReport(link.pathExp, currentPathExp)
 
   return (
     <Link
@@ -149,7 +149,7 @@ const LinkedSection: React.FC<{
 
 const SectionLink: React.FC<{ link: FileRouter.Sidebar.ItemLink }> = ({ link }) => {
   const location = useLocation()
-  const active = getActiveInfo(link, location.pathname)
+  const active = getPathActiveReport(link.pathExp, location.pathname)
 
   return (
     <Link
@@ -167,28 +167,4 @@ const SectionLink: React.FC<{ link: FileRouter.Sidebar.ItemLink }> = ({ link }) 
       <Box py='2' px='4'>{link.title}</Box>
     </Link>
   )
-}
-
-//
-//
-//
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Helpers
-//
-//
-
-const getActiveInfo = (
-  link: FileRouter.Sidebar.Item,
-  currentPathExp: string,
-): { is: boolean; isDirect: boolean; isdescendant: boolean } => {
-  // Normalize paths for comparison - remove leading slash if present
-  const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
-  const isDirect = normalizedCurrentPath === link.pathExp
-  const isdescendant = normalizedCurrentPath.startsWith(link.pathExp)
-  const is = isDirect || isdescendant
-  return {
-    is,
-    isDirect,
-    isdescendant,
-  }
 }

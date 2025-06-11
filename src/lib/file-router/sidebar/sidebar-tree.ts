@@ -54,7 +54,7 @@ const processNode = (
       section.isLinkToo = true
     }
 
-    // Process all non-index children as navs for this section
+    // Process all non-index children as links for this section
     for (const child of node.children) {
       if (child.value.type === 'file' && child.value.name !== 'index' && child.value.route) {
         // Pass the parent path of the route, not the section path

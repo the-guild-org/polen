@@ -21,7 +21,7 @@ const reactRouterPropKeys = [
 export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = props => {
   const location = useLocation()
   const toPathExp = typeof props.to === 'string' ? props.to : props.to.pathname || ''
-  const active = getActiveInfo(toPathExp, location.pathname)
+  const active = getPathActiveReport(toPathExp, location.pathname)
 
   const reactRouterProps: LinkPropsReactRouter = ObjPick(props, reactRouterPropKeys)
 
@@ -38,10 +38,16 @@ export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = 
   )
 }
 
-const getActiveInfo = (
+export interface PathActiveReport {
+  is: boolean
+  isDirect: boolean
+  isdescendant: boolean
+}
+
+export const getPathActiveReport = (
   pathExp: string,
   currentPathExp: string,
-): { is: boolean; isDirect: boolean; isdescendant: boolean } => {
+): PathActiveReport => {
   // Normalize paths for comparison - remove leading slash if present
   const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
   const isDirect = normalizedCurrentPath === pathExp
