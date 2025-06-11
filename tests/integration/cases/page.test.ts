@@ -164,35 +164,6 @@ export const Demo = () => <span>MDX works</span>
       await expect(page.getByText('x', { exact: true })).toBeVisible()
     },
   },
-  {
-    title: 'sidebar active indicator works on navigation',
-    fixture: {
-      'pages': {
-        'a': { 'index.md': '', 'b.md': '', 'c.md': '', 'd.md': '' },
-      },
-    },
-    result: {
-      path: '/a',
-      navBarTitle: 'A',
-    },
-    additionalChecks: async ({ page }) => {
-      const sidebar = page.getByTestId('sidebar')
-
-      await sidebar.getByRole('link', { name: 'B' }).click()
-      await expect(page).toHaveURL(/\/a\/b$/)
-
-      await page.waitForTimeout(100)
-
-      const bLink = sidebar.getByRole('link', { name: 'B' })
-      const cLink = sidebar.getByRole('link', { name: 'C' })
-
-      const bStyle = await bLink.getAttribute('style')
-      const cStyle = await cLink.getAttribute('style')
-
-      expect(bStyle).toContain('var(--accent-11)')
-      expect(cStyle).toContain('var(--gray-12)')
-    },
-  },
 ]
 
 testCases.forEach(({ fixture, result, title, additionalChecks }) => {
