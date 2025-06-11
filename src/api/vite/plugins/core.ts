@@ -15,7 +15,7 @@ import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
 import { Schema } from '../../schema/index.ts'
 import { createLogger } from '../logger.ts'
 import { polenVirtual } from '../vi.ts'
-import { createPagesPlugin, getRouteTree } from './pages-tree.ts'
+import { createPagesPlugin, getRouteTree } from './pages.ts'
 
 const _debug = debug.sub(`vite-plugin-core`)
 

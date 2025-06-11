@@ -109,7 +109,7 @@ export const createPagesPlugin = (
 
     // Plugin 2: Pages Management
     {
-      name: `polen:pages-tree`,
+      name: `polen:pages`,
 
       // Dev server configuration
       configureServer(server) {
