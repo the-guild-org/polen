@@ -3,7 +3,11 @@ import type { Hono } from '#dep/hono/index'
 import type { Vite } from '#dep/vite/index'
 import { debug } from '#singletons/debug'
 import * as HonoNodeServer from '@hono/node-server'
-import { Err } from '@wollybeard/kit'
+import { Err, Http } from '@wollybeard/kit'
+import { dump } from '@wollybeard/kit/debug'
+import cleanStack from 'clean-stack'
+import { Youch } from 'youch'
+import { ErrorParser } from 'youch-core'
 
 type App = Hono.Hono
 
@@ -14,18 +18,40 @@ interface AppServerModule {
 export const Serve = (
   config: Config.Config,
 ): Vite.PluginOption => {
-  let appPromise: Promise<App>
+  const _debug = debug.sub(`serve`)
+  let appPromise: Promise<App | Error>
 
-  const reloadApp = async ({ server }: { server: Vite.ViteDevServer }): Promise<App> => {
-    debug('reloadApp')
-    return await server.ssrLoadModule(config.paths.framework.template.server.app)
+  const reloadApp = async ({ server }: { server: Vite.ViteDevServer }): Promise<App | Error> => {
+    _debug('reloadApp')
+    return server.ssrLoadModule(config.paths.framework.template.server.app)
       .then(module => module as AppServerModule)
       .then(module => module.app)
-      .catch(cause => {
-        if (Err.is(cause)) {
-          server.ssrFixStacktrace(cause)
+      .catch(async (error) => {
+        if (Err.is(error)) {
+          // ━ Clean Stack Trace
+          server.ssrFixStacktrace(error)
+          const stack = cleanStack(error.stack, {
+            pathFilter: (path) => {
+              return !path.match(/.*rolldown-vite.*/)
+            },
+            basePath: config.paths.project.rootDir,
+            // pretty: true,
+          })
+          error.stack = stack
+          // ━ Log Error
+          Err.log(error)
+          const parser = new ErrorParser()
+          const parsedError = await parser.parse(error)
+          const snippet = parsedError.frames[0]?.source?.map(line => {
+            return line.lineNumber.toString().padStart(4, ' ') + `: ` + line.chunk
+          }).join(`\n`)
+          if (snippet) {
+            console.log('-----------------------------')
+            console.log(snippet)
+          }
+          return error
         }
-        throw cause
+        throw error
       })
   }
 
@@ -49,10 +75,12 @@ export const Serve = (
       }
     },
     handleHotUpdate({ server }) {
+      _debug('handleHotUpdate')
       // Reload app server immediately in the background
       appPromise = reloadApp({ server })
     },
     async configureServer(server) {
+      _debug('configureServer')
       // Initial load
       appPromise = reloadApp({ server })
 
@@ -69,6 +97,13 @@ export const Serve = (
           void HonoNodeServer.getRequestListener(async request => {
             // Always await the current app promise
             const app = await appPromise
+            if (Err.is(app)) {
+              // Err.log(app)
+              return new Response(null, {
+                status: Http.Status.InternalServerError.code,
+                statusText: Http.Status.InternalServerError.description,
+              })
+            }
             const response = await app.fetch(request, { viteDevServer: server })
             return response
           })(req, res)

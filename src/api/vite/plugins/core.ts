@@ -13,9 +13,9 @@ import type { ProjectData, SidebarIndex, SiteNavigationItem } from '../../../pro
 import { superjson } from '../../../singletons/superjson.ts'
 import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
 import { Schema } from '../../schema/index.ts'
-import { logger } from '../logger.ts'
+import { createLogger } from '../logger.ts'
 import { polenVirtual } from '../vi.ts'
-import { createPagesTreePlugin, getRouteTree } from './pages-tree.ts'
+import { createPagesPlugin, getRouteTree } from './pages-tree.ts'
 
 const _debug = debug.sub(`vite-plugin-core`)
 
@@ -68,7 +68,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     ...plugins,
 
     // Self-contained pages plugin
-    ...createPagesTreePlugin({
+    ...createPagesPlugin({
       config,
       onPagesChange: (pages) => {
         currentPagesData = pages
@@ -149,7 +149,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             __BUILD_ARCHITECTURE__: Json.encode(config.build.architecture),
             __BUILD_ARCHITECTURE_SSG__: Json.encode(config.build.architecture === `ssg`),
           },
-          customLogger: logger,
+          customLogger: createLogger(config),
           esbuild: false,
           build: {
             target: `esnext`,

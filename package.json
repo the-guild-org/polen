@@ -83,6 +83,7 @@
     "@wollybeard/kit": "^0.35.0",
     "@wollybeard/projector": "^0.2.0",
     "ansis": "^4.1.0",
+    "clean-stack": "^5.2.0",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "es-toolkit": "^1.39.3",
@@ -109,6 +110,7 @@
     "vite": "npm:rolldown-vite@~6.3.18",
     "vite-plugin-inspect": "^11.1.0",
     "vite-plugin-restart": "^0.4.2",
+    "youch-core": "^0.3.2",
     "zx": "8.5.5"
   },
   "devDependencies": {

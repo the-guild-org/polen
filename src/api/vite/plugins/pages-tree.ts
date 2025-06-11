@@ -9,7 +9,7 @@ import mdx from '@mdx-js/rollup'
 import { Path, Str } from '@wollybeard/kit'
 import remarkGfm from 'remark-gfm'
 
-const _debug = debug.sub(`vite-plugin-pages-tree`)
+const _debug = debug.sub(`vite-plugin-pages`)
 
 export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
 
@@ -22,7 +22,7 @@ export interface PagesTreePluginOptions {
 /**
  * Pages plugin with tree support
  */
-export const createPagesTreePlugin = (
+export const createPagesPlugin = (
   { config, onPagesChange, onTreeChange }: PagesTreePluginOptions,
 ): Vite.Plugin[] => {
   // State management
@@ -114,12 +114,13 @@ export const createPagesTreePlugin = (
       // Dev server configuration
       configureServer(server) {
         // Add pages directory to watcher
-        _debug(`Adding pages directory to watcher:`, config.paths.project.absolute.pages)
+        _debug(`configureServer: watch pages directory`, config.paths.project.absolute.pages)
         server.watcher.add(config.paths.project.absolute.pages)
       },
 
       // Hot update handling
       async handleHotUpdate({ file, server }) {
+        _debug(`handleHotUpdate`, file)
         if (!isPageFile(file)) return
 
         _debug(`Page file changed:`, file)
