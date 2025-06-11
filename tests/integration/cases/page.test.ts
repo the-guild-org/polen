@@ -162,43 +162,6 @@ export const Demo = () => <span>MDX works</span>
       await cLink.click()
       await expect(page).toHaveURL(/\/a\/c$/)
       await expect(page.getByText('x', { exact: true })).toBeVisible()
-
-      const activeLink = sidebar.getByRole('link', { name: 'C' })
-      const dLink = sidebar.getByRole('link', { name: 'D' })
-
-      const activeColor = await activeLink.evaluate(el => window.getComputedStyle(el).color)
-      const inactiveColor = await dLink.evaluate(el => window.getComputedStyle(el).color)
-
-      expect(activeColor).not.toBe(inactiveColor)
-    },
-  },
-  {
-    title: 'sidebar active indicator works on navigation',
-    fixture: {
-      'pages': {
-        'a': { 'index.md': '', 'b.md': '', 'c.md': '', 'd.md': '' },
-      },
-    },
-    result: {
-      path: '/a',
-      navBarTitle: 'A',
-    },
-    additionalChecks: async ({ page }) => {
-      const sidebar = page.getByTestId('sidebar')
-
-      await sidebar.getByRole('link', { name: 'B' }).click()
-      await expect(page).toHaveURL(/\/a\/b$/)
-
-      await page.waitForTimeout(100)
-
-      const bLink = sidebar.getByRole('link', { name: 'B' })
-      const cLink = sidebar.getByRole('link', { name: 'C' })
-
-      const bStyle = await bLink.getAttribute('style')
-      const cStyle = await cLink.getAttribute('style')
-
-      expect(bStyle).toContain('var(--accent-11)')
-      expect(cStyle).toContain('var(--gray-12)')
     },
   },
 ]

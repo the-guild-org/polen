@@ -25,8 +25,16 @@
     "url": "git+https://github.com/the-guild-org/polen.git"
   },
   "devEngines": {
-    "node": ">=24.0.0",
-    "pnpm": ">=10.0.0"
+    "runtime": {
+      "name": "node",
+      "version": ">=24.0.0",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=10.0.0",
+      "onFail": "error"
+    }
   },
   "imports": {
     "#*": {

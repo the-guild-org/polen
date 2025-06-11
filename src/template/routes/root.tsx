@@ -11,7 +11,7 @@ import { PROJECT_DATA } from 'virtual:polen/project/data'
 import { pages } from 'virtual:polen/project/pages.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link } from '../components/Link.jsx'
-import { Sidebar } from '../components/Sidebar.jsx'
+import { Sidebar } from '../components/sidebar/Sidebar.tsx'
 import entryClientUrl from '../entry.client.jsx?url'
 import { changelog } from './changelog.jsx'
 import { index } from './index.jsx'
@@ -74,7 +74,6 @@ const Layout = () => {
   const currentNavPathExp = getCurrentNavPathExp()
   const sidebar = currentNavPathExp && PROJECT_DATA.sidebarIndex[currentNavPathExp]
   const showSidebar = sidebar && sidebar.items.length > 0
-
   return (
     <Theme asChild>
       <Box m='8'>

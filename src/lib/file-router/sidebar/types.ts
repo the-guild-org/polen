@@ -14,6 +14,6 @@ export interface ItemSection {
   type: `ItemSection`
   title: string
   pathExp: string
-  isNavToo: boolean
-  navs: ItemLink[]
+  isLinkToo: boolean
+  links: ItemLink[]
 }
