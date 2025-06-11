@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter, useLocation } from 'react-router'
 // todo: #lib/kit-temp does not work as import
-import { ObjPick } from '../../lib/kit-temp.js'
+import { ObjPartition } from '../../lib/kit-temp.js'
 import type { LinkPropsRadix } from './RadixLink.jsx'
 import { LinkRadix } from './RadixLink.jsx'
 
@@ -16,6 +16,7 @@ const reactRouterPropKeys = [
   'relative',
   'to',
   'viewTransition',
+  'children',
 ] as const
 
 export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = props => {
@@ -23,17 +24,17 @@ export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = 
   const toPathExp = typeof props.to === 'string' ? props.to : props.to.pathname || ''
   const active = getPathActiveReport(toPathExp, location.pathname)
 
-  const reactRouterProps: LinkPropsReactRouter = ObjPick(props, reactRouterPropKeys)
+  const { picked: reactRouterProps, omitted: radixProps } = ObjPartition(props, reactRouterPropKeys)
 
   return (
     <LinkRadix
       asChild
-      {...props}
+      {...radixProps}
       data-active={active.is || undefined}
       data-active-direct={active.isDirect || undefined}
       data-active-descendant={active.isdescendant || undefined}
     >
-      <LinkReactRouter {...reactRouterProps}>{props.children}</LinkReactRouter>
+      <LinkReactRouter {...reactRouterProps} />
     </LinkRadix>
   )
 }

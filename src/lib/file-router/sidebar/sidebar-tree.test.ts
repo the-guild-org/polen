@@ -48,7 +48,7 @@ describe('sidebar-tree', () => {
         type: 'ItemSection',
         title: 'Guide',
         pathExp: 'guide',
-        isNavToo: false,
+        isLinkToo: false,
       })
       expect(section!.links).toHaveLength(2)
     }
@@ -73,7 +73,7 @@ describe('sidebar-tree', () => {
         type: 'ItemSection',
         title: 'Guide',
         pathExp: 'guide',
-        isNavToo: true, // Should be true because of index file
+        isLinkToo: true, // Should be true because of index file
       })
       expect(section!.links).toHaveLength(1) // Only introduction, not index
     }

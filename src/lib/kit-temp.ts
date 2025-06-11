@@ -68,3 +68,30 @@ export const ObjPick = <T extends object, K extends keyof T>(obj: T, keys: reado
     return acc
   }, {} as Pick<T, K>)
 }
+
+export const ObjOmit = <T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Omit<T, K> => {
+  return keys.reduce((acc, key) => {
+    if (key in acc) {
+      // @ts-expect-error omitted already at type level
+      delete acc[key]
+    }
+    return acc
+  }, { ...obj } as Omit<T, K>)
+}
+
+export const ObjPartition = <T extends object, K extends keyof T>(
+  obj: T,
+  keys: readonly K[],
+): { omitted: Omit<T, K>; picked: Pick<T, K> } => {
+  return keys.reduce((acc, key) => {
+    if (key in acc.omitted) {
+      // @ts-expect-error omitted already at type level
+      delete acc.omitted[key]
+      acc.picked[key] = obj[key]
+    }
+    return acc
+  }, {
+    omitted: { ...obj } as Omit<T, K>,
+    picked: {} as Pick<T, K>,
+  })
+}

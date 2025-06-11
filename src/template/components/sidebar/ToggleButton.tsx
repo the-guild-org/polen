@@ -6,10 +6,6 @@ export const ToggleButton = ({ isExpanded, toggleExpanded }: { isExpanded: boole
     variant='ghost'
     onClick={toggleExpanded}
     aria-expanded={isExpanded}
-    // todo: allow passing
-    // aria-controls={`section-${section.pathExp.replace(/\//g, '-')}`}
-    // aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${section.title} section`}
-    mx='1'
   >
     {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
   </Button>
