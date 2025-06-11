@@ -50,7 +50,7 @@ describe('sidebar-tree', () => {
         pathExp: 'guide',
         isNavToo: false,
       })
-      expect(section!.navs).toHaveLength(2)
+      expect(section!.links).toHaveLength(2)
     }
   })
 
@@ -75,7 +75,7 @@ describe('sidebar-tree', () => {
         pathExp: 'guide',
         isNavToo: true, // Should be true because of index file
       })
-      expect(section!.navs).toHaveLength(1) // Only introduction, not index
+      expect(section!.links).toHaveLength(1) // Only introduction, not index
     }
   })
 
@@ -112,9 +112,9 @@ describe('sidebar-tree', () => {
     expect(guideSection).toBeDefined()
     expect(guideSection!.type).toBe('ItemSection')
     if (guideSection!.type === 'ItemSection') {
-      expect(guideSection!.navs).toHaveLength(3) // intro + 2 from advanced subdirectory
+      expect(guideSection!.links).toHaveLength(3) // intro + 2 from advanced subdirectory
 
-      const navTitles = guideSection!.navs.map(nav => nav.title)
+      const navTitles = guideSection!.links.map(nav => nav.title)
       expect(navTitles).toContain('Intro')
       expect(navTitles).toContain('Performance')
       expect(navTitles).toContain('Optimization')

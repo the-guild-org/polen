@@ -4,9 +4,7 @@ import type { Vite } from '#dep/vite/index'
 import { debug } from '#singletons/debug'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err, Http } from '@wollybeard/kit'
-import { dump } from '@wollybeard/kit/debug'
 import cleanStack from 'clean-stack'
-import { Youch } from 'youch'
 import { ErrorParser } from 'youch-core'
 
 type App = Hono.Hono

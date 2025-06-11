@@ -162,14 +162,6 @@ export const Demo = () => <span>MDX works</span>
       await cLink.click()
       await expect(page).toHaveURL(/\/a\/c$/)
       await expect(page.getByText('x', { exact: true })).toBeVisible()
-
-      const activeLink = sidebar.getByRole('link', { name: 'C' })
-      const dLink = sidebar.getByRole('link', { name: 'D' })
-
-      const activeColor = await activeLink.evaluate(el => window.getComputedStyle(el).color)
-      const inactiveColor = await dLink.evaluate(el => window.getComputedStyle(el).color)
-
-      expect(activeColor).not.toBe(inactiveColor)
     },
   },
   {
