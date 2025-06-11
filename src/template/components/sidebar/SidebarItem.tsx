@@ -1,5 +1,6 @@
 import type { React } from '#dep/react/index'
 import type { FileRouter } from '#lib/file-router/index'
+import { Texts } from '#template/components/Texts/index'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import { useLocation } from 'react-router'
 import { getPathActiveReport, Link } from '../Link.tsx'
@@ -82,28 +83,13 @@ const SBLink: React.FC<{
 const Section: React.FC<{
   section: FileRouter.Sidebar.ItemSection
 }> = ({ section }) => {
-  // const active = getActiveInfo(section, currentPathExp)
-
   return (
-    <Box // data-active={active.isDirect || undefined}
-     // data-active-child={active.isdescendant || undefined}
-    mt='8'>
-      <Text
-        weight='bold'
-        color='gray'
-        style={{
-          color: 'var(--accent-11)',
-          fontSize: '0.6rem',
-          letterSpacing: '0.025rem',
-          textTransform: 'uppercase',
-        }}
-        // Layout
-        as='div'
-        ml='4'
-        mb='2' // no effect without being "div"
-      >
-        {section.title}
-      </Text>
+    <Box mt='8'>
+      <Box ml='4' mb='2'>
+        <Texts.MinorHeading color='gray'>
+          {section.title}
+        </Texts.MinorHeading>
+      </Box>
       <Items items={section.links} />
     </Box>
   )
