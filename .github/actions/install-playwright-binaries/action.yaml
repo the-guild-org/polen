@@ -52,4 +52,4 @@ runs:
       shell: bash
       if: steps.cache.outputs.cache-hit != 'true'
       working-directory: ${{ inputs.working-directory }}
-      run: npx playwright install ${{ inputs.browsers }}
+      run: pnpx playwright install ${{ inputs.browsers }}
