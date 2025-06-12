@@ -123,10 +123,8 @@ export const create = (options: ReactiveDataOptions): Plugin => {
         if (id !== moduleId) return
 
         const data = getData()
-        return {
-          code: codec.stringify(data),
-          moduleType: moduleType,
-        }
+        // Return just the raw JSON string - let the JSON plugin handle the transformation
+        return codec.stringify(data)
       },
     },
   }

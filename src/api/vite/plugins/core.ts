@@ -216,10 +216,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               },
             }
 
-            return {
-              code: superjson.stringify(projectData),
-              moduleType: 'superjson',
-            }
+            // Return just the JSON string - let the JSON plugin handle the transformation
+            return superjson.stringify(projectData)
           },
         },
       ),
