@@ -101,8 +101,8 @@ export const create = (options: VitePluginJsonImportsOptions = {}): Plugin => {
         }
 
         if (!isCustomCodec) {
-          // For native JSON, use simple export
-          return `export default ${jsesc(code)}`
+          // For native JSON, directly export as JavaScript object literal
+          return `export default ${code}`
         } else {
           // For custom codecs, we need to parse at runtime
           if (!options.codec?.importPath) {
