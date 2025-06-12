@@ -1,11 +1,11 @@
 import type { Config } from '#api/config/index'
+import { reportError } from '#api/server/report-error'
 import type { Hono } from '#dep/hono/index'
 import type { Vite } from '#dep/vite/index'
+import { ResponseInternalServerError } from '#lib/kit-temp'
 import { debug } from '#singletons/debug'
 import * as HonoNodeServer from '@hono/node-server'
-import { Err, Http } from '@wollybeard/kit'
-import cleanStack from 'clean-stack'
-import { ErrorParser } from 'youch-core'
+import { Err } from '@wollybeard/kit'
 
 type App = Hono.Hono
 
@@ -28,25 +28,7 @@ export const Serve = (
         if (Err.is(error)) {
           // ━ Clean Stack Trace
           server.ssrFixStacktrace(error)
-          const stack = cleanStack(error.stack, {
-            pathFilter: (path) => {
-              return !path.match(/.*(?:rolldown-vite|rolldown).*/)
-            },
-            basePath: config.paths.project.rootDir,
-            // pretty: true,
-          })
-          error.stack = stack
-          // ━ Log Error
-          Err.log(error)
-          const parser = new ErrorParser()
-          const parsedError = await parser.parse(error)
-          const snippet = parsedError.frames[0]?.source?.map(line => {
-            return line.lineNumber.toString().padStart(4, ' ') + `: ` + line.chunk
-          }).join(`\n`)
-          if (snippet) {
-            console.log('-----------------------------')
-            console.log(snippet)
-          }
+          reportError(error)
           return error
         }
         throw error
@@ -97,10 +79,7 @@ export const Serve = (
             const app = await appPromise
             if (Err.is(app)) {
               // Err.log(app)
-              return new Response(null, {
-                status: Http.Status.InternalServerError.code,
-                statusText: Http.Status.InternalServerError.description,
-              })
+              return ResponseInternalServerError()
             }
             const response = await app.fetch(request, { viteDevServer: server })
             return response

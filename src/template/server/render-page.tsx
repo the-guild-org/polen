@@ -1,4 +1,6 @@
+import { reportError } from '#api/server/report-error'
 import type { ReactRouter } from '#dep/react-router/index'
+import { ResponseInternalServerError } from '#lib/kit-temp'
 import type { ReactRouterAid } from '#lib/react-router-aid/index'
 import { Arr } from '@wollybeard/kit'
 import { StrictMode } from 'react'
@@ -22,7 +24,8 @@ export const renderPage = (
       </StrictMode>,
     )
   } catch (cause) {
-    throw new Error(`Failed to server side render the HTML`, { cause })
+    reportError(new Error(`Failed to server side render the HTML`, { cause }))
+    return ResponseInternalServerError()
   }
 
   if (__BUILDING__) {

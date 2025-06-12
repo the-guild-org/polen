@@ -12,7 +12,7 @@
 //
 //
 
-import { Fs, Path, Undefined } from '@wollybeard/kit'
+import { Fs, Http, Path, Undefined } from '@wollybeard/kit'
 import type { ResolveHookContext } from 'node:module'
 
 export const arrayEquals = (a: any[], b: any[]) => {
@@ -100,3 +100,9 @@ export const ensureEnd = (string: string, ending: string) => {
   if (string.endsWith(ending)) return string
   return string + ending
 }
+
+export const ResponseInternalServerError = () =>
+  new Response(null, {
+    status: Http.Status.InternalServerError.code,
+    statusText: Http.Status.InternalServerError.description,
+  })
