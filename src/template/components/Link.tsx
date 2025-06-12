@@ -49,11 +49,14 @@ export const getPathActiveReport = (
   pathExp: string,
   currentPathExp: string,
 ): PathActiveReport => {
-  // Normalize paths for comparison - remove leading slash if present
+  // Normalize both paths for comparison
+  const normalizedPath = pathExp.startsWith('/') ? pathExp.slice(1) : pathExp
   const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
-  const isDirect = normalizedCurrentPath === pathExp
-  const isdescendant = normalizedCurrentPath.startsWith(pathExp)
+  
+  const isDirect = normalizedCurrentPath === normalizedPath
+  const isdescendant = normalizedCurrentPath.startsWith(normalizedPath + '/') && normalizedCurrentPath !== normalizedPath
   const is = isDirect || isdescendant
+  
   return {
     is,
     isDirect,
