@@ -1,38 +1,32 @@
 import type { Config } from '#api/config/index'
+import { NavbarData } from '#api/vite/data/navbar'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
-import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
-import { FileRouter } from '#lib/file-router/index'
-import { Tree } from '#lib/tree/index'
+import { VitePluginJson } from '#lib/vite-plugin-json/index'
+import { VitePluginReactiveData } from '#lib/vite-plugin-reactive-data/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debug } from '#singletons/debug'
+import { superjson } from '#singletons/superjson'
 import { Json, Str } from '@wollybeard/kit'
-import jsesc from 'jsesc'
-import type { ProjectData, SidebarIndex, SiteNavigationItem } from '../../../project-data.ts'
-import { superjson } from '../../../singletons/superjson.ts'
+import type { ProjectData } from '../../../project-data.ts'
 import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
 import { Schema } from '../../schema/index.ts'
 import { createLogger } from '../logger.ts'
 import { polenVirtual } from '../vi.ts'
-import { createPagesPlugin, getRouteTree } from './pages.ts'
+import { Pages } from './pages.ts'
 
 const _debug = debug.sub(`vite-plugin-core`)
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
-const viProjectData = polenVirtual([`project`, `data`])
+const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
 
 export interface ProjectPagesModule {
   pages: ReactRouter.RouteObject[]
 }
 
 export const Core = (config: Config.Config): Vite.PluginOption[] => {
-  // State for current pages data (updated by pages plugin)
-  let currentPagesData: FileRouter.ScanResult | null = null
-  let currentTreeData: FileRouter.RouteTreeNode | null = null
-  let viteDevServer: Vite.ViteDevServer | null = null
-
   // Schema cache management
   let schemaCache: Awaited<ReturnType<typeof Schema.readOrThrow>> | null = null
 
@@ -52,6 +46,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
   }
 
   const plugins: Vite.Plugin[] = []
+  const navbarData = NavbarData()
 
   // Note: The main use for this right now is to resolve the react imports
   // from the mdx vite plugin which have to go through the Polen exports since Polen keeps those deps bundled.
@@ -64,26 +59,19 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     }))
   }
 
+  const json = VitePluginJson.create({
+    codec: {
+      validate: superjson,
+      importPath: import.meta.resolve('#singletons/superjson'),
+      importExport: 'superjson',
+    },
+    filter: {
+      moduleTypes: ['jsonsuper'],
+    },
+  })
+
   return [
     ...plugins,
-
-    // Self-contained pages plugin
-    ...createPagesPlugin({
-      config,
-      onPagesChange: (pages) => {
-        currentPagesData = pages
-        // Invalidate project data virtual module to regenerate navigation/sidebar
-        if (viteDevServer) {
-          const projectDataModule = viteDevServer.moduleGraph.getModuleById(viProjectData.resolved)
-          if (projectDataModule) {
-            viteDevServer.moduleGraph.invalidateModule(projectDataModule)
-          }
-        }
-      },
-      onTreeChange: (tree) => {
-        currentTreeData = tree
-      },
-    }),
     /**
      * If a `polen*` import is encountered from the user's project, resolve it to the currently
      * running source code of Polen rather than the user's node_modules.
@@ -95,9 +83,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
      * 2. Secondary: Using Polen CLI on a project that does not have Polen installed.
      *    (User would likely not want to do this because they would not be able to achieve type safety)
      */
-
     {
       name: `polen:internal-import-alias`,
+      enforce: 'pre' as const,
       resolveId(id, importer) {
         const d = debug.sub(`vite-plugin:internal-import-alias`)
 
@@ -133,11 +121,20 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         return to
       },
     },
+    json,
+    VitePluginReactiveData.create({
+      moduleId: `virtual:polen/project/data/navbar`,
+      data: navbarData.value,
+      codec: superjson,
+      name: `polen-navbar`,
+      moduleType: 'jsonsuper',
+    }),
+    ...Pages({
+      config,
+      navbarData,
+    }),
     {
       name: `polen:core`,
-      configureServer(server) {
-        viteDevServer = server
-      },
       config(_, { command }) {
         // isServing = command === `serve`
         return {
@@ -187,81 +184,15 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
           identifier: viProjectData,
           async loader() {
             _debug(`loadingViProjectDataVirtualModule`)
-            // todo: parallel
             const schema = await readSchema()
 
-            // Get pages data from the pages plugin or load initially
-            if (!currentPagesData) {
-              _debug(`loadingPagesDataInitially`)
-              currentPagesData = await FileRouter.scan({
-                dir: config.paths.project.absolute.pages,
-                glob: `**/*.{md,mdx}`,
-              })
-              // Report any diagnostics from initial scan
-              reportDiagnostics(currentPagesData.diagnostics)
-            }
-            if (!currentTreeData) {
-              _debug(`loadingTreeDataInitially`)
-              currentTreeData = await getRouteTree(config)
-            }
-            const pagesScanResult = currentPagesData
-            const routeTree = currentTreeData
-            _debug(`usingPageRoutesFromPagesPlugin`, pagesScanResult.routes.length)
-
-            const siteNavigationItems: SiteNavigationItem[] = []
-
-            //
-            // ━━ Build Navbar
-            //
-
-            // Process first-level children as navigation items
-            for (const child of routeTree.children) {
-              if (child.value.type === 'directory') {
-                // Check if this directory has an index file
-                const hasIndex = child.children.some(c => c.value.type === 'file' && c.value.name === 'index')
-
-                if (hasIndex) {
-                  const pathExp = FileRouter.pathToExpression([child.value.name])
-                  const title = Str.titlizeSlug(child.value.name)
-                  siteNavigationItems.push({
-                    pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
-                    title,
-                  })
-                }
-              } else if (child.value.type === 'file' && child.value.name !== 'index') {
-                const pathExp = FileRouter.pathToExpression([child.value.name])
-                const title = Str.titlizeSlug(child.value.name)
-                siteNavigationItems.push({
-                  pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
-                  title,
-                })
-              }
-            }
-
             // ━ Schema presence causes adding some navbar items
+            const schemaNavbar = navbarData.get('schema')
+            schemaNavbar.length = 0 // Clear existing
             if (schema) {
-              siteNavigationItems.push({ pathExp: `reference`, title: `Reference` })
+              schemaNavbar.push({ pathExp: `reference`, title: `Reference` })
               if (schema.versions.length > 1) {
-                siteNavigationItems.push({ pathExp: `changelog`, title: `Changelog` })
-              }
-            }
-
-            //
-            // ━━ Build Sidebar
-            //
-
-            const sidebarIndex: SidebarIndex = {}
-
-            // Build sidebar for each top-level directory
-            for (const child of routeTree.children) {
-              if (child.value.type === 'directory') {
-                const pathExp = `/${child.value.name}`
-                // Create a subtree starting from this directory
-                const subtree = Tree.node(child.value, child.children)
-                // Pass the directory name as base path so paths are built correctly
-                const sidebar = FileRouter.Sidebar.buildFromTree(subtree, [child.value.name])
-                _debug(`Built sidebar for ${pathExp}:`, sidebar)
-                sidebarIndex[pathExp] = sidebar
+                schemaNavbar.push({ pathExp: `changelog`, title: `Changelog` })
               }
             }
 
@@ -271,10 +202,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const projectData: ProjectData = {
               schema,
-              siteNavigationItems,
-              sidebarIndex,
               faviconPath: `/logo.svg`,
-              pagesScanResult: pagesScanResult,
               paths: config.paths.project,
               server: {
                 static: {
@@ -288,14 +216,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               },
             }
 
-            const projectDataCode = jsesc(superjson.stringify(projectData))
-            const content = `
-            import { superjson } from '#singletons/superjson'
-
-            export const PROJECT_DATA = superjson.parse('${projectDataCode}')
-          `
-
-            return content
+            // Return just the JSON string - let the JSON plugin handle the transformation
+            return superjson.stringify(projectData)
           },
         },
       ),

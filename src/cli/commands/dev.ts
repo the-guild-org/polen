@@ -8,6 +8,7 @@ import { Err, Path } from '@wollybeard/kit'
 import { z } from 'zod'
 
 const args = Command.create()
+  .parameter(`--debug -d`, z.boolean().optional())
   .parameter(
     `--project -p`,
     // @ts-expect-error
@@ -28,7 +29,14 @@ const args = Command.create()
 
 const dir = ensureOptionalAbsoluteWithCwd(args.project) as string
 
-const viteUserConfig = await Api.ConfigResolver.fromFile({ dir })
+const viteUserConfig = await Api.ConfigResolver.fromFile({
+  dir,
+  overrides: {
+    advanced: {
+      debug: args.debug,
+    },
+  },
+})
 
 const viteDevServer = await Err.tryCatch(() => Vite.createServer(viteUserConfig))
 

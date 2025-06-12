@@ -1,10 +1,12 @@
 import type { Config } from '#api/config/index'
+import type { NavbarDataRegistry } from '#api/vite/data/navbar'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
 import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { FileRouter } from '#lib/file-router/index'
-import { ViteVirtual } from '#lib/vite-virtual/index'
+import { Tree } from '#lib/tree/index'
 import { debug } from '#singletons/debug'
+import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
 import { Path, Str } from '@wollybeard/kit'
 import remarkGfm from 'remark-gfm'
@@ -12,19 +14,36 @@ import remarkGfm from 'remark-gfm'
 const _debug = debug.sub(`vite-plugin-pages`)
 
 export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
+export const viProjectPagesData = polenVirtual([`project`, `data`, 'pages.jsonsuper'], { allowPluginProcessing: true })
 
 export interface PagesTreePluginOptions {
   config: Config.Config
+  navbarData?: NavbarDataRegistry
   onPagesChange?: (pages: FileRouter.ScanResult) => void
   onTreeChange?: (tree: FileRouter.RouteTreeNode) => void
+}
+
+export interface ProjectDataPages {
+  sidebarIndex: SidebarIndex
+  pagesScanResult: FileRouter.ScanResult
+}
+
+export interface SidebarIndex {
+  [pathExpression: string]: FileRouter.Sidebar.Sidebar
 }
 
 /**
  * Pages plugin with tree support
  */
-export const createPagesPlugin = (
-  { config, onPagesChange, onTreeChange }: PagesTreePluginOptions,
-): Vite.Plugin[] => {
+export const Pages = ({
+  config,
+  navbarData,
+  onPagesChange,
+  onTreeChange,
+}: PagesTreePluginOptions): Vite.Plugin[] => {
+  let currentPagesData: FileRouter.ScanResult | null = null
+  let currentTreeData: FileRouter.RouteTreeNode | null = null
+
   // State management
   let pagesCache: FileRouter.ScanResult | null = null
   let treeCache: FileRouter.RouteTreeNode | null = null
@@ -119,60 +138,186 @@ export const createPagesPlugin = (
       },
 
       // Hot update handling
-      async handleHotUpdate({ file, server }) {
+      async handleHotUpdate({ file, server, modules }) {
         _debug(`handleHotUpdate`, file)
         if (!isPageFile(file)) return
 
         _debug(`Page file changed:`, file)
 
-        // Clear cache
+        // Check if this is a content-only change to an existing page
+        const oldPages = pagesCache
+
+        // Clear cache and rescan
         clearCache()
+        const newPages = await scanPages()
+        currentPagesData = newPages
 
-        // Invalidate virtual module
-        const mod = server.moduleGraph.getModuleById(viProjectPages.resolved)
-        if (mod) {
-          server.moduleGraph.invalidateModule(mod)
-          _debug(`Invalidated pages virtual module`)
+        // Check if page structure changed (added/removed pages)
+        const structureChanged = !oldPages
+          || oldPages.routes.length !== newPages.routes.length
+          || !oldPages.routes.every((oldRoute, i) =>
+            oldRoute.file.path.absolute === newPages.routes[i]?.file.path.absolute
+          )
+
+        if (structureChanged) {
+          _debug(`Page structure changed, triggering full reload`)
+
+          // Invalidate virtual module
+          const mod = server.moduleGraph.getModuleById(viProjectPages.id)
+          if (mod) {
+            server.moduleGraph.invalidateModule(mod)
+            _debug(`Invalidated pages virtual module`)
+          }
+
+          // Notify about changes
+          if (onPagesChange) {
+            reportDiagnostics(newPages.diagnostics)
+            onPagesChange(newPages)
+          }
+
+          if (onTreeChange) {
+            const tree = await scanTree()
+            onTreeChange(tree)
+            currentTreeData = tree
+          }
+
+          // Trigger full reload for structure changes
+          server.ws.send({ type: `full-reload` })
+          return []
+        } else {
+          _debug(`Page content changed, allowing HMR`)
+          // Let default HMR handle the MDX file change
+          return modules
         }
-
-        // Notify about pages change (for other plugins that depend on pages)
-        if (onPagesChange) {
-          const pages = await scanPages()
-          // Report any diagnostics
-          reportDiagnostics(pages.diagnostics)
-          onPagesChange(pages)
-        }
-
-        // Notify about tree change
-        if (onTreeChange) {
-          const tree = await scanTree()
-          onTreeChange(tree)
-        }
-
-        // Trigger full reload
-        server.ws.send({ type: `full-reload` })
-
-        return []
       },
+      resolveId(id) {
+        if (id === viProjectPagesData.id) {
+          return viProjectPagesData.resolved
+        }
+      },
+      load: {
+        // filter: {
+        //   id: viProjectPagesData.resolved,
+        // },
+        async handler(id) {
+          if (id !== viProjectPagesData.resolved) return
+          _debug(`viProjectDataPages`)
 
-      // Virtual module handling
-      ...ViteVirtual.IdentifiedLoader.toHooks({
-        identifier: viProjectPages,
-        async loader() {
-          _debug(`Loading viProjectPages virtual module`)
-          const pagesScanResult = await scanPages()
-          const tree = await scanTree()
+          // Get pages data from the pages plugin or load initially
+          if (!currentPagesData) {
+            _debug(`loadingPagesDataInitially`)
+            currentPagesData = await FileRouter.scan({
+              dir: config.paths.project.absolute.pages,
+              glob: `**/*.{md,mdx}`,
+            })
+            // Report any diagnostics from initial scan
+            reportDiagnostics(currentPagesData.diagnostics)
+          }
+          if (!currentTreeData) {
+            _debug(`loadingTreeDataInitially`)
+            currentTreeData = await getRouteTree(config)
+          }
+          const pagesScanResult = currentPagesData
+          const routeTree = currentTreeData
+          _debug(`usingPageRoutesFromPagesPlugin`, pagesScanResult.routes.length)
 
-          // Report any diagnostics
-          reportDiagnostics(pagesScanResult.diagnostics)
+          //
+          // ━━ Build Navbar
+          //
 
-          // Notify about pages (useful for initial load)
-          onPagesChange?.(pagesScanResult)
-          onTreeChange?.(tree)
+          // Update navbar if provided
+          if (navbarData) {
+            const navbarPages = navbarData.get('pages')
+            navbarPages.length = 0 // Clear existing
 
-          return generatePagesModule(pagesScanResult)
+            // Process first-level children as navigation items
+            for (const child of routeTree.children) {
+              if (child.value.type === 'directory') {
+                // Check if this directory has an index file
+                const hasIndex = child.children.some(c => c.value.type === 'file' && c.value.name === 'index')
+
+                if (hasIndex) {
+                  const pathExp = FileRouter.pathToExpression([child.value.name])
+                  const title = Str.titlizeSlug(child.value.name)
+                  navbarPages.push({
+                    pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
+                    title,
+                  })
+                }
+              } else if (child.value.type === 'file' && child.value.name !== 'index') {
+                const pathExp = FileRouter.pathToExpression([child.value.name])
+                const title = Str.titlizeSlug(child.value.name)
+                navbarPages.push({
+                  pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
+                  title,
+                })
+              }
+            }
+          }
+
+          //
+          // ━━ Build Sidebar
+          //
+
+          const sidebarIndex: SidebarIndex = {}
+
+          // Build sidebar for each top-level directory
+          for (const child of routeTree.children) {
+            if (child.value.type === 'directory') {
+              const pathExp = `/${child.value.name}`
+              // Create a subtree starting from this directory
+              const subtree = Tree.node(child.value, child.children)
+              // Pass the directory name as base path so paths are built correctly
+              const sidebar = FileRouter.Sidebar.buildFromTree(subtree, [child.value.name])
+              _debug(`Built sidebar for ${pathExp}:`, sidebar)
+              sidebarIndex[pathExp] = sidebar
+            }
+          }
+
+          //
+          // ━━ Put It All together
+          //
+
+          const projectDataPages: ProjectDataPages = {
+            sidebarIndex,
+            pagesScanResult: pagesScanResult,
+          }
+
+          // Return just the JSON string - let the JSON plugin handle the transformation
+          return superjson.stringify(projectDataPages)
         },
-      }),
+      },
+    },
+    // Plugin 4: Virtual Module for Pages Routes
+    {
+      name: 'polen:pages:routes',
+      resolveId(id) {
+        if (id === viProjectPages.id) {
+          return viProjectPages.resolved
+        }
+      },
+      load: {
+        // filter: {
+        //   id: viProjectPages.resolved,
+        // },
+        handler: async (id) => {
+          if (id !== viProjectPages.resolved) return
+
+          _debug(`Loading viProjectPages virtual module`)
+
+          // Ensure we have pages data
+          if (!currentPagesData) {
+            currentPagesData = await scanPages()
+            reportDiagnostics(currentPagesData.diagnostics)
+          }
+
+          // Generate the module code
+          return {
+            code: generatePagesModule(currentPagesData),
+            moduleType: 'js',
+          }
+        },
+      },
     },
   ]
 }

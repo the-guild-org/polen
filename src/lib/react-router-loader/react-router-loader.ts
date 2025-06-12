@@ -12,7 +12,6 @@ export const createLoader = <loader extends Loader>(loader: loader): loader => {
     const serialized: Serialized = {
       superjsonData: superjson.stringify(data),
     }
-    // console.log({ serialized })
     return serialized
   }
 }

@@ -195,12 +195,12 @@ import { ApolloServerPlugin } from '@apollo/server'
 const performancePlugin: ApolloServerPlugin = {
   async requestDidStart() {
     const start = Date.now()
-    
+
     return {
       async willSendResponse(requestContext) {
         const duration = Date.now() - start
         const complexity = calculateQueryComplexity(requestContext.document)
-        
+
         // Log metrics
         console.log({
           query: requestContext.request.query,
@@ -209,7 +209,7 @@ const performancePlugin: ApolloServerPlugin = {
           cacheHits: requestContext.metrics?.cacheHits,
           errors: requestContext.errors?.length || 0
         })
-        
+
         // Send to monitoring service
         metrics.record({
           queryDuration: duration,

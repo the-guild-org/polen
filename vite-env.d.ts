@@ -94,10 +94,6 @@ declare module 'virtual:polen/template/variables' {
   export const templateVariables: import('#api/config/configurator').TemplateVariables
 }
 
-declare module 'virtual:polen/project/data' {
-  export const PROJECT_DATA: import('#project-data').ProjectData
-}
-
 declare module 'virtual:polen/project/pages.jsx' {
   export const pages: import('#api/vite/plugins/core').ProjectPagesModule['pages']
 }
@@ -106,7 +102,17 @@ declare module 'virtual:polen/template/schema-augmentations' {
   export const schemaAugmentations: import('#api/schema-augmentation/schema-augmentation').Augmentation[]
 }
 
-declare module 'virtual:polen/*' {
-  const content: string
-  export default content
+declare module 'virtual:polen/project/data.jsonsuper' {
+  const data: import('#project-data').ProjectData
+  export { data as default }
+}
+
+declare module 'virtual:polen/project/data/navbar.jsonsuper' {
+  const data: import('#api/vite/data/navbar').NavbarData
+  export { data as default }
+}
+
+declare module 'virtual:polen/project/data/pages.jsonsuper' {
+  const data: import('#api/vite/plugins/pages').ProjectDataPages
+  export { data as default }
 }
