@@ -95,3 +95,8 @@ export const ObjPartition = <T extends object, K extends keyof T>(
     picked: {} as Pick<T, K>,
   })
 }
+
+export const ensureEnd = (string: string, ending: string) => {
+  if (string.endsWith(ending)) return string
+  return string + ending
+}

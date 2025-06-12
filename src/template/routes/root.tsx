@@ -7,7 +7,9 @@ import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Arr } from '@wollybeard/kit'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
-import { PROJECT_DATA } from 'virtual:polen/project/data'
+import PROJECT_DATA from 'virtual:polen/project/data.superjson'
+import projectDataNavbar from 'virtual:polen/project/data/navbar.superjson'
+import projectDataPages from 'virtual:polen/project/data/pages.superjson'
 import { pages } from 'virtual:polen/project/pages.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link } from '../components/Link.jsx'
@@ -72,7 +74,7 @@ const Layout = () => {
   }
 
   const currentNavPathExp = getCurrentNavPathExp()
-  const sidebar = currentNavPathExp && PROJECT_DATA.sidebarIndex[currentNavPathExp]
+  const sidebar = currentNavPathExp && projectDataPages.sidebarIndex[currentNavPathExp]
   const showSidebar = sidebar && sidebar.items.length > 0
   return (
     <Theme asChild>
@@ -98,7 +100,7 @@ const Layout = () => {
             </Flex>
           </LinkReactRouter>
           <Flex direction='row' gap='4'>
-            {PROJECT_DATA.siteNavigationItems.map((item, key) => (
+            {projectDataNavbar.map((item, key) => (
               <Link key={key} color='gray' to={item.pathExp}>
                 {item.title}
               </Link>

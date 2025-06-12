@@ -30,7 +30,7 @@ export const Serve = (
           server.ssrFixStacktrace(error)
           const stack = cleanStack(error.stack, {
             pathFilter: (path) => {
-              return !path.match(/.*rolldown-vite.*/)
+              return !path.match(/.*(?:rolldown-vite|rolldown).*/)
             },
             basePath: config.paths.project.rootDir,
             // pretty: true,
