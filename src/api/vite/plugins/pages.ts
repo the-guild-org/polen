@@ -14,7 +14,7 @@ import remarkGfm from 'remark-gfm'
 const _debug = debug.sub(`vite-plugin-pages`)
 
 export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
-export const viProjectPagesData = polenVirtual([`project`, `data`, 'pages.superjson'], { allowPluginProcessing: true })
+export const viProjectPagesData = polenVirtual([`project`, `data`, 'pages.jsonsuper'], { allowPluginProcessing: true })
 
 export interface PagesTreePluginOptions {
   config: Config.Config

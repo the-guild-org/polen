@@ -90,7 +90,7 @@ export const create = (options: VitePluginJsonImportsOptions = {}): Plugin => {
   return {
     name: pluginName,
     enforce: 'pre' as const,
-    // declarative transform file
+    // Transform files based on extension
     transform(code, id) {
       if (!shouldHandle(id)) return
 

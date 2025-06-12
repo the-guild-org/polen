@@ -2,7 +2,7 @@ import { Grafaid } from '#lib/grafaid/index'
 import { visit } from 'graphql'
 // Or your specific import path for this type
 import { ReactRouterAid } from '#lib/react-router-aid/index'
-import PROJECT_DATA from 'virtual:polen/project/data.superjson'
+import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { routes } from '../../routes.jsx'
 
 // todo: Frameworks tend to colocate ssg data loaders with routes to solve the following

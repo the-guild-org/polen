@@ -20,7 +20,7 @@ const _debug = debug.sub(`vite-plugin-core`)
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
-const viProjectData = polenVirtual([`project`, `data.superjson`], { allowPluginProcessing: true })
+const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
 
 export interface ProjectPagesModule {
   pages: ReactRouter.RouteObject[]
@@ -66,7 +66,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       importExport: 'superjson',
     },
     filter: {
-      moduleTypes: ['superjson'],
+      moduleTypes: ['jsonsuper'],
     },
   })
 
@@ -127,7 +127,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       data: navbarData.value,
       codec: superjson,
       name: `polen-navbar`,
-      moduleType: 'superjson',
+      moduleType: 'jsonsuper',
     }),
     ...Pages({
       config,

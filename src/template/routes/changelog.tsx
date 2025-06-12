@@ -1,6 +1,6 @@
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import PROJECT_DATA from 'virtual:polen/project/data.superjson'
+import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { Changelog } from '../components/Changelog.jsx'
 
 const loader = createLoader(() => {
