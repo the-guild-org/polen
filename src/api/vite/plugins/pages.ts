@@ -1,9 +1,9 @@
 import type { Config } from '#api/config/index'
+import type { NavbarDataRegistry } from '#api/vite/data/navbar'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
 import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { FileRouter } from '#lib/file-router/index'
-import type { NavbarRegistry } from '#lib/navbar-registry/index'
 import { Tree } from '#lib/tree/index'
 import { debug } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
@@ -18,7 +18,7 @@ export const viProjectPagesData = polenVirtual([`project`, `data`, 'pages.superj
 
 export interface PagesTreePluginOptions {
   config: Config.Config
-  navbarRegistry?: NavbarRegistry
+  navbarData?: NavbarDataRegistry
   onPagesChange?: (pages: FileRouter.ScanResult) => void
   onTreeChange?: (tree: FileRouter.RouteTreeNode) => void
 }
@@ -37,7 +37,7 @@ export interface SidebarIndex {
  */
 export const Pages = ({
   config,
-  navbarRegistry,
+  navbarData,
   onPagesChange,
   onTreeChange,
 }: PagesTreePluginOptions): Vite.Plugin[] => {
@@ -225,10 +225,10 @@ export const Pages = ({
           // ━━ Build Navbar
           //
 
-          // Update navbar registry if provided
-          if (navbarRegistry) {
-            const navbar = navbarRegistry.get('pages')
-            navbar.length = 0 // Clear existing
+          // Update navbar if provided
+          if (navbarData) {
+            const navbarPages = navbarData.get('pages')
+            navbarPages.length = 0 // Clear existing
 
             // Process first-level children as navigation items
             for (const child of routeTree.children) {
@@ -239,7 +239,7 @@ export const Pages = ({
                 if (hasIndex) {
                   const pathExp = FileRouter.pathToExpression([child.value.name])
                   const title = Str.titlizeSlug(child.value.name)
-                  navbar.push({
+                  navbarPages.push({
                     pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
                     title,
                   })
@@ -247,7 +247,7 @@ export const Pages = ({
               } else if (child.value.type === 'file' && child.value.name !== 'index') {
                 const pathExp = FileRouter.pathToExpression([child.value.name])
                 const title = Str.titlizeSlug(child.value.name)
-                navbar.push({
+                navbarPages.push({
                   pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
                   title,
                 })

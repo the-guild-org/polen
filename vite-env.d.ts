@@ -108,7 +108,7 @@ declare module 'virtual:polen/project/data.superjson' {
 }
 
 declare module 'virtual:polen/project/data/navbar.superjson' {
-  const data: import('#lib/navbar-registry/navbar-registry').NavbarData
+  const data: import('#api/vite/data/navbar').NavbarData
   export { data as default }
 }
 

@@ -1,8 +1,8 @@
 import type { Config } from '#api/config/index'
+import { NavbarData } from '#api/vite/data/navbar'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
-import { NavbarRegistry } from '#lib/navbar-registry/index'
 import { VitePluginJson } from '#lib/vite-plugin-json/index'
 import { VitePluginReactiveData } from '#lib/vite-plugin-reactive-data/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
@@ -27,15 +27,8 @@ export interface ProjectPagesModule {
 }
 
 export const Core = (config: Config.Config): Vite.PluginOption[] => {
-  // State for current pages data (updated by pages plugin)
-  // eslint-disable-next-line
-  let viteDevServer: Vite.ViteDevServer | null = null
-
   // Schema cache management
   let schemaCache: Awaited<ReturnType<typeof Schema.readOrThrow>> | null = null
-
-  // Create shared navbar registry
-  const navbarRegistry = new NavbarRegistry()
 
   const readSchema = async () => {
     if (schemaCache === null) {
@@ -53,6 +46,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
   }
 
   const plugins: Vite.Plugin[] = []
+  const navbarData = NavbarData()
 
   // Note: The main use for this right now is to resolve the react imports
   // from the mdx vite plugin which have to go through the Polen exports since Polen keeps those deps bundled.
@@ -130,20 +124,17 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     json,
     VitePluginReactiveData.create({
       moduleId: `virtual:polen/project/data/navbar`,
-      data: navbarRegistry.items,
+      data: navbarData.value,
       codec: superjson,
       name: `polen-navbar`,
       moduleType: 'superjson',
     }),
     ...Pages({
       config,
-      navbarRegistry,
+      navbarData,
     }),
     {
       name: `polen:core`,
-      configureServer(server) {
-        viteDevServer = server
-      },
       config(_, { command }) {
         // isServing = command === `serve`
         return {
@@ -196,7 +187,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             const schema = await readSchema()
 
             // ━ Schema presence causes adding some navbar items
-            const schemaNavbar = navbarRegistry.get('schema')
+            const schemaNavbar = navbarData.get('schema')
             schemaNavbar.length = 0 // Clear existing
             if (schema) {
               schemaNavbar.push({ pathExp: `reference`, title: `Reference` })
