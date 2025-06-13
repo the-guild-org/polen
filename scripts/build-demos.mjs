@@ -24,9 +24,9 @@ await $`mkdir --parents dist-demos`
 
 // Copy built demos
 console.log('📋 Copying demo builds...')
-await $`cp --recursive examples/demos/dist/* dist-demos/`
-await $`cp --recursive examples/pokemon/dist dist-demos/pokemon`
-// await $`cp --recursive examples/github/dist dist-demos/github`
+await $`cp --recursive examples/demos/build/* dist-demos/`
+await $`cp --recursive examples/pokemon/build dist-demos/pokemon`
+// await $`cp --recursive examples/github/build dist-demos/github`
 
 console.log('✅ Demo build complete! Files are in dist-demos/')
 console.log('📡 To preview locally, run: npx serve dist-demos')

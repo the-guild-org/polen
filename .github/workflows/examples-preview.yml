@@ -37,9 +37,9 @@ jobs:
       - name: Prepare preview directory
         run: |
           mkdir -p dist-preview
-          cp -r examples/demos/dist/* dist-preview/
-          cp -r examples/pokemon/dist dist-preview/pokemon
-          # cp -r examples/github/dist dist-preview/github
+          cp -r examples/demos/build/* dist-preview/
+          cp -r examples/pokemon/build dist-preview/pokemon
+          # cp -r examples/github/build dist-preview/github
 
           # Add PR-specific metadata
           echo "PR #${{ github.event.pull_request.number }}" > dist-preview/PR_INFO.txt

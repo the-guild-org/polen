@@ -45,9 +45,9 @@ jobs:
       - name: Organize demo builds
         run: |
           mkdir -p ./dist-demos
-          cp -r ./examples/demos/dist/* ./dist-demos/
-          cp -r ./examples/pokemon/dist ./dist-demos/pokemon
-          # cp -r ./examples/github/dist ./dist-demos/github
+          cp -r ./examples/demos/build/* ./dist-demos/
+          cp -r ./examples/pokemon/build ./dist-demos/pokemon
+          # cp -r ./examples/github/build ./dist-demos/github
 
       - name: Setup Pages
         if: github.event_name != 'pull_request'
