@@ -111,10 +111,12 @@ This workflow:
 ### demos-release-dist-tag.yaml
 
 Triggered when:
+
 - `latest` or `next` git tags are pushed
 - Manually via GitHub Actions UI (workflow_dispatch)
 
 This workflow:
+
 1. Finds which semver version the tag points to
 2. Updates dist-tag redirects to point to that version
 

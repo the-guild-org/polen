@@ -18,6 +18,29 @@ jobs:
           ref: gh-pages
           fetch-depth: 0 # Need full history to check commit dates
 
+      - name: Get scripts from main branch
+        run: |
+          # Fetch main branch to get scripts
+          git fetch origin main
+          
+          # Checkout scripts from main
+          git checkout origin/main -- .github/scripts || echo "Scripts not in gh-pages, will fetch separately"
+          
+          # If scripts don't exist (because we're in gh-pages), we need to get them
+          if [ ! -d .github/scripts ]; then
+            # Create directory structure
+            mkdir -p .github/scripts
+            
+            # Use sparse checkout to get just the scripts
+            git clone --depth 1 --filter=blob:none --sparse \
+              https://github.com/${{ github.repository }}.git scripts-tmp
+            cd scripts-tmp
+            git sparse-checkout set .github/scripts
+            cp -r .github/scripts ../.github/
+            cd ..
+            rm -rf scripts-tmp
+          fi
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
