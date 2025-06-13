@@ -123,43 +123,65 @@ jobs:
 
       - name: Get previous deployments for this PR
         id: get-prev-pr-deployments
-        run: |
-          # Fetch gh-pages branch to check existing deployments
-          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
-
-          # Get list of commit deployments for this PR
-          PR_DIR="pr-${{ inputs.pr-number }}"
-          COMMIT_DIRS=""
-
-          if git ls-tree -d --name-only "origin/gh-pages:$PR_DIR" 2>/dev/null | grep -E '^[0-9a-f]{7,40}$' > /dev/null; then
-            COMMIT_DIRS=$(git ls-tree -d --name-only "origin/gh-pages:$PR_DIR" 2>/dev/null | grep -E '^[0-9a-f]{7,40}$' | sort -r || echo "")
-          fi
-
-          # Format as markdown links
-          PREV_DEPLOYMENT_LINKS=""
-          if [ -n "$COMMIT_DIRS" ]; then
-            FIRST=true
-            for commit in $COMMIT_DIRS; do
-              # Skip current commit since it's already shown as latest
-              if [ "$commit" != "${{ inputs.head-sha }}" ]; then
-                SHORT_SHA=$(echo "$commit" | cut -c1-7)
-                if [ "$FIRST" = true ]; then
-                  FIRST=false
-                else
-                  PREV_DEPLOYMENT_LINKS="${PREV_DEPLOYMENT_LINKS} / "
-                fi
-                PREV_DEPLOYMENT_LINKS="${PREV_DEPLOYMENT_LINKS}[\`${SHORT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${commit}/pokemon/)"
-              fi
-            done
-          fi
-
-          # If no previous deployments, set to "(none)"
-          if [ -z "$PREV_DEPLOYMENT_LINKS" ]; then
-            PREV_DEPLOYMENT_LINKS="(none)"
-          fi
-
-          # Save to output
-          echo "deployment_links=$PREV_DEPLOYMENT_LINKS" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = '${{ inputs.pr-number }}';
+            const currentSha = '${{ inputs.head-sha }}';
+            const repoOwner = context.repo.owner;
+            const repoName = context.repo.repo;
+            
+            try {
+              // Get the gh-pages branch tree
+              const { data: tree } = await github.rest.git.getTree({
+                owner: repoOwner,
+                repo: repoName,
+                tree_sha: 'gh-pages',
+                recursive: false
+              });
+              
+              // Find the PR directory
+              const prDir = tree.tree.find(item => item.path === `pr-${prNumber}`);
+              if (!prDir || prDir.type !== 'tree') {
+                core.setOutput('deployment_links', '(none)');
+                return;
+              }
+              
+              // Get contents of PR directory
+              const { data: prTree } = await github.rest.git.getTree({
+                owner: repoOwner,
+                repo: repoName,
+                tree_sha: prDir.sha,
+                recursive: false
+              });
+              
+              // Filter for commit SHA directories (excluding current)
+              const commitDirs = prTree.tree
+                .filter(item => 
+                  item.type === 'tree' && 
+                  /^[0-9a-f]{7,40}$/.test(item.path) &&
+                  item.path !== currentSha
+                )
+                .map(item => item.path)
+                .sort()
+                .reverse();
+              
+              if (commitDirs.length === 0) {
+                core.setOutput('deployment_links', '(none)');
+                return;
+              }
+              
+              // Format as markdown links
+              const links = commitDirs.map(sha => {
+                const shortSha = sha.substring(0, 7);
+                return `[\`${shortSha}\`](https://${repoOwner}.github.io/${repoName}/pr-${prNumber}/${sha}/pokemon/)`;
+              });
+              
+              core.setOutput('deployment_links', links.join(' / '));
+            } catch (error) {
+              console.log('Error fetching previous deployments:', error.message);
+              core.setOutput('deployment_links', '(none)');
+            }
 
       - name: Get short SHA
         id: short-sha
