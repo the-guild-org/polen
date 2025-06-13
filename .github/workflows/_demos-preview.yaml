@@ -151,16 +151,13 @@ jobs:
       - name: Get previous deployments for this PR
         id: get-prev-pr-deployments
         uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ inputs.pr-number }}
+          CURRENT_SHA: ${{ inputs.head-sha }}
         with:
           script: |
-            const script = require('./.github/scripts/get-previous-pr-deployments.js');
-            await script({
-              context,
-              github,
-              core,
-              prNumber: '${{ inputs.pr-number }}',
-              currentSha: '${{ inputs.head-sha }}'
-            });
+            const { default: script } = await import('${{ github.workspace }}/.github/scripts/get-previous-pr-deployments.js')
+            return script({ github, context, core })
 
       - name: Get short SHA
         id: short-sha

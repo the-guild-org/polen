@@ -177,9 +177,18 @@ importers:
       '@actions/core':
         specifier: ^1.11.1
         version: 1.11.1
+      '@actions/exec':
+        specifier: ^1.1.1
+        version: 1.1.1
       '@actions/github':
         specifier: ^6.0.1
         version: 6.0.1
+      '@actions/glob':
+        specifier: ^0.5.0
+        version: 0.5.0
+      '@actions/io':
+        specifier: ^1.1.3
+        version: 1.1.3
       '@changesets/cli':
         specifier: ^2.29.4
         version: 2.29.4
@@ -316,6 +325,9 @@ packages:
 
   '@actions/github@6.0.1':
     resolution: {integrity: sha512-xbZVcaqD4XnQAe35qSQqskb3SqIAfRyLBrHMd/8TuL7hJSz2QtbDwnNM8zWx4zO5l2fnGtseNE3MbEvD7BxVMw==}
+
+  '@actions/glob@0.5.0':
+    resolution: {integrity: sha512-tST2rjPvJLRZLuT9NMUtyBjvj9Yo0MiJS3ow004slMvm8GFM+Zv9HvMJ7HWzfUyJnGrJvDsYkWBaaG3YKXRtCw==}
 
   '@actions/http-client@2.2.3':
     resolution: {integrity: sha512-mx8hyJi/hjFvbPokCg4uRd4ZX78t+YyRPtnKWwIl+RzNaVuFpQHfmlGVfsKEJN8LwTCvL+DfVgAM04XaHkm6bA==}
@@ -4647,6 +4659,11 @@ snapshots:
       '@octokit/request': 8.4.1
       '@octokit/request-error': 5.1.1
       undici: 5.29.0
+
+  '@actions/glob@0.5.0':
+    dependencies:
+      '@actions/core': 1.11.1
+      minimatch: 3.1.2
 
   '@actions/http-client@2.2.3':
     dependencies:

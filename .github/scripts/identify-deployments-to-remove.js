@@ -1,20 +1,10 @@
 // @ts-check
+/** @param {import('../../scripts/github-actions-types/async-function').AsyncFunctionArguments} AsyncFunctionArguments */
+export default async ({ github, context, core }) => {
+  // Import required modules
+  const fs = require('fs').promises
+  const { execSync } = require('child_process')
 
-/**
- * @typedef {import('@actions/github').context} GitHubContext
- * @typedef {import('@actions/core')} ActionsCore
- * @typedef {ReturnType<import('@actions/github').getOctokit>} GitHub
- */
-
-/**
- * @param {Object} params
- * @param {GitHubContext} params.context
- * @param {GitHub} params.github
- * @param {ActionsCore} params.core
- * @param {typeof import('fs').promises} params.fs
- * @param {typeof import('child_process').execSync} params.execSync
- */
-module.exports = async ({ context, github, core, fs, execSync }) => {
   // Configuration
   const KEEP_RECENT_COMMITS = 15
   const PR_RETENTION_DAYS = 7

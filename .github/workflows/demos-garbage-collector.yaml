@@ -28,10 +28,8 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs').promises;
-            const { execSync } = require('child_process');
-            const script = require('./.github/scripts/identify-deployments-to-remove.js');
-            await script({ context, github, core, fs, execSync });
+            const { default: script } = await import('${{ github.workspace }}/.github/scripts/identify-deployments-to-remove.js')
+            return script({ github, context, core })
 
       - name: Remove old deployments
         if: steps.identify.outputs.toRemove != '{"trunk":[],"prs":[]}'
