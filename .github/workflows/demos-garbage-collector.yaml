@@ -32,7 +32,7 @@ jobs:
         with:
           script: |
             const semver = require('semver')
-            const { default: script } = await import('${{ github.workspace }}/.github/scripts/identify-deployments-to-remove.js')
+            const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/identify-deployments-to-remove.js')
             return script({ github, context, core, exec, semver })
 
       - name: Remove old deployments

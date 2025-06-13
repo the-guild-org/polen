@@ -39,11 +39,27 @@ Experience Polen in action with our live documentation sites:
 
 Featured examples:
 
-- **[Pokemon GraphQL API](https://the-guild-org.github.io/polen/pokemon/)** - Explore a fun GraphQL API with rich schema documentation and interactive examples
+- **[Pokemon GraphQL API](https://the-guild-org.github.io/polen/latest/pokemon/)** - Explore a fun GraphQL API with rich schema documentation
 - **GitHub GraphQL API** (Coming soon) - Browse GitHub's extensive GraphQL API documentation
 
-> [!NOTE]
-> These demos showcase the latest Polen features from trunk. Every commit is available as a pre-release on npm.
+### Demo Versions
+
+Our demos are available at different stability levels, matching npm's dist tags:
+
+- **Stable Release** (`latest`): [/polen/latest/pokemon](https://the-guild-org.github.io/polen/latest/pokemon/)
+  - The most recent stable version (e.g., `1.0.0`)
+  - Same as `npm install polen`
+
+- **Pre-release** (`next`): [/polen/next/pokemon](https://the-guild-org.github.io/polen/next/pokemon/)
+  - The latest pre-release version (e.g., `1.1.0-beta.1`)
+  - Same as `npm install polen@next`
+
+- **Tagged Versions**: Access any specific release
+  - e.g., [/polen/1.0.0/pokemon](https://the-guild-org.github.io/polen/1.0.0/pokemon/)
+  - Same as `npm install polen@1.0.0`
+
+> [!TIP]
+> The correspondence between demo URLs and npm versions makes it easy to test features before upgrading. If you're using `polen@1.0.0`, visit `/polen/1.0.0/pokemon` to see exactly how your docs will look!
 
 ## Examples
 

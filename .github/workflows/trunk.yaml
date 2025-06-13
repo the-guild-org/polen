@@ -7,14 +7,8 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  pull-requests: write
-  id-token: write
 
 jobs:
-  demos:
-    uses: ./.github/workflows/_demos.yaml
-
   # Check and release canary version
   # https://github.community/t/how-can-i-test-if-secrets-are-available-in-an-action/17911/10
   checkNpmTokenSet:

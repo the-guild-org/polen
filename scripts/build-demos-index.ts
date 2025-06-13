@@ -13,17 +13,28 @@ const args = Command.create()
   .parameter('currentSha', z.string().optional().describe('Current commit SHA'))
   .parameter('mode', z.enum(['demo', 'pr-index']).default('demo').describe('Page mode: demo landing or PR index'))
   .parameter('prDeployments', z.string().optional().describe('JSON array of PR deployments'))
-  .parameter('baseUrl', z.string().optional().describe('Base URL for absolute links'))
+  .parameter('trunkDeployments', z.string().optional().describe('JSON object with trunk deployment info'))
   .parse()
 
-const { basePath, prNumber, currentSha, mode, prDeployments, baseUrl } = args
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments } = args
 
 // Parse PR deployments if provided
 const parsedPrDeployments = (prDeployments ? JSON.parse(prDeployments) : []) as { number: number }[]
 
-const basePathWithoutTrailingSlash = basePath.endsWith('/') && basePath !== '/'
-  ? basePath.slice(0, -1)
-  : basePath
+// Parse trunk deployments if provided
+interface TrunkDeployment {
+  sha: string
+  shortSha: string
+  tag: string | null
+}
+
+interface TrunkDeploymentsData {
+  latest: TrunkDeployment | null
+  previous: TrunkDeployment[]
+}
+
+const parsedTrunkDeployments = (trunkDeployments ? JSON.parse(trunkDeployments) : null) as TrunkDeploymentsData | null
 
 // Function to get previous deployments
 const getPreviousDeployments = () => {
@@ -381,28 +392,50 @@ const indexHtml = `<!DOCTYPE html>
             </svg>
           </a>
           ${
-  currentSha
+  // For trunk deployments (no prNumber), use parsedTrunkDeployments if available
+  !prNumber && parsedTrunkDeployments && parsedTrunkDeployments.latest
     ? `<div class="current-deployment">
-            <span>Current: </span><a href="${currentSha}/pokemon/" class="commit-link">${currentSha.substring(0, 7)}</a>
+            <span>Current: </span>${
+      parsedTrunkDeployments.latest.tag
+        ? `${parsedTrunkDeployments.latest.tag} (<a href="${parsedTrunkDeployments.latest.sha}/pokemon/" class="commit-link">${parsedTrunkDeployments.latest.shortSha}</a>)`
+        : `<a href="${parsedTrunkDeployments.latest.sha}/pokemon/" class="commit-link">${parsedTrunkDeployments.latest.shortSha}</a>`
+    }
           </div>`
-    : ''
-}
-          ${
-  previousDeployments.length > 0
-    ? `
+    : currentSha
+    ? `<div class="current-deployment">
+              <span>Current: </span><a href="${currentSha}/pokemon/" class="commit-link">${
+      currentSha.substring(0, 7)
+    }</a>
+            </div>`
+    : ''}
           <div class="previous-deployments">
             <h3>Previous Deployments</h3>
-            <div class="commit-links">
+            ${
+  // For trunk deployments, use parsedTrunkDeployments
+  !prNumber && parsedTrunkDeployments
+    ? parsedTrunkDeployments.previous.length > 0
+      ? `<div class="commit-links">
+              ${
+        parsedTrunkDeployments.previous.map(deployment => {
+          const label = deployment.tag
+            ? `${deployment.tag} (${deployment.shortSha})`
+            : deployment.shortSha
+          return `<a href="${deployment.sha}/pokemon/" class="commit-link">${label}</a>`
+        }).join('')
+      }
+            </div>`
+      : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'
+    // For PR deployments, use the existing logic
+    : previousDeployments.length > 0
+    ? `<div class="commit-links">
               ${
       previousDeployments.map(sha => `
                 <a href="${sha}/pokemon/" class="commit-link">${sha.substring(0, 7)}</a>
               `).join('')
     }
-            </div>
+            </div>`
+    : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'}
           </div>
-          `
-    : ''
-}
         </div>
       </div>
 

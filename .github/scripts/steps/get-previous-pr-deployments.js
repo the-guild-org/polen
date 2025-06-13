@@ -1,5 +1,5 @@
 // @ts-check
-/** @param {import('./async-function').AsyncFunctionArguments} AsyncFunctionArguments */
+/** @param {import('../lib/async-function').AsyncFunctionArguments} AsyncFunctionArguments */
 export default async ({ github, context, core }) => {
   // Get inputs from environment variables
   const prNumber = process.env.PR_NUMBER
@@ -30,12 +30,17 @@ export default async ({ github, context, core }) => {
       owner: repoOwner,
       repo: repoName,
       tree_sha: prDir.sha,
-      recursive: false, // We only need direct children
+      // recursive: false, // We only need direct children
     })
 
     // Debug: log all directories found
     console.log(`Found ${prTree.tree.length} items in PR directory`)
-    console.log('Directory items:', prTree.tree.filter(item => item.type === 'tree').map(item => item.path))
+    console.log(
+      'Directory items:',
+      prTree.tree
+        .filter((item) => item.type === 'tree')
+        .map((item) => item.path),
+    )
 
     // Filter for commit SHA directories (excluding current)
     const commitDirs = prTree.tree
@@ -49,7 +54,9 @@ export default async ({ github, context, core }) => {
       .sort()
       .reverse()
 
-    console.log(`Found ${commitDirs.length} previous deployments (excluding current ${currentSha})`)
+    console.log(
+      `Found ${commitDirs.length} previous deployments (excluding current ${currentSha})`,
+    )
 
     if (commitDirs.length === 0) {
       core.setOutput('deployment_links', '(none)')
