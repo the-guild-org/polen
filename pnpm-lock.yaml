@@ -274,6 +274,24 @@ importers:
         specifier: ^3.25.56
         version: 3.25.56
 
+  examples/demos:
+    dependencies:
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
+  examples/github:
+    dependencies:
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
+  examples/pokemon:
+    dependencies:
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
 packages:
 
   '@0no-co/graphql.web@1.1.2':

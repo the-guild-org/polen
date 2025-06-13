@@ -7,6 +7,6 @@
     "start": "node build/app.js"
   },
   "dependencies": {
-    "polen": "link:../.."
+    "polen": "workspace:*"
   }
 }

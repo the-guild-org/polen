@@ -1,3 +1,6 @@
+packages:
+  - 'examples/*'
+
 onlyBuiltDependencies:
   - dprint
   - "@playwright/browser-chromium"

@@ -29,21 +29,14 @@ jobs:
       - name: Build Polen
         run: pnpm build
 
-      - name: Install demo dependencies
-        run: pnpm install
-        working-directory: ./examples/demos
-
       - name: Build demos site
-        run: pnpm build
-        working-directory: ./examples/demos
+        run: pnpm --dir examples/demos build
 
       - name: Build Pokemon demo
-        run: pnpm build
-        working-directory: ./examples/pokemon
+        run: pnpm --dir examples/pokemon build
 
       - name: Build GitHub demo
-        run: pnpm build
-        working-directory: ./examples/github
+        run: pnpm --dir examples/github build
 
       - name: Organize demo builds
         run: |

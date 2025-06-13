@@ -26,9 +26,9 @@ jobs:
 
       - name: Build demos
         run: |
-          cd examples/demos && pnpm install && pnpm build
-          cd ../pokemon && pnpm build
-          cd ../github && pnpm build
+          pnpm --dir examples/demos build
+          pnpm --dir examples/pokemon build
+          pnpm --dir examples/github build
 
       - name: Prepare preview directory
         run: |
