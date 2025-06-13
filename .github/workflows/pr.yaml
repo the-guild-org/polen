@@ -3,48 +3,34 @@ concurrency:
   group: ${{github.head_ref}}
   cancel-in-progress: true
 on:
-  - pull_request
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  pages: write
+  id-token: write
+
 jobs:
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - run: pnpm add dprint
-      - run: pnpm check:format
-  # lint-code:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: ./.github/actions/setup
-  #     - run: pnpm build
-  #     - run: pnpm check:lint
-  lint-package:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - run: pnpm build
-      - run: pnpm check:pedantic:package
-  types:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - run: pnpm check:types
-  test-integration:
-    uses: ./.github/workflows/_playwright-test.yaml
+  # Run all checks
+  checks:
+    if: github.event.action != 'closed'
+    uses: ./.github/workflows/_checks.yaml
     with:
-      project-name: integration
-  test-unit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          node-version: 24.1.x
-      - run: pnpm test:unit
-  test-examples:
-    uses: ./.github/workflows/_playwright-test.yaml
+      run-format: true
+      run-lint: false  # Currently disabled
+      run-types: true
+      run-package-lint: true
+      run-unit-tests: true
+      run-integration-tests: true
+      run-examples-tests: true
+
+  # Deploy PR preview
+  examples-preview:
+    uses: ./.github/workflows/_examples-preview.yaml
     with:
-      project-name: examples
+      action: ${{ github.event.action }}
+      pr-number: ${{ github.event.pull_request.number }}
+      head-ref: ${{ github.head_ref }}
+      head-sha: ${{ github.event.pull_request.head.sha }}

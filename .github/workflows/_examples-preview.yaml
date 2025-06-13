@@ -1,8 +1,24 @@
-name: examples preview
+name: examples-preview
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
+  workflow_call:
+    inputs:
+      action:
+        description: 'The PR action (opened, synchronize, reopened, closed)'
+        required: true
+        type: string
+      pr-number:
+        description: 'Pull request number'
+        required: true
+        type: number
+      head-ref:
+        description: 'Head branch reference'
+        required: false
+        type: string
+      head-sha:
+        description: 'Head commit SHA'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -12,7 +28,7 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event.action != 'closed'
+    if: inputs.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,10 +49,10 @@ jobs:
       - name: Build demos
         run: |
           # Build Pokemon demo with base path for PR preview
-          NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build --base "/polen/pr-${{ github.event.pull_request.number }}/pokemon/"
+          NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/pokemon/"
           
           # GitHub demo disabled - schema too large for efficient SSG
-          # NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build --base "/polen/pr-${{ github.event.pull_request.number }}/github/"
+          # NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/github/"
 
       - name: Prepare preview directory
         run: |
@@ -46,17 +62,17 @@ jobs:
           # cp -r examples/github/build dist-preview/github
 
           # Add PR-specific metadata
-          echo "PR #${{ github.event.pull_request.number }}" > dist-preview/PR_INFO.txt
-          echo "Branch: ${{ github.head_ref }}" >> dist-preview/PR_INFO.txt
-          echo "Commit: ${{ github.event.pull_request.head.sha }}" >> dist-preview/PR_INFO.txt
+          echo "PR #${{ inputs.pr-number }}" > dist-preview/PR_INFO.txt
+          echo "Branch: ${{ inputs.head-ref }}" >> dist-preview/PR_INFO.txt
+          echo "Commit: ${{ inputs.head-sha }}" >> dist-preview/PR_INFO.txt
 
       - name: Prepare PR preview for deployment
         run: |
           # Create deployment directory structure
-          mkdir -p gh-pages-deploy/pr-${{ github.event.pull_request.number }}
+          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}
 
           # Copy PR preview files
-          cp -r dist-preview/* gh-pages-deploy/pr-${{ github.event.pull_request.number }}/
+          cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/
 
           # Create a simple PR index page
           cat > gh-pages-deploy/pr-index.html << 'EOF'
@@ -142,43 +158,22 @@ jobs:
 
           echo "</div></body></html>" >> gh-pages-deploy/pr-index.html
 
-      # TODO: Replace with peaceiris/actions-gh-pages@v4 once allowed
-      # - name: Deploy to GitHub Pages
-      #   uses: peaceiris/actions-gh-pages@v4
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./gh-pages-deploy
-      #     destination_dir: .
-      #     keep_files: true  # Keep existing PR previews
-      #     user_name: 'github-actions[bot]'
-      #     user_email: 'github-actions[bot]@users.noreply.github.com'
-      #     commit_message: 'Deploy PR #${{ github.event.pull_request.number }} preview'
-
-      # Manual approach until peaceiris/actions-gh-pages is allowed
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          ref: gh-pages
-          path: gh-pages-branch
-
-      - name: Copy build to gh-pages
-        run: |
-          cp -r ./gh-pages-deploy/* gh-pages-branch/
-
-      - name: Commit and push
-        run: |
-          cd gh-pages-branch
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Deploy PR #${{ github.event.pull_request.number }} preview" || echo "No changes to commit"
-          git push
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages-deploy
+          destination_dir: .
+          keep_files: true  # Keep existing PR previews
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy PR #${{ inputs.pr-number }} preview'
 
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = context.payload.pull_request.number;
+            const prNumber = ${{ inputs.pr-number }};
             const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}`;
             const previewUrl = `${baseUrl}/pr-${prNumber}/`;
 
@@ -223,35 +218,36 @@ jobs:
             }
 
   cleanup:
-    if: github.event.action == 'closed'
+    if: inputs.action == 'closed'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout gh-pages branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: gh-pages
+
+      - name: Prepare cleanup
+        run: |
+          # Create empty directory to trigger removal
+          mkdir -p cleanup-dir
+          
+          # Create marker file to indicate this is a cleanup operation
+          echo "Cleaning up PR #${{ inputs.pr-number }}" > cleanup-dir/.cleanup
 
       - name: Remove PR preview
-        run: |
-          PR_DIR="pr-${{ github.event.pull_request.number }}"
-          if [ -d "$PR_DIR" ]; then
-            rm -rf "$PR_DIR"
-
-            # Update PR index to remove this PR
-            # (The index will be regenerated on next PR deployment)
-
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add .
-            git commit -m "Remove PR #${{ github.event.pull_request.number }} preview" || echo "No changes to commit"
-            git push origin gh-pages
-          fi
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./cleanup-dir
+          destination_dir: pr-${{ inputs.pr-number }}
+          keep_files: false  # This will remove the PR directory
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Remove PR #${{ inputs.pr-number }} preview'
 
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = context.payload.pull_request.number;
+            const prNumber = ${{ inputs.pr-number }};
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,

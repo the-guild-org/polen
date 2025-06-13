@@ -1,17 +1,11 @@
-name: trunk examples deploy
+name: examples-deploy
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: write
   pages: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -46,7 +40,6 @@ jobs:
           # cp -r ./examples/github/build ./dist-demos/github
 
       - name: Deploy to GitHub Pages
-        if: github.event_name != 'pull_request'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
