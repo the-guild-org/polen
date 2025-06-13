@@ -13,18 +13,97 @@ permissions:
   id-token: write
 
 jobs:
-  # Run all checks
-  checks:
+  format:
     if: github.event.action != 'closed'
-    uses: ./.github/workflows/_checks.yaml
-    with:
-      run-format: true
-      run-lint: false # Currently disabled
-      run-types: true
-      run-package-lint: true
-      run-unit-tests: true
-      run-integration-tests: true
-      run-examples-tests: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Check format
+        run: pnpm check:format
+
+  # Lint check (currently disabled)
+  # lint-code:
+  #   if: github.event.action != 'closed'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Setup
+  #       uses: ./.github/actions/setup
+  #     - name: Check lint
+  #       run: pnpm check:lint
+
+  types:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Check types
+        run: pnpm check:types
+
+  lint-package:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Build
+        run: pnpm build
+      - name: Check package
+        run: pnpm check:pedantic:package
+
+  tests-unit:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Run unit tests
+        run: pnpm test:unit
+
+  tests-integration:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Install Playwright browsers
+        uses: ./.github/actions/install-playwright-binaries
+      - name: Build
+        run: pnpm build
+      - name: Re-install to link workspace packages
+        run: pnpm install
+      - name: Run integration tests
+        run: pnpm test:integration
+
+  tests-e2e:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Install Playwright browsers
+        uses: ./.github/actions/install-playwright-binaries
+      - name: Build
+        run: pnpm build
+      - name: Re-install to link workspace packages
+        run: pnpm install
+      - name: Run examples tests
+        run: pnpm test:examples
 
   deploy-examples:
     uses: ./.github/workflows/_examples-preview.yaml
