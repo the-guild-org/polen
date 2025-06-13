@@ -44,16 +44,19 @@ jobs:
       - name: Build Polen
         run: pnpm build
 
+      - name: Re-install to link workspace packages
+        run: pnpm install
+
       - name: Build demos landing page
         run: node ./scripts/build-demos-index.mjs
 
       - name: Build demos
         run: |
           # Build Pokemon demo with base path for PR preview
-          NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/pokemon/"
+          pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/pokemon/"
 
           # GitHub demo disabled - schema too large for efficient SSG
-          # NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/github/"
+          # pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/github/"
 
       - name: Prepare preview directory
         run: |

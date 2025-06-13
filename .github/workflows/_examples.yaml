@@ -20,11 +20,18 @@ jobs:
       - name: Build Polen
         run: pnpm build
 
+      - name: Re-install to link workspace packages
+        run: pnpm install
+
       - name: Upload Polen build
         uses: actions/upload-artifact@v4
         with:
           name: polen-build
-          path: build/
+          path: |
+            build/
+            package.json
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
 
   build-examples:
     needs: build-polen
@@ -47,8 +54,11 @@ jobs:
         with:
           name: polen-build
 
+      - name: Re-install to link workspace packages
+        run: pnpm install
+
       - name: Build example - ${{ matrix.example }}
-        run: NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/${{ matrix.example }} build
+        run: pnpm --dir examples/${{ matrix.example }} build
 
       - name: Upload example build
         uses: actions/upload-artifact@v4
