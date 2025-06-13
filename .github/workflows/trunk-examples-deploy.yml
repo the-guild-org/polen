@@ -1,4 +1,4 @@
-name: Deploy Demos to GitHub Pages
+name: trunk examples deploy
 
 on:
   push:
