@@ -22,43 +22,45 @@ Redirects:
 Primary URLs (actual content):
 /polen                            → Main demos landing page
 /polen/:semver/:demo              → Tagged release deployment (e.g., /polen/1.0.0/pokemon)
+/polen/latest/:demo               → Latest stable release (actual content)
+/polen/next/:demo                 → Latest prerelease (actual content)
 
 Redirects:
 /polen/:demo                      → /polen/latest/:demo
-/polen/latest/:demo               → /polen/:semver/:demo (latest stable)
-/polen/next/:demo                 → /polen/:semver/:demo (latest prerelease)
 ```
 
-Note: Trunk demos are only built on releases, not on every commit. This ensures demos match what's available on npm.
+Note: Trunk demos are only built on releases, not on every commit. This ensures demos match what's available on npm. The dist-tag URLs (`/polen/latest/`, `/polen/next/`) contain actual content (not redirects) with updated base paths.
 
 #### NPM Dist Tags Mapping
 
 The `latest` and `next` URLs correspond to npm dist tags:
 
-- **`latest`**: Points to the most recent stable release (non-prerelease). This matches the npm `latest` dist tag.
-- **`next`**: Points to the most recent prerelease version. This matches the npm `next` dist tag.
+- **`latest`**: Contains a copy of the most recent stable release (non-prerelease). This matches the npm `latest` dist tag.
+- **`next`**: Contains a copy of the most recent prerelease version. This matches the npm `next` dist tag.
 
 When a new release is published:
 
-- If it's a stable release (e.g., `1.0.0`), update `latest` to point to it
-- If it's a prerelease (e.g., `1.0.0-beta.1`), update `next` to point to it
+- If it's a stable release (e.g., `1.0.0`), the `latest` directory is replaced with a copy of that release
+- If it's a prerelease (e.g., `1.0.0-beta.1`), the `next` directory is replaced with a copy of that release
+- All base paths in the copied files are updated via find-replace to match the dist-tag URL
 
 This allows users to always access:
 
-- Stable demos at `/polen/latest/pokemon`
-- Bleeding-edge demos at `/polen/next/pokemon`
+- Stable demos at `/polen/latest/pokemon` (actual content, not a redirect)
+- Bleeding-edge demos at `/polen/next/pokemon` (actual content, not a redirect)
 
 ## Current Implementation
 
 ### Trunk Demos
 
 - **Build trigger**: Only on npm releases (not every commit)
-- **Primary URLs**: `/polen/{semver}/{demo}` (e.g., `/polen/1.2.0/pokemon/`)
-- **Dist-tag redirects**:
-  - `/polen/latest/` → latest stable release
-  - `/polen/next/` → latest prerelease
-  - `/polen/latest/{demo}/` → latest stable release demo
-  - `/polen/next/{demo}/` → latest prerelease demo
+- **Primary URLs**: 
+  - `/polen/{semver}/{demo}` (e.g., `/polen/1.2.0/pokemon/`)
+  - `/polen/latest/{demo}` (latest stable release - actual content)
+  - `/polen/next/{demo}` (latest prerelease - actual content)
+- **Dist-tag content**:
+  - `/polen/latest/` contains a copy of the latest stable release with updated base paths
+  - `/polen/next/` contains a copy of the latest prerelease with updated base paths
 - **Convenience redirects**: `/polen/{demo}/` → `/polen/latest/{demo}/`
 
 ### Pull Request Demos
@@ -84,6 +86,16 @@ When you add a new example to the `examples/` directory:
 2. To add it to existing releases, manually trigger the `demos-release-semver` workflow for each release tag
 3. The workflow dynamically discovers examples, so no workflow changes are needed
 
+### Demos Index UI
+
+The demos landing page now displays:
+
+- **Dist-tag buttons**: Shows `latest` and `next` as primary buttons
+- **Permalinks**: Each dist-tag button has an arrow (→) showing which version it points to
+- **Previous deployments**: Lists older versions below the dist-tags
+
+For PR demos, the "latest" pseudo-dist-tag points to the most recent commit.
+
 ### Garbage Collection
 
 - **Stable releases**: Kept forever
@@ -103,8 +115,9 @@ This workflow:
 
 1. Builds demos at `/polen/{semver}/` paths
 2. Creates convenience redirects (`/polen/{demo}/` → `/polen/latest/{demo}/`)
-3. Updates demos index page
-4. Adds commit status with link to demos
+3. Updates dist-tag content (`/polen/latest/` or `/polen/next/`) by copying the semver build
+4. Updates demos index page
+5. Adds commit status with link to demos
 
 **Manual Trigger**: Use this when adding new examples to rebuild demos for existing releases. Go to Actions → demos-release-semver → Run workflow → Enter a tag (e.g., `1.2.0` or `latest`)
 
@@ -118,9 +131,10 @@ Triggered when:
 This workflow:
 
 1. Finds which semver version the tag points to
-2. Updates dist-tag redirects to point to that version
+2. Copies the semver deployment to the dist-tag directory
+3. Updates all base paths in the copied files via find-replace
 
-**Manual Trigger**: Use this to manually sync dist-tag redirects. Go to Actions → demos-release-dist-tag → Run workflow → Select dist tag (latest or next)
+**Manual Trigger**: Use this to manually sync dist-tag content. Go to Actions → demos-release-dist-tag → Run workflow → Select dist tag (latest or next)
 
 ### demos-garbage-collector.yaml
 
@@ -145,6 +159,7 @@ Runs on schedule (daily). This workflow:
 │   └── update-demos-index.js
 └── tools/                  # CLI utilities
     ├── get-demo-examples.js
+    ├── get-dist-tags.js
     ├── get-pr-deployments.js
     └── get-trunk-deployments.js
 ```

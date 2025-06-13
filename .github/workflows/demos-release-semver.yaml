@@ -168,6 +168,39 @@ jobs:
           done
 
 
+      - name: Update dist-tag content
+        if: steps.release.outputs.needs_build == 'true'
+        run: |
+          TAG="${{ steps.release.outputs.actual_tag }}"
+          IS_PRERELEASE="${{ steps.release.outputs.is_prerelease }}"
+          
+          # Determine which dist-tag to update
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            DIST_TAG="next"
+          else
+            DIST_TAG="latest"
+          fi
+          
+          cd gh-pages
+          
+          # Remove old dist-tag directory if it exists
+          if [ -d "$DIST_TAG" ]; then
+            echo "Removing old $DIST_TAG directory"
+            rm -rf "$DIST_TAG"
+          fi
+          
+          # Copy the semver deployment to the dist-tag name
+          echo "Copying $TAG to $DIST_TAG"
+          cp -r "$TAG" "$DIST_TAG"
+          
+          # Update all base paths in the copied files
+          echo "Updating base paths from /$TAG/ to /$DIST_TAG/"
+          find "$DIST_TAG" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
+            sed -i "s|/polen/$TAG/|/polen/$DIST_TAG/|g" "$file"
+          done
+          
+          echo "✅ Successfully updated $DIST_TAG with content from $TAG"
+
       - name: Update demos index
         uses: actions/github-script@v7
         with:

@@ -56,21 +56,10 @@ jobs:
           EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
           echo "Found demo-enabled examples: $EXAMPLES"
           
-          # Create directories for builds
-          mkdir -p dist-preview-latest
-          mkdir -p dist-preview-commit
-          
-          # Build each example
+          # Build once for the commit-specific path
           for example in $EXAMPLES; do
             echo "Building $example demo..."
-            
-            # Build for latest
-            pnpm --dir examples/$example build --base "/polen/pr-${{ inputs.pr-number }}/latest/$example/"
-            cp -r examples/$example/build dist-preview-latest/$example
-            
-            # Build for commit-specific path
             pnpm --dir examples/$example build --base "/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/$example/"
-            cp -r examples/$example/build dist-preview-commit/$example
           done
 
       - name: Prepare PR preview for deployment
@@ -82,11 +71,26 @@ jobs:
           # Copy landing page to PR root
           cp dist-demos/index.html gh-pages-deploy/pr-${{ inputs.pr-number }}/index.html
 
-          # Copy latest build
-          cp -r dist-preview-latest/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
-
+          # Get list of examples that are enabled for demos
+          EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
+          
+          # Copy builds to commit-specific path
+          for example in $EXAMPLES; do
+            if [ -d "examples/$example/build" ]; then
+              cp -r examples/$example/build gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/$example
+            fi
+          done
+          
+          # Copy to latest (will update paths below)
+          cp -r gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
+          
+          # Update all base paths in the latest copy
+          echo "Updating base paths from /${{ inputs.head-sha }}/ to /latest/"
+          find gh-pages-deploy/pr-${{ inputs.pr-number }}/latest -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
+            sed -i "s|/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/|/polen/pr-${{ inputs.pr-number }}/latest/|g" "$file"
+          done
+          
           # Create redirect from /latest/ to PR root
-          # Example: /polen/pr-123/latest/ → /polen/pr-123/
           # This provides the PR landing page when accessing /latest/
           cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/index.html << EOF
           <!DOCTYPE html>
@@ -102,13 +106,6 @@ jobs:
           </body>
           </html>
           EOF
-
-          # Copy commit-specific build
-          cp -r dist-preview-commit/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
-          
-          # Get list of examples that are enabled for demos
-          # Try multiple methods to find examples
-          EXAMPLES=$(cd .. && node ./.github/scripts/tools/get-demo-examples.js 2>/dev/null || ls -d dist-preview-latest/*/ 2>/dev/null | xargs -n1 basename || echo "")
           
           # Create redirects for direct demo URLs
           # Examples:

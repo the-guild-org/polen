@@ -14,10 +14,11 @@ const args = Command.create()
   .parameter('mode', z.enum(['demo', 'pr-index']).default('demo').describe('Page mode: demo landing or PR index'))
   .parameter('prDeployments', z.string().optional().describe('JSON array of PR deployments'))
   .parameter('trunkDeployments', z.string().optional().describe('JSON object with trunk deployment info'))
+  .parameter('distTags', z.string().optional().describe('JSON object with dist-tag mappings'))
   .parse()
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments } = args
+const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments, distTags } = args
 
 // Parse PR deployments if provided
 const parsedPrDeployments = (prDeployments ? JSON.parse(prDeployments) : []) as { number: number }[]
@@ -35,6 +36,13 @@ interface TrunkDeploymentsData {
 }
 
 const parsedTrunkDeployments = (trunkDeployments ? JSON.parse(trunkDeployments) : null) as TrunkDeploymentsData | null
+
+// Parse dist-tags if provided
+interface DistTagsData {
+  [key: string]: string
+}
+
+const parsedDistTags = (distTags ? JSON.parse(distTags) : {}) as DistTagsData
 
 // Function to get previous deployments
 const getPreviousDeployments = () => {
@@ -301,6 +309,35 @@ const indexHtml = `<!DOCTYPE html>
       margin-top: 1.5rem;
     }
 
+    .dist-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .dist-tag-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .demo-link.dist-tag {
+      min-width: 120px;
+    }
+
+    .permalink {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-family: monospace;
+      transition: color 0.2s ease;
+    }
+
+    .permalink:hover {
+      color: #000;
+      text-decoration: underline;
+    }
+
     .previous-deployments {
       margin-top: 1rem;
       padding-top: 1rem;
@@ -385,27 +422,49 @@ const indexHtml = `<!DOCTYPE html>
         <h2>Pokemon API</h2>
         <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
         <div class="demo-links">
-          <a href="latest/pokemon/" class="demo-link">
-            View Latest${!prNumber && parsedTrunkDeployments && parsedTrunkDeployments.latest ? ` (${parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha})` : ''}
+          ${
+  // For trunk deployments, show dist-tag buttons
+  !prNumber
+    ? Object.entries(parsedDistTags).length > 0
+      ? `<div class="dist-tags">
+            ${
+        Object.entries(parsedDistTags)
+          .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
+          .map(([tag, version]) => `
+                  <div class="dist-tag-group">
+                    <a href="${tag}/pokemon/" class="demo-link dist-tag">
+                      ${tag}
+                      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </a>
+                    <a href="${version}/pokemon/" class="permalink">→ ${version}</a>
+                  </div>
+                `).join('')
+      }
+          </div>`
+      : parsedTrunkDeployments && parsedTrunkDeployments.latest
+      ? `<a href="latest/pokemon/" class="demo-link">
+            View Latest (${parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha})
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
-          </a>
-          ${
-  // For trunk deployments (no prNumber), use parsedTrunkDeployments if available
-  !prNumber && parsedTrunkDeployments && parsedTrunkDeployments.latest
-    ? `<div class="current-deployment">
-            <span>Current: </span><a href="${parsedTrunkDeployments.latest.sha}/pokemon/" class="commit-link">${
-      parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha
-    }</a>
-          </div>`
+          </a>`
+      : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
+    // For PR deployments, show latest pseudo-dist-tag
     : currentSha
-    ? `<div class="current-deployment">
-              <span>Current: </span><a href="${currentSha}/pokemon/" class="commit-link">${
-      currentSha.substring(0, 7)
-    }</a>
-            </div>`
-    : ''}
+    ? `<div class="dist-tags">
+          <div class="dist-tag-group">
+            <a href="latest/pokemon/" class="demo-link dist-tag">
+              latest
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <a href="${currentSha}/pokemon/" class="permalink">→ ${currentSha.substring(0, 7)}</a>
+          </div>
+        </div>`
+    : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
           <div class="previous-deployments">
             <h3>Previous Deployments</h3>
             ${

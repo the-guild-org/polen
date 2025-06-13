@@ -17,7 +17,6 @@ import { execNodeScript } from '../lib/exec-utils.js'
  * @param {import('../lib/async-function').AsyncFunctionArguments} args
  */
 export default async ({ exec, core }) => {
-
   const mode = process.env.MODE || 'trunk'
 
   try {
@@ -31,8 +30,19 @@ export default async ({ exec, core }) => {
         './gh-pages',
       ])
 
+      // Get dist-tags info from gh-pages directory
+      const distTags = await execNodeScript(exec, './.github/scripts/tools/get-dist-tags.js', [
+        './gh-pages',
+      ])
+
       // Build trunk demos index
-      await exec.exec('node', ['./scripts/build-demos-index.ts', '--trunkDeployments', trunkDeployments])
+      await exec.exec('node', [
+        './scripts/build-demos-index.ts',
+        '--trunkDeployments',
+        trunkDeployments,
+        '--distTags',
+        distTags,
+      ])
 
       // Copy to gh-pages root
       await fs.copyFile('dist-demos/index.html', 'gh-pages/index.html')
