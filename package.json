@@ -178,6 +178,7 @@
     "test:unit": "vitest",
     "dev": "pnpm build:watch:emit",
     "dev:pokemon": "pnpm polen dev --project examples/pokemon",
+    "build:demos": "zx ./scripts/build-demos.mjs",
     "build:clean": "pnpm tsc --build tsconfig.build.json --clean && rm -rf build",
     "build": "tsc --build tsconfig.build.json",
     "build:watch": "tsc --build tsconfig.build.json --watch",

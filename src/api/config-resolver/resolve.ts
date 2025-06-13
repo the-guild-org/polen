@@ -21,7 +21,7 @@ export const fromMemory = async (
   /**
    * Refer to `baseRootDirPath` parameter on {@link normalizeInput}.
    *
-   * @defaultValue `process.cwd()`
+   * @default `process.cwd()`
    */
   baseRootDirPath?: string,
 ) => {

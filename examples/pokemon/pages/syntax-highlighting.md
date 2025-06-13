@@ -75,7 +75,7 @@ type Mutation {
 ## React Component Example
 
 ```tsx
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { usePokemonQuery } from './generated/graphql'
 
 interface PokemonCardProps {
@@ -83,33 +83,35 @@ interface PokemonCardProps {
   onSelect?: (pokemon: Pokemon) => void
 }
 
-export const PokemonCard: React.FC<PokemonCardProps> = ({ 
-  pokemonId, 
-  onSelect 
+export const PokemonCard: React.FC<PokemonCardProps> = ({
+  pokemonId,
+  onSelect,
 }) => {
   const [isShiny, setIsShiny] = useState(false)
   const { data, loading, error } = usePokemonQuery({
-    variables: { id: pokemonId }
+    variables: { id: pokemonId },
   })
 
-  if (loading) return <div className="pokemon-card loading">Loading...</div>
-  if (error) return <div className="pokemon-card error">Error loading Pokemon</div>
+  if (loading) return <div className='pokemon-card loading'>Loading...</div>
+  if (error) {
+    return <div className='pokemon-card error'>Error loading Pokemon</div>
+  }
   if (!data?.pokemon) return null
 
   const { pokemon } = data
 
   return (
-    <div 
+    <div
       className={`pokemon-card ${isShiny ? 'shiny' : ''}`}
       onClick={() => onSelect?.(pokemon)}
     >
-      <img 
-        src={pokemon.sprite} 
+      <img
+        src={pokemon.sprite}
         alt={pokemon.name}
         onDoubleClick={() => setIsShiny(!isShiny)}
       />
       <h3>{pokemon.name}</h3>
-      <div className="types">
+      <div className='types'>
         {pokemon.types.map(type => (
           <span key={type.id} className={`type ${type.name}`}>
             {type.name}

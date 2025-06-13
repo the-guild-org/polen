@@ -6,7 +6,7 @@ export type DataSourceType = `file` | `directory` | `memory` | `data`
 
 export interface Config {
   /**
-   * @defaultValue `true`
+   * @default `true`
    */
   enabled?: boolean
   useDataSources?: Arr.Maybe<DataSourceType>

@@ -42,6 +42,9 @@ export const create = async (parameters: {
       build: async () => {
         return await project.packageManager`run build --architecture ssr`
       },
+      buildSsg: async () => {
+        return await project.packageManager`run build --architecture ssg`
+      },
       start: async () => {
         const port = await GetPortPlease.getRandomPort()
 
@@ -53,6 +56,40 @@ export const create = async (parameters: {
 
         // todo: If we give some log output from server then we can use that to detect when the server is ready.
         await project.shell`sleep 1`
+
+        return {
+          raw: serverProcess,
+          stop: async () => {
+            await stopServerProcess(serverProcess)
+          },
+          url,
+        }
+      },
+      serveSsg: async () => {
+        const port = await GetPortPlease.getRandomPort()
+        const url = `http://localhost:${port.toString()}`
+
+        // Use a simple static file server to serve the SSG build
+        // The build output is in the 'build' directory, not 'dist'
+        const serverProcess = project.shell({
+          env: { ...process.env },
+        })`npx serve build --listen ${port.toString()} --single --no-clipboard`
+
+        // Wait for server to be ready by checking if it's responding
+        const maxRetries = 30
+        let retries = 0
+        while (retries < maxRetries) {
+          try {
+            await fetch(url)
+            break
+          } catch (error) {
+            retries++
+            if (retries === maxRetries) {
+              throw new Error(`SSG server failed to start on ${url} after ${maxRetries} attempts`)
+            }
+            await project.shell`sleep 0.5`
+          }
+        }
 
         return {
           raw: serverProcess,

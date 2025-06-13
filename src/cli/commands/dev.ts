@@ -14,6 +14,10 @@ const args = Command.create()
     // @ts-expect-error
     z.string().optional().describe(`The path to the project directory. Default is CWD (current working directory).`),
   )
+  .parameter(
+    `--base -b`,
+    z.string().optional().describe('Base public path for deployment (e.g., /my-project/)'),
+  )
   .settings({
     parameters: {
       environment: {
@@ -32,6 +36,7 @@ const dir = ensureOptionalAbsoluteWithCwd(args.project) as string
 const viteUserConfig = await Api.ConfigResolver.fromFile({
   dir,
   overrides: {
+    ...(args.base ? { build: { base: args.base } } : {}),
     advanced: {
       debug: args.debug,
     },

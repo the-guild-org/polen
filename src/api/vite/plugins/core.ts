@@ -190,9 +190,13 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             const schemaNavbar = navbarData.get('schema')
             schemaNavbar.length = 0 // Clear existing
             if (schema) {
-              schemaNavbar.push({ pathExp: `reference`, title: `Reference` })
+              // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
+              // Without the leading slash, React Router treats paths as relative, which causes
+              // hydration mismatches between SSR (where base path is prepended) and client
+              // (where basename is configured). This ensures consistent behavior.
+              schemaNavbar.push({ pathExp: `/reference`, title: `Reference` })
               if (schema.versions.length > 1) {
-                schemaNavbar.push({ pathExp: `changelog`, title: `Changelog` })
+                schemaNavbar.push({ pathExp: `/changelog`, title: `Changelog` })
               }
             }
 
@@ -203,6 +207,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             const projectData: ProjectData = {
               schema,
               faviconPath: `/logo.svg`,
+              basePath: config.build.base,
               paths: config.paths.project,
               server: {
                 static: {
@@ -210,8 +215,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                   // relative from CWD of process that boots n1ode server
                   // can easily break! Use path relative in server??
                   directory: `./` + config.paths.project.relative.build.root,
-                  // Uses Hono route syntax.
-                  route: `/` + config.paths.project.relative.build.relative.assets + `/*`,
+                  // Uses Hono route syntax - includes base path
+                  route: config.build.base.slice(0, -1) + `/` + config.paths.project.relative.build.relative.assets
+                    + `/*`,
                 },
               },
             }

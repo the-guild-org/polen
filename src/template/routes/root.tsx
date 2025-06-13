@@ -1,3 +1,4 @@
+import { assetUrl, faviconUrl } from '#api/utils/asset-url/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
@@ -40,12 +41,12 @@ export const Component = () => {
         {import.meta.env.DEV && <link rel='stylesheet' href={radixStylesUrl} />}
         <link
           rel='icon'
-          href={PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`}
+          href={faviconUrl(PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`, PROJECT_DATA.basePath)}
           sizes='256 x 256'
         />
         <link
           rel='icon'
-          href={PROJECT_DATA.faviconPath + `?v=1`}
+          href={faviconUrl(PROJECT_DATA.faviconPath + `?v=1`, PROJECT_DATA.basePath)}
           sizes='any'
           type='image/svg+xml'
         />
@@ -120,7 +121,8 @@ const Layout = () => {
         my='8'
         mx='auto'
       >
-        <style>{`
+        <style>
+          {`
           /* Shiki code blocks */
           pre.shiki {
             margin: 1rem 0;
@@ -151,7 +153,8 @@ const Layout = () => {
             background: transparent;
             display: block;
           }
-        `}</style>
+        `}
+        </style>
         {header}
         {isShowSidebar && (
           <Sidebar

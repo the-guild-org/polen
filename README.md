@@ -35,6 +35,13 @@ npm add polen
 
 You can find working examples in the [examples](./examples) directory.
 
+### Live Demos
+
+View our example Polen documentation sites:
+
+- ⚡ [Pokemon GraphQL API Demo](https://the-guild-org.github.io/polen/pokemon/)
+- 📚 [More demos coming soon...](https://the-guild-org.github.io/polen/)
+
 > [!NOTE]
 > These examples work against the version of Polen on trunk. Every commit on trunk is available as a pre-release on npm. You may see behaviour in the examples that has not been released in a stable version of Polen yet.
 
@@ -293,6 +300,41 @@ Deploy the contents of the `./build` directory on your favourite static site pro
 #### SSR
 
 In the future Polen will have features that motivate using a server, but for now there is no particular benefit. Use `SSG` instead.
+
+#### Base Path Configuration
+
+Polen supports deploying to subdirectories through the `build.base` configuration option. This is useful for:
+
+- GitHub Pages project sites (e.g., `/my-project/`)
+- PR preview deployments (e.g., `/pr-123/`)
+- Hosting multiple Polen sites on one domain
+
+```ts
+// polen.config.ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  build: {
+    base: '/my-project/', // Must start and end with /
+  },
+})
+```
+
+When configured, Polen will output differently:
+
+- For SSG architecture:
+  - Generate static files that work in the subdirectory
+- For SSR architecture:
+  - A server that serves static assets from the correct path
+
+You can also set the base path via CLI:
+
+```bash
+npx polen build --base /my-project/
+npx polen dev --base /my-project/
+```
+
+The CLI flag takes precedence over the config file setting.
 
 ### Package
 

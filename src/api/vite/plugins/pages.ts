@@ -8,9 +8,9 @@ import { Tree } from '#lib/tree/index'
 import { debug } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
+import rehypeShiki from '@shikijs/rehype'
 import { Path, Str } from '@wollybeard/kit'
 import remarkGfm from 'remark-gfm'
-import rehypeShiki from '@shikijs/rehype'
 
 const _debug = debug.sub(`vite-plugin-pages`)
 
@@ -257,7 +257,11 @@ export const Pages = ({
                   const pathExp = FileRouter.pathToExpression([child.value.name])
                   const title = Str.titlizeSlug(child.value.name)
                   navbarPages.push({
-                    pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
+                    // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
+                    // Without the leading slash, React Router treats paths as relative, which causes
+                    // hydration mismatches between SSR (where base path is prepended) and client
+                    // (where basename is configured). This ensures consistent behavior.
+                    pathExp: pathExp.startsWith('/') ? pathExp : '/' + pathExp,
                     title,
                   })
                 }
@@ -265,7 +269,11 @@ export const Pages = ({
                 const pathExp = FileRouter.pathToExpression([child.value.name])
                 const title = Str.titlizeSlug(child.value.name)
                 navbarPages.push({
-                  pathExp: pathExp.startsWith('/') ? pathExp.slice(1) : pathExp,
+                  // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
+                  // Without the leading slash, React Router treats paths as relative, which causes
+                  // hydration mismatches between SSR (where base path is prepended) and client
+                  // (where basename is configured). This ensures consistent behavior.
+                  pathExp: pathExp.startsWith('/') ? pathExp : '/' + pathExp,
                   title,
                 })
               }

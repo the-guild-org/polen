@@ -24,7 +24,7 @@ export interface ConfigInput {
    *
    * Relative paths will be resolved relative to this config file.
    *
-   * @defaultValue The directory where the config file is located.
+   * @default The directory where the config file is located.
    */
   root?: string
   /**
@@ -32,7 +32,7 @@ export interface ConfigInput {
    *
    * Powered by [Vite Inspect](https://github.com/antfu-collective/vite-plugin-inspect).
    *
-   * @defaultValue true
+   * @default true
    */
   schema?: SchemaConfigInput
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
@@ -42,12 +42,27 @@ export interface ConfigInput {
      *
      * Used in the navigation bar and in the title tag.
      *
-     * @defaultValue `My Developer Portal`
+     * @default `My Developer Portal`
      */
     title?: string
   }
   build?: {
     architecture?: BuildArchitecture
+    /**
+     * Base public path for the deployed site.
+     *
+     * Use this when deploying to a subdirectory (e.g., GitHub Pages project sites).
+     *
+     * Examples:
+     * - `/` (default) - Deploy to root
+     * - `/my-project/` - Deploy to subdirectory
+     * - `/pr-123/` - PR preview deployments
+     *
+     * Must start and end with `/`.
+     *
+     * @default `/`
+     */
+    base?: string
   }
   advanced?: {
     explorer?: boolean
@@ -64,7 +79,7 @@ export interface ConfigInput {
      * - Global CLI usage against ephemeral projects e.g. a directory with just a
      *   GraphQL Schema file.
      *
-     * @defaultValue false
+     * @default false
      */
     isSelfContainedMode?: boolean
     /**
@@ -90,7 +105,7 @@ export interface ConfigInput {
      *
      * - build output is NOT minified.
      *
-     * @defaultValue false
+     * @default false
      */
     debug?: boolean
     /**
@@ -140,6 +155,7 @@ export interface Config {
   _input: ConfigInput
   build: {
     architecture: BuildArchitecture
+    base: string
   }
   watch: {
     also: string[]
@@ -193,6 +209,7 @@ const configInputDefaults: Config = {
   },
   build: {
     architecture: BuildArchitecture.enum.ssg,
+    base: `/`,
   },
   schema: null,
   ssr: {
@@ -229,6 +246,18 @@ export const normalizeInput = async (
 
   if (configInput?.build?.architecture) {
     config.build.architecture = configInput.build.architecture
+  }
+
+  if (configInput?.build?.base !== undefined) {
+    // Validate base path
+    const base = configInput.build.base
+    if (!base.startsWith(`/`)) {
+      throw new Error(`Base path must start with "/". Provided: ${base}`)
+    }
+    if (!base.endsWith(`/`)) {
+      throw new Error(`Base path must end with "/". Provided: ${base}`)
+    }
+    config.build.base = base
   }
 
   if (configInput?.advanced?.debug !== undefined) {

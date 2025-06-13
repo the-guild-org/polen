@@ -1,0 +1,237 @@
+name: examples-preview
+
+on:
+  workflow_call:
+    inputs:
+      action:
+        description: "The PR action (opened, synchronize, reopened, closed)"
+        required: true
+        type: string
+      pr-number:
+        description: "Pull request number"
+        required: true
+        type: number
+      head-ref:
+        description: "Head branch reference"
+        required: false
+        type: string
+      head-sha:
+        description: "Head commit SHA"
+        required: false
+        type: string
+
+concurrency:
+  group: pr-preview-${{ inputs.pr-number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    if: inputs.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
+      - name: Re-install to link workspace packages
+        run: pnpm install
+
+      - name: Build demos landing page
+        run: node ./scripts/build-demos-index.ts --basePath "/polen/pr-${{ inputs.pr-number }}/" --prNumber "${{ inputs.pr-number }}" --currentSha "${{ inputs.head-sha }}"
+
+      - name: Build demos
+        run: |
+          # Build Pokemon demo for latest
+          pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/latest/pokemon/"
+
+          # Create directory for latest build
+          mkdir -p dist-preview-latest
+          cp -r examples/pokemon/build dist-preview-latest/pokemon
+
+          # Build Pokemon demo for commit-specific path
+          pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/"
+
+          # Create directory for commit-specific build
+          mkdir -p dist-preview-commit
+          cp -r examples/pokemon/build dist-preview-commit/pokemon
+
+          # GitHub demo disabled - schema too large for efficient SSG
+          # pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/latest/github/"
+
+      - name: Prepare PR preview for deployment
+        run: |
+          # Create deployment directory structure
+          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/latest
+          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}
+
+          # Copy landing page to PR root
+          cp dist-demos/index.html gh-pages-deploy/pr-${{ inputs.pr-number }}/index.html
+
+          # Copy latest build
+          cp -r dist-preview-latest/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
+
+          # Copy commit-specific build
+          cp -r dist-preview-commit/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
+
+          # Add PR-specific metadata to both deployments
+          echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
+          echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
+          echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
+
+          echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
+          echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
+          echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
+
+          # Get all PR deployments from gh-pages branch
+          PR_DEPLOYMENTS="[]"
+
+          # Fetch gh-pages to check existing PRs
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
+
+          # Get all PR directories from gh-pages
+          PR_DIRS=$(git ls-tree -d --name-only origin/gh-pages | grep '^pr-' | sort -V || echo "")
+
+          if [ -n "$PR_DIRS" ]; then
+            PR_LIST=""
+            for dir in $PR_DIRS; do
+              PR_NUM=$(echo "$dir" | sed 's/pr-//')
+              if [ -n "$PR_LIST" ]; then PR_LIST="$PR_LIST,"; fi
+              PR_LIST="$PR_LIST{\"number\":\"$PR_NUM\"}"
+            done
+            PR_DEPLOYMENTS="[$PR_LIST]"
+          fi
+
+          # Build PR index page using CLI
+          node ./scripts/build-demos-index.ts --mode pr-index --prDeployments "$PR_DEPLOYMENTS"
+
+          # Copy the generated PR index to deployment directory
+          cp dist-demos/pr-index.html gh-pages-deploy/pr-index.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages-deploy
+          destination_dir: .
+          keep_files: true # Keep existing PR previews
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_message: "Demos preview deployed for #${{ inputs.pr-number }}"
+
+      - name: Get previous deployments for this PR
+        id: get-prev-pr-deployments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = '${{ inputs.pr-number }}';
+            const currentSha = '${{ inputs.head-sha }}';
+            const repoOwner = context.repo.owner;
+            const repoName = context.repo.repo;
+
+            try {
+              // Get the gh-pages branch tree
+              const { data: tree } = await github.rest.git.getTree({
+                owner: repoOwner,
+                repo: repoName,
+                tree_sha: 'gh-pages',
+                recursive: false
+              });
+
+              // Find the PR directory
+              const prDir = tree.tree.find(item => item.path === `pr-${prNumber}`);
+              if (!prDir || prDir.type !== 'tree') {
+                core.setOutput('deployment_links', '(none)');
+                return;
+              }
+
+              // Get contents of PR directory
+              const { data: prTree } = await github.rest.git.getTree({
+                owner: repoOwner,
+                repo: repoName,
+                tree_sha: prDir.sha,
+                recursive: false
+              });
+
+              // Filter for commit SHA directories (excluding current)
+              const commitDirs = prTree.tree
+                .filter(item =>
+                  item.type === 'tree' &&
+                  /^[0-9a-f]{7,40}$/.test(item.path) &&
+                  item.path !== currentSha
+                )
+                .map(item => item.path)
+                .sort()
+                .reverse();
+
+              if (commitDirs.length === 0) {
+                core.setOutput('deployment_links', '(none)');
+                return;
+              }
+
+              // Format as markdown links
+              const links = commitDirs.map(sha => {
+                const shortSha = sha.substring(0, 7);
+                return `[\`${shortSha}\`](https://${repoOwner}.github.io/${repoName}/pr-${prNumber}/${sha}/pokemon/)`;
+              });
+
+              core.setOutput('deployment_links', links.join(' / '));
+            } catch (error) {
+              console.log('Error fetching previous deployments:', error.message);
+              core.setOutput('deployment_links', '(none)');
+            }
+
+      - name: Get short SHA
+        id: short-sha
+        run: echo "sha=$(echo '${{ inputs.head-sha }}' | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ inputs.pr-number }}
+          comment-tag: demos-preview
+          body: |
+            ## Demos Preview Deployed
+
+            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
+
+            #### Pokemon
+            - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) – [`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/)
+            - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
+
+  cleanup:
+    if: inputs.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove PR preview
+        run: |
+          if [ -d "pr-${{ inputs.pr-number }}" ]; then
+            git rm -rf "pr-${{ inputs.pr-number }}"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "Remove PR #${{ inputs.pr-number }} preview"
+            git push
+          fi
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ inputs.pr-number }}
+          comment-tag: demos-preview
+          body: |
+            🧹 Preview deployment for PR #${{ inputs.pr-number }} has been cleaned up.

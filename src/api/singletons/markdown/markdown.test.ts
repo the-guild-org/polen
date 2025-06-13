@@ -12,7 +12,7 @@ console.log(x)
 \`\`\`
 `
     const result = await parse(markdown)
-    
+
     expect(result).toContain(`<h1>Hello</h1>`)
     expect(result).toContain(`<pre`)
     expect(result).toContain(`shiki`)
@@ -32,7 +32,7 @@ type Query {
 \`\`\`
 `
     const result = await parse(markdown)
-    
+
     expect(result).toContain(`type`)
     expect(result).toContain(`Query`)
     // Check that both ID and ! are present (they may be in separate spans)
@@ -43,7 +43,7 @@ type Query {
   test(`parse handles inline code`, async () => {
     const markdown = `This is \`inline code\` in a sentence.`
     const result = await parse(markdown)
-    
+
     expect(result).toContain(`<code>inline code</code>`)
   })
 
@@ -57,7 +57,7 @@ type Query {
 - [ ] Task 2
 `
     const result = await parse(markdown)
-    
+
     expect(result).toContain(`<table>`)
     expect(result).toContain(`<input`)
     expect(result).toContain(`checked`)
@@ -70,7 +70,7 @@ plain text without language
 \`\`\`
 `
     const result = await parse(markdown)
-    
+
     expect(result).toContain(`<pre`)
     expect(result).toContain(`plain text without language`)
   })
@@ -82,7 +82,7 @@ const theme = "light"
 \`\`\`
 `
     const result = await parse(markdown)
-    
+
     expect(result).toContain(`--shiki-light`)
     expect(result).toContain(`--shiki-dark`)
   })

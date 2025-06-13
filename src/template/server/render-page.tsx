@@ -6,6 +6,7 @@ import { Arr } from '@wollybeard/kit'
 import { StrictMode } from 'react'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
+import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
 import { injectManifestIntoHtml } from './manifest.ts'
 import { view } from './view.ts'
@@ -29,7 +30,7 @@ export const renderPage = (
   }
 
   if (__BUILDING__) {
-    html = injectManifestIntoHtml(html, viteClientAssetManifest)
+    html = injectManifestIntoHtml(html, viteClientAssetManifest, PROJECT_DATA.basePath)
   }
 
   // todo: what is this?
