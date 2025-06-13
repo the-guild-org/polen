@@ -9,6 +9,7 @@ export const toViteUserConfig = (
   config: Config,
 ): ViteUserConfigWithPolen => {
   const viteUserConfigFromPolen: Vite.UserConfig = {
+    base: config.build.base,
     plugins: [Main(config)],
   }
 

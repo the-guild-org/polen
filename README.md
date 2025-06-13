@@ -301,6 +301,32 @@ Deploy the contents of the `./build` directory on your favourite static site pro
 
 In the future Polen will have features that motivate using a server, but for now there is no particular benefit. Use `SSG` instead.
 
+#### Base Path Configuration
+
+Polen supports deploying to subdirectories through the `build.base` configuration option. This is useful for:
+
+- GitHub Pages project sites (e.g., `/my-project/`)
+- PR preview deployments (e.g., `/pr-123/`)
+- Hosting multiple Polen sites on one domain
+
+```ts
+// polen.config.ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  build: {
+    base: '/my-project/', // Must start and end with /
+  },
+})
+```
+
+When configured, Polen will output differently:
+
+- For SSG architecture:
+  - Generate static files that work in the subdirectory
+- For SSR architecture:
+  - A server that serrves static assets from the correct path
+
 ### Package
 
 #### ESM

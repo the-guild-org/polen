@@ -27,17 +27,26 @@ jobs:
       - name: Re-install to link workspace packages
         run: pnpm install
 
+      - name: Build demos landing page
+        run: node ./scripts/build-demos-index.mjs
+
       - name: Build demos
         run: |
-          NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/demos build
+          # For now, build without base path
+          # TODO: Once Polen supports --config flag or env vars for base path,
+          # update this to use base path: /polen/pr-${{ github.event.pull_request.number }}/pokemon/
           NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build
+          
+          # Note: PR preview will have broken assets until we can configure base path dynamically
+          # This is tracked in issue #91
+          
           # GitHub demo disabled - schema too large for efficient SSG
           # NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build
 
       - name: Prepare preview directory
         run: |
           mkdir -p dist-preview
-          cp -r examples/demos/build/* dist-preview/
+          cp -r dist-demos/* dist-preview/
           cp -r examples/pokemon/build dist-preview/pokemon
           # cp -r examples/github/build dist-preview/github
 
@@ -50,10 +59,10 @@ jobs:
         run: |
           # Create deployment directory structure
           mkdir -p gh-pages-deploy/pr-${{ github.event.pull_request.number }}
-          
+
           # Copy PR preview files
           cp -r dist-preview/* gh-pages-deploy/pr-${{ github.event.pull_request.number }}/
-          
+
           # Create a simple PR index page
           cat > gh-pages-deploy/pr-index.html << 'EOF'
           <!DOCTYPE html>
@@ -149,7 +158,7 @@ jobs:
       #     user_name: 'github-actions[bot]'
       #     user_email: 'github-actions[bot]@users.noreply.github.com'
       #     commit_message: 'Deploy PR #${{ github.event.pull_request.number }} preview'
-      
+
       # Manual approach until peaceiris/actions-gh-pages is allowed
       - name: Checkout gh-pages branch
         uses: actions/checkout@v4
@@ -187,7 +196,6 @@ jobs:
             ### Direct links:
             - [Demos Landing Page](${previewUrl})
             - [Pokemon Demo](${previewUrl}pokemon/)
-            - [GitHub Demo](${previewUrl}github/)
 
             This preview will be updated automatically when you push new commits.`;
 

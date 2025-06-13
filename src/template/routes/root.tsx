@@ -1,4 +1,5 @@
 import type { ReactRouter } from '#dep/react-router/index'
+import { assetUrl, faviconUrl } from '#lib/asset-url/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import { Box, Button, Grid, Heading, Text } from '@radix-ui/themes'
@@ -40,12 +41,12 @@ export const Component = () => {
         {import.meta.env.DEV && <link rel='stylesheet' href={radixStylesUrl} />}
         <link
           rel='icon'
-          href={PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`}
+          href={faviconUrl(PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`, PROJECT_DATA.basePath)}
           sizes='256 x 256'
         />
         <link
           rel='icon'
-          href={PROJECT_DATA.faviconPath + `?v=1`}
+          href={faviconUrl(PROJECT_DATA.faviconPath + `?v=1`, PROJECT_DATA.basePath)}
           sizes='any'
           type='image/svg+xml'
         />

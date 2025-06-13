@@ -2,7 +2,7 @@ import { createId, markNoPlugins, normalizeId } from './id.ts'
 
 export interface Options {
   /**
-   * @defaultValue '/'
+   * @default '/'
    */
   separator?: string
   /**
@@ -10,7 +10,7 @@ export interface Options {
 
    * @see https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention
 
-   * @defaultValue false
+   * @default false
    */
   allowPluginProcessing?: boolean
 }

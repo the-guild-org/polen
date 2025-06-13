@@ -9,8 +9,11 @@ $.verbose = true
 console.log('🔨 Building Polen...')
 await $`pnpm build`
 
+console.log('🔗 Re-installing to link workspace packages...')
+await $`pnpm install`
+
 console.log('🏠 Building demos landing page...')
-await $`NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/demos build`
+await $`node ./scripts/build-demos-index.mjs`
 
 console.log('⚡ Building Pokemon demo...')
 await $`NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build`
@@ -19,12 +22,9 @@ await $`NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon bui
 // console.log('🐙 Building GitHub demo...')
 // await $`NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build`
 
-console.log('📁 Creating demo distribution...')
-await $`mkdir --parents dist-demos`
-
 // Copy built demos
 console.log('📋 Copying demo builds...')
-await $`cp --recursive examples/demos/build/* dist-demos/`
+// dist-demos already created by build-demos-index.mjs
 await $`cp --recursive examples/pokemon/build dist-demos/pokemon`
 // await $`cp --recursive examples/github/build dist-demos/github`
 

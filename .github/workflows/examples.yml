@@ -32,8 +32,8 @@ jobs:
       - name: Re-install to link workspace packages
         run: pnpm install
 
-      - name: Build demos site
-        run: NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/demos build
+      - name: Build demos landing page
+        run: node ./scripts/build-demos-index.mjs
 
       - name: Build Pokemon demo
         run: NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build
@@ -44,8 +44,7 @@ jobs:
 
       - name: Organize demo builds
         run: |
-          mkdir -p ./dist-demos
-          cp -r ./examples/demos/build/* ./dist-demos/
+          # dist-demos already created by build-demos-index.mjs
           cp -r ./examples/pokemon/build ./dist-demos/pokemon
           # cp -r ./examples/github/build ./dist-demos/github
 

@@ -1,25 +1,28 @@
 import type { Vite } from '#dep/vite/index'
+import { assetUrl } from '#lib/asset-url/index'
 import { Group, Str } from '@wollybeard/kit'
 
 export const injectManifestIntoHtml = (
   html: string,
   manifest: Vite.Manifest,
+  basePath: string,
 ): string => {
-  const assets = getRelevantAsssetsFromManifest(manifest)
+  const assets = getRelevantAsssetsFromManifest(manifest, basePath)
   return injectAssetsIntoHtml(html, assets)
 }
 
 const getRelevantAsssetsFromManifest = (
   manifest: Vite.Manifest,
+  basePath: string,
 ): HttpAssetGroupSet => {
   const htmlAssets: HttpAsset[] = []
 
   for (const manifestChunk of Object.values(manifest)) {
     if (manifestChunk.isEntry) {
-      htmlAssets.push({ type: `js`, path: `/${manifestChunk.file}` })
+      htmlAssets.push({ type: `js`, path: assetUrl(manifestChunk.file, basePath) })
     }
     for (const cssItem of manifestChunk.css ?? []) {
-      htmlAssets.push({ type: `css`, path: `/${cssItem}` })
+      htmlAssets.push({ type: `css`, path: assetUrl(cssItem, basePath) })
     }
   }
 

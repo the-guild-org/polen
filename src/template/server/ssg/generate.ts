@@ -8,7 +8,22 @@ import { getRoutesPaths } from './get-route-paths.ts'
 
 export const generate = async (view: ReactRouter.StaticHandler) => {
   const handler: Hono.Handler = async (ctx) => {
-    const staticHandlerContext = await view.query(ctx.req.raw)
+    // For SSG, we need to create a request with the base path prepended
+    // so React Router can match it correctly
+    const url = new URL(ctx.req.raw.url)
+    const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
+    
+    // Create a new request with the base path prepended to the pathname
+    const modifiedRequest = new Request(
+      `${url.protocol}//${url.host}${basePath}${url.pathname}${url.search}`,
+      {
+        method: ctx.req.raw.method,
+        headers: ctx.req.raw.headers,
+        body: ctx.req.raw.body,
+      }
+    )
+
+    const staticHandlerContext = await view.query(modifiedRequest)
     if (staticHandlerContext instanceof Response) {
       return staticHandlerContext
     }
@@ -30,9 +45,32 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
     const batchPaths = routePaths.slice(i, i + BATCH_SIZE)
     const batchApp = new Hono.Hono()
 
+    // Create a custom handler for batch processing that includes base path handling
+    const batchHandler: Hono.Handler = async (ctx) => {
+      // For SSG, we need to create a request with the base path prepended
+      const url = new URL(ctx.req.raw.url)
+      const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
+      
+      // Create a new request with the base path prepended to the pathname
+      const modifiedRequest = new Request(
+        `${url.protocol}//${url.host}${basePath}${url.pathname}${url.search}`,
+        {
+          method: ctx.req.raw.method,
+          headers: ctx.req.raw.headers,
+          body: ctx.req.raw.body,
+        }
+      )
+
+      const staticHandlerContext = await view.query(modifiedRequest)
+      if (staticHandlerContext instanceof Response) {
+        return staticHandlerContext
+      }
+      return renderPage(staticHandlerContext)
+    }
+
     // Register only the routes for this batch
     for (const routePath of batchPaths) {
-      batchApp.get(routePath, handler)
+      batchApp.get(routePath, batchHandler)
     }
 
     console.log(

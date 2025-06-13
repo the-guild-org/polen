@@ -274,12 +274,6 @@ importers:
         specifier: ^3.25.56
         version: 3.25.56
 
-  examples/demos:
-    dependencies:
-      polen:
-        specifier: link:../..
-        version: link:../..
-
   examples/github:
     dependencies:
       polen:
