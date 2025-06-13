@@ -122,7 +122,7 @@ jobs:
           commit_message: "Demos preview deployed for #${{ inputs.pr-number }}"
 
       - name: Get previous deployments for this PR
-        id: get-pr-deployments
+        id: get-prev-pr-deployments
         run: |
           # Fetch gh-pages branch to check existing deployments
           git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
@@ -136,24 +136,20 @@ jobs:
           fi
 
           # Format as markdown links
-          DEPLOYMENT_LINKS=""
+          PREV_DEPLOYMENT_LINKS=""
           if [ -n "$COMMIT_DIRS" ]; then
             for commit in $COMMIT_DIRS; do
               # Skip current commit since it's already shown as latest
               if [ "$commit" != "${{ inputs.head-sha }}" ]; then
                 SHORT_SHA=$(echo "$commit" | cut -c1-7)
-                DEPLOYMENT_LINKS="${DEPLOYMENT_LINKS}- [\`${SHORT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${commit}/)\n"
+                PREV_DEPLOYMENT_LINKS="${PREV_DEPLOYMENT_LINKS}- [\`${SHORT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${commit}/)"
               fi
             done
           fi
 
-          # Add current deployment at the top
-          CURRENT_SHA=$(echo "${{ inputs.head-sha }}" | cut -c1-7)
-          DEPLOYMENT_LINKS="- [\`${CURRENT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${{ inputs.head-sha }}/) _(current)_\n${DEPLOYMENT_LINKS}"
-
           # Save to output
           echo "deployment_links<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$DEPLOYMENT_LINKS" >> $GITHUB_OUTPUT
+          echo -e "$PREV_DEPLOYMENT_LINKS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Comment on PR
@@ -164,23 +160,12 @@ jobs:
           body: |
             ## Demos Preview Deployed
 
-            **Landing Page:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
+            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
 
-            #### Direct Links
+            #### Pokemon
 
-            - [Pokemon (Latest)](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/)
-
-            <details>
-            <summary>Previous deployments</summary>
-
-            ${{ steps.get-pr-deployments.outputs.deployment_links }}
-
-            </details>
-
-            #### Notes
-
-            - This preview will be updated automatically when you push new commits.
-            - Each commit is preserved at its own URL for permanent reference.
+            - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) ([`${{ inputs.head-sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/))
+            - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
 
   cleanup:
     if: inputs.action == 'closed'
