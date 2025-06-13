@@ -1,4 +1,4 @@
-name: pr examples deploy
+name: examples preview
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 jobs:
-  examples-deploy:
+  deploy:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
@@ -201,7 +201,7 @@ jobs:
               });
             }
 
-  examples-cleanup:
+  cleanup:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
