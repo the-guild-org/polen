@@ -138,16 +138,37 @@ jobs:
 
           echo "</div></body></html>" >> gh-pages-deploy/pr-index.html
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      # TODO: Replace with peaceiris/actions-gh-pages@v4 once allowed
+      # - name: Deploy to GitHub Pages
+      #   uses: peaceiris/actions-gh-pages@v4
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./gh-pages-deploy
+      #     destination_dir: .
+      #     keep_files: true  # Keep existing PR previews
+      #     user_name: 'github-actions[bot]'
+      #     user_email: 'github-actions[bot]@users.noreply.github.com'
+      #     commit_message: 'Deploy PR #${{ github.event.pull_request.number }} preview'
+      
+      # Manual approach until peaceiris/actions-gh-pages is allowed
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./gh-pages-deploy
-          destination_dir: .
-          keep_files: true  # Keep existing PR previews
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'Deploy PR #${{ github.event.pull_request.number }} preview'
+          ref: gh-pages
+          path: gh-pages-branch
+
+      - name: Copy build to gh-pages
+        run: |
+          cp -r ./gh-pages-deploy/* gh-pages-branch/
+
+      - name: Commit and push
+        run: |
+          cd gh-pages-branch
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy PR #${{ github.event.pull_request.number }} preview" || echo "No changes to commit"
+          git push
 
       - name: Comment on PR
         uses: actions/github-script@v7
