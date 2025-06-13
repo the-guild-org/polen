@@ -1,4 +1,8 @@
 // @ts-check
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
+import { execNodeScript } from '../lib/exec-utils.js'
+
 /**
  * Update the demos index page in gh-pages
  *
@@ -13,9 +17,6 @@
  * @param {import('../lib/async-function').AsyncFunctionArguments} args
  */
 export default async ({ exec, core }) => {
-  const { promises: fs } = await import('fs')
-  const path = await import('path')
-  const { execNodeScript } = await import('../lib/exec-utils.js')
 
   const mode = process.env.MODE || 'trunk'
 

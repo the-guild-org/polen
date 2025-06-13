@@ -4,7 +4,7 @@
  * Used to build the PR index page
  */
 
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
 
 try {
   // Fetch gh-pages to check existing PRs

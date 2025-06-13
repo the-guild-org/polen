@@ -1,10 +1,10 @@
 // @ts-check
+import { promises as fs } from 'node:fs'
+
 /**
  * @param {import('../lib/async-function').AsyncFunctionArguments & { semver: typeof import('semver') }} args
  */
 export default async ({ core, exec, semver }) => {
-  // Import required modules
-  const { promises: fs } = await import('fs')
 
   // Configuration
   // Note: We no longer need KEEP_RECENT_COMMITS since we only deploy on releases
