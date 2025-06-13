@@ -1,4 +1,4 @@
-name: examples-preview
+name: demos-preview
 
 on:
   workflow_call:
@@ -83,6 +83,28 @@ jobs:
 
           # Copy commit-specific build
           cp -r dist-preview-commit/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
+          
+          # Create redirects for direct demo URLs
+          for example in pokemon; do
+            mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/$example
+            cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Redirecting...</title>
+            <meta http-equiv="refresh" content="0; url=/polen/pr-${{ inputs.pr-number }}/latest/$example/">
+            <script>window.location.replace("/polen/pr-${{ inputs.pr-number }}/latest/$example/");</script>
+          </head>
+          <body>
+            <p>Redirecting to <a href="/polen/pr-${{ inputs.pr-number }}/latest/$example/">/pr-${{ inputs.pr-number }}/latest/$example/</a>...</p>
+          </body>
+          </html>
+          EOF
+            # Fix the redirect template variables
+            sed -i "s/\${{ inputs.pr-number }}/${{ inputs.pr-number }}/g" gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html
+            sed -i "s/\$example/$example/g" gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html
+          done
 
           # Add PR-specific metadata to both deployments
           echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
@@ -209,28 +231,3 @@ jobs:
             - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) – [`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/)
             - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
 
-  cleanup:
-    if: inputs.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-
-      - name: Remove PR preview
-        run: |
-          if [ -d "pr-${{ inputs.pr-number }}" ]; then
-            git rm -rf "pr-${{ inputs.pr-number }}"
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "Remove pull request #${{ inputs.pr-number }}"
-            git push
-          fi
-
-      - name: Comment on PR
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ inputs.pr-number }}
-          comment-tag: demos-preview-cleanup
-          body: All demos preview deployments for this pull request (${{ inputs.pr-number }}) have been been cleaned up.

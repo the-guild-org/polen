@@ -12,8 +12,12 @@ permissions:
   id-token: write
 
 jobs:
-  deploy-examples:
-    uses: ./.github/workflows/_examples.yaml
+  deploy-demos:
+    uses: ./.github/workflows/_demos.yaml
+    
+  garbage-collect-demos:
+    needs: deploy-demos
+    uses: ./.github/workflows/_demos-garbage-collector.yaml
 
   # Check and release canary version
   # https://github.community/t/how-can-i-test-if-secrets-are-available-in-an-action/17911/10

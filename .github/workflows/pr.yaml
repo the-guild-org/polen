@@ -105,8 +105,8 @@ jobs:
       - name: Run examples tests
         run: pnpm test:examples
 
-  deploy-examples:
-    uses: ./.github/workflows/_examples-preview.yaml
+  deploy-demos:
+    uses: ./.github/workflows/_demos-preview.yaml
     with:
       action: ${{ github.event.action }}
       pr-number: ${{ github.event.pull_request.number }}
