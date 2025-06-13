@@ -4,7 +4,7 @@
  */
 export default async ({ core, exec, semver }) => {
   // Import required modules
-  const fs = require('fs').promises
+  const { promises: fs } = await import('fs')
 
   // Configuration
   // Note: We no longer need KEEP_RECENT_COMMITS since we only deploy on releases

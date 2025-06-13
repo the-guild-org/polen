@@ -13,8 +13,8 @@
  * @param {import('../lib/async-function').AsyncFunctionArguments} args
  */
 export default async ({ exec, core }) => {
-  const fs = require('fs').promises
-  const path = require('path')
+  const { promises: fs } = await import('fs')
+  const path = await import('path')
   const { execNodeScript } = await import('../lib/exec-utils.js')
 
   const mode = process.env.MODE || 'trunk'
