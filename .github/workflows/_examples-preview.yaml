@@ -138,19 +138,32 @@ jobs:
           # Format as markdown links
           PREV_DEPLOYMENT_LINKS=""
           if [ -n "$COMMIT_DIRS" ]; then
+            FIRST=true
             for commit in $COMMIT_DIRS; do
               # Skip current commit since it's already shown as latest
               if [ "$commit" != "${{ inputs.head-sha }}" ]; then
                 SHORT_SHA=$(echo "$commit" | cut -c1-7)
-                PREV_DEPLOYMENT_LINKS="${PREV_DEPLOYMENT_LINKS}- [\`${SHORT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${commit}/)"
+                if [ "$FIRST" = true ]; then
+                  FIRST=false
+                else
+                  PREV_DEPLOYMENT_LINKS="${PREV_DEPLOYMENT_LINKS} / "
+                fi
+                PREV_DEPLOYMENT_LINKS="${PREV_DEPLOYMENT_LINKS}[\`${SHORT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${commit}/pokemon/)"
               fi
             done
           fi
 
+          # If no previous deployments, set to "(none)"
+          if [ -z "$PREV_DEPLOYMENT_LINKS" ]; then
+            PREV_DEPLOYMENT_LINKS="(none)"
+          fi
+
           # Save to output
-          echo "deployment_links<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$PREV_DEPLOYMENT_LINKS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "deployment_links=$PREV_DEPLOYMENT_LINKS" >> $GITHUB_OUTPUT
+
+      - name: Get short SHA
+        id: short-sha
+        run: echo "sha=$(echo '${{ inputs.head-sha }}' | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Comment on PR
         uses: peter-evans/create-or-update-comment@v3
@@ -164,7 +177,7 @@ jobs:
 
             #### Pokemon
 
-            - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) ([`${{ inputs.head-sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/))
+            - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) ([`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/))
             - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
 
   cleanup:
