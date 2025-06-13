@@ -48,15 +48,15 @@ jobs:
         run: pnpm install
 
       - name: Build demos landing page
-        run: node ./scripts/build-demos-index.mjs "/polen/pr-${{ inputs.pr-number }}/"
+        run: pnpm molt build-demos-index "/polen/pr-${{ inputs.pr-number }}/" "${{ inputs.pr-number }}" "${{ inputs.head-sha }}"
 
       - name: Build demos
         run: |
-          # Build Pokemon demo with base path for PR preview
-          pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/pokemon/"
+          # Build Pokemon demo with base path for PR preview (latest)
+          pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/latest/pokemon/"
 
           # GitHub demo disabled - schema too large for efficient SSG
-          # pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/github/"
+          # pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/latest/github/"
 
       - name: Prepare preview directory
         run: |
@@ -73,10 +73,17 @@ jobs:
       - name: Prepare PR preview for deployment
         run: |
           # Create deployment directory structure
-          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}
+          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/latest
+          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}
 
-          # Copy PR preview files
-          cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/
+          # Copy landing page to PR root
+          cp dist-demos/index.html gh-pages-deploy/pr-${{ inputs.pr-number }}/index.html
+
+          # Copy demo files to both latest and commit-specific directories
+          # Remove the landing page from the preview directory before copying
+          rm -f dist-preview/index.html
+          cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
+          cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
 
           # Create a simple PR index page
           cat > gh-pages-deploy/pr-index.html << 'EOF'
@@ -173,6 +180,41 @@ jobs:
           user_email: "github-actions[bot]@users.noreply.github.com"
           commit_message: "Examples deployed for #${{ inputs.pr-number }}"
 
+      - name: Get previous deployments for this PR
+        id: get-pr-deployments
+        run: |
+          # Fetch gh-pages branch to check existing deployments
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
+          
+          # Get list of commit deployments for this PR
+          PR_DIR="pr-${{ inputs.pr-number }}"
+          COMMIT_DIRS=""
+          
+          if git ls-tree -d --name-only "origin/gh-pages:$PR_DIR" 2>/dev/null | grep -E '^[0-9a-f]{7,40}$' > /dev/null; then
+            COMMIT_DIRS=$(git ls-tree -d --name-only "origin/gh-pages:$PR_DIR" 2>/dev/null | grep -E '^[0-9a-f]{7,40}$' | sort -r || echo "")
+          fi
+          
+          # Format as markdown links
+          DEPLOYMENT_LINKS=""
+          if [ -n "$COMMIT_DIRS" ]; then
+            for commit in $COMMIT_DIRS; do
+              # Skip current commit since it's already shown as latest
+              if [ "$commit" != "${{ inputs.head-sha }}" ]; then
+                SHORT_SHA=$(echo "$commit" | cut -c1-7)
+                DEPLOYMENT_LINKS="${DEPLOYMENT_LINKS}- [\`${SHORT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${commit}/)\n"
+              fi
+            done
+          fi
+          
+          # Add current deployment at the top
+          CURRENT_SHA=$(echo "${{ inputs.head-sha }}" | cut -c1-7)
+          DEPLOYMENT_LINKS="- [\`${CURRENT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${{ inputs.head-sha }}/) _(current)_\n${DEPLOYMENT_LINKS}"
+          
+          # Save to output
+          echo "deployment_links<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$DEPLOYMENT_LINKS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Comment on PR
         uses: peter-evans/create-or-update-comment@v3
         with:
@@ -180,15 +222,23 @@ jobs:
           body: |
             ## Demos Preview Deployed
 
-            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
+            **Landing Page:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
 
-            #### Demos
+            #### Direct Links
 
-            - [Pokemon](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/pokemon/)
+            - [Pokemon (Latest)](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/)
+
+            <details>
+            <summary>Previous deployments</summary>
+            
+            ${{ steps.get-pr-deployments.outputs.deployment_links }}
+            
+            </details>
 
             #### Notes
 
             - This preview will be updated automatically when you push new commits.
+            - Each commit is preserved at its own URL for permanent reference.
           comment-tag: polen-preview
 
   cleanup:

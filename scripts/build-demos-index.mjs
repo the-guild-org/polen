@@ -2,12 +2,42 @@
 
 import fs from 'fs'
 import path from 'path'
+import { execSync } from 'child_process'
 
-// Get base path from command line argument or default to /
+// Get command line arguments
 const basePath = process.argv[2] || '/'
+const prNumber = process.argv[3] || ''
+const currentSha = process.argv[4] || ''
 const basePathWithoutTrailingSlash = basePath.endsWith('/') && basePath !== '/'
   ? basePath.slice(0, -1)
   : basePath
+
+// Function to get previous deployments
+const getPreviousDeployments = () => {
+  if (!prNumber) return []
+  
+  try {
+    // Fetch gh-pages branch
+    execSync('git fetch origin gh-pages:refs/remotes/origin/gh-pages', { stdio: 'ignore' })
+    
+    // Get list of commit directories
+    const prDir = `pr-${prNumber}`
+    const result = execSync(`git ls-tree -d --name-only "origin/gh-pages:${prDir}" 2>/dev/null || echo ""`, { encoding: 'utf-8' })
+    
+    const commits = result
+      .split('\n')
+      .filter(line => line && /^[0-9a-f]{7,40}$/.test(line))
+      .filter(sha => sha !== currentSha) // Exclude current deployment
+      .sort()
+      .reverse()
+    
+    return commits
+  } catch (e) {
+    return []
+  }
+}
+
+const previousDeployments = getPreviousDeployments()
 
 const indexHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -111,6 +141,46 @@ const indexHtml = `<!DOCTYPE html>
       height: 16px;
     }
     
+    .demo-links {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .previous-deployments {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .previous-deployments h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .commit-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .commit-link {
+      padding: 0.25rem 0.5rem;
+      border: 1px solid #000;
+      text-decoration: none;
+      color: #000;
+      font-family: monospace;
+      transition: all 0.2s ease;
+    }
+    
+    .commit-link:hover {
+      background: #000;
+      color: #fff;
+    }
+    
     .footer {
       text-align: center;
       padding: 3rem 0;
@@ -151,12 +221,24 @@ const indexHtml = `<!DOCTYPE html>
       <div class="demo-card">
         <h2>Pokemon API</h2>
         <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
-        <a href="${basePathWithoutTrailingSlash}/pokemon/" class="demo-link">
-          View Demo
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </a>
+        <div class="demo-links">
+          <a href="${basePathWithoutTrailingSlash}/latest/pokemon/" class="demo-link">
+            View Latest
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </a>
+          ${previousDeployments.length > 0 ? `
+          <div class="previous-deployments">
+            <h3>Previous Deployments</h3>
+            <div class="commit-links">
+              ${previousDeployments.map(sha => `
+                <a href="${basePathWithoutTrailingSlash}/${sha}/pokemon/" class="commit-link">${sha.substring(0, 7)}</a>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+        </div>
       </div>
       
       <div class="demo-card disabled">
