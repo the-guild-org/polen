@@ -199,7 +199,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr-number }}
-          comment-tag: polen-preview
+          comment-tag: demos-preview
           body: |
             ## Demos Preview Deployed
 
@@ -232,6 +232,6 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr-number }}
-          comment-tag: polen-preview
+          comment-tag: demos-preview
           body: |
             🧹 Preview deployment for PR #${{ inputs.pr-number }} has been cleaned up.
