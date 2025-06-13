@@ -386,7 +386,7 @@ const indexHtml = `<!DOCTYPE html>
         <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
         <div class="demo-links">
           <a href="latest/pokemon/" class="demo-link">
-            View Latest
+            View Latest${!prNumber && parsedTrunkDeployments && parsedTrunkDeployments.latest ? ` (${parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha})` : ''}
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
@@ -395,11 +395,9 @@ const indexHtml = `<!DOCTYPE html>
   // For trunk deployments (no prNumber), use parsedTrunkDeployments if available
   !prNumber && parsedTrunkDeployments && parsedTrunkDeployments.latest
     ? `<div class="current-deployment">
-            <span>Current: </span>${
-      parsedTrunkDeployments.latest.tag
-        ? `${parsedTrunkDeployments.latest.tag} (<a href="${parsedTrunkDeployments.latest.sha}/pokemon/" class="commit-link">${parsedTrunkDeployments.latest.shortSha}</a>)`
-        : `<a href="${parsedTrunkDeployments.latest.sha}/pokemon/" class="commit-link">${parsedTrunkDeployments.latest.shortSha}</a>`
-    }
+            <span>Current: </span><a href="${parsedTrunkDeployments.latest.sha}/pokemon/" class="commit-link">${
+      parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha
+    }</a>
           </div>`
     : currentSha
     ? `<div class="current-deployment">
@@ -417,9 +415,8 @@ const indexHtml = `<!DOCTYPE html>
       ? `<div class="commit-links">
               ${
         parsedTrunkDeployments.previous.map(deployment => {
-          const label = deployment.tag
-            ? `${deployment.tag} (${deployment.shortSha})`
-            : deployment.shortSha
+          // For semver deployments, tag and sha are the same, so just show once
+          const label = deployment.tag || deployment.shortSha
           return `<a href="${deployment.sha}/pokemon/" class="commit-link">${label}</a>`
         }).join('')
       }
