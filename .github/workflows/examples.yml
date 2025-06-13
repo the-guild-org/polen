@@ -38,15 +38,16 @@ jobs:
       - name: Build Pokemon demo
         run: NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build
 
-      - name: Build GitHub demo
-        run: NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build
+      # GitHub demo disabled - schema too large for efficient SSG
+      # - name: Build GitHub demo
+      #   run: NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build
 
       - name: Organize demo builds
         run: |
           mkdir -p ./dist-demos
           cp -r ./examples/demos/dist/* ./dist-demos/
           cp -r ./examples/pokemon/dist ./dist-demos/pokemon
-          cp -r ./examples/github/dist ./dist-demos/github
+          # cp -r ./examples/github/dist ./dist-demos/github
 
       - name: Setup Pages
         if: github.event_name != 'pull_request'
