@@ -26,7 +26,6 @@ jobs:
       run-integration-tests: true
       run-examples-tests: true
 
-  # Deploy PR preview
   deploy-examples:
     uses: ./.github/workflows/_examples-preview.yaml
     with:

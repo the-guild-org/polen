@@ -24,11 +24,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: polen-build
-          path: |
-            build/
-            package.json
-            pnpm-lock.yaml
-            pnpm-workspace.yaml
+          path: build/
 
   build-examples:
     needs: build-polen
@@ -89,3 +85,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist-demos
+

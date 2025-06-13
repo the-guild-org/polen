@@ -4,21 +4,25 @@ on:
   workflow_call:
     inputs:
       action:
-        description: 'The PR action (opened, synchronize, reopened, closed)'
+        description: "The PR action (opened, synchronize, reopened, closed)"
         required: true
         type: string
       pr-number:
-        description: 'Pull request number'
+        description: "Pull request number"
         required: true
         type: number
       head-ref:
-        description: 'Head branch reference'
+        description: "Head branch reference"
         required: false
         type: string
       head-sha:
-        description: 'Head commit SHA'
+        description: "Head commit SHA"
         required: false
         type: string
+
+concurrency:
+  group: pr-preview-${{ inputs.pr-number }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -40,9 +44,6 @@ jobs:
       - name: Build Polen
         run: pnpm build
 
-      - name: Re-install to link workspace packages
-        run: pnpm install
-
       - name: Build demos landing page
         run: node ./scripts/build-demos-index.mjs
 
@@ -50,7 +51,7 @@ jobs:
         run: |
           # Build Pokemon demo with base path for PR preview
           NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/pokemon/"
-          
+
           # GitHub demo disabled - schema too large for efficient SSG
           # NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/github/"
 
@@ -164,118 +165,50 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh-pages-deploy
           destination_dir: .
-          keep_files: true  # Keep existing PR previews
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'Deploy PR #${{ inputs.pr-number }} preview'
+          keep_files: true # Keep existing PR previews
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_message: "Deploy PR #${{ inputs.pr-number }} preview"
 
-      # TODO: Replace with peter-evans/create-or-update-comment@v3 once approved
-      # - uses: peter-evans/create-or-update-comment@v3
-      #   with:
-      #     issue-number: ${{ inputs.pr-number }}
-      #     body: |
-      #       ## Preview Deployed
-      #       Your Polen demo preview is ready!
-      #       
-      #       **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
-      #       
-      #       ### Direct links:
-      #       - [Demos Landing Page](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/)
-      #       - [Pokemon Demo](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/pokemon/)
-      #       
-      #       This preview will be updated automatically when you push new commits.
-      #     comment-tag: polen-preview
-      
       - name: Comment on PR
-        uses: actions/github-script@v7
+        uses: peter-evans/create-or-update-comment@v3
         with:
-          script: |
-            const prNumber = ${{ inputs.pr-number }};
-            const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}`;
-            const previewUrl = `${baseUrl}/pr-${prNumber}/`;
-
-            const comment = `## Preview Deployed
-
+          issue-number: ${{ inputs.pr-number }}
+          body: |
+            ## Preview Deployed
             Your Polen demo preview is ready!
-
-            **Preview URL:** ${previewUrl}
-
+            
+            **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
+            
             ### Direct links:
-            - [Demos Landing Page](${previewUrl})
-            - [Pokemon Demo](${previewUrl}pokemon/)
-
-            This preview will be updated automatically when you push new commits.`;
-
-            // Find existing comment
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-            });
-
-            const botComment = comments.find(comment =>
-              comment.user.type === 'Bot' &&
-              comment.body.includes('Preview Deployed')
-            );
-
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: comment,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                body: comment,
-              });
-            }
+            - [Demos Landing Page](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/)
+            - [Pokemon Demo](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/pokemon/)
+            
+            This preview will be updated automatically when you push new commits.
+          comment-tag: polen-preview
 
   cleanup:
     if: inputs.action == 'closed'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout gh-pages branch
         uses: actions/checkout@v4
-
-      - name: Prepare cleanup
-        run: |
-          # Create empty directory to trigger removal
-          mkdir -p cleanup-dir
-          
-          # Create marker file to indicate this is a cleanup operation
-          echo "Cleaning up PR #${{ inputs.pr-number }}" > cleanup-dir/.cleanup
+        with:
+          ref: gh-pages
 
       - name: Remove PR preview
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./cleanup-dir
-          destination_dir: pr-${{ inputs.pr-number }}
-          keep_files: false  # This will remove the PR directory
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'Remove PR #${{ inputs.pr-number }} preview'
+        run: |
+          if [ -d "pr-${{ inputs.pr-number }}" ]; then
+            git rm -rf "pr-${{ inputs.pr-number }}"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "Remove PR #${{ inputs.pr-number }} preview"
+            git push
+          fi
 
-      # TODO: Replace with peter-evans/create-or-update-comment@v3 once approved
-      # - uses: peter-evans/create-or-update-comment@v3
-      #   with:
-      #     issue-number: ${{ inputs.pr-number }}
-      #     body: |
-      #       🧹 Preview deployment for PR #${{ inputs.pr-number }} has been cleaned up.
-      
       - name: Comment on PR
-        uses: actions/github-script@v7
+        uses: peter-evans/create-or-update-comment@v3
         with:
-          script: |
-            const prNumber = ${{ inputs.pr-number }};
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: `🧹 Preview deployment for PR #${prNumber} has been cleaned up.`,
-            });
+          issue-number: ${{ inputs.pr-number }}
+          body: |
+            🧹 Preview deployment for PR #${{ inputs.pr-number }} has been cleaned up.
