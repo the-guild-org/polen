@@ -1,7 +1,7 @@
 import type { ReactRouter } from '#dep/react-router/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
-import { Box, Button, Heading, Text } from '@radix-ui/themes'
+import { Box, Button, Grid, Heading, Text } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Arr } from '@wollybeard/kit'
@@ -75,53 +75,65 @@ const Layout = () => {
 
   const currentNavPathExp = getCurrentNavPathExp()
   const sidebar = currentNavPathExp && projectDataPages.sidebarIndex[currentNavPathExp]
-  const showSidebar = sidebar && sidebar.items.length > 0
+  const isShowSidebar = sidebar && sidebar.items.length > 0
+
+  const header = (
+    <Flex
+      gridArea={'header'}
+      align='center'
+      gap='8'
+      pb='4'
+      mb='8'
+      style={{
+        borderBottom: `1px solid var(--gray-3)`,
+      }}
+    >
+      <LinkReactRouter
+        to='/'
+        style={{ color: `inherit`, textDecoration: `none` }}
+      >
+        <Flex align='center' gap='2'>
+          <GitHubLogoIcon style={{ width: 30, height: 30 }} />
+          <Text size='3' weight='medium'>
+            {templateVariables.title}
+          </Text>
+        </Flex>
+      </LinkReactRouter>
+      <Flex direction='row' gap='4'>
+        {projectDataNavbar.map((item, key) => (
+          <Link key={key} color='gray' to={item.pathExp}>
+            {item.title}
+          </Link>
+        ))}
+      </Flex>
+    </Flex>
+  )
+
   return (
     <Theme asChild>
-      <Box m='8'>
-        <Flex
-          align='center'
-          gap='8'
-          pb='4'
-          mb='8'
-          style={{
-            borderBottom: `1px solid var(--gray-3)`,
-          }}
-        >
-          <LinkReactRouter
-            to='/'
-            style={{ color: `inherit`, textDecoration: `none` }}
-          >
-            <Flex align='center' gap='2'>
-              <GitHubLogoIcon style={{ width: 30, height: 30 }} />
-              <Text size='3' weight='medium'>
-                {templateVariables.title}
-              </Text>
-            </Flex>
-          </LinkReactRouter>
-          <Flex direction='row' gap='4'>
-            {projectDataNavbar.map((item, key) => (
-              <Link key={key} color='gray' to={item.pathExp}>
-                {item.title}
-              </Link>
-            ))}
-          </Flex>
-        </Flex>
-        {showSidebar
-          ? (
-            <Flex gap='8'>
-              <Sidebar items={sidebar.items} />
-              <Box style={{ flex: 1 }}>
-                <Outlet />
-              </Box>
-            </Flex>
-          )
-          : (
-            <Box>
-              <Outlet />
-            </Box>
-          )}
-      </Box>
+      <Grid
+        width={{ initial: 'var(--container-4)' }}
+        areas="'header header header header header header header header' 'sidebar sidebar . content content content content content'"
+        rows='min-content auto'
+        columns='repeat(8, 1fr)'
+        gapX='2'
+        my='8'
+        mx='auto'
+      >
+        {header}
+        {isShowSidebar && (
+          <Sidebar
+            gridColumn='1 / 3'
+            gridRow='2 / auto'
+            data={sidebar.items}
+            // ml='-100px'
+            // style={{ transform: 'translate(calc(-100% - var(--space-8)))' }}
+          />
+        )}
+        <Box gridArea='content / content / auto / 8'>
+          <Outlet />
+        </Box>
+      </Grid>
     </Theme>
   )
 }

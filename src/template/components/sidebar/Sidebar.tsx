@@ -1,17 +1,19 @@
 import type { FileRouter } from '#lib/file-router/index'
 import { Box } from '@radix-ui/themes'
+import type { BoxOwnProps, LayoutProps, MarginProps } from '@radix-ui/themes/props'
 import { Items } from './SidebarItem.tsx'
 
-interface SidebarProps {
-  items: FileRouter.Sidebar.Item[]
+interface SidebarProps extends LayoutProps, MarginProps, BoxOwnProps {
+  data: FileRouter.Sidebar.Item[]
+  style?: React.CSSProperties
 }
 
-export const Sidebar = ({ items }: SidebarProps) => {
+export const Sidebar = ({ data, ...props }: SidebarProps) => {
   return (
     <Box
       data-testid='sidebar'
       role='Sidebar'
-      flexShrink='0'
+      {...props}
     >
       <style>
         {`
@@ -20,7 +22,7 @@ export const Sidebar = ({ items }: SidebarProps) => {
           }
         `}
       </style>
-      <Items items={items} />
+      <Items items={data} />
     </Box>
   )
 }
