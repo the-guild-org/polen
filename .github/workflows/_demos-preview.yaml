@@ -81,6 +81,22 @@ jobs:
           # Copy latest build
           cp -r dist-preview-latest/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
 
+          # Create redirect from /latest/ to PR root
+          cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/index.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Redirecting...</title>
+            <meta http-equiv="refresh" content="0; url=/polen/pr-${{ inputs.pr-number }}/">
+            <script>window.location.replace("/polen/pr-${{ inputs.pr-number }}/");</script>
+          </head>
+          <body>
+            <p>Redirecting to <a href="/polen/pr-${{ inputs.pr-number }}/">/pr-${{ inputs.pr-number }}/</a>...</p>
+          </body>
+          </html>
+          EOF
+
           # Copy commit-specific build
           cp -r dist-preview-commit/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
           

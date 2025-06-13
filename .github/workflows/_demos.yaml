@@ -115,6 +115,23 @@ jobs:
           # Copy landing page to root
           cp dist-demos/index.html gh-pages-deploy/index.html
           
+          # Create redirect from /latest/ to root
+          mkdir -p gh-pages-deploy/latest
+          cat > gh-pages-deploy/latest/index.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Redirecting...</title>
+            <meta http-equiv="refresh" content="0; url=/polen/">
+            <script>window.location.replace("/polen/");</script>
+          </head>
+          <body>
+            <p>Redirecting to <a href="/polen/">/polen/</a>...</p>
+          </body>
+          </html>
+          EOF
+          
           # Process each example
           for example in pokemon; do
             # Create directories
