@@ -1,5 +1,5 @@
 // @ts-check
-/** @param {import('../../scripts/github-actions-types/async-function').AsyncFunctionArguments} AsyncFunctionArguments */
+/** @param {import('./async-function').AsyncFunctionArguments} AsyncFunctionArguments */
 export default async ({ github, context, core }) => {
   // Get inputs from environment variables
   const prNumber = process.env.PR_NUMBER;

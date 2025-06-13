@@ -1,6 +1,6 @@
 // This file is vendored from: https://github.com/actions/github-script/blob/main/types/async-function.d.ts
 // To refresh this file, run:
-// curl -s https://raw.githubusercontent.com/actions/github-script/main/types/async-function.d.ts -o scripts/github-actions-types/async-function.d.ts
+// curl -s https://raw.githubusercontent.com/actions/github-script/main/types/async-function.d.ts -o .github/scripts/async-function.d.ts
 
 /// <reference types="node" />
 import * as core from '@actions/core';
