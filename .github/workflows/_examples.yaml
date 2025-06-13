@@ -1,0 +1,91 @@
+name: examples
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  build-polen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
+      - name: Upload Polen build
+        uses: actions/upload-artifact@v4
+        with:
+          name: polen-build
+          path: |
+            build/
+            package.json
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
+
+  build-examples:
+    needs: build-polen
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example: [pokemon]
+        # Add more examples here as needed: [pokemon, github, docs]
+        # Uncomment when github example is re-enabled:
+        # example: [pokemon, github]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Download Polen build
+        uses: actions/download-artifact@v4
+        with:
+          name: polen-build
+
+      - name: Build example - ${{ matrix.example }}
+        run: NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/${{ matrix.example }} build
+
+      - name: Upload example build
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-${{ matrix.example }}
+          path: examples/${{ matrix.example }}/build/
+
+  deploy:
+    needs: build-examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build demos landing page
+        run: node ./scripts/build-demos-index.mjs
+
+      - name: Download all example builds
+        uses: actions/download-artifact@v4
+        with:
+          pattern: example-*
+          path: example-builds/
+
+      - name: Organize demo builds
+        run: |
+          # Move each example build to the correct location
+          for example_dir in example-builds/example-*/; do
+            example_name=$(basename "$example_dir" | sed 's/example-//')
+            cp -r "$example_dir" "./dist-demos/$example_name"
+          done
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist-demos

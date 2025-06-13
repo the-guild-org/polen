@@ -17,14 +17,13 @@ jobs:
     uses: ./.github/workflows/_checks.yaml
     with:
       run-format: true
-      run-lint: false  # Currently disabled
+      run-lint: false # Currently disabled
       run-types: true
       run-package-lint: true
       run-unit-tests: true
       run-integration-tests: true
       run-examples-tests: true
 
-  # Deploy examples to GitHub Pages
   deploy-examples:
     needs: [checks]
     uses: ./.github/workflows/_examples-deploy.yaml
@@ -44,7 +43,7 @@ jobs:
         run: |
           echo "isNpmTokenSet: ${{secrets.NPM_TOKEN != ''}}"
           echo "::set-output name=isNpmTokenSet::${{secrets.NPM_TOKEN != ''}}"
-  
+
   release-canary:
     needs: [checkNpmTokenSet, checks]
     if: needs.checkNpmTokenSet.outputs.isNpmTokenSet == 'true'

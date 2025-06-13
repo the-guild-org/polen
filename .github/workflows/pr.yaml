@@ -19,7 +19,7 @@ jobs:
     uses: ./.github/workflows/_checks.yaml
     with:
       run-format: true
-      run-lint: false  # Currently disabled
+      run-lint: false # Currently disabled
       run-types: true
       run-package-lint: true
       run-unit-tests: true
@@ -27,7 +27,7 @@ jobs:
       run-examples-tests: true
 
   # Deploy PR preview
-  examples-preview:
+  deploy-examples:
     uses: ./.github/workflows/_examples-preview.yaml
     with:
       action: ${{ github.event.action }}

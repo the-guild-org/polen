@@ -169,6 +169,23 @@ jobs:
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: 'Deploy PR #${{ inputs.pr-number }} preview'
 
+      # TODO: Replace with peter-evans/create-or-update-comment@v3 once approved
+      # - uses: peter-evans/create-or-update-comment@v3
+      #   with:
+      #     issue-number: ${{ inputs.pr-number }}
+      #     body: |
+      #       ## Preview Deployed
+      #       Your Polen demo preview is ready!
+      #       
+      #       **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
+      #       
+      #       ### Direct links:
+      #       - [Demos Landing Page](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/)
+      #       - [Pokemon Demo](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/pokemon/)
+      #       
+      #       This preview will be updated automatically when you push new commits.
+      #     comment-tag: polen-preview
+      
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
@@ -243,6 +260,13 @@ jobs:
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: 'Remove PR #${{ inputs.pr-number }} preview'
 
+      # TODO: Replace with peter-evans/create-or-update-comment@v3 once approved
+      # - uses: peter-evans/create-or-update-comment@v3
+      #   with:
+      #     issue-number: ${{ inputs.pr-number }}
+      #     body: |
+      #       🧹 Preview deployment for PR #${{ inputs.pr-number }} has been cleaned up.
+      
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
