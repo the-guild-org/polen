@@ -107,6 +107,35 @@
       margin-top: 1.5rem;
     }
 
+    .dist-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .dist-tag-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .demo-link.dist-tag {
+      min-width: 120px;
+    }
+
+    .permalink {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-family: monospace;
+      transition: color 0.2s ease;
+    }
+
+    .permalink:hover {
+      color: #000;
+      text-decoration: underline;
+    }
+
     .previous-deployments {
       margin-top: 1rem;
       padding-top: 1rem;
@@ -191,17 +220,23 @@
         <h2>Pokemon API</h2>
         <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
         <div class="demo-links">
-          <a href="latest/pokemon/" class="demo-link">
-            View Latest
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </a>
-          
+          <div class="dist-tags">
+            
+                  <div class="dist-tag-group">
+                    <a href="next/pokemon/" class="demo-link dist-tag">
+                      next
+                      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </a>
+                    <a href="0.9.0-next.8/pokemon/" class="permalink">→ 0.9.0-next.8</a>
+                  </div>
+                
+          </div>
           <div class="previous-deployments">
             <h3>Previous Deployments</h3>
             <div class="commit-links">
-              <a href="0.9.0-next.8/pokemon/" class="commit-link">0.9.0-next.8 (0.9.0-next.8)</a>
+              <a href="0.9.0-next.8/pokemon/" class="commit-link">0.9.0-next.8</a>
             </div>
           </div>
         </div>
