@@ -33,7 +33,7 @@ jobs:
           script: |
             const semver = require('semver')
             const { default: script } = await import('${{ github.workspace }}/.github/scripts/identify-deployments-to-remove.js')
-            return script({ github, context, core, semver })
+            return script({ github, context, core, exec, semver })
 
       - name: Remove old deployments
         if: steps.identify.outputs.toRemove != '{"trunk":[],"prs":[]}'
