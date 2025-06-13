@@ -1,3 +1,0 @@
-PR #89
-Branch: chore/ci/example-gh-pages
-Commit: a3e2eb6c858fc4361ffc892cd4a40a5a422bc402
