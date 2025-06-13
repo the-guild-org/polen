@@ -190,9 +190,13 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             const schemaNavbar = navbarData.get('schema')
             schemaNavbar.length = 0 // Clear existing
             if (schema) {
-              schemaNavbar.push({ pathExp: `reference`, title: `Reference` })
+              // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
+              // Without the leading slash, React Router treats paths as relative, which causes
+              // hydration mismatches between SSR (where base path is prepended) and client
+              // (where basename is configured). This ensures consistent behavior.
+              schemaNavbar.push({ pathExp: `/reference`, title: `Reference` })
               if (schema.versions.length > 1) {
-                schemaNavbar.push({ pathExp: `changelog`, title: `Changelog` })
+                schemaNavbar.push({ pathExp: `/changelog`, title: `Changelog` })
               }
             }
 
