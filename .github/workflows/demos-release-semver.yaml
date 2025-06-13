@@ -113,14 +113,23 @@ jobs:
           TAG="${{ steps.release.outputs.actual_tag }}"
 
           # Get list of examples that are enabled for demos
+          # Use the script from main branch to ensure we have the latest filtering logic
           EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
           echo "Found demo-enabled examples: $EXAMPLES"
 
           # Build each example at the semver path
           for example in $EXAMPLES; do
+            # Skip if example doesn't exist in this version
+            if [ ! -d "examples/$example" ]; then
+              echo "Skipping $example - not found in this version"
+              continue
+            fi
+            
             echo "Building $example for release $TAG"
-            # Use the polen CLI directly from the workspace
-            pnpm --dir examples/$example exec polen build --base "/polen/$TAG/$example/"
+            # Run build using node directly with the CLI path
+            cd examples/$example
+            node ../../build/cli/index.js build --base "/polen/$TAG/$example/"
+            cd ../..
           done
 
       - name: Checkout gh-pages
