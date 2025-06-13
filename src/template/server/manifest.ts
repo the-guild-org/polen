@@ -1,5 +1,5 @@
+import { assetUrl } from '#api/utils/asset-url/index'
 import type { Vite } from '#dep/vite/index'
-import { assetUrl } from '#lib/asset-url/index'
 import { Group, Str } from '@wollybeard/kit'
 
 export const injectManifestIntoHtml = (

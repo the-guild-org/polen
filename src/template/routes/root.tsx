@@ -1,5 +1,5 @@
+import { assetUrl, faviconUrl } from '#api/utils/asset-url/index'
 import type { ReactRouter } from '#dep/react-router/index'
-import { assetUrl, faviconUrl } from '#lib/asset-url/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import { Box, Button, Grid, Heading, Text } from '@radix-ui/themes'
