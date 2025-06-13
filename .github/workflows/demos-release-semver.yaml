@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release semver tag to build demos for (e.g. 1.2.0, 0.8.0-next.1, ...)'
+        description: "Release semver tag to build demos for (e.g. 1.2.0, 0.8.0-next.1, ...)"
         required: true
         type: string
 
@@ -168,7 +168,6 @@ jobs:
             sed -i "s/\$example/$example/g" gh-pages/$example/index.html
           done
 
-
       - name: Update dist-tag content
         if: steps.release.outputs.needs_build == 'true'
         run: |
@@ -196,8 +195,11 @@ jobs:
 
           # Update all base paths in the copied files
           echo "Updating base paths from /$TAG/ to /$DIST_TAG/"
+          # Escape dots and other special characters in the tag for sed
+          ESCAPED_TAG=$(echo "$TAG" | sed 's/[[\\.\\*]/\\\\&/g')
+          
           find "$DIST_TAG" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
-            sed -i "s|/polen/$TAG/|/polen/$DIST_TAG/|g" "$file"
+            sed -i "s|/polen/$ESCAPED_TAG/|/polen/$DIST_TAG/|g" "$file"
           done
 
           echo "✅ Successfully updated $DIST_TAG with content from $TAG"

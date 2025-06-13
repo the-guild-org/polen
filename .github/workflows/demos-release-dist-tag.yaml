@@ -20,7 +20,7 @@ permissions:
   pages: write
 
 jobs:
-  update-redirects:
+  update-dist-tag-content:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
@@ -97,11 +97,14 @@ jobs:
           echo "Updating base paths from /$SEMVER_TAG/ to /$TAG_NAME/"
           
           # Find and replace in all HTML, JS, and CSS files
+          # Escape dots and other special characters in the semver tag for sed
+          ESCAPED_SEMVER=$(echo "$SEMVER_TAG" | sed 's/[[\.\*]/\\&/g')
+          
           find "$TAG_NAME" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
             # Use sed to replace the paths
-            sed -i "s|/polen/$SEMVER_TAG/|/polen/$TAG_NAME/|g" "$file"
-            sed -i "s|\"/$SEMVER_TAG/|\"|/$TAG_NAME/|g" "$file"
-            sed -i "s|'/$SEMVER_TAG/|'/$TAG_NAME/|g" "$file"
+            sed -i "s|/polen/$ESCAPED_SEMVER/|/polen/$TAG_NAME/|g" "$file"
+            sed -i "s|\"/$ESCAPED_SEMVER/|\"|/$TAG_NAME/|g" "$file"
+            sed -i "s|'/$ESCAPED_SEMVER/|'/$TAG_NAME/|g" "$file"
           done
           
           echo "✅ Successfully updated $TAG_NAME with content from $SEMVER_TAG"

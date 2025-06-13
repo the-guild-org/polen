@@ -54,7 +54,7 @@ This allows users to always access:
 ### Trunk Demos
 
 - **Build trigger**: Only on npm releases (not every commit)
-- **Primary URLs**: 
+- **Primary URLs**:
   - `/polen/{semver}/{demo}` (e.g., `/polen/1.2.0/pokemon/`)
   - `/polen/latest/{demo}` (latest stable release - actual content)
   - `/polen/next/{demo}` (latest prerelease - actual content)
