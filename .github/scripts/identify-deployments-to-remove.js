@@ -40,7 +40,7 @@ export default async ({ github, context, core, exec, semver }) => {
 
   // Get commits for each tag
   const tagCommits = new Set()
-  ;[...stableReleases, ...preReleasesToKeep].forEach((tag) => {
+  for (const tag of [...stableReleases, ...preReleasesToKeep]) {
     try {
       let commitOutput = ''
       await exec.exec('git', ['rev-list', '-n', '1', tag], {
@@ -55,7 +55,7 @@ export default async ({ github, context, core, exec, semver }) => {
     } catch (e) {
       console.log(`Warning: Could not get commit for tag ${tag}`)
     }
-  })
+  }
 
   // Find deployments to remove
   const toRemove = {
