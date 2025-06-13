@@ -52,23 +52,22 @@ jobs:
 
       - name: Build demos
         run: |
-          # Build Pokemon demo with base path for PR preview (latest)
+          # Build Pokemon demo for latest
           pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/latest/pokemon/"
+          
+          # Create directory for latest build
+          mkdir -p dist-preview-latest
+          cp -r examples/pokemon/build dist-preview-latest/pokemon
+          
+          # Build Pokemon demo for commit-specific path
+          pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/"
+          
+          # Create directory for commit-specific build
+          mkdir -p dist-preview-commit
+          cp -r examples/pokemon/build dist-preview-commit/pokemon
 
           # GitHub demo disabled - schema too large for efficient SSG
           # pnpm --dir examples/github build --base "/polen/pr-${{ inputs.pr-number }}/latest/github/"
-
-      - name: Prepare preview directory
-        run: |
-          mkdir -p dist-preview
-          cp -r dist-demos/* dist-preview/
-          cp -r examples/pokemon/build dist-preview/pokemon
-          # cp -r examples/github/build dist-preview/github
-
-          # Add PR-specific metadata
-          echo "PR #${{ inputs.pr-number }}" > dist-preview/PR_INFO.txt
-          echo "Branch: ${{ inputs.head-ref }}" >> dist-preview/PR_INFO.txt
-          echo "Commit: ${{ inputs.head-sha }}" >> dist-preview/PR_INFO.txt
 
       - name: Prepare PR preview for deployment
         run: |
@@ -79,11 +78,20 @@ jobs:
           # Copy landing page to PR root
           cp dist-demos/index.html gh-pages-deploy/pr-${{ inputs.pr-number }}/index.html
 
-          # Copy demo files to both latest and commit-specific directories
-          # Remove the landing page from the preview directory before copying
-          rm -f dist-preview/index.html
-          cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
-          cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
+          # Copy latest build
+          cp -r dist-preview-latest/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
+          
+          # Copy commit-specific build
+          cp -r dist-preview-commit/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
+          
+          # Add PR-specific metadata to both deployments
+          echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
+          echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
+          echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
+          
+          echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
+          echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
+          echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
 
           # Get all PR deployments from gh-pages branch
           PR_DEPLOYMENTS="[]"
