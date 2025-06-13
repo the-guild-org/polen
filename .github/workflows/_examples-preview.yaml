@@ -168,7 +168,7 @@ jobs:
           keep_files: true # Keep existing PR previews
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
-          commit_message: "Deploy PR #${{ inputs.pr-number }} preview"
+          commit_message: "Examples deployed for #${{ inputs.pr-number }}"
 
       - name: Comment on PR
         uses: peter-evans/create-or-update-comment@v3
@@ -177,13 +177,13 @@ jobs:
           body: |
             ## Preview Deployed
             Your Polen demo preview is ready!
-            
+
             **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
-            
+
             ### Direct links:
             - [Demos Landing Page](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/)
             - [Pokemon Demo](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/pokemon/)
-            
+
             This preview will be updated automatically when you push new commits.
           comment-tag: polen-preview
 
