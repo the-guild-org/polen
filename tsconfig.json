@@ -17,6 +17,7 @@
     "build",
     "eslint.config.js",
     "examples/github",
-    "examples/pokemon"
+    "examples/pokemon",
+    "examples/demos"
   ]
 }
