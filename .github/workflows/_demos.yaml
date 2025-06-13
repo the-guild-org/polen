@@ -129,7 +129,7 @@ jobs:
             cp -r example-builds/example-commit-$example/* gh-pages-deploy/${{ steps.sha.outputs.sha }}/$example/
             
             # Create redirect for direct demo access
-            cat > gh-pages-deploy/$example/index.html << 'EOF'
+            cat > gh-pages-deploy/$example/index.html << EOF
           <!DOCTYPE html>
           <html>
           <head>
@@ -143,8 +143,6 @@ jobs:
           </body>
           </html>
           EOF
-            # Fix the redirect template
-            sed -i "s/\$example/$example/g" gh-pages-deploy/$example/index.html
           done
 
       - name: Deploy to GitHub Pages

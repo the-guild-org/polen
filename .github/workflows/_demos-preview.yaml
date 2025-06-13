@@ -87,7 +87,7 @@ jobs:
           # Create redirects for direct demo URLs
           for example in pokemon; do
             mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/$example
-            cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html << 'EOF'
+            cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html << EOF
           <!DOCTYPE html>
           <html>
           <head>
@@ -101,9 +101,6 @@ jobs:
           </body>
           </html>
           EOF
-            # Fix the redirect template variables
-            sed -i "s/\${{ inputs.pr-number }}/${{ inputs.pr-number }}/g" gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html
-            sed -i "s/\$example/$example/g" gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html
           done
 
           # Add PR-specific metadata to both deployments
