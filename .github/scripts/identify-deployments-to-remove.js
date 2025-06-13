@@ -8,8 +8,6 @@ export default async ({ github, context, core, exec, semver }) => {
 
   // Configuration
   const KEEP_RECENT_COMMITS = 15;
-  const PR_RETENTION_DAYS = 7;
-  const now = new Date();
 
   // Get all tags to identify releases
   let tagsOutput = '';
@@ -63,7 +61,6 @@ export default async ({ github, context, core, exec, semver }) => {
   // Find deployments to remove
   const toRemove = {
     trunk: [],
-    prs: [],
   };
 
   // Check trunk deployments (direct SHA directories in root)
@@ -90,38 +87,7 @@ export default async ({ github, context, core, exec, semver }) => {
     }
   }
 
-  // Check PR deployments
-  const prDirs = rootDirs.filter((dir) => dir.startsWith("pr-"));
-
-  for (const prDir of prDirs) {
-    const prNumber = prDir.replace("pr-", "");
-
-    // Check if PR is closed and how long ago
-    try {
-      const { data: pr } = await github.rest.pulls.get({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        pull_number: parseInt(prNumber),
-      });
-
-      if (pr.state === "closed" && pr.closed_at) {
-        const closedDate = new Date(pr.closed_at);
-        const daysSinceClosed =
-          (now.getTime() - closedDate.getTime()) / (1000 * 60 * 60 * 24);
-
-        if (daysSinceClosed > PR_RETENTION_DAYS) {
-          toRemove.prs.push(prDir);
-        }
-      }
-    } catch (e) {
-      console.log(`Could not check PR ${prNumber}, may be deleted`);
-      // If we can't find the PR, it's probably old and safe to remove
-      toRemove.prs.push(prDir);
-    }
-  }
-
   console.log("Trunk deployments to remove:", toRemove.trunk);
-  console.log("PR deployments to remove:", toRemove.prs);
 
   core.setOutput("toRemove", JSON.stringify(toRemove));
 };

@@ -163,11 +163,20 @@ jobs:
         id: short-sha
         run: echo "sha=$(echo '${{ inputs.head-sha }}' | cut -c1-7)" >> $GITHUB_OUTPUT
 
+      - name: Find existing comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ inputs.pr-number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '## Demos Preview'
+
       - name: Comment on PR
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr-number }}
-          comment-tag: demos-preview-deploy
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
           body: |
             ## Demos Preview
 

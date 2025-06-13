@@ -36,14 +36,13 @@ jobs:
             return script({ github, context, core, exec, semver })
 
       - name: Remove old deployments
-        if: steps.identify.outputs.toRemove != '{"trunk":[],"prs":[]}'
+        if: steps.identify.outputs.toRemove != '{"trunk":[]}'
         run: |
           TO_REMOVE='${{ steps.identify.outputs.toRemove }}'
           echo "Deployments to remove: $TO_REMOVE"
           
           # Parse JSON
           TRUNK_DIRS=$(echo "$TO_REMOVE" | jq -r '.trunk[]')
-          PR_DIRS=$(echo "$TO_REMOVE" | jq -r '.prs[]')
           
           # Configure git
           git config user.name "github-actions[bot]"
@@ -57,21 +56,11 @@ jobs:
             fi
           done
           
-          # Remove PR deployments
-          for dir in $PR_DIRS; do
-            if [ -d "$dir" ]; then
-              echo "Removing PR deployment: $dir"
-              git rm -rf "$dir"
-            fi
-          done
-          
           # Commit if there are changes
           if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "chore: garbage collect old deployments
+            git commit -m "chore: garbage collect old trunk deployments
             
-            Removed:
-            - Trunk: $TRUNK_DIRS
-            - PRs: $PR_DIRS"
+            Removed: $TRUNK_DIRS"
             git push
           else
             echo "No deployments to remove"
