@@ -212,7 +212,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                   // can easily break! Use path relative in server??
                   directory: `./` + config.paths.project.relative.build.root,
                   // Uses Hono route syntax - includes base path
-                  route: config.build.base.slice(0, -1) + `/` + config.paths.project.relative.build.relative.assets + `/*`,
+                  route: config.build.base.slice(0, -1) + `/` + config.paths.project.relative.build.relative.assets
+                    + `/*`,
                 },
               },
             }

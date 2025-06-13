@@ -7,6 +7,7 @@ Polen now has partial support for base path configuration, which allows deployin
 ## Current Status
 
 ### ✅ Working
+
 - Base path configuration option in `polen.config.ts`:
   ```typescript
   export default Polen.defineConfig({
@@ -21,6 +22,7 @@ Polen now has partial support for base path configuration, which allows deployin
 - React Router is configured with basename for client-side routing
 
 ### ❌ Not Working / Limitations
+
 1. **SSG (Static Site Generation) fails with base path**
    - SSG generates routes without base path prefix
    - React Router expects routes with base path prefix
@@ -37,6 +39,7 @@ Polen now has partial support for base path configuration, which allows deployin
 ## Implementation Details
 
 ### Files Modified
+
 - `src/api/config/configurator.ts` - Added base path configuration option
 - `src/api/config-resolver/vite.ts` - Pass base path to Vite config
 - `src/lib/asset-url/` - New helper functions for URL generation
@@ -49,6 +52,7 @@ Polen now has partial support for base path configuration, which allows deployin
 - `src/template/server/view.ts` - Configure server-side React Router with basename
 
 ### Test Script
+
 A test script is available at `scripts/test-base-path.mjs` to verify base path functionality.
 
 ## Next Steps
@@ -76,5 +80,6 @@ Until SSG is fixed, use SSR mode for subdirectory deployments:
 3. Or deploy to root path only
 
 ## Related Issues
+
 - GitHub Pages subdirectory deployment (#89)
 - PR preview deployments need base path support

@@ -12,7 +12,7 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
     // so React Router can match it correctly
     const url = new URL(ctx.req.raw.url)
     const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
-    
+
     // Create a new request with the base path prepended to the pathname
     const modifiedRequest = new Request(
       `${url.protocol}//${url.host}${basePath}${url.pathname}${url.search}`,
@@ -20,7 +20,7 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
         method: ctx.req.raw.method,
         headers: ctx.req.raw.headers,
         body: ctx.req.raw.body,
-      }
+      },
     )
 
     const staticHandlerContext = await view.query(modifiedRequest)
@@ -50,7 +50,7 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
       // For SSG, we need to create a request with the base path prepended
       const url = new URL(ctx.req.raw.url)
       const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
-      
+
       // Create a new request with the base path prepended to the pathname
       const modifiedRequest = new Request(
         `${url.protocol}//${url.host}${basePath}${url.pathname}${url.search}`,
@@ -58,7 +58,7 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
           method: ctx.req.raw.method,
           headers: ctx.req.raw.headers,
           body: ctx.req.raw.body,
-        }
+        },
       )
 
       const staticHandlerContext = await view.query(modifiedRequest)
