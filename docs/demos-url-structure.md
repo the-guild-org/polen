@@ -82,71 +82,51 @@ Examples can be excluded from demos by adding `"demo": false` to their `package.
 - **Prereleases**: Only kept if they belong to the current "next" version
 - **PR demos**: Automatically cleaned up when PR is closed/merged
 
-## Information Architecture Improvements
+## Workflow Details
 
-### Current Issues
+### demos-release-semver.yaml
 
-1. **Inconsistent canonical URLs**: Tagged releases redirect to SHA URLs instead of tag URLs being canonical
-2. **Mixed deployment types**: SHA and tag deployments coexist at the same level
-3. **No clear hierarchy**: Latest, tagged releases, and commit deployments are peers
+Triggered when a GitHub release is published or edited. This workflow:
+1. Builds demos at `/polen/{semver}/` paths
+2. Creates convenience redirects (`/polen/{demo}/` → `/polen/latest/{demo}/`)
+3. Updates demos index page
+4. Adds commit status with link to demos
 
-### Proposed Improvements
+### demos-release-dist-tag.yaml
 
-#### Option 1: Separate Release and Commit Paths (Recommended)
+Triggered when `latest` or `next` git tags are pushed. This workflow:
+1. Finds which semver version the tag points to
+2. Updates dist-tag redirects to point to that version
+
+### demos-garbage-collector.yaml
+
+Runs on schedule (daily). This workflow:
+1. Identifies prereleases outside the current "next" range
+2. Removes those old prerelease demos
+3. Always keeps stable releases
+
+## Technical Implementation
+
+### Script Organization
 
 ```
-/polen/releases/                  → All releases index
-/polen/releases/:semver/:demo     → Tagged release (canonical)
-/polen/commits/:sha/:demo         → Commit deployment
-/polen/latest/:demo               → Latest deployment (symlink/redirect)
+.github/scripts/
+├── lib/                    # Importable modules
+│   ├── async-function.d.ts # GitHub Script type definitions
+│   └── exec-utils.js       # Command execution utilities
+├── steps/                  # Complete workflow steps
+│   ├── identify-deployments-to-remove.js
+│   ├── get-previous-pr-deployments.js
+│   └── update-demos-index.js
+└── tools/                  # CLI utilities
+    ├── get-demo-examples.js
+    ├── get-pr-deployments.js
+    └── get-trunk-deployments.js
 ```
 
-Benefits:
+### Handling Mutable Releases
 
-- Clear separation between stable releases and development commits
-- Easier to browse and discover releases
-- Cleaner URL structure
-
-#### Option 2: Nested Version Structure
-
-```
-/polen/v/:semver/:demo            → Tagged release (v prefix for clarity)
-/polen/c/:sha/:demo               → Commit deployment (c prefix)
-/polen/latest/:demo               → Latest deployment
-```
-
-Benefits:
-
-- Shorter URLs
-- Clear distinction with prefixes
-- Maintains flat structure
-
-#### Option 3: Keep Current Structure but Fix Canonical URLs
-
-- Make tag URLs canonical (SHA redirects to tag when available)
-- Implement the SHA→tag conversion on release
-- Keep the flat structure
-
-Benefits:
-
-- Minimal change to existing structure
-- Maintains backward compatibility
-- Simplest to implement
-
-## Implementation Notes
-
-### Tag to SHA Conversion Process
-
-When a release is created:
-
-1. Move `/polen/:sha` directory to `/polen/:semver`
-2. Find-replace all `:sha` references with `:semver` in static files
-3. Create redirect from `/polen/:sha` to `/polen/:semver`
-4. Rebuild demos landing page with updated links
-
-### Considerations
-
-- **Caching**: CDN and browser caches may serve old URLs
-- **SEO**: Redirects should use proper meta refresh or JavaScript
-- **Backwards compatibility**: Old SHA URLs should continue to work
-- **Performance**: Moving/renaming is more efficient than copying
+The "next" GitHub release is mutable - it gets updated rather than recreated when new prereleases are published. The `demos-release-semver.yaml` workflow handles this by:
+1. Listening for both `published` and `edited` events
+2. Finding the actual semver tag when "next" is edited
+3. Building demos for that semver version
