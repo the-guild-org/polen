@@ -43,6 +43,7 @@ Creates preview deployments for pull requests using GitHub Pages sub-directories
 ### PR Preview Setup
 
 PR previews use the same GitHub Pages setup as the main deployment. They will be automatically deployed to sub-directories like:
+
 - `https://<username>.github.io/<repository>/pr-123/`
 - `https://<username>.github.io/<repository>/pr-124/`
 
