@@ -20,3 +20,8 @@ test('built server renders app', async ({ page, runStart, project }) => {
   await page.goto(runStart.url)
   await testPageHome(page, project.config._polen)
 })
+
+test('static site generation renders app', async ({ project, runServeSsg, page }) => {
+  await page.goto(runServeSsg.url)
+  await testPageHome(page, project.config._polen)
+})

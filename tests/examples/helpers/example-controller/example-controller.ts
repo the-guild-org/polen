@@ -42,6 +42,9 @@ export const create = async (parameters: {
       build: async () => {
         return await project.packageManager`run build --architecture ssr`
       },
+      buildSsg: async () => {
+        return await project.packageManager`run build --architecture ssg`
+      },
       start: async () => {
         const port = await GetPortPlease.getRandomPort()
 
@@ -53,6 +56,26 @@ export const create = async (parameters: {
 
         // todo: If we give some log output from server then we can use that to detect when the server is ready.
         await project.shell`sleep 1`
+
+        return {
+          raw: serverProcess,
+          stop: async () => {
+            await stopServerProcess(serverProcess)
+          },
+          url,
+        }
+      },
+      serveSsg: async () => {
+        const port = await GetPortPlease.getRandomPort()
+        const url = `http://localhost:${port.toString()}`
+
+        // Use a simple static file server to serve the SSG build
+        const serverProcess = project.shell({
+          env: { ...process.env },
+        })`npx serve dist --listen ${port.toString()} --single`
+
+        // Give the server time to start
+        await project.shell`sleep 2`
 
         return {
           raw: serverProcess,

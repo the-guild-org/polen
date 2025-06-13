@@ -8,6 +8,8 @@ export interface TestFixtures {
   runDev: ExampleController.ServerProcess
   runBuild: ProcessOutput
   runStart: ExampleController.ServerProcess
+  runBuildSsg: ProcessOutput
+  runServeSsg: ExampleController.ServerProcess
 }
 
 export interface WorkerFixtures {
@@ -38,6 +40,15 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   },
   runStart: async ({ project, runBuild: ___ }, use) => {
     const server = await project.run.start()
+    await use(server)
+    await server.stop()
+  },
+  runBuildSsg: async ({ project }, use) => {
+    const output = await project.run.buildSsg()
+    await use(output)
+  },
+  runServeSsg: async ({ project, runBuildSsg: ___ }, use) => {
+    const server = await project.run.serveSsg()
     await use(server)
     await server.stop()
   },
