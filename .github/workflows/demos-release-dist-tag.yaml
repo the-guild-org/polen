@@ -5,6 +5,15 @@ on:
     tags:
       - 'latest'
       - 'next'
+  workflow_dispatch:
+    inputs:
+      dist_tag:
+        description: 'Dist tag to update (latest or next)'
+        required: true
+        type: choice
+        options:
+          - latest
+          - next
 
 permissions:
   contents: write
@@ -23,8 +32,12 @@ jobs:
       - name: Get dist-tag info
         id: dist-tag
         run: |
-          # Get the tag that was pushed
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          # Get the tag name from push event or manual input
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ inputs.dist_tag }}"
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          fi
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           
           # Get the commit this tag points to
