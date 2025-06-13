@@ -31,19 +31,22 @@ npm add polen
    node build/app.js
    ```
 
-## Examples
+## Live Demos
 
-You can find working examples in the [examples](./examples) directory.
+Experience Polen in action with our live documentation sites:
 
-### Live Demos
+### 🌐 [View All Demos](https://the-guild-org.github.io/polen/)
 
-View our example Polen documentation sites:
-
-- ⚡ [Pokemon GraphQL API Demo](https://the-guild-org.github.io/polen/pokemon/)
-- 📚 [More demos coming soon...](https://the-guild-org.github.io/polen/)
+Featured examples:
+- **[Pokemon GraphQL API](https://the-guild-org.github.io/polen/pokemon/)** - Explore a fun GraphQL API with rich schema documentation and interactive examples
+- **GitHub GraphQL API** (Coming soon) - Browse GitHub's extensive GraphQL API documentation
 
 > [!NOTE]
-> These examples work against the version of Polen on trunk. Every commit on trunk is available as a pre-release on npm. You may see behaviour in the examples that has not been released in a stable version of Polen yet.
+> These demos showcase the latest Polen features from trunk. Every commit is available as a pre-release on npm.
+
+## Examples
+
+Find the source code for these demos and more in the [examples](./examples) directory.
 
 ## Guide
 
