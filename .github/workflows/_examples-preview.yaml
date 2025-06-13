@@ -127,7 +127,7 @@ jobs:
           keep_files: true # Keep existing PR previews
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
-          commit_message: "Demos preview deployed for #${{ inputs.pr-number }}"
+          commit_message: "Add pull request #${{ inputs.pr-number }} commit ${{ inputs.head-sha }}"
 
       - name: Get previous deployments for this PR
         id: get-prev-pr-deployments
@@ -199,7 +199,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr-number }}
-          comment-tag: demos-preview
+          comment-tag: demos-preview-deploy
           body: |
             ## Demos Preview
 
@@ -224,7 +224,7 @@ jobs:
             git rm -rf "pr-${{ inputs.pr-number }}"
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "Remove PR #${{ inputs.pr-number }} preview"
+            git commit -m "Remove pull request #${{ inputs.pr-number }}"
             git push
           fi
 
@@ -232,6 +232,5 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr-number }}
-          comment-tag: demos-preview
-          body: |
-            🧹 Preview deployment for PR #${{ inputs.pr-number }} has been cleaned up.
+          comment-tag: demos-preview-cleanup
+          body: All demos preview deployments for this pull request (${{ inputs.pr-number }}) have been been cleaned up.
