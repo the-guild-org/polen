@@ -33,13 +33,13 @@ jobs:
         run: pnpm install
 
       - name: Build demos site
-        run: pnpm --dir examples/demos build
+        run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/demos build
 
       - name: Build Pokemon demo
-        run: pnpm --dir examples/pokemon build
+        run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/pokemon build
 
       - name: Build GitHub demo
-        run: pnpm --dir examples/github build
+        run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/github build
 
       - name: Organize demo builds
         run: |

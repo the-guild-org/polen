@@ -29,9 +29,9 @@ jobs:
 
       - name: Build demos
         run: |
-          pnpm --dir examples/demos build
-          pnpm --dir examples/pokemon build
-          pnpm --dir examples/github build
+          NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/demos build
+          NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/pokemon build
+          NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/github build
 
       - name: Prepare preview directory
         run: |
