@@ -196,7 +196,7 @@ jobs:
         run: echo "sha=$(echo '${{ inputs.head-sha }}' | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Comment on PR
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr-number }}
           comment-tag: polen-preview
@@ -205,10 +205,8 @@ jobs:
 
             https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
 
-            #### Pokemon
-
-            - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) ([`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/))
-            - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
+            **Pokemon:** [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) / [`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/)  
+            **Previous:** ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
 
   cleanup:
     if: inputs.action == 'closed'
@@ -230,8 +228,9 @@ jobs:
           fi
 
       - name: Comment on PR
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr-number }}
+          comment-tag: polen-preview
           body: |
             🧹 Preview deployment for PR #${{ inputs.pr-number }} has been cleaned up.
