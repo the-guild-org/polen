@@ -10,6 +10,7 @@ import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
 import { Path, Str } from '@wollybeard/kit'
 import remarkGfm from 'remark-gfm'
+import rehypeShiki from '@shikijs/rehype'
 
 const _debug = debug.sub(`vite-plugin-pages`)
 
@@ -123,6 +124,22 @@ export const Pages = ({
       ...mdx({
         jsxImportSource: `polen/react`,
         remarkPlugins: [remarkGfm],
+        rehypePlugins: [
+          [
+            rehypeShiki,
+            {
+              themes: {
+                light: `github-light`,
+                dark: `tokyo-night`,
+              },
+              defaultColor: false,
+              cssVariablePrefix: `--shiki-`,
+              transformers: [
+                // Line numbers will be handled via CSS
+              ],
+            },
+          ],
+        ],
       }),
     },
 

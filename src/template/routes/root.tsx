@@ -120,6 +120,38 @@ const Layout = () => {
         my='8'
         mx='auto'
       >
+        <style>{`
+          /* Shiki code blocks */
+          pre.shiki {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.6;
+            background-color: #f6f8fa;
+          }
+          
+          /* Light mode: use --shiki-light CSS variables from inline styles */
+          pre.shiki span {
+            color: var(--shiki-light);
+          }
+          
+          /* Dark mode - Radix Themes uses [data-is-root-theme="dark"] */
+          [data-is-root-theme="dark"] pre.shiki {
+            background-color: #1a1b26;
+          }
+          
+          [data-is-root-theme="dark"] pre.shiki span {
+            color: var(--shiki-dark);
+          }
+          
+          pre.shiki code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+            background: transparent;
+            display: block;
+          }
+        `}</style>
         {header}
         {isShowSidebar && (
           <Sidebar
