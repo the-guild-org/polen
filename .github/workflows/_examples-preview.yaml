@@ -54,14 +54,14 @@ jobs:
         run: |
           # Build Pokemon demo for latest
           pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/latest/pokemon/"
-          
+
           # Create directory for latest build
           mkdir -p dist-preview-latest
           cp -r examples/pokemon/build dist-preview-latest/pokemon
-          
+
           # Build Pokemon demo for commit-specific path
           pnpm --dir examples/pokemon build --base "/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/"
-          
+
           # Create directory for commit-specific build
           mkdir -p dist-preview-commit
           cp -r examples/pokemon/build dist-preview-commit/pokemon
@@ -80,15 +80,15 @@ jobs:
 
           # Copy latest build
           cp -r dist-preview-latest/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
-          
+
           # Copy commit-specific build
           cp -r dist-preview-commit/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
-          
+
           # Add PR-specific metadata to both deployments
           echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
           echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
           echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
-          
+
           echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
           echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
           echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
@@ -138,7 +138,7 @@ jobs:
             const currentSha = '${{ inputs.head-sha }}';
             const repoOwner = context.repo.owner;
             const repoName = context.repo.repo;
-            
+
             try {
               // Get the gh-pages branch tree
               const { data: tree } = await github.rest.git.getTree({
@@ -147,14 +147,14 @@ jobs:
                 tree_sha: 'gh-pages',
                 recursive: false
               });
-              
+
               // Find the PR directory
               const prDir = tree.tree.find(item => item.path === `pr-${prNumber}`);
               if (!prDir || prDir.type !== 'tree') {
                 core.setOutput('deployment_links', '(none)');
                 return;
               }
-              
+
               // Get contents of PR directory
               const { data: prTree } = await github.rest.git.getTree({
                 owner: repoOwner,
@@ -162,29 +162,29 @@ jobs:
                 tree_sha: prDir.sha,
                 recursive: false
               });
-              
+
               // Filter for commit SHA directories (excluding current)
               const commitDirs = prTree.tree
-                .filter(item => 
-                  item.type === 'tree' && 
+                .filter(item =>
+                  item.type === 'tree' &&
                   /^[0-9a-f]{7,40}$/.test(item.path) &&
                   item.path !== currentSha
                 )
                 .map(item => item.path)
                 .sort()
                 .reverse();
-              
+
               if (commitDirs.length === 0) {
                 core.setOutput('deployment_links', '(none)');
                 return;
               }
-              
+
               // Format as markdown links
               const links = commitDirs.map(sha => {
                 const shortSha = sha.substring(0, 7);
                 return `[\`${shortSha}\`](https://${repoOwner}.github.io/${repoName}/pr-${prNumber}/${sha}/pokemon/)`;
               });
-              
+
               core.setOutput('deployment_links', links.join(' / '));
             } catch (error) {
               console.log('Error fetching previous deployments:', error.message);
@@ -205,8 +205,9 @@ jobs:
 
             https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
 
-            **Pokemon:** [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) / [`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/)  
-            **Previous:** ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
+            #### Pokemon
+            - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) – ([`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/))
+            - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
 
   cleanup:
     if: inputs.action == 'closed'
