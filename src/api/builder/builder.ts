@@ -12,6 +12,7 @@ const buildDefaults = {
 interface BuildConfigInput {
   debug?: boolean
   architecture?: Config.BuildArchitecture
+  base?: string
 }
 
 export const build = async (buildConfigInput: BuildConfigInput) => {
@@ -22,6 +23,7 @@ export const build = async (buildConfigInput: BuildConfigInput) => {
     overrides: {
       build: {
         architecture: buildConfig.architecture,
+        ...(buildConfig.base ? { base: buildConfig.base } : {}),
       },
       advanced: {
         debug: buildConfig.debug,

@@ -11,6 +11,10 @@ const args = Command.create()
     `--architecture -a`,
     Api.Config.BuildArchitecture.default('ssg').describe('Which kind of application architecture to output.'),
   )
+  .parameter(
+    `--base -b`,
+    z.string().optional().describe('Base public path for deployment (e.g., /my-project/)'),
+  )
   .settings({
     parameters: {
       environment: {
@@ -33,4 +37,5 @@ const args = Command.create()
 await Api.Builder.build({
   ...(args.debug === false ? {} : { debug: args.debug }),
   ...(args.architecture === 'ssg' ? {} : { architecture: args.architecture }),
+  ...(args.base ? { base: args.base } : {}),
 })

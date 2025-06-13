@@ -32,16 +32,11 @@ jobs:
 
       - name: Build demos
         run: |
-          # For now, build without base path
-          # TODO: Once Polen supports --config flag or env vars for base path,
-          # update this to use base path: /polen/pr-${{ github.event.pull_request.number }}/pokemon/
-          NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build
-          
-          # Note: PR preview will have broken assets until we can configure base path dynamically
-          # This is tracked in issue #91
+          # Build Pokemon demo with base path for PR preview
+          NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build --base "/polen/pr-${{ github.event.pull_request.number }}/pokemon/"
           
           # GitHub demo disabled - schema too large for efficient SSG
-          # NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build
+          # NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build --base "/polen/pr-${{ github.event.pull_request.number }}/github/"
 
       - name: Prepare preview directory
         run: |

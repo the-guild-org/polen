@@ -325,7 +325,16 @@ When configured, Polen will output differently:
 - For SSG architecture:
   - Generate static files that work in the subdirectory
 - For SSR architecture:
-  - A server that serrves static assets from the correct path
+  - A server that serves static assets from the correct path
+
+You can also set the base path via CLI:
+
+```bash
+npx polen build --base /my-project/
+npx polen dev --base /my-project/
+```
+
+The CLI flag takes precedence over the config file setting.
 
 ### Package
 
