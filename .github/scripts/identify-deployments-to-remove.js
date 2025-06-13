@@ -3,7 +3,7 @@
 /**
  * @typedef {import('@actions/github').context} GitHubContext
  * @typedef {import('@actions/core')} ActionsCore
- * @typedef {import('@octokit/core').Octokit} GitHub
+ * @typedef {ReturnType<import('@actions/github').getOctokit>} GitHub
  */
 
 /**
@@ -89,7 +89,7 @@ module.exports = async ({ context, github, core, fs, execSync }) => {
 
       if (pr.state === 'closed' && pr.closed_at) {
         const closedDate = new Date(pr.closed_at);
-        const daysSinceClosed = (now - closedDate) / (1000 * 60 * 60 * 24);
+        const daysSinceClosed = (now.getTime() - closedDate.getTime()) / (1000 * 60 * 60 * 24);
 
         if (daysSinceClosed > PR_RETENTION_DAYS) {
           toRemove.prs.push(prDir);
