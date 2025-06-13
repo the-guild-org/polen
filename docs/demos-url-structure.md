@@ -76,7 +76,7 @@ This allows users to always access:
 
 ### Demo Filtering
 
-Examples can be excluded from demos by adding `"demo": false` to their `package.json`.
+Examples can be excluded from demos by adding them to the `excludeDemos` array in `.github/demo-config.json`. This configuration is always read from the main branch, ensuring consistent behavior across all versions.
 
 ### Adding New Examples
 

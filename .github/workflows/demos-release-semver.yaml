@@ -35,9 +35,10 @@ jobs:
           # Fetch main branch
           git fetch origin main
 
-          # Checkout scripts from main to get latest fixes
+          # Checkout scripts and config from main to get latest fixes
           git checkout origin/main -- .github/scripts
           git checkout origin/main -- .github/actions
+          git checkout origin/main -- .github/demo-config.json
 
           # Reset to avoid committing these changes
           git reset HEAD
