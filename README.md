@@ -35,6 +35,13 @@ npm add polen
 
 You can find working examples in the [examples](./examples) directory.
 
+### Live Demos
+
+View our example Polen documentation sites:
+
+- 🐙 [GitHub GraphQL API Demo](https://the-guild-org.github.io/polen/github/)
+- ⚡ [Pokemon GraphQL API Demo](https://the-guild-org.github.io/polen/pokemon/)
+
 > [!NOTE]
 > These examples work against the version of Polen on trunk. Every commit on trunk is available as a pre-release on npm. You may see behaviour in the examples that has not been released in a stable version of Polen yet.
 

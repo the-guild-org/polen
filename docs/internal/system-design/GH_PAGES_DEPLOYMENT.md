@@ -46,6 +46,7 @@ concurrency:
 ### Phase 1: Basic Deployment
 
 #### 1.1 Build Job
+
 ```yaml
 jobs:
   build:
@@ -78,22 +79,24 @@ jobs:
 ```
 
 #### 1.2 Deploy Job
+
 ```yaml
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3
+deploy:
+  needs: build
+  runs-on: ubuntu-latest
+  environment:
+    name: github-pages
+    url: ${{ steps.deployment.outputs.page_url }}
+  steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v3
 ```
 
 ### Phase 2: Enhanced Features
 
 #### 2.1 Build Caching Strategy
+
 ```yaml
 - name: Cache Polen build
   uses: actions/cache@v3
@@ -113,6 +116,7 @@ jobs:
 ```
 
 #### 2.2 Artifact Management
+
 ```yaml
 - name: Upload artifact
   uses: actions/upload-pages-artifact@v2
@@ -128,6 +132,7 @@ jobs:
 ### Phase 3: Pull Request Previews
 
 #### 3.1 PR Preview Workflow
+
 ```yaml
 # .github/workflows/pr-preview.yml
 name: PR Preview
@@ -165,12 +170,12 @@ jobs:
 export default defineConfig({
   // Base path configuration for GitHub Pages
   base: process.env.POLEN_BASE_PATH || '/',
-  
+
   // Ensure proper asset handling
   build: {
     assetsDir: 'assets',
     sourcemap: false, // Reduce size for GH Pages
-  }
+  },
 })
 ```
 
@@ -183,22 +188,25 @@ export default {
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-  }
+  },
 }
 ```
 
 ## Performance Optimizations
 
 ### 1. Dependency Caching
+
 - Cache pnpm store between runs
 - Use lock file hash as cache key
 - Separate caches for root and example
 
 ### 2. Build Output Caching
+
 - Cache Polen dist folder when src unchanged
 - Skip rebuild if only example changed
 
 ### 3. Parallel Jobs
+
 ```yaml
 jobs:
   build-polen:
@@ -216,6 +224,7 @@ jobs:
 ## Error Handling
 
 ### Build Failures
+
 ```yaml
 - name: Build with retry
   uses: nick-fields/retry@v2
@@ -235,6 +244,7 @@ jobs:
 ```
 
 ### Deployment Failures
+
 - Automatic rollback to previous version
 - Notification via GitHub Issues
 - Detailed error logs
@@ -242,11 +252,13 @@ jobs:
 ## Monitoring and Notifications
 
 ### Success Metrics
+
 1. Build time tracking
 2. Bundle size reporting
 3. Deployment success rate
 
 ### Notifications
+
 ```yaml
 - name: Notify on success
   if: success()
@@ -276,6 +288,7 @@ jobs:
 ## Future Enhancements
 
 ### 1. Multi-Example Support
+
 ```yaml
 strategy:
   matrix:
@@ -283,17 +296,20 @@ strategy:
 ```
 
 ### 2. Custom Domain Support
+
 ```yaml
 - name: Configure custom domain
   run: echo "pokemon.polen.dev" > ./examples/pokemon/dist/CNAME
 ```
 
 ### 3. Performance Metrics
+
 - Lighthouse CI integration
 - Bundle size tracking
 - Performance budgets
 
 ### 4. Versioned Deployments
+
 - Deploy to `/v1/`, `/v2/` paths
 - Version selector in UI
 - Automatic cleanup of old versions
@@ -308,6 +324,7 @@ strategy:
 ## Documentation
 
 ### User Documentation
+
 ```markdown
 # Deploying to GitHub Pages
 
@@ -318,6 +335,7 @@ strategy:
 ```
 
 ### Maintenance Documentation
+
 - Workflow debugging guide
 - Common issues and solutions
 - Performance tuning tips

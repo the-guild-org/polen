@@ -26,9 +26,9 @@ export default defineConfig({
       src: './assets/logo.svg',
       alt: 'My GraphQL API',
       height: 40, // optional, in pixels
-      darkMode: './assets/logo-dark.svg' // optional
-    }
-  }
+      darkMode: './assets/logo-dark.svg', // optional
+    },
+  },
 })
 ```
 
@@ -37,7 +37,7 @@ export default defineConfig({
 ```typescript
 export default defineConfig({
   favicon: './assets/favicon.ico',
-  logo: './assets/logo.svg'
+  logo: './assets/logo.svg',
 })
 ```
 
@@ -46,24 +46,27 @@ export default defineConfig({
 ### Phase 1: Favicon Support
 
 #### 1.1 File Detection and Loading
+
 - Support paths relative to config file
 - Accept: `.ico`, `.png`, `.svg`, `.jpg`/`.jpeg`
 - Use Vite's asset handling for optimization
 
 #### 1.2 Favicon Generation Pipeline
+
 ```typescript
 // lib/favicon/favicon-generator.ts
 interface FaviconSizes {
   '16x16': boolean
   '32x32': boolean
   '48x48': boolean
-  '180x180': boolean  // Apple touch icon
-  '192x192': boolean  // Android
-  '512x512': boolean  // PWA
+  '180x180': boolean // Apple touch icon
+  '192x192': boolean // Android
+  '512x512': boolean // PWA
 }
 ```
 
 #### 1.3 HTML Injection
+
 ```html
 <!-- Generated in head -->
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -76,6 +79,7 @@ interface FaviconSizes {
 ### Phase 2: Logo Support
 
 #### 2.1 Logo Component
+
 ```tsx
 // template/components/Logo.tsx
 interface LogoProps {
@@ -85,14 +89,14 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({ config, className }) => {
   const { colorMode } = useColorMode()
-  const src = colorMode === 'dark' && config.darkMode 
-    ? config.darkMode 
+  const src = colorMode === 'dark' && config.darkMode
+    ? config.darkMode
     : config.src
-    
+
   return (
-    <img 
-      src={src} 
-      alt={config.alt || 'Logo'} 
+    <img
+      src={src}
+      alt={config.alt || 'Logo'}
       height={config.height}
       className={className}
     />
@@ -101,20 +105,21 @@ export const Logo: React.FC<LogoProps> = ({ config, className }) => {
 ```
 
 #### 2.2 Vite Plugin Integration
+
 ```typescript
 // vite/plugins/branding.ts
 export function brandingPlugin(config: PolenConfig): Plugin {
   return {
     name: 'polen:branding',
-    
+
     configureServer(server) {
       // Watch favicon/logo files for changes
     },
-    
+
     generateBundle() {
       // Generate favicon variants
       // Optimize logo images
-    }
+    },
   }
 }
 ```
@@ -124,11 +129,13 @@ export function brandingPlugin(config: PolenConfig): Plugin {
 ### Image Processing
 
 **Option 1: Sharp** (Recommended)
+
 - Pros: Fast, full-featured, handles all formats
 - Cons: Native dependency
 - Usage: Development dependency only
 
 **Option 2: Browser-based (Canvas API)**
+
 - Pros: No native deps, works everywhere
 - Cons: Limited format support, slower
 - Usage: Fallback option
@@ -154,25 +161,27 @@ const defaults = {
     './logo.svg',
     './assets/logo.svg',
     // Fall back to text-based logo
-  ]
+  ],
 }
 ```
 
 ## User Experience
 
 ### Development Workflow
+
 1. User adds favicon/logo to their project
 2. Updates `polen.config.ts` with paths
 3. Sees immediate update in dev mode
 4. Build generates optimized versions
 
 ### Error Handling
+
 ```typescript
 // Clear error messages
 "Favicon not found at './assets/favicon.png'. Please check the path is relative to polen.config.ts"
 
 // Helpful warnings
-"Logo image is larger than 500KB. Consider optimizing for better performance."
+'Logo image is larger than 500KB. Consider optimizing for better performance.'
 ```
 
 ## Performance Considerations
@@ -185,6 +194,7 @@ const defaults = {
 ## Migration Path
 
 For existing Polen users:
+
 1. Feature is opt-in, no breaking changes
 2. Existing projects continue to work with defaults
 3. Add configuration when ready

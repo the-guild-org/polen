@@ -1,10 +1,10 @@
-import { createHighlighter, type Highlighter, type BundledTheme, type BundledLanguage } from 'shiki'
 import {
-  transformerNotationHighlight,
   transformerNotationDiff,
   transformerNotationFocus,
+  transformerNotationHighlight,
   transformerRenderWhitespace,
 } from '@shikijs/transformers'
+import { type BundledLanguage, type BundledTheme, createHighlighter, type Highlighter } from 'shiki'
 
 export interface ShikiOptions {
   themes?: {
@@ -88,7 +88,7 @@ export interface CodeHighlightOptions {
   theme?: 'light' | 'dark'
   showLineNumbers?: boolean
   highlightLines?: number[]
-  diffLines?: { add: number[], remove: number[] }
+  diffLines?: { add: number[]; remove: number[] }
   focusLines?: number[]
   showInvisibles?: boolean
 }
@@ -104,7 +104,7 @@ export async function highlightCode({
   showInvisibles = false,
 }: CodeHighlightOptions): Promise<string> {
   const highlighter = await getHighlighter()
-  
+
   const themes = {
     light: DEFAULT_THEMES.light,
     dark: DEFAULT_THEMES.dark,
@@ -119,7 +119,7 @@ export async function highlightCode({
       name: `line-numbers`,
       pre(node: any) {
         node.properties[`data-line-numbers`] = `true`
-      }
+      },
     })
   }
 
@@ -131,7 +131,7 @@ export async function highlightCode({
         if (highlightLines.includes(line)) {
           node.properties[`data-highlighted`] = `true`
         }
-      }
+      },
     })
   }
 
@@ -158,4 +158,4 @@ export async function highlightCode({
 }
 
 // Re-export types
-export type { Highlighter, BundledTheme, BundledLanguage } from 'shiki'
+export type { BundledLanguage, BundledTheme, Highlighter } from 'shiki'

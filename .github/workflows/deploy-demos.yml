@@ -1,0 +1,75 @@
+name: Deploy Demos to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
+      - name: Install demo dependencies
+        run: pnpm install
+        working-directory: ./examples/demos
+
+      - name: Build demos site
+        run: pnpm build
+        working-directory: ./examples/demos
+
+      - name: Build Pokemon demo
+        run: pnpm build
+        working-directory: ./examples/pokemon
+
+      - name: Build GitHub demo
+        run: pnpm build
+        working-directory: ./examples/github
+
+      - name: Organize demo builds
+        run: |
+          mkdir -p ./dist-demos
+          cp -r ./examples/demos/dist/* ./dist-demos/
+          cp -r ./examples/pokemon/dist ./dist-demos/pokemon
+          cp -r ./examples/github/dist ./dist-demos/github
+
+      - name: Setup Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist-demos
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

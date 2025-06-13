@@ -1,0 +1,240 @@
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
+      - name: Build demos
+        run: |
+          cd examples/demos && pnpm install && pnpm build
+          cd ../pokemon && pnpm build
+          cd ../github && pnpm build
+
+      - name: Prepare preview directory
+        run: |
+          mkdir -p dist-preview
+          cp -r examples/demos/dist/* dist-preview/
+          cp -r examples/pokemon/dist dist-preview/pokemon
+          cp -r examples/github/dist dist-preview/github
+
+          # Add PR-specific metadata
+          echo "PR #${{ github.event.pull_request.number }}" > dist-preview/PR_INFO.txt
+          echo "Branch: ${{ github.head_ref }}" >> dist-preview/PR_INFO.txt
+          echo "Commit: ${{ github.event.pull_request.head.sha }}" >> dist-preview/PR_INFO.txt
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Deploy PR preview
+        run: |
+          # Create PR preview directory
+          PR_DIR="gh-pages/pr-${{ github.event.pull_request.number }}"
+          rm -rf "$PR_DIR"
+          mkdir -p "$PR_DIR"
+
+          # Copy build to PR directory
+          cp -r dist-preview/* "$PR_DIR/"
+
+          # Update PR index
+          cd gh-pages
+
+          # Create or update PR index page
+          cat > pr-index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Polen PR Previews</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem;
+                background: #f9fafb;
+              }
+              h1 { color: #111827; }
+              .pr-list {
+                display: grid;
+                gap: 1rem;
+                margin-top: 2rem;
+              }
+              .pr-item {
+                background: white;
+                padding: 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+              .pr-number {
+                font-weight: bold;
+                color: #3b82f6;
+              }
+              .pr-link {
+                background: #10b981;
+                color: white;
+                text-decoration: none;
+                padding: 0.5rem 1rem;
+                border-radius: 6px;
+                font-weight: 500;
+              }
+              .pr-link:hover {
+                background: #059669;
+              }
+              .back-link {
+                color: #3b82f6;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+              }
+              .back-link:hover {
+                text-decoration: underline;
+              }
+            </style>
+          </head>
+          <body>
+            <a href="/" class="back-link">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to main demos
+            </a>
+            <h1>Polen PR Previews</h1>
+            <p>Preview deployments for open pull requests.</p>
+            <div class="pr-list">
+          EOF
+
+          # Add all PR directories to index
+          for dir in pr-*/; do
+            if [ -d "$dir" ] && [ "$dir" != "pr-*/" ]; then
+              PR_NUM=$(echo "$dir" | sed 's/pr-\([0-9]*\)\//\1/')
+              echo "<div class='pr-item'>" >> pr-index.html
+              echo "  <span class='pr-number'>PR #$PR_NUM</span>" >> pr-index.html
+              echo "  <a href='/$dir' class='pr-link'>View Preview →</a>" >> pr-index.html
+              echo "</div>" >> pr-index.html
+            fi
+          done
+
+          echo "</div></body></html>" >> pr-index.html
+
+          # Commit and push
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy PR #${{ github.event.pull_request.number }} preview" || echo "No changes to commit"
+          git push origin gh-pages
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}`;
+            const previewUrl = `${baseUrl}/pr-${prNumber}/`;
+
+            const comment = `## Preview Deployed
+
+            Your Polen demo preview is ready!
+
+            **Preview URL:** ${previewUrl}
+
+            ### Direct links:
+            - [Demos Landing Page](${previewUrl})
+            - [Pokemon Demo](${previewUrl}pokemon/)
+            - [GitHub Demo](${previewUrl}github/)
+
+            This preview will be updated automatically when you push new commits.`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Preview Deployed')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: comment,
+              });
+            }
+
+  cleanup-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove PR preview
+        run: |
+          PR_DIR="pr-${{ github.event.pull_request.number }}"
+          if [ -d "$PR_DIR" ]; then
+            rm -rf "$PR_DIR"
+
+            # Update PR index to remove this PR
+            # (The index will be regenerated on next PR deployment)
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "Remove PR #${{ github.event.pull_request.number }} preview" || echo "No changes to commit"
+            git push origin gh-pages
+          fi
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `🧹 Preview deployment for PR #${prNumber} has been cleaned up.`,
+            });

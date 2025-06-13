@@ -120,7 +120,8 @@ const Layout = () => {
         my='8'
         mx='auto'
       >
-        <style>{`
+        <style>
+          {`
           /* Shiki code blocks */
           pre.shiki {
             margin: 1rem 0;
@@ -151,7 +152,8 @@ const Layout = () => {
             background: transparent;
             display: block;
           }
-        `}</style>
+        `}
+        </style>
         {header}
         {isShowSidebar && (
           <Sidebar

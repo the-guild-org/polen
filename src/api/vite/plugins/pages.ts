@@ -8,9 +8,9 @@ import { Tree } from '#lib/tree/index'
 import { debug } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
+import rehypeShiki from '@shikijs/rehype'
 import { Path, Str } from '@wollybeard/kit'
 import remarkGfm from 'remark-gfm'
-import rehypeShiki from '@shikijs/rehype'
 
 const _debug = debug.sub(`vite-plugin-pages`)
 
