@@ -59,9 +59,7 @@ jobs:
           # Build once for the commit-specific path
           for example in $EXAMPLES; do
             echo "Building $example demo..."
-            cd examples/$example
-            node ../../build/cli/index.js build --base "/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/$example/"
-            cd ../..
+            pnpm --dir examples/$example build --base "/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/$example/"
           done
 
       - name: Prepare PR preview for deployment

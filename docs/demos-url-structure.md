@@ -119,7 +119,11 @@ This workflow:
 4. Updates demos index page
 5. Adds commit status with link to demos
 
-**Manual Trigger**: Use this when adding new examples to rebuild demos for existing releases. Go to Actions → demos-release-semver → Run workflow → Enter a semver tag (e.g., `1.2.0`, `1.3.0-beta.1`). Note: Do not use dist-tag names like `latest` or `next` - use the actual version number.
+**Manual Trigger**: Use this when adding new examples to rebuild demos for existing releases. Go to Actions → demos-release-semver → Run workflow → Enter a semver tag (e.g., `1.2.0`, `1.3.0-beta.1`). 
+
+Notes:
+- Do not use dist-tag names like `latest` or `next` - use the actual version number
+- Demos are only supported for versions 0.9.0 and above (configured in `.github/demo-config.json`)
 
 ### demos-release-dist-tag.yaml
 

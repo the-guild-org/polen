@@ -97,7 +97,25 @@ jobs:
             # Regular semver releases
             echo "is_dist_tag=false" >> $GITHUB_OUTPUT
             echo "actual_tag=$TAG" >> $GITHUB_OUTPUT
-            echo "needs_build=true" >> $GITHUB_OUTPUT
+            
+            # Check minimum version from demo config
+            MIN_VERSION=$(cat .github/demo-config.json | jq -r '.minimumVersion // "0.0.0"')
+            
+            # Function to compare semver versions
+            version_lt() {
+              # Returns 0 (true) if $1 < $2
+              printf '%s\n%s' "$1" "$2" | sort -V | head -n1 | grep -q "^$1$"
+            }
+            
+            # Compare versions
+            if version_lt "$TAG" "$MIN_VERSION"; then
+              echo "❌ Version $TAG is below minimum demo version $MIN_VERSION"
+              echo "⚠️  Demos are only supported for versions $MIN_VERSION and above"
+              echo "needs_build=false" >> $GITHUB_OUTPUT
+            else
+              echo "✅ Version $TAG meets minimum requirement ($MIN_VERSION)"
+              echo "needs_build=true" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Build Polen
@@ -127,10 +145,7 @@ jobs:
             fi
             
             echo "Building $example for release $TAG"
-            # Run build using node directly with the CLI path
-            cd examples/$example
-            node ../../build/cli/index.js build --base "/polen/$TAG/$example/"
-            cd ../..
+            pnpm --dir examples/$example build --base "/polen/$TAG/$example/"
           done
 
       - name: Checkout gh-pages
