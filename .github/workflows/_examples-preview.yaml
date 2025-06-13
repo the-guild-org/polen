@@ -48,7 +48,7 @@ jobs:
         run: pnpm install
 
       - name: Build demos landing page
-        run: node ./scripts/build-demos-index.mjs
+        run: node ./scripts/build-demos-index.mjs "/polen/pr-${{ inputs.pr-number }}/"
 
       - name: Build demos
         run: |

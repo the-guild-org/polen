@@ -3,6 +3,12 @@
 import fs from 'fs'
 import path from 'path'
 
+// Get base path from command line argument or default to /
+const basePath = process.argv[2] || '/'
+const basePathWithoutTrailingSlash = basePath.endsWith('/') && basePath !== '/'
+  ? basePath.slice(0, -1)
+  : basePath
+
 const indexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,7 +151,7 @@ const indexHtml = `<!DOCTYPE html>
       <div class="demo-card">
         <h2>🎮 Pokemon API</h2>
         <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
-        <a href="/pokemon/" class="demo-link">
+        <a href="${basePathWithoutTrailingSlash}/pokemon/" class="demo-link">
           View Demo
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
