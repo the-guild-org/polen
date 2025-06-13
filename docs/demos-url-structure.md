@@ -110,10 +110,15 @@ This workflow:
 
 ### demos-release-dist-tag.yaml
 
-Triggered when `latest` or `next` git tags are pushed. This workflow:
+Triggered when:
+- `latest` or `next` git tags are pushed
+- Manually via GitHub Actions UI (workflow_dispatch)
 
+This workflow:
 1. Finds which semver version the tag points to
 2. Updates dist-tag redirects to point to that version
+
+**Manual Trigger**: Use this to manually sync dist-tag redirects. Go to Actions → demos-release-dist-tag → Run workflow → Select dist tag (latest or next)
 
 ### demos-garbage-collector.yaml
 
