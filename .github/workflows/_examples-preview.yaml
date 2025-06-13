@@ -178,16 +178,17 @@ jobs:
         with:
           issue-number: ${{ inputs.pr-number }}
           body: |
-            ## Preview Deployed
-            Your Polen demo preview is ready!
+            ## Demos Preview Deployed
 
-            **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
+            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
 
-            ### Direct links:
-            - [Demos Landing Page](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/)
-            - [Pokemon Demo](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/pokemon/)
+            #### Demos
 
-            This preview will be updated automatically when you push new commits.
+            - [Pokemon](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/pokemon/)
+
+            #### Notes
+
+            - This preview will be updated automatically when you push new commits.
           comment-tag: polen-preview
 
   cleanup:

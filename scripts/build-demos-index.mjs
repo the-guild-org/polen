@@ -25,8 +25,8 @@ const indexHtml = `<!DOCTYPE html>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      color: #1a1a1a;
-      background: #fafafa;
+      color: #000;
+      background: #fff;
     }
     
     .container {
@@ -36,26 +36,22 @@ const indexHtml = `<!DOCTYPE html>
     }
     
     .header {
-      text-align: center;
       margin-bottom: 4rem;
       padding: 3rem 0;
+      border-bottom: 1px solid #000;
     }
     
     .header h1 {
-      font-size: 3rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 2.5rem;
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
     }
     
     .header p {
-      font-size: 1.25rem;
-      color: #666;
+      font-size: 1rem;
+      color: #000;
       max-width: 600px;
-      margin: 0 auto;
     }
     
     .demos-grid {
@@ -67,75 +63,79 @@ const indexHtml = `<!DOCTYPE html>
     
     .demo-card {
       background: white;
-      border-radius: 12px;
       padding: 2rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-      border: 1px solid #e5e5e5;
+      border: 1px solid #000;
+      transition: all 0.2s ease;
     }
     
     .demo-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
     
     .demo-card h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.75rem;
-      color: #1a1a1a;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #000;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
     
     .demo-card p {
-      color: #666;
+      color: #000;
       margin-bottom: 1.5rem;
-      font-size: 1rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
     }
     
     .demo-link {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: #667eea;
-      color: white;
+      background: #000;
+      color: #fff;
       text-decoration: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
       font-weight: 500;
-      transition: background 0.2s ease;
+      transition: all 0.2s ease;
+      border: 1px solid #000;
     }
     
     .demo-link:hover {
-      background: #5a67d8;
+      background: #fff;
+      color: #000;
     }
     
     .demo-link svg {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
     }
     
     .footer {
       text-align: center;
       padding: 3rem 0;
-      color: #666;
-      border-top: 1px solid #e5e5e5;
+      color: #000;
+      border-top: 1px solid #000;
+      font-size: 0.875rem;
     }
     
     .footer a {
-      color: #667eea;
-      text-decoration: none;
-    }
-    
-    .footer a:hover {
+      color: #000;
       text-decoration: underline;
     }
     
+    .footer a:hover {
+      text-decoration: none;
+    }
+    
     .disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
     }
     
     .disabled .demo-link {
-      background: #ccc;
+      background: #fff;
+      color: #000;
       pointer-events: none;
     }
   </style>
@@ -149,7 +149,7 @@ const indexHtml = `<!DOCTYPE html>
     
     <div class="demos-grid">
       <div class="demo-card">
-        <h2>🎮 Pokemon API</h2>
+        <h2>Pokemon API</h2>
         <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
         <a href="${basePathWithoutTrailingSlash}/pokemon/" class="demo-link">
           View Demo
@@ -160,7 +160,7 @@ const indexHtml = `<!DOCTYPE html>
       </div>
       
       <div class="demo-card disabled">
-        <h2>🐙 GitHub API</h2>
+        <h2>GitHub API</h2>
         <p>Browse GitHub's extensive GraphQL API with over 1600 types. Currently disabled due to build performance.</p>
         <span class="demo-link">
           Coming Soon
