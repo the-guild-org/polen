@@ -119,7 +119,7 @@ jobs:
           keep_files: true # Keep existing PR previews
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
-          commit_message: "Examples deployed for #${{ inputs.pr-number }}"
+          commit_message: "Demos preview deployed for #${{ inputs.pr-number }}"
 
       - name: Get previous deployments for this PR
         id: get-pr-deployments

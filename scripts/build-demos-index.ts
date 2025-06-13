@@ -13,9 +13,10 @@ const args = Command.create()
   .parameter('currentSha', z.string().optional().describe('Current commit SHA'))
   .parameter('mode', z.enum(['demo', 'pr-index']).default('demo').describe('Page mode: demo landing or PR index'))
   .parameter('prDeployments', z.string().optional().describe('JSON array of PR deployments'))
+  .parameter('baseUrl', z.string().optional().describe('Base URL for absolute links'))
   .parse()
 
-const { basePath, prNumber, currentSha, mode, prDeployments } = args
+const { basePath, prNumber, currentSha, mode, prDeployments, baseUrl } = args
 
 // Parse PR deployments if provided
 const parsedPrDeployments = (prDeployments ? JSON.parse(prDeployments) : []) as { number: number }[]
@@ -363,7 +364,7 @@ const indexHtml = `<!DOCTYPE html>
         <h2>Pokemon API</h2>
         <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
         <div class="demo-links">
-          <a href="${basePathWithoutTrailingSlash}/latest/pokemon/" class="demo-link">
+          <a href="latest/pokemon/" class="demo-link">
             View Latest
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -377,7 +378,7 @@ const indexHtml = `<!DOCTYPE html>
             <div class="commit-links">
               ${
       previousDeployments.map(sha => `
-                <a href="${basePathWithoutTrailingSlash}/${sha}/pokemon/" class="commit-link">${sha.substring(0, 7)}</a>
+                <a href="${sha}/pokemon/" class="commit-link">${sha.substring(0, 7)}</a>
               `).join('')
     }
             </div>
