@@ -48,7 +48,7 @@ jobs:
         run: pnpm install
 
       - name: Build demos landing page
-        run: pnpm molt build-demos-index "/polen/pr-${{ inputs.pr-number }}/" "${{ inputs.pr-number }}" "${{ inputs.head-sha }}"
+        run: node ./scripts/build-demos-index.mjs "/polen/pr-${{ inputs.pr-number }}/" "${{ inputs.pr-number }}" "${{ inputs.head-sha }}"
 
       - name: Build demos
         run: |
@@ -185,15 +185,15 @@ jobs:
         run: |
           # Fetch gh-pages branch to check existing deployments
           git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
-          
+
           # Get list of commit deployments for this PR
           PR_DIR="pr-${{ inputs.pr-number }}"
           COMMIT_DIRS=""
-          
+
           if git ls-tree -d --name-only "origin/gh-pages:$PR_DIR" 2>/dev/null | grep -E '^[0-9a-f]{7,40}$' > /dev/null; then
             COMMIT_DIRS=$(git ls-tree -d --name-only "origin/gh-pages:$PR_DIR" 2>/dev/null | grep -E '^[0-9a-f]{7,40}$' | sort -r || echo "")
           fi
-          
+
           # Format as markdown links
           DEPLOYMENT_LINKS=""
           if [ -n "$COMMIT_DIRS" ]; then
@@ -205,11 +205,11 @@ jobs:
               fi
             done
           fi
-          
+
           # Add current deployment at the top
           CURRENT_SHA=$(echo "${{ inputs.head-sha }}" | cut -c1-7)
           DEPLOYMENT_LINKS="- [\`${CURRENT_SHA}\`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PR_DIR}/${{ inputs.head-sha }}/) _(current)_\n${DEPLOYMENT_LINKS}"
-          
+
           # Save to output
           echo "deployment_links<<EOF" >> $GITHUB_OUTPUT
           echo -e "$DEPLOYMENT_LINKS" >> $GITHUB_OUTPUT
@@ -219,6 +219,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ inputs.pr-number }}
+          comment-tag: polen-preview
           body: |
             ## Demos Preview Deployed
 
@@ -230,16 +231,15 @@ jobs:
 
             <details>
             <summary>Previous deployments</summary>
-            
+
             ${{ steps.get-pr-deployments.outputs.deployment_links }}
-            
+
             </details>
 
             #### Notes
 
             - This preview will be updated automatically when you push new commits.
             - Each commit is preserved at its own URL for permanent reference.
-          comment-tag: polen-preview
 
   cleanup:
     if: inputs.action == 'closed'
