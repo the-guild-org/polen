@@ -25,12 +25,17 @@ export default async ({ github, context, core }) => {
     }
 
     // Get contents of PR directory
+    // Note: GitHub API returns max 100,000 tree entries in non-recursive mode
     const { data: prTree } = await github.rest.git.getTree({
       owner: repoOwner,
       repo: repoName,
       tree_sha: prDir.sha,
-      // Omit recursive to get only direct children
+      recursive: false, // We only need direct children
     })
+
+    // Debug: log all directories found
+    console.log(`Found ${prTree.tree.length} items in PR directory`)
+    console.log('Directory items:', prTree.tree.filter(item => item.type === 'tree').map(item => item.path))
 
     // Filter for commit SHA directories (excluding current)
     const commitDirs = prTree.tree
@@ -43,6 +48,8 @@ export default async ({ github, context, core }) => {
       .map((item) => item.path)
       .sort()
       .reverse()
+
+    console.log(`Found ${commitDirs.length} previous deployments (excluding current ${currentSha})`)
 
     if (commitDirs.length === 0) {
       core.setOutput('deployment_links', '(none)')
