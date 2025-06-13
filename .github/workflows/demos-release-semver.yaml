@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to build demos for (e.g., 1.2.0 or latest)'
+        description: 'Release semver tag to build demos for (e.g. 1.2.0, 0.8.0-next.1, ...)'
         required: true
         type: string
 
@@ -31,14 +31,14 @@ jobs:
         run: |
           # Save the current tag/branch
           CURRENT_REF=$(git rev-parse HEAD)
-          
+
           # Fetch main branch
           git fetch origin main
-          
+
           # Checkout scripts from main to get latest fixes
           git checkout origin/main -- .github/scripts
           git checkout origin/main -- .github/actions
-          
+
           # Reset to avoid committing these changes
           git reset HEAD
 
@@ -49,7 +49,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TAG="${{ inputs.tag }}"
             ACTION="manual"
-            
+
             # Determine if it's a prerelease based on tag format
             if [[ "$TAG" =~ -[a-zA-Z] ]]; then
               IS_PRERELEASE="true"
@@ -61,25 +61,25 @@ jobs:
             IS_PRERELEASE="${{ github.event.release.prerelease }}"
             ACTION="${{ github.event.action }}"
           fi
-          
+
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
           echo "action=$ACTION" >> $GITHUB_OUTPUT
-          
+
           # For the "next" release being edited, we need to find the actual semver tag
           if [[ "$TAG" == "next" ]] && [[ "$ACTION" == "edited" ]]; then
             echo "is_dist_tag=true" >> $GITHUB_OUTPUT
-            
+
             # Get the commit this release points to
             COMMIT=$(git rev-list -n 1 $TAG)
             echo "Next tag points to commit: $COMMIT"
-            
+
             # Find the semver prerelease tag for this commit
             ALL_TAGS=$(git tag --points-at $COMMIT)
             echo "All tags at this commit: $ALL_TAGS"
-            
+
             SEMVER_TAG=$(echo "$ALL_TAGS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-' | head -1)
-            
+
             if [ -n "$SEMVER_TAG" ]; then
               echo "✅ Found semver tag: $SEMVER_TAG"
               echo "actual_tag=$SEMVER_TAG" >> $GITHUB_OUTPUT
@@ -111,15 +111,16 @@ jobs:
         if: steps.release.outputs.needs_build == 'true'
         run: |
           TAG="${{ steps.release.outputs.actual_tag }}"
-          
+
           # Get list of examples that are enabled for demos
           EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
           echo "Found demo-enabled examples: $EXAMPLES"
-          
+
           # Build each example at the semver path
           for example in $EXAMPLES; do
             echo "Building $example for release $TAG"
-            pnpm --dir examples/$example build --base "/polen/$TAG/$example/"
+            # Use the polen CLI directly from the workspace
+            pnpm --dir examples/$example exec polen build --base "/polen/$TAG/$example/"
           done
 
       - name: Checkout gh-pages
@@ -132,10 +133,10 @@ jobs:
         if: steps.release.outputs.needs_build == 'true'
         run: |
           TAG="${{ steps.release.outputs.actual_tag }}"
-          
+
           # Get list of examples that are enabled for demos
           EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
-          
+
           # Copy built demos to semver paths
           for example in $EXAMPLES; do
             if [ -d "examples/$example/build" ]; then
@@ -143,7 +144,7 @@ jobs:
               cp -r examples/$example/build/* gh-pages/$TAG/$example/
             fi
           done
-          
+
           # Create redirect for direct demo access at root
           # Examples:
           # - /polen/pokemon/ → /polen/latest/pokemon/ (convenience redirect)
@@ -173,32 +174,32 @@ jobs:
         run: |
           TAG="${{ steps.release.outputs.actual_tag }}"
           IS_PRERELEASE="${{ steps.release.outputs.is_prerelease }}"
-          
+
           # Determine which dist-tag to update
           if [[ "$IS_PRERELEASE" == "true" ]]; then
             DIST_TAG="next"
           else
             DIST_TAG="latest"
           fi
-          
+
           cd gh-pages
-          
+
           # Remove old dist-tag directory if it exists
           if [ -d "$DIST_TAG" ]; then
             echo "Removing old $DIST_TAG directory"
             rm -rf "$DIST_TAG"
           fi
-          
+
           # Copy the semver deployment to the dist-tag name
           echo "Copying $TAG to $DIST_TAG"
           cp -r "$TAG" "$DIST_TAG"
-          
+
           # Update all base paths in the copied files
           echo "Updating base paths from /$TAG/ to /$DIST_TAG/"
           find "$DIST_TAG" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
             sed -i "s|/polen/$TAG/|/polen/$DIST_TAG/|g" "$file"
           done
-          
+
           echo "✅ Successfully updated $DIST_TAG with content from $TAG"
 
       - name: Update demos index
@@ -211,23 +212,23 @@ jobs:
       - name: Commit and deploy
         run: |
           cd gh-pages
-          
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           git add .
-          
+
           if [[ -n $(git status --porcelain) ]]; then
             # Use the original tag name for the commit message
             TAG="${{ steps.release.outputs.tag }}"
             ACTION="${{ steps.release.outputs.action }}"
-            
+
             if [[ "$ACTION" == "edited" ]]; then
               git commit -m "chore: update demos for edited release $TAG"
             else
               git commit -m "chore: deploy demos for release $TAG"
             fi
-            
+
             git push origin gh-pages
           else
             echo "No changes to deploy"
@@ -240,7 +241,7 @@ jobs:
           script: |
             const tag = '${{ steps.release.outputs.actual_tag }}';
             const eventName = '${{ github.event_name }}';
-            
+
             let sha;
             if (eventName === 'workflow_dispatch') {
               // For manual runs, get the commit SHA for the tag
@@ -253,7 +254,7 @@ jobs:
             } else {
               sha = '${{ github.event.release.target_commitish }}';
             }
-            
+
             // Create a commit status with link to demos
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
