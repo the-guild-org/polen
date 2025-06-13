@@ -21,12 +21,37 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
     app.get(routePath, handler)
   }
 
-  const result = await Hono.SSG.toSSG(app, NodeFs, {
-    concurrency: 10,
-    dir: PROJECT_DATA.paths.relative.build.root,
-  })
+  // For large schemas, we need to process in smaller batches to avoid memory issues
+  const BATCH_SIZE = 50
+  const totalPaths = routePaths.length
+  console.log(`[info] Generating ${totalPaths} static pages...`)
 
-  if (!result.success) {
-    throw new Error(`Failed to generate static site`, { cause: result.error })
+  for (let i = 0; i < totalPaths; i += BATCH_SIZE) {
+    const batchPaths = routePaths.slice(i, i + BATCH_SIZE)
+    const batchApp = new Hono.Hono()
+
+    // Register only the routes for this batch
+    for (const routePath of batchPaths) {
+      batchApp.get(routePath, handler)
+    }
+
+    console.log(
+      `[info] Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${
+        Math.ceil(totalPaths / BATCH_SIZE)
+      } (${batchPaths.length} pages)...`,
+    )
+
+    const result = await Hono.SSG.toSSG(batchApp, NodeFs, {
+      concurrency: 5, // Reduced concurrency for memory efficiency
+      dir: PROJECT_DATA.paths.relative.build.root,
+    })
+
+    if (!result.success) {
+      throw new Error(`Failed to generate static site at batch ${Math.floor(i / BATCH_SIZE) + 1}`, {
+        cause: result.error,
+      })
+    }
   }
+
+  console.log(`[info] Successfully generated ${totalPaths} static pages.`)
 }

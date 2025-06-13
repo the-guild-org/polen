@@ -70,9 +70,10 @@ export const create = async (parameters: {
         const url = `http://localhost:${port.toString()}`
 
         // Use a simple static file server to serve the SSG build
+        // The build output is in the 'build' directory, not 'dist'
         const serverProcess = project.shell({
           env: { ...process.env },
-        })`npx serve dist --listen ${port.toString()} --single`
+        })`npx serve build --listen ${port.toString()} --single`
 
         // Give the server time to start
         await project.shell`sleep 2`

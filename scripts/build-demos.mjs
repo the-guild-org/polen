@@ -10,13 +10,13 @@ console.log('🔨 Building Polen...')
 await $`pnpm build`
 
 console.log('🏠 Building demos landing page...')
-await $`NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/demos build`
+await $`NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/demos build`
 
 console.log('🐙 Building GitHub demo...')
-await $`NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/github build`
+await $`NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/github build`
 
 console.log('⚡ Building Pokemon demo...')
-await $`NODE_OPTIONS="--max-old-space-size=4096" pnpm --dir examples/pokemon build`
+await $`NODE_OPTIONS="--max-old-space-size=6144" pnpm --dir examples/pokemon build`
 
 console.log('📁 Creating demo distribution...')
 await $`mkdir --parents dist-demos`
