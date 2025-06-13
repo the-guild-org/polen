@@ -76,6 +76,14 @@ This allows users to always access:
 
 Examples can be excluded from demos by adding `"demo": false` to their `package.json`.
 
+### Adding New Examples
+
+When you add a new example to the `examples/` directory:
+
+1. It will automatically be included in future releases
+2. To add it to existing releases, manually trigger the `demos-release-semver` workflow for each release tag
+3. The workflow dynamically discovers examples, so no workflow changes are needed
+
 ### Garbage Collection
 
 - **Stable releases**: Kept forever
@@ -86,21 +94,31 @@ Examples can be excluded from demos by adding `"demo": false` to their `package.
 
 ### demos-release-semver.yaml
 
-Triggered when a GitHub release is published or edited. This workflow:
+Triggered when:
+
+- A GitHub release is published or edited
+- Manually via GitHub Actions UI (workflow_dispatch)
+
+This workflow:
+
 1. Builds demos at `/polen/{semver}/` paths
 2. Creates convenience redirects (`/polen/{demo}/` → `/polen/latest/{demo}/`)
 3. Updates demos index page
 4. Adds commit status with link to demos
 
+**Manual Trigger**: Use this when adding new examples to rebuild demos for existing releases. Go to Actions → demos-release-semver → Run workflow → Enter a tag (e.g., `1.2.0` or `latest`)
+
 ### demos-release-dist-tag.yaml
 
 Triggered when `latest` or `next` git tags are pushed. This workflow:
+
 1. Finds which semver version the tag points to
 2. Updates dist-tag redirects to point to that version
 
 ### demos-garbage-collector.yaml
 
 Runs on schedule (daily). This workflow:
+
 1. Identifies prereleases outside the current "next" range
 2. Removes those old prerelease demos
 3. Always keeps stable releases
@@ -127,6 +145,7 @@ Runs on schedule (daily). This workflow:
 ### Handling Mutable Releases
 
 The "next" GitHub release is mutable - it gets updated rather than recreated when new prereleases are published. The `demos-release-semver.yaml` workflow handles this by:
+
 1. Listening for both `published` and `edited` events
 2. Finding the actual semver tag when "next" is edited
 3. Building demos for that semver version

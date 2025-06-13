@@ -3,6 +3,12 @@ name: demos-release-semver
 on:
   release:
     types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build demos for (e.g., 1.2.0 or latest)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -15,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -23,9 +29,22 @@ jobs:
       - name: Extract release info
         id: release
         run: |
-          TAG="${{ github.event.release.tag_name }}"
-          IS_PRERELEASE="${{ github.event.release.prerelease }}"
-          ACTION="${{ github.event.action }}"
+          # Handle both release events and manual triggers
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+            ACTION="manual"
+            
+            # Determine if it's a prerelease based on tag format
+            if [[ "$TAG" =~ -[a-zA-Z] ]]; then
+              IS_PRERELEASE="true"
+            else
+              IS_PRERELEASE="false"
+            fi
+          else
+            TAG="${{ github.event.release.tag_name }}"
+            IS_PRERELEASE="${{ github.event.release.prerelease }}"
+            ACTION="${{ github.event.action }}"
+          fi
           
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
@@ -171,7 +190,20 @@ jobs:
         with:
           script: |
             const tag = '${{ steps.release.outputs.actual_tag }}';
-            const sha = '${{ github.event.release.target_commitish }}';
+            const eventName = '${{ github.event_name }}';
+            
+            let sha;
+            if (eventName === 'workflow_dispatch') {
+              // For manual runs, get the commit SHA for the tag
+              const { data: ref } = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tag}`
+              });
+              sha = ref.object.sha;
+            } else {
+              sha = '${{ github.event.release.target_commitish }}';
+            }
             
             // Create a commit status with link to demos
             await github.rest.repos.createCommitStatus({
