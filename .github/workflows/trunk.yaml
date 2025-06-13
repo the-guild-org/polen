@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 jobs:
-  deploy-demos:
+  demos:
     uses: ./.github/workflows/_demos.yaml
 
   # Check and release canary version
