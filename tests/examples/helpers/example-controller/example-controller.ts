@@ -73,10 +73,23 @@ export const create = async (parameters: {
         // The build output is in the 'build' directory, not 'dist'
         const serverProcess = project.shell({
           env: { ...process.env },
-        })`npx serve build --listen ${port.toString()} --single`
+        })`npx serve build --listen ${port.toString()} --single --no-clipboard`
 
-        // Give the server time to start
-        await project.shell`sleep 2`
+        // Wait for server to be ready by checking if it's responding
+        const maxRetries = 30
+        let retries = 0
+        while (retries < maxRetries) {
+          try {
+            await fetch(url)
+            break
+          } catch (error) {
+            retries++
+            if (retries === maxRetries) {
+              throw new Error(`SSG server failed to start on ${url} after ${maxRetries} attempts`)
+            }
+            await project.shell`sleep 0.5`
+          }
+        }
 
         return {
           raw: serverProcess,
