@@ -48,7 +48,7 @@ jobs:
         run: pnpm install
 
       - name: Build demos landing page
-        run: node ./scripts/build-demos-index.mjs "/polen/pr-${{ inputs.pr-number }}/" "${{ inputs.pr-number }}" "${{ inputs.head-sha }}"
+        run: node ./scripts/build-demos-index.ts --basePath "/polen/pr-${{ inputs.pr-number }}/" --prNumber "${{ inputs.pr-number }}" --currentSha "${{ inputs.head-sha }}"
 
       - name: Build demos
         run: |
@@ -85,89 +85,30 @@ jobs:
           cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
           cp -r dist-preview/* gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/
 
-          # Create a simple PR index page
-          cat > gh-pages-deploy/pr-index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Polen PR Previews</title>
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 2rem;
-                background: #f9fafb;
-              }
-              h1 { color: #111827; }
-              .pr-list {
-                display: grid;
-                gap: 1rem;
-                margin-top: 2rem;
-              }
-              .pr-item {
-                background: white;
-                padding: 1.5rem;
-                border-radius: 8px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-              }
-              .pr-number {
-                font-weight: bold;
-                color: #3b82f6;
-              }
-              .pr-link {
-                background: #10b981;
-                color: white;
-                text-decoration: none;
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                font-weight: 500;
-              }
-              .pr-link:hover {
-                background: #059669;
-              }
-              .back-link {
-                color: #3b82f6;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                margin-bottom: 1rem;
-              }
-              .back-link:hover {
-                text-decoration: underline;
-              }
-            </style>
-          </head>
-          <body>
-            <a href="/" class="back-link">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to main demos
-            </a>
-            <h1>Polen PR Previews</h1>
-            <p>Preview deployments for open pull requests.</p>
-            <div class="pr-list">
-          EOF
+          # Get all PR deployments from gh-pages branch
+          PR_DEPLOYMENTS="[]"
 
-          # Add all PR directories to index
-          for dir in pr-*/; do
-            if [ -d "$dir" ] && [ "$dir" != "pr-*/" ]; then
-              PR_NUM=$(echo "$dir" | sed 's/pr-\([0-9]*\)\//\1/')
-              echo "<div class='pr-item'>" >> pr-index.html
-              echo "  <span class='pr-number'>PR #$PR_NUM</span>" >> pr-index.html
-              echo "  <a href='/$dir' class='pr-link'>View Preview →</a>" >> pr-index.html
-              echo "</div>" >> pr-index.html
-            fi
-          done
+          # Fetch gh-pages to check existing PRs
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
 
-          echo "</div></body></html>" >> gh-pages-deploy/pr-index.html
+          # Get all PR directories from gh-pages
+          PR_DIRS=$(git ls-tree -d --name-only origin/gh-pages | grep '^pr-' | sort -V || echo "")
+
+          if [ -n "$PR_DIRS" ]; then
+            PR_LIST=""
+            for dir in $PR_DIRS; do
+              PR_NUM=$(echo "$dir" | sed 's/pr-//')
+              if [ -n "$PR_LIST" ]; then PR_LIST="$PR_LIST,"; fi
+              PR_LIST="$PR_LIST{\"number\":\"$PR_NUM\"}"
+            done
+            PR_DEPLOYMENTS="[$PR_LIST]"
+          fi
+
+          # Build PR index page using CLI
+          node ./scripts/build-demos-index.ts --mode pr-index --prDeployments "$PR_DEPLOYMENTS"
+
+          # Copy the generated PR index to deployment directory
+          cp dist-demos/pr-index.html gh-pages-deploy/pr-index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
