@@ -7,6 +7,6 @@
     "build": "polen build"
   },
   "dependencies": {
-    "polen": "workspace:*"
+    "polen": "link:../.."
   }
 }

@@ -277,19 +277,19 @@ importers:
   examples/demos:
     dependencies:
       polen:
-        specifier: workspace:*
+        specifier: link:../..
         version: link:../..
 
   examples/github:
     dependencies:
       polen:
-        specifier: workspace:*
+        specifier: link:../..
         version: link:../..
 
   examples/pokemon:
     dependencies:
       polen:
-        specifier: workspace:*
+        specifier: link:../..
         version: link:../..
 
 packages:
