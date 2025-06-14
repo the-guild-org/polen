@@ -77,8 +77,8 @@ jobs:
           step: demos-rebuild/rebuild-demos.ts
           inputs: |
             {
-              "versions_to_build": ${{ needs.plan.outputs.versions_to_build }},
-              "dist_tags": ${{ needs.plan.outputs.dist_tags }}
+              "versions_to_build": ${{ toJSON(needs.plan.outputs.versions_to_build) }},
+              "dist_tags": ${{ toJSON(needs.plan.outputs.dist_tags) }}
             }
 
       - name: Update demos index

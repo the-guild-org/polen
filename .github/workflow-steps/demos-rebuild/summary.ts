@@ -2,9 +2,9 @@
 import { type RebuildInputs, Step } from '../types.ts'
 
 export default Step<RebuildInputs>(async ({ core, inputs }) => {
-  const versions = inputs.versions_to_build
-  const distTags = inputs.dist_tags
-  const dryRun = inputs.dry_run
+  const versions = inputs.versions_to_build || []
+  const distTags = inputs.dist_tags || {}
+  const dryRun = inputs.dry_run || false
 
   let summary = '# Demos Rebuild Summary\n\n'
 

@@ -7,17 +7,6 @@ import { type RebuildInputs, Step } from '../types.ts'
  * Rebuild demos for multiple versions
  */
 export default Step<RebuildInputs>(async ({ core, $, inputs, fs }) => {
-  console.log('DEBUG: Raw inputs object:', inputs)
-  console.log('DEBUG: inputs type:', typeof inputs)
-  console.log('DEBUG: inputs keys:', Object.keys(inputs))
-  
-  console.log('DEBUG: versions_to_build type:', typeof inputs.versions_to_build)
-  console.log('DEBUG: versions_to_build value:', inputs.versions_to_build)
-  console.log('DEBUG: versions_to_build is array?', Array.isArray(inputs.versions_to_build))
-  
-  console.log('DEBUG: dist_tags type:', typeof inputs.dist_tags)
-  console.log('DEBUG: dist_tags value:', inputs.dist_tags)
-  
   const versions = inputs.versions_to_build
   const distTags = inputs.dist_tags
 
