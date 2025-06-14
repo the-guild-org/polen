@@ -511,6 +511,13 @@ const indexHtml = `<!DOCTYPE html>
             ${
         Object.entries(parsedDistTags)
           .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
+          .filter(([tag, version]) => {
+            // If next points to the same version as latest, filter it out
+            if (tag === 'next' && parsedDistTags['latest'] === version) {
+              return false
+            }
+            return true
+          })
           .map(([tag, version]) => `
                   <div class="dist-tag-button">
                     <a href="${tag}/pokemon/" class="dist-tag-label">
@@ -523,6 +530,11 @@ const indexHtml = `<!DOCTYPE html>
                   </div>
                 `).join('')
       }
+          ${
+        // Show "no prereleases" message if next === latest
+        parsedDistTags['next'] && parsedDistTags['next'] === parsedDistTags['latest']
+          ? '<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>'
+          : ''}
           </div>`
       : parsedTrunkDeployments && parsedTrunkDeployments.latest
       ? `<a href="latest/pokemon/" class="demo-link">
