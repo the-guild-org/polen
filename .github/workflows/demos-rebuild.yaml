@@ -75,7 +75,11 @@ jobs:
         uses: ./.github/actions/run-workflow-step
         with:
           step: demos-rebuild/rebuild-demos.ts
-          inputs: ${{ toJSON(needs.plan.outputs) }}
+          inputs: |
+            {
+              "versions_to_build": ${{ needs.plan.outputs.versions_to_build }},
+              "dist_tags": ${{ needs.plan.outputs.dist_tags }}
+            }
 
       - name: Update demos index
         uses: ./.github/actions/run-workflow-step
