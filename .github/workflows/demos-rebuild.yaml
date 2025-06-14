@@ -75,11 +75,7 @@ jobs:
         uses: ./.github/actions/run-workflow-step
         with:
           step: demos-rebuild/rebuild-demos.ts
-          inputs: |
-            {
-              "versions_to_build": ${{ toJSON(needs.plan.outputs.versions_to_build) }},
-              "dist_tags": ${{ toJSON(needs.plan.outputs.dist_tags) }}
-            }
+          inputs: ${{ toJSON(needs.plan.outputs) }}
 
       - name: Update demos index
         uses: ./.github/actions/run-workflow-step
@@ -131,9 +127,4 @@ jobs:
         uses: ./.github/actions/run-workflow-step
         with:
           step: demos-rebuild/summary.ts
-          inputs: |
-            {
-              "versions_to_build": ${{ toJSON(needs.plan.outputs.versions_to_build) }},
-              "dist_tags": ${{ toJSON(needs.plan.outputs.dist_tags) }},
-              "dry_run": ${{ toJSON(inputs.dry_run) }}
-            }
+          inputs: ${{ toJSON(merge(needs.plan.outputs, inputs)) }}
