@@ -125,6 +125,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/use-latest-ci
+      - name: Setup
+        uses: ./.github/actions/setup
       - name: Summary
         uses: ./.github/actions/run-workflow-step
         with:
