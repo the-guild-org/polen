@@ -102,13 +102,14 @@ jobs:
             MIN_VERSION=$(cat .github/demo-config.json | jq -r '.minimumVersion // "0.0.0"')
             
             # Function to compare semver versions
-            version_lt() {
-              # Returns 0 (true) if $1 < $2
-              printf '%s\n%s' "$1" "$2" | sort -V | head -n1 | grep -q "^$1$"
+            version_gte() {
+              # Returns 0 (true) if $1 >= $2
+              # If $2 is the smaller one when sorted, then $1 >= $2
+              [ "$(printf '%s\n%s' "$1" "$2" | sort -V | head -n1)" = "$2" ]
             }
             
             # Compare versions
-            if version_lt "$TAG" "$MIN_VERSION"; then
+            if ! version_gte "$TAG" "$MIN_VERSION"; then
               echo "❌ Version $TAG is below minimum demo version $MIN_VERSION"
               echo "⚠️  Demos are only supported for versions $MIN_VERSION and above"
               echo "needs_build=false" >> $GITHUB_OUTPUT
