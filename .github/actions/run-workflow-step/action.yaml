@@ -23,7 +23,7 @@ runs:
         # This will use the Node version from the setup action (24.x)
         # Node supports TypeScript execution (suppress experimental warning)
         node --no-warnings --input-type=module -e "
-        import { run } from process.env.RUNNER_PATH;
+        const { run } = await import(process.env.RUNNER_PATH);
         await run({
           step: process.env.STEP_PATH,
           inputs: JSON.parse(process.env.STEP_INPUTS || '{}')
