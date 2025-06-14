@@ -39,10 +39,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.1.x"
+      - name: Setup
+        uses: ./.github/actions/setup
 
       - name: Plan rebuild
         id: plan
@@ -53,9 +51,8 @@ jobs:
           INPUT_REBUILD_DIST_TAGS: ${{ inputs.rebuild_dist_tags }}
         with:
           script: |
-            const { default: semver } = await import('${{ github.workspace }}/node_modules/semver/index.js')
             const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/plan-rebuild.js')
-            return script({ github, context, core, exec, semver })
+            return script({ github, context, core, exec })
 
   rebuild:
     needs: plan

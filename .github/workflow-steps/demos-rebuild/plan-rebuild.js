@@ -5,7 +5,7 @@ import * as semver from 'semver'
 /**
  * Plan rebuild - determine which versions to rebuild
  *
- * @param {import('../../scripts/lib/async-function').AsyncFunctionArguments & { semver: typeof import('semver') }} args
+ * @param {import('../../scripts/lib/async-function').AsyncFunctionArguments} args
  */
 export default async ({ github, context, core }) => {
   // Get all version tags
