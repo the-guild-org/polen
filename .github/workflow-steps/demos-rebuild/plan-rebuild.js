@@ -1,11 +1,13 @@
 // @ts-check
 
+import * as semver from 'semver'
+
 /**
  * Plan rebuild - determine which versions to rebuild
  *
  * @param {import('../../scripts/lib/async-function').AsyncFunctionArguments & { semver: typeof import('semver') }} args
  */
-export default async ({ github, context, core, semver }) => {
+export default async ({ github, context, core }) => {
   // Get all version tags
   const { data: tags } = await github.rest.repos.listTags({
     owner: context.repo.owner,
@@ -14,8 +16,8 @@ export default async ({ github, context, core, semver }) => {
   })
 
   const versionTags = tags
-    .map(t => t.name)
-    .filter(t => semver.valid(t))
+    .map((t) => t.name)
+    .filter((t) => semver.valid(t))
     .sort(semver.rcompare)
 
   console.log(`Found ${versionTags.length} version tags`)
@@ -30,14 +32,21 @@ export default async ({ github, context, core, semver }) => {
       return
     }
 
-    versionsToRebuild = versionTags.filter(v => semver.gte(v, sinceVersion))
-    console.log(`Found ${versionsToRebuild.length} versions >= ${sinceVersion}`)
+    versionsToRebuild = versionTags.filter((v) => semver.gte(v, sinceVersion))
+    console.log(
+      `Found ${versionsToRebuild.length} versions >= ${sinceVersion}`,
+    )
   }
 
   // Apply skip list
-  const skipVersions = (process.env.INPUT_SKIP_VERSIONS || '').split(',').map(v => v.trim()).filter(Boolean)
+  const skipVersions = (process.env.INPUT_SKIP_VERSIONS || '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean)
   if (skipVersions.length > 0) {
-    versionsToRebuild = versionsToRebuild.filter(v => !skipVersions.includes(v))
+    versionsToRebuild = versionsToRebuild.filter(
+      (v) => !skipVersions.includes(v),
+    )
     console.log(`Skipping versions: ${skipVersions.join(', ')}`)
   }
 
@@ -60,8 +69,10 @@ export default async ({ github, context, core, semver }) => {
         })
 
         const semverTag = tagsAtCommit
-          .filter(t => t.commit.sha === ref.object.sha && semver.valid(t.name))
-          .map(t => t.name)
+          .filter(
+            (t) => t.commit.sha === ref.object.sha && semver.valid(t.name),
+          )
+          .map((t) => t.name)
           .sort(semver.rcompare)[0]
 
         if (semverTag) {

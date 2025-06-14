@@ -1,4 +1,6 @@
 // @ts-check
+import * as fs from 'node:fs/promises'
+import * as semver from 'semver'
 import { buildDemosForTag, deployDemos, updateDistTagContent } from '../../scripts/lib/build-demos.js'
 import getDemoExamples from '../../scripts/tools/get-demo-examples.js'
 
@@ -7,7 +9,7 @@ import getDemoExamples from '../../scripts/tools/get-demo-examples.js'
  *
  * @param {import('../../scripts/lib/async-function').AsyncFunctionArguments & { semver: typeof import('semver'), fs: typeof import('fs').promises }} args
  */
-export default async ({ core, exec, semver, fs }) => {
+export default async ({ core, exec }) => {
   const versions = JSON.parse(process.env.VERSIONS_TO_BUILD)
   const distTags = JSON.parse(process.env.DIST_TAGS)
 
@@ -16,17 +18,25 @@ export default async ({ core, exec, semver, fs }) => {
   console.log(`Building demos for examples: ${examples.join(', ')}`)
 
   // Get current branch to return to
-  const currentBranch = await exec.getExecOutput('git', ['rev-parse', '--abbrev-ref', 'HEAD'])
+  const currentBranch = await exec.getExecOutput('git', [
+    'rev-parse',
+    '--abbrev-ref',
+    'HEAD',
+  ])
   const originalBranch = currentBranch.stdout.trim()
 
   // Check minimum version from config
-  const demoConfig = JSON.parse(await fs.readFile('.github/demo-config.json', 'utf-8'))
+  const demoConfig = JSON.parse(
+    await fs.readFile('.github/demo-config.json', 'utf-8'),
+  )
   const minVersion = demoConfig.minimumVersion || '0.0.0'
 
   // Build each version
   for (const version of versions) {
     if (semver.lt(version, minVersion)) {
-      console.log(`⚠️ Skipping ${version} - below minimum version ${minVersion}`)
+      console.log(
+        `⚠️ Skipping ${version} - below minimum version ${minVersion}`,
+      )
       continue
     }
 
