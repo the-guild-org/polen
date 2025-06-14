@@ -1,0 +1,16 @@
+name: Update CI Logic
+description: Fetches latest .github directory from main branch to get current CI scripts and workflows
+runs:
+  using: composite
+  steps:
+    - name: Update CI logic from main
+      run: |
+        # Fetch main branch
+        git fetch origin main
+
+        # Checkout latest .github directory from main
+        git checkout origin/main -- .github
+
+        # Reset to avoid committing these changes
+        git reset HEAD
+      shell: bash
