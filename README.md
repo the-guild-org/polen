@@ -4,7 +4,7 @@ A framework for delightful GraphQL developer portals
 
 ## Installation
 
-```
+```sh
 npm add polen
 ```
 
