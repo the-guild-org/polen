@@ -88,7 +88,7 @@ jobs:
           echo "Updating base paths from /${{ inputs.head-sha }}/ to /latest/"
           # No need to escape SHA since it's just hex characters
           find gh-pages-deploy/pr-${{ inputs.pr-number }}/latest -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
-            sed -i "s|/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/|/polen/pr-${{ inputs.pr-number }}/latest/|g" "$file"
+            perl -i -pe "s|/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/|/polen/pr-${{ inputs.pr-number }}/latest/|g" "$file"
           done
           
           # Create redirect from /latest/ to PR root

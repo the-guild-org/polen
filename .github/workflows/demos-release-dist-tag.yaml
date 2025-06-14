@@ -97,14 +97,9 @@ jobs:
           echo "Updating base paths from /$SEMVER_TAG/ to /$TAG_NAME/"
           
           # Find and replace in all HTML, JS, and CSS files
-          # Escape special characters in the semver tag for sed
-          ESCAPED_SEMVER=$(echo "$SEMVER_TAG" | sed 's/[.[\*^$()+?{|]/\\&/g')
-          
           find "$TAG_NAME" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
-            # Use sed to replace the paths
-            sed -i "s|/polen/$ESCAPED_SEMVER/|/polen/$TAG_NAME/|g" "$file"
-            sed -i "s|\"/$ESCAPED_SEMVER/|\"|/$TAG_NAME/|g" "$file"
-            sed -i "s|'/$ESCAPED_SEMVER/|'/$TAG_NAME/|g" "$file"
+            # Use perl for more reliable find/replace with special characters
+            perl -i -pe "s|/polen/\Q$SEMVER_TAG\E/|/polen/$TAG_NAME/|g" "$file"
           done
           
           echo "✅ Successfully updated $TAG_NAME with content from $SEMVER_TAG"
