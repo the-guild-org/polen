@@ -71,25 +71,18 @@ jobs:
 
       - name: Build demos for release
         if: steps.release.outputs.needs_build == 'true'
-        run: |
-          TAG="${{ steps.release.outputs.actual_tag }}"
-
-          # Get list of examples that are enabled for demos
-          # Use the script from main branch to ensure we have the latest filtering logic
-          EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
-          echo "Found demo-enabled examples: $EXAMPLES"
-
-          # Build each example at the semver path
-          for example in $EXAMPLES; do
-            # Skip if example doesn't exist in this version
-            if [ ! -d "examples/$example" ]; then
-              echo "Skipping $example - not found in this version"
-              continue
-            fi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { buildDemosForTag } = await import('${{ github.workspace }}/.github/scripts/lib/build-demos.js')
+            const { default: getDemoExamples } = await import('${{ github.workspace }}/.github/scripts/tools/get-demo-examples.js')
             
-            echo "Building $example for release $TAG"
-            pnpm --dir examples/$example build --base "/polen/$TAG/$example/"
-          done
+            const tag = '${{ steps.release.outputs.actual_tag }}'
+            const examples = getDemoExamples()
+            
+            console.log(`Found demo-enabled examples: ${examples.join(' ')}`)
+            
+            await buildDemosForTag({ tag, examples, exec, core })
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
