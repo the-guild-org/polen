@@ -50,83 +50,15 @@ jobs:
       - name: Plan rebuild
         id: plan
         uses: actions/github-script@v7
+        env:
+          INPUT_SINCE_VERSION: ${{ inputs.since_version }}
+          INPUT_SKIP_VERSIONS: ${{ inputs.skip_versions }}
+          INPUT_REBUILD_DIST_TAGS: ${{ inputs.rebuild_dist_tags }}
         with:
           script: |
             const semver = require('semver')
-            
-            // Get all version tags
-            const { data: tags } = await github.rest.repos.listTags({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100
-            })
-            
-            const versionTags = tags
-              .map(t => t.name)
-              .filter(t => semver.valid(t))
-              .sort(semver.rcompare)
-            
-            console.log(`Found ${versionTags.length} version tags`)
-            
-            // Filter versions based on input
-            let versionsToRebuild = []
-            
-            if ('${{ inputs.since_version }}') {
-              const sinceVersion = '${{ inputs.since_version }}'
-              if (!semver.valid(sinceVersion)) {
-                core.setFailed(`Invalid version: ${sinceVersion}`)
-                return
-              }
-              
-              versionsToRebuild = versionTags.filter(v => semver.gte(v, sinceVersion))
-              console.log(`Found ${versionsToRebuild.length} versions >= ${sinceVersion}`)
-            }
-            
-            // Apply skip list
-            const skipVersions = '${{ inputs.skip_versions }}'.split(',').map(v => v.trim()).filter(Boolean)
-            if (skipVersions.length > 0) {
-              versionsToRebuild = versionsToRebuild.filter(v => !skipVersions.includes(v))
-              console.log(`Skipping versions: ${skipVersions.join(', ')}`)
-            }
-            
-            // Get dist-tag information
-            const distTags = {}
-            if ('${{ inputs.rebuild_dist_tags }}' === 'true') {
-              for (const tag of ['latest', 'next']) {
-                try {
-                  const { data: ref } = await github.rest.git.getRef({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    ref: `tags/${tag}`
-                  })
-                  
-                  // Find semver tag at this commit
-                  const { data: tagsAtCommit } = await github.rest.repos.listTags({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    per_page: 100
-                  })
-                  
-                  const semverTag = tagsAtCommit
-                    .filter(t => t.commit.sha === ref.object.sha && semver.valid(t.name))
-                    .map(t => t.name)
-                    .sort(semver.rcompare)[0]
-                  
-                  if (semverTag) {
-                    distTags[tag] = semverTag
-                  }
-                } catch (e) {
-                  console.log(`No ${tag} dist-tag found`)
-                }
-              }
-            }
-            
-            console.log('Rebuild plan:')
-            console.log(`- Versions: ${versionsToRebuild.join(', ') || 'none'}`)
-            console.log(`- Dist tags: ${JSON.stringify(distTags)}`)
-            
-            core.setOutput('versions', JSON.stringify(versionsToRebuild))
-            core.setOutput('dist_tags', JSON.stringify(distTags))
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/plan-rebuild.js')
+            return script({ github, context, core, exec, semver })
 
   rebuild:
     needs: plan
@@ -161,90 +93,15 @@ jobs:
 
       - name: Rebuild demos
         uses: actions/github-script@v7
+        env:
+          VERSIONS_TO_BUILD: ${{ needs.plan.outputs.versions_to_build }}
+          DIST_TAGS: ${{ needs.plan.outputs.dist_tags }}
         with:
           script: |
             const fs = require('fs').promises
             const semver = require('semver')
-            const { buildDemosForTag, deployDemos, updateDistTagContent } = await import('${{ github.workspace }}/.github/scripts/lib/build-demos.js')
-            const { default: getDemoExamples } = await import('${{ github.workspace }}/.github/scripts/tools/get-demo-examples.js')
-            
-            const versions = JSON.parse('${{ needs.plan.outputs.versions_to_build }}')
-            const distTags = JSON.parse('${{ needs.plan.outputs.dist_tags }}')
-            
-            // Get list of demo examples
-            const examples = getDemoExamples()
-            console.log(`Building demos for examples: ${examples.join(', ')}`)
-            
-            // Get current branch to return to
-            const currentBranch = await exec.getExecOutput('git', ['rev-parse', '--abbrev-ref', 'HEAD'])
-            const originalBranch = currentBranch.stdout.trim()
-            
-            // Check minimum version from config
-            const demoConfig = JSON.parse(await fs.readFile('.github/demo-config.json', 'utf-8'))
-            const minVersion = demoConfig.minimumVersion || '0.0.0'
-            
-            // Build each version
-            for (const version of versions) {
-              if (require('semver').lt(version, minVersion)) {
-                console.log(`⚠️ Skipping ${version} - below minimum version ${minVersion}`)
-                continue
-              }
-              
-              console.log(`\n📦 Building ${version}...`)
-              
-              // Checkout the version
-              await exec.exec('git', ['checkout', version])
-              
-              // Build Polen if needed
-              try {
-                await exec.exec('pnpm', ['build'])
-              } catch (e) {
-                console.log(`⚠️ Could not build Polen for ${version}, skipping`)
-                continue
-              }
-              
-              // Re-install to link workspace packages
-              await exec.exec('pnpm', ['install'])
-              
-              // Build demos
-              await buildDemosForTag({ tag: version, examples, exec, core })
-              
-              // Deploy to gh-pages
-              await deployDemos({ 
-                tag: version, 
-                examples, 
-                targetDir: 'gh-pages' 
-              })
-            }
-            
-            // Return to main branch
-            await exec.exec('git', ['checkout', 'main'])
-            
-            // Update dist-tags
-            for (const [distTag, semverTag] of Object.entries(distTags)) {
-              console.log(`\n🏷️ Updating ${distTag} -> ${semverTag}`)
-              
-              // Check if we need to build the semver first
-              const semverPath = `gh-pages/${semverTag}`
-              if (!require('fs').existsSync(semverPath)) {
-                console.log(`Building ${semverTag} first...`)
-                
-                await exec.exec('git', ['checkout', semverTag])
-                await exec.exec('pnpm', ['build'])
-                await exec.exec('pnpm', ['install'])
-                await buildDemosForTag({ tag: semverTag, examples, exec, core })
-                await deployDemos({ tag: semverTag, examples, targetDir: 'gh-pages' })
-                await exec.exec('git', ['checkout', 'main'])
-              }
-              
-              // Update dist-tag content
-              await updateDistTagContent({
-                ghPagesDir: 'gh-pages',
-                distTag,
-                semverTag,
-                exec
-              })
-            }
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/rebuild-demos.js')
+            return script({ github, context, core, exec, semver, fs })
 
       - name: Update demos index
         uses: actions/github-script@v7
@@ -289,32 +146,11 @@ jobs:
     steps:
       - name: Summary
         uses: actions/github-script@v7
+        env:
+          VERSIONS_TO_BUILD: ${{ needs.plan.outputs.versions_to_build }}
+          DIST_TAGS: ${{ needs.plan.outputs.dist_tags }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
         with:
           script: |
-            const versions = JSON.parse('${{ needs.plan.outputs.versions_to_build }}')
-            const distTags = JSON.parse('${{ needs.plan.outputs.dist_tags }}')
-            const dryRun = '${{ inputs.dry_run }}' === 'true'
-            
-            let summary = '# Demos Rebuild Summary\n\n'
-            
-            if (dryRun) {
-              summary += '**🔍 DRY RUN MODE**\n\n'
-            }
-            
-            summary += '## Versions\n'
-            if (versions.length > 0) {
-              summary += versions.map(v => `- ${v}`).join('\n')
-            } else {
-              summary += 'No versions to rebuild\n'
-            }
-            
-            summary += '\n\n## Dist Tags\n'
-            if (Object.keys(distTags).length > 0) {
-              for (const [tag, version] of Object.entries(distTags)) {
-                summary += `- ${tag} → ${version}\n`
-              }
-            } else {
-              summary += 'No dist-tags to rebuild\n'
-            }
-            
-            await core.summary.addRaw(summary).write()
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/summary.js')
+            return script({ github, context, core, exec })
