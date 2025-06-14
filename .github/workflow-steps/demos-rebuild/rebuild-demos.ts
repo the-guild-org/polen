@@ -7,8 +7,14 @@ import { type RebuildInputs, Step } from '../types.ts'
  * Rebuild demos for multiple versions
  */
 export default Step<RebuildInputs>(async ({ core, $, inputs, fs }) => {
-  const versions = inputs.versions_to_build
-  const distTags = inputs.dist_tags
+  const versions = inputs.versions_to_build || []
+  const distTags = inputs.dist_tags || {}
+
+  // Early return if nothing to build
+  if (versions.length === 0 && Object.keys(distTags).length === 0) {
+    console.log('No versions or dist-tags to rebuild')
+    return
+  }
 
   // Get list of demo examples
   const examples = await getDemoExamples()

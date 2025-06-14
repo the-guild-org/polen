@@ -34,11 +34,15 @@ export async function run({ step, inputs }: RunOptions): Promise<void> {
 
     // Parse any stringified JSON values within the inputs
     for (const [key, value] of Object.entries(inputs)) {
-      if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
-        try {
-          inputs[key] = JSON.parse(value)
-        } catch {
-          // Keep as string if not valid JSON
+      if (typeof value === 'string') {
+        // Parse any valid JSON string, including arrays, objects, null, booleans, numbers
+        if (value === 'null' || value === 'true' || value === 'false' || 
+            /^-?\d+(\.\d+)?$/.test(value) || value.startsWith('[') || value.startsWith('{') || value.startsWith('"')) {
+          try {
+            inputs[key] = JSON.parse(value)
+          } catch {
+            // Keep as string if not valid JSON
+          }
         }
       }
     }
