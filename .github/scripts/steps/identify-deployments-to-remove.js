@@ -31,7 +31,7 @@ export default async ({ core, exec, semver }) => {
 
   // Find what the dist-tags point to
   const distTagVersions = new Set()
-  
+
   for (const distTag of ['latest', 'next']) {
     let tagOutput = ''
     try {
@@ -42,12 +42,12 @@ export default async ({ core, exec, semver }) => {
           },
         },
       })
-      
+
       const versions = tagOutput
         .split('\n')
         .filter(Boolean)
         .filter((tag) => semver.valid(tag))
-      
+
       versions.forEach(v => distTagVersions.add(v))
     } catch (e) {
       console.log(`No "${distTag}" tag found`)
