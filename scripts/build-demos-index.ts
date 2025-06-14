@@ -11,14 +11,40 @@ const args = Command.create()
   .parameter('basePath', z.string().default('/').describe('Base path for the demos'))
   .parameter('prNumber', z.string().optional().describe('Pull request number'))
   .parameter('currentSha', z.string().optional().describe('Current commit SHA'))
-  .parameter('mode', z.enum(['demo', 'pr-index']).default('demo').describe('Page mode: demo landing or PR index'))
+  .parameter(
+    'mode',
+    z.enum(['demo', 'pr-index', 'dev']).default('demo').describe('Page mode: demo landing, PR index, or dev'),
+  )
   .parameter('prDeployments', z.string().optional().describe('JSON array of PR deployments'))
   .parameter('trunkDeployments', z.string().optional().describe('JSON object with trunk deployment info'))
   .parameter('distTags', z.string().optional().describe('JSON object with dist-tag mappings'))
+  .parameter('serve', z.boolean().default(false).describe('Start a dev server (only in dev mode)'))
   .parse()
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments, distTags } = args
+const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments, distTags, serve } = args
+
+// Set up mock data for dev mode
+let finalDistTags = distTags
+let finalTrunkDeployments = trunkDeployments
+
+if (mode === 'dev') {
+  const mockDistTags = {
+    latest: '1.2.0',
+    next: '1.3.0-beta.2',
+  }
+  const mockTrunkDeployments = {
+    latest: { sha: '1.2.0', shortSha: '1.2.0', tag: '1.2.0' },
+    previous: [
+      { sha: '1.1.0', shortSha: '1.1.0', tag: '1.1.0' },
+      { sha: '1.0.0', shortSha: '1.0.0', tag: '1.0.0' },
+      { sha: '0.9.1', shortSha: '0.9.1', tag: '0.9.1' },
+      { sha: '0.9.0', shortSha: '0.9.0', tag: '0.9.0' },
+    ],
+  }
+  finalDistTags = JSON.stringify(mockDistTags)
+  finalTrunkDeployments = JSON.stringify(mockTrunkDeployments)
+}
 
 // Parse PR deployments if provided
 const parsedPrDeployments = (prDeployments ? JSON.parse(prDeployments) : []) as { number: number }[]
@@ -35,14 +61,16 @@ interface TrunkDeploymentsData {
   previous: TrunkDeployment[]
 }
 
-const parsedTrunkDeployments = (trunkDeployments ? JSON.parse(trunkDeployments) : null) as TrunkDeploymentsData | null
+const parsedTrunkDeployments = (finalTrunkDeployments ? JSON.parse(finalTrunkDeployments) : null) as
+  | TrunkDeploymentsData
+  | null
 
 // Parse dist-tags if provided
 interface DistTagsData {
   [key: string]: string
 }
 
-const parsedDistTags = (distTags ? JSON.parse(distTags) : {}) as DistTagsData
+const parsedDistTags = (finalDistTags ? JSON.parse(finalDistTags) : {}) as DistTagsData
 
 // Function to get previous deployments
 const getPreviousDeployments = () => {
@@ -74,7 +102,7 @@ const getPreviousDeployments = () => {
 const previousDeployments = getPreviousDeployments()
 
 // Generate PR index page if mode is pr-index
-if (mode === 'pr-index') {
+if (mode === 'pr-index' && mode !== 'dev') {
   const prIndexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -315,27 +343,78 @@ const indexHtml = `<!DOCTYPE html>
       gap: 0.75rem;
     }
 
-    .dist-tag-group {
+    .dist-tag-button {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid #000;
+      overflow: hidden;
+    }
+
+    .dist-tag-label {
+      flex: 1;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-    }
-
-    .demo-link.dist-tag {
-      min-width: 120px;
-    }
-
-    .permalink {
-      color: #666;
+      gap: 0.5rem;
+      background: #000;
+      color: #fff;
       text-decoration: none;
-      font-size: 0.875rem;
-      font-family: monospace;
-      transition: color 0.2s ease;
+      transition: all 0.2s ease;
     }
 
-    .permalink:hover {
-      color: #000;
-      text-decoration: underline;
+    .dist-tag-label svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .dist-tag-label:hover svg {
+      transform: translateX(4px);
+    }
+
+    .dist-tag-version {
+      padding: 0.625rem 1.25rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      font-family: monospace;
+      font-size: 0.875rem;
+      background: #000;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    /* Hover states */
+    .dist-tag-button:hover .dist-tag-label,
+    .dist-tag-button:hover .dist-tag-version {
+      background: #fff;
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    .dist-tag-button:hover .dist-tag-version {
+      border-left-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .dist-tag-label:hover {
+      color: #000 !important;
+    }
+
+    .dist-tag-version:hover {
+      color: #000 !important;
+    }
+
+    .permalink-icon {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      margin-left: 0.75rem;
+      transform-origin: center center;
+    }
+
+    .dist-tag-version:hover .permalink-icon {
+      transform: rotate(15deg) translateY(-1px);
     }
 
     .previous-deployments {
@@ -407,6 +486,8 @@ const indexHtml = `<!DOCTYPE html>
       background: #fff;
       color: #000;
       pointer-events: none;
+      width: 100%;
+      justify-content: center;
     }
   </style>
 </head>
@@ -431,14 +512,14 @@ const indexHtml = `<!DOCTYPE html>
         Object.entries(parsedDistTags)
           .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
           .map(([tag, version]) => `
-                  <div class="dist-tag-group">
-                    <a href="${tag}/pokemon/" class="demo-link dist-tag">
+                  <div class="dist-tag-button">
+                    <a href="${tag}/pokemon/" class="dist-tag-label">
                       ${tag}
                       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
                     </a>
-                    <a href="${version}/pokemon/" class="permalink">→ ${version}</a>
+                    <a href="${version}/pokemon/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
                   </div>
                 `).join('')
       }
@@ -454,14 +535,16 @@ const indexHtml = `<!DOCTYPE html>
     // For PR deployments, show latest pseudo-dist-tag
     : currentSha
     ? `<div class="dist-tags">
-          <div class="dist-tag-group">
-            <a href="latest/pokemon/" class="demo-link dist-tag">
+          <div class="dist-tag-button">
+            <a href="latest/pokemon/" class="dist-tag-label">
               latest
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>
-            <a href="${currentSha}/pokemon/" class="permalink">→ ${currentSha.substring(0, 7)}</a>
+            <a href="${currentSha}/pokemon/" class="dist-tag-version">${
+      currentSha.substring(0, 7)
+    }<span class="permalink-icon">¶</span></a>
           </div>
         </div>`
     : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
@@ -521,3 +604,24 @@ if (!fs.existsSync(distDir)) {
 fs.writeFileSync(path.join(distDir, 'index.html'), indexHtml)
 
 console.log('✅ Built demos index page')
+
+// Start dev server if requested
+if (mode === 'dev' && serve) {
+  const { createServer } = await import('http')
+  const { readFileSync } = await import('fs')
+
+  const server = createServer((req, res) => {
+    if (req.url === '/' || req.url === '/index.html') {
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end(readFileSync(path.join(distDir, 'index.html'), 'utf-8'))
+    } else {
+      res.writeHead(404)
+      res.end('Not found')
+    }
+  })
+
+  const port = 3000
+  server.listen(port, () => {
+    console.log(`\n🚀 Dev server running at http://localhost:${port}\n`)
+  })
+}
