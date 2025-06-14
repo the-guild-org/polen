@@ -190,7 +190,7 @@ jobs:
           </html>
           EOF
             # Replace $example in the heredoc content
-            sed -i "s/\$example/$example/g" gh-pages/$example/index.html
+            perl -i -pe "s/\\\$example/$example/g" gh-pages/$example/index.html
           done
 
       - name: Update dist-tag content
