@@ -29,24 +29,33 @@ export default async ({ core, exec, semver }) => {
   // Find the latest stable release using proper semver comparison
   const latestStable = stableReleases.length > 0 ? stableReleases.sort(semver.compare).pop() : ''
 
-  // Find what the "next" tag points to
-  let nextVersionOutput = ''
-  try {
-    await exec.exec('git', ['tag', '--points-at', 'next'], {
-      listeners: {
-        stdout: (data) => {
-          nextVersionOutput += data.toString()
+  // Find what the dist-tags point to
+  const distTagVersions = new Set()
+  
+  for (const distTag of ['latest', 'next']) {
+    let tagOutput = ''
+    try {
+      await exec.exec('git', ['tag', '--points-at', distTag], {
+        listeners: {
+          stdout: (data) => {
+            tagOutput += data.toString()
+          },
         },
-      },
-    })
-  } catch (e) {
-    console.log('No "next" tag found')
+      })
+      
+      const versions = tagOutput
+        .split('\n')
+        .filter(Boolean)
+        .filter((tag) => semver.valid(tag))
+      
+      versions.forEach(v => distTagVersions.add(v))
+    } catch (e) {
+      console.log(`No "${distTag}" tag found`)
+    }
   }
 
-  const nextVersion = nextVersionOutput
-    .split('\n')
-    .filter(Boolean)
-    .find((tag) => semver.valid(tag) && tag.includes('-'))
+  // Find what the "next" tag points to (pre-release version)
+  const nextVersion = Array.from(distTagVersions).find(v => v.includes('-'))
 
   console.log('Latest stable release:', latestStable)
   console.log('Next version:', nextVersion)
@@ -71,6 +80,7 @@ export default async ({ core, exec, semver }) => {
 
   console.log('Stable releases (keep forever):', stableReleases)
   console.log('Pre-releases to keep (next range):', preReleasesToKeep)
+  console.log('Dist-tag versions (keep forever):', Array.from(distTagVersions))
 
   // Get commits for each tag
   const tagCommits = new Set()
@@ -107,8 +117,9 @@ export default async ({ core, exec, semver }) => {
     // Check if this version should be kept
     const isStableRelease = stableReleases.includes(dir)
     const isKeptPrerelease = preReleasesToKeep.includes(dir)
+    const isDistTagVersion = distTagVersions.has(dir)
 
-    if (!isStableRelease && !isKeptPrerelease) {
+    if (!isStableRelease && !isKeptPrerelease && !isDistTagVersion) {
       toRemove.trunk.push(dir)
     }
   }
