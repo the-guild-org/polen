@@ -27,8 +27,21 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Update CI logic
-        uses: ./.github/actions/update-ci
+      - name: Update workflow scripts from main
+        run: |
+          # Save the current tag/branch
+          CURRENT_REF=$(git rev-parse HEAD)
+
+          # Fetch main branch
+          git fetch origin main
+
+          # Checkout scripts and config from main to get latest fixes
+          git checkout origin/main -- .github/scripts
+          git checkout origin/main -- .github/actions
+          git checkout origin/main -- .github/demo-config.json
+
+          # Reset to avoid committing these changes
+          git reset HEAD
 
       - name: Extract release info
         id: release
