@@ -1,22 +1,28 @@
-#!/usr/bin/env node
+import { $ } from 'zx'
+
+interface DistTags {
+  [key: string]: string | undefined
+}
+
 /**
  * Get dist-tag information from git tags
  * Returns which semver versions the dist-tags point to
  */
-
-import { execSync } from 'node:child_process'
-
-try {
-  const distTags = {}
+export async function getDistTags(cwd?: string): Promise<DistTags> {
+  const distTags: DistTags = {}
   const distTagNames = ['latest', 'next']
+
+  // Configure zx for this function
+  const $$ = cwd ? $({ cwd, verbose: false }) : $
 
   for (const tag of distTagNames) {
     try {
       // Get the commit that this dist-tag points to
-      const tagCommit = execSync(`git rev-list -n 1 ${tag}`, { encoding: 'utf-8' }).trim()
+      const tagCommit = (await $$`git rev-list -n 1 ${tag}`).stdout.trim()
 
       // Find all tags at this commit
-      const tagsAtCommit = execSync(`git tag --points-at ${tagCommit}`, { encoding: 'utf-8' })
+      const tagsAtCommit = (await $$`git tag --points-at ${tagCommit}`)
+        .stdout
         .split('\n')
         .filter(t => t.trim())
 
@@ -26,13 +32,10 @@ try {
       if (semverTag) {
         distTags[tag] = semverTag
       }
-    } catch (e) {
+    } catch {
       // Tag doesn't exist or other error - silently continue
     }
   }
 
-  console.log(JSON.stringify(distTags))
-} catch (error) {
-  console.error('Error reading dist-tags:', error.message)
-  console.log('{}')
+  return distTags
 }

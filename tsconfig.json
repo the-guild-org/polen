@@ -13,6 +13,11 @@
     "noImplicitReturns": false, // Great for middleware DX
     "lib": ["DOM", "es2023", "DOM.Iterable"]
   },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".github/**/*.ts"
+  ],
   "exclude": [
     "build",
     "eslint.config.js",

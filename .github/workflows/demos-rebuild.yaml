@@ -44,15 +44,10 @@ jobs:
 
       - name: Plan rebuild
         id: plan
-        uses: actions/github-script@v7
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/plan-rebuild.js')
-            return script({ github, context, core, exec }, {
-              sinceVersion: ${{ toJSON(inputs.since_version) }},
-              skipVersions: ${{ toJSON(inputs.skip_versions) }},
-              rebuildDistTags: ${{ toJSON(inputs.rebuild_dist_tags) }}
-            })
+          step: demos-rebuild/plan-rebuild.ts
+          inputs: ${{ toJSON(inputs) }}
 
   rebuild:
     needs: plan
@@ -77,21 +72,15 @@ jobs:
           path: gh-pages
 
       - name: Rebuild demos
-        uses: actions/github-script@v7
-        env:
-          VERSIONS_TO_BUILD: ${{ needs.plan.outputs.versions_to_build }}
-          DIST_TAGS: ${{ needs.plan.outputs.dist_tags }}
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/rebuild-demos.js')
-            return script({ github, context, core, exec })
+          step: demos-rebuild/rebuild-demos.ts
+          inputs: ${{ toJSON(needs.plan.outputs) }}
 
       - name: Update demos index
-        uses: actions/github-script@v7
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/update-demos-index.js')
-            return script({ github, context, core, exec })
+          step: shared/update-demos-index.ts
 
       - name: Commit and deploy
         run: |
@@ -133,12 +122,12 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/use-latest-ci
       - name: Summary
-        uses: actions/github-script@v7
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/summary.js')
-            return script({ github, context, core, exec }, {
-              versionsToBuild: ${{ toJSON(needs.plan.outputs.versions_to_build) }},
-              distTags: ${{ toJSON(needs.plan.outputs.dist_tags) }},
-              dryRun: ${{ toJSON(inputs.dry_run) }}
-            })
+          step: demos-rebuild/summary.ts
+          inputs: |
+            {
+              "versions_to_build": ${{ toJSON(needs.plan.outputs.versions_to_build) }},
+              "dist_tags": ${{ toJSON(needs.plan.outputs.dist_tags) }},
+              "dry_run": ${{ toJSON(inputs.dry_run) }}
+            }

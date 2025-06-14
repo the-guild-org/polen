@@ -1,15 +1,13 @@
-// @ts-check
+import { type AddDemosLinkInputs, Step } from '../types.ts'
 
 /**
  * Add demos link to commit
- *
- * @param {import('../../scripts/lib/async-function').AsyncFunctionArguments} args
  */
-export default async ({ github, context }) => {
-  const tag = process.env.ACTUAL_TAG
-  const eventName = process.env.GITHUB_EVENT_NAME
+export default Step<AddDemosLinkInputs>(async ({ github, context, inputs }) => {
+  const tag = inputs.actual_tag
+  const eventName = inputs.github_event_name
 
-  let sha
+  let sha: string
   if (eventName === 'workflow_dispatch') {
     // For manual runs, get the commit SHA for the tag
     try {
@@ -20,11 +18,15 @@ export default async ({ github, context }) => {
       })
       sha = ref.object.sha
     } catch (e) {
-      console.log(`Could not find tag ${tag}: ${e.message}`)
+      console.log(`Could not find tag ${tag}: ${(e as Error).message}`)
       return
     }
   } else {
-    sha = process.env.GITHUB_RELEASE_TARGET_COMMITISH
+    sha = inputs.github_release_target_commitish || ''
+    if (!sha) {
+      console.log('No target commitish provided')
+      return
+    }
   }
 
   // Try to create a commit status
@@ -39,7 +41,7 @@ export default async ({ github, context }) => {
       context: 'polen/demos',
     })
     console.log(`✅ Successfully added demos link to commit ${sha}`)
-  } catch (error) {
+  } catch (error: any) {
     if (error.status === 422) {
       console.log(
         `⚠️ Could not add commit status: commit ${sha} not found in repository`,
@@ -51,4 +53,4 @@ export default async ({ github, context }) => {
       throw error
     }
   }
-}
+})

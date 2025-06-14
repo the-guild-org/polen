@@ -111,11 +111,9 @@ jobs:
         run: pnpm build
 
       - name: Update demos index
-        uses: actions/github-script@v7
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/update-demos-index.js')
-            return script({ github, context, core, exec })
+          step: shared/update-demos-index.ts
 
       - name: Commit and deploy
         run: |

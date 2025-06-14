@@ -53,7 +53,7 @@ jobs:
       - name: Build demos
         run: |
           # Get list of examples that are enabled for demos
-          EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
+          EXAMPLES=$(node --no-warnings ./.github/scripts/tools/get-demo-examples.ts)
           echo "Found demo-enabled examples: $EXAMPLES"
 
           # Build once for the commit-specific path
@@ -63,93 +63,25 @@ jobs:
           done
 
       - name: Prepare PR preview for deployment
-        run: |
-          # Create deployment directory structure
-          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/latest
-          mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}
-
-          # Copy landing page to PR root
-          cp dist-demos/index.html gh-pages-deploy/pr-${{ inputs.pr-number }}/index.html
-
-          # Get list of examples that are enabled for demos
-          EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
-
-          # Copy builds to commit-specific path
-          for example in $EXAMPLES; do
-            if [ -d "examples/$example/build" ]; then
-              cp -r examples/$example/build gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/$example
-            fi
-          done
-
-          # Copy to latest (will update paths below)
-          cp -r gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
-
-          # Update all base paths in the latest copy
-          echo "Updating base paths from /${{ inputs.head-sha }}/ to /latest/"
-          # No need to escape SHA since it's just hex characters
-          find gh-pages-deploy/pr-${{ inputs.pr-number }}/latest -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
-            perl -i -pe "s|/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/|/polen/pr-${{ inputs.pr-number }}/latest/|g" "$file"
-          done
-
-          # Create redirect from /latest/ to PR root
-          # This provides the PR landing page when accessing /latest/
-          cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/index.html << EOF
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Redirecting...</title>
-            <meta http-equiv="refresh" content="0; url=/polen/pr-${{ inputs.pr-number }}/">
-            <script>window.location.replace("/polen/pr-${{ inputs.pr-number }}/");</script>
-          </head>
-          <body>
-            <p>Redirecting to <a href="/polen/pr-${{ inputs.pr-number }}/">/pr-${{ inputs.pr-number }}/</a>...</p>
-          </body>
-          </html>
-          EOF
-
-          # Create redirects for direct demo URLs
-          # Examples:
-          # - /polen/pr-123/pokemon/ → /polen/pr-123/latest/pokemon/
-          # This allows users to access the latest PR build without knowing the SHA
-          for example in $EXAMPLES; do
-            mkdir -p gh-pages-deploy/pr-${{ inputs.pr-number }}/$example
-            cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/$example/index.html << EOF
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Redirecting...</title>
-            <meta http-equiv="refresh" content="0; url=/polen/pr-${{ inputs.pr-number }}/latest/$example/">
-            <script>window.location.replace("/polen/pr-${{ inputs.pr-number }}/latest/$example/");</script>
-          </head>
-          <body>
-            <p>Redirecting to <a href="/polen/pr-${{ inputs.pr-number }}/latest/$example/">/pr-${{ inputs.pr-number }}/latest/$example/</a>...</p>
-          </body>
-          </html>
-          EOF
-          done
-
-          # Add PR-specific metadata to both deployments
-          echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
-          echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
-          echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/PR_INFO.txt
-
-          echo "PR #${{ inputs.pr-number }}" > gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
-          echo "Branch: ${{ inputs.head-ref }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
-          echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
-
-          # Build PR index will be handled by the script step below
+        uses: ./.github/actions/run-workflow-step
+        with:
+          step: demos-preview/prepare-pr-deployment.ts
+          inputs: |
+            {
+              "pr_number": "${{ inputs.pr-number }}",
+              "head_sha": "${{ inputs.head-sha }}",
+              "head_ref": "${{ inputs.head-ref }}"
+            }
 
       - name: Update PR index
-        uses: actions/github-script@v7
-        env:
-          MODE: pr-index
-          OUTPUT_DIR: gh-pages-deploy
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/update-demos-index.js')
-            return script({ github, context, core, exec })
+          step: shared/update-demos-index.ts
+          inputs: |
+            {
+              "mode": "pr-index",
+              "output_dir": "gh-pages-deploy"
+            }
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -164,14 +96,14 @@ jobs:
 
       - name: Get previous deployments for this PR
         id: get-prev-pr-deployments
-        uses: actions/github-script@v7
-        env:
-          PR_NUMBER: ${{ inputs.pr-number }}
-          CURRENT_SHA: ${{ inputs.head-sha }}
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/get-previous-pr-deployments.js')
-            return script({ github, context, core })
+          step: demos-preview/get-previous-pr-deployments.ts
+          inputs: |
+            {
+              "pr_number": "${{ inputs.pr-number }}",
+              "current_sha": "${{ inputs.head-sha }}"
+            }
 
       - name: Get short SHA
         id: short-sha

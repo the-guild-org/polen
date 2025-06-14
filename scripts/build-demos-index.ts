@@ -102,7 +102,7 @@ const getPreviousDeployments = () => {
 const previousDeployments = getPreviousDeployments()
 
 // Generate PR index page if mode is pr-index
-if (mode === 'pr-index' && mode !== 'dev') {
+if (mode === 'pr-index') {
   const prIndexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>

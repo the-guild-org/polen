@@ -1,0 +1,31 @@
+# https://github.com/actions/github-script
+name: Run Workflow Step
+description: Execute a workflow step JavaScript module with automatic argument forwarding
+inputs:
+  step:
+    description: "Path to the workflow step module relative to .github/workflow-steps/"
+    required: true
+  inputs:
+    description: "JSON string of additional inputs to pass to the script"
+    required: false
+    default: "{}"
+runs:
+  using: composite
+  steps:
+    - name: Execute workflow step
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        RUNNER_PATH: ${{ github.action_path }}/runner.ts
+        STEP_PATH: ${{ inputs.step }}
+        STEP_INPUTS: ${{ inputs.inputs }}
+      run: |
+        # This will use the Node version from the setup action (24.x)
+        # Node supports TypeScript execution (suppress experimental warning)
+        node --no-warnings --input-type=module -e "
+        import { run } from process.env.RUNNER_PATH;
+        await run({
+          step: process.env.STEP_PATH,
+          inputs: JSON.parse(process.env.STEP_INPUTS || '{}')
+        });
+        "

@@ -32,17 +32,17 @@ jobs:
 
       - name: Extract release info
         id: release
-        uses: actions/github-script@v7
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          INPUT_TAG: ${{ inputs.tag }}
-          GITHUB_RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
-          GITHUB_RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}
-          GITHUB_EVENT_ACTION: ${{ github.event.action }}
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/extract-release-info.js')
-            return script({ github, context, core, exec })
+          step: demos-release-semver/extract-release-info.ts
+          inputs: |
+            {
+              "github_event_name": ${{ toJSON(github.event_name) }},
+              "input_tag": ${{ toJSON(inputs.tag) }},
+              "github_release_tag_name": ${{ toJSON(github.event.release.tag_name) }},
+              "github_release_prerelease": ${{ toJSON(github.event.release.prerelease) }},
+              "github_event_action": ${{ toJSON(github.event.action) }}
+            }
 
       - name: Build Polen
         if: steps.release.outputs.needs_build == 'true'
@@ -54,13 +54,15 @@ jobs:
 
       - name: Build demos for release
         if: steps.release.outputs.needs_build == 'true'
-        uses: actions/github-script@v7
-        env:
-          ACTUAL_TAG: ${{ steps.release.outputs.actual_tag }}
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-release-semver/build-demos.js')
-            return script({ github, context, core, exec })
+          step: demos-release-semver/build-demos.ts
+          inputs: |
+            {
+              "tag": ${{ toJSON(steps.release.outputs.tag) }},
+              "actual_tag": ${{ toJSON(steps.release.outputs.actual_tag) }},
+              "is_dist_tag": ${{ toJSON(steps.release.outputs.is_dist_tag) }}
+            }
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -74,7 +76,7 @@ jobs:
           TAG="${{ steps.release.outputs.actual_tag }}"
 
           # Get list of examples that are enabled for demos
-          EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
+          EXAMPLES=$(node --no-warnings ./.github/scripts/tools/get-demo-examples.ts)
 
           # Copy built demos to semver paths
           for example in $EXAMPLES; do
@@ -84,28 +86,15 @@ jobs:
             fi
           done
 
-          # Create redirect for direct demo access at root
-          # Examples:
-          # - /polen/pokemon/ → /polen/latest/pokemon/ (convenience redirect)
-          for example in $EXAMPLES; do
-            mkdir -p gh-pages/$example
-            cat > gh-pages/$example/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Redirecting...</title>
-            <meta http-equiv="refresh" content="0; url=/polen/latest/$example/">
-            <script>window.location.replace("/polen/latest/$example/");</script>
-          </head>
-          <body>
-            <p>Redirecting to <a href="/polen/latest/$example/">/latest/$example/</a>...</p>
-          </body>
-          </html>
-          EOF
-            # Replace $example in the heredoc content
-            perl -i -pe "s/\\\$example/$example/g" gh-pages/$example/index.html
-          done
+      - name: Create demo redirects
+        if: steps.release.outputs.needs_build == 'true'
+        uses: ./.github/actions/run-workflow-step
+        with:
+          step: demos-release-semver/create-demo-redirects.ts
+          inputs: |
+            {
+              "gh_pages_dir": "gh-pages"
+            }
 
       - name: Update dist-tag content
         if: steps.release.outputs.needs_build == 'true'
@@ -143,11 +132,9 @@ jobs:
           echo "✅ Successfully updated $DIST_TAG with content from $TAG"
 
       - name: Update demos index
-        uses: actions/github-script@v7
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/update-demos-index.js')
-            return script({ github, context, core, exec })
+          step: shared/update-demos-index.ts
 
       - name: Commit and deploy
         run: |
@@ -176,12 +163,12 @@ jobs:
 
       - name: Add demos link to commit
         if: steps.release.outputs.needs_build == 'true'
-        uses: actions/github-script@v7
-        env:
-          ACTUAL_TAG: ${{ steps.release.outputs.actual_tag }}
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          GITHUB_RELEASE_TARGET_COMMITISH: ${{ github.event.release.target_commitish }}
+        uses: ./.github/actions/run-workflow-step
         with:
-          script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-release-semver/add-demos-link.js')
-            return script({ github, context, core, exec })
+          step: demos-release-semver/add-demos-link.ts
+          inputs: |
+            {
+              "actual_tag": ${{ toJSON(steps.release.outputs.actual_tag) }},
+              "github_event_name": ${{ toJSON(github.event_name) }},
+              "github_release_target_commitish": ${{ toJSON(github.event.release.target_commitish) }}
+            }
