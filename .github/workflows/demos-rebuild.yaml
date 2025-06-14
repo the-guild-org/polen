@@ -44,9 +44,6 @@ jobs:
         with:
           node-version: '24.1.x'
 
-      - name: Install dependencies
-        run: npm install semver
-
       - name: Plan rebuild
         id: plan
         uses: actions/github-script@v7

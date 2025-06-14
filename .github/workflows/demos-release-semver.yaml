@@ -27,9 +27,6 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Install workflow dependencies
-        run: npm install semver
-
       - name: Update workflow scripts from main
         run: |
           # Save the current tag/branch
