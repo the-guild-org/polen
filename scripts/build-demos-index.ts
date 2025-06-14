@@ -417,13 +417,13 @@ const indexHtml = `<!DOCTYPE html>
       transform: rotate(15deg) translateY(-1px);
     }
 
-    .previous-deployments {
+    .previous-versions {
       margin-top: 1rem;
       padding-top: 1rem;
       border-top: 1px solid #e0e0e0;
     }
 
-    .previous-deployments h3 {
+    .previous-versions h3 {
       font-size: 0.875rem;
       font-weight: 600;
       margin-bottom: 0.5rem;
@@ -548,8 +548,8 @@ const indexHtml = `<!DOCTYPE html>
           </div>
         </div>`
     : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
-          <div class="previous-deployments">
-            <h3>Previous Deployments</h3>
+          <div class="previous-versions">
+            <h3>Previous Versions</h3>
             ${
   // For trunk deployments, use parsedTrunkDeployments
   !prNumber && parsedTrunkDeployments
