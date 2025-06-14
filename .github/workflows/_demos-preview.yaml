@@ -55,7 +55,7 @@ jobs:
           # Get list of examples that are enabled for demos
           EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
           echo "Found demo-enabled examples: $EXAMPLES"
-          
+
           # Build once for the commit-specific path
           for example in $EXAMPLES; do
             echo "Building $example demo..."
@@ -73,24 +73,24 @@ jobs:
 
           # Get list of examples that are enabled for demos
           EXAMPLES=$(node ./.github/scripts/tools/get-demo-examples.js)
-          
+
           # Copy builds to commit-specific path
           for example in $EXAMPLES; do
             if [ -d "examples/$example/build" ]; then
               cp -r examples/$example/build gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/$example
             fi
           done
-          
+
           # Copy to latest (will update paths below)
           cp -r gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/* gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/
-          
+
           # Update all base paths in the latest copy
           echo "Updating base paths from /${{ inputs.head-sha }}/ to /latest/"
           # No need to escape SHA since it's just hex characters
           find gh-pages-deploy/pr-${{ inputs.pr-number }}/latest -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
             perl -i -pe "s|/polen/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/|/polen/pr-${{ inputs.pr-number }}/latest/|g" "$file"
           done
-          
+
           # Create redirect from /latest/ to PR root
           # This provides the PR landing page when accessing /latest/
           cat > gh-pages-deploy/pr-${{ inputs.pr-number }}/latest/index.html << EOF
@@ -107,7 +107,7 @@ jobs:
           </body>
           </html>
           EOF
-          
+
           # Create redirects for direct demo URLs
           # Examples:
           # - /polen/pr-123/pokemon/ → /polen/pr-123/latest/pokemon/
@@ -140,7 +140,7 @@ jobs:
           echo "Commit: ${{ inputs.head-sha }}" >> gh-pages-deploy/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/PR_INFO.txt
 
           # Build PR index will be handled by the script step below
-      
+
       - name: Update PR index
         uses: actions/github-script@v7
         env:
@@ -148,7 +148,7 @@ jobs:
           OUTPUT_DIR: gh-pages-deploy
         with:
           script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/update-demos-index.js')
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/update-demos-index.js')
             return script({ github, context, core, exec })
 
       - name: Deploy to GitHub Pages
@@ -170,7 +170,7 @@ jobs:
           CURRENT_SHA: ${{ inputs.head-sha }}
         with:
           script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/get-previous-pr-deployments.js')
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/get-previous-pr-deployments.js')
             return script({ github, context, core })
 
       - name: Get short SHA
@@ -182,8 +182,8 @@ jobs:
         id: find-comment
         with:
           issue-number: ${{ inputs.pr-number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '## Demos Preview'
+          comment-author: "github-actions[bot]"
+          body-includes: "## Demos Preview"
 
       - name: Comment on PR
         uses: peter-evans/create-or-update-comment@v4
@@ -199,4 +199,3 @@ jobs:
             #### Pokemon
             - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) – [`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/)
             - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
-

@@ -41,7 +41,7 @@ jobs:
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
         with:
           script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/extract-release-info.js')
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/extract-release-info.js')
             return script({ github, context, core, exec })
 
       - name: Build Polen
@@ -146,7 +146,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/update-demos-index.js')
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/update-demos-index.js')
             return script({ github, context, core, exec })
 
       - name: Commit and deploy

@@ -45,14 +45,14 @@ jobs:
       - name: Plan rebuild
         id: plan
         uses: actions/github-script@v7
-        env:
-          INPUT_SINCE_VERSION: ${{ inputs.since_version }}
-          INPUT_SKIP_VERSIONS: ${{ inputs.skip_versions }}
-          INPUT_REBUILD_DIST_TAGS: ${{ inputs.rebuild_dist_tags }}
         with:
           script: |
             const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/plan-rebuild.js')
-            return script({ github, context, core, exec })
+            return script({ github, context, core, exec }, {
+              sinceVersion: ${{ toJSON(inputs.since_version) }},
+              skipVersions: ${{ toJSON(inputs.skip_versions) }},
+              rebuildDistTags: ${{ toJSON(inputs.rebuild_dist_tags) }}
+            })
 
   rebuild:
     needs: plan
@@ -90,7 +90,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/update-demos-index.js')
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/update-demos-index.js')
             return script({ github, context, core, exec })
 
       - name: Commit and deploy
@@ -134,11 +134,11 @@ jobs:
       - uses: ./.github/actions/use-latest-ci
       - name: Summary
         uses: actions/github-script@v7
-        env:
-          VERSIONS_TO_BUILD: ${{ needs.plan.outputs.versions_to_build }}
-          DIST_TAGS: ${{ needs.plan.outputs.dist_tags }}
-          INPUT_DRY_RUN: ${{ inputs.dry_run }}
         with:
           script: |
             const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-rebuild/summary.js')
-            return script({ github, context, core, exec })
+            return script({ github, context, core, exec }, {
+              versionsToBuild: ${{ toJSON(needs.plan.outputs.versions_to_build) }},
+              distTags: ${{ toJSON(needs.plan.outputs.dist_tags) }},
+              dryRun: ${{ toJSON(inputs.dry_run) }}
+            })

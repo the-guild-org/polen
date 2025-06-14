@@ -1,93 +1,98 @@
 // @ts-check
 
-import * as semver from 'semver'
+import * as semver from "semver";
 
 /**
  * Plan rebuild - determine which versions to rebuild
  *
- * @param {import('../../scripts/lib/async-function').AsyncFunctionArguments} args
+ * @param {import('../async-function').AsyncFunctionArguments} args
+ * @param {{
+ *   sinceVersion?: string,
+ *   skipVersions?: string,
+ *   rebuildDistTags?: string
+ * }} inputs
  */
-export default async ({ github, context, core }) => {
+export default async ({ github, context, core }, inputs = {}) => {
   // Get all version tags
   const { data: tags } = await github.rest.repos.listTags({
     owner: context.repo.owner,
     repo: context.repo.repo,
     per_page: 100,
-  })
+  });
 
   const versionTags = tags
     .map((t) => t.name)
     .filter((t) => semver.valid(t))
-    .sort(semver.rcompare)
+    .sort(semver.rcompare);
 
-  console.log(`Found ${versionTags.length} version tags`)
+  console.log(`Found ${versionTags.length} version tags`);
 
   // Filter versions based on input
-  let versionsToRebuild = []
+  let versionsToRebuild = [];
 
-  const sinceVersion = process.env.INPUT_SINCE_VERSION
+  const sinceVersion = inputs.sinceVersion;
   if (sinceVersion) {
     if (!semver.valid(sinceVersion)) {
-      core.setFailed(`Invalid version: ${sinceVersion}`)
-      return
+      core.setFailed(`Invalid version: ${sinceVersion}`);
+      return;
     }
 
-    versionsToRebuild = versionTags.filter((v) => semver.gte(v, sinceVersion))
+    versionsToRebuild = versionTags.filter((v) => semver.gte(v, sinceVersion));
     console.log(
       `Found ${versionsToRebuild.length} versions >= ${sinceVersion}`,
-    )
+    );
   }
 
   // Apply skip list
-  const skipVersions = (process.env.INPUT_SKIP_VERSIONS || '')
-    .split(',')
+  const skipVersions = (inputs.skipVersions || "")
+    .split(",")
     .map((v) => v.trim())
-    .filter(Boolean)
+    .filter(Boolean);
   if (skipVersions.length > 0) {
     versionsToRebuild = versionsToRebuild.filter(
       (v) => !skipVersions.includes(v),
-    )
-    console.log(`Skipping versions: ${skipVersions.join(', ')}`)
+    );
+    console.log(`Skipping versions: ${skipVersions.join(", ")}`);
   }
 
   // Get dist-tag information
-  const distTags = {}
-  if (process.env.INPUT_REBUILD_DIST_TAGS === 'true') {
-    for (const tag of ['latest', 'next']) {
+  const distTags = {};
+  if (inputs.rebuildDistTags === "true") {
+    for (const tag of ["latest", "next"]) {
       try {
         const { data: ref } = await github.rest.git.getRef({
           owner: context.repo.owner,
           repo: context.repo.repo,
           ref: `tags/${tag}`,
-        })
+        });
 
         // Find semver tag at this commit
         const { data: tagsAtCommit } = await github.rest.repos.listTags({
           owner: context.repo.owner,
           repo: context.repo.repo,
           per_page: 100,
-        })
+        });
 
         const semverTag = tagsAtCommit
           .filter(
             (t) => t.commit.sha === ref.object.sha && semver.valid(t.name),
           )
           .map((t) => t.name)
-          .sort(semver.rcompare)[0]
+          .sort(semver.rcompare)[0];
 
         if (semverTag) {
-          distTags[tag] = semverTag
+          distTags[tag] = semverTag;
         }
       } catch (e) {
-        console.log(`No ${tag} dist-tag found`)
+        console.log(`No ${tag} dist-tag found`);
       }
     }
   }
 
-  console.log('Rebuild plan:')
-  console.log(`- Versions: ${versionsToRebuild.join(', ') || 'none'}`)
-  console.log(`- Dist tags: ${JSON.stringify(distTags)}`)
+  console.log("Rebuild plan:");
+  console.log(`- Versions: ${versionsToRebuild.join(", ") || "none"}`);
+  console.log(`- Dist tags: ${JSON.stringify(distTags)}`);
 
-  core.setOutput('versions', JSON.stringify(versionsToRebuild))
-  core.setOutput('dist_tags', JSON.stringify(distTags))
-}
+  core.setOutput("versions", JSON.stringify(versionsToRebuild));
+  core.setOutput("dist_tags", JSON.stringify(distTags));
+};
