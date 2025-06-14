@@ -6,79 +6,62 @@ interface Inputs {
 }
 
 /**
- * Get previous PR deployments
+ * Get previous PR deployments using GitHub Deployments API
  */
 export default Step<Inputs>(async ({ github, context, core, inputs }) => {
   const prNumber = inputs.pr_number
   const currentSha = inputs.current_sha
 
-  const repoOwner = context.repo.owner
-  const repoName = context.repo.repo
-
   try {
-    // Get the gh-pages branch tree
-    const { data: tree } = await github.rest.git.getTree({
-      owner: repoOwner,
-      repo: repoName,
-      tree_sha: 'gh-pages',
-      // Omit recursive to get only top-level items
+    // Get deployments for this PR's environment
+    const { data: deployments } = await github.rest.repos.listDeployments({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      environment: `pr-${prNumber}`,
+      per_page: 100,
     })
 
-    // Find the PR directory
-    const prDir = tree.tree.find((item) => item.path === `pr-${prNumber}`)
-    if (!prDir || prDir.type !== 'tree') {
-      core.setOutput('deployment_links', '(none)')
-      return
+    // Filter out current deployment and get successful ones
+    const previousDeployments = []
+
+    for (const deployment of deployments) {
+      // Skip current SHA
+      if (deployment.sha === currentSha || deployment.sha.startsWith(currentSha)) {
+        continue
+      }
+
+      // Check deployment status
+      const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        deployment_id: deployment.id,
+        per_page: 1,
+      })
+
+      // Only include successful deployments
+      if (statuses.length > 0 && statuses[0].state === 'success') {
+        previousDeployments.push({
+          sha: deployment.sha.substring(0, 7),
+          url: statuses[0].environment_url || '',
+          created_at: deployment.created_at,
+        })
+      }
     }
 
-    // Get contents of PR directory
-    // Note: GitHub API returns max 100,000 tree entries in non-recursive mode
-    const { data: prTree } = await github.rest.git.getTree({
-      owner: repoOwner,
-      repo: repoName,
-      tree_sha: prDir.sha!,
-      // recursive: false, // We only need direct children
-    })
+    // Sort by creation date (newest first)
+    previousDeployments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-    // Debug: log all directories found
-    console.log(`Found ${prTree.tree.length} items in PR directory`)
-    console.log(
-      'Directory items:',
-      prTree.tree
-        .filter((item) => item.type === 'tree')
-        .map((item) => item.path),
-    )
-
-    // Filter for commit SHA directories (excluding current)
-    const commitDirs = prTree.tree
-      .filter(
-        (item) =>
-          item.type === 'tree'
-          && /^[0-9a-f]{7,40}$/.test(item.path!)
-          && item.path !== currentSha,
-      )
-      .map((item) => item.path!)
-      .sort()
-      .reverse()
-
-    console.log(
-      `Found ${commitDirs.length} previous deployments (excluding current ${currentSha})`,
-    )
-
-    if (commitDirs.length === 0) {
+    if (previousDeployments.length === 0) {
       core.setOutput('deployment_links', '(none)')
       return
     }
 
     // Format as markdown links
-    const links = commitDirs.map((sha) => {
-      const shortSha = sha.substring(0, 7)
-      return `[\`${shortSha}\`](https://${repoOwner}.github.io/${repoName}/pr-${prNumber}/${sha}/pokemon/)`
-    })
+    const links = previousDeployments.map(deployment => `[\`${deployment.sha}\`](${deployment.url})`)
 
     core.setOutput('deployment_links', links.join(' / '))
   } catch (error) {
-    console.log('Error fetching previous deployments:', (error as Error).message)
+    console.error('Error fetching deployments:', error)
     core.setOutput('deployment_links', '(none)')
   }
 })

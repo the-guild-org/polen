@@ -5,6 +5,7 @@
 The demos index has a distinctive minimalist aesthetic characterized by:
 
 ### Design Elements
+
 1. **Black & White Color Scheme**
    - Pure black (#000) and white (#fff) only
    - No grays except for subtle borders (#e0e0e0)
@@ -32,11 +33,13 @@ The demos index has a distinctive minimalist aesthetic characterized by:
 ## Polen's Current Setup
 
 Polen uses:
+
 - **Radix UI Themes** - A pre-styled component library
 - **Radix UI Icons** - Icon set
 - **@wollybeard/kit** - Additional utilities
 
 Current aesthetic is more traditional with:
+
 - Gray color palette from Radix
 - Softer borders and shadows
 - More conventional spacing
@@ -118,17 +121,20 @@ Current aesthetic is more traditional with:
 ## Implementation Strategy
 
 ### Option 1: Progressive Enhancement (Recommended)
+
 - Keep Radix UI Themes as base
 - Layer custom styles on top
 - Use CSS custom properties for easy theming
 - Minimal breaking changes
 
 ### Option 2: Custom Component Library
+
 - Build custom components from scratch
 - More control but more work
 - Could use Radix UI Primitives (unstyled)
 
 ### Option 3: Hybrid Approach
+
 - Use Radix for complex components (modals, dropdowns)
 - Custom components for simple elements (buttons, cards)
 - Best of both worlds
@@ -136,6 +142,7 @@ Current aesthetic is more traditional with:
 ## Code Examples
 
 ### Custom Button Style
+
 ```tsx
 // src/template/components/Button.tsx
 import { Button as RadixButton } from '@radix-ui/themes'
@@ -143,7 +150,7 @@ import styles from './Button.module.css'
 
 export const Button = ({ variant = 'default', ...props }) => {
   return (
-    <RadixButton 
+    <RadixButton
       className={styles[variant]}
       {...props}
     />
@@ -168,6 +175,7 @@ export const Button = ({ variant = 'default', ...props }) => {
 ```
 
 ### Theme Configuration
+
 ```tsx
 // src/template/theme.tsx
 export const demosTheme = {
@@ -175,15 +183,15 @@ export const demosTheme = {
     background: '#fff',
     foreground: '#000',
     border: '#000',
-    muted: '#e0e0e0'
+    muted: '#e0e0e0',
   },
   spacing: {
     card: '2rem',
-    section: '3rem'
+    section: '3rem',
   },
   transitions: {
-    default: 'all 0.2s ease'
-  }
+    default: 'all 0.2s ease',
+  },
 }
 ```
 

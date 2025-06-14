@@ -42,7 +42,7 @@ export type WorkflowStepArgsFor<TInputs> = WorkflowStepArgs & { inputs: TInputs 
  * Helper function to create a workflow step with typed inputs
  */
 export function Step<TInputs = Record<string, any>>(
-  handler: (args: WorkflowStepArgsFor<TInputs>) => Promise<void>
+  handler: (args: WorkflowStepArgsFor<TInputs>) => Promise<void>,
 ): (args: WorkflowStepArgs) => Promise<void> {
   return handler as any
 }

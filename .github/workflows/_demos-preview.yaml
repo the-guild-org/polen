@@ -84,7 +84,7 @@ jobs:
             }
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: ./.github/actions/gh-pages-with-deployments
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh-pages-deploy
@@ -93,6 +93,8 @@ jobs:
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
           commit_message: "Add pull request #${{ inputs.pr-number }} commit ${{ inputs.head-sha }}"
+          pr_number: ${{ inputs.pr-number }}
+          deployment_url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
 
       - name: Get previous deployments for this PR
         id: get-prev-pr-deployments

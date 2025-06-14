@@ -18,15 +18,16 @@ export async function getPRDeployments(): Promise<PRDeployment[]> {
   // Try using GitHub CLI to get deployments
   try {
     // Get deployments from GitHub API
-    const deployments = await $`gh api repos/:owner/:repo/deployments --jq '[.[] | select(.environment == "github-pages" and (.payload.pr_number // .ref | test("^refs/pull/[0-9]+")))] | sort_by(.created_at) | reverse'`
+    const deployments =
+      await $`gh api repos/:owner/:repo/deployments --jq '[.[] | select(.environment == "github-pages" and (.payload.pr_number // .ref | test("^refs/pull/[0-9]+")))] | sort_by(.created_at) | reverse'`
     const deploymentData = JSON.parse(deployments.stdout)
-    
+
     // Extract PR numbers from deployments
     const prMap = new Map<string, PRDeployment>()
-    
+
     for (const deployment of deploymentData) {
       let prNumber: string | null = null
-      
+
       // Check payload for PR number
       if (deployment.payload?.pr_number) {
         prNumber = String(deployment.payload.pr_number)
@@ -37,7 +38,7 @@ export async function getPRDeployments(): Promise<PRDeployment[]> {
           prNumber = match[1]
         }
       }
-      
+
       if (prNumber && !prMap.has(prNumber)) {
         prMap.set(prNumber, {
           number: prNumber,
@@ -47,11 +48,9 @@ export async function getPRDeployments(): Promise<PRDeployment[]> {
         })
       }
     }
-    
+
     // Return sorted by PR number
-    return Array.from(prMap.values()).sort((a, b) => 
-      parseInt(a.number) - parseInt(b.number)
-    )
+    return Array.from(prMap.values()).sort((a, b) => parseInt(a.number) - parseInt(b.number))
   } catch (e) {
     // Fall back to git method if GitHub CLI is not available or fails
     try {
