@@ -54,9 +54,8 @@ jobs:
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
         with:
           script: |
-            const semver = require('semver')
             const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/extract-release-info.js')
-            return script({ github, context, core, exec, semver })
+            return script({ github, context, core, exec })
 
       - name: Build Polen
         if: steps.release.outputs.needs_build == 'true'
@@ -148,7 +147,7 @@ jobs:
 
           # Update all base paths in the copied files
           echo "Updating base paths from /$TAG/ to /$DIST_TAG/"
-          
+
           find "$DIST_TAG" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
             # Use perl for more reliable find/replace with special characters
             perl -i -pe "s|/polen/\Q$TAG\E/|/polen/$DIST_TAG/|g" "$file"

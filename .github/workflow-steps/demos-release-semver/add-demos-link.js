@@ -5,7 +5,7 @@
  *
  * @param {import('../../scripts/lib/async-function').AsyncFunctionArguments} args
  */
-export default async ({ github, context, core }) => {
+export default async ({ github, context }) => {
   const tag = process.env.ACTUAL_TAG
   const eventName = process.env.GITHUB_EVENT_NAME
 
@@ -41,8 +41,12 @@ export default async ({ github, context, core }) => {
     console.log(`✅ Successfully added demos link to commit ${sha}`)
   } catch (error) {
     if (error.status === 422) {
-      console.log(`⚠️ Could not add commit status: commit ${sha} not found in repository`)
-      console.log(`📝 This is expected for tags on commits not in the default branch`)
+      console.log(
+        `⚠️ Could not add commit status: commit ${sha} not found in repository`,
+      )
+      console.log(
+        `📝 This is expected for tags on commits not in the default branch`,
+      )
     } else {
       throw error
     }

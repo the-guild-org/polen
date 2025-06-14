@@ -1,10 +1,11 @@
 // @ts-check
-import { promises as fs } from 'node:fs'
+import * as fs from 'node:fs/promises'
+import * as semver from 'semver'
 
 /**
- * @param {import('../lib/async-function').AsyncFunctionArguments & { semver: typeof import('semver') }} args
+ * @param {import('../lib/async-function').AsyncFunctionArguments} args
  */
-export default async ({ core, exec, semver }) => {
+export default async ({ core, exec }) => {
   // Configuration
   // Note: We no longer need KEEP_RECENT_COMMITS since we only deploy on releases
 
@@ -48,14 +49,14 @@ export default async ({ core, exec, semver }) => {
         .filter(Boolean)
         .filter((tag) => semver.valid(tag))
 
-      versions.forEach(v => distTagVersions.add(v))
+      versions.forEach((v) => distTagVersions.add(v))
     } catch (e) {
       console.log(`No "${distTag}" tag found`)
     }
   }
 
   // Find what the "next" tag points to (pre-release version)
-  const nextVersion = Array.from(distTagVersions).find(v => v.includes('-'))
+  const nextVersion = Array.from(distTagVersions).find((v) => v.includes('-'))
 
   console.log('Latest stable release:', latestStable)
   console.log('Next version:', nextVersion)
@@ -65,7 +66,11 @@ export default async ({ core, exec, semver }) => {
 
   if (nextVersion) {
     // Keep all pre-releases that belong to the same major.minor.patch as next
-    const nextBase = semver.major(nextVersion) + '.' + semver.minor(nextVersion) + '.' + semver.patch(nextVersion)
+    const nextBase = semver.major(nextVersion)
+      + '.'
+      + semver.minor(nextVersion)
+      + '.'
+      + semver.patch(nextVersion)
     preReleasesToKeep = preReleases.filter((tag) => {
       const tagBase = semver.major(tag) + '.' + semver.minor(tag) + '.' + semver.patch(tag)
       return tagBase === nextBase
