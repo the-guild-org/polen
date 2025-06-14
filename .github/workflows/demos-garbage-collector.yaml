@@ -21,46 +21,13 @@ jobs:
       - name: Get scripts from main branch
         uses: ./.github/actions/use-latest-ci
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24.1.x"
+      - name: Setup
+        uses: ./.github/actions/setup
 
-      - name: Identify deployments to remove
-        id: identify
+      - name: Garbage collect old deployments
+        id: gc
         uses: actions/github-script@v7
         with:
           script: |
-            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/shared/identify-deployments-to-remove.js')
+            const { default: script } = await import('${{ github.workspace }}/.github/workflow-steps/demos-garbage-collector/garbage-collect.js')
             return script({ github, context, core, exec })
-
-      - name: Remove old deployments
-        if: steps.identify.outputs.toRemove != '{"trunk":[]}'
-        run: |
-          TO_REMOVE='${{ steps.identify.outputs.toRemove }}'
-          echo "Deployments to remove: $TO_REMOVE"
-
-          # Parse JSON
-          TRUNK_DIRS=$(echo "$TO_REMOVE" | jq -r '.trunk[]')
-
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Remove trunk deployments
-          for dir in $TRUNK_DIRS; do
-            if [ -d "$dir" ]; then
-              echo "Removing trunk deployment: $dir"
-              git rm -rf "$dir"
-            fi
-          done
-
-          # Commit if there are changes
-          if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "chore: garbage collect old trunk deployments
-
-            Removed: $TRUNK_DIRS"
-            git push
-          else
-            echo "No deployments to remove"
-          fi
