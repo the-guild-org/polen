@@ -33,15 +33,20 @@ export async function run({ step, inputs }: RunOptions): Promise<void> {
     const { default: script } = await import(scriptPath)
 
     // Parse any stringified JSON values within the inputs
+    console.log('DEBUG runner: Pre-parse inputs:', JSON.stringify(inputs))
     for (const [key, value] of Object.entries(inputs)) {
       if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
         try {
+          console.log(`DEBUG runner: Parsing JSON for key "${key}":`, value)
           inputs[key] = JSON.parse(value)
-        } catch {
+          console.log(`DEBUG runner: Parsed result for "${key}":`, inputs[key])
+        } catch (e) {
           // Keep as string if not valid JSON
+          console.log(`DEBUG runner: Failed to parse JSON for key "${key}":`, e)
         }
       }
     }
+    console.log('DEBUG runner: Post-parse inputs:', JSON.stringify(inputs))
 
     // Create args object
     const github = token ? getOctokit(token) : {} as any
