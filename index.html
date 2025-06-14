@@ -113,27 +113,78 @@
       gap: 0.75rem;
     }
 
-    .dist-tag-group {
+    .dist-tag-button {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid #000;
+      overflow: hidden;
+    }
+
+    .dist-tag-label {
+      flex: 1;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-    }
-
-    .demo-link.dist-tag {
-      min-width: 120px;
-    }
-
-    .permalink {
-      color: #666;
+      gap: 0.5rem;
+      background: #000;
+      color: #fff;
       text-decoration: none;
-      font-size: 0.875rem;
-      font-family: monospace;
-      transition: color 0.2s ease;
+      transition: all 0.2s ease;
     }
 
-    .permalink:hover {
-      color: #000;
-      text-decoration: underline;
+    .dist-tag-label svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .dist-tag-label:hover svg {
+      transform: translateX(4px);
+    }
+
+    .dist-tag-version {
+      padding: 0.625rem 1.25rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      font-family: monospace;
+      font-size: 0.875rem;
+      background: #000;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    /* Hover states */
+    .dist-tag-button:hover .dist-tag-label,
+    .dist-tag-button:hover .dist-tag-version {
+      background: #fff;
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    .dist-tag-button:hover .dist-tag-version {
+      border-left-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .dist-tag-label:hover {
+      color: #000 !important;
+    }
+
+    .dist-tag-version:hover {
+      color: #000 !important;
+    }
+
+    .permalink-icon {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      margin-left: 0.75rem;
+      transform-origin: center center;
+    }
+
+    .dist-tag-version:hover .permalink-icon {
+      transform: rotate(15deg) translateY(-1px);
     }
 
     .previous-deployments {
@@ -205,6 +256,8 @@
       background: #fff;
       color: #000;
       pointer-events: none;
+      width: 100%;
+      justify-content: center;
     }
   </style>
 </head>
@@ -222,24 +275,24 @@
         <div class="demo-links">
           <div class="dist-tags">
             
-                  <div class="dist-tag-group">
-                    <a href="latest/pokemon/" class="demo-link dist-tag">
+                  <div class="dist-tag-button">
+                    <a href="latest/pokemon/" class="dist-tag-label">
                       latest
                       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
                     </a>
-                    <a href="0.9.0/pokemon/" class="permalink">→ 0.9.0</a>
+                    <a href="0.9.0/pokemon/" class="dist-tag-version">0.9.0<span class="permalink-icon">¶</span></a>
                   </div>
                 
-                  <div class="dist-tag-group">
-                    <a href="next/pokemon/" class="demo-link dist-tag">
+                  <div class="dist-tag-button">
+                    <a href="next/pokemon/" class="dist-tag-label">
                       next
                       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
                     </a>
-                    <a href="0.9.0-next.8/pokemon/" class="permalink">→ 0.9.0-next.8</a>
+                    <a href="0.9.0-next.8/pokemon/" class="dist-tag-version">0.9.0-next.8<span class="permalink-icon">¶</span></a>
                   </div>
                 
           </div>
