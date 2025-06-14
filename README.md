@@ -1,6 +1,6 @@
-# Polen
+# 🌺 Polen
 
-A framework for delightful GraphQL developer portals ✨.
+A framework for delightful GraphQL developer portals
 
 ## Installation
 
