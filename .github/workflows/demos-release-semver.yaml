@@ -27,6 +27,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Install workflow dependencies
+        run: npm install semver
+
       - name: Update workflow scripts from main
         run: |
           # Save the current tag/branch
@@ -45,79 +48,18 @@ jobs:
 
       - name: Extract release info
         id: release
-        run: |
-          # Handle both release events and manual triggers
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ inputs.tag }}"
-            ACTION="manual"
-
-            # Determine if it's a prerelease based on tag format
-            if [[ "$TAG" =~ -[a-zA-Z] ]]; then
-              IS_PRERELEASE="true"
-            else
-              IS_PRERELEASE="false"
-            fi
-          else
-            TAG="${{ github.event.release.tag_name }}"
-            IS_PRERELEASE="${{ github.event.release.prerelease }}"
-            ACTION="${{ github.event.action }}"
-          fi
-
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
-          echo "action=$ACTION" >> $GITHUB_OUTPUT
-
-          # For the "next" release being edited, we need to find the actual semver tag
-          if [[ "$TAG" == "next" ]] && [[ "$ACTION" == "edited" ]]; then
-            echo "is_dist_tag=true" >> $GITHUB_OUTPUT
-
-            # Get the commit this release points to
-            COMMIT=$(git rev-list -n 1 $TAG)
-            echo "Next tag points to commit: $COMMIT"
-
-            # Find the semver prerelease tag for this commit
-            ALL_TAGS=$(git tag --points-at $COMMIT)
-            echo "All tags at this commit: $ALL_TAGS"
-
-            SEMVER_TAG=$(echo "$ALL_TAGS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-' | head -1)
-
-            if [ -n "$SEMVER_TAG" ]; then
-              echo "✅ Found semver tag: $SEMVER_TAG"
-              echo "actual_tag=$SEMVER_TAG" >> $GITHUB_OUTPUT
-              echo "needs_build=true" >> $GITHUB_OUTPUT
-            else
-              echo "❌ No semver tag found for next release"
-              echo "needs_build=false" >> $GITHUB_OUTPUT
-            fi
-          elif [[ "$TAG" == "latest" ]]; then
-            # Skip latest tag updates
-            echo "is_dist_tag=true" >> $GITHUB_OUTPUT
-            echo "needs_build=false" >> $GITHUB_OUTPUT
-          else
-            # Regular semver releases
-            echo "is_dist_tag=false" >> $GITHUB_OUTPUT
-            echo "actual_tag=$TAG" >> $GITHUB_OUTPUT
-            
-            # Check minimum version from demo config
-            MIN_VERSION=$(cat .github/demo-config.json | jq -r '.minimumVersion // "0.0.0"')
-            
-            # Function to compare semver versions
-            version_gte() {
-              # Returns 0 (true) if $1 >= $2
-              # If $2 is the smaller one when sorted, then $1 >= $2
-              [ "$(printf '%s\n%s' "$1" "$2" | sort -V | head -n1)" = "$2" ]
-            }
-            
-            # Compare versions
-            if ! version_gte "$TAG" "$MIN_VERSION"; then
-              echo "❌ Version $TAG is below minimum demo version $MIN_VERSION"
-              echo "⚠️  Demos are only supported for versions $MIN_VERSION and above"
-              echo "needs_build=false" >> $GITHUB_OUTPUT
-            else
-              echo "✅ Version $TAG meets minimum requirement ($MIN_VERSION)"
-              echo "needs_build=true" >> $GITHUB_OUTPUT
-            fi
-          fi
+        uses: actions/github-script@v7
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          GITHUB_RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
+          GITHUB_RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}
+          GITHUB_EVENT_ACTION: ${{ github.event.action }}
+        with:
+          script: |
+            const semver = require('semver')
+            const { default: script } = await import('${{ github.workspace }}/.github/scripts/steps/extract-release-info.js')
+            return script({ github, context, core, exec, semver })
 
       - name: Build Polen
         if: steps.release.outputs.needs_build == 'true'
