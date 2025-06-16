@@ -1,7 +1,6 @@
 import { Api } from '#api/index'
-import { debugGlobal } from '#lib/debug/debug'
 import type { PackageManager } from '@wollybeard/kit'
-import { Path } from '@wollybeard/kit'
+import { Debug, Path } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
 import * as GetPortPlease from 'get-port-please'
@@ -22,7 +21,7 @@ export const create = async (parameters: {
   polenLink?: PackageManager.LinkProtocol
   portProductionServer?: number
 }) => {
-  const debug = debugGlobal.sub(parameters.exampleName)
+  const debug = Debug.create(parameters.exampleName)
   debug.toggle(parameters.debugMode ?? false)
 
   const project = await Projector.create({
