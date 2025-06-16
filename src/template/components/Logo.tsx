@@ -1,4 +1,3 @@
-import { useIsPrefersDarkMode } from '#template/hooks/is-prefers-dark-mode'
 import { Box, Flex, Text } from '@radix-ui/themes'
 
 interface Props {
@@ -9,8 +8,6 @@ interface Props {
 }
 
 export const Logo: React.FC<Props> = ({ src, title, height = 30, showTitle = true }) => {
-  const prefersDarkMode = useIsPrefersDarkMode()
-
   return (
     <Flex align='center' gap='2'>
       <Box style={{ height, display: 'flex', alignItems: 'center' }}>
@@ -18,11 +15,10 @@ export const Logo: React.FC<Props> = ({ src, title, height = 30, showTitle = tru
           src={src}
           alt={title}
           height={height}
+          className='polen-logo'
           style={{
             height: '100%',
             width: 'auto',
-            // Use CSS filter to invert colors in dark mode
-            filter: prefersDarkMode ? 'invert(1)' : 'none',
             transition: 'filter 0.2s ease-in-out',
           }}
         />
@@ -32,6 +28,19 @@ export const Logo: React.FC<Props> = ({ src, title, height = 30, showTitle = tru
           {title}
         </Text>
       )}
+      <style>
+        {`
+          .polen-logo {
+            filter: none;
+          }
+          
+          @media (prefers-color-scheme: dark) {
+            .polen-logo {
+              filter: invert(1);
+            }
+          }
+        `}
+      </style>
     </Flex>
   )
 }

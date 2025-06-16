@@ -193,7 +193,9 @@ if (PROJECT_DATA.schema) {
 if (import.meta.env.DEV) {
   let devRoutes: ReactRouter.RouteObject[] = []
   const { logoEditor } = await import('./dev/editor/logo.tsx')
-  devRoutes = [logoEditor]
+  const { testAction } = await import('./dev/test-action.tsx')
+  const { testNativeForm } = await import('./dev/test-native-form.tsx')
+  devRoutes = [logoEditor, testAction, testNativeForm]
   children.push(...devRoutes)
 }
 
