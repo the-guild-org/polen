@@ -4,6 +4,7 @@ import ViteReact from '@vitejs/plugin-react-oxc'
 // import { Arr, Path } from '@wollybeard/kit'
 // import Inspect from 'vite-plugin-inspect'
 // import Restart from 'vite-plugin-restart'
+import { Branding } from './branding/index.ts'
 import { Build } from './build.ts'
 import { Core } from './core.ts'
 import { Serve } from './serve.ts'
@@ -34,6 +35,7 @@ export const Main = (
 
   plugins.push(
     ViteReact(),
+    Branding(config),
     Core(config),
     Serve(config),
     Build(config),

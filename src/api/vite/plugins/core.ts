@@ -9,7 +9,7 @@ import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debug } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import { Json, Str } from '@wollybeard/kit'
-import type { ProjectData } from '../../../project-data.ts'
+import type { ProjectData } from '../../../project-data.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
 import { Schema } from '../../schema/index.ts'
 import { createLogger } from '../logger.ts'
@@ -206,7 +206,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const projectData: ProjectData = {
               schema,
-              faviconPath: `/logo.svg`,
               basePath: config.build.base,
               paths: config.paths.project,
               server: {

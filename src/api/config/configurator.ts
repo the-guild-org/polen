@@ -1,9 +1,9 @@
 import type { Vite } from '#dep/vite/index'
 import { assertPathAbsolute } from '#lib/kit-temp'
+import { type PackagePaths, packagePaths } from '#package-paths'
 import { Path } from '@wollybeard/kit'
 import { z } from 'zod'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.ts'
-import { type PackagePaths, packagePaths } from '../../package-paths.ts'
 import type { Schema } from '../schema/index.ts'
 
 export const BuildArchitectureEnum = {
@@ -124,7 +124,13 @@ export interface TemplateVariables {
 
 const buildPaths = (rootDir: string): Config[`paths`] => {
   if (!Path.isAbsolute(rootDir)) throw new Error(`Root dir path must be absolute: ${rootDir}`)
-  const ensureAbsolute = Path.ensureAbsoluteWith(rootDir)
+  const rootAbsolute = Path.ensureAbsoluteWith(rootDir)
+
+  const buildAbsolutePath = rootAbsolute(`build`)
+  const buildAbsolute = Path.ensureAbsoluteWith(buildAbsolutePath)
+
+  const publicAbsolutePath = rootAbsolute(`public`)
+  const publicAbsolute = Path.ensureAbsoluteWith(publicAbsolutePath)
   return {
     project: {
       rootDir,
@@ -137,14 +143,22 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
           },
         },
         pages: `pages`,
+        public: {
+          root: 'public',
+          logo: 'logo.svg',
+        },
       },
       absolute: {
+        pages: rootAbsolute(`pages`),
         build: {
-          root: ensureAbsolute(`build`),
-          serverEntrypoint: ensureAbsolute(`build/app.js`),
-          assets: ensureAbsolute(`build/assets`),
+          root: buildAbsolute('.'),
+          serverEntrypoint: buildAbsolute(`app.js`),
+          assets: buildAbsolute(`assets`),
         },
-        pages: ensureAbsolute(`pages`),
+        public: {
+          root: publicAbsolute('.'),
+          logo: publicAbsolute('logo.svg'),
+        },
       },
     },
     framework: packagePaths,
@@ -178,6 +192,10 @@ export interface Config {
           }
         }
         pages: string
+        public: {
+          root: string
+          logo: string
+        }
       }
       absolute: {
         build: {
@@ -186,6 +204,10 @@ export interface Config {
           serverEntrypoint: string
         }
         pages: string
+        public: {
+          root: string
+          logo: string
+        }
       }
     }
     framework: PackagePaths

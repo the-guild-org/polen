@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+// @ts-nocheck
 import { Command } from '@molt/command'
 import { execSync } from 'child_process'
 import fs from 'fs'

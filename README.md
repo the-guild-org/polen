@@ -356,6 +356,17 @@ npx polen dev --base /my-project/
 
 The CLI flag takes precedence over the config file setting.
 
+#### Custom Logo
+
+You can provide a custom logo for your developer portal by placing a `logo.svg` file in your project's `public` directory:
+
+```
+public/
+  logo.svg
+```
+
+Polen will automatically use this logo in the navigation bar instead of the default Polen logo.
+
 ### Package
 
 #### ESM
