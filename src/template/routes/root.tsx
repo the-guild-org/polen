@@ -7,8 +7,8 @@ import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Arr } from '@wollybeard/kit'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
+import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import projectDataNavbar from 'virtual:polen/project/data/navbar.jsonsuper'
 import projectDataPages from 'virtual:polen/project/data/pages.jsonsuper'
 import { pages } from 'virtual:polen/project/pages.jsx'
@@ -179,24 +179,6 @@ const children: ReactRouter.RouteObject[] = [
 if (PROJECT_DATA.schema) {
   children.push(changelog)
   children.push(reference)
-}
-
-//
-//
-//
-//
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Development Routes
-//
-//
-//
-
-if (import.meta.env.DEV) {
-  let devRoutes: ReactRouter.RouteObject[] = []
-  const { logoEditor } = await import('./dev/editor/logo.tsx')
-  const { testAction } = await import('./dev/test-action.tsx')
-  const { testNativeForm } = await import('./dev/test-native-form.tsx')
-  devRoutes = [logoEditor, testAction, testNativeForm]
-  children.push(...devRoutes)
 }
 
 //
