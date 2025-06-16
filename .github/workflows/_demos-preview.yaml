@@ -29,6 +29,7 @@ permissions:
   pull-requests: write
   pages: write
   id-token: write
+  deployments: write
 
 jobs:
   deploy:
