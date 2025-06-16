@@ -29,7 +29,6 @@ export const renderPage = (
     return ResponseInternalServerError()
   }
 
-
   if (__BUILDING__) {
     html = injectManifestIntoHtml(html, viteClientAssetManifest, PROJECT_DATA.basePath)
   }

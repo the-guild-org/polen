@@ -121,4 +121,3 @@ declare module 'virtual:polen/project/assets/logo.svg' {
   const src: string
   export default src
 }
-
