@@ -1,7 +1,6 @@
-import { assetUrl, faviconUrl } from '#api/utils/asset-url/index'
+import { assetUrl } from '#api/utils/asset-url/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
-import { GitHubLogoIcon } from '@radix-ui/react-icons'
 import { Box, Button, Grid, Heading, Text } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
@@ -9,12 +8,14 @@ import { Arr } from '@wollybeard/kit'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import projectDataNavbar from 'virtual:polen/project/data/navbar.jsonsuper'
 import projectDataPages from 'virtual:polen/project/data/pages.jsonsuper'
 import { pages } from 'virtual:polen/project/pages.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link } from '../components/Link.jsx'
-import { Sidebar } from '../components/sidebar/Sidebar.tsx'
+import { Logo } from '../components/Logo.jsx'
+import { Sidebar } from '../components/sidebar/Sidebar.jsx'
 import entryClientUrl from '../entry.client.jsx?url'
 import { changelog } from './changelog.jsx'
 import { index } from './index.jsx'
@@ -39,17 +40,9 @@ export const Component = () => {
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <title>{templateVariables.title}</title>
         {import.meta.env.DEV && <link rel='stylesheet' href={radixStylesUrl} />}
-        <link
-          rel='icon'
-          href={faviconUrl(PROJECT_DATA.faviconPath.replace(`.svg`, `.ico`) + `?v=1`, PROJECT_DATA.basePath)}
-          sizes='256 x 256'
-        />
-        <link
-          rel='icon'
-          href={faviconUrl(PROJECT_DATA.faviconPath + `?v=1`, PROJECT_DATA.basePath)}
-          sizes='any'
-          type='image/svg+xml'
-        />
+        <link rel='icon' type='image/svg+xml' href={assetUrl('/favicon.svg', PROJECT_DATA.basePath)} />
+        <link rel='manifest' href={assetUrl('/manifest.json', PROJECT_DATA.basePath)} />
+        <meta name='theme-color' content='#000000' />
       </head>
       <body style={{ margin: 0 }}>
         <Layout />
@@ -93,12 +86,7 @@ const Layout = () => {
         to='/'
         style={{ color: `inherit`, textDecoration: `none` }}
       >
-        <Flex align='center' gap='2'>
-          <GitHubLogoIcon style={{ width: 30, height: 30 }} />
-          <Text size='3' weight='medium'>
-            {templateVariables.title}
-          </Text>
-        </Flex>
+        <Logo src={logoSrc} title={templateVariables.title} height={30} showTitle={true} />
       </LinkReactRouter>
       <Flex direction='row' gap='4'>
         {projectDataNavbar.map((item, key) => (
@@ -114,7 +102,8 @@ const Layout = () => {
     <Theme asChild>
       <Grid
         width={{ initial: 'var(--container-4)' }}
-        areas="'header header header header header header header header' 'sidebar sidebar . content content content content content'"
+        // areas="'header header header header header header header header' 'sidebar sidebar . content content content content content'"
+        areas="'header header header header header header header header' 'content content content content content content content content'"
         rows='min-content auto'
         columns='repeat(8, 1fr)'
         gapX='2'
@@ -133,21 +122,21 @@ const Layout = () => {
             line-height: 1.6;
             background-color: #f6f8fa;
           }
-          
+
           /* Light mode: use --shiki-light CSS variables from inline styles */
           pre.shiki span {
             color: var(--shiki-light);
           }
-          
+
           /* Dark mode - Radix Themes uses [data-is-root-theme="dark"] */
           [data-is-root-theme="dark"] pre.shiki {
             background-color: #1a1b26;
           }
-          
+
           [data-is-root-theme="dark"] pre.shiki span {
             color: var(--shiki-dark);
           }
-          
+
           pre.shiki code {
             font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
             background: transparent;
@@ -190,6 +179,22 @@ const children: ReactRouter.RouteObject[] = [
 if (PROJECT_DATA.schema) {
   children.push(changelog)
   children.push(reference)
+}
+
+//
+//
+//
+//
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Development Routes
+//
+//
+//
+
+if (import.meta.env.DEV) {
+  let devRoutes: ReactRouter.RouteObject[] = []
+  const { logoEditor } = await import('./dev/editor/logo.tsx')
+  devRoutes = [logoEditor]
+  children.push(...devRoutes)
 }
 
 //

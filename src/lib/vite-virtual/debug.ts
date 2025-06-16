@@ -1,3 +1,3 @@
-import { Debug } from '#lib/debug/index'
+import { Debug } from '@wollybeard/kit'
 
 export const debug = Debug.create(`vite-virtual`)

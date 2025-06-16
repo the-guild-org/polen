@@ -180,7 +180,7 @@
     "sandbox:watch": "tsx --watch src/sandbox",
     "sb": "pnpm sandbox",
     "sb:w": "pnpm sandbox:watch",
-    "polen": "node --no-warnings --conditions source ./src/cli/index.ts",
+    "polen": "node --no-warnings --experimental-transform-types --conditions source ./src/cli/index.ts",
     "test:examples": "playwright test --config 'tests/playwright.config.ts' --project=examples",
     "test:integration": "playwright test --config 'tests/playwright.config.ts' --project=integration",
     "test:unit": "vitest",

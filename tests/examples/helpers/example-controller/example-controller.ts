@@ -1,7 +1,7 @@
 import { Api } from '#api/index'
-import { debugGlobal } from '#lib/debug/debug'
 import type { PackageManager } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
+import { debugGlobal } from '@wollybeard/kit/debug'
 import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
 import * as GetPortPlease from 'get-port-please'

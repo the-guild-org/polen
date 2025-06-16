@@ -116,3 +116,9 @@ declare module 'virtual:polen/project/data/pages.jsonsuper' {
   const data: import('#api/vite/plugins/pages').ProjectDataPages
   export { data as default }
 }
+
+declare module 'virtual:polen/project/assets/logo.svg' {
+  const src: string
+  export default src
+}
+
