@@ -1,4 +1,4 @@
-import { Step } from '../types.js'
+import { Step } from '../types.ts'
 
 interface Inputs {
   pr_number: string
