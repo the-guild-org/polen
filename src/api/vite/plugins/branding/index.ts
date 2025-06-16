@@ -10,7 +10,7 @@ const generateDefaultLogo = async () => {
 }
 
 export function Branding(config: Config.Config): Plugin {
-  const _debug = debug.sub(['vite-plugin', 'branding'])
+  const _debug = debug.sub('vite-plugin:branding')
 
   _debug('initialized')
 
