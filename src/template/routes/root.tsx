@@ -40,9 +40,9 @@ export const Component = () => {
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <title>{templateVariables.title}</title>
         {import.meta.env.DEV && <link rel='stylesheet' href={radixStylesUrl} />}
-        <link rel='icon' type='image/svg+xml' href={assetUrl('/favicon.svg', PROJECT_DATA.basePath)} />
-        <link rel='manifest' href={assetUrl('/manifest.json', PROJECT_DATA.basePath)} />
-        <meta name='theme-color' content='#000000' />
+        {/* <link rel='icon' type='image/svg+xml' href={assetUrl('/favicon.svg', PROJECT_DATA.basePath)} /> */}
+        {/* <link rel='manifest' href={assetUrl('/manifest.json', PROJECT_DATA.basePath)} /> */}
+        {/* <meta name='theme-color' content='#000000' /> */}
       </head>
       <body style={{ margin: 0 }}>
         <Layout />
