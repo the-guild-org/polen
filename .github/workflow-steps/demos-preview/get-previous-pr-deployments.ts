@@ -39,10 +39,10 @@ export default Step<Inputs>(async ({ github, context, core, inputs }) => {
       })
 
       // Only include successful deployments
-      if (statuses.length > 0 && statuses[0].state === 'success') {
+      if (statuses.length > 0 && statuses[0]!.state === 'success') {
         previousDeployments.push({
           sha: deployment.sha.substring(0, 7),
-          url: statuses[0].environment_url || '',
+          url: statuses[0]!.environment_url || '',
           created_at: deployment.created_at,
         })
       }
