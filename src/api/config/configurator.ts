@@ -46,18 +46,6 @@ export interface ConfigInput {
      */
     title?: string
   }
-  /**
-   * Branding configuration for favicon and logo.
-   */
-  branding?: {
-    /**
-     * Path to logo file.
-     *
-     * @default './logo.svg' - Polen will look for a logo.svg file in your project root
-     * @example './assets/logo.svg'
-     */
-    logo?: string
-  }
   build?: {
     architecture?: BuildArchitecture
     /**
