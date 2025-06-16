@@ -7,7 +7,8 @@ import { glob } from 'tinyglobby'
 import type { Schema } from '../../schema.ts'
 import { FileNameExpression } from './file-name-expression/index.ts'
 
-const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
+// const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
+const debug = debugPolen.sub(`schema:data-source-schema-directory`)
 
 const defaultPaths = {
   schemaDirectory: `./schema`,
