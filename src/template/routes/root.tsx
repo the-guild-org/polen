@@ -102,8 +102,7 @@ const Layout = () => {
     <Theme asChild>
       <Grid
         width={{ initial: 'var(--container-4)' }}
-        // areas="'header header header header header header header header' 'sidebar sidebar . content content content content content'"
-        areas="'header header header header header header header header' 'content content content content content content content content'"
+        areas="'header header header header header header header header' 'sidebar sidebar . content content content content content'"
         rows='min-content auto'
         columns='repeat(8, 1fr)'
         gapX='2'

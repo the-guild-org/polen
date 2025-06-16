@@ -17,15 +17,7 @@ if (__BUILDING__) {
 }
 
 app.all(`*`, async (ctx) => {
-  console.log(`[Polen Debug] Request:`, ctx.req.method, ctx.req.path)
-  console.log(`[Polen Debug] Request URL:`, ctx.req.url)
-  console.log(`[Polen Debug] Headers:`, ctx.req.header())
-  console.log(`[Polen Debug] PROJECT_DATA.basePath:`, PROJECT_DATA.basePath)
-
   const staticHandlerContext = await view.query(ctx.req.raw)
-
-  console.log(`[Polen Debug] Static handler response:`, staticHandlerContext)
-  console.log(`[Polen Debug] Response is instance of Response:`, staticHandlerContext instanceof Response)
 
   if (staticHandlerContext instanceof Response) {
     return staticHandlerContext
