@@ -6,10 +6,10 @@ export const MutationType = {
 
 export type MutationType = typeof MutationType[keyof typeof MutationType]
 
-export type ExistenceDiff = 
-  | { before: false; after: true }   // Create
-  | { before: true; after: true }    // Update
-  | { before: true; after: false }   // Delete
+export type ExistenceDiff =
+  | { before: false; after: true } // Create
+  | { before: true; after: true } // Update
+  | { before: true; after: false } // Delete
 
 export const getMutationType = (diff: ExistenceDiff): MutationType => {
   if (!diff.before && diff.after) return MutationType.Create
