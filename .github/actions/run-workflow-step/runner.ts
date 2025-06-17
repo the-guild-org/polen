@@ -30,15 +30,15 @@ export async function run({ step, inputs }: RunOptions): Promise<void> {
 
     // Import the step module
     const scriptPath = `${process.env['GITHUB_WORKSPACE']}/.github/workflow-steps/${step}`
-    console.log(`Loading workflow step from: ${scriptPath}`)
+    core.info(`Loading workflow step from: ${scriptPath}`)
 
     let script
     try {
       const module = await import(scriptPath)
       script = module.default
-      console.log(`Successfully loaded workflow step`)
+      core.debug(`Successfully loaded workflow step`)
     } catch (error) {
-      console.error(`Failed to import workflow step: ${error}`)
+      core.error(`Failed to import workflow step: ${error}`)
       throw error
     }
 
