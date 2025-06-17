@@ -9,15 +9,29 @@ interface Inputs {
 }
 
 /**
- * Update the demos index page in gh-pages
+ * Generate and update the main demos landing page with current deployment info
+ *
+ * WHAT: Creates/updates the demos homepage that lists all available demo deployments
+ * WHY: Provides a central directory for users to discover and access all demo versions
+ *
+ * Two modes:
+ * 1. 'trunk' (default): Main landing page showing stable releases + current prereleases
+ *    - Shows latest stable prominently with "latest" dist-tag
+ *    - Lists previous versions for comparison
+ *    - Displays current dist-tag assignments (latest, next, etc.)
+ *
+ * 2. 'pr-index': Special page showing all PR demo deployments
+ *    - Lists active PR demos for development/testing
+ *    - Shows commit SHAs and PR numbers for navigation
  *
  * Prerequisites:
- * - Main repo must be checked out
- * - gh-pages must be checked out to ./gh-pages subdirectory
+ * - Main repo must be checked out (for accessing build scripts)
+ * - gh-pages must be checked out to ./gh-pages subdirectory (for deployment)
  *
- * Inputs:
- * - mode: 'trunk' (default) or 'pr-index'
- * - output_dir: Output directory for pr-index mode
+ * The generated page helps users understand:
+ * - Which demos represent stable releases vs development versions
+ * - How to access demos for specific features or bugs (PR demos)
+ * - Version history and release progression
  */
 export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
   const mode = inputs.mode || 'trunk'

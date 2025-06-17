@@ -3,7 +3,29 @@ import { VersionHistory } from '../../../src/lib/version-history/index.js'
 import { type ReleaseInputs, Step } from '../types.ts'
 
 /**
- * Extract release information and determine if demos should be built
+ * Extract and validate release information to determine demo build requirements
+ *
+ * WHAT: Parses GitHub release event data and validates if demos should be built
+ * WHY: Not all releases need demos - filters by minimum version requirements and handles edge cases
+ *
+ * Handles multiple trigger scenarios:
+ * 1. GitHub release events (published/edited) - Uses event metadata
+ * 2. Manual workflow dispatch - Uses manual inputs
+ * 3. Dist-tag releases ("latest", "next") - Special handling
+ *
+ * Key validations:
+ * - Minimum Polen version check (demos only supported for recent versions)
+ * - Dist-tag handling ("latest" never needs rebuild, "next" requires semver lookup)
+ * - Release vs prerelease detection
+ *
+ * Outputs:
+ * - needs_build: Whether demos should be built for this release
+ * - actual_tag: The semver tag to use (may differ from input for dist-tags)
+ * - is_dist_tag: Whether this is a dist-tag rather than semver release
+ * - is_prerelease: Whether this is a prerelease version
+ *
+ * This gating step prevents unnecessary builds for old versions or edge cases
+ * while ensuring valid releases get proper demo deployments.
  */
 export default Step<ReleaseInputs>(async ({ core, inputs }) => {
   try {

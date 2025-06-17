@@ -12,18 +12,18 @@ interface Inputs {
 
 /**
  * Prepare PR preview deployment by organizing built demos into deployment structure
- * 
+ *
  * WHAT: Creates a complete gh-pages deployment structure for PR demos
  * WHY: Enables PR reviewers to test changes by viewing live demos before merging
- * 
+ *
  * Creates two parallel deployments:
  * - `/pr-{number}/latest/` - Always points to newest commit (paths updated)
  * - `/pr-{number}/{sha}/` - Permanent commit-specific version
- * 
+ *
  * Also creates convenience redirects:
  * - `/pr-{number}/pokemon/` → `/pr-{number}/latest/pokemon/`
  * - `/pr-{number}/index.html` - Landing page listing all demos
- * 
+ *
  * Structure created:
  * ```
  * gh-pages-deploy/

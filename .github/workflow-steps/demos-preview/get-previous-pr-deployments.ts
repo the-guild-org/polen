@@ -6,7 +6,19 @@ interface Inputs {
 }
 
 /**
- * Get previous PR deployments using GitHub Deployments API
+ * Retrieve previous successful PR demo deployments for comparison links
+ *
+ * WHAT: Fetches deployment history from GitHub Deployments API for this PR
+ * WHY: Allows reviewers to compare current changes against previous demo versions
+ *
+ * Uses GitHub's Deployments API to find successful deployments to the PR environment
+ * that aren't the current commit. This provides "Previous:" links in PR comments
+ * showing earlier demo versions for comparison.
+ *
+ * Filters to only successful deployments and excludes the current SHA to avoid
+ * showing duplicate links. Results are sorted by creation date (newest first).
+ *
+ * Output: deployment_links - Formatted markdown links like "`abc1234`(url) / `def5678`(url)"
  */
 export default Step<Inputs>(async ({ github, context, core, inputs }) => {
   const prNumber = inputs.pr_number

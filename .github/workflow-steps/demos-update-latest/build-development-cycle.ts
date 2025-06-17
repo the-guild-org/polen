@@ -8,19 +8,19 @@ interface Inputs {
 
 /**
  * Build demos for all versions in the current development cycle
- * 
+ *
  * WHAT: Builds demo sites for current stable + prereleases using latest example code
  * WHY: Updates demos when example projects or Polen library changes, without rebuilding old versions
- * 
+ *
  * This is a build-only step that:
  * - Uses current main branch examples (latest features)
  * - Builds each version with appropriate base paths
  * - Does NOT deploy (separate step handles deployment)
- * 
+ *
  * Each version gets built with correct paths:
  * - Stable versions: Built for /latest/ deployment
  * - Prereleases: Built for /{version}/ deployment
- * 
+ *
  * Used by demos-update-latest workflow when examples or library changes.
  */
 export default Step<Inputs>(async ({ core, inputs }) => {

@@ -1,7 +1,26 @@
 import { type AddDemosLinkInputs, Step } from '../types.ts'
 
 /**
- * Add demos link to commit
+ * Add a commit status with link to the deployed demos for this release
+ *
+ * WHAT: Creates a GitHub commit status pointing to the live demo deployment
+ * WHY: Provides immediate access to demos from the commit/release page on GitHub
+ *
+ * When someone views a release or commit on GitHub, they'll see a "polen/demos"
+ * status check with a direct link to the live demos for that version.
+ *
+ * Handles two scenarios:
+ * 1. GitHub release events: Uses the commit SHA from the release
+ * 2. Manual workflow dispatch: Looks up the commit SHA for the provided tag
+ *
+ * The commit status appears as:
+ * - Context: "polen/demos"
+ * - State: "success" (green checkmark)
+ * - Description: "View demos for {version}"
+ * - Link: https://org.github.io/polen/{version}/
+ *
+ * Gracefully handles edge cases like commits not in the default branch
+ * (which can happen with release tags).
  */
 export default Step<AddDemosLinkInputs>(async ({ github, context, core, inputs }) => {
   core.startGroup('Add demos link to commit')

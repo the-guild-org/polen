@@ -11,14 +11,14 @@ interface GenerateDemoLinksInputs {
 
 /**
  * Generate markdown links for all demo examples in a PR preview
- * 
+ *
  * WHAT: Creates formatted markdown text showing links to PR demo deployments
  * WHY: Provides convenient access to both latest and commit-specific demo versions for PR reviews
- * 
+ *
  * Creates two types of links for each demo:
  * - Latest link: Points to PR's latest deployment (updated on each push)
  * - Commit-specific link: Points to specific SHA deployment (permanent)
- * 
+ *
  * @example
  * Output format:
  * #### Pokemon
