@@ -30,7 +30,17 @@ export async function run({ step, inputs }: RunOptions): Promise<void> {
 
     // Import the step module
     const scriptPath = `${process.env['GITHUB_WORKSPACE']}/.github/workflow-steps/${step}`
-    const { default: script } = await import(scriptPath)
+    console.log(`Loading workflow step from: ${scriptPath}`)
+
+    let script
+    try {
+      const module = await import(scriptPath)
+      script = module.default
+      console.log(`Successfully loaded workflow step`)
+    } catch (error) {
+      console.error(`Failed to import workflow step: ${error}`)
+      throw error
+    }
 
     // Parse any stringified JSON values within the inputs
     for (const [key, value] of Object.entries(inputs)) {
