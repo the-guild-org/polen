@@ -300,7 +300,7 @@ const indexHtml = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Polen Demos</title>
+  <title>Polen Demos${prNumber ? ` - PR #${prNumber} Preview` : ``}</title>
   <style>
     * {
       margin: 0;
@@ -556,12 +556,119 @@ const indexHtml = `<!DOCTYPE html>
       width: 100%;
       justify-content: center;
     }
+
+    /* PR Preview Banner */
+    .pr-banner {
+      background: #000;
+      color: #fff;
+      padding: 1rem 0;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #000;
+    }
+
+    .pr-banner .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .pr-banner .container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .pr-banner-links {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .pr-banner-link {
+        justify-content: center;
+      }
+    }
+
+    .pr-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .pr-banner-badge {
+      background: #fff;
+      color: #000;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pr-banner-text {
+      font-size: 0.875rem;
+    }
+
+    .pr-banner-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .pr-banner-link {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid #fff;
+      transition: all 0.2s ease;
+    }
+
+    .pr-banner-link:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    .pr-banner-link svg {
+      width: 16px;
+      height: 16px;
+    }
   </style>
 </head>
 <body>
+  ${prNumber ? `
+  <div class="pr-banner">
+    <div class="container">
+      <div class="pr-banner-content">
+        <span class="pr-banner-badge">PR Preview</span>
+        <span class="pr-banner-text">You're viewing a preview deployment for Pull Request #${prNumber}</span>
+      </div>
+      <div class="pr-banner-links">
+        <a href="https://github.com/the-guild-org/polen/pull/${prNumber}" class="pr-banner-link" target="_blank">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          View PR on GitHub
+        </a>
+        <a href="https://the-guild-org.github.io/polen/" class="pr-banner-link">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          Go to Production Demos
+        </a>
+      </div>
+    </div>
+  </div>
+  ` : ''}
   <div class="container">
     <div class="header">
-      <h1>Polen Demos</h1>
+      <h1>Polen Demos${prNumber ? ` - PR #${prNumber}` : ''}</h1>
       <p>Interactive examples showcasing Polen's powerful GraphQL documentation features</p>
     </div>
 

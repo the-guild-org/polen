@@ -41,7 +41,7 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
       // Copy to gh-pages root
       await fs.copyFile('dist-demos/index.html', 'gh-pages/index.html')
 
-      console.log('✅ Trunk demos index updated successfully')
+      core.info('✅ Trunk demos index updated successfully')
       return
     }
 
@@ -59,7 +59,7 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
 
     await fs.copyFile('dist-demos/pr-index.html', outputPath)
 
-    console.log(`✅ PR demos index updated successfully at ${outputPath}`)
+    core.info(`✅ PR demos index updated successfully at ${outputPath}`)
   } catch (error) {
     core.setFailed(`Failed to update demos index: ${(error as Error).message}`)
   }
