@@ -174,10 +174,6 @@
   },
   "packageManager": "pnpm@10.11.1",
   "scripts": {
-    "gh:demos-rebuild": "gh workflow run demos-rebuild.yaml -f since_version=0.9.0-next.8",
-    "gh:demos-rebuild:list": "gh run list --workflow=demos-rebuild.yaml",
-    "gh:demos-rebuild:logs": "gh run view $(gh run list --workflow=demos-rebuild.yaml --limit=1 --json databaseId -q '.[0].databaseId') --log",
-    "gh:demos-rebuild:watch": "gh run watch $(gh run list --workflow=demos-rebuild.yaml --limit=1 --json databaseId -q '.[0].databaseId')",
     "sandbox": "tsx src/sandbox",
     "sandbox:watch": "tsx --watch src/sandbox",
     "sb": "pnpm sandbox",

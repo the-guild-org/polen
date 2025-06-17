@@ -7,6 +7,24 @@ interface Inputs {
   github_ref?: string
 }
 
+/**
+ * Extract dist-tag information and find corresponding semver version
+ * 
+ * WHAT: Resolves npm dist-tags (like "latest", "next") to their actual semver versions
+ * WHY: Dist-tag releases need to copy content from existing semver deployments rather than rebuild
+ * 
+ * Handles two trigger scenarios:
+ * 1. Tag push event: Extracts tag from refs/tags/{tag_name}
+ * 2. Manual dispatch: Uses input_dist_tag parameter
+ * 
+ * Outputs:
+ * - tag_name: The dist-tag name (e.g., "latest")
+ * - semver_tag: The actual semver version it points to (e.g., "1.2.3")
+ * - commit: The git commit SHA
+ * 
+ * This enables the deployment to copy demos from the semver deployment
+ * instead of rebuilding them from source.
+ */
 export default Step<Inputs>(async ({ core, inputs }) => {
   const { github_event_name, input_dist_tag, github_ref } = inputs
   const versionHistory = new VersionHistory()

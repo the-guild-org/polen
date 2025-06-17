@@ -48,7 +48,7 @@ jobs:
           VERSIONS='${{ steps.get-versions.outputs.versions_to_rebuild }}'
           
           # Get list of examples that are enabled for demos
-          EXAMPLES=$(node --no-warnings ./.github/scripts/tools/get-demo-examples.ts)
+          EXAMPLES=$(node --no-warnings --experimental-transform-types ./.github/scripts/tools/get-demo-examples.ts)
           echo "Building demos for examples: $EXAMPLES"
           
           # Build demos for each version
@@ -60,12 +60,12 @@ jobs:
               # Stable version - use 'latest' path
               BASE_PATH="/polen/latest"
               echo "Building demos landing page for latest..."
-              node --no-warnings ./scripts/build-demos-home.ts --basePath "$BASE_PATH/"
+              node --no-warnings --experimental-transform-types ./scripts/build-demos-home.ts --basePath "$BASE_PATH/"
             else
               # Prerelease - use version-specific path
               BASE_PATH="/polen/$version"
               echo "Building demos landing page for $version..."
-              node --no-warnings ./scripts/build-demos-home.ts --basePath "$BASE_PATH/"
+              node --no-warnings --experimental-transform-types ./scripts/build-demos-home.ts --basePath "$BASE_PATH/"
             fi
             
             # Build each example
@@ -84,54 +84,7 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Update demos
-        if: steps.get-versions.outputs.has_versions == 'true'
-        run: |
-          cd gh-pages
-          
-          # Parse versions from JSON output
-          VERSIONS='${{ steps.get-versions.outputs.versions_to_rebuild }}'
-          EXAMPLES=$(node --no-warnings ../.github/scripts/tools/get-demo-examples.ts)
-          
-          # Update demos for each version
-          echo "$VERSIONS" | jq -r '.[]' | while read version; do
-            echo "\nUpdating demos for version $version..."
-            
-            # Determine target directory
-            if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              # Stable version - update 'latest'
-              TARGET_DIR="latest"
-              if [ -d "$TARGET_DIR" ]; then
-                echo "Removing old $TARGET_DIR directory"
-                rm -rf "$TARGET_DIR"
-              fi
-            else
-              # Prerelease - update version-specific directory
-              TARGET_DIR="$version"
-              if [ -d "$TARGET_DIR" ]; then
-                echo "Removing old $TARGET_DIR directory"
-                rm -rf "$TARGET_DIR"
-              fi
-            fi
-            
-            # Create target directory
-            mkdir -p "$TARGET_DIR"
-            
-            # Copy demos landing page
-            if [ -f "../dist-demos-home/index.html" ]; then
-              cp ../dist-demos-home/index.html "$TARGET_DIR/"
-            fi
-            
-            # Copy built demos
-            for example in $EXAMPLES; do
-              if [ -d "../examples/$example/build" ]; then
-                mkdir -p "$TARGET_DIR/$example"
-                cp -r "../examples/$example/build/"* "$TARGET_DIR/$example/"
-              fi
-            done
-          done
-          
-          echo "✅ Successfully updated demos"
+      # Deployment is now handled by build-and-deploy-cycle.ts
 
       - name: Update demos home
         if: steps.get-versions.outputs.has_versions == 'true'
@@ -144,13 +97,14 @@ jobs:
               "output_dir": "gh-pages"
             }
 
+      - name: Configure git
+        if: steps.get-versions.outputs.has_versions == 'true'
+        uses: ./.github/actions/configure-git
+
       - name: Commit and deploy
         if: steps.get-versions.outputs.has_versions == 'true'
         run: |
           cd gh-pages
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add .
 

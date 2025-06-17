@@ -1,5 +1,4 @@
-import { gte as semverGte, parse as semverParse, prerelease as semverPrerelease } from '@vltpkg/semver'
-import { readFileSync } from 'node:fs'
+import { getDemoConfig } from '../../../src/lib/demos/config.js'
 import { VersionHistory } from '../../../src/lib/version-history/index.js'
 import { type ReleaseInputs, Step } from '../types.ts'
 
@@ -24,7 +23,7 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
 
     // Get release info from event
     const isPrerelease = isWorkflowDispatch
-      ? (semverPrerelease(tag) !== undefined && semverPrerelease(tag)!.length > 0)
+      ? VersionHistory.isPrerelease(tag)
       : inputs.github_release_prerelease
 
     const action = isWorkflowDispatch
@@ -55,11 +54,11 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
             core.setOutput('actual_tag', distTag.semverTag)
             core.setOutput('needs_build', 'true')
           } else {
-            console.log('❌ No semver tag found for next release')
+            core.warning('No semver tag found for next release')
             core.setOutput('needs_build', 'false')
           }
         } catch (e) {
-          console.error('Error finding semver tag:', (e as Error).message)
+          core.error(`Error finding semver tag: ${(e as Error).message}`)
           core.setOutput('needs_build', 'false')
         }
       } else {
@@ -73,32 +72,24 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
     core.setOutput('is_dist_tag', 'false')
     core.setOutput('actual_tag', tag)
 
-    // Check minimum version
+    // Check minimum Polen version
     try {
-      const demoConfig = JSON.parse(
-        readFileSync('.github/demo-config.json', 'utf-8'),
-      )
-      const minVersion = demoConfig.minimumVersion || '0.0.0'
+      const config = getDemoConfig()
 
-      const tagVersion = semverParse(tag)
-      const minVersionParsed = semverParse(minVersion)
-
-      if (tagVersion && minVersionParsed && semverGte(tagVersion, minVersionParsed)) {
-        console.log(
-          `✅ Version ${tag} meets minimum requirement (${minVersion})`,
+      if (config.meetsMinimumPolenVersion(tag)) {
+        core.info(
+          `✅ Version ${tag} meets minimum requirement (${config.minimumPolenVersion})`,
         )
         core.setOutput('needs_build', 'true')
       } else {
-        console.log(
-          `❌ Version ${tag} is below minimum demo version ${minVersion}`,
-        )
-        console.log(
-          `⚠️  Demos are only supported for versions ${minVersion} and above`,
+        core.warning(
+          `Version ${tag} is below minimum Polen version ${config.minimumPolenVersion}. `
+            + `Demos are only supported for Polen versions ${config.minimumPolenVersion} and above`,
         )
         core.setOutput('needs_build', 'false')
       }
     } catch (e) {
-      console.error('Error checking minimum version:', (e as Error).message)
+      core.error(`Error checking minimum Polen version: ${(e as Error).message}`)
       // Default to building if we can't check
       core.setOutput('needs_build', 'true')
     }

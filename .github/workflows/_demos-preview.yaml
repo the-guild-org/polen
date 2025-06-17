@@ -49,12 +49,12 @@ jobs:
         run: pnpm install
 
       - name: Build demos landing page
-        run: node ./scripts/build-demos-home.ts --basePath "/polen/pr-${{ inputs.pr-number }}/" --prNumber "${{ inputs.pr-number }}" --currentSha "${{ inputs.head-sha }}"
+        run: node --no-warnings --experimental-transform-types ./scripts/build-demos-home.ts --basePath "/polen/pr-${{ inputs.pr-number }}/" --prNumber "${{ inputs.pr-number }}" --currentSha "${{ inputs.head-sha }}"
 
       - name: Build demos
         run: |
           # Get list of examples that are enabled for demos
-          EXAMPLES=$(node --no-warnings ./.github/scripts/tools/get-demo-examples.ts)
+          EXAMPLES=$(node --no-warnings --experimental-transform-types ./.github/scripts/tools/get-demo-examples.ts)
           echo "Found demo-enabled examples: $EXAMPLES"
 
           # Build once for the commit-specific path

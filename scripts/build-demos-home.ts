@@ -2,160 +2,166 @@
 // @ts-nocheck
 import { Command } from '@molt/command'
 import { Str } from '@wollybeard/kit'
-import { execSync } from 'child_process'
 import fs from 'fs'
 import { createServer } from 'http'
 import path from 'path'
 import { z } from 'zod'
 import { getDemoExamples } from '../.github/scripts/tools/get-demo-examples.ts'
+import { VersionHistory } from '../src/lib/version-history/index.ts'
 
-const args = Command.create()
-  .description('Build demos landing page or PR index')
-  .parameter('basePath', z.string().default('/').describe('Base path for the demos'))
-  .parameter('prNumber', z.string().optional().describe('Pull request number'))
-  .parameter('currentSha', z.string().optional().describe('Current commit SHA'))
-  .parameter(
-    'mode',
-    z.enum(['demo', 'pr-index', 'dev']).default('demo').describe('Page mode: demo landing, PR index, or dev'),
-  )
-  .parameter('prDeployments', z.string().optional().describe('JSON array of PR deployments'))
-  .parameter('trunkDeployments', z.string().optional().describe('JSON object with trunk deployment info'))
-  .parameter('distTags', z.string().optional().describe('JSON object with dist-tag mappings'))
-  .parameter('serve', z.boolean().default(false).describe('Start a dev server (only in dev mode)'))
-  .parse()
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments, distTags, serve } = args
-
-/*
-Ideal code:
-const demoExamples = await Err.tryOrThrow(getDemoExamples, Err.wrapWith('Failed to get demo examples'))
-*/
-// Get demo examples
-let demoExamples: string[] = []
-try {
-  demoExamples = await getDemoExamples()
-} catch (cause) {
-  throw new Error('Failed to get demo examples', { cause })
+// Define the interface for the build options
+export interface BuildDemosHomeOptions {
+  basePath?: string
+  prNumber?: string
+  currentSha?: string
+  mode?: 'demo' | 'pr-index' | 'dev'
+  prDeployments?: string
+  trunkDeployments?: string
+  distTags?: string
+  serve?: boolean
 }
 
-// Load demo metadata from package.json files
-const demoMetadata: Record<string, { title: string; description: string; enabled: boolean }> = {}
+// Main function that builds the demos home page
+export async function buildDemosHome(options: BuildDemosHomeOptions = {}) {
+  const {
+    basePath = '/',
+    prNumber,
+    currentSha,
+    mode = 'demo',
+    prDeployments,
+    trunkDeployments,
+    distTags,
+    serve = false,
+  } = options
 
-// First, load metadata from package.json files for discovered examples
-for (const example of demoExamples) {
+  /*
+  Ideal code:
+  const demoExamples = await Err.tryOrThrow(getDemoExamples, Err.wrapWith('Failed to get demo examples'))
+  */
+  // Get demo examples
+  let demoExamples: string[] = []
   try {
-    const packageJsonPath = path.join(process.cwd(), 'examples', example, 'package.json')
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+    demoExamples = await getDemoExamples()
+  } catch (cause) {
+    throw new Error('Failed to get demo examples', { cause })
+  }
 
-    demoMetadata[example] = {
-      title: packageJson.displayName || Str.Case.title(packageJson.name || example),
-      description: packageJson.description || `Explore the ${example} GraphQL API with comprehensive documentation.`,
-      enabled: true,
+  // Load demo metadata from package.json files
+  const demoMetadata: Record<string, { title: string; description: string; enabled: boolean }> = {}
+
+  // First, load metadata from package.json files for discovered examples
+  for (const example of demoExamples) {
+    try {
+      const packageJsonPath = path.join(process.cwd(), 'examples', example, 'package.json')
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+
+      demoMetadata[example] = {
+        title: packageJson.displayName || Str.Case.title(packageJson.name || example),
+        description: packageJson.description || `Explore the ${example} GraphQL API with comprehensive documentation.`,
+        enabled: true,
+      }
+    } catch (e) {
+      // Fallback if package.json is missing or invalid
+      demoMetadata[example] = {
+        title: Str.Case.title(example),
+        description: `Explore the ${example} GraphQL API with comprehensive documentation.`,
+        enabled: true,
+      }
     }
-  } catch (e) {
-    // Fallback if package.json is missing or invalid
-    demoMetadata[example] = {
-      title: Str.Case.title(example),
-      description: `Explore the ${example} GraphQL API with comprehensive documentation.`,
-      enabled: true,
+  }
+
+  // Add any additional disabled demos that aren't in the examples directory
+  const disabledDemos = {
+    github: {
+      title: 'GitHub API',
+      description:
+        "Browse GitHub's extensive GraphQL API with over 1600 types. Currently disabled due to build performance.",
+      enabled: false,
+    },
+  }
+
+  // Merge disabled demos into metadata
+  Object.assign(demoMetadata, disabledDemos)
+
+  // Set up mock data for dev mode
+  let finalDistTags = distTags
+  let finalTrunkDeployments = trunkDeployments
+
+  if (mode === 'dev') {
+    const mockDistTags = {
+      latest: '1.2.0',
+      next: '1.3.0-beta.2',
+    }
+    const mockTrunkDeployments = {
+      latest: { sha: '1.2.0', shortSha: '1.2.0', tag: '1.2.0' },
+      previous: [
+        { sha: '1.1.0', shortSha: '1.1.0', tag: '1.1.0' },
+        { sha: '1.0.0', shortSha: '1.0.0', tag: '1.0.0' },
+        { sha: '0.9.1', shortSha: '0.9.1', tag: '0.9.1' },
+        { sha: '0.9.0', shortSha: '0.9.0', tag: '0.9.0' },
+      ],
+    }
+    finalDistTags = JSON.stringify(mockDistTags)
+    finalTrunkDeployments = JSON.stringify(mockTrunkDeployments)
+  }
+
+  // Parse PR deployments if provided
+  const parsedPrDeployments = (prDeployments ? JSON.parse(prDeployments) : []) as { number: number }[]
+
+  // Parse trunk deployments if provided
+  interface TrunkDeployment {
+    sha: string
+    shortSha: string
+    tag: string | null
+  }
+
+  interface TrunkDeploymentsData {
+    latest: TrunkDeployment | null
+    previous: TrunkDeployment[]
+  }
+
+  const parsedTrunkDeployments = (finalTrunkDeployments ? JSON.parse(finalTrunkDeployments) : null) as
+    | TrunkDeploymentsData
+    | null
+
+  // Parse dist-tags if provided
+  interface DistTagsData {
+    [key: string]: string
+  }
+
+  const parsedDistTags = (finalDistTags ? JSON.parse(finalDistTags) : {}) as DistTagsData
+
+  // Function to get previous deployments
+  const getPreviousDeployments = async () => {
+    if (!prNumber) return []
+
+    try {
+      const versionHistory = new VersionHistory()
+      // Fetch gh-pages branch
+      await versionHistory['git'].fetch(['origin', 'gh-pages:refs/remotes/origin/gh-pages'])
+
+      // Get list of commit directories
+      const prDir = `pr-${prNumber}`
+      const result = await versionHistory['git'].raw(['ls-tree', '-d', '--name-only', `origin/gh-pages:${prDir}`])
+
+      const commits = result
+        .split('\n')
+        .filter(line => line && /^[0-9a-f]{7,40}$/.test(line))
+        .filter(sha => sha !== currentSha) // Exclude current deployment
+        .sort()
+        .reverse()
+
+      return commits
+    } catch (e) {
+      return []
     }
   }
-}
 
-// Add any additional disabled demos that aren't in the examples directory
-const disabledDemos = {
-  github: {
-    title: 'GitHub API',
-    description:
-      "Browse GitHub's extensive GraphQL API with over 1600 types. Currently disabled due to build performance.",
-    enabled: false,
-  },
-}
+  const previousDeployments = await getPreviousDeployments()
 
-// Merge disabled demos into metadata
-Object.assign(demoMetadata, disabledDemos)
-
-// Set up mock data for dev mode
-let finalDistTags = distTags
-let finalTrunkDeployments = trunkDeployments
-
-if (mode === 'dev') {
-  const mockDistTags = {
-    latest: '1.2.0',
-    next: '1.3.0-beta.2',
-  }
-  const mockTrunkDeployments = {
-    latest: { sha: '1.2.0', shortSha: '1.2.0', tag: '1.2.0' },
-    previous: [
-      { sha: '1.1.0', shortSha: '1.1.0', tag: '1.1.0' },
-      { sha: '1.0.0', shortSha: '1.0.0', tag: '1.0.0' },
-      { sha: '0.9.1', shortSha: '0.9.1', tag: '0.9.1' },
-      { sha: '0.9.0', shortSha: '0.9.0', tag: '0.9.0' },
-    ],
-  }
-  finalDistTags = JSON.stringify(mockDistTags)
-  finalTrunkDeployments = JSON.stringify(mockTrunkDeployments)
-}
-
-// Parse PR deployments if provided
-const parsedPrDeployments = (prDeployments ? JSON.parse(prDeployments) : []) as { number: number }[]
-
-// Parse trunk deployments if provided
-interface TrunkDeployment {
-  sha: string
-  shortSha: string
-  tag: string | null
-}
-
-interface TrunkDeploymentsData {
-  latest: TrunkDeployment | null
-  previous: TrunkDeployment[]
-}
-
-const parsedTrunkDeployments = (finalTrunkDeployments ? JSON.parse(finalTrunkDeployments) : null) as
-  | TrunkDeploymentsData
-  | null
-
-// Parse dist-tags if provided
-interface DistTagsData {
-  [key: string]: string
-}
-
-const parsedDistTags = (finalDistTags ? JSON.parse(finalDistTags) : {}) as DistTagsData
-
-// Function to get previous deployments
-const getPreviousDeployments = () => {
-  if (!prNumber) return []
-
-  try {
-    // Fetch gh-pages branch
-    execSync('git fetch origin gh-pages:refs/remotes/origin/gh-pages', { stdio: 'ignore' })
-
-    // Get list of commit directories
-    const prDir = `pr-${prNumber}`
-    const result = execSync(`git ls-tree -d --name-only "origin/gh-pages:${prDir}" 2>/dev/null || echo ""`, {
-      encoding: 'utf-8',
-    })
-
-    const commits = result
-      .split('\n')
-      .filter(line => line && /^[0-9a-f]{7,40}$/.test(line))
-      .filter(sha => sha !== currentSha) // Exclude current deployment
-      .sort()
-      .reverse()
-
-    return commits
-  } catch (e) {
-    return []
-  }
-}
-
-const previousDeployments = getPreviousDeployments()
-
-// Generate PR index page if mode is pr-index
-if (mode === 'pr-index') {
-  const prIndexHtml = `<!DOCTYPE html>
+  // Generate PR index page if mode is pr-index
+  if (mode === 'pr-index') {
+    const prIndexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -255,32 +261,32 @@ if (mode === 'pr-index') {
     <p>Preview deployments for open pull requests.</p>
     <div class="pr-list">
       ${
-    parsedPrDeployments.length > 0
-      ? parsedPrDeployments.map((pr) => `
+      parsedPrDeployments.length > 0
+        ? parsedPrDeployments.map((pr) => `
           <div class="pr-item">
             <span class="pr-number">PR #${pr.number}</span>
             <a href="/pr-${pr.number}/" class="pr-link">View Preview →</a>
           </div>
         `).join('')
-      : '<p>No PR previews currently deployed.</p>'
-  }
+        : '<p>No PR previews currently deployed.</p>'
+    }
     </div>
   </div>
 </body>
 </html>`
 
-  // Write PR index
-  const distDir = path.join(process.cwd(), 'dist-demos')
-  if (!fs.existsSync(distDir)) {
-    fs.mkdirSync(distDir, { recursive: true })
+    // Write PR index
+    const distDir = path.join(process.cwd(), 'dist-demos')
+    if (!fs.existsSync(distDir)) {
+      fs.mkdirSync(distDir, { recursive: true })
+    }
+    fs.writeFileSync(path.join(distDir, 'pr-index.html'), prIndexHtml)
+    console.log('Built PR index page')
+    return // Exit early for pr-index mode
   }
-  fs.writeFileSync(path.join(distDir, 'pr-index.html'), prIndexHtml)
-  console.log('Built PR index page')
-  process.exit(0)
-}
 
-// Otherwise generate demo landing page
-const indexHtml = `<!DOCTYPE html>
+  // Otherwise generate demo landing page
+  const indexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -628,8 +634,8 @@ const indexHtml = `<!DOCTYPE html>
 </head>
 <body>
   ${
-  prNumber
-    ? `
+    prNumber
+      ? `
   <div class="pr-banner">
     <div class="container">
       <div class="pr-banner-content">
@@ -653,8 +659,8 @@ const indexHtml = `<!DOCTYPE html>
     </div>
   </div>
   `
-    : ''
-}
+      : ''
+  }
   <div class="container">
     <div class="header">
       <h1>Polen Demos${prNumber ? ` - PR #${prNumber}` : ''}</h1>
@@ -663,44 +669,44 @@ const indexHtml = `<!DOCTYPE html>
 
     <div class="demos-grid">
       ${
-  // Generate demo cards for all examples plus any disabled ones
-  [...new Set([...demoExamples, ...Object.keys(demoMetadata)])].map(example => {
-    const metadata = demoMetadata[example] || {
-      title: example.charAt(0).toUpperCase() + example.slice(1) + ' API',
-      description: `Explore the ${example} GraphQL API with comprehensive documentation.`,
-      enabled: true,
-    }
+    // Generate demo cards for all examples plus any disabled ones
+    [...new Set([...demoExamples, ...Object.keys(demoMetadata)])].map(example => {
+      const metadata = demoMetadata[example] || {
+        title: example.charAt(0).toUpperCase() + example.slice(1) + ' API',
+        description: `Explore the ${example} GraphQL API with comprehensive documentation.`,
+        enabled: true,
+      }
 
-    if (!metadata.enabled) {
-      return `<div class="demo-card disabled">
+      if (!metadata.enabled) {
+        return `<div class="demo-card disabled">
               <h2>${metadata.title}</h2>
               <p>${metadata.description}</p>
               <span class="demo-link">
                 Coming Soon
               </span>
             </div>`
-    }
+      }
 
-    return `<div class="demo-card">
+      return `<div class="demo-card">
             <h2>${metadata.title}</h2>
             <p>${metadata.description}</p>
             <div class="demo-links">
               ${
-      // For trunk deployments, show dist-tag buttons
-      !prNumber
-        ? Object.entries(parsedDistTags).length > 0
-          ? `<div class="dist-tags">
+        // For trunk deployments, show dist-tag buttons
+        !prNumber
+          ? Object.entries(parsedDistTags).length > 0
+            ? `<div class="dist-tags">
               ${
-            Object.entries(parsedDistTags)
-              .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
-              .filter(([tag, version]) => {
-                // If next points to the same version as latest, filter it out
-                if (tag === 'next' && parsedDistTags['latest'] === version) {
-                  return false
-                }
-                return true
-              })
-              .map(([tag, version]) => `
+              Object.entries(parsedDistTags)
+                .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
+                .filter(([tag, version]) => {
+                  // If next points to the same version as latest, filter it out
+                  if (tag === 'next' && parsedDistTags['latest'] === version) {
+                    return false
+                  }
+                  return true
+                })
+                .map(([tag, version]) => `
                     <div class="dist-tag-button">
                       <a href="${tag}/${example}/" class="dist-tag-label">
                         ${tag}
@@ -711,24 +717,24 @@ const indexHtml = `<!DOCTYPE html>
                       <a href="${version}/${example}/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
                     </div>
                   `).join('')
-          }
+            }
             ${
-            // Show "no prereleases" message if next === latest
-            parsedDistTags['next'] && parsedDistTags['next'] === parsedDistTags['latest']
-              ? '<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>'
-              : ''}
+              // Show "no prereleases" message if next === latest
+              parsedDistTags['next'] && parsedDistTags['next'] === parsedDistTags['latest']
+                ? '<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>'
+                : ''}
             </div>`
-          : parsedTrunkDeployments && parsedTrunkDeployments.latest
-          ? `<a href="latest/${example}/" class="demo-link">
+            : parsedTrunkDeployments && parsedTrunkDeployments.latest
+            ? `<a href="latest/${example}/" class="demo-link">
               View Latest (${parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha})
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>`
-          : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
-        // For PR deployments, show latest pseudo-dist-tag
-        : currentSha
-        ? `<div class="dist-tags">
+            : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
+          // For PR deployments, show latest pseudo-dist-tag
+          : currentSha
+          ? `<div class="dist-tags">
             <div class="dist-tag-button">
               <a href="latest/${example}/" class="dist-tag-label">
                 latest
@@ -737,41 +743,41 @@ const indexHtml = `<!DOCTYPE html>
                 </svg>
               </a>
               <a href="${currentSha}/${example}/" class="dist-tag-version">${
-          currentSha.substring(0, 7)
-        }<span class="permalink-icon">¶</span></a>
+            currentSha.substring(0, 7)
+          }<span class="permalink-icon">¶</span></a>
             </div>
           </div>`
-        : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
+          : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
             <div class="previous-versions">
               <h3>Previous Versions</h3>
               ${
-      // For trunk deployments, use parsedTrunkDeployments
-      !prNumber && parsedTrunkDeployments
-        ? parsedTrunkDeployments.previous.length > 0
+        // For trunk deployments, use parsedTrunkDeployments
+        !prNumber && parsedTrunkDeployments
+          ? parsedTrunkDeployments.previous.length > 0
+            ? `<div class="commit-links">
+                ${
+              parsedTrunkDeployments.previous.map(deployment => {
+                // For semver deployments, tag and sha are the same, so just show once
+                const label = deployment.tag || deployment.shortSha
+                return `<a href="${deployment.sha}/${example}/" class="commit-link">${label}</a>`
+              }).join('')
+            }
+              </div>`
+            : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'
+          // For PR deployments, use the existing logic
+          : previousDeployments.length > 0
           ? `<div class="commit-links">
                 ${
-            parsedTrunkDeployments.previous.map(deployment => {
-              // For semver deployments, tag and sha are the same, so just show once
-              const label = deployment.tag || deployment.shortSha
-              return `<a href="${deployment.sha}/${example}/" class="commit-link">${label}</a>`
-            }).join('')
-          }
-              </div>`
-          : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'
-        // For PR deployments, use the existing logic
-        : previousDeployments.length > 0
-        ? `<div class="commit-links">
-                ${
-          previousDeployments.map(sha => `
+            previousDeployments.map(sha => `
                   <a href="${sha}/${example}/" class="commit-link">${sha.substring(0, 7)}</a>
                 `).join('')
-        }
+          }
               </div>`
-        : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'}
+          : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'}
             </div>
           </div>
         </div>`
-  }).join('')}
+    }).join('')}
     </div>
 
     <div class="footer">
@@ -781,31 +787,53 @@ const indexHtml = `<!DOCTYPE html>
 </body>
 </html>`
 
-// Create dist-demos directory if it doesn't exist
-const distDir = path.join(process.cwd(), 'dist-demos')
-if (!fs.existsSync(distDir)) {
-  fs.mkdirSync(distDir, { recursive: true })
+  // Create dist-demos directory if it doesn't exist
+  const distDir = path.join(process.cwd(), 'dist-demos')
+  if (!fs.existsSync(distDir)) {
+    fs.mkdirSync(distDir, { recursive: true })
+  }
+
+  // Write index.html
+  fs.writeFileSync(path.join(distDir, 'index.html'), indexHtml)
+
+  console.log('✅ Built demos index page')
+
+  // Start dev server if requested
+  if (mode === 'dev' && serve) {
+    const server = createServer((req, res) => {
+      if (req.url === '/' || req.url === '/index.html') {
+        res.writeHead(200, { 'Content-Type': 'text/html' })
+        res.end(fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8'))
+      } else {
+        res.writeHead(404)
+        res.end('Not found')
+      }
+    })
+
+    const port = 3000
+    server.listen(port, () => {
+      console.log(`\n🚀 Dev server running at http://localhost:${port}\n`)
+    })
+  }
 }
 
-// Write index.html
-fs.writeFileSync(path.join(distDir, 'index.html'), indexHtml)
+// CLI execution - only runs when called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const args = Command.create()
+    .description('Build demos landing page or PR index')
+    .parameter('basePath', z.string().default('/').describe('Base path for the demos'))
+    .parameter('prNumber', z.string().optional().describe('Pull request number'))
+    .parameter('currentSha', z.string().optional().describe('Current commit SHA'))
+    .parameter(
+      'mode',
+      z.enum(['demo', 'pr-index', 'dev']).default('demo').describe('Page mode: demo landing, PR index, or dev'),
+    )
+    .parameter('prDeployments', z.string().optional().describe('JSON array of PR deployments'))
+    .parameter('trunkDeployments', z.string().optional().describe('JSON object with trunk deployment info'))
+    .parameter('distTags', z.string().optional().describe('JSON object with dist-tag mappings'))
+    .parameter('serve', z.boolean().default(false).describe('Start a dev server (only in dev mode)'))
+    .parse()
 
-console.log('✅ Built demos index page')
-
-// Start dev server if requested
-if (mode === 'dev' && serve) {
-  const server = createServer((req, res) => {
-    if (req.url === '/' || req.url === '/index.html') {
-      res.writeHead(200, { 'Content-Type': 'text/html' })
-      res.end(fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8'))
-    } else {
-      res.writeHead(404)
-      res.end('Not found')
-    }
-  })
-
-  const port = 3000
-  server.listen(port, () => {
-    console.log(`\n🚀 Dev server running at http://localhost:${port}\n`)
-  })
+  // Run the main function with CLI args
+  await buildDemosHome(args)
 }

@@ -1,65 +1,31 @@
-import * as semver from 'semver'
 import { VersionHistory } from '../../../src/lib/version-history/index.js'
 import { Step } from '../types.ts'
 
 /**
  * Identify and remove old demo deployments
+ *
+ * Removal policy:
+ * - Keep all stable versions forever
+ * - Keep current development cycle (latest stable + newer prereleases)
+ * - Remove prereleases from past development cycles
+ *
+ * Note: We don't check dist-tags because they should always point to
+ * versions in the current cycle. If they don't, that's a bug that
+ * should be surfaced. Git history provides recovery if needed.
  */
 export default Step(async ({ core, $, fs }) => {
-  // Get version history
+  core.startGroup('Garbage collect old demo deployments')
+
   const versionHistory = new VersionHistory()
-  const allVersions = await versionHistory.getSemverTags()
 
-  // Separate stable releases from pre-releases
-  const stableReleases = allVersions.filter(v => !v.isPrerelease).map(v => v.tag)
-  const preReleases = allVersions.filter(v => v.isPrerelease).map(v => v.tag)
+  // Get prereleases from past development cycles
+  const pastCyclePrereleases = await versionHistory.getPastDevelopmentCycles()
+  const versionsToRemove = pastCyclePrereleases.map(v => v.tag)
 
-  // Find the latest stable release
-  const latestStableVersion = await versionHistory.getLatestRelease()
-  const latestStable = latestStableVersion?.tag || ''
-
-  // Find what the dist-tags point to
-  const distTagVersions = new Set<string>()
-  const distTags = await versionHistory.getDistTags()
-
-  for (const distTag of distTags) {
-    if (distTag.semverTag) {
-      distTagVersions.add(distTag.semverTag)
-    }
+  core.info(`Found ${versionsToRemove.length} old prereleases to remove`)
+  if (versionsToRemove.length > 0) {
+    core.debug(`Versions to remove: ${versionsToRemove.join(', ')}`)
   }
-
-  // Find what the "next" tag points to (pre-release version)
-  const nextDistTag = distTags.find(dt => dt.name === 'next')
-  const nextVersion = nextDistTag?.semverTag
-
-  console.log('Latest stable release:', latestStable)
-  console.log('Next version:', nextVersion)
-
-  // Determine which pre-releases to keep
-  let preReleasesToKeep: string[] = []
-
-  if (nextVersion) {
-    // Keep all pre-releases that belong to the same major.minor.patch as next
-    const nextBase = semver.major(nextVersion)
-      + '.'
-      + semver.minor(nextVersion)
-      + '.'
-      + semver.patch(nextVersion)
-    preReleasesToKeep = preReleases.filter((tag: string) => {
-      const tagBase = semver.major(tag) + '.' + semver.minor(tag) + '.' + semver.patch(tag)
-      return tagBase === nextBase
-    })
-  } else if (latestStable) {
-    // Fallback: keep pre-releases newer than latest stable
-    preReleasesToKeep = preReleases.filter((tag) => semver.gt(tag, latestStable))
-  } else {
-    // No stable release yet, keep all pre-releases
-    preReleasesToKeep = preReleases
-  }
-
-  console.log('Stable releases (keep forever):', stableReleases)
-  console.log('Pre-releases to keep (next range):', preReleasesToKeep)
-  console.log('Dist-tag versions (keep forever):', Array.from(distTagVersions))
 
   // Find deployments to remove
   const toRemove = {
@@ -70,23 +36,18 @@ export default Step(async ({ core, $, fs }) => {
   const rootDirs = await fs.readdir('.')
   const semverDirs = rootDirs.filter((dir) => /^[0-9]+\.[0-9]+\.[0-9]+/.test(dir))
 
-  // For semver deployments, we keep based on the tag policy
+  // Check which directories exist and should be removed
   for (const dir of semverDirs) {
-    // Check if this version should be kept
-    const isStableRelease = stableReleases.includes(dir)
-    const isKeptPrerelease = preReleasesToKeep.includes(dir)
-    const isDistTagVersion = distTagVersions.has(dir)
-
-    if (!isStableRelease && !isKeptPrerelease && !isDistTagVersion) {
+    if (versionsToRemove.includes(dir)) {
       toRemove.trunk.push(dir)
     }
   }
 
-  console.log('Trunk deployments to remove:', toRemove.trunk)
+  core.debug(`Trunk deployments to remove: ${toRemove.trunk.join(', ')}`)
 
   // Remove deployments if any were found
   if (toRemove.trunk.length === 0) {
-    console.log('No deployments to remove')
+    core.info('No deployments to remove')
     core.setOutput('removed', 'false')
 
     // Generate summary
@@ -94,23 +55,22 @@ export default Step(async ({ core, $, fs }) => {
     summary += '🟢 **No deployments needed removal**\n\n'
     summary += 'All deployments are still relevant and were kept.'
     await core.summary.addRaw(summary).write()
+    core.endGroup()
     return
   }
 
-  // Configure git
-  await $`git config user.name "github-actions[bot]"`
-  await $`git config user.email "github-actions[bot]@users.noreply.github.com"`
+  // Git should already be configured by the workflow
 
   // Remove trunk deployments
   for (const dir of toRemove.trunk) {
     try {
       const dirExists = await fs.stat(dir).then(() => true).catch(() => false)
       if (dirExists) {
-        console.log(`Removing trunk deployment: ${dir}`)
+        core.info(`Removing trunk deployment: ${dir}`)
         await $`git rm -rf ${dir}`
       }
     } catch (e) {
-      console.error(`Failed to remove ${dir}:`, (e as Error).message)
+      core.error(`Failed to remove ${dir}: ${(e as Error).message}`)
     }
   }
 
@@ -126,7 +86,7 @@ Removed: ${toRemove.trunk.join(', ')}`
     await $`git commit -m ${commitMessage}`
     await $`git push`
 
-    console.log('✅ Successfully removed old deployments')
+    core.info('✅ Successfully removed old deployments')
     core.setOutput('removed', 'true')
     core.setOutput('removedDirs', toRemove.trunk.join(', '))
 
@@ -136,8 +96,9 @@ Removed: ${toRemove.trunk.join(', ')}`
     summary += '## Removed Deployments\n'
     summary += toRemove.trunk.map(dir => `- ${dir}`).join('\n')
     await core.summary.addRaw(summary).write()
+    core.endGroup()
   } else {
-    console.log('No changes to commit')
+    core.info('No changes to commit')
     core.setOutput('removed', 'false')
 
     // Generate summary
@@ -145,5 +106,6 @@ Removed: ${toRemove.trunk.join(', ')}`
     summary += '🟢 **No deployments needed removal**\n\n'
     summary += 'All deployments are still relevant and were kept.'
     await core.summary.addRaw(summary).write()
+    core.endGroup()
   }
 })

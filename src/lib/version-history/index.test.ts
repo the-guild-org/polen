@@ -62,7 +62,7 @@ describe('VersionHistory', () => {
       expect(VersionHistory.isPrerelease('3.0.0-alpha')).toBe(true)
     })
 
-    it('identifies stable releases', () => {
+    it('identifies stable versions', () => {
       expect(VersionHistory.isPrerelease('1.0.0')).toBe(false)
       expect(VersionHistory.isPrerelease('v2.3.4')).toBe(false)
     })
@@ -137,8 +137,8 @@ describe('VersionHistory', () => {
       const cycle = await versionHistory.getCurrentDevelopmentCycle()
 
       expect(cycle.stable?.tag).toBe('2.0.0')
-      expect(cycle.prereleases).toHaveLength(0) // No prereleases after 2.0.0
-      expect(cycle.all).toHaveLength(1) // Just 2.0.0
+      expect(cycle.prereleases).toHaveLength(0) // No prereleases after stable version 2.0.0
+      expect(cycle.all).toHaveLength(1) // Just the stable version
     })
 
     it('includes prereleases newer than latest stable', async () => {
@@ -163,14 +163,14 @@ describe('VersionHistory', () => {
 
       const cycle = await versionHistory.getCurrentDevelopmentCycle()
 
-      expect(cycle.stable?.tag).toBe('1.1.0')
-      expect(cycle.prereleases).toHaveLength(2)
+      expect(cycle.stable?.tag).toBe('1.1.0') // Latest stable version
+      expect(cycle.prereleases).toHaveLength(2) // Prereleases newer than stable
       expect(cycle.prereleases[0]?.tag).toBe('2.0.0-beta.2')
       expect(cycle.prereleases[1]?.tag).toBe('2.0.0-beta.1')
-      expect(cycle.all).toHaveLength(3)
+      expect(cycle.all).toHaveLength(3) // Stable + 2 prereleases
     })
 
-    it('returns all versions as prereleases when no stable release exists', async () => {
+    it('returns all versions as prereleases when no stable version exists', async () => {
       // Mock git tags with only prereleases
       mockGit.tags.mockResolvedValue({
         all: ['0.1.0-alpha.1', '0.1.0-alpha.2', '0.1.0-beta.1'],

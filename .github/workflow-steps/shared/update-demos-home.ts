@@ -1,7 +1,6 @@
 import * as path from 'node:path'
-import { getDistTags } from '../../scripts/lib/git/get-dist-tags.ts'
+import { VersionHistory } from '../../../src/lib/version-history/index.js'
 import { getPRDeployments } from '../../scripts/lib/git/get-pr-deployments.ts'
-import { getVersionHistory } from '../../scripts/lib/git/get-version-history.ts'
 import { Step } from '../types.ts'
 
 interface Inputs {
@@ -29,14 +28,45 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
     }
 
     if (mode === 'trunk') {
-      // Get version history from git tags
-      const trunkDeployments = JSON.stringify(await getVersionHistory())
+      // Initialize version history
+      const versionHistory = new VersionHistory()
 
-      // Get dist-tags info from gh-pages directory
-      const distTags = JSON.stringify(await getDistTags('./gh-pages'))
+      // Get all versions and format for build-demos-home
+      const allVersions = await versionHistory.getVersions()
+      const latestStable = await versionHistory.getLatestStableVersion()
+
+      // Format trunk deployments in the expected structure
+      const trunkDeployments = {
+        latest: latestStable
+          ? {
+            sha: latestStable.commit,
+            shortSha: latestStable.commit.substring(0, 7),
+            tag: latestStable.tag,
+          }
+          : null,
+        previous: allVersions
+          .filter(v => v.tag !== latestStable?.tag)
+          .slice(0, 10)
+          .map(v => ({
+            sha: v.commit,
+            shortSha: v.commit.substring(0, 7),
+            tag: v.tag,
+          })),
+      }
+
+      // Get dist-tags info
+      const distTagInfos = await versionHistory.getDistTags()
+      const distTags: Record<string, string> = {}
+      for (const info of distTagInfos) {
+        if (info.semverTag) {
+          distTags[info.name] = info.semverTag
+        }
+      }
 
       // Build trunk demos index
-      await $`node ./scripts/build-demos-home.ts --trunkDeployments=${trunkDeployments} --distTags=${distTags}`
+      await $`node ./scripts/build-demos-home.ts --trunkDeployments=${JSON.stringify(trunkDeployments)} --distTags=${
+        JSON.stringify(distTags)
+      }`
 
       // Copy to gh-pages root
       await fs.copyFile('dist-demos/index.html', 'gh-pages/index.html')

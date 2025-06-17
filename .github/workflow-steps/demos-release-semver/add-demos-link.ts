@@ -3,7 +3,8 @@ import { type AddDemosLinkInputs, Step } from '../types.ts'
 /**
  * Add demos link to commit
  */
-export default Step<AddDemosLinkInputs>(async ({ github, context, inputs }) => {
+export default Step<AddDemosLinkInputs>(async ({ github, context, core, inputs }) => {
+  core.startGroup('Add demos link to commit')
   const tag = inputs.actual_tag
   const eventName = inputs.github_event_name
 
@@ -18,13 +19,13 @@ export default Step<AddDemosLinkInputs>(async ({ github, context, inputs }) => {
       })
       sha = ref.object.sha
     } catch (e) {
-      console.log(`Could not find tag ${tag}: ${(e as Error).message}`)
+      core.warning(`Could not find tag ${tag}: ${(e as Error).message}`)
       return
     }
   } else {
     sha = inputs.github_release_target_commitish || ''
     if (!sha) {
-      console.log('No target commitish provided')
+      core.warning('No target commitish provided')
       return
     }
   }
@@ -40,16 +41,17 @@ export default Step<AddDemosLinkInputs>(async ({ github, context, inputs }) => {
       description: `View demos for ${tag}`,
       context: 'polen/demos',
     })
-    console.log(`✅ Successfully added demos link to commit ${sha}`)
+    core.info(`✅ Successfully added demos link to commit ${sha}`)
+    core.endGroup()
   } catch (error: any) {
     if (error.status === 422) {
-      console.log(
-        `⚠️ Could not add commit status: commit ${sha} not found in repository`,
+      core.warning(
+        `Could not add commit status: commit ${sha} not found in repository. `
+          + `This is expected for tags on commits not in the default branch`,
       )
-      console.log(
-        `📝 This is expected for tags on commits not in the default branch`,
-      )
+      core.endGroup()
     } else {
+      core.endGroup()
       throw error
     }
   }

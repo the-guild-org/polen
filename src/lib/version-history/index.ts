@@ -56,9 +56,25 @@ export class VersionHistory {
   }
 
   /**
-   * Get all semver tags
+   * Check if a version is stable (not a prerelease)
    */
-  async getSemverTags(): Promise<VersionInfo[]> {
+  static isStableVersion(tag: string): boolean {
+    return !VersionHistory.isPrerelease(tag)
+  }
+
+  /**
+   * Get the deployment path for a version
+   * Stable versions go to /latest/, prereleases go to /[version]/
+   */
+  static getDeploymentPath(version: string, prefix: string = '/polen'): string {
+    const isStable = VersionHistory.isStableVersion(version)
+    return isStable ? `${prefix}/latest/` : `${prefix}/${version}/`
+  }
+
+  /**
+   * Get all versions from the repository
+   */
+  async getVersions(): Promise<VersionInfo[]> {
     const tags = await this.git.tags()
     const versions: VersionInfo[] = []
 
@@ -130,18 +146,18 @@ export class VersionHistory {
   }
 
   /**
-   * Get the latest stable release
+   * Get the latest stable version
    */
-  async getLatestRelease(): Promise<VersionInfo | null> {
-    const versions = await this.getSemverTags()
+  async getLatestStableVersion(): Promise<VersionInfo | null> {
+    const versions = await this.getVersions()
     return versions.find(v => !v.isPrerelease) || null
   }
 
   /**
-   * Get the latest prerelease
+   * Get the latest prerelease version
    */
-  async getLatestPrerelease(): Promise<VersionInfo | null> {
-    const versions = await this.getSemverTags()
+  async getLatestPrereleaseVersion(): Promise<VersionInfo | null> {
+    const versions = await this.getVersions()
     return versions.find(v => v.isPrerelease) || null
   }
 
@@ -155,7 +171,7 @@ export class VersionHistory {
     if (semverTags.length === 0) return null
 
     // Get full info for the first semver tag
-    const versions = await this.getSemverTags()
+    const versions = await this.getVersions()
     return versions.find(v => v.tag === semverTags[0]) || null
   }
 
@@ -163,7 +179,7 @@ export class VersionHistory {
    * Get deployment history for demos (versions that should have demos)
    */
   async getDeploymentHistory(minimumVersion?: string): Promise<VersionInfo[]> {
-    const versions = await this.getSemverTags()
+    const versions = await this.getVersions()
 
     if (!minimumVersion) return versions
 
@@ -177,10 +193,10 @@ export class VersionHistory {
    * Get the current development cycle: latest stable + all newer prereleases
    */
   async getCurrentDevelopmentCycle(): Promise<DevelopmentCycle> {
-    const latestStable = await this.getLatestRelease()
+    const latestStable = await this.getLatestStableVersion()
     if (!latestStable) {
-      // No stable release yet, return all versions as prereleases
-      const allVersions = await this.getSemverTags()
+      // No stable version yet, return all versions as prereleases
+      const allVersions = await this.getVersions()
       return {
         stable: null,
         prereleases: allVersions,
@@ -188,7 +204,7 @@ export class VersionHistory {
       }
     }
 
-    const allVersions = await this.getSemverTags()
+    const allVersions = await this.getVersions()
     const prereleases = allVersions.filter(
       v => v.isPrerelease && semverCompare(v.semver, latestStable.semver) > 0,
     )
@@ -199,12 +215,49 @@ export class VersionHistory {
       all: [latestStable, ...prereleases],
     }
   }
+
+  /**
+   * Get versions since a specific version (inclusive)
+   */
+  async getVersionsSince(sinceVersion: string, skipVersions: string[] = []): Promise<VersionInfo[]> {
+    const sinceSemver = VersionHistory.parseSemver(sinceVersion)
+    if (!sinceSemver) {
+      throw new Error(`Invalid version: ${sinceVersion}`)
+    }
+
+    const allVersions = await this.getVersions()
+    return allVersions.filter(v => {
+      // Skip if in skip list
+      if (skipVersions.includes(v.tag)) return false
+      // Include if >= sinceVersion
+      return semverCompare(v.semver, sinceSemver) >= 0
+    })
+  }
+
+  /**
+   * Get all prereleases from past development cycles
+   *
+   * A development cycle is the set of prereleases between stable versions.
+   * This returns all prereleases that are not part of the current development cycle.
+   *
+   * Note: This only returns prereleases. Stable versions are not part of development cycles.
+   */
+  async getPastDevelopmentCycles(): Promise<VersionInfo[]> {
+    const allVersions = await this.getVersions()
+    const currentCycle = await this.getCurrentDevelopmentCycle()
+    const currentCycleTags = new Set(currentCycle.all.map(v => v.tag))
+
+    // Return prereleases not in the current cycle
+    return allVersions.filter(v => {
+      return v.isPrerelease && !currentCycleTags.has(v.tag)
+    })
+  }
 }
 
 // Export convenience functions
-export async function getSemverTags(repoPath?: string): Promise<VersionInfo[]> {
+export async function getVersions(repoPath?: string): Promise<VersionInfo[]> {
   const versionHistory = new VersionHistory(repoPath)
-  return versionHistory.getSemverTags()
+  return versionHistory.getVersions()
 }
 
 export async function getDistTags(repoPath?: string): Promise<DistTagInfo[]> {
@@ -212,7 +265,7 @@ export async function getDistTags(repoPath?: string): Promise<DistTagInfo[]> {
   return versionHistory.getDistTags()
 }
 
-export async function getLatestRelease(repoPath?: string): Promise<VersionInfo | null> {
+export async function getLatestStableVersion(repoPath?: string): Promise<VersionInfo | null> {
   const versionHistory = new VersionHistory(repoPath)
-  return versionHistory.getLatestRelease()
+  return versionHistory.getLatestStableVersion()
 }

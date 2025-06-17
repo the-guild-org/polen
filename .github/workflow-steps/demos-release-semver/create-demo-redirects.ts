@@ -16,9 +16,11 @@ interface Inputs {
 export default Step<Inputs>(async ({ core, inputs }) => {
   const ghPagesDir = inputs.gh_pages_dir
 
+  core.startGroup('Create demo redirects')
+
   try {
     const examples = await getDemoExamples()
-    console.log(`Creating redirects for examples: ${examples.join(', ')}`)
+    core.info(`Creating redirects for examples: ${examples.join(', ')}`)
 
     for (const example of examples) {
       const exampleDir = path.join(ghPagesDir, example)
@@ -30,11 +32,13 @@ export default Step<Inputs>(async ({ core, inputs }) => {
         createHtmlRedirect(`/polen/latest/${example}/`),
       )
 
-      console.log(`Created redirect for ${example}`)
+      core.debug(`Created redirect for ${example}`)
     }
 
-    console.log('✅ Demo redirects created successfully')
+    core.info('✅ Demo redirects created successfully')
+    core.endGroup()
   } catch (error) {
+    core.endGroup()
     core.setFailed(`Failed to create demo redirects: ${(error as Error).message}`)
   }
 })

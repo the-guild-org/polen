@@ -11,7 +11,33 @@ interface Inputs {
 }
 
 /**
- * Prepare PR preview for deployment
+ * Prepare PR preview deployment by organizing built demos into deployment structure
+ * 
+ * WHAT: Creates a complete gh-pages deployment structure for PR demos
+ * WHY: Enables PR reviewers to test changes by viewing live demos before merging
+ * 
+ * Creates two parallel deployments:
+ * - `/pr-{number}/latest/` - Always points to newest commit (paths updated)
+ * - `/pr-{number}/{sha}/` - Permanent commit-specific version
+ * 
+ * Also creates convenience redirects:
+ * - `/pr-{number}/pokemon/` → `/pr-{number}/latest/pokemon/`
+ * - `/pr-{number}/index.html` - Landing page listing all demos
+ * 
+ * Structure created:
+ * ```
+ * gh-pages-deploy/
+ * ├── pr-123/
+ * │   ├── index.html (landing page)
+ * │   ├── latest/ (updated on each push)
+ * │   │   ├── pokemon/
+ * │   │   └── star-wars/
+ * │   ├── abc1234/ (permanent)
+ * │   │   ├── pokemon/
+ * │   │   └── star-wars/
+ * │   ├── pokemon/ → latest/pokemon/ (redirect)
+ * │   └── star-wars/ → latest/star-wars/ (redirect)
+ * ```
  */
 export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
   core.startGroup('PR preview deployment preparation')

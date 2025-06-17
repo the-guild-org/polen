@@ -62,7 +62,7 @@ export default Step<Inputs>(async ({ github, context, core, inputs }) => {
 
     core.setOutput('deployment_links', links.join(' / '))
   } catch (error) {
-    console.error('Error fetching deployments:', error)
+    core.error(`Error fetching deployments: ${error}`)
     core.setOutput('deployment_links', '(none)')
   }
 })

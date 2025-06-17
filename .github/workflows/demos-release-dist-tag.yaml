@@ -54,59 +54,26 @@ jobs:
           path: gh-pages
 
       - name: Update dist-tag content
-        run: |
-          cd gh-pages
-
-          TAG_NAME="${{ steps.dist-tag.outputs.tag_name }}"
-          SEMVER_TAG="${{ steps.dist-tag.outputs.semver_tag }}"
-
-          # Check if the semver deployment exists
-          if [ ! -d "$SEMVER_TAG" ]; then
-            echo "❌ Deployment for $SEMVER_TAG not found in gh-pages"
-            echo "⚠️  This indicates the release workflow may have failed or skipped building demos"
-            echo "📝 Check the release workflow run for $SEMVER_TAG"
-            exit 1
-          fi
-
-          # Update dist-tag to contain actual content (not redirects)
-          # This handles when npm dist-tags are moved to different versions
-          # Examples:
-          # - /polen/latest/ contains copy of /polen/1.2.1/ content
-          # - /polen/next/ contains copy of /polen/1.3.0-beta.2/ content
-          echo "Updating $TAG_NAME to contain content from $SEMVER_TAG"
-
-          # Remove old dist-tag directory if it exists
-          if [ -d "$TAG_NAME" ]; then
-            echo "Removing old $TAG_NAME directory"
-            rm -rf "$TAG_NAME"
-          fi
-
-          # Copy the semver deployment to the dist-tag name
-          echo "Copying $SEMVER_TAG to $TAG_NAME"
-          cp -r "$SEMVER_TAG" "$TAG_NAME"
-
-          # Update all base paths in the copied files
-          echo "Updating base paths from /$SEMVER_TAG/ to /$TAG_NAME/"
-
-          # Find and replace in all HTML, JS, and CSS files
-          find "$TAG_NAME" -type f \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \) | while read file; do
-            # Use perl for more reliable find/replace with special characters
-            perl -i -pe "s|/polen/\Q$SEMVER_TAG\E/|/polen/$TAG_NAME/|g" "$file"
-          done
-
-          echo "✅ Successfully updated $TAG_NAME with content from $SEMVER_TAG"
+        uses: ./.github/actions/run-workflow-step
+        with:
+          step: demos-release-dist-tag/update-dist-tag-content.ts
+          inputs: |
+            {
+              "tag_name": "${{ steps.dist-tag.outputs.tag_name }}",
+              "semver_tag": "${{ steps.dist-tag.outputs.semver_tag }}"
+            }
 
       - name: Update demos index
         uses: ./.github/actions/run-workflow-step
         with:
           step: shared/update-demos-home.ts
 
+      - name: Configure git
+        uses: ./.github/actions/configure-git
+
       - name: Commit and deploy
         run: |
           cd gh-pages
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add .
 

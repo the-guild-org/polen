@@ -48,19 +48,6 @@ export function Step<TInputs = Record<string, any>>(
 }
 
 // Common input types
-export interface RebuildInputs {
-  versions_to_build: string[]
-  dist_tags: Record<string, string>
-  dry_run?: boolean
-}
-
-export interface PlanRebuildInputs {
-  since_version?: string
-  skip_versions?: string
-  rebuild_dist_tags?: string
-  dry_run?: boolean
-}
-
 export interface ReleaseInputs {
   github_event_name: string
   input_tag?: string

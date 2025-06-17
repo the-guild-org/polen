@@ -9,13 +9,11 @@ interface PRDeployment {
 
 /**
  * Get list of PR deployments using GitHub Deployments API
- * Falls back to checking gh-pages branch if API is not available
  */
 export async function getPRDeployments(): Promise<PRDeployment[]> {
   // Configure zx
   $.verbose = false
 
-  // Try using GitHub CLI to get deployments
   try {
     // Get deployments from GitHub API
     const deployments =
@@ -52,38 +50,8 @@ export async function getPRDeployments(): Promise<PRDeployment[]> {
     // Return sorted by PR number
     return Array.from(prMap.values()).sort((a, b) => parseInt(a.number) - parseInt(b.number))
   } catch (e) {
-    // Fall back to git method if GitHub CLI is not available or fails
-    try {
-      // Fetch gh-pages to check existing PRs
-      try {
-        await $`git fetch origin gh-pages:refs/remotes/origin/gh-pages`
-      } catch (e) {
-        // Ignore fetch errors - might not exist yet
-      }
-
-      // Get all PR directories from gh-pages
-      let prDirs: string[] = []
-      try {
-        const output = await $`git ls-tree -d --name-only origin/gh-pages`
-        prDirs = output.stdout
-          .split('\n')
-          .filter(line => line.startsWith('pr-'))
-          .sort((a, b) => {
-            const aNum = parseInt(a.replace('pr-', ''))
-            const bNum = parseInt(b.replace('pr-', ''))
-            return aNum - bNum
-          })
-      } catch (e) {
-        // No gh-pages branch yet
-      }
-
-      // Build PR deployments array
-      return prDirs.map(dir => ({
-        number: dir.replace('pr-', ''),
-      }))
-    } catch (error) {
-      // Return empty array on error
-      return []
-    }
+    // Return empty array if GitHub API is not available
+    console.error('Failed to get PR deployments from GitHub API:', e)
+    return []
   }
 }
