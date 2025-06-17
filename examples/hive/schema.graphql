@@ -1,0 +1,1504 @@
+type Query {
+  organization(
+    """Reference to the organization that should be fetched."""
+    reference: OrganizationReferenceInput!
+  ): Organization
+  project(reference: ProjectReferenceInput!): Project
+  target(reference: TargetReferenceInput!): Target
+}
+
+type Mutation {
+  assignMemberRole(input: AssignMemberRoleInput!): AssignMemberRoleResult!
+
+  """Create a CDN access token for a target."""
+  createCdnAccessToken(input: CreateCdnAccessTokenInput!): CdnAccessTokenCreateResult!
+
+  """Create a contract for a given target."""
+  createContract(input: CreateContractInput!): CreateContractResult!
+  createMemberRole(input: CreateMemberRoleInput!): CreateMemberRoleResult!
+  createOrganizationAccessToken(input: CreateOrganizationAccessTokenInput!): CreateOrganizationAccessTokenResult!
+  createProject(input: CreateProjectInput!): CreateProjectResult!
+
+  """Create a new target within an existing project."""
+  createTarget(input: CreateTargetInput!): CreateTargetResult!
+
+  """Delete a CDN access token."""
+  deleteCdnAccessToken(input: DeleteCdnAccessTokenInput!): DeleteCdnAccessTokenResult!
+  deleteMemberRole(input: DeleteMemberRoleInput!): DeleteMemberRoleResult!
+  deleteOrganizationAccessToken(input: DeleteOrganizationAccessTokenInput!): DeleteOrganizationAccessTokenResult!
+  deleteOrganizationInvitation(input: DeleteOrganizationInvitationInput!): DeleteOrganizationInvitationResult!
+  deleteProject(input: DeleteProjectInput!): DeleteProjectResult!
+
+  """Delete a target."""
+  deleteTarget(input: DeleteTargetInput!): DeleteTargetResult!
+
+  """Disable a contract."""
+  disableContract(input: DisableContractInput!): DisableContractResult!
+  inviteToOrganizationByEmail(input: InviteToOrganizationByEmailInput!): InviteToOrganizationByEmailResult!
+  updateMemberRole(input: UpdateMemberRoleInput!): UpdateMemberRoleResult!
+  updateProjectSlug(input: UpdateProjectSlugInput!): UpdateProjectSlugResult!
+
+  """Update the conditional breaking change configuration of a target."""
+  updateTargetConditionalBreakingChangeConfiguration(input: UpdateTargetConditionalBreakingChangeConfigurationInput!): UpdateTargetConditionalBreakingChangeConfigurationResult!
+
+  """
+  Update the targets dangerous change classification settings. This allows dangerous changes fail schema checks.
+  """
+  updateTargetDangerousChangeClassification(input: UpdateTargetDangerousChangeClassificationInput!): UpdateTargetDangerousChangeClassificationResult!
+
+  """Updates the target's explorer endpoint url."""
+  updateTargetGraphQLEndpointUrl(input: UpdateTargetGraphQLEndpointUrlInput!): UpdateTargetGraphQLEndpointUrlResult!
+}
+
+"""
+A date-time string at UTC, such as `2007-12-03T10:15:30Z`, is compliant with the date-time format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. This scalar is a description of an exact instant on the timeline such as the instant that a user account was created. This scalar ignores leap seconds (thereby assuming that a minute constitutes 59 seconds). In this respect, it diverges from the RFC 3339 profile. Where an RFC 3339 compliant date-time string has a time-zone other than UTC, it is shifted to UTC. For example, the date-time string `2016-01-01T14:10:20+01:00` is shifted to `2016-01-01T13:10:20Z`. 
+"""
+scalar DateTime
+
+scalar SafeInt
+
+"""@oneOf"""
+type AssignMemberRoleResult {
+  error: AssignMemberRoleResultError
+  ok: AssignMemberRoleResultOk
+}
+
+type AssignMemberRoleResultError {
+  message: String!
+}
+
+type AssignMemberRoleResultOk {
+  previousMemberRole: MemberRole
+  updatedMember: Member!
+}
+
+type CdnAccessToken {
+  alias: String!
+  createdAt: DateTime!
+  firstCharacters: String!
+  id: ID!
+  lastCharacters: String!
+}
+
+"""@oneOf"""
+type CdnAccessTokenCreateResult {
+  error: CdnAccessTokenCreateResultError
+  ok: CdnAccessTokenCreateResultOk
+}
+
+type CdnAccessTokenCreateResultError {
+  message: String!
+}
+
+type CdnAccessTokenCreateResultOk {
+  cdnUrl: String!
+  createdCdnAccessToken: CdnAccessToken!
+  secretAccessToken: String!
+}
+
+type ClientStats {
+  operations: OperationStatsValuesConnection!
+  totalRequests: SafeInt!
+  totalVersions: SafeInt!
+}
+
+type ClientStatsValues {
+  count: Float!
+  name: String!
+  percentage: Float!
+}
+
+type ClientStatsValuesConnection {
+  edges: [ClientStatsValuesEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ClientStatsValuesEdge {
+  cursor: String!
+  node: ClientStatsValues!
+}
+
+type CompositeSchema {
+  author: String!
+  commit: ID!
+  service: String
+  source: String!
+  url: String
+}
+
+type ConditionalBreakingChangeConfiguration {
+  """
+  Determines which formula is used to determine if a change is considered breaking or not. Only one formula can be used at a time.
+  """
+  breakingChangeFormula: BreakingChangeFormulaType!
+
+  """
+  List of client names that are be excluded from the breaking change detection.
+  """
+  excludedClients: [String!]!
+
+  """Whether conditional breaking change detection is enabled."""
+  isEnabled: Boolean!
+
+  """
+  If TargetValidationSettings.breakingChangeFormula is PERCENTAGE, then this is the percent of the total operations over the TargetValidationSettings.period required for a change to be considered breaking.
+  """
+  percentage: Float!
+
+  """
+  The period in days. Operations of the last x days will be used for the conditional breaking change detection.
+  """
+  period: Int!
+
+  """
+  If TargetValidationSettings.breakingChangeFormula is REQUEST_COUNT, then this is the total number of operations over the TargetValidationSettings.period required for a change to be considered breaking.
+  """
+  requestCount: Int!
+
+  """
+  List of target within the same project, whose operations are used for the breaking change detection.
+  """
+  targets: [Target!]!
+}
+
+type Contract {
+  contractName: String!
+  createdAt: DateTime!
+  excludeTags: [String!]
+  id: ID!
+  includeTags: [String!]
+  isDisabled: Boolean!
+  removeUnreachableTypesFromPublicApiSchema: Boolean!
+}
+
+"""Schema check result for contracts"""
+type ContractCheck {
+  compositeSchemaSDL: String
+  contractName: String!
+
+  """The contract version against this check was performed."""
+  contractVersion: ContractVersion
+  isSuccess: Boolean!
+  schemaChanges: SchemaChangeConnection
+  schemaCompositionErrors: SchemaErrorConnection
+  supergraphSDL: String
+}
+
+type ContractCheckConnection {
+  edges: [ContractCheckEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ContractCheckEdge {
+  cursor: String!
+  node: ContractCheck!
+}
+
+type ContractConnection {
+  edges: [ContractEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ContractEdge {
+  cursor: String!
+  node: Contract!
+}
+
+type ContractVersion {
+  compositeSchemaSDL: String
+  contractName: String!
+
+  """Whether this contract version is composable."""
+  isComposable: Boolean!
+  previousContractVersion: ContractVersion
+  previousDiffableContractVersion: ContractVersion
+  schemaChanges: SchemaChangeConnection
+  schemaCompositionErrors: SchemaErrorConnection
+  supergraphSDL: String
+}
+
+type ContractVersionConnection {
+  edges: [ContractVersionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ContractVersionEdge {
+  cursor: String!
+  node: ContractVersion!
+}
+
+type CreateContractInputErrors {
+  contractName: String
+  excludeTags: String
+  includeTags: String
+  target: String
+}
+
+type CreateContractResult {
+  error: CreateContractResultError
+  ok: CreateContractResultOk
+}
+
+type CreateContractResultError {
+  details: CreateContractInputErrors!
+  message: String!
+}
+
+type CreateContractResultOk {
+  createdContract: Contract!
+}
+
+type CreateMemberRoleInputErrors {
+  description: String
+  name: String
+}
+
+"""@oneOf"""
+type CreateMemberRoleResult {
+  error: CreateMemberRoleResultError
+  ok: CreateMemberRoleResultOk
+}
+
+type CreateMemberRoleResultError {
+  """The detailed validation error messages for the input fields."""
+  inputErrors: CreateMemberRoleInputErrors
+  message: String!
+}
+
+type CreateMemberRoleResultOk {
+  createdMemberRole: MemberRole!
+  updatedOrganization: Organization!
+}
+
+type CreateOrganizationAccessTokenResult {
+  error: CreateOrganizationAccessTokenResultError
+  ok: CreateOrganizationAccessTokenResultOk
+}
+
+type CreateOrganizationAccessTokenResultError {
+  details: CreateOrganizationAccessTokenResultErrorDetails
+  message: String!
+}
+
+type CreateOrganizationAccessTokenResultErrorDetails {
+  """Error message for the input description."""
+  description: String
+
+  """Error message for the input title."""
+  title: String
+}
+
+type CreateOrganizationAccessTokenResultOk {
+  privateAccessKey: String!
+}
+
+type CreateProjectInputErrors {
+  slug: String
+}
+
+type CreateProjectResult {
+  error: CreateProjectResultError
+  ok: CreateProjectResultOk
+}
+
+type CreateProjectResultError {
+  inputErrors: CreateProjectInputErrors!
+  message: String!
+}
+
+type CreateProjectResultOk {
+  createdProject: Project!
+}
+
+type CreateTargetResult {
+  error: CreateTargetResultError
+  ok: CreateTargetResultOk
+}
+
+type CreateTargetResultError {
+  message: String!
+}
+
+type CreateTargetResultOk {
+  createdTarget: Target!
+}
+
+type DateRange {
+  from: DateTime!
+  to: DateTime!
+}
+
+"""@oneOf"""
+type DeleteCdnAccessTokenResult {
+  error: DeleteCdnAccessTokenResultError
+  ok: DeleteCdnAccessTokenResultOk
+}
+
+type DeleteCdnAccessTokenResultError {
+  message: String!
+}
+
+type DeleteCdnAccessTokenResultOk {
+  deletedCdnAccessTokenId: ID!
+}
+
+"""@oneOf"""
+type DeleteMemberRoleResult {
+  error: DeleteMemberRoleResultError
+  ok: DeleteMemberRoleResultOk
+}
+
+type DeleteMemberRoleResultError {
+  message: String!
+}
+
+type DeleteMemberRoleResultOk {
+  deletedMemberRoleId: ID!
+  updatedOrganization: Organization!
+}
+
+type DeleteOrganizationAccessTokenResult {
+  error: DeleteOrganizationAccessTokenResultError
+  ok: DeleteOrganizationAccessTokenResultOk
+}
+
+type DeleteOrganizationAccessTokenResultError {
+  message: String!
+}
+
+type DeleteOrganizationAccessTokenResultOk {
+  deletedOrganizationAccessTokenId: ID!
+}
+
+"""@oneOf"""
+type DeleteOrganizationInvitationResult {
+  error: DeleteOrganizationInvitationResultError
+  ok: DeleteOrganizationInvitationResultOk
+}
+
+type DeleteOrganizationInvitationResultError {
+  message: String!
+}
+
+type DeleteOrganizationInvitationResultOk {
+  deletedOrganizationInvitationId: ID!
+}
+
+type DeleteProjectResult {
+  error: DeleteProjectResultError
+  ok: DeleteProjectResultOk
+}
+
+type DeleteProjectResultError {
+  message: String!
+}
+
+type DeleteProjectResultOk {
+  deletedProjectId: ID!
+}
+
+type DeleteTargetResult {
+  error: DeleteTargetResultError
+  ok: DeleteTargetResultOk
+}
+
+type DeleteTargetResultError {
+  message: String!
+}
+
+type DeleteTargetResultOk {
+  deletedTargetId: ID!
+}
+
+type DeletedSchemaLog {
+  """The name of the service that got deleted."""
+  deletedService: String!
+
+  """The previous SDL of the full schema or subgraph."""
+  previousServiceSdl: String
+}
+
+type DisableContractResult {
+  error: DisableContractResultError
+  ok: DisableContractResultOk
+}
+
+type DisableContractResultError {
+  message: String!
+}
+
+type DisableContractResultOk {
+  disabledContract: Contract!
+}
+
+type DurationValues {
+  avg: Int!
+  p75: Int!
+  p90: Int!
+  p95: Int!
+  p99: Int!
+}
+
+"""A failed schema check."""
+type FailedSchemaCheck implements SchemaCheck {
+  compositeSchemaSDL: String
+  compositionErrors: SchemaErrorConnection
+
+  """Conditional breaking change metadata."""
+  conditionalBreakingChangeMetadata: SchemaCheckConditionalBreakingChangeMetadata
+
+  """Results of the contracts"""
+  contractChecks: ContractCheckConnection
+  createdAt: String!
+  id: ID!
+
+  """Meta information about the schema check."""
+  meta: SchemaCheckMeta
+
+  """The previous schema SDL. For composite schemas this is the service."""
+  previousSchemaSDL: String
+  schemaChanges: SchemaChangeConnection
+
+  """The SDL of the schema that was checked."""
+  schemaSDL: String!
+
+  """
+  The schema version against this check was performed. Is null if there is no schema version published yet.
+  """
+  schemaVersion: SchemaVersion
+
+  """
+  The name of the service that owns the schema. Is null for non composite project types.
+  """
+  serviceName: String
+  supergraphSDL: String
+
+  """The URL of the schema check on the Hive Web App."""
+  webUrl: String
+}
+
+type InviteToOrganizationByEmailInputErrors {
+  email: String
+}
+
+"""@oneOf"""
+type InviteToOrganizationByEmailResult {
+  error: InviteToOrganizationByEmailResultError
+  ok: InviteToOrganizationByEmailResultOk
+}
+
+type InviteToOrganizationByEmailResultError {
+  """The detailed validation error messages for the input fields."""
+  inputErrors: InviteToOrganizationByEmailInputErrors!
+  message: String!
+}
+
+type InviteToOrganizationByEmailResultOk {
+  createdOrganizationInvitation: OrganizationInvitation!
+}
+
+type Member {
+  isOwner: Boolean!
+  resourceAssignment: ResourceAssignment!
+  role: MemberRole!
+  user: User!
+}
+
+type MemberConnection {
+  edges: [MemberEdge!]!
+  pageInfo: PageInfo!
+}
+
+type MemberEdge {
+  cursor: String!
+  node: Member!
+}
+
+type MemberRole {
+  description: String!
+  id: ID!
+
+  """
+  Whether the role is a built-in role. Built-in roles cannot be deleted or modified.
+  """
+  isLocked: Boolean!
+  name: String!
+
+  """List of permissions attached to this member role."""
+  permissions: [String!]!
+}
+
+type MemberRoleConnection {
+  edges: [MemberRoleEdge!]!
+}
+
+type MemberRoleEdge {
+  node: MemberRole!
+}
+
+type Operation {
+  """Operation body"""
+  body: String!
+
+  """Hash that uniquely identifies the operation."""
+  hash: ID!
+
+  """Name of the operation"""
+  name: String
+
+  """Operation type"""
+  type: GraphQLOperationType!
+}
+
+type OperationStatsValues {
+  """Total number of requests"""
+  count: SafeInt!
+
+  """Number of requests that succeeded"""
+  countOk: SafeInt!
+  duration: DurationValues!
+  id: ID!
+  name: String!
+  operationHash: String!
+  percentage: Float!
+}
+
+type OperationStatsValuesConnection {
+  edges: [OperationStatsValuesEdge!]!
+  pageInfo: PageInfo!
+}
+
+type OperationStatsValuesEdge {
+  cursor: String!
+  node: OperationStatsValues!
+}
+
+type OperationsStats {
+  clients: ClientStatsValuesConnection!
+  duration: DurationValues!
+  operations: OperationStatsValuesConnection!
+  totalFailures: SafeInt!
+  totalOperations: Int!
+  totalRequests: SafeInt!
+}
+
+type Organization {
+  """Get organization access token by id."""
+  accessToken(id: ID!): OrganizationAccessToken
+
+  """Paginated organization access tokens."""
+  accessTokens(after: String, first: Int): OrganizationAccessTokenConnection!
+
+  """List of available permission groups that can be assigned to users."""
+  availableMemberPermissionGroups: [PermissionGroup!]!
+
+  """
+  List of available permission groups that can be assigned to organization access tokens.
+  """
+  availableOrganizationAccessTokenPermissionGroups: [PermissionGroup!]!
+
+  """Unique UUID of the organization"""
+  id: ID!
+  invitations(after: String, first: Int): OrganizationInvitationConnection
+  memberRoles(after: String, first: Int): MemberRoleConnection
+  members(after: String, first: Int): MemberConnection!
+  owner: Member!
+  projects: ProjectConnection!
+
+  """The slug of the organization."""
+  slug: String!
+}
+
+type OrganizationAccessToken {
+  createdAt: DateTime!
+  description: String
+  firstCharacters: String!
+  id: ID!
+  permissions: [String!]!
+  resources: ResourceAssignment!
+  title: String!
+}
+
+type OrganizationAccessTokenConnection {
+  edges: [OrganizationAccessTokenEdge!]!
+  pageInfo: PageInfo!
+}
+
+type OrganizationAccessTokenEdge {
+  cursor: String!
+  node: OrganizationAccessToken!
+}
+
+type OrganizationInvitation {
+  createdAt: DateTime!
+  email: String!
+  expiresAt: DateTime!
+  id: ID!
+  role: MemberRole!
+}
+
+type OrganizationInvitationConnection {
+  edges: [OrganizationInvitationEdge!]!
+}
+
+type OrganizationInvitationEdge {
+  node: OrganizationInvitation!
+}
+
+type PageInfo {
+  endCursor: String!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+}
+
+type Permission {
+  dependsOnId: ID
+  description: String!
+  id: ID!
+  level: PermissionLevelType!
+  title: String!
+}
+
+type PermissionGroup {
+  id: ID!
+  permissions: [Permission!]!
+  title: String!
+}
+
+type Project {
+  id: ID!
+  slug: String!
+  targets: TargetConnection!
+  type: ProjectType!
+}
+
+type ProjectConnection {
+  edges: [ProjectEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ProjectEdge {
+  cursor: String!
+  node: Project!
+}
+
+type ProjectResourceAssignment {
+  project: Project!
+  projectId: ID!
+  targets: ProjectTargetsResourceAssignment!
+}
+
+type ProjectTargetsResourceAssignment {
+  mode: ResourceAssignmentModeType!
+  targets: [TargetResouceAssignment!]
+}
+
+type PushedSchemaLog {
+  """
+  The previous SDL of the pushed schema. Is null for single schema projects.
+  """
+  previousServiceSdl: String
+
+  """The name of the service that got published."""
+  service: String
+
+  """
+  The serviceSDL of the pushed schema. Is null for single schema projects.
+  """
+  serviceSdl: String
+}
+
+type ResourceAssignment {
+  mode: ResourceAssignmentModeType!
+  projects: [ProjectResourceAssignment!]
+}
+
+"""
+Describes a schema change for either a schema version (`SchemaVersion`) or schema check (`SchemaCheck`).
+"""
+type SchemaChange {
+  """Whether the breaking change is safe based on usage data."""
+  isSafeBasedOnUsage: Boolean!
+
+  """Message describing the schema change."""
+  message: String!
+
+  """
+  The severity level of this schema change. Note: A schema change with the impact `SeverityLevelType.BREAKING` can still be safe based on the usage (`SchemaChange.isSafeBasedOnUsage`).
+  """
+  severityLevel: SeverityLevelType!
+
+  """
+  The reason for the schema changes severity level (`SchemaChange.severityLevel`)
+  """
+  severityReason: String
+
+  """
+  Usage statistics about the schema change if it is not safe based on usage. The statistics are determined based on the breaking change configuration. The usage statistics are only available for breaking changes and only represent a snapshot of the usage data at the time of the schema check/schema publish.
+  """
+  usageStatistics: SchemaChangeUsageStatistics
+}
+
+type SchemaChangeConnection {
+  edges: [SchemaChangeEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SchemaChangeEdge {
+  cursor: String!
+  node: SchemaChange!
+}
+
+type SchemaChangeUsageStatistics {
+  """List of top clients that are affected by this schema change."""
+  topAffectedClients: [SchemaChangeUsageStatisticsAffectedClient!]!
+
+  """List of the top operations that are affected by this schema change."""
+  topAffectedOperations: [SchemaChangeUsageStatisticsAffectedOperation!]!
+}
+
+type SchemaChangeUsageStatisticsAffectedClient {
+  """The number of times the client called the operation in the period."""
+  count: Float!
+
+  """Name of the client."""
+  name: String!
+
+  """The percentage share of the client of the total traffic."""
+  percentage: Float!
+}
+
+type SchemaChangeUsageStatisticsAffectedOperation {
+  """The number of times the operation was called in the period."""
+  count: Float!
+
+  """Hash of the operation."""
+  hash: String!
+
+  """Name of the operation."""
+  name: String!
+
+  """
+  Get the associated operation. The field is nullable as this data is only stored for the duration of the usage retention period.
+  """
+  operation: Operation
+
+  """The percentage share of the operation of the total traffic."""
+  percentage: Float!
+}
+
+type SchemaCheckConditionalBreakingChangeMetadata {
+  period: DateRange!
+  usage: SchemaCheckConditionalBreakingChangeMetadataUsage!
+}
+
+type SchemaCheckConditionalBreakingChangeMetadataUsage {
+  """Total amount of requests for the settings and period."""
+  totalRequestCount: Float!
+}
+
+type SchemaCheckConnection {
+  edges: [SchemaCheckEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SchemaCheckEdge {
+  cursor: String!
+  node: SchemaCheck!
+}
+
+type SchemaCheckMeta {
+  author: String!
+  commit: String!
+}
+
+type SchemaConnection {
+  edges: [SchemaEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SchemaCoordinateStats {
+  clients: ClientStatsValuesConnection!
+  operations: OperationStatsValuesConnection!
+  totalRequests: SafeInt!
+}
+
+type SchemaEdge {
+  cursor: String!
+  node: Schema!
+}
+
+type SchemaError {
+  message: String!
+}
+
+type SchemaErrorConnection {
+  edges: [SchemaErrorEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SchemaErrorEdge {
+  cursor: String!
+  node: SchemaError!
+}
+
+type SchemaVersion {
+  """Contract versions of this schema version."""
+  contractVersions: ContractVersionConnection
+  id: ID!
+
+  """
+  A schema version is valid if the composition and contract compositions are successful.
+  """
+  isValid: Boolean!
+
+  """
+  The log that initiated this schema version. For a federation schema this is the published or removed subgraph/service.
+  """
+  log: RegistryLog!
+
+  """
+  Schema changes that were introduced in this schema version (compared to the previous version).
+  """
+  schemaChanges: SchemaChangeConnection
+  schemaCompositionErrors: SchemaErrorConnection
+
+  """
+  The schemas that are composed within this schema version. For federation these are the subgraphs/services.
+  """
+  schemas: SchemaConnection!
+
+  """The (public) schema SDL."""
+  sdl: String
+
+  """The supergraph SDL for a federation schema."""
+  supergraph: String
+}
+
+type SchemaVersionConnection {
+  edges: [SchemaVersionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SchemaVersionEdge {
+  cursor: String!
+  node: SchemaVersion!
+}
+
+type SingleSchema {
+  author: String!
+  commit: ID!
+  source: String!
+}
+
+"""A successful schema check."""
+type SuccessfulSchemaCheck implements SchemaCheck {
+  """Conditional breaking change metadata."""
+  conditionalBreakingChangeMetadata: SchemaCheckConditionalBreakingChangeMetadata
+
+  """Results of the contracts"""
+  contractChecks: ContractCheckConnection
+  createdAt: String!
+  id: ID!
+
+  """Meta information about the schema check."""
+  meta: SchemaCheckMeta
+
+  """The previous schema SDL. For composite schemas this is the service."""
+  previousSchemaSDL: String
+  schemaChanges: SchemaChangeConnection
+
+  """The SDL of the schema that was checked."""
+  schemaSDL: String!
+
+  """
+  The schema version against this check was performed. Is null if there is no schema version published yet.
+  """
+  schemaVersion: SchemaVersion
+
+  """
+  The name of the service that owns the schema. Is null for non composite project types.
+  """
+  serviceName: String
+
+  """The URL of the schema check on the Hive Web App."""
+  webUrl: String
+}
+
+type Target {
+  """
+  Get a list of paginated schema contracts that are active for the target.
+  """
+  activeContracts(after: String, first: Int): ContractConnection!
+
+  """
+  A paginated connection of CDN tokens for accessing this target's artifacts.
+  """
+  cdnAccessTokens(after: String, first: Int): TargetCdnAccessTokenConnection!
+
+  """Retrieve statistics for a clients usage."""
+  clientStats(
+    """Name of the client for which statistics should be fetched."""
+    clientName: String!
+
+    """The usage period for retrieving the statistics."""
+    period: DateRangeInput!
+  ): ClientStats!
+
+  """Configuration for conditional breaking change detection."""
+  conditionalBreakingChangeConfiguration: ConditionalBreakingChangeConfiguration!
+
+  """Get a list of paginated schema contracts for the target."""
+  contracts(after: String, first: Int): ContractConnection!
+
+  """
+  Whether a dangerous change fails a schema check and requires a manual approval.
+  """
+  failDiffOnDangerousChange: Boolean!
+  id: ID!
+
+  """The latest (potentially invalid) schema version."""
+  latestSchemaVersion: SchemaVersion
+
+  """The latest valid (composable) schema version."""
+  latestValidSchemaVersion: SchemaVersion
+
+  """Retrieve an operation via it's hash."""
+  operation(hash: ID!): Operation
+
+  """Retrieve an overview of all operation statistics."""
+  operationsStats(
+    """Optional filter."""
+    filter: OperationStatsFilterInput
+
+    """The usage period for retrieving the statistics."""
+    period: DateRangeInput!
+  ): OperationsStats!
+
+  """Get a schema check for the target by ID."""
+  schemaCheck(id: ID!): SchemaCheck
+
+  """Get a list of paginated schema checks for a target."""
+  schemaChecks(after: String, first: Int): SchemaCheckConnection!
+
+  """Retrieve statistics over a schema coordinates usage."""
+  schemaCoordinateStats(
+    """The usage period for retrieving the statistics."""
+    period: DateRangeInput!
+
+    """The schema coordinate for which statistics should be fetched."""
+    schemaCoordinate: String!
+  ): SchemaCoordinateStats!
+
+  """Retreive a specific schema version in this target by it's id."""
+  schemaVersion(id: ID!): SchemaVersion
+
+  """Paginated list of schema versions, ordered from recent to oldest."""
+  schemaVersions(after: String, first: Int): SchemaVersionConnection!
+  slug: String!
+}
+
+type TargetAppDeploymentsResourceAssignment {
+  appDeployments: [String!]
+  mode: ResourceAssignmentModeType!
+}
+
+type TargetCdnAccessTokenConnection {
+  edges: [TargetCdnAccessTokenEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TargetCdnAccessTokenEdge {
+  cursor: String!
+  node: CdnAccessToken!
+}
+
+type TargetConnection {
+  edges: [TargetEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TargetEdge {
+  cursor: String!
+  node: Target!
+}
+
+type TargetResouceAssignment {
+  appDeployments: TargetAppDeploymentsResourceAssignment!
+  services: TargetServicesResourceAssignment!
+  target: Target!
+  targetId: ID!
+}
+
+type TargetServicesResourceAssignment {
+  mode: ResourceAssignmentModeType!
+  services: [String!]
+}
+
+type UpdateMemberRoleInputErrors {
+  description: String
+  name: String
+}
+
+"""@oneOf"""
+type UpdateMemberRoleResult {
+  error: UpdateMemberRoleResultError
+  ok: UpdateMemberRoleResultOk
+}
+
+type UpdateMemberRoleResultError {
+  """The detailed validation error messages for the input fields."""
+  inputErrors: UpdateMemberRoleInputErrors
+  message: String!
+}
+
+type UpdateMemberRoleResultOk {
+  updatedRole: MemberRole!
+}
+
+type UpdateProjectSlugError {
+  message: String!
+}
+
+type UpdateProjectSlugOk {
+  updatedProject: Project!
+}
+
+type UpdateProjectSlugResult {
+  error: UpdateProjectSlugError
+  ok: UpdateProjectSlugOk
+}
+
+type UpdateTargetConditionalBreakingChangeConfigurationResult {
+  error: UpdateTargetConditionalBreakingChangeConfigurationResultError
+  ok: UpdateTargetConditionalBreakingChangeConfigurationResultOk
+}
+
+type UpdateTargetConditionalBreakingChangeConfigurationResultError {
+  message: String!
+}
+
+type UpdateTargetConditionalBreakingChangeConfigurationResultOk {
+  target: Target!
+}
+
+type UpdateTargetDangerousChangeClassificationResult {
+  error: UpdateTargetDangerousChangeClassificationResultError
+  ok: UpdateTargetDangerousChangeClassificationResultOk
+}
+
+type UpdateTargetDangerousChangeClassificationResultError {
+  message: String!
+}
+
+type UpdateTargetDangerousChangeClassificationResultOk {
+  target: Target!
+}
+
+type UpdateTargetGraphQLEndpointUrlResult {
+  error: UpdateTargetGraphQLEndpointUrlResultError
+  ok: UpdateTargetGraphQLEndpointUrlResultOk
+}
+
+type UpdateTargetGraphQLEndpointUrlResultError {
+  message: String!
+}
+
+type UpdateTargetGraphQLEndpointUrlResultOk {
+  target: Target!
+}
+
+type User {
+  displayName: String!
+  email: String!
+  id: ID!
+  provider: AuthProviderType!
+}
+
+interface SchemaCheck {
+  """Conditional breaking change metadata."""
+  conditionalBreakingChangeMetadata: SchemaCheckConditionalBreakingChangeMetadata
+
+  """Results of the contracts"""
+  contractChecks: ContractCheckConnection
+  createdAt: String!
+  id: ID!
+
+  """Meta information about the schema check."""
+  meta: SchemaCheckMeta
+
+  """The previous schema SDL. For composite schemas this is the service."""
+  previousSchemaSDL: String
+  schemaChanges: SchemaChangeConnection
+
+  """The SDL of the schema that was checked."""
+  schemaSDL: String!
+
+  """
+  The schema version against this check was performed. Is null if there is no schema version published yet.
+  """
+  schemaVersion: SchemaVersion
+
+  """
+  The name of the service that owns the schema. Is null for non composite project types.
+  """
+  serviceName: String
+
+  """The URL of the schema check on the Hive Web App."""
+  webUrl: String
+}
+
+union RegistryLog = DeletedSchemaLog | PushedSchemaLog
+
+union Schema = CompositeSchema | SingleSchema
+
+enum AuthProviderType {
+  GITHUB
+  GOOGLE
+
+  """OpenID Connect"""
+  OIDC
+
+  """Username-Password-Authentication"""
+  USERNAME_PASSWORD
+}
+
+enum BreakingChangeFormulaType {
+  PERCENTAGE
+  REQUEST_COUNT
+}
+
+enum ProjectType {
+  FEDERATION
+  SINGLE
+  STITCHING
+}
+
+enum GraphQLOperationType {
+  MUTATION
+  QUERY
+  SUBSCRIPTION
+}
+
+enum PermissionLevelType {
+  APP_DEPLOYMENT
+  ORGANIZATION
+  PROJECT
+  SERVICE
+  TARGET
+}
+
+enum ResourceAssignmentModeType {
+  """Apply to all subresouces of the resource."""
+  ALL
+
+  """Apply to specific subresouces of the resource."""
+  GRANULAR
+}
+
+"""Describes the impact of a schema change."""
+enum SeverityLevelType {
+  """The change will definetly break GraphQL client users."""
+  BREAKING
+
+  """
+  The change might break existing clients that do not follow best-practises such as future-proof enums or future-proof interface/union type usages.
+  """
+  DANGEROUS
+
+  """The change is safe and does not break existing clients."""
+  SAFE
+}
+
+input AppDeploymentResourceAssignmentInput {
+  appDeployment: String!
+}
+
+input AssignMemberRoleInput {
+  member: MemberReferenceInput!
+  memberRole: MemberRoleReferenceInput!
+  organization: OrganizationReferenceInput!
+  resources: ResourceAssignmentInput!
+}
+
+"""Fields not provided (omitted) will retain the previous value."""
+input ConditionalBreakingChangeConfigurationInput {
+  """
+  Whether a percentage or absolute value should be used for the conditional breaking changes treshold.
+  """
+  breakingChangeFormula: BreakingChangeFormulaType
+
+  """
+  List of client names that are excluded from the breaking change detection.
+  """
+  excludedClients: [String!]
+
+  """
+  Update whethe the conditional breaking change detection is enabled or disabled.
+  """
+  isEnabled: Boolean
+
+  """
+  The percentage value if `UpdateTargetValidationSettingsInput.breakingChangeFormula` is set to `BreakingChangeFormulaType.PERCENTAGE`.
+  """
+  percentage: Float
+
+  """
+  The period in days. Operations of the last x days will be used for the conditional breaking change detection. The maximum value depends on the organizations data retention limits.
+  """
+  period: Int
+
+  """
+  The request count value if `UpdateTargetValidationSettingsInput.breakingChangeFormula` is set to `BreakingChangeFormulaType.REQUEST_COUNT`.
+  """
+  requestCount: Int
+
+  """
+  List of target ids within the same project, whose operations are used for the breaking change detection.
+  """
+  targetIds: [ID!]
+}
+
+input ContractReferenceInput {
+  byId: ID
+}
+
+input CreateCdnAccessTokenInput {
+  """Alias describing the purpose of the access token."""
+  alias: String!
+
+  """The target for which the access token should be created for."""
+  target: TargetReferenceInput!
+}
+
+input CreateContractInput {
+  contractName: String!
+  excludeTags: [String!]
+  includeTags: [String!]
+  removeUnreachableTypesFromPublicApiSchema: Boolean!
+  target: TargetReferenceInput!
+}
+
+input CreateMemberRoleInput {
+  description: String!
+  name: String!
+  organization: OrganizationReferenceInput!
+  selectedPermissions: [String!]!
+}
+
+input CreateOrganizationAccessTokenInput {
+  description: String
+  organization: OrganizationReferenceInput!
+  permissions: [String!]!
+  resources: ResourceAssignmentInput!
+  title: String!
+}
+
+input CreateProjectInput {
+  organization: OrganizationReferenceInput!
+  slug: String!
+  type: ProjectType!
+}
+
+input CreateTargetInput {
+  """Reference to the project in which the target should be created in."""
+  project: ProjectReferenceInput!
+
+  """Slug of the target, must be unique per project."""
+  slug: String!
+}
+
+"""Describes a date range interval."""
+input DateRangeInput {
+  from: DateTime!
+  to: DateTime!
+}
+
+input DeleteCdnAccessTokenInput {
+  cdnAccessTokenId: ID!
+  target: TargetReferenceInput!
+}
+
+input DeleteMemberRoleInput {
+  memberRole: MemberRoleReferenceInput!
+}
+
+input DeleteOrganizationAccessTokenInput {
+  organizationAccessToken: OrganizationAccessTokenReference!
+}
+
+input DeleteOrganizationInvitationInput {
+  email: String!
+  organization: OrganizationReferenceInput!
+}
+
+input DeleteProjectInput {
+  project: ProjectReferenceInput!
+}
+
+input DeleteTargetInput {
+  """Reference to the target that should be deleted."""
+  target: TargetReferenceInput!
+}
+
+input DisableContractInput {
+  contract: ContractReferenceInput!
+}
+
+input InviteToOrganizationByEmailInput {
+  email: String!
+  memberRoleId: ID
+  organization: OrganizationReferenceInput!
+}
+
+input MemberReferenceInput {
+  byId: ID
+}
+
+input MemberRoleReferenceInput {
+  byId: ID
+}
+
+input OperationStatsFilterInput {
+  """Filter by only showing operations performed by specific clients."""
+  clientNames: [String!]
+
+  """Filter by only showing operations with a specific id."""
+  operationIds: [ID!]
+}
+
+input OrganizationAccessTokenReference {
+  byId: ID
+}
+
+input OrganizationReferenceInput {
+  byId: ID
+  bySelector: OrganizationSelectorInput
+}
+
+input OrganizationSelectorInput {
+  organizationSlug: String!
+}
+
+input ProjectReferenceInput {
+  byId: ID
+  bySelector: ProjectSelectorInput
+}
+
+input ProjectResourceAssignmentInput {
+  projectId: ID!
+  targets: ProjectTargetsResourceAssignmentInput!
+}
+
+input ProjectSelectorInput {
+  organizationSlug: String!
+  projectSlug: String!
+}
+
+input ProjectTargetsResourceAssignmentInput {
+  """
+  Whether the permissions should apply for all targets within the project or only selected ones.
+  """
+  mode: ResourceAssignmentModeType!
+
+  """
+  Specific targets within the projects for which the permissions should be applied.
+  """
+  targets: [TargetResourceAssignmentInput!]
+}
+
+input ResourceAssignmentInput {
+  """
+  Whether the permissions should apply for all projects within the organization or only selected ones.
+  """
+  mode: ResourceAssignmentModeType!
+
+  """
+  Specific projects within the organization for which the permissions should be applied.
+  """
+  projects: [ProjectResourceAssignmentInput!]
+}
+
+input ServiceResourceAssignmentInput {
+  serviceName: String!
+}
+
+input TargetAppDeploymentsResourceAssignmentInput {
+  """
+  Specific app deployments within the target for which the permissions should be applied.
+  """
+  appDeployments: [AppDeploymentResourceAssignmentInput!]
+
+  """
+  Whether the permissions should apply for all app deployments within the target.
+  """
+  mode: ResourceAssignmentModeType!
+}
+
+"""Reference to a target."""
+input TargetReferenceInput {
+  """Reference to a target using it's ID (see "Target.id" field)."""
+  byId: ID
+
+  """
+  Reference to a target using it's slug parts (see "Organization.slug", "Project.slug", "Target.slug").
+  """
+  bySelector: TargetSelectorInput
+}
+
+input TargetResourceAssignmentInput {
+  appDeployments: TargetAppDeploymentsResourceAssignmentInput!
+  services: TargetServicesResourceAssignmentInput!
+  targetId: ID!
+}
+
+input TargetSelectorInput {
+  organizationSlug: String!
+  projectSlug: String!
+  targetSlug: String!
+}
+
+input TargetServicesResourceAssignmentInput {
+  """
+  Whether the permissions should apply for all services within the target or only selected ones.
+  """
+  mode: ResourceAssignmentModeType!
+
+  """
+  Specific services within the target for which the permissions should be applied.
+  """
+  services: [ServiceResourceAssignmentInput!]
+}
+
+input UpdateMemberRoleInput {
+  description: String!
+
+  """The member role that should be udpated."""
+  memberRole: MemberRoleReferenceInput!
+  name: String!
+  selectedPermissions: [String!]!
+}
+
+input UpdateProjectSlugInput {
+  project: ProjectReferenceInput!
+  slug: String!
+}
+
+input UpdateTargetConditionalBreakingChangeConfigurationInput {
+  """Updates to the conditional breaking change configuration."""
+  conditionalBreakingChangeConfiguration: ConditionalBreakingChangeConfigurationInput!
+
+  """The target on which the settings are adjusted."""
+  target: TargetReferenceInput!
+}
+
+input UpdateTargetDangerousChangeClassificationInput {
+  failDiffOnDangerousChange: Boolean!
+  target: TargetReferenceInput!
+}
+
+input UpdateTargetGraphQLEndpointUrlInput {
+  graphqlEndpointUrl: String
+  target: TargetReferenceInput!
+}

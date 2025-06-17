@@ -307,6 +307,12 @@ importers:
         specifier: link:../..
         version: link:../..
 
+  examples/hive:
+    dependencies:
+      polen:
+        specifier: link:../..
+        version: link:../..
+
   examples/pokemon:
     dependencies:
       polen:
