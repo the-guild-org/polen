@@ -1,4 +1,3 @@
-import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { updateBasePaths } from '../../scripts/lib/build-demos.ts'
 import { createHtmlRedirect } from '../../scripts/lib/html-redirect.ts'
@@ -14,7 +13,9 @@ interface Inputs {
 /**
  * Prepare PR preview for deployment
  */
-export default Step<Inputs>(async ({ $, core, inputs }) => {
+export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
+  console.log('=== Starting PR preview deployment preparation ===')
+
   const prNumber = inputs.pr_number
   const headSha = inputs.head_sha
   const headRef = inputs.head_ref
