@@ -21,9 +21,20 @@ export default Step<Inputs>(async ({ $, core, inputs }) => {
   const deployDir = 'gh-pages-deploy'
 
   try {
+    // Log current working directory for debugging
+    console.log(`Current working directory: ${process.cwd()}`)
+
     // Create deployment directory structure
     await fs.mkdir(path.join(deployDir, `pr-${prNumber}`, 'latest'), { recursive: true })
     await fs.mkdir(path.join(deployDir, `pr-${prNumber}`, headSha), { recursive: true })
+
+    // Verify directory was created
+    try {
+      await fs.access(deployDir)
+      console.log(`✅ Created deployment directory: ${deployDir}`)
+    } catch {
+      throw new Error(`Failed to create deployment directory: ${deployDir}`)
+    }
 
     // Copy landing page to PR root
     const landingPageSource = 'dist-demos/index.html'
@@ -113,6 +124,18 @@ export default Step<Inputs>(async ({ $, core, inputs }) => {
     )
 
     console.log('✅ PR preview deployment prepared successfully')
+
+    // Final verification - list what was created
+    console.log('\n📁 Deployment directory contents:')
+    try {
+      const { stdout } = await $`find ${deployDir} -type f | head -20`
+      console.log(stdout.toString())
+
+      const fileCount = (await $`find ${deployDir} -type f | wc -l`).stdout.toString().trim()
+      console.log(`\n✅ Total files prepared for deployment: ${fileCount}`)
+    } catch (e) {
+      console.error('Failed to list deployment directory contents')
+    }
   } catch (error) {
     core.setFailed(`Failed to prepare PR deployment: ${(error as Error).message}`)
   }

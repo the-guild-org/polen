@@ -84,6 +84,19 @@ jobs:
               "output_dir": "gh-pages-deploy"
             }
 
+      - name: Debug - Check working directory and files
+        run: |
+          echo "Current working directory: $(pwd)"
+          echo "---"
+          echo "Files in current directory:"
+          ls -la
+          echo "---"
+          echo "Looking for gh-pages-deploy:"
+          find . -name "gh-pages-deploy" -type d 2>/dev/null | head -10
+          echo "---"
+          echo "Looking for dist-demos:"
+          find . -name "dist-demos" -type d 2>/dev/null | head -10
+
       - name: Debug - List gh-pages-deploy contents
         run: |
           echo "Contents of gh-pages-deploy:"
