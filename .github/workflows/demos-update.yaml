@@ -1,0 +1,76 @@
+name: demos-update
+
+on:
+  push:
+    branches: [main]
+    paths: 
+      - 'examples/**'
+      - 'src/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  update-current-cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
+      - name: Re-install to link workspace packages  
+        run: pnpm install
+
+      - name: Check latest tag
+        id: check
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            check-latest-tag '{}'
+
+      - name: Build current cycle
+        if: steps.check.outputs.has_versions == 'true'
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            build-current-cycle \
+            '{
+              "versions_to_rebuild": ${{ steps.check.outputs.versions_to_rebuild }}
+            }'
+
+      - name: Deploy to GitHub Pages
+        if: steps.check.outputs.has_versions == 'true'
+        uses: ./.github/actions/gh-pages-with-deployments
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_from: examples
+          additional_source_dirs: dist-demos
+          environment_tag: current-cycle
+          is_preview: false
+
+  garbage-collect:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Garbage collect old deployments
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            garbage-collect '{}'

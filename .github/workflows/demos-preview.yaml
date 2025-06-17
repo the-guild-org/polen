@@ -1,0 +1,89 @@
+name: demos-preview
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+      head_sha:
+        required: true
+        type: string
+      head_ref:
+        required: true
+        type: string
+    outputs:
+      deployment_url:
+        description: "URL of the deployed preview"
+        value: ${{ jobs.build-and-deploy.outputs.deployment_url }}
+      demo_links:
+        description: "Markdown links for demo examples"
+        value: ${{ jobs.build-and-deploy.outputs.demo_links }}
+
+permissions:
+  contents: read
+  pages: write
+  deployments: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      deployment_url: ${{ steps.deploy.outputs.page_url }}
+      demo_links: ${{ steps.generate-links.outputs.links }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.head_sha }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
+      - name: Re-install to link workspace packages
+        run: pnpm install
+
+      - name: Get previous deployments
+        id: previous
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            get-previous-deployments \
+            '{
+              "pr_number": "${{ inputs.pr_number }}",
+              "current_sha": "${{ inputs.head_sha }}"
+            }'
+
+      - name: Prepare PR deployment
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            prepare-pr-deployment \
+            '{
+              "pr_number": "${{ inputs.pr_number }}",
+              "head_sha": "${{ inputs.head_sha }}",
+              "head_ref": "${{ inputs.head_ref }}"
+            }'
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: ./.github/actions/gh-pages-with-deployments
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_from: gh-pages-deploy
+          environment_tag: pr-${{ inputs.pr_number }}
+          is_preview: true
+
+      - name: Generate demo links
+        id: generate-links
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            generate-demo-links \
+            '{
+              "pr_number": "${{ inputs.pr_number }}",
+              "head_sha": "${{ inputs.head_sha }}",
+              "github_repository_owner": "${{ github.repository_owner }}",
+              "github_repository_name": "${{ github.event.repository.name }}",
+              "previous_deployment_links": "${{ steps.previous.outputs.deployment_links }}"
+            }'

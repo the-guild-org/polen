@@ -1,0 +1,83 @@
+name: demos-release
+
+on:
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release semver tag to build demos for (e.g. 1.2.0, 0.8.0-next.1, ...)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  statuses: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update workflow scripts from main
+        uses: ./.github/actions/use-latest-ci
+
+      - name: Extract release info
+        id: release
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            extract-release-info \
+            '{
+              "github_event_name": "${{ github.event_name }}",
+              "input_tag": "${{ inputs.tag }}",
+              "github_release_tag_name": "${{ github.event.release.tag_name }}",
+              "github_release_prerelease": ${{ github.event.release.prerelease || false }},
+              "github_event_action": "${{ github.event.action }}"
+            }'
+
+      - name: Build Polen
+        if: steps.release.outputs.needs_build == 'true'
+        run: pnpm build
+
+      - name: Re-install to link workspace packages
+        if: steps.release.outputs.needs_build == 'true'
+        run: pnpm install
+
+      - name: Build demos
+        if: steps.release.outputs.needs_build == 'true'
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            build-demos \
+            '{
+              "tag": "${{ steps.release.outputs.tag }}",
+              "actual_tag": "${{ steps.release.outputs.actual_tag }}"
+            }'
+
+      - name: Deploy to GitHub Pages
+        if: steps.release.outputs.needs_build == 'true'
+        uses: ./.github/actions/gh-pages-with-deployments
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_from: examples
+          additional_source_dirs: dist-demos
+          environment_tag: ${{ steps.release.outputs.actual_tag }}
+          is_preview: false
+
+      - name: Add demos link to commit
+        if: steps.release.outputs.needs_build == 'true'
+        run: |
+          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
+            add-demos-link \
+            '{
+              "actual_tag": "${{ steps.release.outputs.actual_tag }}",
+              "github_event_name": "${{ github.event_name }}",
+              "github_release_target_commitish": "${{ github.event.release.target_commitish }}"
+            }'
