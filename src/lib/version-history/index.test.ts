@@ -1,7 +1,7 @@
-import { describe, expect, it, vi, beforeEach, type Mock } from 'vitest'
 import { parse as semverParse } from '@vltpkg/semver'
-import { VersionHistory } from './index.js'
 import type { SimpleGit } from 'simple-git'
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
+import { VersionHistory } from './index.js'
 
 describe('VersionHistory', () => {
   describe('parseSemver', () => {

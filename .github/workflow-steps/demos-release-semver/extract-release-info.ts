@@ -1,5 +1,5 @@
+import { gte as semverGte, parse as semverParse, prerelease as semverPrerelease } from '@vltpkg/semver'
 import { readFileSync } from 'node:fs'
-import { parse as semverParse, prerelease as semverPrerelease, gte as semverGte } from '@vltpkg/semver'
 import { VersionHistory } from '../../../src/lib/version-history/index.js'
 import { type ReleaseInputs, Step } from '../types.ts'
 
@@ -50,7 +50,7 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
         try {
           const versionHistory = new VersionHistory()
           const distTag = await versionHistory.getDistTag('next')
-          
+
           if (distTag?.semverTag) {
             core.setOutput('actual_tag', distTag.semverTag)
             core.setOutput('needs_build', 'true')
@@ -82,7 +82,7 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
 
       const tagVersion = semverParse(tag)
       const minVersionParsed = semverParse(minVersion)
-      
+
       if (tagVersion && minVersionParsed && semverGte(tagVersion, minVersionParsed)) {
         console.log(
           `✅ Version ${tag} meets minimum requirement (${minVersion})`,

@@ -9,25 +9,25 @@ export default Step(async ({ core, $, fs }) => {
   // Get version history
   const versionHistory = new VersionHistory()
   const allVersions = await versionHistory.getSemverTags()
-  
+
   // Separate stable releases from pre-releases
   const stableReleases = allVersions.filter(v => !v.isPrerelease).map(v => v.tag)
   const preReleases = allVersions.filter(v => v.isPrerelease).map(v => v.tag)
-  
+
   // Find the latest stable release
   const latestStableVersion = await versionHistory.getLatestRelease()
   const latestStable = latestStableVersion?.tag || ''
-  
+
   // Find what the dist-tags point to
   const distTagVersions = new Set<string>()
   const distTags = await versionHistory.getDistTags()
-  
+
   for (const distTag of distTags) {
     if (distTag.semverTag) {
       distTagVersions.add(distTag.semverTag)
     }
   }
-  
+
   // Find what the "next" tag points to (pre-release version)
   const nextDistTag = distTags.find(dt => dt.name === 'next')
   const nextVersion = nextDistTag?.semverTag

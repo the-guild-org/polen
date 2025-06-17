@@ -1,4 +1,4 @@
-import { parse as semverParse, lt as semverLt } from '@vltpkg/semver'
+import { lt as semverLt, parse as semverParse } from '@vltpkg/semver'
 import { buildDemosForTag, deployDemos, updateDistTagContent } from '../../scripts/lib/build-demos.ts'
 import { getDemoExamples } from '../../scripts/tools/get-demo-examples.ts'
 import { type RebuildInputs, Step } from '../types.ts'
@@ -33,7 +33,7 @@ export default Step<RebuildInputs>(async ({ core, $, inputs, fs }) => {
   for (const version of versions) {
     const versionParsed = semverParse(version)
     const minVersionParsed = semverParse(minVersion)
-    
+
     if (versionParsed && minVersionParsed && semverLt(versionParsed, minVersionParsed)) {
       console.log(
         `⚠️ Skipping ${version} - below minimum version ${minVersion}`,

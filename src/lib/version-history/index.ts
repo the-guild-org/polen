@@ -1,5 +1,10 @@
+import {
+  compare as semverCompare,
+  parse as semverParse,
+  prerelease as semverPrerelease,
+  type Version,
+} from '@vltpkg/semver'
 import { type SimpleGit, simpleGit } from 'simple-git'
-import { type Version, compare as semverCompare, parse as semverParse, prerelease as semverPrerelease } from '@vltpkg/semver'
 
 export interface VersionInfo {
   tag: string
@@ -185,7 +190,7 @@ export class VersionHistory {
 
     const allVersions = await this.getSemverTags()
     const prereleases = allVersions.filter(
-      v => v.isPrerelease && semverCompare(v.semver, latestStable.semver) > 0
+      v => v.isPrerelease && semverCompare(v.semver, latestStable.semver) > 0,
     )
 
     return {

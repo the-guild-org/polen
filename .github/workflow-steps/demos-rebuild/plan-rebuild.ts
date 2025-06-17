@@ -1,4 +1,10 @@
-import { parse as semverParse, valid as semverValid, gte as semverGte, compare as semverCompare, prerelease as semverPrerelease } from '@vltpkg/semver'
+import {
+  compare as semverCompare,
+  gte as semverGte,
+  parse as semverParse,
+  prerelease as semverPrerelease,
+  valid as semverValid,
+} from '@vltpkg/semver'
 import { type PlanRebuildInputs, Step } from '../types.ts'
 
 /**
