@@ -81,3 +81,8 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 
 - **NEVER** use child process exec to execute a script when you could ESM import it instead
 - **NEVER** use ESM dynamic import when you could ESM statically import it instead
+
+## CI Debugging Rules
+
+- When debugging CI issues, use the `gh` CLI to investigate logs, workflows, and deployments directly
+- Check workflow runs, deployment statuses, and logs yourself before asking for debug information
