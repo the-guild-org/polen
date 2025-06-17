@@ -36,7 +36,7 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
       const distTags = JSON.stringify(await getDistTags('./gh-pages'))
 
       // Build trunk demos index
-      await $`node ./scripts/build-demos-index.ts --trunkDeployments=${trunkDeployments} --distTags=${distTags}`
+      await $`node ./scripts/build-demos-home.ts --trunkDeployments=${trunkDeployments} --distTags=${distTags}`
 
       // Copy to gh-pages root
       await fs.copyFile('dist-demos/index.html', 'gh-pages/index.html')
@@ -50,7 +50,7 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
     const prDeployments = JSON.stringify(await getPRDeployments())
 
     // Build PR index
-    await $`node ./scripts/build-demos-index.ts --mode pr-index --prDeployments=${prDeployments}`
+    await $`node ./scripts/build-demos-home.ts --mode pr-index --prDeployments=${prDeployments}`
 
     // Determine output path based on input
     const outputPath = inputs.output_dir

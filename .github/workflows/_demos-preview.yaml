@@ -49,7 +49,7 @@ jobs:
         run: pnpm install
 
       - name: Build demos landing page
-        run: node ./scripts/build-demos-index.ts --basePath "/polen/pr-${{ inputs.pr-number }}/" --prNumber "${{ inputs.pr-number }}" --currentSha "${{ inputs.head-sha }}"
+        run: node ./scripts/build-demos-home.ts --basePath "/polen/pr-${{ inputs.pr-number }}/" --prNumber "${{ inputs.pr-number }}" --currentSha "${{ inputs.head-sha }}"
 
       - name: Build demos
         run: |
