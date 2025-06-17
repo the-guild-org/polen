@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // @ts-nocheck
 import { Command } from '@molt/command'
+import { Err } from '@wollybeard/kit'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { createServer } from 'http'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import { z } from 'zod'
 import { getDemoExamples } from '../.github/scripts/tools/get-demo-examples.ts'
 
@@ -27,34 +27,59 @@ const args = Command.create()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments, distTags, serve } = args
 
-// TODO staically import and execute this
+// This should use @wollybeard/kit Err.tryCatch
 // Get demo examples
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const getDemoExamplesPath = path.join(__dirname, '..', '.github', 'scripts', 'tools', 'get-demo-examples.ts')
 let demoExamples: string[] = []
 try {
-  const result = execSync(`node --no-warnings ${getDemoExamplesPath}`, { encoding: 'utf-8' })
-  demoExamples = result.trim().split(' ').filter(Boolean)
+  demoExamples = await getDemoExamples()
 } catch (e) {
   console.error('Failed to get demo examples, using defaults')
   demoExamples = ['pokemon', 'hive']
 }
 
-// TODO: pull demo descriptions from example package.json descriptions.
-// TODO: pull titles from example package.json names (passed through Str.Case.titlize)
-// Demo metadata
-const demoMetadata: Record<string, { title: string; description: string; enabled: boolean }> = {
-  pokemon: {
-    title: 'Pokemon API',
-    description: 'Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.',
-    enabled: true,
-  },
-  hive: {
-    title: 'GraphQL Hive API',
-    description:
-      'Browse the GraphQL Hive schema registry and observability platform API with comprehensive documentation.',
-    enabled: true,
-  },
+/*
+
+Ideal code:
+
+const demoExamples = await Err.tryOrThrow(getDemoExamples, Err.wrapWith('Failed to get demo examples'))
+
+*/
+
+// this should use @wollybeard/kit Str.Case... utility
+// Helper to convert package name to title case
+const toTitleCase = (str: string): string => {
+  return str
+    .split(/[-_\s]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+}
+
+// Load demo metadata from package.json files
+const demoMetadata: Record<string, { title: string; description: string; enabled: boolean }> = {}
+
+// First, load metadata from package.json files for discovered examples
+for (const example of demoExamples) {
+  try {
+    const packageJsonPath = path.join(process.cwd(), 'examples', example, 'package.json')
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+
+    demoMetadata[example] = {
+      title: packageJson.displayName || toTitleCase(packageJson.name || example) + ' API',
+      description: packageJson.description || `Explore the ${example} GraphQL API with comprehensive documentation.`,
+      enabled: true,
+    }
+  } catch (e) {
+    // Fallback if package.json is missing or invalid
+    demoMetadata[example] = {
+      title: toTitleCase(example) + ' API',
+      description: `Explore the ${example} GraphQL API with comprehensive documentation.`,
+      enabled: true,
+    }
+  }
+}
+
+// Add any additional disabled demos that aren't in the examples directory
+const disabledDemos = {
   github: {
     title: 'GitHub API',
     description:
@@ -62,6 +87,9 @@ const demoMetadata: Record<string, { title: string; description: string; enabled
     enabled: false,
   },
 }
+
+// Merge disabled demos into metadata
+Object.assign(demoMetadata, disabledDemos)
 
 // Set up mock data for dev mode
 let finalDistTags = distTags
@@ -670,13 +698,10 @@ console.log('✅ Built demos index page')
 
 // Start dev server if requested
 if (mode === 'dev' && serve) {
-  const { createServer } = await import('http')
-  const { readFileSync } = await import('fs')
-
   const server = createServer((req, res) => {
     if (req.url === '/' || req.url === '/index.html') {
       res.writeHead(200, { 'Content-Type': 'text/html' })
-      res.end(readFileSync(path.join(distDir, 'index.html'), 'utf-8'))
+      res.end(fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8'))
     } else {
       res.writeHead(404)
       res.end('Not found')

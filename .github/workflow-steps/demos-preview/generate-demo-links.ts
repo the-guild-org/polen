@@ -1,4 +1,4 @@
-import { execSync } from 'child_process'
+import { getDemoExamples } from '../../scripts/tools/get-demo-examples.ts'
 import { Step } from '../types.ts'
 
 interface GenerateDemoLinksInputs {
@@ -14,10 +14,7 @@ interface GenerateDemoLinksInputs {
  */
 export default Step<GenerateDemoLinksInputs>(async ({ inputs, core }) => {
   // Get list of demos
-  const examplesOutput = execSync('node --no-warnings ./.github/scripts/tools/get-demo-examples.ts', {
-    encoding: 'utf-8',
-  })
-  const examples = examplesOutput.trim().split(' ').filter(Boolean)
+  const examples = await getDemoExamples()
 
   // Get short SHA
   const shortSha = inputs.head_sha.substring(0, 7)
