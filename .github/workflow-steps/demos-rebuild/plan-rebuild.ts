@@ -1,4 +1,10 @@
-import * as semver from 'semver'
+import {
+  compare as semverCompare,
+  gte as semverGte,
+  parse as semverParse,
+  prerelease as semverPrerelease,
+  valid as semverValid,
+} from '@vltpkg/semver'
 import { type PlanRebuildInputs, Step } from '../types.ts'
 
 /**
@@ -14,8 +20,12 @@ export default Step<PlanRebuildInputs>(async ({ github, context, core, inputs = 
 
   const versionTags = tags
     .map((t) => t.name)
-    .filter((t): t is string => semver.valid(t) !== null)
-    .sort(semver.rcompare)
+    .filter((t): t is string => semverValid(t) !== undefined)
+    .sort((a, b) => {
+      const vA = semverParse(a)
+      const vB = semverParse(b)
+      return vA && vB ? semverCompare(vB, vA) : 0
+    })
 
   console.log(`Found ${versionTags.length} version tags`)
 
@@ -24,12 +34,16 @@ export default Step<PlanRebuildInputs>(async ({ github, context, core, inputs = 
 
   const sinceVersion = inputs.since_version
   if (sinceVersion) {
-    if (!semver.valid(sinceVersion)) {
+    if (!semverValid(sinceVersion)) {
       core.setFailed(`Invalid version: ${sinceVersion}`)
       return
     }
 
-    versionsToRebuild = versionTags.filter((v: string) => semver.gte(v, sinceVersion))
+    versionsToRebuild = versionTags.filter((v: string) => {
+      const vParsed = semverParse(v)
+      const sinceParsed = semverParse(sinceVersion)
+      return vParsed && sinceParsed && semverGte(vParsed, sinceParsed)
+    })
     console.log(
       `Found ${versionsToRebuild.length} versions >= ${sinceVersion}`,
     )
@@ -67,10 +81,14 @@ export default Step<PlanRebuildInputs>(async ({ github, context, core, inputs = 
 
         const semverTag = tagsAtCommit
           .filter(
-            (t) => t.commit.sha === ref.object.sha && semver.valid(t.name),
+            (t) => t.commit.sha === ref.object.sha && semverValid(t.name),
           )
           .map((t) => t.name)
-          .sort(semver.rcompare)[0]
+          .sort((a, b) => {
+            const vA = semverParse(a)
+            const vB = semverParse(b)
+            return vA && vB ? semverCompare(vB, vA) : 0
+          })[0]
 
         if (semverTag) {
           distTags[tag] = semverTag

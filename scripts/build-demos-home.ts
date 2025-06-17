@@ -27,23 +27,17 @@ const args = Command.create()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments, distTags, serve } = args
 
-// This should use @wollybeard/kit Err.tryCatch
+/*
+Ideal code:
+const demoExamples = await Err.tryOrThrow(getDemoExamples, Err.wrapWith('Failed to get demo examples'))
+*/
 // Get demo examples
 let demoExamples: string[] = []
 try {
   demoExamples = await getDemoExamples()
-} catch (e) {
-  console.error('Failed to get demo examples, using defaults')
-  demoExamples = ['pokemon', 'hive']
+} catch (cause) {
+  throw new Error('Failed to get demo examples', { cause })
 }
-
-/*
-
-Ideal code:
-
-const demoExamples = await Err.tryOrThrow(getDemoExamples, Err.wrapWith('Failed to get demo examples'))
-
-*/
 
 // Load demo metadata from package.json files
 const demoMetadata: Record<string, { title: string; description: string; enabled: boolean }> = {}

@@ -1,6 +1,6 @@
+import { gte as semverGte, parse as semverParse, prerelease as semverPrerelease } from '@vltpkg/semver'
 import { readFileSync } from 'node:fs'
-import * as semver from 'semver'
-import { $ } from 'zx'
+import { VersionHistory } from '../../../src/lib/version-history/index.js'
 import { type ReleaseInputs, Step } from '../types.ts'
 
 /**
@@ -24,7 +24,7 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
 
     // Get release info from event
     const isPrerelease = isWorkflowDispatch
-      ? semver.prerelease(tag) !== null
+      ? (semverPrerelease(tag) !== undefined && semverPrerelease(tag)!.length > 0)
       : inputs.github_release_prerelease
 
     const action = isWorkflowDispatch
@@ -48,19 +48,11 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
       // For "next" tag being edited, find the actual semver
       if (tag === 'next' && action === 'edited') {
         try {
-          $.verbose = false
-          const commit = (await $`git rev-list -n 1 ${tag}`).stdout.trim()
-          const allTags = (await $`git tag --points-at ${commit}`)
-            .stdout
-            .split('\n')
-            .filter((t) => t.trim())
+          const versionHistory = new VersionHistory()
+          const distTag = await versionHistory.getDistTag('next')
 
-          const semverTag = allTags.find(
-            (t) => semver.valid(t) && semver.prerelease(t),
-          )
-
-          if (semverTag) {
-            core.setOutput('actual_tag', semverTag)
+          if (distTag?.semverTag) {
+            core.setOutput('actual_tag', distTag.semverTag)
             core.setOutput('needs_build', 'true')
           } else {
             console.log('❌ No semver tag found for next release')
@@ -88,7 +80,10 @@ export default Step<ReleaseInputs>(async ({ core, inputs }) => {
       )
       const minVersion = demoConfig.minimumVersion || '0.0.0'
 
-      if (semver.gte(tag, minVersion)) {
+      const tagVersion = semverParse(tag)
+      const minVersionParsed = semverParse(minVersion)
+
+      if (tagVersion && minVersionParsed && semverGte(tagVersion, minVersionParsed)) {
         console.log(
           `✅ Version ${tag} meets minimum requirement (${minVersion})`,
         )
