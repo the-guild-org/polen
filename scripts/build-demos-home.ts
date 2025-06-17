@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @ts-nocheck
 import { Command } from '@molt/command'
-import { Err } from '@wollybeard/kit'
+import { Str } from '@wollybeard/kit'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import { createServer } from 'http'
@@ -45,15 +45,6 @@ const demoExamples = await Err.tryOrThrow(getDemoExamples, Err.wrapWith('Failed 
 
 */
 
-// this should use @wollybeard/kit Str.Case... utility
-// Helper to convert package name to title case
-const toTitleCase = (str: string): string => {
-  return str
-    .split(/[-_\s]+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ')
-}
-
 // Load demo metadata from package.json files
 const demoMetadata: Record<string, { title: string; description: string; enabled: boolean }> = {}
 
@@ -64,14 +55,14 @@ for (const example of demoExamples) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
 
     demoMetadata[example] = {
-      title: packageJson.displayName || toTitleCase(packageJson.name || example) + ' API',
+      title: packageJson.displayName || Str.Case.title(packageJson.name || example),
       description: packageJson.description || `Explore the ${example} GraphQL API with comprehensive documentation.`,
       enabled: true,
     }
   } catch (e) {
     // Fallback if package.json is missing or invalid
     demoMetadata[example] = {
-      title: toTitleCase(example) + ' API',
+      title: Str.Case.title(example),
       description: `Explore the ${example} GraphQL API with comprehensive documentation.`,
       enabled: true,
     }
@@ -580,13 +571,13 @@ const indexHtml = `<!DOCTYPE html>
         align-items: flex-start;
         gap: 1rem;
       }
-      
+
       .pr-banner-links {
         width: 100%;
         flex-direction: column;
         align-items: stretch;
       }
-      
+
       .pr-banner-link {
         justify-content: center;
       }
@@ -642,7 +633,9 @@ const indexHtml = `<!DOCTYPE html>
   </style>
 </head>
 <body>
-  ${prNumber ? `
+  ${
+  prNumber
+    ? `
   <div class="pr-banner">
     <div class="container">
       <div class="pr-banner-content">
@@ -665,7 +658,9 @@ const indexHtml = `<!DOCTYPE html>
       </div>
     </div>
   </div>
-  ` : ''}
+  `
+    : ''
+}
   <div class="container">
     <div class="header">
       <h1>Polen Demos${prNumber ? ` - PR #${prNumber}` : ''}</h1>
