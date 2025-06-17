@@ -7,8 +7,27 @@ interface Inputs {
 }
 
 /**
- * Build and deploy demos for the current development cycle
- * Handles both building and deployment in one step to avoid complex bash
+ * Build and deploy demos for all versions in the current development cycle
+ *
+ * WHAT: Complete build-and-deploy pipeline for current stable + prereleases
+ * WHY: Updates live demos when examples change, keeping them in sync with latest code
+ *
+ * This is a combined build+deploy step that:
+ * 1. Builds demos for each version using current main branch examples
+ * 2. Deploys directly to gh-pages (stable → /latest/, prereleases → /{version}/)
+ * 3. Handles build failures gracefully (continues with other versions)
+ * 4. Updates both demos landing page and individual example sites
+ *
+ * Used by the demos-update-latest workflow when:
+ * - Example projects are updated with new features
+ * - Polen library itself is updated
+ * - Manual triggering is needed
+ *
+ * Unlike release-triggered builds, this uses the current state of examples
+ * rather than the examples as they existed at release time, ensuring demos
+ * showcase the latest capabilities even for older Polen versions.
+ *
+ * Avoids complex bash orchestration by combining build+deploy in TypeScript.
  */
 export default Step<Inputs>(async ({ core, inputs, $ }) => {
   core.startGroup('Build and deploy development cycle')

@@ -10,19 +10,19 @@ interface Inputs {
 
 /**
  * Create convenience redirect pages for direct demo access at the root level
- * 
+ *
  * WHAT: Creates HTML redirect pages that point to the /latest/ versions of demos
  * WHY: Enables simple URLs like `/polen/pokemon/` instead of `/polen/latest/pokemon/`
- * 
+ *
  * For each demo example (pokemon, star-wars, etc.), creates:
  * `/polen/{example}/index.html` → redirects to `/polen/latest/{example}/`
- * 
+ *
  * This provides user-friendly, stable URLs that always point to the latest
  * stable version of each demo, regardless of what the current version number is.
- * 
+ *
  * Users can bookmark `/polen/pokemon/` and always get the latest stable Pokemon demo,
  * while power users can still access specific versions via `/polen/1.2.3/pokemon/`.
- * 
+ *
  * These redirects are created during the release deployment process so they're
  * available immediately when a new stable version is released.
  */
