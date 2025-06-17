@@ -108,9 +108,19 @@ jobs:
               "current_sha": "${{ inputs.head-sha }}"
             }
 
-      - name: Get short SHA
-        id: short-sha
-        run: echo "sha=$(echo '${{ inputs.head-sha }}' | cut -c1-7)" >> $GITHUB_OUTPUT
+      - name: Generate demo links
+        id: demo-links
+        uses: ./.github/actions/run-workflow-step
+        with:
+          step: demos-preview/generate-demo-links.ts
+          inputs: |
+            {
+              "pr_number": "${{ inputs.pr-number }}",
+              "head_sha": "${{ inputs.head-sha }}",
+              "github_repository_owner": "${{ github.repository_owner }}",
+              "github_repository_name": "${{ github.event.repository.name }}",
+              "previous_deployment_links": "${{ steps.get-prev-pr-deployments.outputs.deployment_links }}"
+            }
 
       - name: Find existing comment
         uses: peter-evans/find-comment@v3
@@ -131,6 +141,4 @@ jobs:
 
             https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/
 
-            #### Pokemon
-            - [Latest](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/latest/pokemon/) – [`${{ steps.short-sha.outputs.sha }}`](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr-number }}/${{ inputs.head-sha }}/pokemon/)
-            - Previous: ${{ steps.get-prev-pr-deployments.outputs.deployment_links }}
+            ${{ steps.demo-links.outputs.links }}

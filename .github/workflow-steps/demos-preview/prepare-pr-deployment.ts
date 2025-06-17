@@ -26,10 +26,20 @@ export default Step<Inputs>(async ({ $, core, inputs }) => {
     await fs.mkdir(path.join(deployDir, `pr-${prNumber}`, headSha), { recursive: true })
 
     // Copy landing page to PR root
+    const landingPageSource = 'dist-demos/index.html'
+    try {
+      await fs.access(landingPageSource)
+      console.log(`✅ Found landing page at ${landingPageSource}`)
+    } catch {
+      console.error(`❌ Landing page not found at ${landingPageSource}`)
+      throw new Error(`Landing page not found at ${landingPageSource}`)
+    }
+
     await fs.copyFile(
-      'dist-demos/index.html',
+      landingPageSource,
       path.join(deployDir, `pr-${prNumber}`, 'index.html'),
     )
+    console.log(`✅ Copied landing page to pr-${prNumber}/index.html`)
 
     // Get list of examples that are enabled for demos
     const examples = await getDemoExamples()

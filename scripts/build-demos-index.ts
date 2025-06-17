@@ -3,8 +3,11 @@
 import { Command } from '@molt/command'
 import { execSync } from 'child_process'
 import fs from 'fs'
+import { createServer } from 'http'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import { z } from 'zod'
+import { getDemoExamples } from '../.github/scripts/tools/get-demo-examples.ts'
 
 const args = Command.create()
   .description('Build demos landing page or PR index')
@@ -23,6 +26,42 @@ const args = Command.create()
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { basePath, prNumber, currentSha, mode, prDeployments, trunkDeployments, distTags, serve } = args
+
+// TODO staically import and execute this
+// Get demo examples
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const getDemoExamplesPath = path.join(__dirname, '..', '.github', 'scripts', 'tools', 'get-demo-examples.ts')
+let demoExamples: string[] = []
+try {
+  const result = execSync(`node --no-warnings ${getDemoExamplesPath}`, { encoding: 'utf-8' })
+  demoExamples = result.trim().split(' ').filter(Boolean)
+} catch (e) {
+  console.error('Failed to get demo examples, using defaults')
+  demoExamples = ['pokemon', 'hive']
+}
+
+// TODO: pull demo descriptions from example package.json descriptions.
+// TODO: pull titles from example package.json names (passed through Str.Case.titlize)
+// Demo metadata
+const demoMetadata: Record<string, { title: string; description: string; enabled: boolean }> = {
+  pokemon: {
+    title: 'Pokemon API',
+    description: 'Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.',
+    enabled: true,
+  },
+  hive: {
+    title: 'GraphQL Hive API',
+    description:
+      'Browse the GraphQL Hive schema registry and observability platform API with comprehensive documentation.',
+    enabled: true,
+  },
+  github: {
+    title: 'GitHub API',
+    description:
+      "Browse GitHub's extensive GraphQL API with over 1600 types. Currently disabled due to build performance.",
+    enabled: false,
+  },
+}
 
 // Set up mock data for dev mode
 let finalDistTags = distTags
@@ -499,104 +538,116 @@ const indexHtml = `<!DOCTYPE html>
     </div>
 
     <div class="demos-grid">
-      <div class="demo-card">
-        <h2>Pokemon API</h2>
-        <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
-        <div class="demo-links">
-          ${
-  // For trunk deployments, show dist-tag buttons
-  !prNumber
-    ? Object.entries(parsedDistTags).length > 0
-      ? `<div class="dist-tags">
+      ${
+  // Generate demo cards for all examples plus any disabled ones
+  [...new Set([...demoExamples, ...Object.keys(demoMetadata)])].map(example => {
+    const metadata = demoMetadata[example] || {
+      title: example.charAt(0).toUpperCase() + example.slice(1) + ' API',
+      description: `Explore the ${example} GraphQL API with comprehensive documentation.`,
+      enabled: true,
+    }
+
+    if (!metadata.enabled) {
+      return `<div class="demo-card disabled">
+              <h2>${metadata.title}</h2>
+              <p>${metadata.description}</p>
+              <span class="demo-link">
+                Coming Soon
+              </span>
+            </div>`
+    }
+
+    return `<div class="demo-card">
+            <h2>${metadata.title}</h2>
+            <p>${metadata.description}</p>
+            <div class="demo-links">
+              ${
+      // For trunk deployments, show dist-tag buttons
+      !prNumber
+        ? Object.entries(parsedDistTags).length > 0
+          ? `<div class="dist-tags">
+              ${
+            Object.entries(parsedDistTags)
+              .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
+              .filter(([tag, version]) => {
+                // If next points to the same version as latest, filter it out
+                if (tag === 'next' && parsedDistTags['latest'] === version) {
+                  return false
+                }
+                return true
+              })
+              .map(([tag, version]) => `
+                    <div class="dist-tag-button">
+                      <a href="${tag}/${example}/" class="dist-tag-label">
+                        ${tag}
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                      <a href="${version}/${example}/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
+                    </div>
+                  `).join('')
+          }
             ${
-        Object.entries(parsedDistTags)
-          .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
-          .filter(([tag, version]) => {
-            // If next points to the same version as latest, filter it out
-            if (tag === 'next' && parsedDistTags['latest'] === version) {
-              return false
-            }
-            return true
-          })
-          .map(([tag, version]) => `
-                  <div class="dist-tag-button">
-                    <a href="${tag}/pokemon/" class="dist-tag-label">
-                      ${tag}
-                      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </a>
-                    <a href="${version}/pokemon/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
-                  </div>
-                `).join('')
-      }
-          ${
-        // Show "no prereleases" message if next === latest
-        parsedDistTags['next'] && parsedDistTags['next'] === parsedDistTags['latest']
-          ? '<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>'
-          : ''}
-          </div>`
-      : parsedTrunkDeployments && parsedTrunkDeployments.latest
-      ? `<a href="latest/pokemon/" class="demo-link">
-            View Latest (${parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha})
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </a>`
-      : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
-    // For PR deployments, show latest pseudo-dist-tag
-    : currentSha
-    ? `<div class="dist-tags">
-          <div class="dist-tag-button">
-            <a href="latest/pokemon/" class="dist-tag-label">
-              latest
+            // Show "no prereleases" message if next === latest
+            parsedDistTags['next'] && parsedDistTags['next'] === parsedDistTags['latest']
+              ? '<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>'
+              : ''}
+            </div>`
+          : parsedTrunkDeployments && parsedTrunkDeployments.latest
+          ? `<a href="latest/${example}/" class="demo-link">
+              View Latest (${parsedTrunkDeployments.latest.tag || parsedTrunkDeployments.latest.shortSha})
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
-            </a>
-            <a href="${currentSha}/pokemon/" class="dist-tag-version">${
-      currentSha.substring(0, 7)
-    }<span class="permalink-icon">¶</span></a>
+            </a>`
+          : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
+        // For PR deployments, show latest pseudo-dist-tag
+        : currentSha
+        ? `<div class="dist-tags">
+            <div class="dist-tag-button">
+              <a href="latest/${example}/" class="dist-tag-label">
+                latest
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
+              <a href="${currentSha}/${example}/" class="dist-tag-version">${
+          currentSha.substring(0, 7)
+        }<span class="permalink-icon">¶</span></a>
+            </div>
+          </div>`
+        : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
+            <div class="previous-versions">
+              <h3>Previous Versions</h3>
+              ${
+      // For trunk deployments, use parsedTrunkDeployments
+      !prNumber && parsedTrunkDeployments
+        ? parsedTrunkDeployments.previous.length > 0
+          ? `<div class="commit-links">
+                ${
+            parsedTrunkDeployments.previous.map(deployment => {
+              // For semver deployments, tag and sha are the same, so just show once
+              const label = deployment.tag || deployment.shortSha
+              return `<a href="${deployment.sha}/${example}/" class="commit-link">${label}</a>`
+            }).join('')
+          }
+              </div>`
+          : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'
+        // For PR deployments, use the existing logic
+        : previousDeployments.length > 0
+        ? `<div class="commit-links">
+                ${
+          previousDeployments.map(sha => `
+                  <a href="${sha}/${example}/" class="commit-link">${sha.substring(0, 7)}</a>
+                `).join('')
+        }
+              </div>`
+        : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'}
+            </div>
           </div>
         </div>`
-    : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
-          <div class="previous-versions">
-            <h3>Previous Versions</h3>
-            ${
-  // For trunk deployments, use parsedTrunkDeployments
-  !prNumber && parsedTrunkDeployments
-    ? parsedTrunkDeployments.previous.length > 0
-      ? `<div class="commit-links">
-              ${
-        parsedTrunkDeployments.previous.map(deployment => {
-          // For semver deployments, tag and sha are the same, so just show once
-          const label = deployment.tag || deployment.shortSha
-          return `<a href="${deployment.sha}/pokemon/" class="commit-link">${label}</a>`
-        }).join('')
-      }
-            </div>`
-      : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'
-    // For PR deployments, use the existing logic
-    : previousDeployments.length > 0
-    ? `<div class="commit-links">
-              ${
-      previousDeployments.map(sha => `
-                <a href="${sha}/pokemon/" class="commit-link">${sha.substring(0, 7)}</a>
-              `).join('')
-    }
-            </div>`
-    : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'}
-          </div>
-        </div>
-      </div>
-
-      <div class="demo-card disabled">
-        <h2>GitHub API</h2>
-        <p>Browse GitHub's extensive GraphQL API with over 1600 types. Currently disabled due to build performance.</p>
-        <span class="demo-link">
-          Coming Soon
-        </span>
-      </div>
+  }).join('')}
     </div>
 
     <div class="footer">
