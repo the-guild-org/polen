@@ -1,12 +1,12 @@
-import globals from "globals";
+import globals from 'globals'
 // import reactHooks from 'eslint-plugin-react-hooks'
 // import reactRefresh from 'eslint-plugin-react-refresh'
-import js from "@eslint/js";
-import stylistic from "@stylistic/eslint-plugin";
-import onlyWarn from "eslint-plugin-only-warn";
-import tsdoc from "eslint-plugin-tsdoc";
-import unusedImports from "eslint-plugin-unused-imports";
-import tsEslint from "typescript-eslint";
+import js from '@eslint/js'
+import stylistic from '@stylistic/eslint-plugin'
+import onlyWarn from 'eslint-plugin-only-warn'
+import tsdoc from 'eslint-plugin-tsdoc'
+import unusedImports from 'eslint-plugin-unused-imports'
+import tsEslint from 'typescript-eslint'
 
 export default tsEslint.config(
   js.configs.recommended,
@@ -16,12 +16,12 @@ export default tsEslint.config(
   tsEslint.configs.stylisticTypeChecked,
   {
     ignores: [
-      "build",
-      "eslint.config.js",
-      "vite.config.ts",
-      "**/__snapshots__/**/*",
-      "examples",
-      ".bundle-explorer",
+      'build',
+      'eslint.config.js',
+      'vite.config.ts',
+      '**/__snapshots__/**/*',
+      'examples',
+      '.bundle-explorer',
     ],
   },
   // reactRefresh.configs.recommended,
@@ -38,49 +38,49 @@ export default tsEslint.config(
       },
     },
     plugins: {
-      "unused-imports": unusedImports,
+      'unused-imports': unusedImports,
       // https://github.com/microsoft/tsdoc/tree/master/eslint-plugin
       tsdoc: tsdoc,
       // https://github.com/bfanger/eslint-plugin-only-warn
       onlyWarn,
-      "@stylistic": stylistic,
+      '@stylistic': stylistic,
     },
     rules: {
-      "no-empty-pattern": "off", // incompatible with playwright fixtures
-      "unused-imports/no-unused-imports": "warn",
-      "@typescript-eslint/consistent-type-imports": "warn",
-      "tsdoc/syntax": "warn",
+      'no-empty-pattern': 'off', // incompatible with playwright fixtures
+      'unused-imports/no-unused-imports': 'warn',
+      '@typescript-eslint/consistent-type-imports': 'warn',
+      'tsdoc/syntax': 'warn',
       // TypeScript makes these safe & effective
-      "no-case-declarations": "off",
+      'no-case-declarations': 'off',
       // Same approach used by TypeScript noUnusedLocals
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
         {
-          varsIgnorePattern: "^___",
-          argsIgnorePattern: "^___",
+          varsIgnorePattern: '^___',
+          argsIgnorePattern: '^___',
         },
       ],
       // TODO make issue that this rule doens't handle case of template literals: https://typescript-eslint.io/rules/no-unused-expressions/
-      "@typescript-eslint/no-unused-expressions": "off",
+      '@typescript-eslint/no-unused-expressions': 'off',
       // Useful for organizing Types
-      "@typescript-eslint/no-namespace": "off",
+      '@typescript-eslint/no-namespace': 'off',
       // I like documenting more useful key names
-      "@typescript-eslint/consistent-indexed-object-style": "off",
+      '@typescript-eslint/consistent-indexed-object-style': 'off',
       // Turn training wheels off. When we want these we want these.
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
-      "@typescript-eslint/no-unsafe-return": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/ban-ts-comment": [
-        "warn",
-        { "ts-expect-error": false },
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/ban-ts-comment': [
+        'warn',
+        { 'ts-expect-error': false },
       ],
-      "@typescript-eslint/no-unnecessary-type-parameters": "off",
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       // Disable dprint conflicts:
-      "@stylistic/member-delimiter-style": "off",
-      "@stylistic/no-multi-spaces": "off",
-      "@stylistic/comma-spacing": "off",
-      "@stylistic/quotes": ["warn", "backtick"],
+      '@stylistic/member-delimiter-style': 'off',
+      '@stylistic/no-multi-spaces': 'off',
+      '@stylistic/comma-spacing': 'off',
+      '@stylistic/quotes': ['warn', 'backtick'],
     },
   },
   /*
@@ -103,12 +103,12 @@ export default tsEslint.config(
     Until Zed fixes their issue, is there a way I could modify my ESLint settings to use single quotes ONLY in files that end in *.test.ts?
    */
   {
-    files: ["**/*.test.ts"],
+    files: ['**/*.test.ts'],
     plugins: {
-      "@stylistic": stylistic,
+      '@stylistic': stylistic,
     },
     rules: {
-      "@stylistic/quotes": ["warn", "single"],
+      '@stylistic/quotes': ['warn', 'single'],
     },
   },
-);
+)

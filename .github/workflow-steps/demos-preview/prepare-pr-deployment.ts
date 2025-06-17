@@ -94,6 +94,7 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
       fromPath: `/polen/pr-${prNumber}/${headSha}/`,
       toPath: `/polen/pr-${prNumber}/latest/`,
       $,
+      core,
     })
 
     // Create redirect from /latest/ to PR root

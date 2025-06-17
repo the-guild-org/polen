@@ -30,9 +30,10 @@ interface DeployDemosOptions {
   tag: string
   examples: string[]
   targetDir: string
+  core: WorkflowStepArgs['core']
 }
 
-export async function deployDemos({ tag, examples, targetDir }: DeployDemosOptions): Promise<void> {
+export async function deployDemos({ tag, examples, targetDir, core }: DeployDemosOptions): Promise<void> {
   for (const example of examples) {
     const buildDir = `examples/${example}/build`
     try {
