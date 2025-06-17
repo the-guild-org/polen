@@ -113,7 +113,7 @@ jobs:
       - name: Update demos index
         uses: ./.github/actions/run-workflow-step
         with:
-          step: shared/update-demos-index.ts
+          step: shared/update-demos-home.ts
 
       - name: Commit and deploy
         run: |

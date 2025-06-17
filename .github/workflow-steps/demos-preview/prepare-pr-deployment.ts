@@ -16,6 +16,7 @@ interface Inputs {
 export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
   core.startGroup('PR preview deployment preparation')
   core.info(`Preparing deployment for PR #${inputs.pr_number}`)
+  core.info(`Step function called with inputs: ${JSON.stringify(inputs)}`)
 
   const prNumber = inputs.pr_number
   const headSha = inputs.head_sha
@@ -27,8 +28,10 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
     core.debug(`Current working directory: ${process.cwd()}`)
 
     // Create deployment directory structure
+    core.info(`Creating deployment directory: ${deployDir}`)
     await fs.mkdir(path.join(deployDir, `pr-${prNumber}`, 'latest'), { recursive: true })
     await fs.mkdir(path.join(deployDir, `pr-${prNumber}`, headSha), { recursive: true })
+    core.info(`Created directories under ${deployDir}`)
 
     // Verify directory was created
     try {

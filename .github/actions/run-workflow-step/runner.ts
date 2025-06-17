@@ -103,8 +103,12 @@ export async function run({ step, inputs }: RunOptions): Promise<void> {
 }
 
 // Parse environment variables and run
+core.info('Runner.ts started')
 const step = process.env['STEP_PATH']
 const inputsJson = process.env['STEP_INPUTS'] || '{}'
+
+core.info(`STEP_PATH: ${step}`)
+core.info(`STEP_INPUTS: ${inputsJson}`)
 
 if (!step) {
   core.setFailed('STEP_PATH environment variable is required')

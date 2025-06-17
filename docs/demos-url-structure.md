@@ -161,7 +161,7 @@ Runs on schedule (daily). This workflow:
 ├── steps/                  # Complete workflow steps
 │   ├── identify-deployments-to-remove.js
 │   ├── get-previous-pr-deployments.js
-│   └── update-demos-index.js
+│   └── update-demos-home.js
 └── tools/                  # CLI utilities
     ├── get-demo-examples.js
     ├── get-dist-tags.js

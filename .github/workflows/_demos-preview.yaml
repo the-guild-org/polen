@@ -74,10 +74,10 @@ jobs:
               "head_ref": "${{ inputs.head-ref }}"
             }
 
-      - name: Update PR index
+      - name: Update Demos Home
         uses: ./.github/actions/run-workflow-step
         with:
-          step: shared/update-demos-index.ts
+          step: shared/update-demos-home.ts
           inputs: |
             {
               "mode": "pr-index",
@@ -111,27 +111,27 @@ jobs:
             echo "Error: gh-pages-deploy directory does not exist"
             exit 1
           fi
-          
+
           file_count=$(find gh-pages-deploy -type f | wc -l)
           if [ "$file_count" -eq 0 ]; then
             echo "Error: gh-pages-deploy directory is empty (no files found)"
             exit 1
           fi
-          
+
           echo "✅ Found $file_count files to deploy"
-          
+
           # Verify PR-specific directory exists
           if [ ! -d "gh-pages-deploy/pr-${{ inputs.pr-number }}" ]; then
             echo "Error: PR directory gh-pages-deploy/pr-${{ inputs.pr-number }} does not exist"
             exit 1
           fi
-          
+
           pr_file_count=$(find "gh-pages-deploy/pr-${{ inputs.pr-number }}" -type f | wc -l)
           if [ "$pr_file_count" -eq 0 ]; then
             echo "Error: PR directory is empty (no files found)"
             exit 1
           fi
-          
+
           echo "✅ Found $pr_file_count files in PR directory"
 
       - name: Deploy to GitHub Pages
