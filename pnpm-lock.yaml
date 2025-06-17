@@ -59,6 +59,9 @@ importers:
       '@vitejs/plugin-react-oxc':
         specifier: ^0.2.3
         version: 0.2.3(rolldown-vite@6.3.21(@types/node@24.0.3)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))
+      '@vltpkg/semver':
+        specifier: 0.0.0-15
+        version: 0.0.0-15
       '@vue/reactivity':
         specifier: ^3.5.16
         version: 3.5.16
@@ -137,6 +140,9 @@ importers:
       shiki:
         specifier: ^3.6.0
         version: 3.6.0
+      simple-git:
+        specifier: ^3.28.0
+        version: 3.28.0
       source-map:
         specifier: ^0.7.4
         version: 0.7.4
@@ -2300,6 +2306,22 @@ packages:
   '@vitest/utils@3.2.3':
     resolution: {integrity: sha512-4zFBCU5Pf+4Z6v+rwnZ1HU1yzOKKvDkMXZrymE2PBlbjKJRlrOxbvpfPSvJTGRIwGoahaOGvp+kbCoxifhzJ1Q==}
 
+  '@vltpkg/error-cause@0.0.0-15':
+    resolution: {integrity: sha512-NErHL5Yr9OdQJHJMrqC1K96Ls70LVpPwGD2uUJId2mWDPW0pJ6KHeVe3m3Gk+nKqZWgES22CIbw+/jycs89Vcw==}
+    engines: {node: '>=22'}
+
+  '@vltpkg/fast-split@0.0.0-15':
+    resolution: {integrity: sha512-hHPZEYv2xbKrhwAoIrtX8y3tZQ6aFN+qB0h0FNtNbtSYvE7/3T0p2r522UzaTI7JmTbSiE4HQXVnDJLUnGjcqA==}
+    engines: {node: '>=22'}
+
+  '@vltpkg/semver@0.0.0-15':
+    resolution: {integrity: sha512-p7bQwkFLlq542TvPJIDq/KmFgK769avf/dJp/XSA7Sr0wTXtQI15v5JoBe0uedwEeuuObxkkjSanU+CN2VXSGg==}
+    engines: {node: '>=22'}
+
+  '@vltpkg/types@0.0.0-15':
+    resolution: {integrity: sha512-HkDvtiZKE791l5cMFIsgbJb+5daQaiMf6S/XPdy7Km+UIntPE1ddhWccQO8KOAfH2P4PkKUCkG9bU7NC+tVaqw==}
+    engines: {node: '>=22'}
+
   '@vue/reactivity@3.5.16':
     resolution: {integrity: sha512-FG5Q5ee/kxhIm1p2bykPpPwqiUBV3kFySsHEQha5BJvjXdZTUfmya7wP7zC39dFuZAcf/PD5S4Lni55vGLMhvA==}
 
@@ -4089,6 +4111,9 @@ packages:
 
   simple-git@2.48.0:
     resolution: {integrity: sha512-z4qtrRuaAFJS4PUd0g+xy7aN4y+RvEt/QTJpR184lhJguBA1S/LsVlvE/CM95RsYMOFJG3NGGDjqFCzKU19S/A==}
+
+  simple-git@3.28.0:
+    resolution: {integrity: sha512-Rs/vQRwsn1ILH1oBUy8NucJlXmnnLeLCfcvbSehkPzbv3wwoFWIdtfd6Ndo6ZPhlPsCZ60CPI4rxurnwAa+a2w==}
 
   sirv@3.0.1:
     resolution: {integrity: sha512-FoqMu0NCGBLCcAkS1qA+XJIQTR6/JHfQXl+uGteNCQ76T91DMUjPa9xfmeqMY3z80nLSg9yQmNjK0Px6RWsH/A==}
@@ -6844,6 +6869,20 @@ snapshots:
       loupe: 3.1.4
       tinyrainbow: 2.0.0
 
+  '@vltpkg/error-cause@0.0.0-15': {}
+
+  '@vltpkg/fast-split@0.0.0-15': {}
+
+  '@vltpkg/semver@0.0.0-15':
+    dependencies:
+      '@vltpkg/error-cause': 0.0.0-15
+      '@vltpkg/fast-split': 0.0.0-15
+      '@vltpkg/types': 0.0.0-15
+
+  '@vltpkg/types@0.0.0-15':
+    dependencies:
+      '@vltpkg/error-cause': 0.0.0-15
+
   '@vue/reactivity@3.5.16':
     dependencies:
       '@vue/shared': 3.5.16
@@ -8989,6 +9028,14 @@ snapshots:
       simple-concat: 1.0.1
 
   simple-git@2.48.0:
+    dependencies:
+      '@kwsites/file-exists': 1.1.1
+      '@kwsites/promise-deferred': 1.1.1
+      debug: 4.4.1
+    transitivePeerDependencies:
+      - supports-color
+
+  simple-git@3.28.0:
     dependencies:
       '@kwsites/file-exists': 1.1.1
       '@kwsites/promise-deferred': 1.1.1

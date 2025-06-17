@@ -29,31 +29,23 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
       - name: Get dist-tag info
         id: dist-tag
-        run: |
-          # Get the tag name from push event or manual input
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG_NAME="${{ inputs.dist_tag }}"
-          else
-            TAG_NAME="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-
-          # Get the commit this tag points to
-          COMMIT=$(git rev-list -n 1 $TAG_NAME)
-          echo "commit=$COMMIT" >> $GITHUB_OUTPUT
-
-          # Find the semver tag for this commit
-          SEMVER_TAG=$(git tag --points-at $COMMIT | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-
-          if [ -z "$SEMVER_TAG" ]; then
-            echo "❌ No semver tag found for commit $COMMIT"
-            exit 1
-          fi
-
-          echo "semver_tag=$SEMVER_TAG" >> $GITHUB_OUTPUT
-          echo "✅ Dist-tag $TAG_NAME points to $SEMVER_TAG"
+        uses: ./.github/actions/run-workflow-step
+        with:
+          step: demos-release-dist-tag/get-dist-tag-info.ts
+          inputs: |
+            {
+              "github_event_name": "${{ github.event_name }}",
+              "input_dist_tag": "${{ inputs.dist_tag }}",
+              "github_ref": "${{ github.ref }}"
+            }
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -103,12 +95,6 @@ jobs:
           done
 
           echo "✅ Successfully updated $TAG_NAME with content from $SEMVER_TAG"
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Build Polen
-        run: pnpm build
 
       - name: Update demos index
         uses: ./.github/actions/run-workflow-step

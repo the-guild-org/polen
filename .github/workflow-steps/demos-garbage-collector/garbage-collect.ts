@@ -1,43 +1,36 @@
 import * as semver from 'semver'
+import { VersionHistory } from '../../../src/lib/version-history/index.js'
 import { Step } from '../types.ts'
 
 /**
  * Identify and remove old demo deployments
  */
 export default Step(async ({ core, $, fs }) => {
-  // Get all tags to identify releases
-  const tagsOutput = await $`git tag`.text()
-  const tags = tagsOutput
-    .split('\n')
-    .filter(Boolean)
-    .filter((tag): tag is string => semver.valid(tag) !== null) // Only keep valid semver tags
-
+  // Get version history
+  const versionHistory = new VersionHistory()
+  const allVersions = await versionHistory.getSemverTags()
+  
   // Separate stable releases from pre-releases
-  const stableReleases = tags.filter((tag: string) => !tag.includes('-'))
-  const preReleases = tags.filter((tag: string) => tag.includes('-'))
-
-  // Find the latest stable release using proper semver comparison
-  const latestStable = stableReleases.length > 0 ? stableReleases.sort(semver.compare).pop() : ''
-
+  const stableReleases = allVersions.filter(v => !v.isPrerelease).map(v => v.tag)
+  const preReleases = allVersions.filter(v => v.isPrerelease).map(v => v.tag)
+  
+  // Find the latest stable release
+  const latestStableVersion = await versionHistory.getLatestRelease()
+  const latestStable = latestStableVersion?.tag || ''
+  
   // Find what the dist-tags point to
   const distTagVersions = new Set<string>()
-
-  for (const distTag of ['latest', 'next']) {
-    try {
-      const tagOutput = await $`git tag --points-at ${distTag}`.text()
-      const versions = tagOutput
-        .split('\n')
-        .filter(Boolean)
-        .filter((tag: string) => semver.valid(tag))
-
-      versions.forEach((v: string) => distTagVersions.add(v))
-    } catch (e) {
-      console.log(`No "${distTag}" tag found`)
+  const distTags = await versionHistory.getDistTags()
+  
+  for (const distTag of distTags) {
+    if (distTag.semverTag) {
+      distTagVersions.add(distTag.semverTag)
     }
   }
-
+  
   // Find what the "next" tag points to (pre-release version)
-  const nextVersion = Array.from(distTagVersions).find((v: string) => v.includes('-'))
+  const nextDistTag = distTags.find(dt => dt.name === 'next')
+  const nextVersion = nextDistTag?.semverTag
 
   console.log('Latest stable release:', latestStable)
   console.log('Next version:', nextVersion)
