@@ -62,6 +62,7 @@ export default Step<RebuildInputs>(async ({ core, $, inputs, fs }) => {
       tag: version,
       examples,
       targetDir: 'gh-pages',
+      core,
     })
   }
 
@@ -83,7 +84,7 @@ export default Step<RebuildInputs>(async ({ core, $, inputs, fs }) => {
       await $`pnpm build`
       await $`pnpm install`
       await buildDemosForTag({ tag: semverTag, examples, $, core })
-      await deployDemos({ tag: semverTag, examples, targetDir: 'gh-pages' })
+      await deployDemos({ tag: semverTag, examples, targetDir: 'gh-pages', core })
       await $`git checkout ${originalBranch}`
     }
 
@@ -93,6 +94,7 @@ export default Step<RebuildInputs>(async ({ core, $, inputs, fs }) => {
       distTag,
       semverTag,
       $,
+      core,
     })
   }
 })

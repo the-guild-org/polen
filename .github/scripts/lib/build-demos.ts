@@ -9,19 +9,19 @@ interface BuildDemosForTagOptions {
   core: WorkflowStepArgs['core']
 }
 
-export async function buildDemosForTag({ tag, examples, $ }: BuildDemosForTagOptions): Promise<void> {
-  console.log(`Building demos for ${tag}...`)
+export async function buildDemosForTag({ tag, examples, $, core }: BuildDemosForTagOptions): Promise<void> {
+  core.info(`Building demos for ${tag}...`)
 
   for (const example of examples) {
     // Skip if example doesn't exist in this version
     try {
       await fs.access(`examples/${example}`)
     } catch {
-      console.log(`Skipping ${example} - not found in this version`)
+      core.warning(`Skipping ${example} - not found in this version`)
       continue
     }
 
-    console.log(`Building ${example} for release ${tag}`)
+    core.info(`Building ${example} for release ${tag}`)
     await $`pnpm --dir examples/${example} build --base /polen/${tag}/${example}/`
   }
 }
@@ -30,9 +30,10 @@ interface DeployDemosOptions {
   tag: string
   examples: string[]
   targetDir: string
+  core: WorkflowStepArgs['core']
 }
 
-export async function deployDemos({ tag, examples, targetDir }: DeployDemosOptions): Promise<void> {
+export async function deployDemos({ tag, examples, targetDir, core }: DeployDemosOptions): Promise<void> {
   for (const example of examples) {
     const buildDir = `examples/${example}/build`
     try {
@@ -41,7 +42,7 @@ export async function deployDemos({ tag, examples, targetDir }: DeployDemosOptio
       await fs.mkdir(path.dirname(destDir), { recursive: true })
       await fs.cp(buildDir, destDir, { recursive: true })
     } catch (e) {
-      console.log(`Skipping ${example} - no build directory found`)
+      core.warning(`Skipping ${example} - no build directory found`)
     }
   }
 }
@@ -51,14 +52,15 @@ interface UpdateBasePathsOptions {
   fromPath: string
   toPath: string
   $: WorkflowStepArgs['$']
+  core: WorkflowStepArgs['core']
 }
 
-export async function updateBasePaths({ directory, fromPath, toPath, $ }: UpdateBasePathsOptions): Promise<void> {
-  console.log(`Updating base paths from ${fromPath} to ${toPath}`)
+export async function updateBasePaths({ directory, fromPath, toPath, $, core }: UpdateBasePathsOptions): Promise<void> {
+  core.info(`Updating base paths from ${fromPath} to ${toPath}`)
 
   // Use perl for reliable path replacement
   const escapedFromPath = fromPath.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
-  await $`find ${directory} -type f \\( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.json' \\) -exec perl -i -pe "s|${escapedFromPath}|${toPath}|g" {} +`
+  await $`find ${directory} -type f \\( -name '*.html' -o -name '*.ts' -o -name '*.css' -o -name '*.json' \\) -exec perl -i -pe "s|${escapedFromPath}|${toPath}|g" {} +`
 }
 
 interface UpdateDistTagContentOptions {
@@ -66,6 +68,7 @@ interface UpdateDistTagContentOptions {
   distTag: string
   semverTag: string
   $: WorkflowStepArgs['$']
+  core: WorkflowStepArgs['core']
 }
 
 export async function updateDistTagContent({
@@ -73,6 +76,7 @@ export async function updateDistTagContent({
   distTag,
   semverTag,
   $,
+  core,
 }: UpdateDistTagContentOptions): Promise<void> {
   const distTagPath = path.join(ghPagesDir, distTag)
   const semverPath = path.join(ghPagesDir, semverTag)
@@ -87,13 +91,13 @@ export async function updateDistTagContent({
   // Remove old dist-tag directory if it exists
   try {
     await fs.rm(distTagPath, { recursive: true })
-    console.log(`Removed old ${distTag} directory`)
+    core.info(`Removed old ${distTag} directory`)
   } catch {
     // Directory doesn't exist, that's fine
   }
 
   // Copy the semver deployment to the dist-tag name
-  console.log(`Copying ${semverTag} to ${distTag}`)
+  core.info(`Copying ${semverTag} to ${distTag}`)
   await fs.cp(semverPath, distTagPath, { recursive: true })
 
   // Update paths
@@ -102,9 +106,10 @@ export async function updateDistTagContent({
     fromPath: `/polen/${semverTag}/`,
     toPath: `/polen/${distTag}/`,
     $,
+    core,
   })
 
-  console.log(
+  core.info(
     `✅ Successfully updated ${distTag} with content from ${semverTag}`,
   )
 }

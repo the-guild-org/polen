@@ -1,7 +1,7 @@
 import { Url } from '#dep/url/index'
 import { Path } from '@wollybeard/kit'
-import { ExampleName } from './example-name.js'
-import type { WorkerFixtures } from './test.js'
+import { ExampleName } from './example-name.ts'
+import type { WorkerFixtures } from './test.ts'
 
 const selfPath = Path.parse(Url.fileURLToPath(import.meta.url))
 

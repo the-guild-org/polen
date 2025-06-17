@@ -1,7 +1,7 @@
 import { Api } from '#api/index'
 import type { FsLayout } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
-import { test } from '../helpers/test.js'
+import { test } from '../helpers/test.ts'
 
 interface TestCase {
   title?: string

@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node --no-warnings
 
 import * as core from '@actions/core'
 import { context } from '@actions/github'
@@ -7,7 +7,7 @@ import * as glob from '@actions/glob'
 import * as io from '@actions/io'
 import { promises as fs } from 'node:fs'
 import { $ } from 'zx'
-import type { WorkflowStepArgs } from '../../workflow-steps/types.js'
+import type { WorkflowStepArgs } from '../../workflow-steps/types.ts'
 
 interface RunOptions {
   step: string
@@ -15,6 +15,8 @@ interface RunOptions {
 }
 
 export async function run({ step, inputs }: RunOptions): Promise<void> {
+  core.info(`Runner started for step: ${step}`)
+
   try {
     const token = process.env['GITHUB_TOKEN']
 
@@ -30,7 +32,17 @@ export async function run({ step, inputs }: RunOptions): Promise<void> {
 
     // Import the step module
     const scriptPath = `${process.env['GITHUB_WORKSPACE']}/.github/workflow-steps/${step}`
-    const { default: script } = await import(scriptPath)
+    core.info(`Loading workflow step from: ${scriptPath}`)
+
+    let script
+    try {
+      const module = await import(scriptPath)
+      script = module.default
+      core.debug(`Successfully loaded workflow step`)
+    } catch (error) {
+      core.error(`Failed to import workflow step: ${error}`)
+      throw error
+    }
 
     // Parse any stringified JSON values within the inputs
     for (const [key, value] of Object.entries(inputs)) {
@@ -88,4 +100,25 @@ export async function run({ step, inputs }: RunOptions): Promise<void> {
     core.setFailed((error as Error).message)
     process.exit(1)
   }
+}
+
+// Parse environment variables and run
+core.info('Runner.ts started')
+const step = process.env['STEP_PATH']
+const inputsJson = process.env['STEP_INPUTS'] || '{}'
+
+core.info(`STEP_PATH: ${step}`)
+core.info(`STEP_INPUTS: ${inputsJson}`)
+
+if (!step) {
+  core.setFailed('STEP_PATH environment variable is required')
+  process.exit(1)
+}
+
+try {
+  const inputs = JSON.parse(inputsJson)
+  await run({ step, inputs })
+} catch (error) {
+  core.setFailed(`Failed to parse inputs or run step: ${error}`)
+  process.exit(1)
 }

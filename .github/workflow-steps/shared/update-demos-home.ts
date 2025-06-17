@@ -36,12 +36,12 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
       const distTags = JSON.stringify(await getDistTags('./gh-pages'))
 
       // Build trunk demos index
-      await $`node ./scripts/build-demos-index.ts --trunkDeployments=${trunkDeployments} --distTags=${distTags}`
+      await $`node ./scripts/build-demos-home.ts --trunkDeployments=${trunkDeployments} --distTags=${distTags}`
 
       // Copy to gh-pages root
       await fs.copyFile('dist-demos/index.html', 'gh-pages/index.html')
 
-      console.log('✅ Trunk demos index updated successfully')
+      core.info('✅ Trunk demos index updated successfully')
       return
     }
 
@@ -50,7 +50,7 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
     const prDeployments = JSON.stringify(await getPRDeployments())
 
     // Build PR index
-    await $`node ./scripts/build-demos-index.ts --mode pr-index --prDeployments=${prDeployments}`
+    await $`node ./scripts/build-demos-home.ts --mode pr-index --prDeployments=${prDeployments}`
 
     // Determine output path based on input
     const outputPath = inputs.output_dir
@@ -59,7 +59,7 @@ export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
 
     await fs.copyFile('dist-demos/pr-index.html', outputPath)
 
-    console.log(`✅ PR demos index updated successfully at ${outputPath}`)
+    core.info(`✅ PR demos index updated successfully at ${outputPath}`)
   } catch (error) {
     core.setFailed(`Failed to update demos index: ${(error as Error).message}`)
   }

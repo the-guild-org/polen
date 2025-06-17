@@ -1,7 +1,7 @@
 import { expect } from 'playwright/test'
-import type { SchemaAugmentation } from '../../../src/api/schema-augmentation/index.js'
-import { configMemorySchema, pc } from '../helpers/polen.js'
-import { test } from '../helpers/test.js'
+import type { SchemaAugmentation } from '../../../src/api/schema-augmentation/index.ts'
+import { configMemorySchema, pc } from '../helpers/polen.ts'
+import { test } from '../helpers/test.ts'
 
 const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }[] = [
   { placement: 'over' },

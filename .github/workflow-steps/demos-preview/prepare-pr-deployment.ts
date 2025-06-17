@@ -1,4 +1,3 @@
-import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { updateBasePaths } from '../../scripts/lib/build-demos.ts'
 import { createHtmlRedirect } from '../../scripts/lib/html-redirect.ts'
@@ -14,26 +13,53 @@ interface Inputs {
 /**
  * Prepare PR preview for deployment
  */
-export default Step<Inputs>(async ({ $, core, inputs }) => {
+export default Step<Inputs>(async ({ $, core, inputs, fs }) => {
+  core.startGroup('PR preview deployment preparation')
+  core.info(`Preparing deployment for PR #${inputs.pr_number}`)
+  core.info(`Step function called with inputs: ${JSON.stringify(inputs)}`)
+
   const prNumber = inputs.pr_number
   const headSha = inputs.head_sha
   const headRef = inputs.head_ref
   const deployDir = 'gh-pages-deploy'
 
   try {
+    // Log current working directory for debugging
+    core.debug(`Current working directory: ${process.cwd()}`)
+
     // Create deployment directory structure
+    core.info(`Creating deployment directory: ${deployDir}`)
     await fs.mkdir(path.join(deployDir, `pr-${prNumber}`, 'latest'), { recursive: true })
     await fs.mkdir(path.join(deployDir, `pr-${prNumber}`, headSha), { recursive: true })
+    core.info(`Created directories under ${deployDir}`)
+
+    // Verify directory was created
+    try {
+      await fs.access(deployDir)
+      core.info(`✅ Created deployment directory: ${deployDir}`)
+    } catch {
+      throw new Error(`Failed to create deployment directory: ${deployDir}`)
+    }
 
     // Copy landing page to PR root
+    const landingPageSource = 'dist-demos/index.html'
+    try {
+      await fs.access(landingPageSource)
+      core.info(`✅ Found landing page at ${landingPageSource}`)
+    } catch {
+      core.error(`❌ Landing page not found at ${landingPageSource}`)
+      throw new Error(`Landing page not found at ${landingPageSource}`)
+    }
+
     await fs.copyFile(
-      'dist-demos/index.html',
+      landingPageSource,
       path.join(deployDir, `pr-${prNumber}`, 'index.html'),
     )
+    core.info(`✅ Copied landing page to pr-${prNumber}/index.html`)
 
     // Get list of examples that are enabled for demos
     const examples = await getDemoExamples()
-    console.log(`Found demo-enabled examples: ${examples.join(', ')}`)
+    core.info(`Found demo-enabled examples: ${examples.join(', ')}`)
 
     // Copy builds to commit-specific path
     for (const example of examples) {
@@ -43,7 +69,7 @@ export default Step<Inputs>(async ({ $, core, inputs }) => {
         const destDir = path.join(deployDir, `pr-${prNumber}`, headSha, example)
         await fs.cp(buildDir, destDir, { recursive: true })
       } catch {
-        console.log(`Skipping ${example} - no build directory found`)
+        core.warning(`Skipping ${example} - no build directory found`)
       }
     }
 
@@ -62,12 +88,13 @@ export default Step<Inputs>(async ({ $, core, inputs }) => {
     }
 
     // Update all base paths in the latest copy
-    console.log(`Updating base paths from /${headSha}/ to /latest/`)
+    core.info(`Updating base paths from /${headSha}/ to /latest/`)
     await updateBasePaths({
       directory: latestDir,
       fromPath: `/polen/pr-${prNumber}/${headSha}/`,
       toPath: `/polen/pr-${prNumber}/latest/`,
       $,
+      core,
     })
 
     // Create redirect from /latest/ to PR root
@@ -102,7 +129,22 @@ export default Step<Inputs>(async ({ $, core, inputs }) => {
       prInfo,
     )
 
-    console.log('✅ PR preview deployment prepared successfully')
+    core.info('✅ PR preview deployment prepared successfully')
+    core.endGroup()
+
+    // Final verification - list what was created
+    core.startGroup('📁 Deployment directory contents')
+    try {
+      const { stdout } = await $`find ${deployDir} -type f | head -20`
+      core.info(stdout.toString())
+
+      const fileCount = (await $`find ${deployDir} -type f | wc -l`).stdout.toString().trim()
+      core.info(`✅ Total files prepared for deployment: ${fileCount}`)
+      core.endGroup()
+    } catch (e) {
+      core.warning('Failed to list deployment directory contents')
+      core.endGroup()
+    }
   } catch (error) {
     core.setFailed(`Failed to prepare PR deployment: ${(error as Error).message}`)
   }

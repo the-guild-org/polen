@@ -5,7 +5,7 @@ import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
 import * as GetPortPlease from 'get-port-please'
 import type { ProcessPromise } from 'zx'
-import type { ExampleName } from '../example-name.js'
+import type { ExampleName } from '../example-name.ts'
 
 const projectDir = Path.join(import.meta.dirname, `../../../../`)
 const examplesDir = Path.join(projectDir, `/examples`)

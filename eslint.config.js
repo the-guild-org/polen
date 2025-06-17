@@ -53,10 +53,13 @@ export default tsEslint.config(
       // TypeScript makes these safe & effective
       'no-case-declarations': 'off',
       // Same approach used by TypeScript noUnusedLocals
-      '@typescript-eslint/no-unused-vars': ['warn', {
-        varsIgnorePattern: '^___',
-        argsIgnorePattern: '^___',
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          varsIgnorePattern: '^___',
+          argsIgnorePattern: '^___',
+        },
+      ],
       // TODO make issue that this rule doens't handle case of template literals: https://typescript-eslint.io/rules/no-unused-expressions/
       '@typescript-eslint/no-unused-expressions': 'off',
       // Useful for organizing Types
@@ -68,7 +71,10 @@ export default tsEslint.config(
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/ban-ts-comment': ['warn', { 'ts-expect-error': false }],
+      '@typescript-eslint/ban-ts-comment': [
+        'warn',
+        { 'ts-expect-error': false },
+      ],
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       // Disable dprint conflicts:
       '@stylistic/member-delimiter-style': 'off',

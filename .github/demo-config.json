@@ -1,4 +1,5 @@
 {
   "excludeDemos": ["github"],
-  "minimumVersion": "0.9.0"
+  "minimumVersion": "0.9.0",
+  "order": ["hive", "pokemon"]
 }

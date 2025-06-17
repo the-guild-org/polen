@@ -14,9 +14,11 @@ export async function getDemoExamples(): Promise<string[]> {
 
   // Read demo config from main branch
   let excludedDemos: string[] = []
+  let demoOrder: string[] = []
   try {
     const config = JSON.parse(await fs.readFile(configPath, 'utf8'))
     excludedDemos = config.excludeDemos || []
+    demoOrder = config.order || []
   } catch (e) {
     console.error('Warning: Could not read demo-config.json, including all examples')
   }
@@ -40,7 +42,28 @@ export async function getDemoExamples(): Promise<string[]> {
     console.error(`Error reading examples directory:`, (e as Error).message)
   }
 
-  return examples
+  // Sort examples according to the order specified in demo-config.json
+  // Examples in the order array come first in the specified order,
+  // followed by any remaining examples in alphabetical order
+  const orderedExamples: string[] = []
+  const remainingExamples = [...examples]
+
+  // Add examples in the specified order
+  for (const demo of demoOrder) {
+    if (examples.includes(demo)) {
+      orderedExamples.push(demo)
+      const index = remainingExamples.indexOf(demo)
+      if (index > -1) {
+        remainingExamples.splice(index, 1)
+      }
+    }
+  }
+
+  // Add remaining examples in alphabetical order
+  remainingExamples.sort()
+  orderedExamples.push(...remainingExamples)
+
+  return orderedExamples
 }
 
 // If run directly as CLI, output space-separated list

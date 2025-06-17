@@ -70,3 +70,25 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 - ESLint with TypeScript rules
 - Backticks for strings (except in test files due to Zed IDE limitation)
 - No runtime dependencies allowed (all dependencies must be bundled)
+
+## Development Rules
+
+- After making changes, ensure all checks pass by running `pnpm fc` (includes lint (+autofix), format (+autofix), types, and package checks)
+- Run tests relevant to your changes: `pnpm test:unit`, `pnpm test:integration`, or `pnpm test:examples`
+- Use `pnpm fix` to auto-fix lint and format issues before committing
+
+## Import Rules
+
+- **NEVER** use child process exec to execute a script when you could ESM import it instead
+- **NEVER** use ESM dynamic import when you could ESM statically import it instead
+
+## TypeScript Execution Rules
+
+- **CRITICAL**: We use Node.js 24 with `--no-warnings` flag to execute TypeScript directly
+- **NEVER** use tsx or ts-node - we rely on Node.js native TypeScript support
+- Always use `.ts` file extensions in imports when using Node.js TypeScript execution
+
+## CI Debugging Rules
+
+- When debugging CI issues, use the `gh` CLI to investigate logs, workflows, and deployments directly
+- Check workflow runs, deployment statuses, and logs yourself before asking for debug information

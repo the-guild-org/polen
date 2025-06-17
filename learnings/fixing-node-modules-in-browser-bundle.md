@@ -90,10 +90,10 @@ Fixed incorrect import paths that were preventing proper module resolution:
 
 ```typescript
 // Before (incorrect)
-import * as PathDriver from '#platform:path/driver.js'
+import * as PathDriver from '#platform:path/driver.ts'
 
 // After (correct)
-import * as PlatformPath from '#platform:path/path.js'
+import * as PlatformPath from '#platform:path/path.ts'
 ```
 
 ## Key Learnings

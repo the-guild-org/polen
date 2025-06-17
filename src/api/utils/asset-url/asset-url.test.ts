@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { assetUrl, faviconUrl, joinPaths, pageUrl } from './asset-url.js'
+import { assetUrl, faviconUrl, joinPaths, pageUrl } from './asset-url.ts'
 
 describe('asset-url helpers', () => {
   describe('joinPaths', () => {
@@ -20,9 +20,9 @@ describe('asset-url helpers', () => {
 
   describe('assetUrl', () => {
     test('creates asset URLs with base path', () => {
-      expect(assetUrl('assets/app.js', '/')).toBe('/assets/app.js')
-      expect(assetUrl('assets/app.js', '/my-app/')).toBe('/my-app/assets/app.js')
-      expect(assetUrl('/assets/app.js', '/my-app/')).toBe('/my-app/assets/app.js')
+      expect(assetUrl('assets/app.ts', '/')).toBe('/assets/app.ts')
+      expect(assetUrl('assets/app.ts', '/my-app/')).toBe('/my-app/assets/app.ts')
+      expect(assetUrl('/assets/app.ts', '/my-app/')).toBe('/my-app/assets/app.ts')
     })
   })
 

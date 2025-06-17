@@ -1,0 +1,15 @@
+{
+  "name": "hive",
+  "displayName": "Hive API",
+  "description": "Browse the GraphQL Hive schema registry and observability platform API with comprehensive documentation.",
+  "type": "module",
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "polen dev",
+    "build": "polen build",
+    "start": "node build/app.js"
+  },
+  "dependencies": {
+    "polen": "link:../.."
+  }
+}
