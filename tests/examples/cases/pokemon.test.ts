@@ -1,8 +1,8 @@
 import type { Page } from 'playwright/test'
 import { expect } from 'playwright/test'
-import type { Config } from '../../../src/api/config/index.js'
-import { getFixtureOptions } from '../helpers/helpers.js'
-import { test } from '../helpers/test.js'
+import type { Config } from '../../../src/api/config/index.ts'
+import { getFixtureOptions } from '../helpers/helpers.ts'
+import { test } from '../helpers/test.ts'
 
 test.use(getFixtureOptions(import.meta))
 

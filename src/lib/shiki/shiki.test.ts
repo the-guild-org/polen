@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { getHighlighter, highlightCode } from './shiki.js'
+import { getHighlighter, highlightCode } from './shiki.ts'
 
 test(`getHighlighter returns singleton instance`, async () => {
   const highlighter1 = await getHighlighter()

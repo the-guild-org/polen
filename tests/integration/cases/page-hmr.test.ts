@@ -1,6 +1,6 @@
 import { Api } from '#api/index'
 import { expect } from 'playwright/test'
-import { test } from '../helpers/test.js'
+import { test } from '../helpers/test.ts'
 
 test.describe('HMR', () => {
   test('auto-refresh on content change', async ({ page, vite, project }) => {

@@ -19,6 +19,4 @@ runs:
         RUNNER_PATH: ${{ github.action_path }}/runner.ts
         STEP_PATH: ${{ inputs.step }}
         STEP_INPUTS: ${{ inputs.inputs }}
-      run: |
-        # Use tsx to execute TypeScript directly
-        npx tsx --no-warnings "${{ github.action_path }}/runner.ts"
+      run: node --no-warnings "${{ github.action_path }}/runner.ts"

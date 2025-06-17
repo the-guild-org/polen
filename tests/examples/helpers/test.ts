@@ -1,8 +1,8 @@
 import type { PackageManager } from '@wollybeard/kit'
 import { test as base } from 'playwright/test'
 import { type ProcessOutput } from 'zx'
-import { ExampleController } from './example-controller/index.js'
-import type { ExampleName } from './example-name.js'
+import { ExampleController } from './example-controller/index.ts'
+import type { ExampleName } from './example-name.ts'
 
 export interface TestFixtures {
   runDev: ExampleController.ServerProcess

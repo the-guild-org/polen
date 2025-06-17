@@ -1,7 +1,7 @@
 import { expect } from 'playwright/test'
 import { renderDate } from '../../../src/template/components/Changelog.jsx'
-import { configMemorySchemaVersions, pc } from '../helpers/polen.js'
-import { test } from '../helpers/test.js'
+import { configMemorySchemaVersions, pc } from '../helpers/polen.ts'
+import { test } from '../helpers/test.ts'
 
 test('shows changelog in navigation bar when multiple schema versions are provided', async ({ page, vite }) => {
   // Set up schema versions with different content

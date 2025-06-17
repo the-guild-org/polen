@@ -1,6 +1,6 @@
 import { expect } from 'playwright/test'
-import { configMemorySchema, pc } from '../helpers/polen.js'
-import { test } from '../helpers/test.js'
+import { configMemorySchema, pc } from '../helpers/polen.ts'
+import { test } from '../helpers/test.ts'
 
 test('renders markdown as HTML in schema type descriptions', async ({ page, vite }) => {
   const viteUserConfig = await pc({

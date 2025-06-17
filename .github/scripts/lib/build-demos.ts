@@ -58,7 +58,7 @@ export async function updateBasePaths({ directory, fromPath, toPath, $ }: Update
 
   // Use perl for reliable path replacement
   const escapedFromPath = fromPath.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
-  await $`find ${directory} -type f \\( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.json' \\) -exec perl -i -pe "s|${escapedFromPath}|${toPath}|g" {} +`
+  await $`find ${directory} -type f \\( -name '*.html' -o -name '*.ts' -o -name '*.css' -o -name '*.json' \\) -exec perl -i -pe "s|${escapedFromPath}|${toPath}|g" {} +`
 }
 
 interface UpdateDistTagContentOptions {
