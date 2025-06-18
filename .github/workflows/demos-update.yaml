@@ -19,14 +19,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup
-        uses: ./.github/actions/setup
-
       - name: Build Polen
-        run: pnpm build
-
-      - name: Re-install to link workspace packages  
-        run: pnpm install
+        uses: ./.github/actions/build-polen
 
       - name: Check latest tag
         id: check

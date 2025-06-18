@@ -3,8 +3,8 @@ name: demos-dist-tag
 on:
   push:
     tags:
-      - 'latest'
-      - 'next'
+      - "latest"
+      - "next"
   workflow_dispatch:
     inputs:
       dist_tag:
@@ -46,24 +46,10 @@ jobs:
           name: update-dist-tag-content
           previous: ${{ toJSON(steps.dist-tag.outputs) }}
 
-      - name: Configure git
-        run: |
-          cd gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
       - name: Commit and push changes
-        run: |
-          cd gh-pages
-          if git diff --quiet; then
-            echo "No changes to commit"
-          else
-            git add .
-            git commit -m "chore: update ${{ steps.dist-tag.outputs.tag_name }} to point to ${{ steps.dist-tag.outputs.semver_tag }}
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-            git push
-            echo "✅ Successfully updated ${{ steps.dist-tag.outputs.tag_name }} to ${{ steps.dist-tag.outputs.semver_tag }}"
-          fi
+        uses: ./.github/actions/commit
+        with:
+          working-directory: gh-pages
+          type: chore
+          scope: dist-tag
+          message: "update ${{ steps.dist-tag.outputs.tag_name }} to point to ${{ steps.dist-tag.outputs.semver_tag }}"

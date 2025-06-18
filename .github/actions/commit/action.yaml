@@ -1,0 +1,110 @@
+name: 'Commit'
+description: 'Commit changes using conventional commits format with optional push'
+
+inputs:
+  working-directory:
+    description: 'Working directory for git operations'
+    required: false
+    default: '.'
+  type:
+    description: 'Conventional commit type (feat, fix, docs, style, refactor, test, chore, etc.)'
+    required: true
+  scope:
+    description: 'Conventional commit scope (optional)'
+    required: false
+    default: ''
+  message:
+    description: 'Commit message (the description after type/scope)'
+    required: true
+  body:
+    description: 'Commit body for additional details (optional)'
+    required: false
+    default: ''
+  breaking:
+    description: 'Whether this is a breaking change (adds ! to type)'
+    required: false
+    default: 'false'
+  add-pattern:
+    description: 'Pattern for git add (default: .)'
+    required: false
+    default: '.'
+  configure-git:
+    description: 'Whether to configure git user before committing'
+    required: false
+    default: 'true'
+  push:
+    description: 'Whether to push after committing'
+    required: false
+    default: 'true'
+
+outputs:
+  has-changes:
+    description: 'Whether there were changes to commit'
+    value: ${{ steps.check-changes.outputs.has-changes }}
+  committed:
+    description: 'Whether changes were committed'
+    value: ${{ steps.commit.outputs.committed }}
+  pushed:
+    description: 'Whether changes were pushed'
+    value: ${{ steps.push.outputs.pushed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure git
+      if: inputs.configure-git == 'true'
+      uses: ./.github/actions/configure-git
+      with:
+        working-directory: ${{ inputs.working-directory }}
+
+    - name: Check for changes
+      id: check-changes
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        if git diff --quiet && git diff --staged --quiet; then
+          echo "No changes to commit"
+          echo "has-changes=false" >> $GITHUB_OUTPUT
+        else
+          echo "Changes detected"
+          echo "has-changes=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit changes
+      id: commit
+      if: steps.check-changes.outputs.has-changes == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        git add ${{ inputs.add-pattern }}
+        
+        # Construct conventional commit message
+        TYPE="${{ inputs.type }}"
+        if [ "${{ inputs.breaking }}" = "true" ]; then
+          TYPE="${TYPE}!"
+        fi
+        
+        if [ -n "${{ inputs.scope }}" ]; then
+          COMMIT_MSG="${TYPE}(${{ inputs.scope }}): ${{ inputs.message }}"
+        else
+          COMMIT_MSG="${TYPE}: ${{ inputs.message }}"
+        fi
+        
+        # Add body if provided
+        if [ -n "${{ inputs.body }}" ]; then
+          COMMIT_MSG="${COMMIT_MSG}
+        
+        ${{ inputs.body }}"
+        fi
+        
+        git commit -m "$COMMIT_MSG"
+        echo "committed=true" >> $GITHUB_OUTPUT
+
+    - name: Push changes
+      id: push
+      if: steps.check-changes.outputs.has-changes == 'true' && inputs.push == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        git push
+        echo "pushed=true" >> $GITHUB_OUTPUT

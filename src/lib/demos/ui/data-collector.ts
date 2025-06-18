@@ -5,9 +5,9 @@
 import { Str } from '@wollybeard/kit'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { getDemoConfig, getDemoExamples } from '../index.ts'
 import { WorkflowError } from '../../github-actions/error-handling.ts'
 import { VersionHistory } from '../../version-history/index.ts'
+import { getDemoConfig, getDemoExamples } from '../index.ts'
 
 export interface DemoMetadata {
   title: string

@@ -40,11 +40,9 @@ jobs:
 
       - name: Build Polen
         if: steps.release.outputs.needs_build == 'true'
-        run: pnpm build
-
-      - name: Re-install to link workspace packages
-        if: steps.release.outputs.needs_build == 'true'
-        run: pnpm install
+        uses: ./.github/actions/build-polen
+        with:
+          skip-setup: 'true'
 
       - name: Build demos
         if: steps.release.outputs.needs_build == 'true'

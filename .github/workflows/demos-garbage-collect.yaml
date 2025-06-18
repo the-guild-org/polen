@@ -16,14 +16,8 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
 
-      - name: Setup
-        uses: ./.github/actions/setup
-
       - name: Build Polen
-        run: pnpm build
-
-      - name: Re-install to link workspace packages
-        run: pnpm install
+        uses: ./.github/actions/build-polen
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -39,11 +33,10 @@ jobs:
 
       - name: Deploy cleaned gh-pages
         if: steps.gc.outputs.has_changes == 'true'
-        working-directory: gh-pages
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "chore: garbage collect past development cycle deployments
-          Removed: ${{ steps.gc.outputs.removed_deployments }}"
-          git push
+        uses: ./.github/actions/commit
+        with:
+          working-directory: gh-pages
+          type: chore
+          scope: demos
+          message: "garbage collect past development cycle deployments"
+          body: "Removed: ${{ steps.gc.outputs.removed_deployments }}"
