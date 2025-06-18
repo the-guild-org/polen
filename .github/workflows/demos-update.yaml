@@ -3,9 +3,9 @@ name: demos-update
 on:
   push:
     branches: [main]
-    paths: 
-      - 'examples/**'
-      - 'src/**'
+    paths:
+      - "examples/**"
+      - "src/**"
   workflow_dispatch:
 
 permissions:
@@ -25,15 +25,8 @@ jobs:
       - name: Build Polen
         uses: ./.github/actions/build-polen
 
-      - name: Check latest tag
-        id: check
-        uses: ./.github/actions/step
-        with:
-          name: check-latest-tag
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build current cycle
-        if: steps.check.outputs.has_versions == 'true'
+        id: build
         uses: ./.github/actions/step
         with:
           name: build-current-cycle
@@ -41,7 +34,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
-        if: steps.check.outputs.has_versions == 'true'
+        if: steps.build.outputs.complete
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

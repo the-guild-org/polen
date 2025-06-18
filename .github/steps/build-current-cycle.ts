@@ -1,17 +1,12 @@
+import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
 import { GitHubActions } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
-const jsonString = <T>(schema: z.ZodSchema<T>) => z.string().transform(s => schema.parse(JSON.parse(s)))
-
-const Inputs = z.object({
-  previous: z.object({
-    versions_to_rebuild: jsonString(z.array(z.string())),
-  }),
-})
+// const jsonString = <T>(schema: z.ZodSchema<T>) => z.string().transform(s => schema.parse(JSON.parse(s)))
 
 const Outputs = z.object({
-  build_complete: z.string(),
+  complete: z.boolean(),
   failed_versions: z.string(),
 })
 
@@ -21,10 +16,62 @@ const Outputs = z.object({
 export default GitHubActions.createStep({
   name: 'build-current-cycle',
   description: 'Build demos for all versions in the current development cycle',
-  inputs: Inputs,
+  // inputs: Inputs,
   outputs: Outputs,
-  async run({ core, inputs }) {
-    const versions = inputs.previous.versions_to_rebuild
+  async run({ core }) {
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Check Latest Tag
+    //
+    //
+
+    const versionHistory = new VersionHistory()
+
+    // Get the current development cycle
+    const cycle = await versionHistory.getCurrentDevelopmentCycle()
+
+    if (!cycle.stable) {
+      core.warning('No stable version found - skipping update')
+      return {
+        complete: false,
+      }
+    }
+
+    // Check if latest dist-tag exists and matches the stable version
+    const latestTag = await versionHistory.getDistTag('latest')
+    if (!latestTag || latestTag.semverTag !== cycle.stable.tag) {
+      core.warning(
+        `Latest dist-tag ${
+          latestTag ? `points to ${latestTag.semverTag}` : 'not found'
+        }, but latest stable is ${cycle.stable.tag}`,
+      )
+    }
+
+    const versions = cycle.all.map(v => v.tag)
+    const versionList = versions.join(', ')
+
+    core.info(`✅ Found ${cycle.all.length} versions to rebuild: ${versionList}`)
+    core.info(`  Latest stable: ${cycle.stable.tag}`)
+    if (cycle.prereleases.length > 0) {
+      core.info(`  Prereleases: ${cycle.prereleases.map(v => v.tag).join(', ')}`)
+    }
+
+    // return {
+    //   has_versions: 'true',
+    //   versions_to_rebuild: JSON.stringify(versions),
+    // }
+
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Build
+    //
+    //
+
+    // const versions = inputs.previous.versions_to_rebuild
 
     if (versions.length === 0) {
       throw new Error('No versions to rebuild')
@@ -43,7 +90,7 @@ export default GitHubActions.createStep({
     }
 
     return {
-      build_complete: 'true',
+      complete: true,
       failed_versions: JSON.stringify(result.failedVersions),
     }
   },

@@ -99,9 +99,6 @@ export class DemoOrchestrator {
 
     return safeExecute('build-for-pr', async () => {
       this.logger.info(`🚀 Building PR demos for #${prNumber} (${fullSha})`)
-      this.logger.info(`DEBUG: Using short SHA for directories: ${shortSha}`)
-      this.logger.info(`DEBUG: Full SHA: ${fullSha}`)
-      this.logger.info(`DEBUG: Ref: ${ref || 'not provided'}`)
 
       // Get latest stable version for Polen CLI
       const latestStable = await this.versionHistory.getLatestStableVersion()
@@ -382,9 +379,6 @@ export class DemoOrchestrator {
 
     // Create directory structure without pr directory prefix
     // The workflow will handle the pr-{number} directory when deploying
-    this.logger.info(`DEBUG: Creating deployment directories:`)
-    this.logger.info(`DEBUG:   ${join(deployDir, 'latest')}`)
-    this.logger.info(`DEBUG:   ${join(deployDir, sha)}`)
     await fs.mkdir(join(deployDir, 'latest'), { recursive: true })
     await fs.mkdir(join(deployDir, sha), { recursive: true })
 
