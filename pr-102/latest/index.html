@@ -64,11 +64,6 @@
       transform: translateY(-2px);
     }
 
-    .demo-card.disabled {
-      opacity: 0.6;
-      background: #f5f5f5;
-    }
-
     .demo-card h2 {
       font-size: 1.25rem;
       margin-bottom: 0.5rem;
@@ -99,80 +94,173 @@
     }
 
     .demo-link:hover {
-      background: transparent;
+      background: #fff;
       color: #000;
     }
 
-    .demo-link.disabled {
-      background: #ccc;
-      color: #666;
-      border-color: #ccc;
-      cursor: not-allowed;
+    .demo-link svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .demo-links {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.5rem;
     }
 
     .dist-tags {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      margin-top: 1rem;
     }
 
     .dist-tag-button {
       display: flex;
       align-items: stretch;
       border: 1px solid #000;
+      overflow: hidden;
     }
 
     .dist-tag-label {
       flex: 1;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 0.5rem;
-      padding: 0.625rem 1rem;
       background: #000;
       color: #fff;
       text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: opacity 0.2s ease;
-    }
-
-    .dist-tag-label:hover {
-      opacity: 0.9;
+      transition: all 0.2s ease;
     }
 
     .dist-tag-label svg {
       width: 16px;
       height: 16px;
-      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .dist-tag-label:hover svg {
+      transform: translateX(4px);
     }
 
     .dist-tag-version {
+      padding: 0.625rem 1.25rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      font-family: monospace;
+      font-size: 0.875rem;
+      background: #000;
+      color: #fff;
+      text-decoration: none;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.625rem 1rem;
+      transition: all 0.2s ease;
+    }
+
+    /* Hover states */
+    .dist-tag-button:hover .dist-tag-label,
+    .dist-tag-button:hover .dist-tag-version {
       background: #fff;
-      color: #000;
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-family: monospace;
-      border-left: 1px solid #000;
-      transition: background 0.2s ease;
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    .dist-tag-button:hover .dist-tag-version {
+      border-left-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .dist-tag-label:hover {
+      color: #000 !important;
     }
 
     .dist-tag-version:hover {
-      background: rgba(0, 0, 0, 0.05);
+      color: #000 !important;
     }
 
     .permalink-icon {
-      opacity: 0;
-      transition: opacity 0.2s ease;
+      display: inline-block;
+      transition: transform 0.2s ease;
+      margin-left: 0.75rem;
+      transform-origin: center center;
     }
 
     .dist-tag-version:hover .permalink-icon {
-      opacity: 0.6;
+      transform: rotate(15deg) translateY(-1px);
+    }
+
+    .previous-versions {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .previous-versions h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .commit-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .commit-link {
+      padding: 0.25rem 0.5rem;
+      border: 1px solid #000;
+      text-decoration: none;
+      color: #000;
+      font-family: monospace;
+      transition: all 0.2s ease;
+    }
+
+    .commit-link:hover {
+      background: #000;
+      color: #fff;
+    }
+
+    .current-deployment {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    .current-deployment span {
+      color: #000;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 3rem 0;
+      color: #000;
+      border-top: 1px solid #000;
+      font-size: 0.875rem;
+    }
+
+    .footer a {
+      color: #000;
+      text-decoration: underline;
+    }
+
+    .footer a:hover {
+      text-decoration: none;
+    }
+
+    .disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .disabled .demo-link {
+      background: #fff;
+      color: #000;
+      pointer-events: none;
+      width: 100%;
+      justify-content: center;
     }
 
     .version-info {
@@ -370,39 +458,41 @@
   
     
     <div class="demos-grid">
-      
-    <div class="demo-card">
-      <h2>Hive API</h2>
-      <p>Browse the GraphQL Hive schema registry and observability platform API with comprehensive documentation.</p>
-      <a href="/polen/pr-102/latest/latest/hive/" class="demo-link">
-        View Latest (latest)
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-      </a>
-    </div>
-  
-    <div class="demo-card">
-      <h2>Pokemon API</h2>
-      <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
-      <a href="/polen/pr-102/latest/latest/pokemon/" class="demo-link">
-        View Latest (latest)
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-      </a>
-    </div>
-  
-      <div class="demo-card disabled">
-        <h2>GitHub API</h2>
-        <p>Browse GitHub's extensive GraphQL API with over 1600 types.</p>
-        <p><em>Note: Currently disabled due to build performance.</em></p>
-        <div class="demo-link disabled">Coming Soon</div>
-      </div>
-    
+      <div class="demo-card">
+            <h2>Hive API</h2>
+            <p>Browse the GraphQL Hive schema registry and observability platform API with comprehensive documentation.</p>
+            <div class="demo-links">
+              <p style="color: #666; font-size: 0.875rem;">No deployments available</p>
+            <div class="previous-versions">
+              <h3>Previous Versions</h3>
+              <p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>
+            </div>
+          </div>
+        </div><div class="demo-card">
+            <h2>Pokemon API</h2>
+            <p>Explore a fun GraphQL API for Pokemon data with rich schema documentation and interactive examples.</p>
+            <div class="demo-links">
+              <p style="color: #666; font-size: 0.875rem;">No deployments available</p>
+            <div class="previous-versions">
+              <h3>Previous Versions</h3>
+              <p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>
+            </div>
+          </div>
+        </div><div class="demo-card disabled">
+              <h2>GitHub API</h2>
+              <p>Browse GitHub's extensive GraphQL API with over 1600 types.</p>
+              <span class="demo-link">
+                Coming Soon
+              </span>
+            </div>
     </div>
   
     
+    
+    <div class="footer">
+      <p>Built with <a href="https://github.com/the-guild-org/polen" target="_blank">Polen</a> - The delightful GraphQL documentation framework</p>
+    </div>
+  
   </div>
 </body>
 </html>
