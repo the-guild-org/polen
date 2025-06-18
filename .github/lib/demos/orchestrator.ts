@@ -352,6 +352,18 @@ export class DemoOrchestrator {
     // Get demo examples
     const examples = await getDemoExamples()
 
+    // Copy landing page first
+    const landingPagePath = join('dist-demos', 'index.html')
+    try {
+      await fs.access(landingPagePath)
+      await fs.copyFile(landingPagePath, join(deployDir, sha, 'index.html'))
+      await fs.copyFile(landingPagePath, join(deployDir, 'index.html'))
+      this.logger.info(`Copied landing page`)
+    } catch (error) {
+      this.logger.error(`Failed to copy landing page: ${error}`)
+      throw new WorkflowError('prepare-pr-deployment', `Landing page not found at ${landingPagePath}`)
+    }
+
     // Copy builds to commit-specific path
     for (const example of examples) {
       // Polen outputs to 'dist' by default
@@ -378,6 +390,9 @@ export class DemoOrchestrator {
     // Copy to latest and update paths
     const shaDir = join(deployDir, sha)
     const latestDir = join(deployDir, 'latest')
+
+    // Copy landing page to latest
+    await fs.copyFile(landingPagePath, join(latestDir, 'index.html'))
 
     const entries = await fs.readdir(shaDir)
     for (const entry of entries) {

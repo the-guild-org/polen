@@ -7,7 +7,7 @@
  */
 
 import * as core from '@actions/core'
-import { runStepByName } from './runner.ts'
+import { runStep, runStepByName } from './runner.ts'
 
 async function main() {
   const stepName = process.argv[2]
@@ -53,7 +53,6 @@ async function main() {
 
     // If path override is provided and not empty, use it directly
     if (pathOverride && pathOverride !== '') {
-      const { runStep } = await import('./runner.ts')
       await runStep(pathOverride, JSON.stringify(mergedInputs))
     } else {
       await runStepByName(stepName, workflowName, JSON.stringify(mergedInputs))
