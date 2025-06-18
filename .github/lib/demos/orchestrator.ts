@@ -255,9 +255,13 @@ export class DemoOrchestrator {
         this.logger.debug(`Versions to remove: ${versionsToRemove.join(', ')}`)
       }
 
+      // Determine the gh-pages directory to clean
+      const ghPagesDir = process.env.WORKING_DIR || 'gh-pages'
+      this.logger.debug(`Operating on directory: ${ghPagesDir}`)
+
       // Clean up deployments
       const result = await this.pathManager.cleanupOldDeployments(
-        'gh-pages',
+        ghPagesDir,
         versionsToRemove,
         false, // Not a dry run
       )

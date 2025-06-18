@@ -1,0 +1,47 @@
+name: demos-garbage-collect
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  garbage-collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        run: pnpm build
+
+      - name: Re-install to link workspace packages
+        run: pnpm install
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Run garbage collector
+        id: gc
+        run: node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts garbage-collect '{}'
+
+      - name: Deploy cleaned gh-pages
+        if: steps.gc.outputs.has_changes == 'true'
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: garbage collect past development cycle deployments
+          Removed: ${{ steps.gc.outputs.removed_deployments }}"
+          git push
