@@ -16,9 +16,14 @@ inputs:
     description: "Outputs from previous steps (e.g. toJSON(steps.previous.outputs))"
     required: false
     default: "{}"
+  github_token:
+    description: "GitHub token for API access"
+    required: false
 runs:
   using: "composite"
   steps:
     - name: Run workflow step
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} '${{ inputs.inputs }}' '${{ inputs.context }}' '${{ inputs.previous }}'

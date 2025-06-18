@@ -45,12 +45,14 @@ jobs:
         with:
           name: get-previous-deployments
           inputs: ${{ toJSON(inputs) }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare PR deployment
         uses: ./.github/actions/step
         with:
           name: prepare-pr-deployment
           inputs: ${{ toJSON(inputs) }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
         id: deploy
@@ -69,3 +71,4 @@ jobs:
           inputs: ${{ toJSON(inputs) }}
           context: ${{ toJSON(github) }}
           previous: ${{ toJSON(steps.previous.outputs) }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
