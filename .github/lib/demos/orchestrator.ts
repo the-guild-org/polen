@@ -4,11 +4,11 @@
 
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
+import { fetchAllPRDeployments } from '../../../src/lib/demos/deployment-data.ts'
 import { buildDemosHome, demoBuilder, getDemoConfig, getDemoExamples } from '../../../src/lib/demos/index.ts'
 import { executeWithContinuation, safeExecute, WorkflowError } from '../../../src/lib/github-actions/error-handling.ts'
 import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { DeploymentPathManager } from './path-manager.ts'
-import { getAllPrDeployments, getPreviousDeployments } from './pr-deployment-collector.ts'
 
 export interface BuildResult {
   success: boolean
@@ -110,8 +110,12 @@ export class DemoOrchestrator {
       const shaBasePath = `/polen/pr-${prNumber}/${shortSha}/`
       const prRootBasePath = `/polen/pr-${prNumber}/`
 
-      // Get previous deployments for this PR
-      const previousDeployments = getPreviousDeployments(prNumber, shortSha)
+      // Get all PR deployments and filter for this PR
+      const allPrDeployments = await fetchAllPRDeployments()
+      const currentPrDeployment = allPrDeployments.find(d => d.number === parseInt(prNumber, 10))
+
+      // Use existing deployments or empty array
+      const previousDeployments = currentPrDeployment?.previousDeployments || []
 
       // Build landing page for PR with deployment history
       const prDeploymentsData = [{
@@ -347,7 +351,7 @@ export class DemoOrchestrator {
         }
 
         // Get all PR deployments
-        const allPrDeployments = getAllPrDeployments()
+        const allPrDeployments = await fetchAllPRDeployments()
 
         await buildDemosHome({
           mode: 'demo',
