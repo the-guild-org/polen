@@ -49,11 +49,7 @@ jobs:
         id: previous
         run: |
           node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            get-previous-deployments \
-            '{
-              "pr_number": "${{ inputs.pr_number }}",
-              "current_sha": "${{ inputs.head_sha }}"
-            }'
+            get-previous-deployments '${{ toJSON(inputs) }}'
 
       - name: Prepare PR deployment
         run: |

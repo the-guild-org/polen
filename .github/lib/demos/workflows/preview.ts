@@ -32,7 +32,7 @@ const GenerateDemoLinksOutputs = z.object({
 
 const GetPreviousDeploymentsInputs = z.object({
   pr_number: z.string(),
-  current_sha: z.string(),
+  head_sha: z.string(),
 })
 
 const GetPreviousDeploymentsOutputs = z.object({
@@ -119,7 +119,7 @@ export const getPreviousDeployments = defineWorkflowStep({
   outputs: GetPreviousDeploymentsOutputs,
   
   async execute({ github, context, core, inputs }) {
-    const { pr_number, current_sha } = inputs
+    const { pr_number, head_sha } = inputs
 
     try {
       // Get deployments for this PR's environment
@@ -135,7 +135,7 @@ export const getPreviousDeployments = defineWorkflowStep({
 
       for (const deployment of deployments) {
         // Skip current SHA
-        if (deployment.sha === current_sha || deployment.sha.startsWith(current_sha)) {
+        if (deployment.sha === head_sha || deployment.sha.startsWith(head_sha)) {
           continue
         }
 
