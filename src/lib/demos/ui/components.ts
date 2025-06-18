@@ -115,6 +115,71 @@ export const getDemoPageStyles = () => {
       cursor: not-allowed;
     }
 
+    .dist-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .dist-tag-button {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid ${theme.primaryColor};
+    }
+
+    .dist-tag-label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: ${theme.primaryColor};
+      color: ${theme.backgroundColor};
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: opacity 0.2s ease;
+    }
+
+    .dist-tag-label:hover {
+      opacity: 0.9;
+    }
+
+    .dist-tag-label svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .dist-tag-version {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: ${theme.backgroundColor};
+      color: ${theme.primaryColor};
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-family: monospace;
+      border-left: 1px solid ${theme.primaryColor};
+      transition: background 0.2s ease;
+    }
+
+    .dist-tag-version:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .permalink-icon {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .dist-tag-version:hover .permalink-icon {
+      opacity: 0.6;
+    }
+
     .version-info {
       margin-top: 3rem;
       padding: 2rem;
@@ -194,6 +259,73 @@ export const getDemoPageStyles = () => {
       text-decoration: underline;
     }
 
+    .pr-banner {
+      background: ${theme.primaryColor};
+      color: ${theme.backgroundColor};
+      padding: 1rem 0;
+      margin-bottom: 0;
+      border-bottom: 2px solid ${theme.primaryColor};
+    }
+
+    .pr-banner .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .pr-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .pr-banner-badge {
+      background: ${theme.backgroundColor};
+      color: ${theme.primaryColor};
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pr-banner-text {
+      font-size: 0.875rem;
+    }
+
+    .pr-banner-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .pr-banner-link {
+      color: ${theme.backgroundColor};
+      text-decoration: none;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid ${theme.backgroundColor};
+      transition: all 0.2s ease;
+    }
+
+    .pr-banner-link:hover {
+      background: ${theme.backgroundColor};
+      color: ${theme.primaryColor};
+    }
+
+    .pr-banner-link svg {
+      width: 16px;
+      height: 16px;
+    }
+
     @media (max-width: 768px) {
       .container {
         padding: 1rem;
@@ -211,7 +343,54 @@ export const getDemoPageStyles = () => {
       .demo-card {
         padding: 1.5rem;
       }
+
+      .pr-banner .container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0 1rem;
+      }
+
+      .pr-banner-links {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pr-banner-link {
+        justify-content: center;
+      }
     }
+  `
+}
+
+/**
+ * Generate PR banner HTML
+ */
+export const generatePrBanner = (prNumber: string): string => {
+  return `
+    <div class="pr-banner">
+      <div class="container">
+        <div class="pr-banner-content">
+          <span class="pr-banner-badge">PR Preview</span>
+          <span class="pr-banner-text">You're viewing a preview deployment for Pull Request #${prNumber}</span>
+        </div>
+        <div class="pr-banner-links">
+          <a href="https://github.com/the-guild-org/polen/pull/${prNumber}" class="pr-banner-link" target="_blank">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            View PR on GitHub
+          </a>
+          <a href="https://the-guild-org.github.io/polen/" class="pr-banner-link">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Go to Production Demos
+          </a>
+        </div>
+      </div>
+    </div>
   `
 }
 
@@ -247,9 +426,11 @@ export const generateHeader = (data: LandingPageData): string => {
 export const generateDemoCard = (
   name: string,
   metadata: DemoMetadata,
-  basePath: string,
+  data: LandingPageData,
 ): string => {
   const { title, description, enabled, reason } = metadata
+  const { basePath, prNumber, currentSha } = data.config
+  const { distTags, trunkDeployments } = data
 
   if (!enabled) {
     return `
@@ -262,16 +443,77 @@ export const generateDemoCard = (
     `
   }
 
-  const demoUrl = `${basePath}${name}/`
+  // For PR deployments, show latest/sha buttons
+  if (prNumber && currentSha) {
+    return `
+      <div class="demo-card">
+        <h2>${title}</h2>
+        <p>${description}</p>
+        <div class="dist-tags">
+          <div class="dist-tag-button">
+            <a href="${basePath}latest/${name}/" class="dist-tag-label">
+              latest
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <a href="${basePath}${currentSha}/${name}/" class="dist-tag-version">${currentSha.substring(0, 7)}<span class="permalink-icon">¶</span></a>
+          </div>
+        </div>
+      </div>
+    `
+  }
 
+  // For trunk deployments, show dist-tag buttons
+  if (!prNumber && distTags && Object.keys(distTags).length > 0) {
+    const distTagButtons = Object.entries(distTags)
+      .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
+      .filter(([tag, version]) => {
+        // If next points to the same version as latest, filter it out
+        if (tag === 'next' && distTags['latest'] === version) {
+          return false
+        }
+        return true
+      })
+      .map(([tag, version]) => `
+        <div class="dist-tag-button">
+          <a href="${basePath}${tag}/${name}/" class="dist-tag-label">
+            ${tag}
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </a>
+          <a href="${basePath}${version}/${name}/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
+        </div>
+      `).join('')
+
+    const noPrereleasesMessage = distTags['next'] && distTags['next'] === distTags['latest']
+      ? '<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>'
+      : ''
+
+    return `
+      <div class="demo-card">
+        <h2>${title}</h2>
+        <p>${description}</p>
+        <div class="dist-tags">
+          ${distTagButtons}
+          ${noPrereleasesMessage}
+        </div>
+      </div>
+    `
+  }
+
+  // Fallback to simple link
+  const latestTag = trunkDeployments?.latest?.tag || trunkDeployments?.latest?.shortSha || 'latest'
+  
   return `
     <div class="demo-card">
       <h2>${title}</h2>
       <p>${description}</p>
-      <a href="${demoUrl}" class="demo-link">
-        Explore API
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M7 17L17 7M17 7H7M17 7V17"/>
+      <a href="${basePath}latest/${name}/" class="demo-link">
+        View Latest ${latestTag ? `(${latestTag})` : ''}
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
         </svg>
       </a>
     </div>
@@ -282,7 +524,7 @@ export const generateDemoCard = (
  * Generate demos grid HTML
  */
 export const generateDemosGrid = (data: LandingPageData): string => {
-  const { demoMetadata, demoExamples, config } = data
+  const { demoMetadata, demoExamples } = data
   const orderedExamples = getDemoConfig().getOrderedDemos(demoExamples)
 
   // Add disabled demos to the list
@@ -295,7 +537,7 @@ export const generateDemosGrid = (data: LandingPageData): string => {
 
   const demoCards = allDemos
     .map(name =>
-      generateDemoCard(name, demoMetadata[name] || { title: name, description: '', enabled: true }, config.basePath)
+      generateDemoCard(name, demoMetadata[name] || { title: name, description: '', enabled: true }, data)
     )
     .join('')
 
@@ -314,6 +556,8 @@ export const generateVersionInfo = (data: LandingPageData): string => {
 
   if (!trunkDeployments) return ''
 
+  const basePath = data.config.basePath || '/'
+  
   const distTagsHtml = distTags
     ? Object.entries(distTags)
       .map(([tag, version]) => {
@@ -322,14 +566,14 @@ export const generateVersionInfo = (data: LandingPageData): string => {
           : tag === 'next'
           ? 'version-tag next'
           : 'version-tag'
-        return `<a href="/${version}/" class="${className}">${tag}: ${version}</a>`
+        return `<a href="${basePath}${version}/" class="${className}">${tag}: ${version}</a>`
       })
       .join('')
     : ''
 
   const previousVersionsHtml = trunkDeployments.previous
     .slice(0, 10) // Limit to recent versions
-    .map(version => `<a href="/${version.tag}/" class="version-tag">${version.tag}</a>`)
+    .map(version => `<a href="${basePath}${version.tag}/" class="version-tag">${version.tag}</a>`)
     .join('')
 
   return `

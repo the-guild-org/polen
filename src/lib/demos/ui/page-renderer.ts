@@ -7,6 +7,7 @@ import {
   generateBackLink,
   generateDemosGrid,
   generateHeader,
+  generatePrBanner,
   generatePrSection,
   generateVersionInfo,
   getDemoPageStyles,
@@ -29,6 +30,7 @@ export class DemoPageRenderer {
       pageTitle = `${pageTitle} - PR #${prNumber} Preview`
     }
 
+    const prBannerHtml = prNumber ? generatePrBanner(prNumber) : ''
     const headerHtml = generateHeader(data)
     const demosGridHtml = generateDemosGrid(data)
     const versionInfoHtml = generateVersionInfo(data)
@@ -46,6 +48,7 @@ export class DemoPageRenderer {
   </style>
 </head>
 <body>
+  ${prBannerHtml}
   <div class="container">
     ${headerHtml}
     ${demosGridHtml}
