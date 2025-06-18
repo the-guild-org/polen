@@ -7,8 +7,8 @@ import { context, getOctokit } from '@actions/github'
 import { promises as fs } from 'node:fs'
 import { $ } from 'zx'
 import { WorkflowError } from './error-handling.ts'
+import type { WorkflowContext } from './step.ts'
 import type { WorkflowStep } from './types.ts'
-import type { WorkflowContext } from './workflow-framework.ts'
 
 /**
  * Create a workflow context with all necessary tools

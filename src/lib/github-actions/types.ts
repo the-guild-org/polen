@@ -2,7 +2,7 @@
  * Common types for GitHub Actions workflows
  */
 
-import type { WorkflowContext } from './workflow-framework.ts'
+import type { WorkflowContext } from './step.ts'
 
 // Re-export workflow context for convenience
 export type { WorkflowContext }

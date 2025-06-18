@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { defineStep } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 const Outputs = z.object({
@@ -10,7 +10,7 @@ const Outputs = z.object({
 /**
  * Check current development cycle and prepare versions for rebuilding
  */
-export default defineWorkflowStep({
+export default defineStep({
   name: 'check-latest-tag',
   description: 'Identify all versions in the current development cycle that need demo updates',
   inputs: z.object({}),

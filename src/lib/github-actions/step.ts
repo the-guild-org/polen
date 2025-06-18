@@ -22,7 +22,7 @@ export interface IWorkflowError extends Error {
 }
 
 // Generic workflow step definition
-export interface WorkflowStepDefinition<$Inputs, $Outputs> {
+export interface StepDefinition<$Inputs, $Outputs> {
   name: string
   description: string
   inputs: z.ZodSchema<$Inputs>
@@ -33,15 +33,36 @@ export interface WorkflowStepDefinition<$Inputs, $Outputs> {
 /**
  * Define a type-safe workflow step
  */
-export function defineWorkflowStep<$Inputs, $Outputs>(
-  definition: WorkflowStepDefinition<$Inputs, $Outputs>,
+export function defineStep<$Inputs, $Outputs>(
+  definition: StepDefinition<$Inputs, $Outputs>,
 ) {
   return async (context: WorkflowContext, rawInputs: unknown): Promise<$Outputs> => {
     const stepName = definition.name
 
     try {
-      // Validate inputs
-      const inputs = definition.inputs.parse(rawInputs)
+      // Validate inputs with strict mode to catch excess properties
+      const parseResult = definition.inputs.safeParse(rawInputs)
+
+      if (!parseResult.success) {
+        throw parseResult.error
+      }
+
+      const inputs = parseResult.data
+
+      // Check for excess properties if using object schema
+      if (definition.inputs instanceof z.ZodObject && typeof rawInputs === 'object' && rawInputs !== null) {
+        const knownKeys = Object.keys(definition.inputs.shape)
+        const providedKeys = Object.keys(rawInputs)
+        const unknownKeys = providedKeys.filter(key => !knownKeys.includes(key))
+
+        if (unknownKeys.length > 0) {
+          context.core.warning(
+            `Step '${stepName}' received unknown inputs: ${unknownKeys.join(', ')}. These inputs will be ignored.`,
+          )
+          context.core.debug(`Known inputs: ${knownKeys.join(', ')}`)
+          context.core.debug(`Provided inputs: ${JSON.stringify(rawInputs, null, 2)}`)
+        }
+      }
 
       context.core.startGroup(`${definition.name}: ${definition.description}`)
       context.core.debug(`Inputs: ${JSON.stringify(inputs)}`)

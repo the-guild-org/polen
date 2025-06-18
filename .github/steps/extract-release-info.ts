@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
 import { getDemoConfig } from '../../src/lib/demos/index.ts'
-import { CommonSchemas, defineWorkflowStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
+import { CommonSchemas, defineStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 // Input/Output schemas
@@ -21,7 +21,7 @@ const ExtractReleaseInfoOutputs = z.object({
 /**
  * Extract and validate release information
  */
-export default defineWorkflowStep({
+export default defineStep({
   name: 'extract-release-info',
   description: 'Extract and validate release information to determine demo build requirements',
   inputs: ExtractReleaseInfoInputs,

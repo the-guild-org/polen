@@ -43,14 +43,6 @@ jobs:
       - name: Build Polen
         uses: ./.github/actions/build-polen
 
-      - name: Get previous deployments
-        id: previous
-        uses: ./.github/actions/step
-        with:
-          name: get-previous-deployments
-          inputs: ${{ toJSON(inputs) }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Prepare PR deployment
         uses: ./.github/actions/step
         with:
@@ -74,8 +66,6 @@ jobs:
         with:
           name: generate-demo-links
           inputs: ${{ toJSON(inputs) }}
-          context: ${{ toJSON(github) }}
-          previous: ${{ toJSON(steps.previous.outputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Find existing comment
@@ -83,8 +73,8 @@ jobs:
         id: find-comment
         with:
           issue-number: ${{ inputs.pr_number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '## Polen Demos Preview'
+          comment-author: "github-actions[bot]"
+          body-includes: "## Polen Demos Preview"
 
       - name: Comment on PR
         uses: peter-evans/create-or-update-comment@v4
@@ -93,9 +83,8 @@ jobs:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           edit-mode: replace
           body: |
-            ## Polen Demos Preview 🚀
+            ## Polen Demos Preview
 
             **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr_number }}/
 
-            ### Available Demos
             ${{ steps.generate-links.outputs.links }}

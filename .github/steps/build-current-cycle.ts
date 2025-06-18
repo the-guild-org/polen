@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { CommonSchemas, defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { CommonSchemas, defineStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Inputs = z.object({
@@ -16,7 +16,7 @@ const Outputs = z.object({
 /**
  * Build demos for current development cycle
  */
-export default defineWorkflowStep({
+export default defineStep({
   name: 'build-current-cycle',
   description: 'Build demos for all versions in the current development cycle',
   inputs: Inputs,

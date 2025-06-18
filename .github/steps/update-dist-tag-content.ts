@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { defineStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Inputs = z.object({
@@ -16,7 +16,7 @@ const Outputs = z.object({
 /**
  * Update dist-tag content by copying from semver deployment
  */
-export default defineWorkflowStep({
+export default defineStep({
   name: 'update-dist-tag-content',
   description: 'Copy content from semver deployment to dist-tag directory',
   inputs: Inputs,

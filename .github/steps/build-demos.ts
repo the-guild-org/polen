@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { defineStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Inputs = z.object({
@@ -16,7 +16,7 @@ const Outputs = z.object({
 /**
  * Build demos for a release
  */
-export default defineWorkflowStep({
+export default defineStep({
   name: 'build-demos',
   description: 'Build demo sites for a newly released Polen version',
   inputs: Inputs,

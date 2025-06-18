@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineWorkflowStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
+import { defineStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 const Inputs = z.object({
@@ -16,7 +16,7 @@ const Outputs = z.object({
 /**
  * Extract dist-tag information and find corresponding semver version
  */
-export default defineWorkflowStep({
+export default defineStep({
   name: 'get-dist-tag-info',
   description: 'Resolve npm dist-tags to their actual semver versions',
   inputs: Inputs,
