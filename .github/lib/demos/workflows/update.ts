@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod'
-import { defineWorkflowStep, CommonSchemas } from '../../shared/workflow-framework.ts'
+import { defineWorkflowStep, CommonSchemas } from '../../../../src/lib/github-actions/index.js'
 import { demoOrchestrator } from '../orchestrator.ts'
 import { VersionHistory } from '../../../../src/lib/version-history/index.js'
 

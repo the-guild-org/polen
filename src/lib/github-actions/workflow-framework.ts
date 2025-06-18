@@ -5,7 +5,6 @@
 import { z } from 'zod'
 import type { GitHub } from '@actions/github/lib/utils.js'
 import type { Context } from '@actions/github/lib/context.js'
-import { WorkflowError } from './error-handling.ts'
 
 // Core GitHub Actions context types
 export interface WorkflowContext {
@@ -14,6 +13,27 @@ export interface WorkflowContext {
   context: Context
   $: typeof import('zx').$
   fs: typeof import('node:fs/promises')
+}
+
+// Workflow error class
+export class WorkflowError extends Error {
+  constructor(
+    public readonly step: string,
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message)
+    this.name = 'WorkflowError'
+  }
+
+  static wrap(step: string, error: unknown): WorkflowError {
+    if (error instanceof WorkflowError) {
+      return error
+    }
+
+    const message = error instanceof Error ? error.message : String(error)
+    return new WorkflowError(step, message, error)
+  }
 }
 
 // Generic workflow step definition
@@ -50,7 +70,7 @@ export function defineWorkflowStep<TInputs, TOutputs>(
       context.core.debug(`Outputs: ${JSON.stringify(validatedOutputs)}`)
       
       // Set GitHub Actions outputs
-      for (const [key, value] of Object.entries(validatedOutputs)) {
+      for (const [key, value] of Object.entries(validatedOutputs as Record<string, any>)) {
         context.core.setOutput(key, typeof value === 'string' ? value : JSON.stringify(value))
       }
 

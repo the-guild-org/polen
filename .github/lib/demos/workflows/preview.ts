@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod'
-import { defineWorkflowStep } from '../../shared/workflow-framework.ts'
+import { defineWorkflowStep } from '../../../../src/lib/github-actions/index.js'
 import { demoOrchestrator } from '../orchestrator.ts'
 import { getDemoExamples } from '../../../scripts/tools/get-demo-examples.ts'
 

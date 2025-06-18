@@ -45,7 +45,7 @@ export {
   WorkflowOrchestrator,
   CommonSchemas,
   createLegacyStep
-} from '../shared/workflow-framework.ts'
+} from '../../../src/lib/github-actions/index.js'
 
 export {
   GitVersionUtils,
