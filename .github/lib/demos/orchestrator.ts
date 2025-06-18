@@ -354,13 +354,24 @@ export class DemoOrchestrator {
 
     // Copy builds to commit-specific path
     for (const example of examples) {
-      const buildDir = join('examples', example, 'build')
+      // Polen outputs to 'dist' by default
+      const distDir = join('examples', example, 'dist')
       try {
-        await fs.access(buildDir)
+        await fs.access(distDir)
         const destDir = join(deployDir, sha, example)
-        await fs.cp(buildDir, destDir, { recursive: true })
+        await fs.cp(distDir, destDir, { recursive: true })
+        this.logger.info(`Copied ${example} demo from dist`)
       } catch {
-        this.logger.debug(`Skipping ${example} - no build directory found`)
+        // Fallback to 'build' directory if 'dist' doesn't exist
+        const buildDir = join('examples', example, 'build')
+        try {
+          await fs.access(buildDir)
+          const destDir = join(deployDir, sha, example)
+          await fs.cp(buildDir, destDir, { recursive: true })
+          this.logger.info(`Copied ${example} demo from build`)
+        } catch {
+          this.logger.debug(`Skipping ${example} - no dist or build directory found`)
+        }
       }
     }
 
