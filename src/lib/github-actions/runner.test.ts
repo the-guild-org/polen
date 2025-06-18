@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v4'
-import { searchModule } from './discovery.ts'
 import { runStep } from './runner.ts'
+import { searchModule } from './search-module.ts'
 import { defineStep } from './step.ts'
 
 // Mock the discovery module

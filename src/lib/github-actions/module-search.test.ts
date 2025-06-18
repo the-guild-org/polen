@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { searchModule } from './discovery.ts'
+import { searchModule } from './search-module.ts'
 
 // Mock fs module
 vi.mock('node:fs', () => ({

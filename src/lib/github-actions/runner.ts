@@ -7,9 +7,9 @@ import { context, getOctokit } from '@actions/github'
 import { promises as fs } from 'node:fs'
 import { z } from 'zod/v4'
 import { $ } from 'zx'
-import { searchModule } from './discovery.ts'
 import { WorkflowError } from './error-handling.ts'
 import { createPRController } from './pr-controller.ts'
+import { searchModule } from './search-module.ts'
 import type { Args, ExportedStep } from './step.ts'
 
 /**
