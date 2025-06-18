@@ -4,7 +4,7 @@
 
 import { z } from 'zod'
 import { defineWorkflowStep } from '../../../../src/lib/github-actions/index.ts'
-import { getDemoExamples } from '../../../scripts/tools/get-demo-examples.ts'
+import { getDemoExamples } from '../utils/get-demo-examples.ts'
 import { demoOrchestrator } from '../orchestrator.ts'
 
 // Input/Output schemas

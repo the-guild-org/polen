@@ -38,13 +38,8 @@ export {
   safeExecute,
   ValidationError,
   WorkflowError,
-} from '../shared/error-handling.ts'
+} from '../../../src/lib/github-actions/error-handling.ts'
 
-export {
-  CommonSchemas,
-  createLegacyStep,
-  defineWorkflowStep,
-  WorkflowOrchestrator,
-} from '../../../src/lib/github-actions/index.ts'
+export { CommonSchemas, defineWorkflowStep, WorkflowOrchestrator } from '../../../src/lib/github-actions/index.ts'
 
 export { commitAndPush, configureGit, createCommitMessage, hasChangesToCommit } from '../shared/git-utils.ts'

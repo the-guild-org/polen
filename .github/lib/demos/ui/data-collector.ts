@@ -5,10 +5,10 @@
 import { Str } from '@wollybeard/kit'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { WorkflowError } from '../../../../src/lib/github-actions/error-handling.ts'
 import { VersionHistory } from '../../../../src/lib/version-history/index.ts'
-import { getDemoExamples } from '../../../scripts/tools/get-demo-examples.ts'
-import { WorkflowError } from '../../shared/error-handling.ts'
 import { demoConfig } from '../config.ts'
+import { getDemoExamples } from '../utils/get-demo-examples.ts'
 
 export interface DemoMetadata {
   title: string

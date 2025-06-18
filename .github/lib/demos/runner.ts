@@ -9,7 +9,7 @@ import { getOctokit } from '@actions/github'
 import { context } from '@actions/github'
 import { promises as fs } from 'node:fs'
 import { $ } from 'zx'
-import { WorkflowError } from '../shared/error-handling.ts'
+import { WorkflowError } from '../../../src/lib/github-actions/error-handling.ts'
 
 // Import all workflow step functions
 import { addDemosLink, buildDemos, extractReleaseInfo } from './workflows/release.ts'

@@ -4,14 +4,13 @@
 
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { $ } from 'zx'
 import { demoBuilder } from '../../../src/lib/demos/builder.ts'
+import { executeWithContinuation, safeExecute, WorkflowError } from '../../../src/lib/github-actions/error-handling.ts'
 import { VersionHistory } from '../../../src/lib/version-history/index.ts'
-import { getDemoExamples } from '../../scripts/tools/get-demo-examples.ts'
-import { executeWithContinuation, safeExecute, WorkflowError } from '../shared/error-handling.ts'
 import { demoConfig } from './config.ts'
 import { DeploymentPathManager } from './deployment/path-manager.ts'
 import { buildDemosHome } from './ui/landing-page.ts'
+import { getDemoExamples } from './utils/get-demo-examples.ts'
 
 export interface BuildResult {
   success: boolean

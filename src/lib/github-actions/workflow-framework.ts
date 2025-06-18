@@ -78,16 +78,6 @@ export const CommonSchemas = {
   jsonString: <T>(schema: z.ZodSchema<T>) => z.string().transform(s => schema.parse(JSON.parse(s))),
 } as const
 
-// Utility for creating simple string-based steps (backwards compatibility)
-export function createLegacyStep<TInputs = Record<string, string>>(
-  execute: (context: WorkflowContext & { inputs: TInputs }) => Promise<void>,
-) {
-  return async (context: WorkflowContext): Promise<void> => {
-    const inputs = context.core.getInput as any // Legacy compatibility
-    await execute({ ...context, inputs })
-  }
-}
-
 /**
  * Workflow orchestration utilities
  */

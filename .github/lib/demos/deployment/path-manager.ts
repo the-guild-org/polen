@@ -4,7 +4,7 @@
 
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { WorkflowError } from '../../shared/error-handling.ts'
+import { WorkflowError } from '../../../../src/lib/github-actions/index.ts'
 
 export interface RedirectConfig {
   from: string
