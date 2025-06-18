@@ -3,6 +3,16 @@ import { readFileSync } from 'node:fs'
 import type { DemoConfigData } from './config-schema.ts'
 import { DemoConfigSchema, LegacyDemoConfigSchema } from './config-schema.ts'
 
+// Try to import the TypeScript config
+let importedConfig: DemoConfigData | null = null
+try {
+  // @ts-ignore - This import might fail if the file doesn't exist
+  const configModule = await import('../../../.github/demo-config.ts')
+  importedConfig = configModule.default || configModule.demoConfig
+} catch {
+  // Config file doesn't exist or failed to load
+}
+
 // Default configuration
 const DEFAULT_CONFIG: DemoConfigData = {
   examples: {
@@ -46,14 +56,24 @@ export class DemoConfig {
   private data: DemoConfigData
   private configPath: string
 
-  constructor(configPath: string = '.github/demo-config.json') {
+  constructor(configPath: string = '.github/demo-config') {
     this.configPath = configPath
     this.data = this.loadConfig()
   }
 
   private loadConfig(): DemoConfigData {
+    // Check if we're loading the default config path and have an imported TypeScript config
+    if (this.configPath === '.github/demo-config' && importedConfig) {
+      const parsed = DemoConfigSchema.safeParse(importedConfig)
+      if (parsed.success) {
+        return parsed.data
+      }
+    }
+
+    // Try JSON config
     try {
-      const raw = JSON.parse(readFileSync(this.configPath, 'utf-8'))
+      const jsonConfigPath = `${this.configPath}.json`
+      const raw = JSON.parse(readFileSync(jsonConfigPath, 'utf-8'))
 
       // Try to parse as modern config first
       const modernParse = DemoConfigSchema.safeParse(raw)
@@ -79,10 +99,11 @@ export class DemoConfig {
 
       throw new Error('Invalid config format')
     } catch (e) {
-      console.warn(`Could not read ${this.configPath}, using defaults:`, e)
+      console.warn(`No config file found at ${this.configPath}.json, using defaults`)
       return DEFAULT_CONFIG
     }
   }
+
 
   get excludeDemos(): string[] {
     return this.data.examples.exclude
