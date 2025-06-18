@@ -4,7 +4,6 @@
 
 import type { Context } from '@actions/github/lib/context.ts'
 import type { GitHub } from '@actions/github/lib/utils.ts'
-import type { Obj } from '@wollybeard/kit'
 import { z } from 'zod/v4'
 import type { PRController } from './pr-controller.ts'
 
@@ -18,6 +17,11 @@ export interface Args<$Inputs extends object = {}> {
   pr: PRController
   inputs: $Inputs
 }
+
+export type Step<$Inputs = Record<string, any>> = (
+  context: Args,
+  inputs: $Inputs,
+) => Promise<void>
 
 type InputsSchema = z.ZodObject
 
@@ -61,7 +65,6 @@ export function defineStep<
       if (parseResult) {
         if (parseResult.success) {
           inputs = parseResult.data
-          throw parseResult.error
         } else {
           throw parseResult.error
         }
@@ -110,18 +113,13 @@ export function defineStep<
         for (const [key, value] of Object.entries(outputs)) {
           args.core.setOutput(key, typeof value === 'string' ? value : JSON.stringify(value))
         }
-
-        args.core.endGroup()
-      }
-
-      //
-      // ━━ Ensure No Outputs
-      //
-
-      if (outputs) {
+      } else if (outputRaw !== undefined && outputRaw !== null) {
+        //
+        // ━━ Ensure No Outputs
+        //
         args.core.warning(
-          `Step did not define outputs schema, but returned outputs. These will not be validated or exoprted. Outputs were: ${
-            JSON.stringify(outputs)
+          `Step did not define outputs schema, but returned outputs. These will not be validated or exported. Outputs were: ${
+            JSON.stringify(outputRaw)
           }`,
         )
       }

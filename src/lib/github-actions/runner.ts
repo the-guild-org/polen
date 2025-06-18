@@ -8,8 +8,7 @@ import { promises as fs } from 'node:fs'
 import { $ } from 'zx'
 import { WorkflowError } from './error-handling.ts'
 import { createPRController } from './pr-controller.ts'
-import type { Args } from './step.ts'
-import type { WorkflowStep } from './types.ts'
+import type { Args, Step } from './step.ts'
 
 /**
  * Create a workflow context with all necessary tools
@@ -50,7 +49,7 @@ export async function runStep(
   try {
     // Dynamically import the step module
     const stepModule = await import(stepPath)
-    const step: WorkflowStep = stepModule.default
+    const step: Step = stepModule.default
 
     if (!step || typeof step !== 'function') {
       throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)

@@ -7,12 +7,6 @@ import type { Args } from './step.ts'
 // Re-export workflow context for convenience
 export type { Args }
 
-// Workflow step function type
-export type WorkflowStep<TInputs = Record<string, any>> = (
-  context: Args,
-  inputs: TInputs,
-) => Promise<void>
-
 // Workflow results
 export interface WorkflowResult {
   success: boolean
