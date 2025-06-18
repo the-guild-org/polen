@@ -107,9 +107,8 @@ jobs:
         run: pnpm test:examples
 
   demos:
-    uses: ./.github/workflows/_demos-preview.yaml
+    uses: ./.github/workflows/demos-preview.yaml
     with:
-      action: ${{ github.event.action }}
-      pr-number: ${{ github.event.pull_request.number }}
-      head-ref: ${{ github.head_ref }}
-      head-sha: ${{ github.event.pull_request.head.sha }}
+      pr_number: ${{ github.event.pull_request.number }}
+      head_ref: ${{ github.head_ref }}
+      head_sha: ${{ github.event.pull_request.head.sha }}
