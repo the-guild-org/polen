@@ -69,15 +69,15 @@ export function createStep<
   $OutputsSchema extends OutputsSchema,
   $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 >(
-  definition: Definition<$InputsSchema, $OutputsSchema, $ContextSchema>,
+  input: Definition<$InputsSchema, $OutputsSchema, $ContextSchema>,
 ): Step<$InputsSchema, $OutputsSchema, $ContextSchema> {
   const run = async (args: Args<z.Infer<$InputsSchema>, any>) => {
-    const outputRaw = await definition.run(args as any)
+    const outputRaw = await input.run(args as any)
     return outputRaw as z.Infer<$OutputsSchema>
   }
 
   return {
-    definition,
+    input,
     run,
   }
 }

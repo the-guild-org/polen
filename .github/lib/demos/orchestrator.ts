@@ -134,7 +134,7 @@ export class DemoOrchestrator {
 
       // Create deployment structure
       await this.preparePRDeployment(prNumber, shortSha, ref, fullSha)
-      
+
       // After deployment structure is created, build SHA-specific landing page
       await buildDemosHome({
         basePath: shaBasePath,
