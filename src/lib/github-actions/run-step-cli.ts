@@ -37,8 +37,8 @@ async function main() {
     // Merge all inputs together, with well-known inputs taking precedence
     const mergedInputs = {
       ...inputs,
-      ...(Object.keys(context).length > 0 && { context }),
-      ...(Object.keys(previous).length > 0 && { previous }),
+      ...(Object.keys(context).length > 0 ? { context } : {}),
+      ...(Object.keys(previous).length > 0 ? { previous } : {}),
     }
 
     await runStep(stepPath, JSON.stringify(mergedInputs))
