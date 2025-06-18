@@ -30,13 +30,13 @@ jobs:
 
       - name: Check latest tag
         id: check
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: check-latest-tag
 
       - name: Build current cycle
         if: steps.check.outputs.has_versions == 'true'
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: build-current-cycle
           inputs: |  

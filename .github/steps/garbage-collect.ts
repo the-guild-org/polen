@@ -2,7 +2,7 @@ import { z } from 'zod/v4'
 import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
-const GarbageCollectOutputs = z.object({
+const Outputs = z.object({
   removed: z.string(),
   removed_count: z.string(),
 })
@@ -14,8 +14,7 @@ export default defineWorkflowStep({
   name: 'garbage-collect',
   description: 'Remove old demo deployments to save space',
   inputs: z.object({}),
-  outputs: GarbageCollectOutputs,
-
+  outputs: Outputs,
   async execute({ core }) {
     const result = await demoOrchestrator.garbageCollect()
 

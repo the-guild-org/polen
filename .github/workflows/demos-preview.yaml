@@ -47,13 +47,13 @@ jobs:
 
       - name: Get previous deployments
         id: previous
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: get-previous-deployments
           inputs: ${{ toJSON(inputs) }}
 
       - name: Prepare PR deployment
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: prepare-pr-deployment
           inputs: ${{ toJSON(inputs) }}
@@ -69,7 +69,7 @@ jobs:
 
       - name: Generate demo links
         id: generate-links
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: generate-demo-links
           inputs: |

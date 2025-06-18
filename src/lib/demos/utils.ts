@@ -1,11 +1,14 @@
 /**
- * Get list of demo examples from the examples directory
+ * Utility functions for demo management
  */
 
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { demoConfig } from '../config.ts'
+import { getDemoConfig } from './config.ts'
 
+/**
+ * Get list of demo examples from the examples directory
+ */
 export async function getDemoExamples(): Promise<string[]> {
   const examplesDir = join(process.cwd(), 'examples')
   const examples: string[] = []
@@ -23,5 +26,6 @@ export async function getDemoExamples(): Promise<string[]> {
   }
 
   // Use DemoConfig to filter and order examples
-  return demoConfig.getOrderedExamples(examples)
+  const config = getDemoConfig()
+  return config.getOrderedDemos(examples)
 }

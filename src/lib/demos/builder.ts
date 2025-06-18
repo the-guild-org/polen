@@ -1,8 +1,8 @@
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { $ } from 'zx'
-import { getDemoExamples } from '../../../.github/lib/demos/index.ts'
 import { getDemoConfig } from './config.ts'
+import { getDemoExamples } from './utils.ts'
 
 $.verbose = false // Suppress command output by default
 

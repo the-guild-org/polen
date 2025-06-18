@@ -3,7 +3,7 @@
  */
 
 import { $ } from 'zx'
-import { safeExecute } from '../../../src/lib/github-actions/index.ts'
+import { safeExecute } from '../../src/lib/github-actions/index.ts'
 
 /**
  * Configure git for GitHub Actions bot

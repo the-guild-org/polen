@@ -28,7 +28,7 @@ jobs:
 
       - name: Get dist-tag info
         id: dist-tag
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: get-dist-tag-info
           inputs: |
@@ -45,7 +45,7 @@ jobs:
           path: gh-pages
 
       - name: Update dist-tag content
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: update-dist-tag-content
           inputs: |

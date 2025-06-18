@@ -1,7 +1,7 @@
 import { z } from 'zod/v4'
+import { getDemoConfig } from '../../src/lib/demos/index.ts'
 import { CommonSchemas, defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
-import { demoConfig } from '../lib/demos/config.ts'
 
 // Input/Output schemas
 const ExtractReleaseInfoInputs = z.object({
@@ -77,12 +77,12 @@ export default defineWorkflowStep({
     }
 
     // Regular semver release - check minimum version
-    const config = demoConfig.getConfig()
-    const needsBuild = demoConfig.meetsMinimumVersion(tag)
+    const config = getDemoConfig()
+    const needsBuild = config.meetsMinimumPolenVersion(tag)
 
     if (!needsBuild) {
       core.warning(
-        `Version ${tag} is below minimum Polen version ${config.examples.minimumPolenVersion}`,
+        `Version ${tag} is below minimum Polen version ${config.minimumPolenVersion}`,
       )
     }
 

@@ -2,12 +2,12 @@ import { z } from 'zod/v4'
 import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
-const UpdateDistTagContentInputs = z.object({
+const Inputs = z.object({
   tag_name: z.string(),
   semver_tag: z.string(),
 })
 
-const UpdateDistTagContentOutputs = z.object({
+const Outputs = z.object({
   update_complete: z.string(),
 })
 
@@ -17,9 +17,8 @@ const UpdateDistTagContentOutputs = z.object({
 export default defineWorkflowStep({
   name: 'update-dist-tag-content',
   description: 'Copy content from semver deployment to dist-tag directory',
-  inputs: UpdateDistTagContentInputs,
-  outputs: UpdateDistTagContentOutputs,
-
+  inputs: Inputs,
+  outputs: Outputs,
   async execute({ inputs }) {
     const { tag_name, semver_tag } = inputs
 

@@ -2,11 +2,11 @@ import { z } from 'zod/v4'
 import { CommonSchemas, defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
-const BuildCurrentCycleInputs = z.object({
+const Inputs = z.object({
   versions_to_rebuild: CommonSchemas.jsonString(z.array(z.string())),
 })
 
-const BuildCurrentCycleOutputs = z.object({
+const Outputs = z.object({
   build_complete: z.string(),
   failed_versions: z.string(),
 })
@@ -17,9 +17,8 @@ const BuildCurrentCycleOutputs = z.object({
 export default defineWorkflowStep({
   name: 'build-current-cycle',
   description: 'Build demos for all versions in the current development cycle',
-  inputs: BuildCurrentCycleInputs,
-  outputs: BuildCurrentCycleOutputs,
-
+  inputs: Inputs,
+  outputs: Outputs,
   async execute({ core, inputs }) {
     const versions = inputs.versions_to_rebuild
 

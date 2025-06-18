@@ -33,7 +33,7 @@ jobs:
 
       - name: Run garbage collector
         id: gc
-        uses: ./.github/actions/workflow-step
+        uses: ./.github/actions/step
         with:
           name: garbage-collect
 

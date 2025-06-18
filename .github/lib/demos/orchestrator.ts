@@ -4,13 +4,11 @@
 
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { demoBuilder } from '../../../src/lib/demos/builder.ts'
+import { demoBuilder, getDemoConfig, getDemoExamples } from '../../../src/lib/demos/index.ts'
 import { executeWithContinuation, safeExecute, WorkflowError } from '../../../src/lib/github-actions/error-handling.ts'
 import { VersionHistory } from '../../../src/lib/version-history/index.ts'
-import { demoConfig } from './config.ts'
 import { DeploymentPathManager } from './deployment/path-manager.ts'
 import { buildDemosHome } from './ui/landing-page.ts'
-import { getDemoExamples } from './utils/get-demo-examples.ts'
 
 export interface BuildResult {
   success: boolean
@@ -31,7 +29,7 @@ export interface GcResult {
 export class DemoOrchestrator {
   private versionHistory: VersionHistory
   private pathManager: DeploymentPathManager
-  private config = demoConfig.getConfig()
+  private config = getDemoConfig()
 
   constructor(
     private workingDir: string = process.cwd(),
@@ -50,8 +48,8 @@ export class DemoOrchestrator {
       this.logger.info(`🚀 Building demos for release ${version}`)
 
       // Check minimum version requirement
-      if (!demoConfig.meetsMinimumVersion(version)) {
-        const minVersion = this.config.examples.minimumPolenVersion
+      if (!this.config.meetsMinimumPolenVersion(version)) {
+        const minVersion = this.config.minimumPolenVersion
         this.logger.error(`Version ${version} is below minimum ${minVersion}`)
         return {
           success: false,
@@ -63,7 +61,7 @@ export class DemoOrchestrator {
 
       // Determine deployment path
       const isStable = VersionHistory.isStableVersion(version)
-      const basePath = demoConfig.getDeploymentPath(version, isStable)
+      const basePath = this.config.getDeploymentPath(version, isStable)
 
       // Build landing page
       await buildDemosHome({
@@ -158,7 +156,7 @@ export class DemoOrchestrator {
         versions,
         async (version) => {
           const isStable = VersionHistory.isStableVersion(version)
-          const basePath = demoConfig.getDeploymentPath(version, isStable)
+          const basePath = this.config.getDeploymentPath(version, isStable)
 
           // Build landing page
           await buildDemosHome({

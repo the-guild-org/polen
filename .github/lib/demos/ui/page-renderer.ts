@@ -2,7 +2,7 @@
  * HTML page renderer for demo landing pages
  */
 
-import { demoConfig } from '../config.ts'
+import { getDemoConfig } from '../../../../src/lib/demos/index.ts'
 import {
   generateBackLink,
   generateDemosGrid,
@@ -21,7 +21,7 @@ export class DemoPageRenderer {
    * Render main demo landing page
    */
   renderMainLandingPage(data: LandingPageData): string {
-    const config = demoConfig.getConfig()
+    const config = getDemoConfig().fullConfig
     const { mode, prNumber } = data.config
 
     let pageTitle = config.ui.branding.title

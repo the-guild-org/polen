@@ -2,14 +2,14 @@
  * UI component generators for demo landing pages
  */
 
-import { demoConfig } from '../config.ts'
+import { getDemoConfig } from '../../../../src/lib/demos/index.ts'
 import type { DemoMetadata, LandingPageData, PrDeployment, TrunkDeployment } from './data-collector.ts'
 
 /**
  * CSS styles for the demo landing page
  */
 export const getDemoPageStyles = () => {
-  const config = demoConfig.getConfig()
+  const config = getDemoConfig().fullConfig
   const theme = config.ui.theme
 
   return `
@@ -219,7 +219,7 @@ export const getDemoPageStyles = () => {
  * Generate header HTML
  */
 export const generateHeader = (data: LandingPageData): string => {
-  const config = demoConfig.getConfig()
+  const config = getDemoConfig().fullConfig
   const { mode, prNumber } = data.config
 
   let title = config.ui.branding.title
@@ -283,7 +283,7 @@ export const generateDemoCard = (
  */
 export const generateDemosGrid = (data: LandingPageData): string => {
   const { demoMetadata, demoExamples, config } = data
-  const orderedExamples = demoConfig.getOrderedExamples(demoExamples)
+  const orderedExamples = getDemoConfig().getOrderedDemos(demoExamples)
 
   // Add disabled demos to the list
   const allDemos = [...orderedExamples]

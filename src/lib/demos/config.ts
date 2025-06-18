@@ -1,10 +1,45 @@
 import { gte as semverGte, parse as semverParse } from '@vltpkg/semver'
 import { readFileSync } from 'node:fs'
+import type { DemoConfigData } from './config-schema.ts'
+import { DemoConfigSchema, LegacyDemoConfigSchema } from './config-schema.ts'
 
-export interface DemoConfigData {
-  excludeDemos: string[]
-  minimumPolenVersion: string
-  order: string[]
+// Default configuration
+const DEFAULT_CONFIG: DemoConfigData = {
+  examples: {
+    exclude: [],
+    order: [],
+    minimumPolenVersion: '0.1.0',
+  },
+  deployment: {
+    basePaths: {},
+    redirects: [],
+    gc: {
+      retainStableVersions: true,
+      retainCurrentCycle: true,
+      retainDays: 30,
+    },
+  },
+  ui: {
+    theme: {
+      primaryColor: '#000',
+      backgroundColor: '#fff',
+      textColor: '#000',
+      mutedTextColor: '#666',
+    },
+    branding: {
+      title: 'Polen Demos',
+      description: 'Interactive GraphQL API documentation',
+    },
+  },
+  metadata: {
+    disabledDemos: {
+      github: {
+        title: 'GitHub API',
+        description: "Browse GitHub's extensive GraphQL API with over 1600 types.",
+        reason: 'Currently disabled due to build performance.',
+      },
+    },
+  },
 }
 
 export class DemoConfig {
@@ -19,32 +54,48 @@ export class DemoConfig {
   private loadConfig(): DemoConfigData {
     try {
       const raw = JSON.parse(readFileSync(this.configPath, 'utf-8'))
-      return {
-        excludeDemos: raw.excludeDemos || [],
-        // Support both old and new field names during migration
-        minimumPolenVersion: raw.minimumPolenVersion || raw.minimumVersion || '0.0.0',
-        order: raw.order || [],
+
+      // Try to parse as modern config first
+      const modernParse = DemoConfigSchema.safeParse(raw)
+      if (modernParse.success) {
+        return modernParse.data
       }
+
+      // Fall back to legacy config format
+      const legacyParse = LegacyDemoConfigSchema.safeParse(raw)
+      if (legacyParse.success) {
+        const legacy = legacyParse.data
+        return {
+          ...DEFAULT_CONFIG,
+          examples: {
+            exclude: legacy.excludeDemos || [],
+            order: legacy.order || [],
+            minimumPolenVersion: legacy.minimumPolenVersion || legacy.minimumVersion || '0.0.0',
+          },
+        }
+      }
+
+      throw new Error('Invalid config format')
     } catch (e) {
-      console.warn(`Could not read ${this.configPath}, using defaults`)
-      return {
-        excludeDemos: [],
-        minimumPolenVersion: '0.0.0',
-        order: [],
-      }
+      console.warn(`Could not read ${this.configPath}, using defaults:`, e)
+      return DEFAULT_CONFIG
     }
   }
 
   get excludeDemos(): string[] {
-    return this.data.excludeDemos
+    return this.data.examples.exclude
   }
 
   get minimumPolenVersion(): string {
-    return this.data.minimumPolenVersion
+    return this.data.examples.minimumPolenVersion
   }
 
   get order(): string[] {
-    return this.data.order
+    return this.data.examples.order
+  }
+
+  get fullConfig(): DemoConfigData {
+    return this.data
   }
 
   /**
@@ -65,7 +116,7 @@ export class DemoConfig {
    * Check if a demo is excluded
    */
   isDemoExcluded(demoName: string): boolean {
-    return this.data.excludeDemos.includes(demoName)
+    return this.data.examples.exclude.includes(demoName)
   }
 
   /**
@@ -94,6 +145,20 @@ export class DemoConfig {
     orderedDemos.push(...remainingDemos)
 
     return orderedDemos
+  }
+
+  /**
+   * Get deployment path for a version
+   */
+  getDeploymentPath(version: string, isStable: boolean = false): string {
+    return isStable ? '/latest/' : `/${version}/`
+  }
+
+  /**
+   * Get all disabled demos with metadata
+   */
+  getDisabledDemos(): Record<string, { title: string; description: string; reason?: string }> {
+    return this.data.metadata.disabledDemos
   }
 }
 

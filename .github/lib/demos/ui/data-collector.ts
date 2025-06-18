@@ -5,10 +5,9 @@
 import { Str } from '@wollybeard/kit'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { getDemoConfig, getDemoExamples } from '../../../../src/lib/demos/index.ts'
 import { WorkflowError } from '../../../../src/lib/github-actions/error-handling.ts'
 import { VersionHistory } from '../../../../src/lib/version-history/index.ts'
-import { demoConfig } from '../config.ts'
-import { getDemoExamples } from '../utils/get-demo-examples.ts'
 
 export interface DemoMetadata {
   title: string
@@ -139,7 +138,7 @@ export class DemoDataCollector {
    */
   private async loadDemoMetadata(demoExamples: string[]): Promise<Record<string, DemoMetadata>> {
     const metadata: Record<string, DemoMetadata> = {}
-    const config = demoConfig.getConfig()
+    const config = getDemoConfig().fullConfig
 
     // Load metadata from package.json files for enabled examples
     for (const example of demoExamples) {
@@ -164,7 +163,8 @@ export class DemoDataCollector {
     }
 
     // Add disabled demos from configuration
-    for (const [name, disabledDemo] of Object.entries(config.metadata.disabledDemos)) {
+    const disabledDemos = getDemoConfig().getDisabledDemos()
+    for (const [name, disabledDemo] of Object.entries(disabledDemos)) {
       metadata[name] = {
         title: disabledDemo.title,
         description: disabledDemo.description,

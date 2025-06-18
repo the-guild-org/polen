@@ -3,9 +3,9 @@
  * Replaces .github/demo-config.json with a TypeScript configuration
  */
 
-import type { DemoConfig } from './lib/demos/config.ts'
+import type { DemoConfigData } from '../src/lib/demos/config-schema.ts'
 
-export const demoConfig: DemoConfig = {
+export const demoConfig: DemoConfigData = {
   examples: {
     exclude: ['github'],
     order: ['hive', 'pokemon'],

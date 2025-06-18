@@ -7,8 +7,8 @@ import { context, getOctokit } from '@actions/github'
 import { promises as fs } from 'node:fs'
 import { $ } from 'zx'
 import { WorkflowError } from './error-handling.ts'
-import type { WorkflowContext } from './workflow-framework.ts'
 import type { WorkflowStep } from './types.js'
+import type { WorkflowContext } from './workflow-framework.ts'
 
 /**
  * Create a workflow context with all necessary tools
@@ -121,20 +121,19 @@ export async function runWorkflowStepFromPath(
   inputsJson?: string,
 ): Promise<void> {
   const inputs = inputsJson ? JSON.parse(inputsJson) : {}
-  
+
   try {
     // Dynamically import the step module
     const stepModule = await import(stepPath)
     const step: WorkflowStep = stepModule.default
-    
+
     if (!step || typeof step !== 'function') {
       throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
     }
-    
+
     // Create context and run the step
     const context = createWorkflowContext()
     await step(context, inputs)
-    
   } catch (error) {
     if (error instanceof SyntaxError && inputsJson) {
       console.error(`❌ Invalid JSON inputs: ${inputsJson}`)
@@ -144,5 +143,26 @@ export async function runWorkflowStepFromPath(
       console.error(`❌ Error running step from ${stepPath}:`, error)
     }
     process.exit(1)
+  }
+}
+
+/**
+ * Create a CLI runner for workflow steps with custom conventions
+ */
+export function createStepRunnerCLI(options: {
+  stepResolver: (stepName: string) => string
+  usage?: string
+}): () => Promise<void> {
+  return async () => {
+    const stepName = process.argv[2]
+    const inputsJson = process.argv[3]
+
+    if (!stepName) {
+      console.error(options.usage || 'Usage: node runner.ts <step-name> [inputs-json]')
+      process.exit(1)
+    }
+
+    const stepPath = options.stepResolver(stepName)
+    await runWorkflowStepFromPath(stepPath, inputsJson)
   }
 }

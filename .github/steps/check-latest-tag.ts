@@ -2,7 +2,7 @@ import { z } from 'zod/v4'
 import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
-const CheckLatestTagOutputs = z.object({
+const Outputs = z.object({
   has_versions: z.string(),
   versions_to_rebuild: z.string(),
 })
@@ -14,8 +14,7 @@ export default defineWorkflowStep({
   name: 'check-latest-tag',
   description: 'Identify all versions in the current development cycle that need demo updates',
   inputs: z.object({}),
-  outputs: CheckLatestTagOutputs,
-
+  outputs: Outputs,
   async execute({ core }) {
     const versionHistory = new VersionHistory()
 

@@ -1,12 +1,12 @@
 import { z } from 'zod/v4'
 import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 
-const GetPreviousDeploymentsInputs = z.object({
+const Inputs = z.object({
   pr_number: z.string(),
   head_sha: z.string(),
 })
 
-const GetPreviousDeploymentsOutputs = z.object({
+const Outputs = z.object({
   deployment_links: z.string(),
 })
 
@@ -16,9 +16,8 @@ const GetPreviousDeploymentsOutputs = z.object({
 export default defineWorkflowStep({
   name: 'get-previous-deployments',
   description: 'Retrieve previous successful PR demo deployments for comparison links',
-  inputs: GetPreviousDeploymentsInputs,
-  outputs: GetPreviousDeploymentsOutputs,
-
+  inputs: Inputs,
+  outputs: Outputs,
   async execute({ github, context, core, inputs }) {
     const { pr_number, head_sha } = inputs
 

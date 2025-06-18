@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
+import { getDemoExamples } from '../../src/lib/demos/index.ts'
 import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
-import { getDemoExamples } from '../lib/demos/get-demo-examples.ts'
 
 const GenerateDemoLinksInputs = z.object({
   pr_number: z.string(),
@@ -23,7 +23,7 @@ export default defineWorkflowStep({
   inputs: GenerateDemoLinksInputs,
   outputs: GenerateDemoLinksOutputs,
 
-  async execute({ core, inputs }) {
+  async execute({ inputs }) {
     const {
       pr_number,
       head_sha,

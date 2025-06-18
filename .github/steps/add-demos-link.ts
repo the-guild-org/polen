@@ -1,13 +1,13 @@
 import { z } from 'zod/v4'
 import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 
-const AddDemosLinkInputs = z.object({
+const Intputs = z.object({
   actual_tag: z.string(),
   github_event_name: z.string(),
   github_release_target_commitish: z.string().optional(),
 })
 
-const AddDemosLinkOutputs = z.object({
+const Outputs = z.object({
   link_added: z.string(),
 })
 
@@ -17,9 +17,8 @@ const AddDemosLinkOutputs = z.object({
 export default defineWorkflowStep({
   name: 'add-demos-link',
   description: 'Add a GitHub commit status with link to the deployed demos',
-  inputs: AddDemosLinkInputs,
-  outputs: AddDemosLinkOutputs,
-
+  inputs: Intputs,
+  outputs: Outputs,
   async execute({ github, context, core, inputs }) {
     const { actual_tag, github_event_name, github_release_target_commitish } = inputs
 

@@ -2,13 +2,13 @@ import { z } from 'zod/v4'
 import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
-const GetDistTagInfoInputs = z.object({
+const Inputs = z.object({
   github_event_name: z.string(),
   input_dist_tag: z.string().optional(),
   github_ref: z.string().optional(),
 })
 
-const GetDistTagInfoOutputs = z.object({
+const Outputs = z.object({
   tag_name: z.string(),
   semver_tag: z.string(),
   commit: z.string(),
@@ -20,9 +20,8 @@ const GetDistTagInfoOutputs = z.object({
 export default defineWorkflowStep({
   name: 'get-dist-tag-info',
   description: 'Resolve npm dist-tags to their actual semver versions',
-  inputs: GetDistTagInfoInputs,
-  outputs: GetDistTagInfoOutputs,
-
+  inputs: Inputs,
+  outputs: Outputs,
   async execute({ core, inputs }) {
     const { github_event_name, input_dist_tag, github_ref } = inputs
     const versionHistory = new VersionHistory()
