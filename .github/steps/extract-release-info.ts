@@ -64,16 +64,17 @@ export default defineStep({
     // Track tags for debugging
     core.info(`Analyzing tag: ${tag}`)
 
-    // Identify latest dist tag
-    const latestDistTag = config.distTags.latest
-    const isDistTag = config.distTags[tag] !== undefined
-    const actualTag = isDistTag ? config.distTags[tag] : tag
+    // Create version history and analyze dist tags
+    const history = new VersionHistory()
+    const distTagInfo = await history.getDistTag(tag)
+    const isDistTag = distTagInfo !== null && distTagInfo.semverTag !== undefined
+    const actualTag = isDistTag && distTagInfo.semverTag ? distTagInfo.semverTag : tag
 
     core.info(`Tag info: ${tag} -> ${actualTag} (isDistTag: ${isDistTag})`)
 
-    // Create version history and analyze tags
-    const history = new VersionHistory()
-    const allTags = history.getTags()
+    // Get all version tags
+    const versions = await history.getVersions()
+    const allTags = new Set(versions.map(v => v.tag))
 
     // Check if this is a prerelease
     const isPrerelease = tag.includes('-') || tag.includes('alpha') || tag.includes('beta') || tag.includes('rc')

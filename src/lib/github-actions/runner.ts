@@ -10,7 +10,7 @@ import { $ } from 'zx'
 import { WorkflowError } from './error-handling.ts'
 import { createPRController } from './pr-controller.ts'
 import { searchModule } from './search-module.ts'
-import type { Args, ExportedStep } from './step.ts'
+import type { Args, Step } from './step.ts'
 
 /**
  * Create a workflow context with all necessary tools
@@ -73,9 +73,9 @@ export async function runStep(
   try {
     // Dynamically import the step module
     const stepModule = await import(stepPath)
-    const step: ExportedStep = stepModule.default
+    const step: Step = stepModule.default
 
-    if (!step || !step.execute || !step.definition) {
+    if (!step || !step.run || !step.definition) {
       throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
     }
 
@@ -83,7 +83,7 @@ export async function runStep(
 
     // todo: allow step definition to opt-out of runtime validation
     // Validate context if schema is provided
-    let validatedContext = context
+    let validatedContext: any = context
     if (definition.context) {
       const contextValidation = definition.context.safeParse(context)
       if (!contextValidation.success) {
@@ -142,7 +142,7 @@ export async function runStep(
     core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
     // Execute step
-    const outputRaw = await step.execute(stepArgs)
+    const outputRaw = await step.run(stepArgs)
 
     // Validate & Export outputs
     // todo: allow step definition to opt-out of output validation

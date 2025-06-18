@@ -18,7 +18,7 @@ export interface Args<$Inputs extends object = {}, $Context = Context> {
   inputs: $Inputs
 }
 
-export type StepFunction<
+export type StepRunner<
   $Inputs extends Record<string, any> = Record<string, any>,
   $Outputs = any,
   $Context = Context,
@@ -48,13 +48,13 @@ export interface StepDefinition<
 }
 
 // Export the full step definition for runner
-export interface ExportedStep<
+export interface Step<
   $InputsSchema extends InputsSchema = InputsSchema,
   $OutputsSchema extends OutputsSchema = OutputsSchema,
   $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 > {
   definition: StepDefinition<$InputsSchema, $OutputsSchema, $ContextSchema>
-  execute: StepFunction<
+  run: StepRunner<
     z.Infer<$InputsSchema>,
     z.Infer<$OutputsSchema>,
     $ContextSchema extends z.ZodTypeAny ? z.Infer<$ContextSchema> : Context
@@ -70,15 +70,15 @@ export function defineStep<
   $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 >(
   definition: StepDefinition<$InputsSchema, $OutputsSchema, $ContextSchema>,
-): ExportedStep<$InputsSchema, $OutputsSchema, $ContextSchema> {
-  const execute = async (args: Args<z.Infer<$InputsSchema>, any>) => {
+): Step<$InputsSchema, $OutputsSchema, $ContextSchema> {
+  const run = async (args: Args<z.Infer<$InputsSchema>, any>) => {
     const outputRaw = await definition.run(args as any)
     return outputRaw as z.Infer<$OutputsSchema>
   }
 
   return {
     definition,
-    execute,
+    run,
   }
 }
 

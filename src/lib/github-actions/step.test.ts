@@ -52,7 +52,7 @@ describe('defineWorkflowStep', () => {
       },
     }
 
-    const result = await TestStep.execute({
+    const result = await TestStep.run({
       ...contextWithPR,
       inputs: {
         required: 'value',
@@ -141,7 +141,7 @@ describe('defineWorkflowStep', () => {
       },
     })
 
-    const result = await TestStep.execute({
+    const result = await TestStep.run({
       ...contextWithPR,
       inputs: {},
     })
