@@ -82,7 +82,8 @@ export interface CreateInput<
   context?: $ContextSchema
   run: (
     args: Args<z.output<$InputsSchema>, z.output<$ContextSchema>>,
-  ) => Promise<z.output<$OutputsSchema> | void>
+    // todo: Obj.isEmpty ...
+  ) => Promise<{} extends z.Infer<$OutputsSchema> ? void : z.Infer<$OutputsSchema>>
 }
 
 /**
@@ -95,20 +96,13 @@ export function createStep<
 >(
   input: CreateInput<$InputsSchema, $OutputsSchema, $ContextSchema>,
 ): Step<$InputsSchema, $OutputsSchema, $ContextSchema> {
-  const { run: inputRun, inputs, outputs, context, ...rest } = input
+  const { run, inputs, outputs, context, ...rest } = input
   const definition: Definition<$InputsSchema, $OutputsSchema, $ContextSchema> = {
     ...rest,
     inputsSchema: inputs,
     outputsSchema: outputs,
     contextSchema: context,
   }
-  
-  // Wrap the run function to ensure it returns the correct type
-  const run: Runner<z.output<$InputsSchema>, z.output<$OutputsSchema>, z.output<$ContextSchema>> = async (args) => {
-    const result = await inputRun(args)
-    return result as z.output<$OutputsSchema>
-  }
-  
   return {
     definition,
     run,
