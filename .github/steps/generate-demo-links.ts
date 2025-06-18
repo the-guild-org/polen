@@ -3,7 +3,7 @@ import { getDemoExamples } from '../../src/lib/demos/index.ts'
 import { defineWorkflowStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
 
 const PreviousStepOutputs = z.object({
-  deployment_links: z.string(),
+  deployment_links: z.string().optional().default('(none)'),
 })
 
 const GenerateDemoLinksInputs = z.object({
@@ -53,7 +53,7 @@ export default defineWorkflowStep<Inputs, Outputs>({
 
       return `#### ${displayName}
 - [Latest](https://${owner}.github.io/${repo}/pr-${pr_number}/latest/${example}/) – [\`${shortSha}\`](https://${owner}.github.io/${repo}/pr-${pr_number}/${head_sha}/${example}/)
-- Previous: ${previous.deployment_links}
+- Previous: ${previous.deployment_links || '(none)'}
 `
     }).join('\\n')
 

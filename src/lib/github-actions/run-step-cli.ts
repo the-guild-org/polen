@@ -34,12 +34,19 @@ async function main() {
     const context = JSON.parse(contextJson)
     const previous = JSON.parse(previousJson)
 
-    // Merge all inputs together, with well-known inputs taking precedence
+    // Debug logging
+    core.debug(`Parsed inputs: ${JSON.stringify(inputs)}`)
+    core.debug(`Parsed context keys: ${Object.keys(context).join(', ')}`)
+    core.debug(`Parsed previous: ${JSON.stringify(previous)}`)
+
+    // Merge all inputs together, always including context and previous
     const mergedInputs = {
       ...inputs,
-      ...(Object.keys(context).length > 0 ? { context } : {}),
-      ...(Object.keys(previous).length > 0 ? { previous } : {}),
+      context,
+      previous,
     }
+
+    core.debug(`Merged inputs: ${JSON.stringify(mergedInputs)}`)
 
     await runStep(stepPath, JSON.stringify(mergedInputs))
   } catch (error) {
