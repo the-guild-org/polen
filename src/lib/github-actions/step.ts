@@ -224,5 +224,5 @@ export function createStep<
   return {
     definition,
     run,
-  }
+  } as any
 }

@@ -1,6 +1,8 @@
 /**
  * GitHub Actions context schemas with proper typing for event payloads
  * Based on GitHub's official webhook documentation
+ *
+ * @see {@link https://docs.github.com/en/webhooks/webhook-events-and-payloads}
  */
 
 import { z } from 'zod/v4'
@@ -168,6 +170,8 @@ const PullRequest = z.object({
 /**
  * Pull request webhook event payload
  * Triggered when a pull request is opened, closed, or changed
+ *
+ * @see {@link https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request}
  */
 export const PullRequestEvent = z.object({
   /**
@@ -210,6 +214,8 @@ export const PullRequestEvent = z.object({
 /**
  * Push webhook event payload
  * Triggered when commits are pushed to a repository
+ *
+ * @see {@link https://docs.github.com/en/webhooks/webhook-events-and-payloads#push}
  */
 export const PushEvent = z.object({
   /** Git ref that was pushed (e.g., 'refs/heads/main') */
@@ -277,6 +283,8 @@ export const PushEvent = z.object({
 /**
  * Workflow dispatch event payload
  * Triggered when a workflow is manually triggered
+ *
+ * @see {@link https://docs.github.com/en/webhooks/webhook-events-and-payloads#workflow_dispatch}
  */
 export const WorkflowDispatchEvent = z.object({
   /** Input values provided to the workflow */
@@ -294,6 +302,8 @@ export const WorkflowDispatchEvent = z.object({
 /**
  * Release event payload
  * Triggered when a release is published, unpublished, created, edited, deleted, or prereleased
+ *
+ * @see {@link https://docs.github.com/en/webhooks/webhook-events-and-payloads#release}
  */
 export const ReleaseEvent = z.object({
   /** Action that triggered the event */

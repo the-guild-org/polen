@@ -72,6 +72,18 @@ export default GitHubActions.createStep({
     const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}`
     s`## [Polen Demos Preview](${baseUrl})`
 
+    // Get current timestamp
+    const now = new Date()
+    const timestamp = now.toLocaleString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour12: false,
+    })
+    s`**<sup>Last updated at ${timestamp}</sup>**`
+
     for (const example of examples) {
       const displayName = Str.Case.title(example)
       const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}`
