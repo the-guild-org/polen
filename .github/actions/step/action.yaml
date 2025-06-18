@@ -26,4 +26,7 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
-      run: node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} '${{ inputs.inputs }}' '${{ inputs.context }}' '${{ inputs.previous }}'
+        STEP_INPUTS: ${{ inputs.inputs }}
+        STEP_CONTEXT: ${{ inputs.context }}
+        STEP_PREVIOUS: ${{ inputs.previous }}
+      run: node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$STEP_INPUTS" "$STEP_CONTEXT" "$STEP_PREVIOUS"
