@@ -1,0 +1,92 @@
+name: demos-release
+
+on:
+  release:
+    types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release semver tag to build demos for (e.g. 1.2.0, 0.8.0-next.1, ...)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  statuses: write
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update workflow scripts from main
+        uses: ./.github/actions/use-latest-ci
+
+      - name: Extract release info
+        id: release
+        uses: ./.github/actions/step
+        with:
+          name: extract-release-info
+
+      - name: Build Polen
+        if: steps.release.outputs.needs_build == 'true'
+        uses: ./.github/actions/build-polen
+        with:
+          skip-setup: "true"
+
+      - name: Build demos
+        if: steps.release.outputs.needs_build == 'true'
+        uses: ./.github/actions/step
+        with:
+          name: build-demos
+
+      - name: Prepare release deployment
+        if: steps.release.outputs.needs_build == 'true'
+        uses: ./.github/actions/step
+        with:
+          name: prepare-release-deployment
+          path: .github/steps/prepare-release-deployment.ts
+
+      - name: Deploy to GitHub Pages
+        if: steps.release.outputs.needs_build == 'true'
+        id: deploy
+        uses: ./.github/actions/gh-pages
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: gh-pages-deploy
+          destination_dir: ${{ steps.release.outputs.actual_tag }}
+          keep_files: true
+          environment: ${{ steps.release.outputs.is_prerelease == 'true' && 'prerelease' || 'production' }}
+          deployment_url: https://${{ github.repository_owner }}.github.io/polen/${{ steps.release.outputs.actual_tag }}/
+          commit_message: "Deploy demos for ${{ steps.release.outputs.actual_tag }}"
+
+      - name: Update dist tag (if applicable)
+        if: steps.release.outputs.is_dist_tag == 'true'
+        uses: ./.github/actions/step
+        with:
+          name: update-dist-tag
+          path: .github/steps/update-dist-tag.ts
+
+      - name: Add demos link to commit
+        if: steps.release.outputs.needs_build == 'true'
+        uses: ./.github/actions/step
+        with:
+          name: add-demos-link
+
+      - name: Garbage collect old demos
+        if: steps.release.outputs.needs_build == 'true' && steps.release.outputs.is_prerelease == 'false'
+        uses: ./.github/actions/step
+        with:
+          name: garbage-collect-demos
+          path: .github/steps/garbage-collect-demos.ts

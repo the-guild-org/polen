@@ -72,36 +72,36 @@ export default defineStep({
       previousDeploymentsText = '(none)'
     }
 
+    //
+    // ━━ Format
+    //
+
     // Get list of demos
     const examples = await getDemoExamples()
 
     // Get short SHA
     const shortSha = head_sha.substring(0, 7)
 
-    // Generate markdown for each demo
-    const demosText = examples.map(example => {
+    const s = Str.Builder()
+
+    const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}`
+    s`## [Polen Demos Preview](${baseUrl})`
+
+    for (const example of examples) {
       const displayName = Str.Case.title(example)
       const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}`
 
-      let text = ''
-      text += `#### ${displayName}\n`
-      // dprint-ignore
-      text += `- Latest: [View Demo](${baseUrl}/latest/${example}/) • [Commit ${shortSha}](${baseUrl}/${head_sha}/${example}/)\n`
-      text += `- Previous: ${previousDeploymentsText}`
-      return text
-    }).join('\n')
+      // let text = ''
+      s`#### [${displayName}](${baseUrl}/latest/${example}/) – [\`${shortSha}\`](${baseUrl}/${head_sha}/${example}/)`
+      s`Previous Deployments: ${previousDeploymentsText}`
+    }
 
-    // Create the full comment content
-    const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}`
-    const commentContent = `## Polen Demos Preview
-
-**Preview URL:** ${baseUrl}/
-
-### Available Demos
-${demosText}`
+    //
+    // ━━ Send
+    //
 
     await pr.comment({
-      content: commentContent,
+      content: s.toString(),
     })
 
     core.info('✅ PR comment created/updated successfully')

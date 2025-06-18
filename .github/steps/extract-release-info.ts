@@ -58,9 +58,6 @@ export default defineStep({
     // Get release info
     const releaseAction = isWorkflowDispatch ? 'manual' : (context.payload as any).action
 
-    // Get demo config
-    const config = await getDemoConfig()
-
     // Track tags for debugging
     core.info(`Analyzing tag: ${tag}`)
 
