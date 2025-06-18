@@ -6,6 +6,11 @@ vi.mock('node:fs', () => ({
   readFileSync: vi.fn(),
 }))
 
+// Mock the imported TypeScript config to prevent it from affecting tests
+vi.mock('../../../.github/demo-config.ts', () => ({
+  default: null,
+}))
+
 describe('DemoConfig', () => {
   const mockReadFileSync = readFileSync as unknown as ReturnType<typeof vi.fn>
 
@@ -37,7 +42,7 @@ describe('DemoConfig', () => {
     it('loads config from custom path', () => {
       mockReadFileSync.mockReturnValue('{}')
 
-      const config = new DemoConfig('custom/path.json')
+      const config = new DemoConfig('custom/path')
 
       expect(mockReadFileSync).toHaveBeenCalledWith('custom/path.json', 'utf-8')
     })

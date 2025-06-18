@@ -62,9 +62,10 @@ jobs:
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          deploy_from: gh-pages-deploy
-          environment_tag: pr-${{ inputs.pr_number }}
-          is_preview: true
+          publish_dir: gh-pages-deploy
+          destination_dir: pr-${{ inputs.pr_number }}
+          pr_number: ${{ inputs.pr_number }}
+          keep_files: true
 
       - name: Generate demo links
         id: generate-links

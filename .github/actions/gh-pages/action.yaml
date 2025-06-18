@@ -38,6 +38,11 @@ inputs:
     description: The URL where the deployment will be accessible
     required: false
 
+outputs:
+  deployment_url:
+    description: The URL where the deployment is accessible
+    value: ${{ steps.deployment_url.outputs.url }}
+
 runs:
   using: composite
   steps:
@@ -77,6 +82,7 @@ runs:
           });
 
     - name: Deploy to GitHub Pages
+      id: deploy_pages
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ inputs.github_token }}
@@ -99,7 +105,7 @@ runs:
           const deploymentUrl = '${{ inputs.deployment_url }}';
           
           // Determine final status based on previous step outcome
-          const success = '${{ job.status }}' !== 'failure';
+          const success = '${{ steps.deploy_pages.outcome }}' === 'success';
           
           // Construct environment URL if not provided
           let environmentUrl = deploymentUrl;
@@ -126,3 +132,24 @@ runs:
           if (environmentUrl) {
             console.log(`Deployment URL: ${environmentUrl}`);
           }
+          
+          // Fail the action if deployment failed
+          if (!success) {
+            core.setFailed('GitHub Pages deployment failed');
+          }
+          
+    - name: Set deployment URL output
+      id: deployment_url
+      shell: bash
+      run: |
+        DEPLOYMENT_URL="${{ inputs.deployment_url }}"
+        if [ -z "$DEPLOYMENT_URL" ]; then
+          BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          PR_NUMBER="${{ inputs.pr_number }}"
+          if [ -n "$PR_NUMBER" ]; then
+            DEPLOYMENT_URL="$BASE_URL/pr-$PR_NUMBER/"
+          else
+            DEPLOYMENT_URL="$BASE_URL"
+          fi
+        fi
+        echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
