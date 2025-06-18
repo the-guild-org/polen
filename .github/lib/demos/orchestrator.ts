@@ -412,12 +412,8 @@ export class DemoOrchestrator {
       `/polen/pr-${prNumber}/latest/`,
     )
 
-    // Create convenience redirects
-    await this.pathManager.createDemoRedirects(
-      examples,
-      deployDir,
-      `/polen/pr-${prNumber}/latest/`,
-    )
+    // Don't create redirects at root level as they would overwrite previous deployments
+    // when using peaceiris/actions-gh-pages with keep_files: true
 
     // Add PR metadata
     const prInfo = `PR #${prNumber}\\nBranch: ${ref || 'unknown'}\\nCommit: ${sha}`
