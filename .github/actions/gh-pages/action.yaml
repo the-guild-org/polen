@@ -1,4 +1,4 @@
-name: GitHub Pages with Deployments
+name: GitHub Pages
 description: Deploy to GitHub Pages with deployment tracking
 inputs:
   github_token:

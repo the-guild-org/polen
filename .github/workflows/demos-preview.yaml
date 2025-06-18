@@ -54,7 +54,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: ./.github/actions/gh-pages-with-deployments
+        uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           deploy_from: gh-pages-deploy

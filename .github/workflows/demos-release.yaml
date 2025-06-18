@@ -53,7 +53,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         if: steps.release.outputs.needs_build == 'true'
-        uses: ./.github/actions/gh-pages-with-deployments
+        uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           deploy_from: examples
