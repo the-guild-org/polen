@@ -22,7 +22,7 @@ export const DemoConfigSchema = z.object({
       retainCurrentCycle: z.boolean().default(true),
       retainDays: z.number().default(30),
     }).default({}),
-  }).default({}),
+  }),
   ui: z.object({
     theme: z.object({
       primaryColor: z.string().default('#000'),
@@ -35,14 +35,14 @@ export const DemoConfigSchema = z.object({
       description: z.string().default('Interactive GraphQL API documentation'),
       logoUrl: z.string().optional(),
     }).default({}),
-  }).default({}),
+  }),
   metadata: z.object({
     disabledDemos: z.record(z.object({
       title: z.string(),
       description: z.string(),
       reason: z.string().optional(),
     })).default({}),
-  }).default({}),
+  }),
 })
 
 export type DemoConfigData = z.infer<typeof DemoConfigSchema>
