@@ -1,12 +1,16 @@
 import { z } from 'zod/v4'
 import { getDemoConfig } from '../../src/lib/demos/index.ts'
-import { CommonSchemas, defineStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
+import {
+  CommonSchemas,
+  defineStep,
+  ReleaseContext,
+  WorkflowDispatchContext,
+} from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 // Input/Output schemas
 const ExtractReleaseInfoInputs = z.object({
   tag: z.string().optional(),
-  context: GitHubContextSchema,
 })
 
 const ExtractReleaseInfoOutputs = z.object({
@@ -18,6 +22,12 @@ const ExtractReleaseInfoOutputs = z.object({
   action: z.string(),
 })
 
+// This step can handle both release and workflow_dispatch events
+const ExtractReleaseContext = z.union([
+  ReleaseContext,
+  WorkflowDispatchContext,
+])
+
 /**
  * Extract and validate release information
  */
@@ -26,69 +36,72 @@ export default defineStep({
   description: 'Extract and validate release information to determine demo build requirements',
   inputs: ExtractReleaseInfoInputs,
   outputs: ExtractReleaseInfoOutputs,
+  context: ExtractReleaseContext,
 
-  async run({ core, inputs }) {
-    const { tag: inputTag, context } = inputs
-    const isWorkflowDispatch = context.event_name === 'workflow_dispatch'
+  async run({ core, inputs, context }) {
+    const { tag: inputTag } = inputs
+    const isWorkflowDispatch = context.eventName === 'workflow_dispatch'
 
     // Get tag from event or manual input
-    const tag = isWorkflowDispatch ? inputTag : (context.event as any).release?.tag_name
+    let tag: string | undefined
+    if (isWorkflowDispatch) {
+      tag = inputTag
+    } else {
+      const releasePayload = context.payload as z.infer<typeof ReleaseContext>['payload']
+      tag = releasePayload.release.tag_name
+    }
+
     if (!tag) {
       throw new Error('No tag provided')
     }
 
     // Get release info
-    const isPrerelease = isWorkflowDispatch
-      ? VersionHistory.isPrerelease(tag)
-      : (context.event as any).release?.prerelease
+    const releaseAction = isWorkflowDispatch ? 'manual' : (context.payload as any).action
 
-    const action = isWorkflowDispatch ? 'manual' : (context.event as any).action
+    // Get demo config
+    const config = await getDemoConfig()
 
-    // Handle dist-tag releases
-    if (tag === 'next' || tag === 'latest') {
-      let actualTag = tag
-      let needsBuild = false
+    // Track tags for debugging
+    core.info(`Analyzing tag: ${tag}`)
 
-      if (tag === 'next' && action === 'edited') {
-        try {
-          const versionHistory = new VersionHistory()
-          const distTag = await versionHistory.getDistTag('next')
-          if (distTag?.semverTag) {
-            actualTag = distTag.semverTag
-            needsBuild = true
-          }
-        } catch (e) {
-          core.error(`Error finding semver tag: ${e}`)
-        }
-      }
+    // Identify latest dist tag
+    const latestDistTag = config.distTags.latest
+    const isDistTag = config.distTags[tag] !== undefined
+    const actualTag = isDistTag ? config.distTags[tag] : tag
 
-      return {
-        tag,
-        actual_tag: actualTag,
-        is_prerelease: String(false),
-        is_dist_tag: 'true',
-        needs_build: String(needsBuild),
-        action: action || 'unknown',
-      }
-    }
+    core.info(`Tag info: ${tag} -> ${actualTag} (isDistTag: ${isDistTag})`)
 
-    // Regular semver release - check minimum version
-    const config = getDemoConfig()
-    const needsBuild = config.meetsMinimumPolenVersion(tag)
+    // Create version history and analyze tags
+    const history = new VersionHistory()
+    const allTags = history.getTags()
 
-    if (!needsBuild) {
-      core.warning(
-        `Version ${tag} is below minimum Polen version ${config.minimumPolenVersion}`,
-      )
+    // Check if this is a prerelease
+    const isPrerelease = tag.includes('-') || tag.includes('alpha') || tag.includes('beta') || tag.includes('rc')
+
+    // Determine if build is needed
+    let needsBuild = 'true'
+
+    if (releaseAction === 'deleted' || releaseAction === 'unpublished') {
+      core.info('Release deleted/unpublished - no build needed')
+      needsBuild = 'false'
+    } else if (isDistTag) {
+      core.info(`Dist tag update: ${tag} -> ${actualTag}`)
+      needsBuild = 'false'
+    } else if (!allTags.has(tag)) {
+      core.info(`Tag ${tag} not found in version history - needs build`)
+      needsBuild = 'true'
+    } else {
+      core.info(`Tag ${tag} found in version history`)
+      needsBuild = 'true'
     }
 
     return {
       tag,
-      actual_tag: tag,
+      actual_tag: actualTag,
       is_prerelease: String(isPrerelease),
-      is_dist_tag: 'false',
-      needs_build: String(needsBuild),
-      action: action || 'unknown',
+      is_dist_tag: String(isDistTag),
+      needs_build: needsBuild,
+      action: releaseAction || 'unknown',
     }
   },
 })

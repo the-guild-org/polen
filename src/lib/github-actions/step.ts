@@ -8,18 +8,22 @@ import { z } from 'zod/v4'
 import type { PRController } from './pr-controller.ts'
 
 // Core GitHub Actions context types
-export interface Args<$Inputs extends object = {}> {
+export interface Args<$Inputs extends object = {}, $Context = Context> {
   core: typeof import('@actions/core')
   github: InstanceType<typeof GitHub>
-  context: Context
+  context: $Context
   $: typeof import('zx').$
   fs: typeof import('node:fs/promises')
   pr: PRController
   inputs: $Inputs
 }
 
-export type StepFunction<$Inputs extends Record<string, any> = Record<string, any>, $Outputs = any> = (
-  context: Args<$Inputs>,
+export type StepFunction<
+  $Inputs extends Record<string, any> = Record<string, any>,
+  $Outputs = any,
+  $Context = Context,
+> = (
+  context: Args<$Inputs, $Context>,
 ) => Promise<$Outputs>
 
 type InputsSchema = z.ZodObject
@@ -30,13 +34,15 @@ type OutputsSchema = z.ZodObject
 export interface StepDefinition<
   $InputsSchema extends InputsSchema,
   $OutputsSchema extends OutputsSchema,
+  $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 > {
   name: string
   description: string
   inputs?: $InputsSchema
   outputs?: $OutputsSchema
+  context?: $ContextSchema
   run: (
-    args: Args<z.Infer<$InputsSchema>>,
+    args: Args<z.Infer<$InputsSchema>, $ContextSchema extends z.ZodTypeAny ? z.Infer<$ContextSchema> : Context>,
     // todo: Obj.isEmpty ...
   ) => Promise<{} extends z.Infer<$OutputsSchema> ? void : z.Infer<$OutputsSchema>>
 }
@@ -45,9 +51,14 @@ export interface StepDefinition<
 export interface ExportedStep<
   $InputsSchema extends InputsSchema = InputsSchema,
   $OutputsSchema extends OutputsSchema = OutputsSchema,
+  $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 > {
-  definition: StepDefinition<$InputsSchema, $OutputsSchema>
-  execute: StepFunction<z.Infer<$InputsSchema>, z.Infer<$OutputsSchema>>
+  definition: StepDefinition<$InputsSchema, $OutputsSchema, $ContextSchema>
+  execute: StepFunction<
+    z.Infer<$InputsSchema>,
+    z.Infer<$OutputsSchema>,
+    $ContextSchema extends z.ZodTypeAny ? z.Infer<$ContextSchema> : Context
+  >
 }
 
 /**
@@ -56,11 +67,12 @@ export interface ExportedStep<
 export function defineStep<
   $InputsSchema extends InputsSchema,
   $OutputsSchema extends OutputsSchema,
+  $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 >(
-  definition: StepDefinition<$InputsSchema, $OutputsSchema>,
-): ExportedStep<$InputsSchema, $OutputsSchema> {
-  const execute = async (args: Args<z.Infer<$InputsSchema>>) => {
-    const outputRaw = await definition.run(args)
+  definition: StepDefinition<$InputsSchema, $OutputsSchema, $ContextSchema>,
+): ExportedStep<$InputsSchema, $OutputsSchema, $ContextSchema> {
+  const execute = async (args: Args<z.Infer<$InputsSchema>, any>) => {
+    const outputRaw = await definition.run(args as any)
     return outputRaw as z.Infer<$OutputsSchema>
   }
 

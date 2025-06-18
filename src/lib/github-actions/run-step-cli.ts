@@ -19,7 +19,9 @@ async function main() {
 
   if (!stepName) {
     core.setFailed('Missing required step name parameter')
-    core.error('Usage: run-step-cli <step-name> <workflow-name> [path-override] [inputs-json] [context-json] [previous-json]')
+    core.error(
+      'Usage: run-step-cli <step-name> <workflow-name> [path-override] [inputs-json] [context-json] [previous-json]',
+    )
     core.error('This runner expects steps to be in .github/steps/<name>.ts')
     process.exit(1)
   }

@@ -1,12 +1,10 @@
 import { Str } from '@wollybeard/kit'
 import { z } from 'zod/v4'
 import { getDemoExamples } from '../../../src/lib/demos/index.ts'
-import { defineStep } from '../../../src/lib/github-actions/index.ts'
+import { defineStep, PullRequestContext } from '../../../src/lib/github-actions/index.ts'
 
-const Inputs = z.object({
-  pr_number: z.string(),
-  head_sha: z.string(),
-})
+// No inputs needed - we get everything from context
+const Inputs = z.object({})
 
 /**
  * Create or update PR comment with demo links
@@ -15,11 +13,10 @@ export default defineStep({
   name: 'pr-comment',
   description: 'Create or update PR comment with demo preview links',
   inputs: Inputs,
-  async run({ core, inputs, github, context, pr }) {
-    const {
-      pr_number,
-      head_sha,
-    } = inputs
+  context: PullRequestContext,
+  async run({ core, github, context, pr }) {
+    const pr_number = context.payload.pull_request.number.toString()
+    const head_sha = context.payload.pull_request.head.sha
 
     let previousDeploymentsText: string
     try {

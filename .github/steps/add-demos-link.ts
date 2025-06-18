@@ -1,8 +1,7 @@
 import { z } from 'zod/v4'
-import { defineStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
+import { defineStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
 
 const Inputs = z.object({
-  context: GitHubContextSchema,
   previous: z.object({
     actual_tag: z.string(),
   }),
@@ -12,6 +11,12 @@ const Outputs = z.object({
   link_added: z.string(),
 })
 
+// This step can handle both release and workflow_dispatch events
+const DemosLinkContext = z.union([
+  ReleaseContext,
+  WorkflowDispatchContext,
+])
+
 /**
  * Add demos link to commit status
  */
@@ -20,12 +25,12 @@ export default defineStep({
   description: 'Add a GitHub commit status with link to the deployed demos',
   inputs: Inputs,
   outputs: Outputs,
+  context: DemosLinkContext,
   async run({ github, context, core, inputs }) {
     const { actual_tag } = inputs.previous
-    const githubContext = inputs.context
 
     let sha: string
-    if (githubContext.event_name === 'workflow_dispatch') {
+    if (context.eventName === 'workflow_dispatch') {
       // Get commit SHA for the tag
       try {
         const { data: ref } = await github.rest.git.getRef({
@@ -39,7 +44,9 @@ export default defineStep({
         return { link_added: 'false' }
       }
     } else {
-      sha = (githubContext.event as any).release?.target_commitish || ''
+      // For release events
+      const releasePayload = context.payload as z.infer<typeof ReleaseContext>['payload']
+      sha = releasePayload.release.target_commitish
       if (!sha) {
         core.warning('No target commitish provided')
         return { link_added: 'false' }

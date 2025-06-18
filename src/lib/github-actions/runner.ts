@@ -73,13 +73,30 @@ export async function runStep(
   try {
     // Dynamically import the step module
     const stepModule = await import(stepPath)
-    const exportedStep: ExportedStep = stepModule.default
+    const step: ExportedStep = stepModule.default
 
-    if (!exportedStep || !exportedStep.execute || !exportedStep.definition) {
+    if (!step || !step.execute || !step.definition) {
       throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
     }
 
-    const { definition, execute } = exportedStep
+    const { definition } = step
+
+    // todo: allow step definition to opt-out of runtime validation
+    // Validate context if schema is provided
+    let validatedContext = context
+    if (definition.context) {
+      const contextValidation = definition.context.safeParse(context)
+      if (!contextValidation.success) {
+        const errorMessage = `Step '${definition.name}' expects a different GitHub event context`
+        core.error(errorMessage)
+        core.error(`Expected context: ${JSON.stringify(contextValidation.error.issues, null, 2)}`)
+        core.error(`Actual event: ${context.eventName}`)
+
+        // For now, default to hard error. We can make this configurable later
+        throw new WorkflowError('runner', errorMessage)
+      }
+      validatedContext = contextValidation.data
+    }
 
     // Validate inputs
     let inputs: Record<string, unknown> = {}
@@ -94,6 +111,7 @@ export async function runStep(
         throw parseResult.error
       }
 
+      // todo: let step define if it wants to silence this warning
       // Check for excess properties if using object schema
       if (definition.inputs instanceof z.ZodObject && typeof rawInputs === 'object' && rawInputs !== null) {
         const knownKeys = Object.keys(definition.inputs.shape)
@@ -114,8 +132,9 @@ export async function runStep(
 
     // Create context with validated inputs
     const args = createArgs(stepName || definition.name)
-    const argsWithInputs = {
+    const stepArgs = {
       ...args,
+      context: validatedContext,
       inputs: inputs as any,
     }
 
@@ -123,9 +142,10 @@ export async function runStep(
     core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
     // Execute step
-    const outputRaw = await execute(argsWithInputs)
+    const outputRaw = await step.execute(stepArgs)
 
     // Validate & Export outputs
+    // todo: allow step definition to opt-out of output validation
     if (definition.outputs) {
       const outputs = definition.outputs.parse(outputRaw)
       core.debug(`Outputs: ${JSON.stringify(outputs)}`)

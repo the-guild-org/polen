@@ -1,12 +1,9 @@
 import { z } from 'zod/v4'
-import { defineStep } from '../../src/lib/github-actions/index.ts'
+import { defineStep, PullRequestContext } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
-const Inputs = z.object({
-  pr_number: z.string(),
-  head_sha: z.string(),
-  head_ref: z.string(),
-})
+// No inputs needed - we get everything from context
+const Inputs = z.object({})
 
 const Outputs = z.object({
   deployment_ready: z.string(),
@@ -20,8 +17,11 @@ export default defineStep({
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
   inputs: Inputs,
   outputs: Outputs,
-  async run({ core, inputs }) {
-    const { pr_number, head_sha, head_ref } = inputs
+  context: PullRequestContext,
+  async run({ core, context }) {
+    const pr_number = context.payload.pull_request.number.toString()
+    const head_sha = context.payload.pull_request.head.sha
+    const head_ref = context.payload.pull_request.head.ref
 
     core.info(`Preparing deployment for PR #${pr_number}`)
 

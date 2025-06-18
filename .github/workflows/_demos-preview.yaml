@@ -2,16 +2,6 @@ name: demos-preview
 
 on:
   workflow_call:
-    inputs:
-      pr_number:
-        required: true
-        type: string
-      head_sha:
-        required: true
-        type: string
-      head_ref:
-        required: true
-        type: string
     outputs:
       deployment_url:
         description: "URL of the deployed preview"
@@ -43,7 +33,6 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: prepare-pr-deployment
-          inputs: ${{ toJSON(inputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
@@ -51,8 +40,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: gh-pages-deploy
-          destination_dir: pr-${{ inputs.pr_number }}
-          pr_number: ${{ inputs.pr_number }}
+          destination_dir: pr-${{ github.event.pull_request.number }}
+          pr_number: ${{ github.event.pull_request.number }}
           keep_files: true
 
       - name: Comment on PR
@@ -60,5 +49,4 @@ jobs:
         with:
           name: demos-deploy-comment
           path: .github/steps/pr/demos-deploy-comment.ts
-          inputs: ${{ toJSON(inputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

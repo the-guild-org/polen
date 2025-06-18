@@ -1,10 +1,9 @@
 import { z } from 'zod/v4'
-import { defineStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
+import { defineStep, PushContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 const Inputs = z.object({
   dist_tag: z.string().optional(),
-  context: GitHubContextSchema,
 })
 
 const Outputs = z.object({
@@ -12,6 +11,12 @@ const Outputs = z.object({
   semver_tag: z.string(),
   commit: z.string(),
 })
+
+// This step can handle both push (to tags) and workflow_dispatch events
+const DistTagContext = z.union([
+  PushContext,
+  WorkflowDispatchContext,
+])
 
 /**
  * Extract dist-tag information and find corresponding semver version
@@ -21,22 +26,25 @@ export default defineStep({
   description: 'Resolve npm dist-tags to their actual semver versions',
   inputs: Inputs,
   outputs: Outputs,
-  async run({ core, inputs }) {
-    const { dist_tag, context } = inputs
+  context: DistTagContext,
+  async run({ core, inputs, context }) {
+    const { dist_tag } = inputs
     const versionHistory = new VersionHistory()
 
     // Get the tag name from push event or manual input
     let tagName: string
-    if (context.event_name === 'workflow_dispatch') {
+    if (context.eventName === 'workflow_dispatch') {
       if (!dist_tag) {
         throw new Error('dist_tag input is required for workflow_dispatch')
       }
       tagName = dist_tag
     } else {
-      if (!context.ref || !context.ref.startsWith('refs/tags/')) {
+      // Push event
+      const pushPayload = context.payload as z.infer<typeof PushContext>['payload']
+      if (!pushPayload.ref || !pushPayload.ref.startsWith('refs/tags/')) {
         throw new Error('Invalid ref for tag push event')
       }
-      tagName = context.ref.replace('refs/tags/', '')
+      tagName = pushPayload.ref.replace('refs/tags/', '')
     }
 
     // Get the dist tag info
