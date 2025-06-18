@@ -81,6 +81,18 @@ runs:
             description: 'Deploying to GitHub Pages'
           });
 
+    - name: Validate publish directory
+      shell: bash
+      run: |
+        if [ ! -d "${{ inputs.publish_dir }}" ]; then
+          echo "Error: Publish directory '${{ inputs.publish_dir }}' does not exist"
+          echo "Contents of current directory:"
+          ls -la
+          exit 1
+        fi
+        echo "Publish directory exists with contents:"
+        ls -la "${{ inputs.publish_dir }}" | head -20
+        
     - name: Deploy to GitHub Pages
       id: deploy_pages
       uses: peaceiris/actions-gh-pages@v4
@@ -93,6 +105,7 @@ runs:
         user_email: ${{ inputs.user_email }}
         commit_message: ${{ inputs.commit_message }}
         publish_branch: gh-pages
+        force_orphan: true
 
     - name: Update deployment status
       if: always()

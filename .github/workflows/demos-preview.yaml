@@ -21,7 +21,7 @@ on:
         value: ${{ jobs.build-and-deploy.outputs.demo_links }}
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   deployments: write
 
