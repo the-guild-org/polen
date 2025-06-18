@@ -77,7 +77,7 @@ export function createStep<
   }
 
   return {
-    input,
+    definition: input,
     run,
   }
 }
