@@ -27,6 +27,7 @@ export function getPreviousDeployments(prNumber: string, currentSha?: string): s
 
     return commits
   } catch (e) {
+    console.warn(`Failed to get previous deployments for PR ${prNumber}:`, e)
     return []
   }
 }
@@ -73,6 +74,7 @@ export function getAllPrDeployments(): { number: number; sha?: string; ref?: str
 
     return prDirs
   } catch (e) {
+    console.warn('Failed to get all PR deployments:', e)
     return []
   }
 }

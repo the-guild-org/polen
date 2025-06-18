@@ -13,7 +13,8 @@ export default defineStep({
     const pr_number = context.payload.pull_request.number.toString()
     const head_sha = context.payload.pull_request.head.sha
 
-    let previousDeploymentsText: string
+    let previousDeployments: Array<{ sha: string; fullSha: string; created_at: string }> = []
+
     try {
       // Get deployments for this PR's environment
       const { data: deployments } = await github.rest.repos.listDeployments({
@@ -24,8 +25,6 @@ export default defineStep({
       })
 
       // Filter out current deployment and get successful ones
-      const previousDeployments = []
-
       for (const deployment of deployments) {
         // Skip current SHA
         if (deployment.sha === head_sha || deployment.sha.startsWith(head_sha)) {
@@ -44,13 +43,9 @@ export default defineStep({
         const firstStatus = statuses[0]
         if (statuses.length > 0 && firstStatus && firstStatus.state === 'success') {
           const shortSha = deployment.sha.substring(0, 7)
-          // Construct proper URL with /polen prefix and SHA path
-          const deploymentUrl =
-            `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}/${deployment.sha}/`
           previousDeployments.push({
             sha: shortSha,
             fullSha: deployment.sha,
-            url: deploymentUrl,
             created_at: deployment.created_at,
           })
         }
@@ -58,21 +53,8 @@ export default defineStep({
 
       // Sort by creation date (newest first)
       previousDeployments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-
-      if (previousDeployments.length === 0) {
-        previousDeploymentsText = '(none)'
-      } else {
-        // Format as markdown links - limit to 10 most recent
-        const links = previousDeployments.slice(0, 10).map(deployment => `[\`${deployment.sha}\`](${deployment.url})`)
-        previousDeploymentsText = links.join(' / ')
-
-        if (previousDeployments.length > 10) {
-          previousDeploymentsText += ` and ${previousDeployments.length - 10} more`
-        }
-      }
     } catch (error) {
       core.error(`Error fetching deployments: ${error}`)
-      previousDeploymentsText = '(none)'
     }
 
     //
@@ -96,7 +78,22 @@ export default defineStep({
 
       // let text = ''
       s`#### [${displayName}](${baseUrl}/latest/${example}/) – [\`${shortSha}\`](${baseUrl}/${head_sha}/${example}/)`
-      s`Previous Deployments: ${previousDeploymentsText}`
+
+      // Format previous deployments per demo
+      if (previousDeployments.length === 0) {
+        s`Previous Deployments: (none)`
+      } else {
+        const deploymentLinks = previousDeployments
+          .slice(0, 10)
+          .map(deployment => `[\`${deployment.sha}\`](${baseUrl}/${deployment.fullSha}/${example}/)`)
+          .join(' / ')
+
+        let previousDeploymentsText = `Previous Deployments: ${deploymentLinks}`
+        if (previousDeployments.length > 10) {
+          previousDeploymentsText += ` and ${previousDeployments.length - 10} more`
+        }
+        s`${previousDeploymentsText}`
+      }
     }
 
     //

@@ -456,6 +456,10 @@ export const getDemoPageStyles = () => {
  * Generate PR banner HTML
  */
 export const generatePrBanner = (prNumber: string): string => {
+  // These should be set by the GitHub Actions environment
+  const repoOwner = process.env['GITHUB_REPOSITORY_OWNER'] || 'the-guild-org'
+  const repoName = process.env['GITHUB_REPOSITORY']?.split('/')[1] || 'polen'
+
   return `
     <div class="pr-banner">
       <div class="container">
@@ -464,13 +468,13 @@ export const generatePrBanner = (prNumber: string): string => {
           <span class="pr-banner-text">You're viewing a preview deployment for Pull Request #${prNumber}</span>
         </div>
         <div class="pr-banner-links">
-          <a href="https://github.com/the-guild-org/polen/pull/${prNumber}" class="pr-banner-link" target="_blank">
+          <a href="https://github.com/${repoOwner}/${repoName}/pull/${prNumber}" class="pr-banner-link" target="_blank">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             View PR on GitHub
           </a>
-          <a href="https://the-guild-org.github.io/polen/" class="pr-banner-link">
+          <a href="https://${repoOwner}.github.io/${repoName}/" class="pr-banner-link">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
@@ -530,15 +534,14 @@ export const generateDemoCard = (
             </div>`
   }
 
-  // Get previous deployments for PR - mimicking the old getPreviousDeployments logic
-  const getPreviousDeployments = () => {
-    if (!prNumber || !prDeployments) return []
+  // Get previous deployments for PR from the passed data
+  let previousDeployments: string[] = []
+  if (prNumber && prDeployments) {
     const currentPr = prDeployments.find(pr => pr.number.toString() === prNumber)
-    if (!currentPr || !currentPr.previousDeployments) return []
-    return currentPr.previousDeployments.filter(sha => sha !== currentSha)
+    if (currentPr && currentPr.previousDeployments) {
+      previousDeployments = currentPr.previousDeployments.filter(sha => sha !== currentSha)
+    }
   }
-
-  const previousDeployments = getPreviousDeployments()
 
   return `<div class="demo-card">
             <h2>${title}</h2>
@@ -561,13 +564,13 @@ export const generateDemoCard = (
             })
             .map(([tag, version]) => `
                     <div class="dist-tag-button">
-                      <a href="${tag}/${name}/" class="dist-tag-label">
+                      <a href="${basePath}${tag}/${name}/" class="dist-tag-label">
                         ${tag}
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </a>
-                      <a href="${version}/${name}/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
+                      <a href="${basePath}${version}/${name}/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
                     </div>
                   `).join('')
         }
@@ -578,7 +581,7 @@ export const generateDemoCard = (
             : ''}
             </div>`
         : trunkDeployments && trunkDeployments.latest
-        ? `<a href="latest/${name}/" class="demo-link">
+        ? `<a href="${basePath}latest/${name}/" class="demo-link">
               View Latest (${trunkDeployments.latest.tag || trunkDeployments.latest.shortSha})
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -589,13 +592,13 @@ export const generateDemoCard = (
       : currentSha
       ? `<div class="dist-tags">
             <div class="dist-tag-button">
-              <a href="latest/${name}/" class="dist-tag-label">
+              <a href="${basePath}latest/${name}/" class="dist-tag-label">
                 latest
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </a>
-              <a href="${currentSha}/${name}/" class="dist-tag-version">${
+              <a href="${basePath}${currentSha}/${name}/" class="dist-tag-version">${
         currentSha.substring(0, 7)
       }<span class="permalink-icon">¶</span></a>
             </div>
@@ -612,7 +615,7 @@ export const generateDemoCard = (
           trunkDeployments.previous.map(deployment => {
             // For semver deployments, tag and sha are the same, so just show once
             const label = deployment.tag || deployment.shortSha
-            return `<a href="${deployment.sha}/${name}/" class="commit-link">${label}</a>`
+            return `<a href="${basePath}${deployment.sha}/${name}/" class="commit-link">${label}</a>`
           }).join('')
         }
               </div>`
@@ -622,7 +625,7 @@ export const generateDemoCard = (
       ? `<div class="commit-links">
                 ${
         previousDeployments.map(sha => `
-                  <a href="${sha}/${name}/" class="commit-link">${sha.substring(0, 7)}</a>
+                  <a href="${basePath}${sha}/${name}/" class="commit-link">${sha.substring(0, 7)}</a>
                 `).join('')
       }
               </div>`
