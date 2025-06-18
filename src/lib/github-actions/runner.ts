@@ -71,8 +71,16 @@ export async function runStep(
   delete rawInputs._stepName // Clean up before passing to step
 
   try {
+    // Convert to absolute path for import
+    const { resolve } = await import('node:path')
+    const { pathToFileURL } = await import('node:url')
+
+    // Resolve to absolute path and convert to file URL for proper ESM import
+    const absolutePath = resolve(process.cwd(), stepPath)
+    const importUrl = pathToFileURL(absolutePath).href
+
     // Dynamically import the step module
-    const stepModule = await import(stepPath)
+    const stepModule = await import(importUrl)
     const step: Step = stepModule.default
 
     if (!step || !step.run || !step.definition) {

@@ -48,5 +48,4 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: demos-deploy-comment
-          path: .github/steps/pr/demos-deploy-comment.ts
           github_token: ${{ secrets.GITHUB_TOKEN }}
