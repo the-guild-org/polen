@@ -47,6 +47,4 @@ export {
   WorkflowOrchestrator,
 } from '../../../src/lib/github-actions/index.ts'
 
-export { createGitVersionUtils, GitVersionUtils, VersionUtils } from '../shared/git-version-utils.ts'
-
 export { commitAndPush, configureGit, createCommitMessage, hasChangesToCommit } from '../shared/git-utils.ts'

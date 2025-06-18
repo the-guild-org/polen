@@ -3,7 +3,7 @@
  */
 
 import { $ } from 'zx'
-import { safeExecute, WorkflowError } from './error-handling.ts'
+import { safeExecute } from './error-handling.ts'
 
 /**
  * Configure git for GitHub Actions bot
@@ -36,14 +36,8 @@ export async function commitAndPush(message: string): Promise<void> {
 }
 
 /**
- * Create a commit with standard footer
+ * Create a commit
  */
 export function createCommitMessage(title: string, body?: string): string {
-  const footer = `
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>`
-
-  return body ? `${title}\n\n${body}${footer}` : `${title}${footer}`
+  return body ? `${title}\n\n${body}` : `${title}`
 }

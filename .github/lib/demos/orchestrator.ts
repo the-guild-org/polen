@@ -9,7 +9,6 @@ import { demoBuilder } from '../../../src/lib/demos/builder.ts'
 import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { getDemoExamples } from '../../scripts/tools/get-demo-examples.ts'
 import { executeWithContinuation, safeExecute, WorkflowError } from '../shared/error-handling.ts'
-import { GitVersionUtils } from '../shared/git-version-utils.ts'
 import { demoConfig } from './config.ts'
 import { DeploymentPathManager } from './deployment/path-manager.ts'
 import { buildDemosHome } from './ui/landing-page.ts'
@@ -32,7 +31,6 @@ export interface GcResult {
  */
 export class DemoOrchestrator {
   private versionHistory: VersionHistory
-  private gitVersionUtils: GitVersionUtils
   private pathManager: DeploymentPathManager
   private config = demoConfig.getConfig()
 
@@ -41,8 +39,7 @@ export class DemoOrchestrator {
     private logger: { info: (msg: string) => void; error: (msg: string) => void; debug: (msg: string) => void } =
       console,
   ) {
-    this.versionHistory = new VersionHistory()
-    this.gitVersionUtils = new GitVersionUtils(workingDir)
+    this.versionHistory = new VersionHistory(workingDir)
     this.pathManager = new DeploymentPathManager(workingDir)
   }
 
