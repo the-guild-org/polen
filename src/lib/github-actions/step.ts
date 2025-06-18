@@ -96,9 +96,15 @@ export function createStep<
 >(
   input: CreateInput<$InputsSchema, $OutputsSchema, $ContextSchema>,
 ): Step<$InputsSchema, $OutputsSchema, $ContextSchema> {
-  const { run, ...definition } = input
+  const { run, inputs, outputs, context, ...rest } = input
+  const definition: Definition<$InputsSchema, $OutputsSchema, $ContextSchema> = {
+    ...rest,
+    inputsSchema: inputs,
+    outputsSchema: outputs,
+    contextSchema: context,
+  }
   return {
     definition,
     run,
-  } as any
+  }
 }
