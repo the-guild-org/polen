@@ -15,7 +15,7 @@ export default defineStep({
   description: 'Remove old demo deployments to save space',
   inputs: z.object({}),
   outputs: Outputs,
-  async execute({ core }) {
+  async run({ core }) {
     const result = await demoOrchestrator.garbageCollect()
 
     if (result.removed.length > 0) {

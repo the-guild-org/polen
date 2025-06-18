@@ -15,7 +15,7 @@ export default defineStep({
   description: 'Identify all versions in the current development cycle that need demo updates',
   inputs: z.object({}),
   outputs: Outputs,
-  async execute({ core }) {
+  async run({ core }) {
     const versionHistory = new VersionHistory()
 
     // Get the current development cycle

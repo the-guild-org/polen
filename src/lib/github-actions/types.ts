@@ -2,14 +2,14 @@
  * Common types for GitHub Actions workflows
  */
 
-import type { WorkflowContext } from './step.ts'
+import type { Args } from './step.ts'
 
 // Re-export workflow context for convenience
-export type { WorkflowContext }
+export type { Args }
 
 // Workflow step function type
 export type WorkflowStep<TInputs = Record<string, any>> = (
-  context: WorkflowContext,
+  context: Args,
   inputs: TInputs,
 ) => Promise<void>
 

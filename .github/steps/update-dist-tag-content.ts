@@ -21,7 +21,7 @@ export default defineStep({
   description: 'Copy content from semver deployment to dist-tag directory',
   inputs: Inputs,
   outputs: Outputs,
-  async execute({ inputs }) {
+  async run({ inputs }) {
     const { tag_name, semver_tag } = inputs.previous
 
     await demoOrchestrator.updateDistTag(tag_name, semver_tag)

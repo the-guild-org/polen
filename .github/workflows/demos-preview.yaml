@@ -16,9 +16,6 @@ on:
       deployment_url:
         description: "URL of the deployed preview"
         value: ${{ jobs.deploy.outputs.deployment_url }}
-      demo_links:
-        description: "Markdown links for demo examples"
-        value: ${{ jobs.deploy.outputs.demo_links }}
 
 permissions:
   contents: write
@@ -31,7 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       deployment_url: ${{ steps.deploy.outputs.deployment_url }}
-      demo_links: ${{ steps.generate-links.outputs.links }}
 
     steps:
       - name: Checkout
@@ -51,7 +47,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
-        id: deploy
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,23 +55,9 @@ jobs:
           pr_number: ${{ inputs.pr_number }}
           keep_files: true
 
-      - name: Generate demo links
-        id: pr-comment-text
+      - name: Comment on PR
         uses: ./.github/actions/step
         with:
-          name: pr-comment-text
+          name: pr-comment
           inputs: ${{ toJSON(inputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Comment on PR
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ inputs.pr_number }}
-          comment-id: demos-deployment
-          edit-mode: replace
-          body: |
-            ## Polen Demos Preview
-
-            **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr_number }}/
-
-            ${{ steps.pr-comment-text.outputs.links }}

@@ -21,7 +21,7 @@ export default defineStep({
   description: 'Resolve npm dist-tags to their actual semver versions',
   inputs: Inputs,
   outputs: Outputs,
-  async execute({ core, inputs }) {
+  async run({ core, inputs }) {
     const { dist_tag, context } = inputs
     const versionHistory = new VersionHistory()
 

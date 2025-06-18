@@ -20,7 +20,7 @@ export default defineStep({
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
   inputs: Inputs,
   outputs: Outputs,
-  async execute({ core, inputs }) {
+  async run({ core, inputs }) {
     const { pr_number, head_sha, head_ref } = inputs
 
     core.info(`Preparing deployment for PR #${pr_number}`)

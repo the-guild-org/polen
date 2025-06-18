@@ -21,7 +21,7 @@ export default defineStep({
   description: 'Build demo sites for a newly released Polen version',
   inputs: Inputs,
   outputs: Outputs,
-  async execute({ inputs }) {
+  async run({ inputs }) {
     const { actual_tag } = inputs.previous
 
     const result = await demoOrchestrator.buildForRelease(actual_tag)

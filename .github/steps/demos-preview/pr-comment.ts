@@ -1,30 +1,21 @@
 import { Str } from '@wollybeard/kit'
 import { z } from 'zod/v4'
-import { getDemoExamples } from '../../src/lib/demos/index.ts'
-import { defineStep } from '../../src/lib/github-actions/index.ts'
+import { getDemoExamples } from '../../../src/lib/demos/index.ts'
+import { defineStep } from '../../../src/lib/github-actions/index.ts'
 
-const GenerateDemoLinksInputs = z.object({
+const Inputs = z.object({
   pr_number: z.string(),
   head_sha: z.string(),
 })
 
-const GenerateDemoLinksOutputs = z.object({
-  links: z.string(),
-})
-
-type Inputs = z.infer<typeof GenerateDemoLinksInputs>
-type Outputs = z.infer<typeof GenerateDemoLinksOutputs>
-
 /**
- * Generate demo links for PR comments
+ * Create or update PR comment with demo links
  */
-export default defineStep<Inputs, Outputs>({
-  name: 'generate-demo-links',
-  description: 'Generate markdown links for all demo examples in a PR preview',
-  inputs: GenerateDemoLinksInputs,
-  outputs: GenerateDemoLinksOutputs,
-
-  async execute({ core, inputs, github, context }) {
+export default defineStep({
+  name: 'pr-comment',
+  description: 'Create or update PR comment with demo preview links',
+  inputs: Inputs,
+  async run({ core, inputs, github, context, pr }) {
     const {
       pr_number,
       head_sha,
@@ -103,8 +94,19 @@ export default defineStep<Inputs, Outputs>({
       return text
     }).join('\n')
 
-    return {
-      links: demosText,
-    }
+    // Create the full comment content
+    const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}`
+    const commentContent = `## Polen Demos Preview
+
+**Preview URL:** ${baseUrl}/
+
+### Available Demos
+${demosText}`
+
+    await pr.comment({
+      content: commentContent,
+    })
+
+    core.info('✅ PR comment created/updated successfully')
   },
 })

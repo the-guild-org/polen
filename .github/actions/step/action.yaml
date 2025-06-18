@@ -1,8 +1,8 @@
 name: "Run Step"
-description: "Run a TypeScript script by convention from .github/steps/<name>.ts"
+description: "Run a TypeScript workflow step from .github/steps/<name>.ts"
 inputs:
   name:
-    description: "The name of the workflow step to run"
+    description: "The name of the workflow step"
     required: true
   inputs:
     description: "JSON string of inputs for the step"
@@ -29,4 +29,6 @@ runs:
         STEP_INPUTS: ${{ inputs.inputs }}
         STEP_CONTEXT: ${{ inputs.context }}
         STEP_PREVIOUS: ${{ inputs.previous }}
-      run: node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$STEP_INPUTS" "$STEP_CONTEXT" "$STEP_PREVIOUS"
+      run: |
+        WORKFLOW_NAME="${{ github.workflow }}"
+        node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$STEP_INPUTS" "$STEP_CONTEXT" "$STEP_PREVIOUS"

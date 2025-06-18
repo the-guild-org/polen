@@ -21,7 +21,7 @@ export default defineStep({
   description: 'Build demos for all versions in the current development cycle',
   inputs: Inputs,
   outputs: Outputs,
-  async execute({ core, inputs }) {
+  async run({ core, inputs }) {
     const versions = inputs.previous.versions_to_rebuild
 
     if (versions.length === 0) {

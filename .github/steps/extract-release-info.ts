@@ -27,7 +27,7 @@ export default defineStep({
   inputs: ExtractReleaseInfoInputs,
   outputs: ExtractReleaseInfoOutputs,
 
-  async execute({ core, inputs }) {
+  async run({ core, inputs }) {
     const { tag: inputTag, context } = inputs
     const isWorkflowDispatch = context.event_name === 'workflow_dispatch'
 

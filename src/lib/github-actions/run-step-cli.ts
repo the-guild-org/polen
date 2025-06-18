@@ -7,24 +7,55 @@
  */
 
 import * as core from '@actions/core'
+import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { runStep } from './runner.ts'
 
 async function main() {
   const stepName = process.argv[2]
-  const inputsJson = process.argv[3] || '{}'
-  const contextJson = process.argv[4] || '{}'
-  const previousJson = process.argv[5] || '{}'
+  const workflowName = process.argv[3]
+  const inputsJson = process.argv[4] || '{}'
+  const contextJson = process.argv[5] || '{}'
+  const previousJson = process.argv[6] || '{}'
 
   if (!stepName) {
     core.setFailed('Missing required step name parameter')
-    core.error('Usage: run-step-cli <step-name> [inputs-json] [context-json] [previous-json]')
+    core.error('Usage: run-step-cli <step-name> <workflow-name> [inputs-json] [context-json] [previous-json]')
     core.error('This runner expects steps to be in .github/steps/<name>.ts')
     process.exit(1)
   }
 
   const currentDir = process.cwd()
-  const stepPath = join(currentDir, '.github/steps', `${stepName}.ts`)
+
+  // Try to find the step file using the convention:
+  // 1. First try: .github/steps/<workflow-name>/<step-name>.ts
+  // 2. Second try: .github/steps/<step-name>.ts
+  let stepPath: string
+
+  if (workflowName) {
+    // Strip 'demos-' prefix if present for cleaner paths
+    const cleanWorkflowName = workflowName.replace(/^demos-/, '')
+    const workflowSpecificPath = join(currentDir, '.github/steps', cleanWorkflowName, `${stepName}.ts`)
+
+    if (existsSync(workflowSpecificPath)) {
+      stepPath = workflowSpecificPath
+      core.debug(`Found step at workflow-specific path: ${workflowSpecificPath}`)
+    } else {
+      const generalPath = join(currentDir, '.github/steps', `${stepName}.ts`)
+      if (existsSync(generalPath)) {
+        stepPath = generalPath
+        core.debug(`Found step at general path: ${generalPath}`)
+      } else {
+        core.error(`Step not found at either path:`)
+        core.error(`  - ${workflowSpecificPath}`)
+        core.error(`  - ${generalPath}`)
+        core.setFailed(`Step '${stepName}' not found`)
+        process.exit(1)
+      }
+    }
+  } else {
+    stepPath = join(currentDir, '.github/steps', `${stepName}.ts`)
+  }
 
   try {
     core.info(`Running workflow step: ${stepName}`)
@@ -44,6 +75,7 @@ async function main() {
       ...inputs,
       context,
       previous,
+      _stepName: stepName, // Pass step name for default comment ID
     }
 
     core.debug(`Merged inputs: ${JSON.stringify(mergedInputs)}`)

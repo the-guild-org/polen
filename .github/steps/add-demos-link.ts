@@ -20,7 +20,7 @@ export default defineStep({
   description: 'Add a GitHub commit status with link to the deployed demos',
   inputs: Inputs,
   outputs: Outputs,
-  async execute({ github, context, core, inputs }) {
+  async run({ github, context, core, inputs }) {
     const { actual_tag } = inputs.previous
     const githubContext = inputs.context
 

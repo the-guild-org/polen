@@ -4,50 +4,74 @@
 
 import type { Context } from '@actions/github/lib/context.ts'
 import type { GitHub } from '@actions/github/lib/utils.ts'
+import type { Obj } from '@wollybeard/kit'
 import { z } from 'zod/v4'
+import type { PRController } from './pr-controller.ts'
 
 // Core GitHub Actions context types
-export interface WorkflowContext {
+export interface Args<$Inputs extends object = {}> {
   core: typeof import('@actions/core')
   github: InstanceType<typeof GitHub>
   context: Context
   $: typeof import('zx').$
   fs: typeof import('node:fs/promises')
+  pr: PRController
+  inputs: $Inputs
 }
 
 // Generic error interface that workflow implementations can extend
-export interface IWorkflowError extends Error {
+export interface WorkflowError extends Error {
   step: string
   cause?: unknown
 }
 
+type InputsSchema = z.ZodObject
+
+type OutputsSchema = z.ZodObject
+
 // Generic workflow step definition
-export interface StepDefinition<$Inputs, $Outputs> {
+export interface StepDefinition<
+  $InputsSchema extends InputsSchema,
+  $OutputsSchema extends OutputsSchema,
+> {
   name: string
   description: string
-  inputs: z.ZodSchema<$Inputs>
-  outputs: z.ZodSchema<$Outputs>
-  execute: (context: WorkflowContext & { inputs: $Inputs }) => Promise<$Outputs>
+  inputs?: $InputsSchema
+  outputs?: $OutputsSchema
+  run: (
+    args: Args<z.Infer<$InputsSchema>>,
+    // todo: Obj.isEmpty ...
+  ) => Promise<{} extends z.Infer<$OutputsSchema> ? void : z.Infer<$OutputsSchema>>
 }
 
 /**
  * Define a type-safe workflow step
  */
-export function defineStep<$Inputs, $Outputs>(
-  definition: StepDefinition<$Inputs, $Outputs>,
+export function defineStep<
+  $InputsSchema extends InputsSchema,
+  $OutputsSchema extends OutputsSchema,
+>(
+  definition: StepDefinition<$InputsSchema, $OutputsSchema>,
 ) {
-  return async (context: WorkflowContext, rawInputs: unknown): Promise<$Outputs> => {
+  return async (
+    args: Args,
+    rawInputs: unknown,
+  ): Promise<$OutputsSchema extends undefined ? void : z.Infer<$OutputsSchema>> => {
     const stepName = definition.name
 
     try {
       // Validate inputs with strict mode to catch excess properties
-      const parseResult = definition.inputs.safeParse(rawInputs)
+      const parseResult = definition.inputs?.safeParse(rawInputs)
 
-      if (!parseResult.success) {
-        throw parseResult.error
+      let inputs: object = {}
+      if (parseResult) {
+        if (parseResult.success) {
+          inputs = parseResult.data
+          throw parseResult.error
+        } else {
+          throw parseResult.error
+        }
       }
-
-      const inputs = parseResult.data
 
       // Check for excess properties if using object schema
       if (definition.inputs instanceof z.ZodObject && typeof rawInputs === 'object' && rawInputs !== null) {
@@ -56,45 +80,74 @@ export function defineStep<$Inputs, $Outputs>(
         const unknownKeys = providedKeys.filter(key => !knownKeys.includes(key))
 
         if (unknownKeys.length > 0) {
-          context.core.warning(
+          args.core.warning(
             `Step '${stepName}' received unknown inputs: ${unknownKeys.join(', ')}. These inputs will be ignored.`,
           )
-          context.core.debug(`Known inputs: ${knownKeys.join(', ')}`)
-          context.core.debug(`Provided inputs: ${JSON.stringify(rawInputs, null, 2)}`)
+          args.core.debug(`Known inputs: ${knownKeys.join(', ')}`)
+          args.core.debug(`Provided inputs: ${JSON.stringify(rawInputs, null, 2)}`)
         }
       }
 
-      context.core.startGroup(`${definition.name}: ${definition.description}`)
-      context.core.debug(`Inputs: ${JSON.stringify(inputs)}`)
+      args.core.startGroup(`${definition.name}: ${definition.description}`)
+      args.core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
-      // Execute step
-      const outputs = await definition.execute({ ...context, inputs })
+      //
+      // ━━ Execute Step
+      //
 
-      // Validate outputs
-      const validatedOutputs = definition.outputs.parse(outputs)
-
-      context.core.debug(`Outputs: ${JSON.stringify(validatedOutputs)}`)
-
-      // Set GitHub Actions outputs
-      for (const [key, value] of Object.entries(validatedOutputs as Record<string, any>)) {
-        context.core.setOutput(key, typeof value === 'string' ? value : JSON.stringify(value))
+      const argsWithInputs: Args<z.Infer<InputsSchema>> = {
+        ...args,
+        inputs: inputs as z.infer<InputsSchema>,
       }
 
-      context.core.endGroup()
-      return validatedOutputs
+      const outputRaw = await definition.run(argsWithInputs as any)
+
+      //
+      // ━━ Validate & Export outputs
+      //
+
+      let outputs: Record<string, any> = {}
+
+      if (definition.outputs) {
+        outputs = definition.outputs.parse(outputRaw)
+        args.core.debug(`Outputs: ${JSON.stringify(outputs)}`)
+
+        // Set GitHub Actions outputs
+        for (const [key, value] of Object.entries(outputs)) {
+          args.core.setOutput(key, typeof value === 'string' ? value : JSON.stringify(value))
+        }
+
+        args.core.endGroup()
+      }
+
+      //
+      // ━━ Ensure No Outputs
+      //
+
+      if (outputs) {
+        args.core.warning(
+          `Step did not define outputs schema, but returned outputs. These will not be validated or exoprted. Outputs were: ${
+            JSON.stringify(outputs)
+          }`,
+        )
+      }
+
+      args.core.endGroup()
+
+      return outputs as any
     } catch (error) {
-      context.core.endGroup()
+      args.core.endGroup()
 
       // Log error details once
       if (error instanceof z.ZodError) {
-        context.core.error(`Validation error in step ${stepName}: ${error.message}`)
-        context.core.debug(`Validation issues: ${JSON.stringify(error.issues, null, 2)}`)
-        context.core.debug(`Received data: ${JSON.stringify(rawInputs, null, 2)}`)
+        args.core.error(`Validation error in step ${stepName}: ${error.message}`)
+        args.core.debug(`Validation issues: ${JSON.stringify(error.issues, null, 2)}`)
+        args.core.debug(`Received data: ${JSON.stringify(rawInputs, null, 2)}`)
       } else if (error instanceof Error) {
-        context.core.error(`Step ${stepName} failed: ${error.message}`)
-        context.core.debug(`Stack: ${error.stack}`)
+        args.core.error(`Step ${stepName} failed: ${error.message}`)
+        args.core.debug(`Stack: ${error.stack}`)
       } else {
-        context.core.error(`Step ${stepName} failed: ${String(error)}`)
+        args.core.error(`Step ${stepName} failed: ${String(error)}`)
       }
 
       // Re-throw the error - let the consumer handle error wrapping
@@ -116,12 +169,12 @@ export const CommonSchemas = {
  * Workflow orchestration utilities
  */
 export class WorkflowOrchestrator {
-  constructor(private context: WorkflowContext) {}
+  constructor(private context: Args) {}
 
   async executeSteps<T extends Record<string, any>>(
     steps: Array<{
       name: string
-      step: (context: WorkflowContext, inputs?: any) => Promise<any>
+      step: (context: Args, inputs?: any) => Promise<any>
       inputs?: any
       continueOnError?: boolean
     }>,

@@ -34,7 +34,7 @@ describe('defineWorkflowStep', () => {
         optional: z.string().optional(),
       }),
       outputs: z.object({ result: z.string() }),
-      async execute({ inputs }) {
+      async run({ inputs }) {
         return { result: `Got ${inputs.required}` }
       },
     })
@@ -61,7 +61,7 @@ describe('defineWorkflowStep', () => {
         required: z.string(),
       }),
       outputs: z.object({ result: z.string() }),
-      async execute({ inputs }) {
+      async run({ inputs }) {
         return { result: inputs.required }
       },
     })
@@ -79,7 +79,7 @@ describe('defineWorkflowStep', () => {
         number: z.number(),
       }),
       outputs: z.object({ result: z.string() }),
-      async execute() {
+      async run() {
         return { result: 'ok' }
       },
     })
@@ -90,19 +90,48 @@ describe('defineWorkflowStep', () => {
     )
   })
 
-  it('does not warn for non-object schemas', async () => {
+  // todo: this test is now a static type error, update to refelct that
+  // it('does not warn for non-object schemas', async () => {
+  //   const TestStep = defineStep({
+  //     name: 'test-step',
+  //     description: 'Test step',
+  //     inputs: z.string(),
+  //     outputs: z.object({ result: z.string() }),
+  //     async run({ inputs }) {
+  //       return { result: inputs }
+  //     },
+  //   })
+
+  //   await TestStep(mockContext, 'just-a-string')
+
+  //   expect(mockCore.warning).not.toHaveBeenCalled()
+  // })
+
+  it('always provides PR controller', async () => {
+    const mockPR = {
+      number: 123,
+      isActive: true,
+      comment: vi.fn(),
+      deleteComment: vi.fn(),
+      getComments: vi.fn(),
+    }
+
+    const contextWithPR = {
+      ...mockContext,
+      pr: mockPR,
+    }
+
     const TestStep = defineStep({
       name: 'test-step',
-      description: 'Test step',
-      inputs: z.string(),
-      outputs: z.object({ result: z.string() }),
-      async execute({ inputs }) {
-        return { result: inputs }
+      description: 'Test step with PR',
+      inputs: z.object({}),
+      outputs: z.object({ isActive: z.boolean() }),
+      async run({ pr }) {
+        return { isActive: pr.isActive }
       },
     })
 
-    await TestStep(mockContext, 'just-a-string')
-
-    expect(mockCore.warning).not.toHaveBeenCalled()
+    const result = await TestStep(contextWithPR, {})
+    expect(result).toEqual({ isActive: true })
   })
 })
