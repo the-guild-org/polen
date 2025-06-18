@@ -22,7 +22,6 @@ const DistTagContext = z.union([
  * Extract dist-tag information and find corresponding semver version
  */
 export default GitHubActions.createStep({
-  name: 'get-dist-tag-info',
   description: 'Resolve npm dist-tags to their actual semver versions',
   inputs: Inputs,
   outputs: Outputs,

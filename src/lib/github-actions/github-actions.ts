@@ -1,4 +1,5 @@
 export * from './error-handling.ts'
+export * from './git-controller.ts'
 export * from './pr-controller.ts'
 export * from './runner.ts'
 export * from './schemas/index.ts'

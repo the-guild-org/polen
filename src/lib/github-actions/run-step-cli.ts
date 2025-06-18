@@ -46,7 +46,6 @@ async function main() {
       ...inputs,
       context,
       previous,
-      _stepName: stepName, // Pass step name for default comment ID
     }
 
     core.debug(`Merged inputs: ${JSON.stringify(mergedInputs)}`)

@@ -26,7 +26,6 @@ const Context = z.union([
  * Extract and validate release information
  */
 export default GitHubActions.createStep({
-  name: 'extract-release-info',
   description: 'Extract and validate release information to determine demo build requirements',
   inputs: ExtractReleaseInfoInputs,
   outputs: ExtractReleaseInfoOutputs,

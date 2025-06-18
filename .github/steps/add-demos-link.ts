@@ -21,7 +21,6 @@ const Context = z.union([
  * Add demos link to commit status
  */
 export default GitHubActions.createStep({
-  name: 'add-demos-link',
   description: 'Add a GitHub commit status with link to the deployed demos',
   inputs: Inputs,
   outputs: Outputs,

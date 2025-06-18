@@ -13,7 +13,6 @@ const Outputs = z.object({
  * Build demos for current development cycle
  */
 export default GitHubActions.createStep({
-  name: 'build-current-cycle',
   description: 'Build demos for all versions in the current development cycle',
   // inputs: Inputs,
   outputs: Outputs,

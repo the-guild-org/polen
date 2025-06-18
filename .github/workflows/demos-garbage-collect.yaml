@@ -29,18 +29,7 @@ jobs:
           path: gh-pages
 
       - name: Run garbage collector
-        id: gc
         uses: ./.github/actions/step
         with:
           name: garbage-collect
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy cleaned gh-pages
-        if: fromJSON(steps.gc.outputs.json).has_changes
-        uses: ./.github/actions/commit
-        with:
-          working-directory: gh-pages
-          type: chore
-          scope: demos
-          message: "garbage collect past development cycle deployments"
-          body: "Removed: ${{ steps.gc.outputs.removed_deployments }}"

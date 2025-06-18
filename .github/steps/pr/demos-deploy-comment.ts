@@ -6,7 +6,7 @@ import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
  * Create or update PR comment with demo links
  */
 export default GitHubActions.createStep({
-  name: 'pr-comment',
+  name: 'demos-deploy-comment',
   description: 'Create or update PR comment with demo preview links',
   context: GitHubActions.PullRequestContext,
   async run({ core, github, context, pr }) {

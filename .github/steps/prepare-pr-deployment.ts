@@ -10,7 +10,6 @@ const Outputs = z.object({
  * Prepare PR preview deployment
  */
 export default GitHubActions.createStep({
-  name: 'prepare-pr-deployment',
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
   outputs: Outputs,
   context: GitHubActions.PullRequestContext,

@@ -17,7 +17,6 @@ const Outputs = z.object({
  * Build demos for a release
  */
 export default GitHubActions.createStep({
-  name: 'build-demos',
   description: 'Build demo sites for a newly released Polen version',
   inputs: Inputs,
   outputs: Outputs,

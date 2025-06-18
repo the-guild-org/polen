@@ -13,7 +13,6 @@ const Inputs = z.object({
  * Update dist-tag content by copying from semver deployment
  */
 export default GitHubActions.createStep({
-  name: 'update-dist-tag-content',
   description: 'Copy content from semver deployment to dist-tag directory',
   inputs: Inputs,
   async run({ inputs }) {

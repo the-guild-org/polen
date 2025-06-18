@@ -4,11 +4,12 @@
 
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { Obj, Str } from '@wollybeard/kit'
+import { Obj, Path, Str } from '@wollybeard/kit'
 import { promises as fs } from 'node:fs'
 import { z } from 'zod/v4'
 import { $ } from 'zx'
 import { WorkflowError } from './error-handling.ts'
+import { createGitController } from './git-controller.ts'
 import { createPRController } from './pr-controller.ts'
 import { searchModule } from './search-module.ts'
 import type { Args, Step } from './step.ts'
@@ -16,7 +17,7 @@ import type { Args, Step } from './step.ts'
 /**
  * Create a workflow context with all necessary tools
  */
-export function createArgs(stepName?: string): Args {
+export function createArgs(stepName: string): Args {
   const githubToken = process.env['GITHUB_TOKEN']
   if (!githubToken) {
     throw new WorkflowError('runner', 'GITHUB_TOKEN environment variable is required')
@@ -24,6 +25,7 @@ export function createArgs(stepName?: string): Args {
 
   const github = getOctokit(githubToken)
   const pr = createPRController(github, context, stepName)
+  const git = createGitController($)
 
   return {
     core,
@@ -32,6 +34,7 @@ export function createArgs(stepName?: string): Args {
     $,
     fs,
     pr,
+    git,
     inputs: {},
   }
 }
@@ -66,10 +69,6 @@ export async function runStep(
   inputsJson?: string,
 ): Promise<void> {
   const rawInputs = inputsJson ? JSON.parse(inputsJson) : {}
-
-  // Extract step name from inputs if provided
-  const stepName = rawInputs._stepName
-  delete rawInputs._stepName // Clean up before passing to step
 
   try {
     // Dynamically import the step module
@@ -109,6 +108,7 @@ export async function runStep(
     //
 
     const { definition } = step
+    const stepName = definition.name ?? Path.parse(stepPath).name
 
     // todo: allow step definition to opt-out of runtime validation
     // Validate context if schema is provided
@@ -116,7 +116,7 @@ export async function runStep(
     if (definition.contextSchema) {
       const contextValidation = definition.contextSchema.safeParse(context)
       if (!contextValidation.success) {
-        const errorMessage = `Step '${definition.name}' expects a different GitHub event context`
+        const errorMessage = `Step '${stepName}' expects a different GitHub event context`
         core.error(errorMessage)
         core.error(`Expected context: ${JSON.stringify(contextValidation.error.issues, null, 2)}`)
         core.error(`Actual event: ${context.eventName}`)
@@ -134,7 +134,7 @@ export async function runStep(
       if (parseResult.success) {
         inputs = parseResult.data
       } else {
-        core.error(`Validation error in step ${definition.name}: ${parseResult.error.message}`)
+        core.error(`Validation error in step ${stepName}: ${parseResult.error.message}`)
         core.debug(`Validation issues: ${JSON.stringify(parseResult.error.issues, null, 2)}`)
         core.debug(`Received data: ${JSON.stringify(rawInputs, null, 2)}`)
         throw parseResult.error
@@ -149,9 +149,7 @@ export async function runStep(
 
         if (unknownKeys.length > 0) {
           core.warning(
-            `Step '${definition.name}' received unknown inputs: ${
-              unknownKeys.join(', ')
-            }. These inputs will be ignored.`,
+            `Step '${stepName}' received unknown inputs: ${unknownKeys.join(', ')}. These inputs will be ignored.`,
           )
           core.debug(`Known inputs: ${knownKeys.join(', ')}`)
           core.debug(`Provided inputs: ${JSON.stringify(rawInputs, null, 2)}`)
@@ -168,7 +166,7 @@ export async function runStep(
     //
 
     // Create context with validated inputs
-    const args = createArgs(stepName || definition.name)
+    const args = createArgs(stepName)
     const stepArgs = {
       ...args,
       context: validatedContext,

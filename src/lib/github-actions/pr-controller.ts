@@ -67,7 +67,7 @@ export function createPRController(
     return new NoOpPRController(defaultCommentId)
   }
 
-  return new PRControllerImpl(github, context, prNumber, defaultCommentId)
+  return new PullRequestController(github, context, prNumber, defaultCommentId)
 }
 
 /**
@@ -86,7 +86,7 @@ function isPREvent(context: Context): boolean {
     || (context.eventName === 'issue_comment' && context.payload.issue?.['pull_request'])
 }
 
-class PRControllerImpl implements PRController {
+class PullRequestController implements PRController {
   public readonly isActive = true
 
   constructor(
