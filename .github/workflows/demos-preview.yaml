@@ -39,12 +39,6 @@ jobs:
       - name: Build Polen
         uses: ./.github/actions/build-polen
 
-      - name: Debug Workflow Ref
-        uses: ./.github/actions/step
-        with:
-          name: debug-workflow-ref
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Prepare PR deployment
         uses: ./.github/actions/step
         with:
