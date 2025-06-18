@@ -332,14 +332,14 @@ export const ReleaseEvent = z.object({
 })
 
 /**
- * GitHub Actions context with pull_request event
- * Use this to ensure your step only runs on pull request events
+ * Generic GitHub Actions context that accepts any event type
+ * Use this when your step needs to work with multiple event types
  */
-export const PullRequestContext = z.object({
-  /** Will always be 'pull_request' */
-  eventName: z.literal('pull_request'),
-  /** Pull request event payload */
-  payload: PullRequestEvent,
+export const Context = z.object({
+  /** Event name (e.g., 'push', 'pull_request', etc.) */
+  // eventName: z.any(),
+  /** Event payload (structure depends on eventName) */
+  // payload: z.any(),
   /** Repository information */
   repo: z.object({
     owner: z.string(),
@@ -359,6 +359,22 @@ export const PullRequestContext = z.object({
   ref: z.string(),
   /** Actor who triggered the workflow */
   actor: z.string(),
+})
+
+export type ContextSchema = typeof Context
+
+export type Context = z.output<typeof Context>
+
+/**
+ * GitHub Actions context with pull_request event
+ * Use this to ensure your step only runs on pull request events
+ */
+export const PullRequestContext = z.object({
+  ...Context.shape,
+  /** Will always be 'pull_request' */
+  eventName: z.literal('pull_request'),
+  /** Pull request event payload */
+  payload: PullRequestEvent,
 })
 
 /**
@@ -366,29 +382,11 @@ export const PullRequestContext = z.object({
  * Use this to ensure your step only runs on push events
  */
 export const PushContext = z.object({
+  ...Context.shape,
   /** Will always be 'push' */
   eventName: z.literal('push'),
   /** Push event payload */
   payload: PushEvent,
-  /** Repository information */
-  repo: z.object({
-    owner: z.string(),
-    repo: z.string(),
-  }),
-  /** Workflow information */
-  workflow: z.string(),
-  /** Job name */
-  job: z.string(),
-  /** Run ID */
-  runId: z.number(),
-  /** Run number */
-  runNumber: z.number(),
-  /** SHA that triggered the workflow */
-  sha: z.string(),
-  /** Ref that triggered the workflow */
-  ref: z.string(),
-  /** Actor who triggered the workflow */
-  actor: z.string(),
 })
 
 /**
@@ -396,29 +394,11 @@ export const PushContext = z.object({
  * Use this to ensure your step only runs on manual workflow triggers
  */
 export const WorkflowDispatchContext = z.object({
+  ...Context.shape,
   /** Will always be 'workflow_dispatch' */
   eventName: z.literal('workflow_dispatch'),
   /** Workflow dispatch event payload */
   payload: WorkflowDispatchEvent,
-  /** Repository information */
-  repo: z.object({
-    owner: z.string(),
-    repo: z.string(),
-  }),
-  /** Workflow information */
-  workflow: z.string(),
-  /** Job name */
-  job: z.string(),
-  /** Run ID */
-  runId: z.number(),
-  /** Run number */
-  runNumber: z.number(),
-  /** SHA that triggered the workflow */
-  sha: z.string(),
-  /** Ref that triggered the workflow */
-  ref: z.string(),
-  /** Actor who triggered the workflow */
-  actor: z.string(),
 })
 
 /**
@@ -426,85 +406,9 @@ export const WorkflowDispatchContext = z.object({
  * Use this to ensure your step only runs on release events
  */
 export const ReleaseContext = z.object({
+  ...Context.shape,
   /** Will always be 'release' */
   eventName: z.literal('release'),
   /** Release event payload */
   payload: ReleaseEvent,
-  /** Repository information */
-  repo: z.object({
-    owner: z.string(),
-    repo: z.string(),
-  }),
-  /** Workflow information */
-  workflow: z.string(),
-  /** Job name */
-  job: z.string(),
-  /** Run ID */
-  runId: z.number(),
-  /** Run number */
-  runNumber: z.number(),
-  /** SHA that triggered the workflow */
-  sha: z.string(),
-  /** Ref that triggered the workflow */
-  ref: z.string(),
-  /** Actor who triggered the workflow */
-  actor: z.string(),
 })
-
-/**
- * Generic GitHub Actions context that accepts any event type
- * Use this when your step needs to work with multiple event types
- */
-export const GenericContext = z.object({
-  /** Event name (e.g., 'push', 'pull_request', etc.) */
-  eventName: z.string(),
-  /** Event payload (structure depends on eventName) */
-  payload: z.any(),
-  /** Repository information */
-  repo: z.object({
-    owner: z.string(),
-    repo: z.string(),
-  }),
-  /** Workflow information */
-  workflow: z.string(),
-  /** Job name */
-  job: z.string(),
-  /** Run ID */
-  runId: z.number(),
-  /** Run number */
-  runNumber: z.number(),
-  /** SHA that triggered the workflow */
-  sha: z.string(),
-  /** Ref that triggered the workflow */
-  ref: z.string(),
-  /** Actor who triggered the workflow */
-  actor: z.string(),
-})
-
-/**
- * Helper to create a context schema for specific event types
- * @param eventName - The GitHub event name
- * @param payloadSchema - Zod schema for the event payload
- * @example
- * const MyCustomContext = createContextSchema('issues', IssuesEventSchema)
- */
-export function createContextSchema<T extends z.ZodTypeAny>(
-  eventName: string,
-  payloadSchema: T,
-) {
-  return z.object({
-    eventName: z.literal(eventName),
-    payload: payloadSchema,
-    repo: z.object({
-      owner: z.string(),
-      repo: z.string(),
-    }),
-    workflow: z.string(),
-    job: z.string(),
-    runId: z.number(),
-    runNumber: z.number(),
-    sha: z.string(),
-    ref: z.string(),
-    actor: z.string(),
-  })
-}

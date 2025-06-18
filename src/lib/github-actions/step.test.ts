@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v4'
-import { runStep } from './runner.ts'
 import { createStep } from './step.ts'
 
 describe('defineWorkflowStep', () => {
@@ -77,8 +76,8 @@ describe('defineWorkflowStep', () => {
     })
 
     // Outputs are validated in the runner, not in execute
-    expect(TestStep.definition.outputs).toBeDefined()
-    expect(TestStep.definition.inputs).toBeDefined()
+    expect(TestStep.definition.outputsSchema).toBeDefined()
+    expect(TestStep.definition.inputsSchema).toBeDefined()
   })
 
   it('step definition contains all metadata', async () => {
@@ -96,8 +95,8 @@ describe('defineWorkflowStep', () => {
 
     expect(TestStep.definition.name).toBe('test-step')
     expect(TestStep.definition.description).toBe('Test step')
-    expect(TestStep.definition.inputs).toBeDefined()
-    expect(TestStep.definition.outputs).toBeDefined()
+    expect(TestStep.definition.inputsSchema).toBeDefined()
+    expect(TestStep.definition.outputsSchema).toBeDefined()
   })
 
   // todo: this test is now a static type error, update to refelct that

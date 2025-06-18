@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { createStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
+import { GitHubActions } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 // Input/Output schemas
@@ -17,20 +17,20 @@ const ExtractReleaseInfoOutputs = z.object({
 })
 
 // This step can handle both release and workflow_dispatch events
-const ExtractReleaseContext = z.union([
-  ReleaseContext,
-  WorkflowDispatchContext,
+const Context = z.union([
+  GitHubActions.ReleaseContext,
+  GitHubActions.WorkflowDispatchContext,
 ])
 
 /**
  * Extract and validate release information
  */
-export default createStep({
+export default GitHubActions.createStep({
   name: 'extract-release-info',
   description: 'Extract and validate release information to determine demo build requirements',
   inputs: ExtractReleaseInfoInputs,
   outputs: ExtractReleaseInfoOutputs,
-  context: ExtractReleaseContext,
+  context: Context,
 
   async run({ core, inputs, context }) {
     const { tag: inputTag } = inputs
@@ -41,8 +41,7 @@ export default createStep({
     if (isWorkflowDispatch) {
       tag = inputTag
     } else {
-      const releasePayload = context.payload as z.infer<typeof ReleaseContext>['payload']
-      tag = releasePayload.release.tag_name
+      tag = context.payload.release.tag_name
     }
 
     if (!tag) {

@@ -112,8 +112,8 @@ export async function runStep(
     // todo: allow step definition to opt-out of runtime validation
     // Validate context if schema is provided
     let validatedContext: any = context
-    if (definition.context) {
-      const contextValidation = definition.context.safeParse(context)
+    if (definition.contextSchema) {
+      const contextValidation = definition.contextSchema.safeParse(context)
       if (!contextValidation.success) {
         const errorMessage = `Step '${definition.name}' expects a different GitHub event context`
         core.error(errorMessage)
@@ -128,8 +128,8 @@ export async function runStep(
 
     // Validate inputs
     let inputs: Record<string, unknown> = {}
-    if (definition.inputs) {
-      const parseResult = definition.inputs.safeParse(rawInputs)
+    if (definition.inputsSchema) {
+      const parseResult = definition.inputsSchema.safeParse(rawInputs)
       if (parseResult.success) {
         inputs = parseResult.data
       } else {
@@ -141,8 +141,8 @@ export async function runStep(
 
       // todo: let step define if it wants to silence this warning
       // Check for excess properties if using object schema
-      if (definition.inputs instanceof z.ZodObject && typeof rawInputs === 'object' && rawInputs !== null) {
-        const knownKeys = Object.keys(definition.inputs.shape)
+      if (definition.inputsSchema instanceof z.ZodObject && typeof rawInputs === 'object' && rawInputs !== null) {
+        const knownKeys = Object.keys(definition.inputsSchema.shape)
         const providedKeys = Object.keys(rawInputs)
         const unknownKeys = providedKeys.filter(key => !knownKeys.includes(key))
 
@@ -190,8 +190,8 @@ export async function runStep(
 
     // Validate & Export outputs
     // todo: allow step definition to opt-out of output validation
-    if (definition.outputs) {
-      const outputs = definition.outputs.parse(outputRaw)
+    if (definition.outputsSchema) {
+      const outputs = definition.outputsSchema.parse(outputRaw)
       core.debug(`Outputs: ${JSON.stringify(outputs)}`)
 
       // Set GitHub Actions outputs

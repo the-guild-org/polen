@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { createStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
+import { GitHubActions } from '../../src/lib/github-actions/index.ts'
 
 const Inputs = z.object({
   previous: z.object({
@@ -12,20 +12,20 @@ const Outputs = z.object({
 })
 
 // This step can handle both release and workflow_dispatch events
-const DemosLinkContext = z.union([
-  ReleaseContext,
-  WorkflowDispatchContext,
+const Context = z.union([
+  GitHubActions.ReleaseContext,
+  GitHubActions.WorkflowDispatchContext,
 ])
 
 /**
  * Add demos link to commit status
  */
-export default createStep({
+export default GitHubActions.createStep({
   name: 'add-demos-link',
   description: 'Add a GitHub commit status with link to the deployed demos',
   inputs: Inputs,
   outputs: Outputs,
-  context: DemosLinkContext,
+  context: Context,
   async run({ github, context, core, inputs }) {
     const { actual_tag } = inputs.previous
 
@@ -45,7 +45,7 @@ export default createStep({
       }
     } else {
       // For release events
-      const releasePayload = context.payload as z.infer<typeof ReleaseContext>['payload']
+      const releasePayload = context.payload as z.infer<typeof GitHubActions.ReleaseContext>['payload']
       sha = releasePayload.release.target_commitish
       if (!sha) {
         core.warning('No target commitish provided')

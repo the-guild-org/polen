@@ -121,6 +121,9 @@ export class DemoOrchestrator {
         previousDeployments: previousDeployments,
       }]
 
+      // Build individual demos with SHA-specific base path
+      await demoBuilder.build(version, { basePath: shaBasePath })
+
       // Build landing page for PR root (without currentSha to show overview)
       await buildDemosHome({
         basePath: prRootBasePath,
@@ -129,13 +132,10 @@ export class DemoOrchestrator {
         prDeployments: JSON.stringify(prDeploymentsData),
       })
 
-      // Build individual demos with SHA-specific base path
-      await demoBuilder.build(version, { basePath: shaBasePath })
-
-      // Create deployment structure
+      // Create deployment structure (this will copy the PR root landing page)
       await this.preparePRDeployment(prNumber, shortSha, ref, fullSha)
 
-      // After deployment structure is created, build SHA-specific landing page
+      // Build SHA-specific landing page directly to deployment directory
       await buildDemosHome({
         basePath: shaBasePath,
         mode: 'demo',

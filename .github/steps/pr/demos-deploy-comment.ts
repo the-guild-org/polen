@@ -1,14 +1,14 @@
 import { Str } from '@wollybeard/kit'
 import { getDemoExamples } from '../../../src/lib/demos/index.ts'
-import { createStep, PullRequestContext } from '../../../src/lib/github-actions/index.ts'
+import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
 
 /**
  * Create or update PR comment with demo links
  */
-export default createStep({
+export default GitHubActions.createStep({
   name: 'pr-comment',
   description: 'Create or update PR comment with demo preview links',
-  context: PullRequestContext,
+  context: GitHubActions.PullRequestContext,
   async run({ core, github, context, pr }) {
     const pr_number = context.payload.pull_request.number.toString()
     const head_sha = context.payload.pull_request.head.sha

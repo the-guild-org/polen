@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { createStep, PushContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
+import { GitHubActions } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 const Inputs = z.object({
@@ -14,14 +14,14 @@ const Outputs = z.object({
 
 // This step can handle both push (to tags) and workflow_dispatch events
 const DistTagContext = z.union([
-  PushContext,
-  WorkflowDispatchContext,
+  GitHubActions.PushContext,
+  GitHubActions.WorkflowDispatchContext,
 ])
 
 /**
  * Extract dist-tag information and find corresponding semver version
  */
-export default createStep({
+export default GitHubActions.createStep({
   name: 'get-dist-tag-info',
   description: 'Resolve npm dist-tags to their actual semver versions',
   inputs: Inputs,
@@ -40,11 +40,11 @@ export default createStep({
       tagName = dist_tag
     } else {
       // Push event
-      const pushPayload = context.payload as z.infer<typeof PushContext>['payload']
-      if (!pushPayload.ref || !pushPayload.ref.startsWith('refs/tags/')) {
+      const { payload } = context
+      if (!payload.ref || !payload.ref.startsWith('refs/tags/')) {
         throw new Error('Invalid ref for tag push event')
       }
-      tagName = pushPayload.ref.replace('refs/tags/', '')
+      tagName = payload.ref.replace('refs/tags/', '')
     }
 
     // Get the dist tag info

@@ -4,7 +4,7 @@
 
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { WorkflowError } from '../../../src/lib/github-actions/index.ts'
+import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
 
 export interface RedirectConfig {
   from: string
@@ -40,7 +40,7 @@ export class DeploymentPathManager {
         await this.updateFileBasePath(file, fromPath, toPath)
       }
     } catch (error) {
-      throw new WorkflowError('path-manager', `Failed to update base paths in ${directory}`, error)
+      throw new GitHubActions.WorkflowError('path-manager', `Failed to update base paths in ${directory}`, error)
     }
   }
 
@@ -59,7 +59,7 @@ export class DeploymentPathManager {
         await fs.writeFile(redirectPath, html)
       }
     } catch (error) {
-      throw new WorkflowError('path-manager', 'Failed to generate redirects', error)
+      throw new GitHubActions.WorkflowError('path-manager', 'Failed to generate redirects', error)
     }
   }
 
@@ -150,7 +150,7 @@ export class DeploymentPathManager {
         }
       }
     } catch (error) {
-      throw new WorkflowError('path-manager', `Failed to cleanup deployments in ${parentDir}`, error)
+      throw new GitHubActions.WorkflowError('path-manager', `Failed to cleanup deployments in ${parentDir}`, error)
     }
 
     return { removed, kept, errors }
@@ -192,7 +192,7 @@ export class DeploymentPathManager {
         await fs.writeFile(filePath, updatedContent)
       }
     } catch (error) {
-      throw new WorkflowError('path-manager', `Failed to update file ${filePath}`, error)
+      throw new GitHubActions.WorkflowError('path-manager', `Failed to update file ${filePath}`, error)
     }
   }
 
