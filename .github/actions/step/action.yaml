@@ -9,11 +9,11 @@ inputs:
     required: false
     default: "{}"
   context:
-    description: "GitHub context object (usually ${{ toJSON(github) }})"
+    description: "GitHub context object (usually toJSON(github))"
     required: false
     default: "{}"
   previous:
-    description: "Outputs from previous steps (e.g. ${{ toJSON(steps.previous.outputs) }})"
+    description: "Outputs from previous steps (e.g. toJSON(steps.previous.outputs))"
     required: false
     default: "{}"
 runs:
