@@ -2,10 +2,10 @@
  * Unified configuration system for demos
  */
 
-import { z } from 'zod'
+import { compare as compareSemver, parse as parseSemver } from '@vltpkg/semver'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { parse as parseSemver, compare as compareSemver } from '@vltpkg/semver'
+import { z } from 'zod'
 
 // Schema for demo configuration
 const DemoConfigSchema = z.object({
@@ -69,7 +69,7 @@ const DEFAULT_CONFIG: DemoConfig = {
   ui: {
     theme: {
       primaryColor: '#000',
-      backgroundColor: '#fff', 
+      backgroundColor: '#fff',
       textColor: '#000',
       mutedTextColor: '#666',
     },
@@ -139,18 +139,18 @@ export class DemoConfigManager {
   meetsMinimumVersion(version: string): boolean {
     const config = this.getConfig()
     const minimum = config.examples.minimumPolenVersion
-    
+
     try {
       // Parse both versions, handling 'v' prefix if present
       const versionParsed = parseSemver(version)
       const minimumParsed = parseSemver(minimum)
-      
+
       if (!versionParsed || !minimumParsed) {
         // If parsing fails, fall back to string comparison
         console.warn(`Failed to parse version '${version}' or minimum '${minimum}'`)
         return version >= minimum
       }
-      
+
       // Compare versions: returns -1 if version < minimum, 0 if equal, 1 if version > minimum
       const comparison = compareSemver(versionParsed, minimumParsed)
       return comparison >= 0
@@ -167,14 +167,14 @@ export class DemoConfigManager {
   getOrderedExamples(availableExamples: string[]): string[] {
     const config = this.getConfig()
     const { exclude, order } = config.examples
-    
+
     // Filter out excluded examples
     const enabled = availableExamples.filter(ex => !exclude.includes(ex))
-    
+
     // Apply ordering
     const ordered = [...order.filter(ex => enabled.includes(ex))]
     const unordered = enabled.filter(ex => !order.includes(ex))
-    
+
     return [...ordered, ...unordered.sort()]
   }
 

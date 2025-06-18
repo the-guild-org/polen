@@ -9,9 +9,9 @@ import { promises as fs } from 'node:fs'
 import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { z } from 'zod'
+import { safeExecute, WorkflowError } from '../../shared/error-handling.ts'
 import { DemoDataCollector } from './data-collector.ts'
 import { DemoPageRenderer } from './page-renderer.ts'
-import { WorkflowError, safeExecute } from '../../shared/error-handling.ts'
 
 // Define the interface for the build options
 export interface BuildDemosHomeOptions {
@@ -46,26 +46,26 @@ export async function buildDemosHome(rawOptions: BuildDemosHomeOptions = {}): Pr
   return safeExecute('build-demos-home', async () => {
     // Validate and normalize options
     const options = OptionsSchema.parse(rawOptions)
-    
+
     // Collect all required data
     const dataCollector = new DemoDataCollector()
     const data = await dataCollector.collectLandingPageData(options)
-    
+
     // Render the page
     const renderer = new DemoPageRenderer()
     const html = renderer.renderPage(data)
-    
+
     // Ensure output directory exists
     await fs.mkdir(options.outputDir, { recursive: true })
-    
+
     // Write the appropriate file based on mode
     const fileName = options.mode === 'pr-index' ? 'pr-index.html' : 'index.html'
     const outputPath = join(options.outputDir, fileName)
-    
+
     await fs.writeFile(outputPath, html)
-    
+
     console.log(`✅ Built ${options.mode} page: ${outputPath}`)
-    
+
     // Start development server if requested
     if (options.serve) {
       await startDevServer(outputPath, html)

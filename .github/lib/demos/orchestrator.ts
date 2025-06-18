@@ -257,7 +257,7 @@ export class DemoOrchestrator {
       }
 
       // Determine the gh-pages directory to clean
-      const ghPagesDir = process.env.WORKING_DIR || 'gh-pages'
+      const ghPagesDir = process.env['WORKING_DIR'] || 'gh-pages'
       this.logger.debug(`Operating on directory: ${ghPagesDir}`)
 
       // Clean up deployments

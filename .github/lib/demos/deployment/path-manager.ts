@@ -29,11 +29,11 @@ export class DeploymentPathManager {
   ): Promise<void> {
     try {
       const files = await this.getAllFiles(directory)
-      const targetFiles = files.filter(file => 
-        file.endsWith('.html') || 
-        file.endsWith('.js') || 
-        file.endsWith('.css') ||
-        file.endsWith('.json')
+      const targetFiles = files.filter(file =>
+        file.endsWith('.html')
+        || file.endsWith('.js')
+        || file.endsWith('.css')
+        || file.endsWith('.json')
       )
 
       for (const file of targetFiles) {
@@ -52,9 +52,9 @@ export class DeploymentPathManager {
       for (const redirect of redirects) {
         const redirectPath = join(outputDir, redirect.from, 'index.html')
         const redirectDir = join(outputDir, redirect.from)
-        
+
         await fs.mkdir(redirectDir, { recursive: true })
-        
+
         const html = this.createRedirectHtml(redirect.to)
         await fs.writeFile(redirectPath, html)
       }
@@ -67,8 +67,8 @@ export class DeploymentPathManager {
    * Create convenience redirects for demo examples
    */
   async createDemoRedirects(
-    examples: string[], 
-    outputDir: string, 
+    examples: string[],
+    outputDir: string,
     targetBasePath: string = '/latest/',
   ): Promise<void> {
     const redirects: RedirectConfig[] = examples.map(example => ({
@@ -160,13 +160,13 @@ export class DeploymentPathManager {
 
   private async getAllFiles(directory: string): Promise<string[]> {
     const files: string[] = []
-    
+
     const processDirectory = async (dir: string): Promise<void> => {
       const entries = await fs.readdir(dir, { withFileTypes: true })
-      
+
       for (const entry of entries) {
         const fullPath = join(dir, entry.name)
-        
+
         if (entry.isDirectory()) {
           await processDirectory(fullPath)
         } else {
@@ -187,7 +187,7 @@ export class DeploymentPathManager {
     try {
       const content = await fs.readFile(filePath, 'utf-8')
       const updatedContent = content.replaceAll(fromPath, toPath)
-      
+
       if (content !== updatedContent) {
         await fs.writeFile(filePath, updatedContent)
       }

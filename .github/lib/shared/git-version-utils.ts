@@ -1,12 +1,12 @@
 /**
  * Enhanced git version utilities (extractable as @the-guild/git-version-utils)
- * 
+ *
  * This module provides a clean abstraction over git operations for version management.
  * It could be extracted as a standalone package for reuse across projects.
  */
 
 import { $ } from 'zx'
-import { WorkflowError, safeExecute } from './error-handling.ts'
+import { safeExecute, WorkflowError } from './error-handling.ts'
 
 export interface GitTag {
   tag: string
@@ -38,7 +38,7 @@ export interface DistTag {
 
 /**
  * Enhanced git version management utilities
- * 
+ *
  * This class provides a higher-level abstraction than the original VersionHistory
  * with better error handling, caching, and more comprehensive semver support.
  */
@@ -54,34 +54,36 @@ export class GitVersionUtils {
   /**
    * Get all git tags with metadata
    */
-  async getAllTags(options: { 
+  async getAllTags(options: {
     pattern?: string
     sortBy?: 'version' | 'date'
     limit?: number
   } = {}): Promise<GitTag[]> {
     const cacheKey = `all-tags:${JSON.stringify(options)}`
-    
+
     if (this.tagCache.has(cacheKey)) {
       return this.tagCache.get(cacheKey)!
     }
 
     return safeExecute('get-all-tags', async () => {
       const { pattern = '*', sortBy = 'version', limit } = options
-      
+
       // Get tags with commit info
       const gitArgs = [
-        'tag', '-l', pattern,
+        'tag',
+        '-l',
+        pattern,
         '--sort=-version:refname',
-        '--format=%(refname:short)|%(objectname)|%(creatordate:iso)|%(subject)'
+        '--format=%(refname:short)|%(objectname)|%(creatordate:iso)|%(subject)',
       ]
-      
+
       if (limit) {
         gitArgs.push(`--count=${limit}`)
       }
-      
-      const output = await this.gitCommand(gitArgs)
+
+      const output = await this.gitCommand`git ${gitArgs.join(' ')}`
       const lines = output.stdout.trim().split('\n').filter(Boolean)
-      
+
       const tags: GitTag[] = lines.map(line => {
         const [tag, commit, date, message] = line.split('|')
         return {
@@ -108,13 +110,13 @@ export class GitVersionUtils {
   parseSemver(version: string): SemverInfo | null {
     const semverRegex = /^v?(\d+)\.(\d+)\.(\d+)(?:-([^+]+))?(?:\+(.+))?$/
     const match = version.match(semverRegex)
-    
+
     if (!match) return null
-    
+
     return {
-      major: parseInt(match[1], 10),
-      minor: parseInt(match[2], 10),
-      patch: parseInt(match[3], 10),
+      major: parseInt(match[1]!, 10),
+      minor: parseInt(match[2]!, 10),
+      patch: parseInt(match[3]!, 10),
       prerelease: match[4],
       build: match[5],
       raw: version,
@@ -142,7 +144,7 @@ export class GitVersionUtils {
   compareSemver(a: string, b: string): number {
     const semverA = this.parseSemver(a)
     const semverB = this.parseSemver(b)
-    
+
     if (!semverA || !semverB) {
       // Fallback to string comparison
       return a.localeCompare(b)
@@ -167,15 +169,15 @@ export class GitVersionUtils {
    * Get the latest stable version
    */
   async getLatestStableVersion(): Promise<GitTag | null> {
-    return safeExecute('get-latest-stable', async () => {
+    return await safeExecute('get-latest-stable', async () => {
       const tags = await this.getAllTags()
       const stableTags = tags.filter(tag => this.isStableVersion(tag.tag))
-      
+
       if (stableTags.length === 0) return null
-      
+
       // Sort by semver and return the latest
       stableTags.sort((a, b) => this.compareSemver(b.tag, a.tag))
-      return stableTags[0]
+      return stableTags[0]!
     })
   }
 
@@ -186,7 +188,7 @@ export class GitVersionUtils {
     return safeExecute('get-current-cycle', async () => {
       const allTags = await this.getAllTags()
       const stable = await this.getLatestStableVersion()
-      
+
       if (!stable) {
         return { stable: null, prereleases: [], all: [] }
       }
@@ -212,12 +214,10 @@ export class GitVersionUtils {
     return safeExecute('get-past-cycles', async () => {
       const allTags = await this.getAllTags()
       const currentCycle = await this.getCurrentDevelopmentCycle()
-      
+
       const currentVersions = new Set(currentCycle.all.map(v => v.tag))
-      
-      return allTags.filter(tag => 
-        this.isPrerelease(tag.tag) && !currentVersions.has(tag.tag)
-      )
+
+      return allTags.filter(tag => this.isPrerelease(tag.tag) && !currentVersions.has(tag.tag))
     })
   }
 
@@ -226,7 +226,7 @@ export class GitVersionUtils {
    */
   async getDistTags(): Promise<DistTag[]> {
     const cacheKey = 'dist-tags'
-    
+
     if (this.distTagCache.has(cacheKey)) {
       return this.distTagCache.get(cacheKey)!
     }
@@ -236,9 +236,9 @@ export class GitVersionUtils {
         // Try to get from package.json or npm registry
         const output = await this.gitCommand`npm dist-tag ls`.catch(() => ({ stdout: '' }))
         const lines = output.stdout.trim().split('\n').filter(Boolean)
-        
+
         const distTags: DistTag[] = []
-        
+
         for (const line of lines) {
           const [name, version] = line.split(': ')
           if (name && version) {
@@ -246,7 +246,7 @@ export class GitVersionUtils {
             try {
               const tagOutput = await this.gitCommand`git rev-list -n 1 ${version}`
               const commit = tagOutput.stdout.trim()
-              
+
               distTags.push({
                 name,
                 commit,
@@ -262,7 +262,7 @@ export class GitVersionUtils {
             }
           }
         }
-        
+
         this.distTagCache.set(cacheKey, distTags)
         return distTags
       } catch (error) {
@@ -304,14 +304,18 @@ export class GitVersionUtils {
     currentBranch: string
     latestCommit: string
   }> {
-    return safeExecute('get-repo-info', async () => {
+    return await safeExecute('get-repo-info', async () => {
       const [remoteUrl, currentBranch, latestCommit] = await Promise.all([
         this.gitCommand`git remote get-url origin`.then(r => r.stdout.trim()),
         this.gitCommand`git branch --show-current`.then(r => r.stdout.trim()),
         this.gitCommand`git rev-parse HEAD`.then(r => r.stdout.trim()),
       ])
 
-      return { remoteUrl, currentBranch, latestCommit }
+      return {
+        remoteUrl: String(remoteUrl),
+        currentBranch: String(currentBranch),
+        latestCommit: String(latestCommit),
+      }
     })
   }
 
@@ -329,14 +333,14 @@ export class GitVersionUtils {
    * Create and push a new tag
    */
   async createTag(
-    tagName: string, 
-    message: string, 
+    tagName: string,
+    message: string,
     commit: string = 'HEAD',
   ): Promise<void> {
     return safeExecute('create-tag', async () => {
       await this.gitCommand`git tag -a ${tagName} ${commit} -m ${message}`
       await this.gitCommand`git push origin ${tagName}`
-      
+
       // Clear cache since we've added a new tag
       this.clearCache()
     })
@@ -349,10 +353,10 @@ export class GitVersionUtils {
     return safeExecute('delete-tag', async () => {
       // Delete locally
       await this.gitCommand`git tag -d ${tagName}`.catch(() => {})
-      
+
       // Delete remotely
       await this.gitCommand`git push origin --delete ${tagName}`.catch(() => {})
-      
+
       // Clear cache
       this.clearCache()
     })
@@ -387,7 +391,7 @@ export const VersionUtils = {
    */
   filterVersions(versions: string[], type: 'stable' | 'prerelease' | 'all' = 'all'): string[] {
     const utils = new GitVersionUtils()
-    
+
     switch (type) {
       case 'stable':
         return versions.filter(v => utils.isStableVersion(v))
@@ -402,12 +406,12 @@ export const VersionUtils = {
    * Get version range
    */
   getVersionsInRange(
-    versions: string[], 
-    from: string, 
+    versions: string[],
+    from: string,
     to?: string,
   ): string[] {
     const utils = new GitVersionUtils()
-    
+
     return versions.filter(version => {
       if (utils.compareSemver(version, from) < 0) return false
       if (to && utils.compareSemver(version, to) > 0) return false

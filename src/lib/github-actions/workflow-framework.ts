@@ -22,21 +22,21 @@ export interface IWorkflowError extends Error {
 }
 
 // Generic workflow step definition
-export interface WorkflowStepDefinition<TInputs, TOutputs> {
+export interface WorkflowStepDefinition<$Inputs, $Outputs> {
   name: string
   description: string
-  inputs: z.ZodSchema<TInputs>
-  outputs: z.ZodSchema<TOutputs>
-  execute: (context: WorkflowContext & { inputs: TInputs }) => Promise<TOutputs>
+  inputs: z.ZodSchema<$Inputs>
+  outputs: z.ZodSchema<$Outputs>
+  execute: (context: WorkflowContext & { inputs: $Inputs }) => Promise<$Outputs>
 }
 
 /**
  * Define a type-safe workflow step
  */
-export function defineWorkflowStep<TInputs, TOutputs>(
-  definition: WorkflowStepDefinition<TInputs, TOutputs>,
+export function defineWorkflowStep<$Inputs, $Outputs>(
+  definition: WorkflowStepDefinition<$Inputs, $Outputs>,
 ) {
-  return async (context: WorkflowContext, rawInputs: unknown): Promise<TOutputs> => {
+  return async (context: WorkflowContext, rawInputs: unknown): Promise<$Outputs> => {
     const stepName = definition.name
 
     try {

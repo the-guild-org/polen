@@ -3,14 +3,16 @@
  */
 
 export class WorkflowError extends Error {
+  declare readonly message: string
+
   constructor(
     public readonly step: string,
     message: string,
-    public readonly cause?: unknown,
+    public override readonly cause?: unknown,
   ) {
     super(`[${step}] ${message}`)
     this.name = 'WorkflowError'
-    
+
     if (cause instanceof Error) {
       this.stack = `${this.stack}\nCaused by: ${cause.stack}`
     }
@@ -20,7 +22,7 @@ export class WorkflowError extends Error {
     if (error instanceof WorkflowError) {
       return error
     }
-    
+
     const message = error instanceof Error ? error.message : String(error)
     return new WorkflowError(step, message, error)
   }

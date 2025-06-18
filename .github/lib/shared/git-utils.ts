@@ -3,7 +3,7 @@
  */
 
 import { $ } from 'zx'
-import { WorkflowError, safeExecute } from './error-handling.ts'
+import { safeExecute, WorkflowError } from './error-handling.ts'
 
 /**
  * Configure git for GitHub Actions bot

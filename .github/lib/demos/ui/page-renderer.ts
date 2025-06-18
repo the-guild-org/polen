@@ -2,16 +2,16 @@
  * HTML page renderer for demo landing pages
  */
 
-import type { LandingPageData } from './data-collector.ts'
-import {
-  getDemoPageStyles,
-  generateHeader,
-  generateDemosGrid,
-  generateVersionInfo,
-  generatePrSection,
-  generateBackLink,
-} from './components.ts'
 import { demoConfig } from '../config.ts'
+import {
+  generateBackLink,
+  generateDemosGrid,
+  generateHeader,
+  generatePrSection,
+  generateVersionInfo,
+  getDemoPageStyles,
+} from './components.ts'
+import type { LandingPageData } from './data-collector.ts'
 
 /**
  * Renders complete HTML pages for demo landing

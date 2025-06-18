@@ -2,8 +2,8 @@
  * UI component generators for demo landing pages
  */
 
-import type { DemoMetadata, LandingPageData, TrunkDeployment, PrDeployment } from './data-collector.ts'
 import { demoConfig } from '../config.ts'
+import type { DemoMetadata, LandingPageData, PrDeployment, TrunkDeployment } from './data-collector.ts'
 
 /**
  * CSS styles for the demo landing page
@@ -221,7 +221,7 @@ export const getDemoPageStyles = () => {
 export const generateHeader = (data: LandingPageData): string => {
   const config = demoConfig.getConfig()
   const { mode, prNumber } = data.config
-  
+
   let title = config.ui.branding.title
   let description = config.ui.branding.description
 
@@ -284,7 +284,7 @@ export const generateDemoCard = (
 export const generateDemosGrid = (data: LandingPageData): string => {
   const { demoMetadata, demoExamples, config } = data
   const orderedExamples = demoConfig.getOrderedExamples(demoExamples)
-  
+
   // Add disabled demos to the list
   const allDemos = [...orderedExamples]
   for (const [name, metadata] of Object.entries(demoMetadata)) {
@@ -294,7 +294,9 @@ export const generateDemosGrid = (data: LandingPageData): string => {
   }
 
   const demoCards = allDemos
-    .map(name => generateDemoCard(name, demoMetadata[name], config.basePath))
+    .map(name =>
+      generateDemoCard(name, demoMetadata[name] || { title: name, description: '', enabled: true }, config.basePath)
+    )
     .join('')
 
   return `
@@ -312,14 +314,18 @@ export const generateVersionInfo = (data: LandingPageData): string => {
 
   if (!trunkDeployments) return ''
 
-  const distTagsHtml = distTags ? Object.entries(distTags)
-    .map(([tag, version]) => {
-      const className = tag === 'latest' ? 'version-tag latest' : 
-                      tag === 'next' ? 'version-tag next' : 
-                      'version-tag'
-      return `<a href="/${version}/" class="${className}">${tag}: ${version}</a>`
-    })
-    .join('') : ''
+  const distTagsHtml = distTags
+    ? Object.entries(distTags)
+      .map(([tag, version]) => {
+        const className = tag === 'latest'
+          ? 'version-tag latest'
+          : tag === 'next'
+          ? 'version-tag next'
+          : 'version-tag'
+        return `<a href="/${version}/" class="${className}">${tag}: ${version}</a>`
+      })
+      .join('')
+    : ''
 
   const previousVersionsHtml = trunkDeployments.previous
     .slice(0, 10) // Limit to recent versions
@@ -330,10 +336,14 @@ export const generateVersionInfo = (data: LandingPageData): string => {
     <div class="version-info">
       <h3>Available Versions</h3>
       ${distTagsHtml ? `<div class="version-list">${distTagsHtml}</div>` : ''}
-      ${previousVersionsHtml ? `
+      ${
+    previousVersionsHtml
+      ? `
         <h4 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: #666;">Previous Versions:</h4>
         <div class="version-list">${previousVersionsHtml}</div>
-      ` : ''}
+      `
+      : ''
+  }
     </div>
   `
 }

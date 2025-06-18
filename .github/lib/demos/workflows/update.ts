@@ -82,6 +82,7 @@ export const checkLatestTag = defineWorkflowStep({
 export const buildCurrentCycle = defineWorkflowStep({
   name: 'build-current-cycle',
   description: 'Build demos for all versions in the current development cycle',
+  // @ts-expect-error - Zod transform creates type mismatch between input and output types
   inputs: BuildCurrentCycleInputs,
   outputs: BuildCurrentCycleOutputs,
 

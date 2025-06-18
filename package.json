@@ -170,7 +170,7 @@
     "typescript-eslint": "^8.34.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.3",
-    "zod": "^3.25.65"
+    "zod": "3.25.67"
   },
   "packageManager": "pnpm@10.11.1",
   "scripts": {
