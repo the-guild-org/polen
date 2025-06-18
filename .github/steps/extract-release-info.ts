@@ -10,9 +10,9 @@ const ExtractReleaseInfoInputs = z.object({
 const ExtractReleaseInfoOutputs = z.object({
   tag: z.string(),
   actual_tag: z.string(),
-  is_prerelease: z.string(),
-  is_dist_tag: z.string(),
-  needs_build: z.string(),
+  is_prerelease: z.boolean(),
+  is_dist_tag: z.boolean(),
+  needs_build: z.boolean(),
   action: z.string(),
 })
 
@@ -70,27 +70,27 @@ export default GitHubActions.createStep({
     const isPrerelease = tag.includes('-') || tag.includes('alpha') || tag.includes('beta') || tag.includes('rc')
 
     // Determine if build is needed
-    let needsBuild = 'true'
+    let needsBuild = true
 
     if (releaseAction === 'deleted' || releaseAction === 'unpublished') {
       core.info('Release deleted/unpublished - no build needed')
-      needsBuild = 'false'
+      needsBuild = false
     } else if (isDistTag) {
       core.info(`Dist tag update: ${tag} -> ${actualTag}`)
-      needsBuild = 'false'
+      needsBuild = false
     } else if (!allTags.has(tag)) {
       core.info(`Tag ${tag} not found in version history - needs build`)
-      needsBuild = 'true'
+      needsBuild = true
     } else {
       core.info(`Tag ${tag} found in version history`)
-      needsBuild = 'true'
+      needsBuild = true
     }
 
     return {
       tag,
       actual_tag: actualTag,
-      is_prerelease: String(isPrerelease),
-      is_dist_tag: String(isDistTag),
+      is_prerelease: isPrerelease,
+      is_dist_tag: isDistTag,
       needs_build: needsBuild,
       action: releaseAction || 'unknown',
     }

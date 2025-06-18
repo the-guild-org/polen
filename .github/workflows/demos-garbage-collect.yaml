@@ -36,7 +36,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy cleaned gh-pages
-        if: steps.gc.outputs.has_changes == 'true'
+        if: fromJSON(steps.gc.outputs.json).has_changes
         uses: ./.github/actions/commit
         with:
           working-directory: gh-pages

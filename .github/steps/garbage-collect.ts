@@ -3,8 +3,10 @@ import { GitHubActions } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Outputs = z.object({
-  removed: z.string(),
-  removed_count: z.string(),
+  removed: z.array(z.string()),
+  removed_count: z.number(),
+  has_changes: z.boolean(),
+  removed_deployments: z.string(), // For backwards compatibility
 })
 
 /**
@@ -29,8 +31,10 @@ export default GitHubActions.createStep({
     }
 
     return {
-      removed: JSON.stringify(result.removed),
-      removed_count: String(result.removed.length),
+      removed: result.removed,
+      removed_count: result.removed.length,
+      has_changes: result.removed.length > 0,
+      removed_deployments: result.removed.join(', '), // For backwards compatibility
     }
   },
 })

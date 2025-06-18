@@ -8,7 +8,7 @@ const Inputs = z.object({
 })
 
 const Outputs = z.object({
-  link_added: z.string(),
+  link_added: z.boolean(),
 })
 
 // This step can handle both release and workflow_dispatch events
@@ -41,7 +41,7 @@ export default GitHubActions.createStep({
         sha = ref.object.sha
       } catch (e) {
         core.warning(`Could not find tag ${actual_tag}: ${e}`)
-        return { link_added: 'false' }
+        return { link_added: false }
       }
     } else {
       // For release events
@@ -49,7 +49,7 @@ export default GitHubActions.createStep({
       sha = releasePayload.release.target_commitish
       if (!sha) {
         core.warning('No target commitish provided')
-        return { link_added: 'false' }
+        return { link_added: false }
       }
     }
 
@@ -66,14 +66,14 @@ export default GitHubActions.createStep({
       })
 
       core.info(`✅ Successfully added demos link to commit ${sha}`)
-      return { link_added: 'true' }
+      return { link_added: true }
     } catch (error: any) {
       if (error.status === 422) {
         core.warning(
           `Could not add commit status: commit ${sha} not found in repository. `
             + `This is expected for tags on commits not in the default branch`,
         )
-        return { link_added: 'false' }
+        return { link_added: false }
       } else {
         throw error
       }

@@ -3,7 +3,7 @@ import { GitHubActions } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Outputs = z.object({
-  deployment_ready: z.string(),
+  deployment_ready: z.boolean(),
 })
 
 /**
@@ -31,7 +31,7 @@ export default GitHubActions.createStep({
     core.info('✅ PR preview deployment prepared successfully')
 
     return {
-      deployment_ready: 'true',
+      deployment_ready: true,
     }
   },
 })

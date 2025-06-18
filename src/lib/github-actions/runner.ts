@@ -4,6 +4,7 @@
 
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
+import { Obj, Str } from '@wollybeard/kit'
 import { promises as fs } from 'node:fs'
 import { z } from 'zod/v4'
 import { $ } from 'zx'
@@ -192,11 +193,11 @@ export async function runStep(
     // todo: allow step definition to opt-out of output validation
     if (definition.outputsSchema) {
       const outputs = definition.outputsSchema.parse(outputRaw)
-      core.debug(`Outputs: ${JSON.stringify(outputs)}`)
-
-      // Set GitHub Actions outputs
-      for (const [key, value] of Object.entries(outputs)) {
-        core.setOutput(key, typeof value === 'string' ? value : JSON.stringify(value))
+      const json = JSON.stringify(outputs)
+      core.setOutput('json', json)
+      for (const [key, value] of Obj.entries(outputs)) {
+        // todo: if key === json raise an error, it is a reserved name
+        core.setOutput(key, Str.is(value) ? value : JSON.stringify(value))
       }
     } else if (outputRaw !== undefined && outputRaw !== null) {
       core.warning(

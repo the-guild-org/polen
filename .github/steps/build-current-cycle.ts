@@ -6,8 +6,7 @@ import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 // const jsonString = <T>(schema: z.ZodSchema<T>) => z.string().transform(s => schema.parse(JSON.parse(s)))
 
 const Outputs = z.object({
-  complete: z.boolean(),
-  failed_versions: z.string(),
+  did: z.boolean(),
 })
 
 /**
@@ -35,7 +34,7 @@ export default GitHubActions.createStep({
     if (!cycle.stable) {
       core.warning('No stable version found - skipping update')
       return {
-        complete: false,
+        did: false,
       }
     }
 
@@ -90,8 +89,7 @@ export default GitHubActions.createStep({
     }
 
     return {
-      complete: true,
-      failed_versions: JSON.stringify(result.failedVersions),
+      did: true,
     }
   },
 })

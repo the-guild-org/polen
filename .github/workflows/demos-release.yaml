@@ -41,20 +41,20 @@ jobs:
           context: ${{ toJSON(github) }}
 
       - name: Build Polen
-        if: steps.release.outputs.needs_build == 'true'
+        if: fromJSON(steps.release.outputs.json).needs_build
         uses: ./.github/actions/build-polen
         with:
           skip-setup: "true"
 
       - name: Build demos
-        if: steps.release.outputs.needs_build == 'true'
+        if: fromJSON(steps.release.outputs.json).needs_build
         uses: ./.github/actions/step
         with:
           name: build-demos
           previous: ${{ toJSON(steps.release.outputs) }}
 
       - name: Deploy to GitHub Pages
-        if: steps.release.outputs.needs_build == 'true'
+        if: fromJSON(steps.release.outputs.json).needs_build
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -64,7 +64,7 @@ jobs:
           is_preview: false
 
       - name: Add demos link to commit
-        if: steps.release.outputs.needs_build == 'true'
+        if: fromJSON(steps.release.outputs.json).needs_build
         uses: ./.github/actions/step
         with:
           name: add-demos-link
