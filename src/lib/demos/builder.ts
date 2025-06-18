@@ -65,7 +65,7 @@ export class DemoBuilder {
     console.log(`  Building landing page...`)
 
     // Import and call the build-demos-home module directly
-    const { buildDemosHome } = await import('./ui/landing-page.js')
+    const { buildDemosHome } = await import('./ui/landing-page.ts')
 
     await buildDemosHome({
       basePath: options.basePath || '/',
@@ -289,7 +289,7 @@ export class DemoBuilder {
    * Build demos for current development cycle
    */
   async buildCurrentCycle(deployDir: string): Promise<void> {
-    const { VersionHistory } = await import('../version-history/index.js')
+    const { VersionHistory } = await import('../version-history/index.ts')
     const versionHistory = new VersionHistory()
     const cycle = await versionHistory.getCurrentDevelopmentCycle()
 

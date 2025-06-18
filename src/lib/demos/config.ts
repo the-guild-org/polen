@@ -68,9 +68,11 @@ export class DemoConfig {
         return {
           ...DEFAULT_CONFIG,
           examples: {
-            exclude: legacy.excludeDemos || [],
-            order: legacy.order || [],
-            minimumPolenVersion: legacy.minimumPolenVersion || legacy.minimumVersion || '0.0.0',
+            ...DEFAULT_CONFIG.examples,
+            exclude: legacy.excludeDemos || DEFAULT_CONFIG.examples.exclude,
+            order: legacy.order || DEFAULT_CONFIG.examples.order,
+            minimumPolenVersion: legacy.minimumPolenVersion || legacy.minimumVersion
+              || DEFAULT_CONFIG.examples.minimumPolenVersion,
           },
         }
       }

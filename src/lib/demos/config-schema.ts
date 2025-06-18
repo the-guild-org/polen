@@ -10,7 +10,7 @@ export const DemoConfigSchema = z.object({
     exclude: z.array(z.string()).default([]),
     order: z.array(z.string()).default([]),
     minimumPolenVersion: z.string().default('0.1.0'),
-  }).default({}),
+  }),
   deployment: z.object({
     basePaths: z.record(z.string()).default({}),
     redirects: z.array(z.object({

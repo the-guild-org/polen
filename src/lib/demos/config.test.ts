@@ -50,7 +50,7 @@ describe('DemoConfig', () => {
       const config = new DemoConfig()
 
       expect(config.excludeDemos).toEqual([])
-      expect(config.minimumPolenVersion).toBe('0.0.0')
+      expect(config.minimumPolenVersion).toBe('0.1.0')
       expect(config.order).toEqual([])
     })
 

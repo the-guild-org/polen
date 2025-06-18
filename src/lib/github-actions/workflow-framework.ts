@@ -2,8 +2,8 @@
  * Type-safe workflow step framework for GitHub Actions
  */
 
-import type { Context } from '@actions/github/lib/context.js'
-import type { GitHub } from '@actions/github/lib/utils.js'
+import type { Context } from '@actions/github/lib/context.ts'
+import type { GitHub } from '@actions/github/lib/utils.ts'
 import { z } from 'zod/v4'
 
 // Core GitHub Actions context types
