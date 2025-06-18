@@ -9,10 +9,6 @@ const Inputs = z.object({
   }),
 })
 
-const Outputs = z.object({
-  update_complete: z.string(),
-})
-
 /**
  * Update dist-tag content by copying from semver deployment
  */
@@ -20,14 +16,9 @@ export default defineStep({
   name: 'update-dist-tag-content',
   description: 'Copy content from semver deployment to dist-tag directory',
   inputs: Inputs,
-  outputs: Outputs,
   async run({ inputs }) {
     const { tag_name, semver_tag } = inputs.previous
 
     await demoOrchestrator.updateDistTag(tag_name, semver_tag)
-
-    return {
-      update_complete: 'true',
-    }
   },
 })

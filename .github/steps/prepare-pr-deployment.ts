@@ -2,9 +2,6 @@ import { z } from 'zod/v4'
 import { defineStep, PullRequestContext } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
-// No inputs needed - we get everything from context
-const Inputs = z.object({})
-
 const Outputs = z.object({
   deployment_ready: z.string(),
 })
@@ -15,7 +12,6 @@ const Outputs = z.object({
 export default defineStep({
   name: 'prepare-pr-deployment',
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
-  inputs: Inputs,
   outputs: Outputs,
   context: PullRequestContext,
   async run({ core, context }) {

@@ -73,7 +73,7 @@ export async function runStep(
   try {
     // Dynamically import the step module
     let stepModule: any
-    
+
     // Check if this is a test scenario (mocked module)
     if (process.env.NODE_ENV === 'test' && stepPath.startsWith('./test-')) {
       // For tests, use direct import path
@@ -82,14 +82,14 @@ export async function runStep(
       // For real usage, convert to absolute path
       const { resolve } = await import('node:path')
       const { pathToFileURL } = await import('node:url')
-      
+
       // Resolve to absolute path and convert to file URL for proper ESM import
       const absolutePath = resolve(process.cwd(), stepPath)
       const importUrl = pathToFileURL(absolutePath).href
-      
+
       stepModule = await import(importUrl)
     }
-    
+
     const step: Step = stepModule.default
 
     if (!step || !step.run || !step.definition) {

@@ -13,7 +13,6 @@ const Outputs = z.object({
 export default defineStep({
   name: 'check-latest-tag',
   description: 'Identify all versions in the current development cycle that need demo updates',
-  inputs: z.object({}),
   outputs: Outputs,
   async run({ core }) {
     const versionHistory = new VersionHistory()

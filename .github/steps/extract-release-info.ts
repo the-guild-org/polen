@@ -1,11 +1,5 @@
 import { z } from 'zod/v4'
-import { getDemoConfig } from '../../src/lib/demos/index.ts'
-import {
-  CommonSchemas,
-  defineStep,
-  ReleaseContext,
-  WorkflowDispatchContext,
-} from '../../src/lib/github-actions/index.ts'
+import { defineStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 // Input/Output schemas
