@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
+import { createStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 // Input/Output schemas
@@ -25,7 +25,7 @@ const ExtractReleaseContext = z.union([
 /**
  * Extract and validate release information
  */
-export default defineStep({
+export default createStep({
   name: 'extract-release-info',
   description: 'Extract and validate release information to determine demo build requirements',
   inputs: ExtractReleaseInfoInputs,

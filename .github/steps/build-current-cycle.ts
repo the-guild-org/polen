@@ -1,10 +1,12 @@
 import { z } from 'zod/v4'
-import { CommonSchemas, defineStep } from '../../src/lib/github-actions/index.ts'
+import { createStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
+
+const jsonString = <T>(schema: z.ZodSchema<T>) => z.string().transform(s => schema.parse(JSON.parse(s)))
 
 const Inputs = z.object({
   previous: z.object({
-    versions_to_rebuild: CommonSchemas.jsonString(z.array(z.string())),
+    versions_to_rebuild: jsonString(z.array(z.string())),
   }),
 })
 
@@ -16,7 +18,7 @@ const Outputs = z.object({
 /**
  * Build demos for current development cycle
  */
-export default defineStep({
+export default createStep({
   name: 'build-current-cycle',
   description: 'Build demos for all versions in the current development cycle',
   inputs: Inputs,

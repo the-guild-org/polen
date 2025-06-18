@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineStep, PullRequestContext } from '../../src/lib/github-actions/index.ts'
+import { createStep, PullRequestContext } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Outputs = z.object({
@@ -9,7 +9,7 @@ const Outputs = z.object({
 /**
  * Prepare PR preview deployment
  */
-export default defineStep({
+export default createStep({
   name: 'prepare-pr-deployment',
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
   outputs: Outputs,

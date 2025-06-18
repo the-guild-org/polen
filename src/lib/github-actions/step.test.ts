@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v4'
 import { runStep } from './runner.ts'
-import { defineStep } from './step.ts'
+import { createStep } from './step.ts'
 
 describe('defineWorkflowStep', () => {
   const mockCore = {
@@ -27,7 +27,7 @@ describe('defineWorkflowStep', () => {
   })
 
   it('executes step with validated inputs', async () => {
-    const TestStep = defineStep({
+    const TestStep = createStep({
       name: 'test-step',
       description: 'Test step',
       inputs: z.object({
@@ -64,7 +64,7 @@ describe('defineWorkflowStep', () => {
   })
 
   it('validates output types', async () => {
-    const TestStep = defineStep({
+    const TestStep = createStep({
       name: 'test-step',
       description: 'Test step',
       inputs: z.object({
@@ -82,7 +82,7 @@ describe('defineWorkflowStep', () => {
   })
 
   it('step definition contains all metadata', async () => {
-    const TestStep = defineStep({
+    const TestStep = createStep({
       name: 'test-step',
       description: 'Test step',
       inputs: z.object({
@@ -131,7 +131,7 @@ describe('defineWorkflowStep', () => {
       pr: mockPR,
     }
 
-    const TestStep = defineStep({
+    const TestStep = createStep({
       name: 'test-step',
       description: 'Test step with PR',
       inputs: z.object({}),

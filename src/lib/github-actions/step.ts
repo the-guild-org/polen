@@ -18,7 +18,7 @@ export interface Args<$Inputs extends object = {}, $Context = Context> {
   inputs: $Inputs
 }
 
-export type StepRunner<
+export type Runner<
   $Inputs extends Record<string, any> = Record<string, any>,
   $Outputs = any,
   $Context = Context,
@@ -31,7 +31,7 @@ type InputsSchema = z.ZodObject
 type OutputsSchema = z.ZodObject
 
 // Generic workflow step definition
-export interface StepDefinition<
+export interface Definition<
   $InputsSchema extends InputsSchema,
   $OutputsSchema extends OutputsSchema,
   $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
@@ -53,8 +53,8 @@ export interface Step<
   $OutputsSchema extends OutputsSchema = OutputsSchema,
   $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 > {
-  definition: StepDefinition<$InputsSchema, $OutputsSchema, $ContextSchema>
-  run: StepRunner<
+  definition: Definition<$InputsSchema, $OutputsSchema, $ContextSchema>
+  run: Runner<
     z.Infer<$InputsSchema>,
     z.Infer<$OutputsSchema>,
     $ContextSchema extends z.ZodTypeAny ? z.Infer<$ContextSchema> : Context
@@ -64,12 +64,12 @@ export interface Step<
 /**
  * Define a type-safe workflow step
  */
-export function defineStep<
+export function createStep<
   $InputsSchema extends InputsSchema,
   $OutputsSchema extends OutputsSchema,
   $ContextSchema extends z.ZodTypeAny = z.ZodTypeAny,
 >(
-  definition: StepDefinition<$InputsSchema, $OutputsSchema, $ContextSchema>,
+  definition: Definition<$InputsSchema, $OutputsSchema, $ContextSchema>,
 ): Step<$InputsSchema, $OutputsSchema, $ContextSchema> {
   const run = async (args: Args<z.Infer<$InputsSchema>, any>) => {
     const outputRaw = await definition.run(args as any)
@@ -79,51 +79,5 @@ export function defineStep<
   return {
     definition,
     run,
-  }
-}
-
-// Common input/output schemas
-export const CommonSchemas = {
-  version: z.string().regex(/^\d+\.\d+\.\d+/, 'Must be valid semver'),
-  sha: z.string().regex(/^[a-f0-9]{7,40}$/, 'Must be valid git SHA'),
-  prNumber: z.string().regex(/^\d+$/, 'Must be valid PR number'),
-  boolean: z.union([z.boolean(), z.string().transform(s => s === 'true')]),
-  jsonString: <T>(schema: z.ZodSchema<T>) => z.string().transform(s => schema.parse(JSON.parse(s))),
-} as const
-
-/**
- * Workflow orchestration utilities
- */
-export class WorkflowOrchestrator {
-  constructor(private context: Args) {}
-
-  async executeSteps<T extends Record<string, any>>(
-    steps: Array<{
-      name: string
-      step: (context: Args, inputs?: any) => Promise<any>
-      inputs?: any
-      continueOnError?: boolean
-    }>,
-  ): Promise<T> {
-    const results: Record<string, any> = {}
-
-    for (const { name, step, inputs, continueOnError = false } of steps) {
-      try {
-        this.context.core.info(`🚀 Executing step: ${name}`)
-        results[name] = await step(this.context, inputs)
-        this.context.core.info(`✅ Completed step: ${name}`)
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
-        this.context.core.error(`❌ Failed step: ${name} - ${errorMessage}`)
-
-        if (!continueOnError) {
-          throw error
-        }
-
-        results[name] = { error }
-      }
-    }
-
-    return results as T
   }
 }

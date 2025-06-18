@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineStep } from '../../src/lib/github-actions/index.ts'
+import { createStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Outputs = z.object({
@@ -10,7 +10,7 @@ const Outputs = z.object({
 /**
  * Garbage collect old demo deployments
  */
-export default defineStep({
+export default createStep({
   name: 'garbage-collect',
   description: 'Remove old demo deployments to save space',
   inputs: z.object({}),

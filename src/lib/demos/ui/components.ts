@@ -588,21 +588,39 @@ export const generateDemoCard = (
               </svg>
             </a>`
         : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
-      // For PR deployments, show latest pseudo-dist-tag
-      : currentSha
-      ? `<div class="dist-tags">
-            <div class="dist-tag-button">
-              <a href="${basePath}latest/${name}/" class="dist-tag-label">
-                latest
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-              <a href="${basePath}${currentSha}/${name}/" class="dist-tag-version">${
-        currentSha.substring(0, 7)
-      }<span class="permalink-icon">¶</span></a>
-            </div>
-          </div>`
+      // For PR deployments
+      : prDeployments && prDeployments.length > 0
+      ? currentSha
+        // If we have currentSha, show the specific deployment
+        ? `<div class="dist-tags">
+              <div class="dist-tag-button">
+                <a href="${basePath}latest/${name}/" class="dist-tag-label">
+                  latest
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+                <a href="${basePath}${currentSha}/${name}/" class="dist-tag-version">${
+          currentSha.substring(0, 7)
+        }<span class="permalink-icon">¶</span></a>
+              </div>
+            </div>`
+        // Otherwise show available deployments for this PR
+        : prDeployments[0]?.sha
+        ? `<div class="dist-tags">
+              <div class="dist-tag-button">
+                <a href="${basePath}latest/${name}/" class="dist-tag-label">
+                  latest
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+                <a href="${basePath}${prDeployments[0].sha}/${name}/" class="dist-tag-version">${
+          prDeployments[0].sha
+        }<span class="permalink-icon">¶</span></a>
+              </div>
+            </div>`
+        : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
       : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
             <div class="previous-versions">
               <h3>Previous Versions</h3>

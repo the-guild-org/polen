@@ -96,6 +96,17 @@ export async function runStep(
       throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
     }
 
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Process Step Definition
+    // Validate Inputs
+    // Warning about excess properties
+    // Validate expected GitHub event versus actual
+    //
+    //
+
     const { definition } = step
 
     // todo: allow step definition to opt-out of runtime validation
@@ -147,6 +158,14 @@ export async function runStep(
       }
     }
 
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Run Step
+    //
+    //
+
     // Create context with validated inputs
     const args = createArgs(stepName || definition.name)
     const stepArgs = {
@@ -160,6 +179,14 @@ export async function runStep(
 
     // Execute step
     const outputRaw = await step.run(stepArgs)
+
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Handle Step Output
+    //
+    //
 
     // Validate & Export outputs
     // todo: allow step definition to opt-out of output validation

@@ -121,12 +121,11 @@ export class DemoOrchestrator {
         previousDeployments: previousDeployments,
       }]
 
-      // Build landing page with PR root base path for correct links
+      // Build landing page for PR root (without currentSha to show overview)
       await buildDemosHome({
         basePath: prRootBasePath,
         mode: 'demo',
         prNumber,
-        currentSha: shortSha,
         prDeployments: JSON.stringify(prDeploymentsData),
       })
 
@@ -135,6 +134,16 @@ export class DemoOrchestrator {
 
       // Create deployment structure
       await this.preparePRDeployment(prNumber, shortSha, ref, fullSha)
+      
+      // After deployment structure is created, build SHA-specific landing page
+      await buildDemosHome({
+        basePath: shaBasePath,
+        mode: 'demo',
+        prNumber,
+        currentSha: shortSha,
+        prDeployments: JSON.stringify(prDeploymentsData),
+        outputDir: `gh-pages-deploy/${shortSha}`,
+      })
 
       this.logger.info(`✅ Successfully built PR demos for #${prNumber}`)
 

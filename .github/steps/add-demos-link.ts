@@ -1,5 +1,5 @@
 import { z } from 'zod/v4'
-import { defineStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
+import { createStep, ReleaseContext, WorkflowDispatchContext } from '../../src/lib/github-actions/index.ts'
 
 const Inputs = z.object({
   previous: z.object({
@@ -20,7 +20,7 @@ const DemosLinkContext = z.union([
 /**
  * Add demos link to commit status
  */
-export default defineStep({
+export default createStep({
   name: 'add-demos-link',
   description: 'Add a GitHub commit status with link to the deployed demos',
   inputs: Inputs,

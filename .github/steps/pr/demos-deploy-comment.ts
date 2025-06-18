@@ -1,11 +1,11 @@
 import { Str } from '@wollybeard/kit'
 import { getDemoExamples } from '../../../src/lib/demos/index.ts'
-import { defineStep, PullRequestContext } from '../../../src/lib/github-actions/index.ts'
+import { createStep, PullRequestContext } from '../../../src/lib/github-actions/index.ts'
 
 /**
  * Create or update PR comment with demo links
  */
-export default defineStep({
+export default createStep({
   name: 'pr-comment',
   description: 'Create or update PR comment with demo preview links',
   context: PullRequestContext,

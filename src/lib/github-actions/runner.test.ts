@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v4'
 import { runStep } from './runner.ts'
-import { defineStep } from './step.ts'
+import { createStep } from './step.ts'
 
 // Mock the discovery module
 vi.mock('./discovery.ts')
@@ -45,7 +45,7 @@ describe('runner', () => {
 
   describe('runStep', () => {
     it('validates inputs before running step', async () => {
-      const TestStep = defineStep({
+      const TestStep = createStep({
         name: 'test-step',
         description: 'Test step',
         inputs: z.object({
@@ -77,7 +77,7 @@ describe('runner', () => {
     })
 
     it('handles validation errors', async () => {
-      const TestStep = defineStep({
+      const TestStep = createStep({
         name: 'test-step',
         description: 'Test step',
         inputs: z.object({
@@ -110,7 +110,7 @@ describe('runner', () => {
     })
 
     it('warns about unknown inputs', async () => {
-      const TestStep = defineStep({
+      const TestStep = createStep({
         name: 'test-step',
         description: 'Test step',
         inputs: z.object({
@@ -142,7 +142,7 @@ describe('runner', () => {
     })
 
     it('validates and exports outputs', async () => {
-      const TestStep = defineStep({
+      const TestStep = createStep({
         name: 'test-step',
         description: 'Test step',
         inputs: z.object({}),
@@ -167,7 +167,7 @@ describe('runner', () => {
     })
 
     it('warns when step returns outputs without schema', async () => {
-      const TestStep = defineStep({
+      const TestStep = createStep({
         name: 'test-step',
         description: 'Test step',
         inputs: z.object({}),
