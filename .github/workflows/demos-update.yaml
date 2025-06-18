@@ -27,6 +27,7 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: check-latest-tag
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build current cycle
         if: steps.check.outputs.has_versions == 'true'
@@ -34,6 +35,7 @@ jobs:
         with:
           name: build-current-cycle
           previous: ${{ toJSON(steps.check.outputs) }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
         if: steps.check.outputs.has_versions == 'true'

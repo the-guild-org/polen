@@ -30,6 +30,7 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: garbage-collect
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy cleaned gh-pages
         if: steps.gc.outputs.has_changes == 'true'
