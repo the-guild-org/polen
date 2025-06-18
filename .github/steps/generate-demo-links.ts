@@ -50,12 +50,10 @@ export default defineWorkflowStep<Inputs, Outputs>({
     const demoLinks = examples.map(example => {
       // Capitalize first letter for display
       const displayName = example.charAt(0).toUpperCase() + example.slice(1)
+      const baseUrl = `https://${owner}.github.io/${repo}/pr-${pr_number}`
 
-      return `#### ${displayName}
-- [Latest](https://${owner}.github.io/${repo}/pr-${pr_number}/latest/${example}/) – [\`${shortSha}\`](https://${owner}.github.io/${repo}/pr-${pr_number}/${head_sha}/${example}/)
-- Previous: ${previous.deployment_links || '(none)'}
-`
-    }).join('\\n')
+      return `- **${displayName}**: [View Demo](${baseUrl}/latest/${example}/) • [Commit ${shortSha}](${baseUrl}/${head_sha}/${example}/)`
+    }).join('\n')
 
     return {
       links: demoLinks,

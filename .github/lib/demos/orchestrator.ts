@@ -343,11 +343,11 @@ export class DemoOrchestrator {
 
   private async preparePRDeployment(prNumber: string, sha: string, ref?: string): Promise<void> {
     const deployDir = 'gh-pages-deploy'
-    const prDir = `pr-${prNumber}`
 
-    // Create directory structure
-    await fs.mkdir(join(deployDir, prDir, 'latest'), { recursive: true })
-    await fs.mkdir(join(deployDir, prDir, sha), { recursive: true })
+    // Create directory structure without pr directory prefix
+    // The workflow will handle the pr-{number} directory when deploying
+    await fs.mkdir(join(deployDir, 'latest'), { recursive: true })
+    await fs.mkdir(join(deployDir, sha), { recursive: true })
 
     // Get demo examples
     const examples = await getDemoExamples()
@@ -357,7 +357,7 @@ export class DemoOrchestrator {
       const buildDir = join('examples', example, 'build')
       try {
         await fs.access(buildDir)
-        const destDir = join(deployDir, prDir, sha, example)
+        const destDir = join(deployDir, sha, example)
         await fs.cp(buildDir, destDir, { recursive: true })
       } catch {
         this.logger.debug(`Skipping ${example} - no build directory found`)
@@ -365,8 +365,8 @@ export class DemoOrchestrator {
     }
 
     // Copy to latest and update paths
-    const shaDir = join(deployDir, prDir, sha)
-    const latestDir = join(deployDir, prDir, 'latest')
+    const shaDir = join(deployDir, sha)
+    const latestDir = join(deployDir, 'latest')
 
     const entries = await fs.readdir(shaDir)
     for (const entry of entries) {
@@ -387,7 +387,7 @@ export class DemoOrchestrator {
     // Create convenience redirects
     await this.pathManager.createDemoRedirects(
       examples,
-      join(deployDir, prDir),
+      deployDir,
       `/pr-${prNumber}/latest/`,
     )
 

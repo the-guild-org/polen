@@ -78,15 +78,24 @@ jobs:
           previous: ${{ toJSON(steps.previous.outputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Find existing comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ inputs.pr_number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '## Polen Demos Preview'
+
       - name: Comment on PR
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ inputs.pr_number }}
-          comment-id: deployment
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
           edit-mode: replace
           body: |
-            ## Demos Preview
+            ## Polen Demos Preview 🚀
 
-            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr_number }}/
+            **Preview URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr_number }}/
 
+            ### Available Demos
             ${{ steps.generate-links.outputs.links }}
