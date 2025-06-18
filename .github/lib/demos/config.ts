@@ -5,6 +5,7 @@
 import { z } from 'zod'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { parse as parseSemver, compare as compareSemver } from '@vltpkg/semver'
 
 // Schema for demo configuration
 const DemoConfigSchema = z.object({
@@ -139,20 +140,25 @@ export class DemoConfigManager {
     const config = this.getConfig()
     const minimum = config.examples.minimumPolenVersion
     
-    // Simple version comparison (could be enhanced with semver library)
-    const parseVersion = (v: string) => v.split('.').map(Number)
-    const minParts = parseVersion(minimum)
-    const versionParts = parseVersion(version.replace(/-.+$/, '')) // Remove prerelease suffix
-    
-    for (let i = 0; i < Math.max(minParts.length, versionParts.length); i++) {
-      const min = minParts[i] || 0
-      const ver = versionParts[i] || 0
+    try {
+      // Parse both versions, handling 'v' prefix if present
+      const versionParsed = parseSemver(version)
+      const minimumParsed = parseSemver(minimum)
       
-      if (ver > min) return true
-      if (ver < min) return false
+      if (!versionParsed || !minimumParsed) {
+        // If parsing fails, fall back to string comparison
+        console.warn(`Failed to parse version '${version}' or minimum '${minimum}'`)
+        return version >= minimum
+      }
+      
+      // Compare versions: returns -1 if version < minimum, 0 if equal, 1 if version > minimum
+      const comparison = compareSemver(versionParsed, minimumParsed)
+      return comparison >= 0
+    } catch (error) {
+      console.error(`Error comparing versions: ${error}`)
+      // On error, be permissive and allow the version
+      return true
     }
-    
-    return true // Equal versions are OK
   }
 
   /**

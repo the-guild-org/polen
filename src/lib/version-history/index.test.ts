@@ -1,7 +1,7 @@
 import { parse as semverParse } from '@vltpkg/semver'
 import type { SimpleGit } from 'simple-git'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
-import { VersionHistory } from './index.js'
+import { VersionHistory } from './index.ts'
 
 describe('VersionHistory', () => {
   describe('parseSemver', () => {

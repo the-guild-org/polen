@@ -1,5 +1,5 @@
-import { demoBuilder } from '../../../src/lib/demos/builder.js'
-import { VersionHistory } from '../../../src/lib/version-history/index.js'
+import { demoBuilder } from '../../../src/lib/demos/builder.ts'
+import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { Step } from '../types.ts'
 
 interface Inputs {

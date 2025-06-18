@@ -3,9 +3,9 @@
  */
 
 import { z } from 'zod'
-import { defineWorkflowStep } from '../../../../src/lib/github-actions/index.js'
-import { demoOrchestrator } from '../orchestrator.ts'
+import { defineWorkflowStep } from '../../../../src/lib/github-actions/index.ts'
 import { getDemoExamples } from '../../../scripts/tools/get-demo-examples.ts'
+import { demoOrchestrator } from '../orchestrator.ts'
 
 // Input/Output schemas
 const PreparePrDeploymentInputs = z.object({
@@ -47,7 +47,7 @@ export const preparePrDeployment = defineWorkflowStep({
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
   inputs: PreparePrDeploymentInputs,
   outputs: PreparePrDeploymentOutputs,
-  
+
   async execute({ core, inputs }) {
     const { pr_number, head_sha, head_ref } = inputs
 
@@ -76,7 +76,7 @@ export const generateDemoLinks = defineWorkflowStep({
   description: 'Generate markdown links for all demo examples in a PR preview',
   inputs: GenerateDemoLinksInputs,
   outputs: GenerateDemoLinksOutputs,
-  
+
   async execute({ core, inputs }) {
     const {
       pr_number,
@@ -88,7 +88,7 @@ export const generateDemoLinks = defineWorkflowStep({
 
     // Get list of demos
     const examples = await getDemoExamples()
-    
+
     // Get short SHA
     const shortSha = head_sha.substring(0, 7)
 
@@ -117,7 +117,7 @@ export const getPreviousDeployments = defineWorkflowStep({
   description: 'Retrieve previous successful PR demo deployments for comparison links',
   inputs: GetPreviousDeploymentsInputs,
   outputs: GetPreviousDeploymentsOutputs,
-  
+
   async execute({ github, context, core, inputs }) {
     const { pr_number, head_sha } = inputs
 

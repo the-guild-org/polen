@@ -5,7 +5,7 @@
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { getDemoConfig } from '../../../src/lib/demos/config.js'
+import { getDemoConfig } from '../../../src/lib/demos/config.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

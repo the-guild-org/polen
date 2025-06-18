@@ -1,5 +1,5 @@
 import * as path from 'node:path'
-import { VersionHistory } from '../../../src/lib/version-history/index.js'
+import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { getPRDeployments } from '../../scripts/lib/git/get-pr-deployments.ts'
 import { Step } from '../types.ts'
 

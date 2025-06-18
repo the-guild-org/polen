@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DemoConfig, getDemoConfig, resetDemoConfig } from './config.js'
+import { DemoConfig, getDemoConfig, resetDemoConfig } from './config.ts'
 
 vi.mock('node:fs', () => ({
   readFileSync: vi.fn(),

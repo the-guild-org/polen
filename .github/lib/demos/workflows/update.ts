@@ -3,9 +3,9 @@
  */
 
 import { z } from 'zod'
-import { defineWorkflowStep, CommonSchemas } from '../../../../src/lib/github-actions/index.js'
+import { CommonSchemas, defineWorkflowStep } from '../../../../src/lib/github-actions/index.ts'
+import { VersionHistory } from '../../../../src/lib/version-history/index.ts'
 import { demoOrchestrator } from '../orchestrator.ts'
-import { VersionHistory } from '../../../../src/lib/version-history/index.js'
 
 // Input/Output schemas
 const CheckLatestTagOutputs = z.object({
@@ -35,7 +35,7 @@ export const checkLatestTag = defineWorkflowStep({
   description: 'Identify all versions in the current development cycle that need demo updates',
   inputs: z.object({}),
   outputs: CheckLatestTagOutputs,
-  
+
   async execute({ core }) {
     const versionHistory = new VersionHistory()
 
@@ -56,13 +56,13 @@ export const checkLatestTag = defineWorkflowStep({
       core.warning(
         `Latest dist-tag ${
           latestTag ? `points to ${latestTag.semverTag}` : 'not found'
-        }, but latest stable is ${cycle.stable.tag}`
+        }, but latest stable is ${cycle.stable.tag}`,
       )
     }
 
     const versions = cycle.all.map(v => v.tag)
     const versionList = versions.join(', ')
-    
+
     core.info(`✅ Found ${cycle.all.length} versions to rebuild: ${versionList}`)
     core.info(`  Latest stable: ${cycle.stable.tag}`)
     if (cycle.prereleases.length > 0) {
@@ -84,7 +84,7 @@ export const buildCurrentCycle = defineWorkflowStep({
   description: 'Build demos for all versions in the current development cycle',
   inputs: BuildCurrentCycleInputs,
   outputs: BuildCurrentCycleOutputs,
-  
+
   async execute({ core, inputs }) {
     const versions = inputs.versions_to_rebuild
 
@@ -119,7 +119,7 @@ export const garbageCollect = defineWorkflowStep({
   description: 'Remove old demo deployments to save space',
   inputs: z.object({}),
   outputs: GarbageCollectOutputs,
-  
+
   async execute({ core }) {
     const result = await demoOrchestrator.garbageCollect()
 

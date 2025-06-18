@@ -1,5 +1,5 @@
-import { getDemoConfig } from '../../../src/lib/demos/config.js'
-import { VersionHistory } from '../../../src/lib/version-history/index.js'
+import { getDemoConfig } from '../../../src/lib/demos/config.ts'
+import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { type ReleaseInputs, Step } from '../types.ts'
 
 /**

@@ -1,4 +1,4 @@
-import { demoBuilder } from '../../../src/lib/demos/builder.js'
+import { demoBuilder } from '../../../src/lib/demos/builder.ts'
 import { Step } from '../types.ts'
 
 interface Inputs {

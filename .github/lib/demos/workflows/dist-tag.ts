@@ -3,9 +3,9 @@
  */
 
 import { z } from 'zod'
-import { defineWorkflowStep } from '../../../../src/lib/github-actions/index.js'
+import { defineWorkflowStep } from '../../../../src/lib/github-actions/index.ts'
+import { VersionHistory } from '../../../../src/lib/version-history/index.ts'
 import { demoOrchestrator } from '../orchestrator.ts'
-import { VersionHistory } from '../../../../src/lib/version-history/index.js'
 
 // Input/Output schemas
 const GetDistTagInfoInputs = z.object({
@@ -37,7 +37,7 @@ export const getDistTagInfo = defineWorkflowStep({
   description: 'Resolve npm dist-tags to their actual semver versions',
   inputs: GetDistTagInfoInputs,
   outputs: GetDistTagInfoOutputs,
-  
+
   async execute({ core, inputs }) {
     const { github_event_name, input_dist_tag, github_ref } = inputs
     const versionHistory = new VersionHistory()
@@ -85,7 +85,7 @@ export const updateDistTagContent = defineWorkflowStep({
   description: 'Copy content from semver deployment to dist-tag directory',
   inputs: UpdateDistTagContentInputs,
   outputs: UpdateDistTagContentOutputs,
-  
+
   async execute({ core, inputs }) {
     const { tag_name, semver_tag } = inputs
 

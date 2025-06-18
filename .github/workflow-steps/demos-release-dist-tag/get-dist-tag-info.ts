@@ -1,4 +1,4 @@
-import { VersionHistory } from '../../../src/lib/version-history/index.js'
+import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { Step } from '../types.ts'
 
 interface Inputs {

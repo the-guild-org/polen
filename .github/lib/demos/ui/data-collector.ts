@@ -2,13 +2,13 @@
  * Data collection for demo landing pages
  */
 
+import { Str } from '@wollybeard/kit'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { Str } from '@wollybeard/kit'
+import { VersionHistory } from '../../../../src/lib/version-history/index.ts'
 import { getDemoExamples } from '../../../scripts/tools/get-demo-examples.ts'
-import { VersionHistory } from '../../../../src/lib/version-history/index.js'
-import { demoConfig } from '../config.ts'
 import { WorkflowError } from '../../shared/error-handling.ts'
+import { demoConfig } from '../config.ts'
 
 export interface DemoMetadata {
   title: string
@@ -84,17 +84,17 @@ export class DemoDataCollector {
 
       // Get demo examples
       const demoExamples = await this.getDemoExamples()
-      
+
       // Load demo metadata
       const demoMetadata = await this.loadDemoMetadata(demoExamples)
-      
+
       // Parse deployment data based on mode
-      const parsedTrunkDeployments = mode === 'dev' 
+      const parsedTrunkDeployments = mode === 'dev'
         ? this.getMockTrunkDeployments()
         : this.parseTrunkDeployments(trunkDeployments)
 
       const parsedPrDeployments = this.parsePrDeployments(prDeployments)
-      
+
       const parsedDistTags = mode === 'dev'
         ? this.getMockDistTags()
         : this.parseDistTags(distTags)
@@ -149,7 +149,8 @@ export class DemoDataCollector {
 
         metadata[example] = {
           title: packageJson.displayName || Str.Case.title(packageJson.name || example),
-          description: packageJson.description || `Explore the ${example} GraphQL API with comprehensive documentation.`,
+          description: packageJson.description
+            || `Explore the ${example} GraphQL API with comprehensive documentation.`,
           enabled: true,
         }
       } catch {
@@ -180,7 +181,7 @@ export class DemoDataCollector {
    */
   private parseTrunkDeployments(trunkDeployments?: string): TrunkDeploymentsData | undefined {
     if (!trunkDeployments) return undefined
-    
+
     try {
       return JSON.parse(trunkDeployments) as TrunkDeploymentsData
     } catch {
@@ -193,7 +194,7 @@ export class DemoDataCollector {
    */
   private parsePrDeployments(prDeployments?: string): PrDeployment[] | undefined {
     if (!prDeployments) return undefined
-    
+
     try {
       return JSON.parse(prDeployments) as PrDeployment[]
     } catch {
@@ -206,7 +207,7 @@ export class DemoDataCollector {
    */
   private parseDistTags(distTags?: string): DistTagsData | undefined {
     if (!distTags) return undefined
-    
+
     try {
       return JSON.parse(distTags) as DistTagsData
     } catch {
@@ -220,7 +221,7 @@ export class DemoDataCollector {
   private async getPreviousDeployments(prNumber: string, currentSha: string): Promise<string[]> {
     try {
       const versionHistory = new VersionHistory()
-      
+
       // Fetch gh-pages branch
       await versionHistory['git'].fetch(['origin', 'gh-pages:refs/remotes/origin/gh-pages'])
 

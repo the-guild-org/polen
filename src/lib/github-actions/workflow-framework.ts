@@ -2,9 +2,9 @@
  * Type-safe workflow step framework for GitHub Actions
  */
 
-import { z } from 'zod'
-import type { GitHub } from '@actions/github/lib/utils.js'
 import type { Context } from '@actions/github/lib/context.js'
+import type { GitHub } from '@actions/github/lib/utils.js'
+import { z } from 'zod'
 
 // Core GitHub Actions context types
 export interface WorkflowContext {
@@ -15,25 +15,10 @@ export interface WorkflowContext {
   fs: typeof import('node:fs/promises')
 }
 
-// Workflow error class
-export class WorkflowError extends Error {
-  constructor(
-    public readonly step: string,
-    message: string,
-    public readonly cause?: unknown,
-  ) {
-    super(message)
-    this.name = 'WorkflowError'
-  }
-
-  static wrap(step: string, error: unknown): WorkflowError {
-    if (error instanceof WorkflowError) {
-      return error
-    }
-
-    const message = error instanceof Error ? error.message : String(error)
-    return new WorkflowError(step, message, error)
-  }
+// Generic error interface that workflow implementations can extend
+export interface IWorkflowError extends Error {
+  step: string
+  cause?: unknown
 }
 
 // Generic workflow step definition
@@ -57,7 +42,7 @@ export function defineWorkflowStep<TInputs, TOutputs>(
     try {
       // Validate inputs
       const inputs = definition.inputs.parse(rawInputs)
-      
+
       context.core.startGroup(`${definition.name}: ${definition.description}`)
       context.core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
@@ -66,9 +51,9 @@ export function defineWorkflowStep<TInputs, TOutputs>(
 
       // Validate outputs
       const validatedOutputs = definition.outputs.parse(outputs)
-      
+
       context.core.debug(`Outputs: ${JSON.stringify(validatedOutputs)}`)
-      
+
       // Set GitHub Actions outputs
       for (const [key, value] of Object.entries(validatedOutputs as Record<string, any>)) {
         context.core.setOutput(key, typeof value === 'string' ? value : JSON.stringify(value))
@@ -78,7 +63,8 @@ export function defineWorkflowStep<TInputs, TOutputs>(
       return validatedOutputs
     } catch (error) {
       context.core.endGroup()
-      throw WorkflowError.wrap(stepName, error)
+      // Re-throw the error - let the consumer handle error wrapping
+      throw error
     }
   }
 }
@@ -89,8 +75,7 @@ export const CommonSchemas = {
   sha: z.string().regex(/^[a-f0-9]{7,40}$/, 'Must be valid git SHA'),
   prNumber: z.string().regex(/^\d+$/, 'Must be valid PR number'),
   boolean: z.union([z.boolean(), z.string().transform(s => s === 'true')]),
-  jsonString: <T>(schema: z.ZodSchema<T>) => 
-    z.string().transform(s => schema.parse(JSON.parse(s))),
+  jsonString: <T>(schema: z.ZodSchema<T>) => z.string().transform(s => schema.parse(JSON.parse(s))),
 } as const
 
 // Utility for creating simple string-based steps (backwards compatibility)
@@ -125,14 +110,14 @@ export class WorkflowOrchestrator {
         results[name] = await step(this.context, inputs)
         this.context.core.info(`✅ Completed step: ${name}`)
       } catch (error) {
-        const workflowError = WorkflowError.wrap(name, error)
-        this.context.core.error(`❌ Failed step: ${name} - ${workflowError.message}`)
-        
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        this.context.core.error(`❌ Failed step: ${name} - ${errorMessage}`)
+
         if (!continueOnError) {
-          throw workflowError
+          throw error
         }
-        
-        results[name] = { error: workflowError }
+
+        results[name] = { error }
       }
     }
 

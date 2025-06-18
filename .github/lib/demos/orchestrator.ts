@@ -2,17 +2,17 @@
  * Demo orchestrator - unified coordination of all demo operations
  */
 
-import { $ } from 'zx'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { VersionHistory } from '../../../src/lib/version-history/index.js'
-import { GitVersionUtils } from '../shared/git-version-utils.ts'
-import { demoBuilder } from '../../../src/lib/demos/builder.js'
+import { $ } from 'zx'
+import { demoBuilder } from '../../../src/lib/demos/builder.ts'
+import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { getDemoExamples } from '../../scripts/tools/get-demo-examples.ts'
-import { buildDemosHome } from './ui/landing-page.ts'
-import { DeploymentPathManager } from './deployment/path-manager.ts'
+import { executeWithContinuation, safeExecute, WorkflowError } from '../shared/error-handling.ts'
+import { GitVersionUtils } from '../shared/git-version-utils.ts'
 import { demoConfig } from './config.ts'
-import { WorkflowError, safeExecute, executeWithContinuation } from '../shared/error-handling.ts'
+import { DeploymentPathManager } from './deployment/path-manager.ts'
+import { buildDemosHome } from './ui/landing-page.ts'
 
 export interface BuildResult {
   success: boolean
@@ -38,7 +38,8 @@ export class DemoOrchestrator {
 
   constructor(
     private workingDir: string = process.cwd(),
-    private logger: { info: (msg: string) => void; error: (msg: string) => void; debug: (msg: string) => void } = console,
+    private logger: { info: (msg: string) => void; error: (msg: string) => void; debug: (msg: string) => void } =
+      console,
   ) {
     this.versionHistory = new VersionHistory()
     this.gitVersionUtils = new GitVersionUtils(workingDir)
@@ -78,7 +79,7 @@ export class DemoOrchestrator {
       await demoBuilder.build(version, { basePath })
 
       this.logger.info(`✅ Successfully built demos for ${version}`)
-      
+
       return {
         success: true,
         versions: [version],
@@ -124,7 +125,7 @@ export class DemoOrchestrator {
       await this.preparePRDeployment(prNumber, sha, ref)
 
       this.logger.info(`✅ Successfully built PR demos for #${prNumber}`)
-      
+
       return {
         success: true,
         versions: [version],
@@ -171,7 +172,7 @@ export class DemoOrchestrator {
 
           // Build demos
           await demoBuilder.build(version, { basePath })
-          
+
           return version
         },
       )
@@ -184,7 +185,7 @@ export class DemoOrchestrator {
       }
 
       this.logger.info(`✅ Successfully built ${successes.length}/${versions.length} versions`)
-      
+
       return {
         success: failures.length < versions.length, // Success if at least one version built
         versions: successes,
@@ -299,11 +300,13 @@ export class DemoOrchestrator {
 
         // Format data
         const trunkDeployments = {
-          latest: latestStable ? {
-            sha: latestStable.commit,
-            shortSha: latestStable.commit.substring(0, 7),
-            tag: latestStable.tag,
-          } : null,
+          latest: latestStable
+            ? {
+              sha: latestStable.commit,
+              shortSha: latestStable.commit.substring(0, 7),
+              tag: latestStable.tag,
+            }
+            : null,
           previous: allVersions
             .filter(v => v.tag !== latestStable?.tag)
             .slice(0, 10)

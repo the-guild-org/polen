@@ -3,10 +3,10 @@
  */
 
 import { z } from 'zod'
-import { defineWorkflowStep, CommonSchemas } from '../../../../src/lib/github-actions/index.js'
-import { demoOrchestrator } from '../orchestrator.ts'
+import { CommonSchemas, defineWorkflowStep } from '../../../../src/lib/github-actions/index.ts'
+import { VersionHistory } from '../../../../src/lib/version-history/index.ts'
 import { demoConfig } from '../config.ts'
-import { VersionHistory } from '../../../../src/lib/version-history/index.js'
+import { demoOrchestrator } from '../orchestrator.ts'
 
 // Input/Output schemas
 const ExtractReleaseInfoInputs = z.object({
@@ -53,9 +53,10 @@ export const extractReleaseInfo = defineWorkflowStep({
   description: 'Extract and validate release information to determine demo build requirements',
   inputs: ExtractReleaseInfoInputs,
   outputs: ExtractReleaseInfoOutputs,
-  
+
   async execute({ core, inputs }) {
-    const { github_event_name, input_tag, github_release_tag_name, github_release_prerelease, github_event_action } = inputs
+    const { github_event_name, input_tag, github_release_tag_name, github_release_prerelease, github_event_action } =
+      inputs
     const isWorkflowDispatch = github_event_name === 'workflow_dispatch'
 
     // Get tag from event or manual input
@@ -65,10 +66,10 @@ export const extractReleaseInfo = defineWorkflowStep({
     }
 
     // Get release info
-    const isPrerelease = isWorkflowDispatch 
+    const isPrerelease = isWorkflowDispatch
       ? VersionHistory.isPrerelease(tag)
       : github_release_prerelease
-    
+
     const action = isWorkflowDispatch ? 'manual' : github_event_action
 
     // Handle dist-tag releases
@@ -102,10 +103,10 @@ export const extractReleaseInfo = defineWorkflowStep({
     // Regular semver release - check minimum version
     const config = demoConfig.getConfig()
     const needsBuild = demoConfig.meetsMinimumVersion(tag)
-    
+
     if (!needsBuild) {
       core.warning(
-        `Version ${tag} is below minimum Polen version ${config.examples.minimumPolenVersion}`
+        `Version ${tag} is below minimum Polen version ${config.examples.minimumPolenVersion}`,
       )
     }
 
@@ -128,12 +129,12 @@ export const buildDemos = defineWorkflowStep({
   description: 'Build demo sites for a newly released Polen version',
   inputs: BuildDemosInputs,
   outputs: BuildDemosOutputs,
-  
+
   async execute({ core, inputs }) {
     const tag = inputs.actual_tag || inputs.tag
-    
+
     const result = await demoOrchestrator.buildForRelease(tag)
-    
+
     if (!result.success) {
       const errorMessages = result.errors.map(e => e.message).join(', ')
       throw new Error(`Failed to build demos: ${errorMessages}`)
@@ -153,7 +154,7 @@ export const addDemosLink = defineWorkflowStep({
   description: 'Add a GitHub commit status with link to the deployed demos',
   inputs: AddDemosLinkInputs,
   outputs: AddDemosLinkOutputs,
-  
+
   async execute({ github, context, core, inputs }) {
     const { actual_tag, github_event_name, github_release_target_commitish } = inputs
 
@@ -190,14 +191,14 @@ export const addDemosLink = defineWorkflowStep({
         description: `View demos for ${actual_tag}`,
         context: 'polen/demos',
       })
-      
+
       core.info(`✅ Successfully added demos link to commit ${sha}`)
       return { link_added: 'true' }
     } catch (error: any) {
       if (error.status === 422) {
         core.warning(
-          `Could not add commit status: commit ${sha} not found in repository. ` +
-          `This is expected for tags on commits not in the default branch`
+          `Could not add commit status: commit ${sha} not found in repository. `
+            + `This is expected for tags on commits not in the default branch`,
         )
         return { link_added: 'false' }
       } else {
