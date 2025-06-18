@@ -29,13 +29,12 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     outputs:
-      deployment_url: ${{ steps.deploy.outputs.page_url }}
+      deployment_url: ${{ steps.deploy.outputs.deployment_url }}
       demo_links: ${{ steps.generate-links.outputs.links }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.head_sha }}
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -59,12 +58,7 @@ jobs:
       - name: Prepare PR deployment
         run: |
           node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            prepare-pr-deployment \
-            '{
-              "pr_number": "${{ inputs.pr_number }}",
-              "head_sha": "${{ inputs.head_sha }}",
-              "head_ref": "${{ inputs.head_ref }}"
-            }'
+            prepare-pr-deployment '${{ toJSON(inputs) }}'
 
       - name: Deploy to GitHub Pages
         id: deploy
@@ -78,12 +72,17 @@ jobs:
       - name: Generate demo links
         id: generate-links
         run: |
+          # Create JSON with all required inputs
+          FULL_JSON=$(cat <<EOF
+          {
+            "pr_number": "${{ inputs.pr_number }}",
+            "head_sha": "${{ inputs.head_sha }}",
+            "github_repository_owner": "${{ github.repository_owner }}",
+            "github_repository_name": "${{ github.event.repository.name }}",
+            "previous_deployment_links": "${{ steps.previous.outputs.deployment_links }}"
+          }
+          EOF
+          )
+
           node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            generate-demo-links \
-            '{
-              "pr_number": "${{ inputs.pr_number }}",
-              "head_sha": "${{ inputs.head_sha }}",
-              "github_repository_owner": "${{ github.repository_owner }}",
-              "github_repository_name": "${{ github.event.repository.name }}",
-              "previous_deployment_links": "${{ steps.previous.outputs.deployment_links }}"
-            }'
+            generate-demo-links "$FULL_JSON"
