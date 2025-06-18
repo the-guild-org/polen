@@ -30,3 +30,9 @@ dist-ssr
 node_modules/
 .bundle-explorer
 dist-demos
+
+# GitHub Actions TypeScript compiled files
+.github/**/*.js
+.github/**/*.js.map
+.github/**/*.d.ts
+.github/**/*.d.ts.map
