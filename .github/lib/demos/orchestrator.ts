@@ -93,8 +93,12 @@ export class DemoOrchestrator {
    * Build demos for PR preview
    */
   async buildForPR(prNumber: string, sha: string, ref?: string): Promise<BuildResult> {
+    // Use short SHA for directory names to avoid issues with long paths
+    const shortSha = sha.substring(0, 7)
+    const fullSha = sha
+
     return safeExecute('build-for-pr', async () => {
-      this.logger.info(`🚀 Building PR demos for #${prNumber} (${sha})`)
+      this.logger.info(`🚀 Building PR demos for #${prNumber} (${fullSha})`)
 
       // Get latest stable version for Polen CLI
       const latestStable = await this.versionHistory.getLatestStableVersion()
@@ -103,32 +107,34 @@ export class DemoOrchestrator {
       }
 
       const version = latestStable.tag
-      const basePath = `/polen/pr-${prNumber}/${sha}/`
+      const shaBasePath = `/polen/pr-${prNumber}/${shortSha}/`
+      const prRootBasePath = `/polen/pr-${prNumber}/`
 
       // Get previous deployments for this PR
-      const previousDeployments = getPreviousDeployments(prNumber, sha)
+      const previousDeployments = getPreviousDeployments(prNumber, shortSha)
 
       // Build landing page for PR with deployment history
       const prDeploymentsData = [{
         number: parseInt(prNumber, 10),
-        sha: sha,
+        sha: shortSha,
         ref: ref,
         previousDeployments: previousDeployments,
       }]
 
+      // Build landing page with PR root base path for correct links
       await buildDemosHome({
-        basePath,
+        basePath: prRootBasePath,
         mode: 'demo',
         prNumber,
-        currentSha: sha,
+        currentSha: shortSha,
         prDeployments: JSON.stringify(prDeploymentsData),
       })
 
-      // Build individual demos
-      await demoBuilder.build(version, { basePath })
+      // Build individual demos with SHA-specific base path
+      await demoBuilder.build(version, { basePath: shaBasePath })
 
       // Create deployment structure
-      await this.preparePRDeployment(prNumber, sha, ref)
+      await this.preparePRDeployment(prNumber, shortSha, ref, fullSha)
 
       this.logger.info(`✅ Successfully built PR demos for #${prNumber}`)
 
@@ -359,7 +365,7 @@ export class DemoOrchestrator {
 
   // Private helper methods
 
-  private async preparePRDeployment(prNumber: string, sha: string, ref?: string): Promise<void> {
+  private async preparePRDeployment(prNumber: string, sha: string, ref?: string, fullSha?: string): Promise<void> {
     const deployDir = 'gh-pages-deploy'
 
     // Create directory structure without pr directory prefix
@@ -421,18 +427,27 @@ export class DemoOrchestrator {
       )
     }
 
-    // Update base paths in latest
-    await this.pathManager.updateBasePaths(
-      latestDir,
-      `/polen/pr-${prNumber}/${sha}/`,
-      `/polen/pr-${prNumber}/latest/`,
-    )
+    // Update base paths in latest directory (but not the root index.html)
+    const latestEntries = await fs.readdir(latestDir)
+    for (const entry of latestEntries) {
+      if (entry !== 'index.html') {
+        const entryPath = join(latestDir, entry)
+        const stat = await fs.stat(entryPath)
+        if (stat.isDirectory()) {
+          await this.pathManager.updateBasePaths(
+            entryPath,
+            `/polen/pr-${prNumber}/${sha}/`,
+            `/polen/pr-${prNumber}/latest/`,
+          )
+        }
+      }
+    }
 
     // Don't create redirects at root level as they would overwrite previous deployments
     // when using peaceiris/actions-gh-pages with keep_files: true
 
     // Add PR metadata
-    const prInfo = `PR #${prNumber}\\nBranch: ${ref || 'unknown'}\\nCommit: ${sha}`
+    const prInfo = `PR #${prNumber}\\nBranch: ${ref || 'unknown'}\\nCommit: ${fullSha || sha}`
     await fs.writeFile(join(latestDir, 'PR_INFO.txt'), prInfo)
     await fs.writeFile(join(shaDir, 'PR_INFO.txt'), prInfo)
   }

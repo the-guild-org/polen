@@ -77,7 +77,7 @@ export default defineStep({
       const baseUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}`
 
       // let text = ''
-      s`#### [${displayName}](${baseUrl}/latest/${example}/) – [\`${shortSha}\`](${baseUrl}/${head_sha}/${example}/)`
+      s`#### [${displayName}](${baseUrl}/latest/${example}/) – [\`${shortSha}\`](${baseUrl}/${shortSha}/${example}/)`
 
       // Format previous deployments per demo
       if (previousDeployments.length === 0) {
@@ -85,7 +85,7 @@ export default defineStep({
       } else {
         const deploymentLinks = previousDeployments
           .slice(0, 10)
-          .map(deployment => `[\`${deployment.sha}\`](${baseUrl}/${deployment.fullSha}/${example}/)`)
+          .map(deployment => `[\`${deployment.sha}\`](${baseUrl}/${deployment.sha}/${example}/)`)
           .join(' / ')
 
         let previousDeploymentsText = `Previous Deployments: ${deploymentLinks}`
