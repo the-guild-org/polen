@@ -12,13 +12,14 @@ import { runStepByName } from './runner.ts'
 async function main() {
   const stepName = process.argv[2]
   const workflowName = process.argv[3]
-  const inputsJson = process.argv[4] || '{}'
-  const contextJson = process.argv[5] || '{}'
-  const previousJson = process.argv[6] || '{}'
+  const pathOverride = process.argv[4]
+  const inputsJson = process.argv[5] || '{}'
+  const contextJson = process.argv[6] || '{}'
+  const previousJson = process.argv[7] || '{}'
 
   if (!stepName) {
     core.setFailed('Missing required step name parameter')
-    core.error('Usage: run-step-cli <step-name> <workflow-name> [inputs-json] [context-json] [previous-json]')
+    core.error('Usage: run-step-cli <step-name> <workflow-name> [path-override] [inputs-json] [context-json] [previous-json]')
     core.error('This runner expects steps to be in .github/steps/<name>.ts')
     process.exit(1)
   }
@@ -48,7 +49,13 @@ async function main() {
 
     core.debug(`Merged inputs: ${JSON.stringify(mergedInputs)}`)
 
-    await runStepByName(stepName, workflowName, JSON.stringify(mergedInputs))
+    // If path override is provided and not empty, use it directly
+    if (pathOverride && pathOverride !== '') {
+      const { runStep } = await import('./runner.ts')
+      await runStep(pathOverride, JSON.stringify(mergedInputs))
+    } else {
+      await runStepByName(stepName, workflowName, JSON.stringify(mergedInputs))
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     const stack = error instanceof Error ? error.stack : undefined
@@ -62,6 +69,7 @@ async function main() {
     // Log additional context
     core.error(`Step name: ${stepName}`)
     core.error(`Workflow name: ${workflowName || 'none'}`)
+    core.error(`Path override: ${pathOverride || 'none'}`)
     core.error(`Inputs: ${inputsJson}`)
     core.error(`Context: ${contextJson}`)
     core.error(`Previous: ${previousJson}`)

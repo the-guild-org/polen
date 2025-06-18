@@ -43,7 +43,6 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: prepare-pr-deployment
-          workflow: demos-preview
           inputs: ${{ toJSON(inputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -59,7 +58,7 @@ jobs:
       - name: Comment on PR
         uses: ./.github/actions/step
         with:
-          name: pr-comment
-          workflow: demos-preview
+          name: demos-deploy-comment
+          path: .github/steps/pr/demos-deploy-comment.ts
           inputs: ${{ toJSON(inputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

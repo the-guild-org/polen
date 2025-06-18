@@ -4,6 +4,10 @@ inputs:
   name:
     description: "The name of the workflow step"
     required: true
+  path:
+    description: "Explicit path to the step module (overrides discovery)"
+    required: false
+    default: ""
   workflow:
     description: "The workflow name for step discovery (defaults to github.workflow)"
     required: false
@@ -39,4 +43,5 @@ runs:
         if [ -z "$WORKFLOW_NAME" ]; then
           WORKFLOW_NAME="${{ github.workflow }}"
         fi
-        node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$STEP_INPUTS" "$STEP_CONTEXT" "$STEP_PREVIOUS"
+        PATH_OVERRIDE="${{ inputs.path }}"
+        node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$PATH_OVERRIDE" "$STEP_INPUTS" "$STEP_CONTEXT" "$STEP_PREVIOUS"
