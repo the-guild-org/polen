@@ -33,7 +33,9 @@ jobs:
 
       - name: Run garbage collector
         id: gc
-        run: node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts garbage-collect '{}'
+        uses: ./.github/actions/workflow-step
+        with:
+          name: garbage-collect
 
       - name: Deploy cleaned gh-pages
         if: steps.gc.outputs.has_changes == 'true'

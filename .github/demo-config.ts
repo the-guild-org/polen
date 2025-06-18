@@ -7,9 +7,9 @@ import type { DemoConfig } from './lib/demos/config.ts'
 
 export const demoConfig: DemoConfig = {
   examples: {
-    exclude: [],
-    order: ['pokemon', 'star-wars'],
-    minimumPolenVersion: '0.1.0',
+    exclude: ['github'],
+    order: ['hive', 'pokemon'],
+    minimumPolenVersion: '0.9.0',
   },
   deployment: {
     basePaths: {

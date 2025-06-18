@@ -1,13 +1,7 @@
-/**
- * Unified workflow steps for dist-tag operations
- */
+import { z } from 'zod/v4'
+import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
-import { z } from 'zod'
-import { defineWorkflowStep } from '../../../../src/lib/github-actions/index.ts'
-import { VersionHistory } from '../../../../src/lib/version-history/index.ts'
-import { demoOrchestrator } from '../orchestrator.ts'
-
-// Input/Output schemas
 const GetDistTagInfoInputs = z.object({
   github_event_name: z.string(),
   input_dist_tag: z.string().optional(),
@@ -20,19 +14,10 @@ const GetDistTagInfoOutputs = z.object({
   commit: z.string(),
 })
 
-const UpdateDistTagContentInputs = z.object({
-  tag_name: z.string(),
-  semver_tag: z.string(),
-})
-
-const UpdateDistTagContentOutputs = z.object({
-  update_complete: z.string(),
-})
-
 /**
  * Extract dist-tag information and find corresponding semver version
  */
-export const getDistTagInfo = defineWorkflowStep({
+export default defineWorkflowStep({
   name: 'get-dist-tag-info',
   description: 'Resolve npm dist-tags to their actual semver versions',
   inputs: GetDistTagInfoInputs,
@@ -73,26 +58,6 @@ export const getDistTagInfo = defineWorkflowStep({
       tag_name: tagName,
       semver_tag: distTag.semverTag,
       commit: distTag.commit,
-    }
-  },
-})
-
-/**
- * Update dist-tag content by copying from semver deployment
- */
-export const updateDistTagContent = defineWorkflowStep({
-  name: 'update-dist-tag-content',
-  description: 'Copy content from semver deployment to dist-tag directory',
-  inputs: UpdateDistTagContentInputs,
-  outputs: UpdateDistTagContentOutputs,
-
-  async execute({ core, inputs }) {
-    const { tag_name, semver_tag } = inputs
-
-    await demoOrchestrator.updateDistTag(tag_name, semver_tag)
-
-    return {
-      update_complete: 'true',
     }
   },
 })

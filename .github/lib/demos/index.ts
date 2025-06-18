@@ -22,14 +22,11 @@ export { DemoPageRenderer, renderDemoLandingPage } from './ui/page-renderer.ts'
 export { DeploymentPathManager } from './deployment/path-manager.ts'
 export type { RedirectConfig } from './deployment/path-manager.ts'
 
-// Workflow steps
-export * as DistTagWorkflow from './workflows/dist-tag.ts'
-export * as PreviewWorkflow from './workflows/preview.ts'
-export * as ReleaseWorkflow from './workflows/release.ts'
-export * as UpdateWorkflow from './workflows/update.ts'
+// Utilities
+export { getDemoExamples } from './utils/get-demo-examples.ts'
 
-// Runner for executing workflow steps
-export { runWorkflowStep, WORKFLOW_STEPS } from './runner.ts'
+// Re-export utilities from main library
+export { createWorkflowContext } from '../../../src/lib/github-actions/index.ts'
 
 // Re-export shared utilities
 export {

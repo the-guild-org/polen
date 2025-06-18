@@ -30,18 +30,19 @@ jobs:
 
       - name: Check latest tag
         id: check
-        run: |
-          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            check-latest-tag '{}'
+        uses: ./.github/actions/workflow-step
+        with:
+          name: check-latest-tag
 
       - name: Build current cycle
         if: steps.check.outputs.has_versions == 'true'
-        run: |
-          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            build-current-cycle \
-            '{
+        uses: ./.github/actions/workflow-step
+        with:
+          name: build-current-cycle
+          inputs: |  
+            {
               "versions_to_rebuild": ${{ steps.check.outputs.versions_to_rebuild }}
-            }'
+            }
 
       - name: Deploy to GitHub Pages
         if: steps.check.outputs.has_versions == 'true'

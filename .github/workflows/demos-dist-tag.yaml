@@ -28,14 +28,15 @@ jobs:
 
       - name: Get dist-tag info
         id: dist-tag
-        run: |
-          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            get-dist-tag-info \
-            '{
+        uses: ./.github/actions/workflow-step
+        with:
+          name: get-dist-tag-info
+          inputs: |
+            {
               "github_event_name": "${{ github.event_name }}",
               "input_dist_tag": "${{ inputs.dist_tag }}",
               "github_ref": "${{ github.ref }}"
-            }'
+            }
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -44,13 +45,14 @@ jobs:
           path: gh-pages
 
       - name: Update dist-tag content
-        run: |
-          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            update-dist-tag-content \
-            '{
+        uses: ./.github/actions/workflow-step
+        with:
+          name: update-dist-tag-content
+          inputs: |
+            {
               "tag_name": "${{ steps.dist-tag.outputs.tag_name }}",
               "semver_tag": "${{ steps.dist-tag.outputs.semver_tag }}"
-            }'
+            }
 
       - name: Configure git
         run: |

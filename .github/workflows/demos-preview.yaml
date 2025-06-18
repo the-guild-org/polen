@@ -47,14 +47,16 @@ jobs:
 
       - name: Get previous deployments
         id: previous
-        run: |
-          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            get-previous-deployments '${{ toJSON(inputs) }}'
+        uses: ./.github/actions/workflow-step
+        with:
+          name: get-previous-deployments
+          inputs: ${{ toJSON(inputs) }}
 
       - name: Prepare PR deployment
-        run: |
-          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            prepare-pr-deployment '${{ toJSON(inputs) }}'
+        uses: ./.github/actions/workflow-step
+        with:
+          name: prepare-pr-deployment
+          inputs: ${{ toJSON(inputs) }}
 
       - name: Deploy to GitHub Pages
         id: deploy
@@ -67,18 +69,14 @@ jobs:
 
       - name: Generate demo links
         id: generate-links
-        run: |
-          # Create JSON with all required inputs
-          FULL_JSON=$(cat <<EOF
-          {
-            "pr_number": "${{ inputs.pr_number }}",
-            "head_sha": "${{ inputs.head_sha }}",
-            "github_repository_owner": "${{ github.repository_owner }}",
-            "github_repository_name": "${{ github.event.repository.name }}",
-            "previous_deployment_links": "${{ steps.previous.outputs.deployment_links }}"
-          }
-          EOF
-          )
-
-          node --no-warnings --experimental-transform-types ./.github/lib/demos/runner.ts \
-            generate-demo-links "$FULL_JSON"
+        uses: ./.github/actions/workflow-step
+        with:
+          name: generate-demo-links
+          inputs: |
+            {
+              "pr_number": "${{ inputs.pr_number }}",
+              "head_sha": "${{ inputs.head_sha }}",
+              "github_repository_owner": "${{ github.repository_owner }}",
+              "github_repository_name": "${{ github.event.repository.name }}",
+              "previous_deployment_links": "${{ steps.previous.outputs.deployment_links }}"
+            }

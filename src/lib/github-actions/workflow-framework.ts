@@ -4,7 +4,7 @@
 
 import type { Context } from '@actions/github/lib/context.js'
 import type { GitHub } from '@actions/github/lib/utils.js'
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 // Core GitHub Actions context types
 export interface WorkflowContext {
