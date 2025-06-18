@@ -92,3 +92,4 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       head_ref: ${{ github.head_ref }}
       head_sha: ${{ github.event.pull_request.head.sha }}
+    secrets: inherit

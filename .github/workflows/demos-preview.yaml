@@ -15,15 +15,16 @@ on:
     outputs:
       deployment_url:
         description: "URL of the deployed preview"
-        value: ${{ jobs.build-and-deploy.outputs.deployment_url }}
+        value: ${{ jobs.deploy.outputs.deployment_url }}
       demo_links:
         description: "Markdown links for demo examples"
-        value: ${{ jobs.build-and-deploy.outputs.demo_links }}
+        value: ${{ jobs.deploy.outputs.demo_links }}
 
 permissions:
   contents: write
   pages: write
   deployments: write
+  pull-requests: write
 
 jobs:
   deploy:
@@ -76,3 +77,16 @@ jobs:
           context: ${{ toJSON(github) }}
           previous: ${{ toJSON(steps.previous.outputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ inputs.pr_number }}
+          comment-id: deployment
+          edit-mode: replace
+          body: |
+            ## Demos Preview
+
+            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ inputs.pr_number }}/
+
+            ${{ steps.generate-links.outputs.links }}
