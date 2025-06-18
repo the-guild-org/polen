@@ -19,12 +19,6 @@ export interface Args<$Inputs extends object = {}> {
   inputs: $Inputs
 }
 
-// Generic error interface that workflow implementations can extend
-export interface WorkflowError extends Error {
-  step: string
-  cause?: unknown
-}
-
 type InputsSchema = z.ZodObject
 
 type OutputsSchema = z.ZodObject
