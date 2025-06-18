@@ -29,94 +29,9 @@ export function createWorkflowContext(): WorkflowContext {
 }
 
 /**
- * Registry of workflow steps
- */
-export interface WorkflowStepRegistry {
-  [key: string]: WorkflowStep<any>
-}
-
-/**
- * Run a workflow step from a registry
- */
-export async function runWorkflowStep(
-  stepName: string,
-  inputs: unknown,
-  registry: WorkflowStepRegistry,
-): Promise<void> {
-  const step = registry[stepName]
-  if (!step) {
-    throw new WorkflowError('runner', `Unknown workflow step: ${stepName}`)
-  }
-
-  try {
-    core.info(`🚀 Running workflow step: ${stepName}`)
-    core.debug(`Inputs: ${JSON.stringify(inputs, null, 2)}`)
-
-    const workflowContext = createWorkflowContext()
-    await step(workflowContext, inputs)
-
-    core.info(`✅ Completed workflow step: ${stepName}`)
-  } catch (error) {
-    const workflowError = WorkflowError.wrap('runner', error)
-    core.error(`❌ Failed workflow step: ${stepName} - ${workflowError.message}`)
-
-    if (workflowError.cause) {
-      core.debug(`Caused by: ${workflowError.cause}`)
-    }
-
-    core.setFailed(workflowError.message)
-    throw workflowError
-  }
-}
-
-/**
- * CLI runner for workflow steps
- */
-export async function runWorkflowStepCLI(registry: WorkflowStepRegistry): Promise<void> {
-  const args = process.argv.slice(2)
-
-  if (args.length < 1) {
-    console.error('Usage: node runner.ts <step-name> [inputs-json]')
-    console.error('')
-    console.error('Available steps:')
-    Object.keys(registry).forEach(step => {
-      console.error(`  - ${step}`)
-    })
-    process.exit(1)
-  }
-
-  const stepName = args[0]!
-  const inputsJson = args[1] || '{}'
-
-  if (!registry[stepName]) {
-    console.error(`❌ Unknown workflow step: ${stepName}`)
-    console.error('')
-    console.error('Available steps:')
-    Object.keys(registry).forEach(step => {
-      console.error(`  - ${step}`)
-    })
-    process.exit(1)
-  }
-
-  try {
-    const inputs = JSON.parse(inputsJson)
-    await runWorkflowStep(stepName, inputs, registry)
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      console.error('❌ Invalid JSON inputs:', inputsJson)
-    } else if (error instanceof WorkflowError) {
-      // Already logged by runWorkflowStep
-    } else {
-      console.error('❌ Unexpected error:', error)
-    }
-    process.exit(1)
-  }
-}
-
-/**
  * Run a workflow step by importing it from a path
  */
-export async function runWorkflowStepFromPath(
+export async function runStep(
   stepPath: string,
   inputsJson?: string,
 ): Promise<void> {
@@ -143,26 +58,5 @@ export async function runWorkflowStepFromPath(
       console.error(`❌ Error running step from ${stepPath}:`, error)
     }
     process.exit(1)
-  }
-}
-
-/**
- * Create a CLI runner for workflow steps with custom conventions
- */
-export function createStepRunnerCLI(options: {
-  stepResolver: (stepName: string) => string
-  usage?: string
-}): () => Promise<void> {
-  return async () => {
-    const stepName = process.argv[2]
-    const inputsJson = process.argv[3]
-
-    if (!stepName) {
-      console.error(options.usage || 'Usage: node runner.ts <step-name> [inputs-json]')
-      process.exit(1)
-    }
-
-    const stepPath = options.stepResolver(stepName)
-    await runWorkflowStepFromPath(stepPath, inputsJson)
   }
 }

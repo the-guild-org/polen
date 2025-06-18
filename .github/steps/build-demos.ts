@@ -3,8 +3,10 @@ import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Inputs = z.object({
-  tag: z.string(),
-  actual_tag: z.string().optional(),
+  previous: z.object({
+    tag: z.string(),
+    actual_tag: z.string(),
+  }),
 })
 
 const Outputs = z.object({
@@ -20,9 +22,9 @@ export default defineWorkflowStep({
   inputs: Inputs,
   outputs: Outputs,
   async execute({ inputs }) {
-    const tag = inputs.actual_tag || inputs.tag
+    const { actual_tag } = inputs.previous
 
-    const result = await demoOrchestrator.buildForRelease(tag)
+    const result = await demoOrchestrator.buildForRelease(actual_tag)
 
     if (!result.success) {
       const errorMessages = result.errors.map(e => e.message).join(', ')

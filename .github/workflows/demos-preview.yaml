@@ -72,11 +72,6 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: generate-demo-links
-          inputs: |
-            {
-              "pr_number": "${{ inputs.pr_number }}",
-              "head_sha": "${{ inputs.head_sha }}",
-              "github_repository_owner": "${{ github.repository_owner }}",
-              "github_repository_name": "${{ github.event.repository.name }}",
-              "previous_deployment_links": "${{ steps.previous.outputs.deployment_links }}"
-            }
+          inputs: ${{ toJSON(inputs) }}
+          context: ${{ toJSON(github) }}
+          previous: ${{ toJSON(steps.previous.outputs) }}

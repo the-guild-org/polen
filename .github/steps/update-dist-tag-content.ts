@@ -3,8 +3,10 @@ import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Inputs = z.object({
-  tag_name: z.string(),
-  semver_tag: z.string(),
+  previous: z.object({
+    tag_name: z.string(),
+    semver_tag: z.string(),
+  }),
 })
 
 const Outputs = z.object({
@@ -20,7 +22,7 @@ export default defineWorkflowStep({
   inputs: Inputs,
   outputs: Outputs,
   async execute({ inputs }) {
-    const { tag_name, semver_tag } = inputs
+    const { tag_name, semver_tag } = inputs.previous
 
     await demoOrchestrator.updateDistTag(tag_name, semver_tag)
 

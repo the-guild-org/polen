@@ -16,5 +16,5 @@ export type { BuildDemosHomeOptions } from './ui/landing-page.ts'
 export { DemoPageRenderer, renderDemoLandingPage } from './ui/page-renderer.ts'
 
 // Deployment utilities (GitHub Actions specific)
-export { DeploymentPathManager } from './deployment/path-manager.ts'
-export type { RedirectConfig } from './deployment/path-manager.ts'
+export { DeploymentPathManager } from './path-manager.ts'
+export type { RedirectConfig } from './path-manager.ts'

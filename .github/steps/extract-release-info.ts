@@ -1,15 +1,12 @@
 import { z } from 'zod/v4'
 import { getDemoConfig } from '../../src/lib/demos/index.ts'
-import { CommonSchemas, defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { CommonSchemas, defineWorkflowStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 // Input/Output schemas
 const ExtractReleaseInfoInputs = z.object({
-  github_event_name: z.string(),
-  input_tag: z.string().optional(),
-  github_release_tag_name: z.string().optional(),
-  github_release_prerelease: CommonSchemas.boolean.optional(),
-  github_event_action: z.string().optional(),
+  tag: z.string().optional(),
+  context: GitHubContextSchema,
 })
 
 const ExtractReleaseInfoOutputs = z.object({
@@ -31,12 +28,11 @@ export default defineWorkflowStep({
   outputs: ExtractReleaseInfoOutputs,
 
   async execute({ core, inputs }) {
-    const { github_event_name, input_tag, github_release_tag_name, github_release_prerelease, github_event_action } =
-      inputs
-    const isWorkflowDispatch = github_event_name === 'workflow_dispatch'
+    const { tag: inputTag, context } = inputs
+    const isWorkflowDispatch = context.event_name === 'workflow_dispatch'
 
     // Get tag from event or manual input
-    const tag = isWorkflowDispatch ? input_tag : github_release_tag_name
+    const tag = isWorkflowDispatch ? inputTag : (context.event as any).release?.tag_name
     if (!tag) {
       throw new Error('No tag provided')
     }
@@ -44,9 +40,9 @@ export default defineWorkflowStep({
     // Get release info
     const isPrerelease = isWorkflowDispatch
       ? VersionHistory.isPrerelease(tag)
-      : github_release_prerelease
+      : (context.event as any).release?.prerelease
 
-    const action = isWorkflowDispatch ? 'manual' : github_event_action
+    const action = isWorkflowDispatch ? 'manual' : (context.event as any).action
 
     // Handle dist-tag releases
     if (tag === 'next' || tag === 'latest') {

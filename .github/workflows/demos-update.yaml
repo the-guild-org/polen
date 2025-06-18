@@ -39,10 +39,7 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: build-current-cycle
-          inputs: |  
-            {
-              "versions_to_rebuild": ${{ steps.check.outputs.versions_to_rebuild }}
-            }
+          previous: ${{ toJSON(steps.check.outputs) }}
 
       - name: Deploy to GitHub Pages
         if: steps.check.outputs.has_versions == 'true'

@@ -3,7 +3,9 @@ import { CommonSchemas, defineWorkflowStep } from '../../src/lib/github-actions/
 import { demoOrchestrator } from '../lib/demos/orchestrator.ts'
 
 const Inputs = z.object({
-  versions_to_rebuild: CommonSchemas.jsonString(z.array(z.string())),
+  previous: z.object({
+    versions_to_rebuild: CommonSchemas.jsonString(z.array(z.string())),
+  }),
 })
 
 const Outputs = z.object({
@@ -20,7 +22,7 @@ export default defineWorkflowStep({
   inputs: Inputs,
   outputs: Outputs,
   async execute({ core, inputs }) {
-    const versions = inputs.versions_to_rebuild
+    const versions = inputs.previous.versions_to_rebuild
 
     if (versions.length === 0) {
       throw new Error('No versions to rebuild')

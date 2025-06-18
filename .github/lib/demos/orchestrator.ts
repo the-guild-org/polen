@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { demoBuilder, getDemoConfig, getDemoExamples } from '../../../src/lib/demos/index.ts'
 import { executeWithContinuation, safeExecute, WorkflowError } from '../../../src/lib/github-actions/error-handling.ts'
 import { VersionHistory } from '../../../src/lib/version-history/index.ts'
-import { DeploymentPathManager } from './deployment/path-manager.ts'
+import { DeploymentPathManager } from './path-manager.ts'
 import { buildDemosHome } from './ui/landing-page.ts'
 
 export interface BuildResult {

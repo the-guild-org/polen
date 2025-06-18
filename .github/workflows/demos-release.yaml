@@ -35,14 +35,8 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: extract-release-info
-          inputs: |
-            {
-              "github_event_name": "${{ github.event_name }}",
-              "input_tag": "${{ inputs.tag }}",
-              "github_release_tag_name": "${{ github.event.release.tag_name }}",
-              "github_release_prerelease": ${{ github.event.release.prerelease || false }},
-              "github_event_action": "${{ github.event.action }}"
-            }
+          inputs: ${{ toJSON(inputs) }}
+          context: ${{ toJSON(github) }}
 
       - name: Build Polen
         if: steps.release.outputs.needs_build == 'true'
@@ -57,11 +51,7 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: build-demos
-          inputs: |
-            {
-              "tag": "${{ steps.release.outputs.tag }}",
-              "actual_tag": "${{ steps.release.outputs.actual_tag }}"
-            }
+          previous: ${{ toJSON(steps.release.outputs) }}
 
       - name: Deploy to GitHub Pages
         if: steps.release.outputs.needs_build == 'true'
@@ -78,9 +68,5 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: add-demos-link
-          inputs: |
-            {
-              "actual_tag": "${{ steps.release.outputs.actual_tag }}",
-              "github_event_name": "${{ github.event_name }}",
-              "github_release_target_commitish": "${{ github.event.release.target_commitish }}"
-            }
+          context: ${{ toJSON(github) }}
+          previous: ${{ toJSON(steps.release.outputs) }}

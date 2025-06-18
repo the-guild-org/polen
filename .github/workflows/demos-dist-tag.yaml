@@ -31,12 +31,8 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: get-dist-tag-info
-          inputs: |
-            {
-              "github_event_name": "${{ github.event_name }}",
-              "input_dist_tag": "${{ inputs.dist_tag }}",
-              "github_ref": "${{ github.ref }}"
-            }
+          inputs: ${{ toJSON(inputs) }}
+          context: ${{ toJSON(github) }}
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -48,11 +44,7 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: update-dist-tag-content
-          inputs: |
-            {
-              "tag_name": "${{ steps.dist-tag.outputs.tag_name }}",
-              "semver_tag": "${{ steps.dist-tag.outputs.semver_tag }}"
-            }
+          previous: ${{ toJSON(steps.dist-tag.outputs) }}
 
       - name: Configure git
         run: |

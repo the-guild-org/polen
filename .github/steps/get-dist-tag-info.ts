@@ -1,11 +1,10 @@
 import { z } from 'zod/v4'
-import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { defineWorkflowStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
 import { VersionHistory } from '../../src/lib/version-history/index.ts'
 
 const Inputs = z.object({
-  github_event_name: z.string(),
-  input_dist_tag: z.string().optional(),
-  github_ref: z.string().optional(),
+  dist_tag: z.string().optional(),
+  context: GitHubContextSchema,
 })
 
 const Outputs = z.object({
@@ -23,21 +22,21 @@ export default defineWorkflowStep({
   inputs: Inputs,
   outputs: Outputs,
   async execute({ core, inputs }) {
-    const { github_event_name, input_dist_tag, github_ref } = inputs
+    const { dist_tag, context } = inputs
     const versionHistory = new VersionHistory()
 
     // Get the tag name from push event or manual input
     let tagName: string
-    if (github_event_name === 'workflow_dispatch') {
-      if (!input_dist_tag) {
+    if (context.event_name === 'workflow_dispatch') {
+      if (!dist_tag) {
         throw new Error('dist_tag input is required for workflow_dispatch')
       }
-      tagName = input_dist_tag
+      tagName = dist_tag
     } else {
-      if (!github_ref || !github_ref.startsWith('refs/tags/')) {
+      if (!context.ref || !context.ref.startsWith('refs/tags/')) {
         throw new Error('Invalid ref for tag push event')
       }
-      tagName = github_ref.replace('refs/tags/', '')
+      tagName = context.ref.replace('refs/tags/', '')
     }
 
     // Get the dist tag info

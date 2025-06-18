@@ -1,23 +1,29 @@
 import { z } from 'zod/v4'
 import { getDemoExamples } from '../../src/lib/demos/index.ts'
-import { defineWorkflowStep } from '../../src/lib/github-actions/index.ts'
+import { defineWorkflowStep, GitHubContextSchema } from '../../src/lib/github-actions/index.ts'
+
+const PreviousStepOutputs = z.object({
+  deployment_links: z.string(),
+})
 
 const GenerateDemoLinksInputs = z.object({
   pr_number: z.string(),
   head_sha: z.string(),
-  github_repository_owner: z.string(),
-  github_repository_name: z.string(),
-  previous_deployment_links: z.string(),
+  context: GitHubContextSchema,
+  previous: PreviousStepOutputs,
 })
 
 const GenerateDemoLinksOutputs = z.object({
   links: z.string(),
 })
 
+type Inputs = z.infer<typeof GenerateDemoLinksInputs>
+type Outputs = z.infer<typeof GenerateDemoLinksOutputs>
+
 /**
  * Generate demo links for PR comments
  */
-export default defineWorkflowStep({
+export default defineWorkflowStep<Inputs, Outputs>({
   name: 'generate-demo-links',
   description: 'Generate markdown links for all demo examples in a PR preview',
   inputs: GenerateDemoLinksInputs,
@@ -27,10 +33,12 @@ export default defineWorkflowStep({
     const {
       pr_number,
       head_sha,
-      github_repository_owner,
-      github_repository_name,
-      previous_deployment_links,
+      context,
+      previous,
     } = inputs
+
+    // Extract repository info from github context
+    const [owner, repo] = context.repository.split('/') as [string, string]
 
     // Get list of demos
     const examples = await getDemoExamples()
@@ -44,8 +52,8 @@ export default defineWorkflowStep({
       const displayName = example.charAt(0).toUpperCase() + example.slice(1)
 
       return `#### ${displayName}
-- [Latest](https://${github_repository_owner}.github.io/${github_repository_name}/pr-${pr_number}/latest/${example}/) – [\`${shortSha}\`](https://${github_repository_owner}.github.io/${github_repository_name}/pr-${pr_number}/${head_sha}/${example}/)
-- Previous: ${previous_deployment_links}
+- [Latest](https://${owner}.github.io/${repo}/pr-${pr_number}/latest/${example}/) – [\`${shortSha}\`](https://${owner}.github.io/${repo}/pr-${pr_number}/${head_sha}/${example}/)
+- Previous: ${previous.deployment_links}
 `
     }).join('\\n')
 
