@@ -6,19 +6,19 @@
  * This wrapper exists for backwards compatibility during the transition.
  */
 
-import { buildDemosHome, type BuildDemosHomeOptions } from '../.github/lib/demos/ui/landing-page.ts'
+import { buildDemosHome, type BuildDemosHomeOptions } from '../src/lib/demos/ui/landing-page.ts'
 
 // Re-export the main function and types for backwards compatibility
 export { buildDemosHome, type BuildDemosHomeOptions }
 
 // If this file is run directly, delegate to the new implementation
 if (import.meta.url === `file://${process.argv[1]}`) {
-  console.warn('⚠️  WARNING: This script has moved to .github/lib/demos/ui/landing-page.ts')
+  console.warn('⚠️  WARNING: This script has moved to src/lib/demos/ui/landing-page.ts')
   console.warn('⚠️  Please update your references to use the new location.')
   console.warn('⚠️  This wrapper will be removed in a future version.')
 
   // Import and run the new implementation
-  const { buildDemosHome } = await import('../.github/lib/demos/ui/landing-page.ts')
+  const { buildDemosHome } = await import('../src/lib/demos/ui/landing-page.ts')
 
   // Parse command line arguments and run
   try {

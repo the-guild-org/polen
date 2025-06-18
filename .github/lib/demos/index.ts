@@ -9,12 +9,6 @@
 export { DemoOrchestrator, demoOrchestrator } from './orchestrator.ts'
 export type { BuildResult, GcResult } from './orchestrator.ts'
 
-// UI components for landing pages (GitHub Actions specific)
-export { DemoDataCollector } from './ui/data-collector.ts'
-export { buildDemosHome } from './ui/landing-page.ts'
-export type { BuildDemosHomeOptions } from './ui/landing-page.ts'
-export { DemoPageRenderer, renderDemoLandingPage } from './ui/page-renderer.ts'
-
 // Deployment utilities (GitHub Actions specific)
 export { DeploymentPathManager } from './path-manager.ts'
 export type { RedirectConfig } from './path-manager.ts'

@@ -2,7 +2,7 @@
  * HTML page renderer for demo landing pages
  */
 
-import { getDemoConfig } from '../../../../src/lib/demos/index.ts'
+import { getDemoConfig } from '../index.ts'
 import {
   generateBackLink,
   generateDemosGrid,

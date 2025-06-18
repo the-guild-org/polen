@@ -9,7 +9,7 @@ import { promises as fs } from 'node:fs'
 import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { safeExecute, WorkflowError } from '../../../../src/lib/github-actions/error-handling.ts'
+import { safeExecute, WorkflowError } from '../../github-actions/error-handling.ts'
 import { DemoDataCollector } from './data-collector.ts'
 import { DemoPageRenderer } from './page-renderer.ts'
 

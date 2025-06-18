@@ -65,7 +65,7 @@ export class DemoBuilder {
     console.log(`  Building landing page...`)
 
     // Import and call the build-demos-home module directly
-    const { buildDemosHome } = await import('../../../scripts/build-demos-home.js')
+    const { buildDemosHome } = await import('./ui/landing-page.js')
 
     await buildDemosHome({
       basePath: options.basePath || '/',

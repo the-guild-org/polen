@@ -2,7 +2,7 @@
  * UI component generators for demo landing pages
  */
 
-import { getDemoConfig } from '../../../../src/lib/demos/index.ts'
+import { getDemoConfig } from '../index.ts'
 import type { DemoMetadata, LandingPageData, PrDeployment, TrunkDeployment } from './data-collector.ts'
 
 /**
