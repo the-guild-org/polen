@@ -26,7 +26,7 @@ permissions:
   deployments: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     outputs:
       deployment_url: ${{ steps.deploy.outputs.deployment_url }}

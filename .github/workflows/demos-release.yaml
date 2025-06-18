@@ -16,7 +16,7 @@ permissions:
   statuses: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,7 +44,7 @@ jobs:
         if: steps.release.outputs.needs_build == 'true'
         uses: ./.github/actions/build-polen
         with:
-          skip-setup: 'true'
+          skip-setup: "true"
 
       - name: Build demos
         if: steps.release.outputs.needs_build == 'true'
