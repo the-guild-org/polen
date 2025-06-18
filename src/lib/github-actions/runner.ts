@@ -54,7 +54,7 @@ export async function runStep(
     if (inputsJson) {
       core.debug(`Step inputs: ${inputsJson}`)
     }
-    
+
     // Re-throw to let CLI handle the error
     throw error
   }

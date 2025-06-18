@@ -4,7 +4,9 @@ import { $ } from 'zx'
 import { getDemoConfig } from './config.ts'
 import { getDemoExamples } from './utils.ts'
 
-$.verbose = false // Suppress command output by default
+// Configure zx for CI-friendly operation
+$.verbose = true // Show command output
+$.quiet = false // Don't suppress stdout/stderr
 
 export interface BuildOptions {
   basePath?: string
@@ -105,7 +107,15 @@ export class DemoBuilder {
       args.push('--outputDir', path.join(outputDir, example))
     }
 
-    await $`cd ${exampleDir} && npx polen ${args}`
+    // Build with a timeout to prevent hanging
+    try {
+      // Use --yes to auto-confirm any npx prompts and set CI env
+      const result = await $`cd ${exampleDir} && CI=true npx --yes polen ${args}`.timeout('5m')
+      console.log(`  ✅ Built ${example}`)
+    } catch (error) {
+      console.error(`  ❌ Failed to build ${example}:`, error)
+      throw error
+    }
   }
 
   /**
