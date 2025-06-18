@@ -56,6 +56,14 @@ runs:
           const prNumber = '${{ inputs.pr_number }}';
           const environment = prNumber ? `pr-${prNumber}` : '${{ inputs.environment }}';
           
+          console.log('DEBUG: Creating deployment with:');
+          console.log('  context.sha:', context.sha);
+          console.log('  context.payload.pull_request?.head.sha:', context.payload.pull_request?.head?.sha);
+          console.log('  environment:', environment);
+          console.log('  prNumber:', prNumber);
+          console.log('  workflow:', context.workflow);
+          console.log('  eventName:', context.eventName);
+          
           // Create deployment
           const deployment = await github.rest.repos.createDeployment({
             owner: context.repo.owner,
@@ -69,6 +77,8 @@ runs:
           });
           
           console.log(`Created deployment ${deployment.data.id} for environment ${environment}`);
+          console.log('DEBUG: Created deployment with SHA:', deployment.data.sha);
+          console.log('DEBUG: Deployment ref:', deployment.data.ref);
           core.setOutput('deployment_id', deployment.data.id);
           core.setOutput('environment', environment);
           

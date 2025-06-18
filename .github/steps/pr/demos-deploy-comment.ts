@@ -24,10 +24,16 @@ export default GitHubActions.createStep({
         per_page: 100,
       })
 
+      core.info(`DEBUG: Found ${deployments.length} deployments for pr-${pr_number}`)
+      core.info(`DEBUG: Current head_sha: ${head_sha}`)
+      
       // Filter out current deployment and get successful ones
       for (const deployment of deployments) {
+        core.info(`DEBUG: Deployment ${deployment.id}: sha=${deployment.sha}, ref=${deployment.ref}, created_at=${deployment.created_at}`)
+        
         // Skip current SHA
         if (deployment.sha === head_sha || deployment.sha.startsWith(head_sha)) {
+          core.info(`DEBUG: Skipping current deployment ${deployment.id}`)
           continue
         }
 
@@ -41,8 +47,11 @@ export default GitHubActions.createStep({
 
         // Only include successful deployments
         const firstStatus = statuses[0]
+        core.info(`DEBUG: Deployment ${deployment.id} status: ${firstStatus?.state || 'no status'}`)
+        
         if (statuses.length > 0 && firstStatus && firstStatus.state === 'success') {
           const shortSha = deployment.sha.substring(0, 7)
+          core.info(`DEBUG: Adding to previousDeployments: ${shortSha} (full: ${deployment.sha})`)
           previousDeployments.push({
             sha: shortSha,
             fullSha: deployment.sha,
