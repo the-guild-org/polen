@@ -60,7 +60,8 @@ export class DemoOrchestrator {
 
       // Determine deployment path
       const isStable = VersionHistory.isStableVersion(version)
-      const basePath = this.config.getDeploymentPath(version, isStable)
+      const deploymentPath = this.config.getDeploymentPath(version, isStable)
+      const basePath = `/polen${deploymentPath}`
 
       // Build landing page
       await buildDemosHome({
@@ -101,7 +102,7 @@ export class DemoOrchestrator {
       }
 
       const version = latestStable.tag
-      const basePath = `/pr-${prNumber}/${sha}/`
+      const basePath = `/polen/pr-${prNumber}/${sha}/`
 
       // Build landing page for PR
       await buildDemosHome({
@@ -155,7 +156,8 @@ export class DemoOrchestrator {
         versions,
         async (version) => {
           const isStable = VersionHistory.isStableVersion(version)
-          const basePath = this.config.getDeploymentPath(version, isStable)
+          const deploymentPath = this.config.getDeploymentPath(version, isStable)
+          const basePath = `/polen${deploymentPath}`
 
           // Build landing page
           await buildDemosHome({
@@ -225,8 +227,8 @@ export class DemoOrchestrator {
       // Update base paths using the path manager
       await this.pathManager.updateBasePaths(
         distTagPath,
-        `/${semverTag}/`,
-        `/${distTag}/`,
+        `/polen/${semverTag}/`,
+        `/polen/${distTag}/`,
       )
 
       this.logger.info(`✅ Successfully updated ${distTag} to ${semverTag}`)
@@ -406,15 +408,15 @@ export class DemoOrchestrator {
     // Update base paths in latest
     await this.pathManager.updateBasePaths(
       latestDir,
-      `/pr-${prNumber}/${sha}/`,
-      `/pr-${prNumber}/latest/`,
+      `/polen/pr-${prNumber}/${sha}/`,
+      `/polen/pr-${prNumber}/latest/`,
     )
 
     // Create convenience redirects
     await this.pathManager.createDemoRedirects(
       examples,
       deployDir,
-      `/pr-${prNumber}/latest/`,
+      `/polen/pr-${prNumber}/latest/`,
     )
 
     // Add PR metadata
