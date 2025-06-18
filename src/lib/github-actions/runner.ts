@@ -75,7 +75,7 @@ export async function runStep(
     let stepModule: any
 
     // Check if this is a test scenario (mocked module)
-    if (process.env.NODE_ENV === 'test' && stepPath.startsWith('./test-')) {
+    if (process.env['NODE_ENV'] === 'test' && stepPath.startsWith('./test-')) {
       // For tests, use direct import path
       stepModule = await import(stepPath)
     } else {
