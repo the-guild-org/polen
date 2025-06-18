@@ -100,7 +100,7 @@ export class DemoBuilder {
     console.log(`  Building ${example}...`)
 
     // Build using Polen CLI
-    const args = ['build', '--basePath', basePath]
+    const args = ['build', '--base', basePath]
     if (outputDir) {
       args.push('--outputDir', path.join(outputDir, example))
     }
