@@ -104,7 +104,6 @@ export class DemoConfig {
     }
   }
 
-
   get excludeDemos(): string[] {
     return this.data.examples.exclude
   }
