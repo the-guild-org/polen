@@ -7,9 +7,7 @@
  */
 
 import * as core from '@actions/core'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
-import { runStep } from './runner.ts'
+import { runStepByName } from './runner.ts'
 
 async function main() {
   const stepName = process.argv[2]
@@ -25,37 +23,7 @@ async function main() {
     process.exit(1)
   }
 
-  const currentDir = process.cwd()
-
-  // Try to find the step file using the convention:
-  // 1. First try: .github/steps/<workflow-name>/<step-name>.ts
-  // 2. Second try: .github/steps/<step-name>.ts
-  let stepPath: string
-
-  if (workflowName) {
-    // Strip 'demos-' prefix if present for cleaner paths
-    const cleanWorkflowName = workflowName.replace(/^demos-/, '')
-    const workflowSpecificPath = join(currentDir, '.github/steps', cleanWorkflowName, `${stepName}.ts`)
-
-    if (existsSync(workflowSpecificPath)) {
-      stepPath = workflowSpecificPath
-      core.debug(`Found step at workflow-specific path: ${workflowSpecificPath}`)
-    } else {
-      const generalPath = join(currentDir, '.github/steps', `${stepName}.ts`)
-      if (existsSync(generalPath)) {
-        stepPath = generalPath
-        core.debug(`Found step at general path: ${generalPath}`)
-      } else {
-        core.error(`Step not found at either path:`)
-        core.error(`  - ${workflowSpecificPath}`)
-        core.error(`  - ${generalPath}`)
-        core.setFailed(`Step '${stepName}' not found`)
-        process.exit(1)
-      }
-    }
-  } else {
-    stepPath = join(currentDir, '.github/steps', `${stepName}.ts`)
-  }
+  // Module discovery is now handled by the runner
 
   try {
     core.info(`Running workflow step: ${stepName}`)
@@ -80,7 +48,7 @@ async function main() {
 
     core.debug(`Merged inputs: ${JSON.stringify(mergedInputs)}`)
 
-    await runStep(stepPath, JSON.stringify(mergedInputs))
+    await runStepByName(stepName, workflowName, JSON.stringify(mergedInputs))
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     const stack = error instanceof Error ? error.stack : undefined
@@ -92,7 +60,8 @@ async function main() {
     }
 
     // Log additional context
-    core.error(`Step path: ${stepPath}`)
+    core.error(`Step name: ${stepName}`)
+    core.error(`Workflow name: ${workflowName || 'none'}`)
     core.error(`Inputs: ${inputsJson}`)
     core.error(`Context: ${contextJson}`)
     core.error(`Previous: ${previousJson}`)

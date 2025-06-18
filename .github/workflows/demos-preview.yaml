@@ -39,10 +39,17 @@ jobs:
       - name: Build Polen
         uses: ./.github/actions/build-polen
 
+      - name: Debug Workflow Ref
+        uses: ./.github/actions/step
+        with:
+          name: debug-workflow-ref
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Prepare PR deployment
         uses: ./.github/actions/step
         with:
           name: prepare-pr-deployment
+          workflow: demos-preview
           inputs: ${{ toJSON(inputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -59,5 +66,6 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: pr-comment
+          workflow: demos-preview
           inputs: ${{ toJSON(inputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

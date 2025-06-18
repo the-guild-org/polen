@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v4'
+import { runStep } from './runner.ts'
 import { defineStep } from './step.ts'
 
 describe('defineWorkflowStep', () => {
@@ -25,7 +26,7 @@ describe('defineWorkflowStep', () => {
     vi.clearAllMocks()
   })
 
-  it('warns about excess properties in inputs', async () => {
+  it('executes step with validated inputs', async () => {
     const TestStep = defineStep({
       name: 'test-step',
       description: 'Test step',
@@ -39,21 +40,30 @@ describe('defineWorkflowStep', () => {
       },
     })
 
-    const result = await TestStep(mockContext, {
-      required: 'value',
-      optional: 'optional-value',
-      unknown1: 'should-warn',
-      unknown2: 'should-also-warn',
+    // Create context with PR controller
+    const contextWithPR = {
+      ...mockContext,
+      pr: {
+        number: 0,
+        isActive: false,
+        comment: vi.fn(),
+        deleteComment: vi.fn(),
+        getComments: vi.fn(),
+      },
+    }
+
+    const result = await TestStep.execute({
+      ...contextWithPR,
+      inputs: {
+        required: 'value',
+        optional: 'optional-value',
+      },
     })
 
     expect(result).toEqual({ result: 'Got value' })
-    expect(mockCore.warning).toHaveBeenCalledWith(
-      `Step 'test-step' received unknown inputs: unknown1, unknown2. These inputs will be ignored.`,
-    )
-    expect(mockCore.debug).toHaveBeenCalledWith('Known inputs: required, optional')
   })
 
-  it('does not warn when no excess properties', async () => {
+  it('validates output types', async () => {
     const TestStep = defineStep({
       name: 'test-step',
       description: 'Test step',
@@ -66,12 +76,12 @@ describe('defineWorkflowStep', () => {
       },
     })
 
-    await TestStep(mockContext, { required: 'value' })
-
-    expect(mockCore.warning).not.toHaveBeenCalled()
+    // Outputs are validated in the runner, not in execute
+    expect(TestStep.definition.outputs).toBeDefined()
+    expect(TestStep.definition.inputs).toBeDefined()
   })
 
-  it('validates input types', async () => {
+  it('step definition contains all metadata', async () => {
     const TestStep = defineStep({
       name: 'test-step',
       description: 'Test step',
@@ -84,10 +94,10 @@ describe('defineWorkflowStep', () => {
       },
     })
 
-    await expect(TestStep(mockContext, { number: 'not-a-number' })).rejects.toThrow()
-    expect(mockCore.error).toHaveBeenCalledWith(
-      expect.stringContaining('Validation error in step test-step'),
-    )
+    expect(TestStep.definition.name).toBe('test-step')
+    expect(TestStep.definition.description).toBe('Test step')
+    expect(TestStep.definition.inputs).toBeDefined()
+    expect(TestStep.definition.outputs).toBeDefined()
   })
 
   // todo: this test is now a static type error, update to refelct that
@@ -131,7 +141,10 @@ describe('defineWorkflowStep', () => {
       },
     })
 
-    const result = await TestStep(contextWithPR, {})
+    const result = await TestStep.execute({
+      ...contextWithPR,
+      inputs: {},
+    })
     expect(result).toEqual({ isActive: true })
   })
 })

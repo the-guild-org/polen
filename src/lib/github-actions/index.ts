@@ -2,6 +2,7 @@
  * GitHub Actions workflow framework and utilities
  */
 
+export * from './discovery.ts'
 export * from './error-handling.ts'
 export * from './pr-controller.ts'
 export * from './runner.ts'

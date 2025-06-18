@@ -4,6 +4,10 @@ inputs:
   name:
     description: "The name of the workflow step"
     required: true
+  workflow:
+    description: "The workflow name for step discovery (defaults to github.workflow)"
+    required: false
+    default: ""
   inputs:
     description: "JSON string of inputs for the step"
     required: false
@@ -30,5 +34,9 @@ runs:
         STEP_CONTEXT: ${{ inputs.context }}
         STEP_PREVIOUS: ${{ inputs.previous }}
       run: |
-        WORKFLOW_NAME="${{ github.workflow }}"
+        # Use explicit workflow name if provided, otherwise fall back to github.workflow
+        WORKFLOW_NAME="${{ inputs.workflow }}"
+        if [ -z "$WORKFLOW_NAME" ]; then
+          WORKFLOW_NAME="${{ github.workflow }}"
+        fi
         node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$STEP_INPUTS" "$STEP_CONTEXT" "$STEP_PREVIOUS"
