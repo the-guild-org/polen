@@ -44,7 +44,30 @@ async function main() {
     await runStep(stepPath, JSON.stringify(mergedInputs))
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    core.setFailed(`Failed to run step ${stepName}: ${message}`)
+    const stack = error instanceof Error ? error.stack : undefined
+
+    core.error(`Failed to run step ${stepName}: ${message}`)
+    if (stack) {
+      core.error(`Stack trace:`)
+      core.error(stack)
+    }
+
+    // Log additional context
+    core.error(`Step path: ${stepPath}`)
+    core.error(`Inputs: ${inputsJson}`)
+    core.error(`Context: ${contextJson}`)
+    core.error(`Previous: ${previousJson}`)
+
+    // Check for common issues
+    if (error instanceof Error) {
+      if (error.message.includes('Cannot find module')) {
+        core.error(`Module import error - check that all dependencies are installed`)
+      } else if (error.message.includes('SyntaxError')) {
+        core.error(`Syntax error in step file - check TypeScript compilation`)
+      }
+    }
+
+    core.setFailed(`Step execution failed: ${message}`)
     process.exit(1)
   }
 }

@@ -50,13 +50,48 @@ export async function runStep(
     const context = createWorkflowContext()
     await step(context, inputs)
   } catch (error) {
+    core.error(`❌ Error running step from ${stepPath}`)
+
     if (error instanceof SyntaxError && inputsJson) {
-      console.error(`❌ Invalid JSON inputs: ${inputsJson}`)
+      core.error(`Invalid JSON inputs: ${inputsJson}`)
+      core.error(`SyntaxError details: ${error.message}`)
     } else if (error instanceof WorkflowError) {
       // WorkflowError already handles logging via core.setFailed
+      core.error(`WorkflowError: ${error.message}`)
+      if (error.cause) {
+        core.error(`Caused by: ${error.cause}`)
+      }
+    } else if (error instanceof Error) {
+      core.error(`Error type: ${error.constructor.name}`)
+      core.error(`Error message: ${error.message}`)
+      if (error.stack) {
+        core.error(`Stack trace:`)
+        error.stack.split('\n').forEach(line => core.error(line))
+      }
+
+      // Check for module resolution errors
+      if (error.message.includes('Cannot find module') || error.message.includes('MODULE_NOT_FOUND')) {
+        core.error(`This appears to be a module import error.`)
+        core.error(`Check that the step file exists at: ${stepPath}`)
+        core.error(`Ensure all dependencies are properly installed.`)
+      }
+
+      // Check for TypeScript errors
+      if (error.message.includes('Unexpected token') || error.message.includes('SyntaxError')) {
+        core.error(`This appears to be a TypeScript compilation error.`)
+        core.error(`Ensure Node.js is running with --experimental-transform-types flag.`)
+      }
     } else {
-      console.error(`❌ Error running step from ${stepPath}:`, error)
+      core.error(`Unknown error type: ${typeof error}`)
+      core.error(`Error value: ${String(error)}`)
     }
+
+    // Log the inputs for debugging
+    if (inputsJson) {
+      core.error(`Step inputs: ${inputsJson}`)
+    }
+
+    core.setFailed(`Step execution failed`)
     process.exit(1)
   }
 }

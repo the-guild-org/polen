@@ -63,6 +63,23 @@ export function defineWorkflowStep<$Inputs, $Outputs>(
       return validatedOutputs
     } catch (error) {
       context.core.endGroup()
+
+      // Log detailed error information before re-throwing
+      context.core.error(`Step ${stepName} failed during execution`)
+
+      if (error instanceof z.ZodError) {
+        context.core.error(`Validation error: ${error.message}`)
+        context.core.error(`Issues: ${JSON.stringify(error.issues, null, 2)}`)
+        context.core.error(`Received data: ${JSON.stringify(rawInputs, null, 2)}`)
+      } else if (error instanceof Error) {
+        context.core.error(`Error: ${error.message}`)
+        if (error.stack) {
+          context.core.error(`Stack: ${error.stack}`)
+        }
+      } else {
+        context.core.error(`Unknown error: ${String(error)}`)
+      }
+
       // Re-throw the error - let the consumer handle error wrapping
       throw error
     }
