@@ -43,9 +43,14 @@ export default defineStep({
         // Only include successful deployments
         const firstStatus = statuses[0]
         if (statuses.length > 0 && firstStatus && firstStatus.state === 'success') {
+          const shortSha = deployment.sha.substring(0, 7)
+          // Construct proper URL with /polen prefix and SHA path
+          const deploymentUrl =
+            `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${pr_number}/${deployment.sha}/`
           previousDeployments.push({
-            sha: deployment.sha.substring(0, 7),
-            url: firstStatus.environment_url || '',
+            sha: shortSha,
+            fullSha: deployment.sha,
+            url: deploymentUrl,
             created_at: deployment.created_at,
           })
         }
@@ -56,12 +61,15 @@ export default defineStep({
 
       if (previousDeployments.length === 0) {
         previousDeploymentsText = '(none)'
+      } else {
+        // Format as markdown links - limit to 10 most recent
+        const links = previousDeployments.slice(0, 10).map(deployment => `[\`${deployment.sha}\`](${deployment.url})`)
+        previousDeploymentsText = links.join(' / ')
+
+        if (previousDeployments.length > 10) {
+          previousDeploymentsText += ` and ${previousDeployments.length - 10} more`
+        }
       }
-
-      // Format as markdown links
-      const links = previousDeployments.map(deployment => `[\`${deployment.sha}\`](${deployment.url})`)
-
-      previousDeploymentsText = links.join(' / ')
     } catch (error) {
       core.error(`Error fetching deployments: ${error}`)
       previousDeploymentsText = '(none)'

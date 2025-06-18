@@ -6,7 +6,6 @@ import { Str } from '@wollybeard/kit'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { WorkflowError } from '../../github-actions/error-handling.ts'
-import { VersionHistory } from '../../version-history/index.ts'
 import { getDemoConfig, getDemoExamples } from '../index.ts'
 
 export interface DemoMetadata {
@@ -31,6 +30,7 @@ export interface PrDeployment {
   number: number
   sha?: string
   ref?: string
+  previousDeployments?: string[]
 }
 
 export interface DistTagsData {
@@ -43,7 +43,6 @@ export interface LandingPageData {
   trunkDeployments?: TrunkDeploymentsData
   prDeployments?: PrDeployment[]
   distTags?: DistTagsData
-  previousDeployments?: string[]
   config: {
     basePath: string
     mode: 'demo' | 'pr-index' | 'dev'
@@ -98,18 +97,12 @@ export class DemoDataCollector {
         ? this.getMockDistTags()
         : this.parseDistTags(distTags)
 
-      // Get previous deployments for PR mode
-      const previousDeployments = prNumber && currentSha
-        ? await this.getPreviousDeployments(prNumber, currentSha)
-        : undefined
-
       return {
         demoMetadata,
         demoExamples,
         trunkDeployments: parsedTrunkDeployments,
         prDeployments: parsedPrDeployments,
         distTags: parsedDistTags,
-        previousDeployments,
         config: {
           mode,
           basePath,
@@ -212,33 +205,6 @@ export class DemoDataCollector {
       return JSON.parse(distTags) as DistTagsData
     } catch {
       return undefined
-    }
-  }
-
-  /**
-   * Get previous deployments for a PR
-   */
-  private async getPreviousDeployments(prNumber: string, currentSha: string): Promise<string[]> {
-    try {
-      const versionHistory = new VersionHistory()
-
-      // Fetch gh-pages branch
-      await versionHistory['git'].fetch(['origin', 'gh-pages:refs/remotes/origin/gh-pages'])
-
-      // Get list of commit directories
-      const prDir = `pr-${prNumber}`
-      const result = await versionHistory['git'].raw(['ls-tree', '-d', '--name-only', `origin/gh-pages:${prDir}`])
-
-      const commits = result
-        .split('\n')
-        .filter(line => line && /^[0-9a-f]{7,40}$/.test(line))
-        .filter(sha => sha !== currentSha) // Exclude current deployment
-        .sort()
-        .reverse()
-
-      return commits
-    } catch {
-      return []
     }
   }
 

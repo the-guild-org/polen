@@ -8,6 +8,7 @@ import { buildDemosHome, demoBuilder, getDemoConfig, getDemoExamples } from '../
 import { executeWithContinuation, safeExecute, WorkflowError } from '../../../src/lib/github-actions/error-handling.ts'
 import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { DeploymentPathManager } from './path-manager.ts'
+import { getAllPrDeployments, getPreviousDeployments } from './pr-deployment-collector.ts'
 
 export interface BuildResult {
   success: boolean
@@ -104,12 +105,23 @@ export class DemoOrchestrator {
       const version = latestStable.tag
       const basePath = `/polen/pr-${prNumber}/${sha}/`
 
-      // Build landing page for PR
+      // Get previous deployments for this PR
+      const previousDeployments = getPreviousDeployments(prNumber, sha)
+
+      // Build landing page for PR with deployment history
+      const prDeploymentsData = [{
+        number: parseInt(prNumber, 10),
+        sha: sha,
+        ref: ref,
+        previousDeployments: previousDeployments,
+      }]
+
       await buildDemosHome({
         basePath,
         mode: 'demo',
         prNumber,
         currentSha: sha,
+        prDeployments: JSON.stringify(prDeploymentsData),
       })
 
       // Build individual demos
@@ -319,10 +331,14 @@ export class DemoOrchestrator {
           }
         }
 
+        // Get all PR deployments
+        const allPrDeployments = getAllPrDeployments()
+
         await buildDemosHome({
           mode: 'demo',
           trunkDeployments: JSON.stringify(trunkDeployments),
           distTags: JSON.stringify(distTags),
+          prDeployments: JSON.stringify(allPrDeployments),
           outputDir: outputDir || 'dist-demos',
         })
 

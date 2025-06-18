@@ -105,7 +105,6 @@ runs:
         user_email: ${{ inputs.user_email }}
         commit_message: ${{ inputs.commit_message }}
         publish_branch: gh-pages
-        force_orphan: true
 
     - name: Update deployment status
       if: always()

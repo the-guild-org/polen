@@ -6,6 +6,7 @@ import { getDemoConfig } from '../index.ts'
 import {
   generateBackLink,
   generateDemosGrid,
+  generateFooter,
   generateHeader,
   generatePrBanner,
   generatePrSection,
@@ -34,6 +35,7 @@ export class DemoPageRenderer {
     const headerHtml = generateHeader(data)
     const demosGridHtml = generateDemosGrid(data)
     const versionInfoHtml = generateVersionInfo(data)
+    const footerHtml = generateFooter()
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -53,6 +55,7 @@ export class DemoPageRenderer {
     ${headerHtml}
     ${demosGridHtml}
     ${versionInfoHtml}
+    ${footerHtml}
   </div>
 </body>
 </html>`
@@ -65,6 +68,7 @@ export class DemoPageRenderer {
     const backLinkHtml = generateBackLink('/', 'Back to Main Demos')
     const headerHtml = generateHeader(data)
     const prSectionHtml = generatePrSection(data)
+    const footerHtml = generateFooter()
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -82,6 +86,7 @@ export class DemoPageRenderer {
     ${backLinkHtml}
     ${headerHtml}
     ${prSectionHtml}
+    ${footerHtml}
   </div>
 </body>
 </html>`
@@ -94,6 +99,7 @@ export class DemoPageRenderer {
     const headerHtml = generateHeader(data)
     const demosGridHtml = generateDemosGrid(data)
     const versionInfoHtml = generateVersionInfo(data)
+    const footerHtml = generateFooter()
 
     const devNoticeHtml = `
       <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 1rem; margin-bottom: 2rem; border-radius: 4px;">
@@ -118,6 +124,7 @@ export class DemoPageRenderer {
     ${headerHtml}
     ${demosGridHtml}
     ${versionInfoHtml}
+    ${footerHtml}
   </div>
 </body>
 </html>`
