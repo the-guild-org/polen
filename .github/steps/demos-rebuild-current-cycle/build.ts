@@ -24,12 +24,12 @@ export default GitHubActions.createStep({
       }
     }
 
-    const versions = cycle.all.map(v => v.tag)
+    const versions = cycle.all.map(v => v.git.tag)
 
     core.info(`✅ Found ${cycle.all.length} versions to rebuild: ${versions.join(', ')}`)
-    core.info(`  Latest stable: ${cycle.stable.tag}`)
+    core.info(`  Latest stable: ${cycle.stable.git.tag}`)
     if (cycle.prereleases.length > 0) {
-      core.info(`  Prereleases: ${cycle.prereleases.map(v => v.tag).join(', ')}`)
+      core.info(`  Prereleases: ${cycle.prereleases.map(v => v.git.tag).join(', ')}`)
     }
 
     core.info(`Building demos for ${versions.length} versions: ${versions.join(', ')}`)
@@ -62,18 +62,18 @@ export default GitHubActions.createStep({
     const trunkDeployments = {
       latest: latestStable
         ? {
-          sha: latestStable.commit,
-          shortSha: latestStable.commit.substring(0, 7),
-          tag: latestStable.tag,
+          sha: latestStable.git.sha,
+          shortSha: latestStable.git.sha.substring(0, 7),
+          tag: latestStable.git.tag,
         }
         : null,
       previous: allVersions
-        .filter(v => v.tag !== latestStable?.tag)
+        .filter(v => v.git.tag !== latestStable?.git.tag)
         .slice(0, 10)
         .map(v => ({
-          sha: v.commit,
-          shortSha: v.commit.substring(0, 7),
-          tag: v.tag,
+          sha: v.git.sha,
+          shortSha: v.git.sha.substring(0, 7),
+          tag: v.git.tag,
         })),
     }
 

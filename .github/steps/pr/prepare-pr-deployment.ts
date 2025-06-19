@@ -39,7 +39,7 @@ export default GitHubActions.createStep({
       throw new Error('No stable version found for PR builds')
     }
 
-    const version = latestStable.tag
+    const version = latestStable.git.tag
     const shaBasePath = `/polen/pr-${pr_number}/${shortSha}/`
     const prRootBasePath = `/polen/pr-${pr_number}/`
 

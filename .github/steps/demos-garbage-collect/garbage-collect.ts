@@ -26,11 +26,11 @@ export default GitHubActions.createStep({
 
     // Get current development cycle versions to keep
     const currentCycle = await versionHistory.getCurrentDevelopmentCycle()
-    const versionsToKeep = currentCycle.all.map(v => v.tag)
+    const versionsToKeep = currentCycle.all.map(v => v.git.tag)
 
     // Also keep all stable versions
     const allVersions = await versionHistory.getVersions()
-    const stableVersions = allVersions.filter(v => !v.isPrerelease).map(v => v.tag)
+    const stableVersions = allVersions.filter(v => !v.isPrerelease).map(v => v.git.tag)
 
     // Combine versions to keep
     const keepVersions = [...new Set([...versionsToKeep, ...stableVersions])]

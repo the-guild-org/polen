@@ -290,7 +290,7 @@ export class DemoBuilder {
       throw new Error('No stable release found')
     }
 
-    const versions = cycle.all.map(v => v.tag)
+    const versions = cycle.all.map(v => v.git.tag)
     await this.buildMultipleVersions(versions, deployDir)
   }
 }

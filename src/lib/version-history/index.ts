@@ -7,10 +7,30 @@ import {
 import { type SimpleGit, simpleGit } from 'simple-git'
 
 export interface VersionInfo {
-  tag: string
-  commit: string
+  /**
+   * Git-related information for this version
+   */
+  git: {
+    /**
+     * The git tag name for this version (e.g., "1.2.3" or "2.0.0-beta.1")
+     */
+    tag: string
+    /**
+     * The full git commit SHA associated with this version tag
+     */
+    sha: string
+  }
+  /**
+   * The date when this version tag was created
+   */
   date: Date
+  /**
+   * Whether this version is a prerelease (contains -alpha, -beta, -rc, etc.)
+   */
   isPrerelease: boolean
+  /**
+   * Parsed semver object containing major, minor, patch, and prerelease info
+   */
   semver: Version
 }
 
@@ -91,8 +111,10 @@ export class VersionHistory {
         if (!commit) continue
 
         versions.push({
-          tag,
-          commit,
+          git: {
+            tag,
+            sha: commit,
+          },
           date: new Date(parseInt(timestamp || '0', 10) * 1000),
           isPrerelease: VersionHistory.isPrerelease(tag),
           semver,
@@ -179,7 +201,7 @@ export class VersionHistory {
 
     // Get full info for the first semver tag
     const versions = await this.getVersions()
-    return versions.find(v => v.tag === semverTags[0]) || null
+    return versions.find(v => v.git.tag === semverTags[0]) || null
   }
 
   /**
@@ -235,7 +257,7 @@ export class VersionHistory {
     const allVersions = await this.getVersions()
     return allVersions.filter(v => {
       // Skip if in skip list
-      if (skipVersions.includes(v.tag)) return false
+      if (skipVersions.includes(v.git.tag)) return false
       // Include if >= sinceVersion
       return semverCompare(v.semver, sinceSemver) >= 0
     })
@@ -252,11 +274,11 @@ export class VersionHistory {
   async getPastDevelopmentCycles(): Promise<VersionInfo[]> {
     const allVersions = await this.getVersions()
     const currentCycle = await this.getCurrentDevelopmentCycle()
-    const currentCycleTags = new Set(currentCycle.all.map(v => v.tag))
+    const currentCycleTags = new Set(currentCycle.all.map(v => v.git.tag))
 
     // Return prereleases not in the current cycle
     return allVersions.filter(v => {
-      return v.isPrerelease && !currentCycleTags.has(v.tag)
+      return v.isPrerelease && !currentCycleTags.has(v.git.tag)
     })
   }
 }
