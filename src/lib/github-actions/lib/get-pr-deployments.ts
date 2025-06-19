@@ -5,7 +5,6 @@ export interface Deployment {
   shortSha: string
   createdAt: string
   status?: string
-  url?: string
 }
 
 /**
@@ -59,7 +58,6 @@ export async function fetchPullRequestDeployments(
           shortSha,
           createdAt: deployment.created_at,
           status: state,
-          url: latestStatus?.environment_url,
         })
         console.log(`  Added to deployments list`)
       }
