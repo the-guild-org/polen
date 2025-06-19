@@ -170,14 +170,10 @@
     "typescript-eslint": "^8.34.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.3",
-    "zod": "^3.25.65"
+    "zod": "3.25.67"
   },
   "packageManager": "pnpm@10.11.1",
   "scripts": {
-    "gh:demos-rebuild": "gh workflow run demos-rebuild.yaml -f since_version=0.9.0-next.8",
-    "gh:demos-rebuild:list": "gh run list --workflow=demos-rebuild.yaml",
-    "gh:demos-rebuild:logs": "gh run view $(gh run list --workflow=demos-rebuild.yaml --limit=1 --json databaseId -q '.[0].databaseId') --log",
-    "gh:demos-rebuild:watch": "gh run watch $(gh run list --workflow=demos-rebuild.yaml --limit=1 --json databaseId -q '.[0].databaseId')",
     "sandbox": "tsx src/sandbox",
     "sandbox:watch": "tsx --watch src/sandbox",
     "sb": "pnpm sandbox",
@@ -190,7 +186,7 @@
     "dev:pokemon": "pnpm polen dev --project examples/pokemon",
     "dev:hive": "pnpm polen dev --project examples/hive",
     "dev:github": "pnpm polen dev --project examples/github",
-    "dev:demo-index": "node --no-warnings ./scripts/build-demos-home.ts --mode dev --serve",
+    "dev:demo-index": "node --no-warnings --experimental-transform-types --conditions source ./src/lib/demos/ui/landing-page-cli.ts --mode dev --serve",
     "build:demos": "zx ./scripts/build-demos.mjs",
     "build:clean": "pnpm tsc --build tsconfig.build.json --clean && rm -rf build",
     "build": "tsc --build tsconfig.build.json",

@@ -1,0 +1,53 @@
+name: build-polen
+
+on:
+  workflow_call:
+    inputs:
+      install-playwright:
+        description: 'Install Playwright browsers after build'
+        type: boolean
+        default: false
+        required: false
+      checkout-ref:
+        description: 'Git ref to checkout (branch, tag, or SHA)'
+        type: string
+        default: ''
+        required: false
+      run-tests:
+        description: 'Test command to run after build (e.g., "pnpm test:integration")'
+        type: string
+        default: ''
+        required: false
+      skip-build:
+        description: 'Skip the build step'
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checkout-ref }}
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build Polen
+        if: '!inputs.skip-build'
+        run: pnpm build
+
+      - name: Re-install to link workspace packages
+        if: '!inputs.skip-build'
+        run: pnpm install
+
+      - name: Install Playwright browsers
+        if: inputs.install-playwright
+        uses: ./.github/actions/install-playwright-binaries
+
+      - name: Run tests
+        if: inputs.run-tests != ''
+        run: ${{ inputs.run-tests }}

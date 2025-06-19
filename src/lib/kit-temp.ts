@@ -12,7 +12,7 @@
 //
 //
 
-import { Fs, Http, Path, Undefined } from '@wollybeard/kit'
+import { Arr, Err, Fs, Http, Path, Undefined } from '@wollybeard/kit'
 import type { ResolveHookContext } from 'node:module'
 
 export const arrayEquals = (a: any[], b: any[]) => {
@@ -106,3 +106,22 @@ export const ResponseInternalServerError = () =>
     status: Http.Status.InternalServerError.code,
     statusText: Http.Status.InternalServerError.description,
   })
+
+/**
+ * Execute an operation on multiple items, continuing even if some fail
+ */
+export async function tryCatchMany<item, result>(
+  items: item[],
+  operation: (item: item) => Promise<result>,
+): Promise<[result[], (Error & { context: { item: item } })[]]> {
+  const partitionedResults = await Promise.all(items.map(async (item) => {
+    const result = await Err.tryCatch(() => operation(item))
+    if (Err.is(result)) {
+      const error = result as Error & { context: { item: item } }
+      error.context = { item }
+      return error
+    }
+    return result
+  })).then(Arr.partitionErrors)
+  return partitionedResults as any
+}

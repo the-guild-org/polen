@@ -1,0 +1,59 @@
+name: demos-build-on-release-semver
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pages: write
+  statuses: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update workflow scripts from main
+        uses: ./.github/actions/use-latest-ci
+
+      - name: Extract release info
+        id: release
+        uses: ./.github/actions/step
+        with:
+          name: extract-release-info
+
+      - name: Build Polen
+        uses: ./.github/actions/build-polen
+        with:
+          skip-setup: "true"
+
+      - name: Build demos
+        uses: ./.github/actions/step
+        with:
+          name: build
+          previous: ${{ toJSON(steps.release.outputs) }}
+
+      - name: Deploy to GitHub Pages
+        uses: ./.github/actions/gh-pages
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_from: examples
+          additional_source_dirs: dist-demos
+          environment_tag: ${{ steps.release.outputs.tag }}
+          is_preview: false
+
+      - name: Add demos link to commit
+        uses: ./.github/actions/step
+        with:
+          name: add-demos-link
+          previous: ${{ toJSON(steps.release.outputs) }}

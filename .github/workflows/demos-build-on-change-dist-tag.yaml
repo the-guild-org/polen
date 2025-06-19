@@ -1,0 +1,57 @@
+name: demos-dist-tag
+
+on:
+  push:
+    tags:
+      - "latest"
+      - "next"
+  workflow_dispatch:
+    inputs:
+      dist_tag:
+        description: "Dist-tag to update (latest, next, etc.)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  update-dist-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Get dist-tag info
+        id: dist-tag
+        uses: ./.github/actions/step
+        with:
+          name: get-dist-tag-info
+          inputs: ${{ toJSON(inputs) }}
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Update dist-tag content
+        uses: ./.github/actions/step
+        with:
+          name: build
+          previous: ${{ steps.dist-tag.outputs.json }}
+
+      - name: Commit and push changes
+        uses: ./.github/actions/commit
+        with:
+          working-directory: gh-pages
+          type: chore
+          scope: dist-tag
+          message: "update ${{ steps.dist-tag.outputs.tag_name }} to point to ${{ steps.dist-tag.outputs.semver_tag }}"

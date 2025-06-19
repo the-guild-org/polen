@@ -74,42 +74,18 @@ jobs:
 
   tests-integration:
     if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup
-        uses: ./.github/actions/setup
-      - name: Install Playwright browsers
-        uses: ./.github/actions/install-playwright-binaries
-      - name: Build
-        run: pnpm build
-      - name: Re-install to link workspace packages
-        run: pnpm install
-      - name: Run integration tests
-        run: pnpm test:integration
+    uses: ./.github/workflows/_build-polen.yaml
+    with:
+      install-playwright: true
+      run-tests: "pnpm test:integration"
 
   tests-e2e:
     if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup
-        uses: ./.github/actions/setup
-      - name: Install Playwright browsers
-        uses: ./.github/actions/install-playwright-binaries
-      - name: Build
-        run: pnpm build
-      - name: Re-install to link workspace packages
-        run: pnpm install
-      - name: Run examples tests
-        run: pnpm test:examples
+    uses: ./.github/workflows/_build-polen.yaml
+    with:
+      install-playwright: true
+      run-tests: "pnpm test:examples"
 
   demos:
     uses: ./.github/workflows/_demos-preview.yaml
-    with:
-      action: ${{ github.event.action }}
-      pr-number: ${{ github.event.pull_request.number }}
-      head-ref: ${{ github.head_ref }}
-      head-sha: ${{ github.event.pull_request.head.sha }}
+    secrets: inherit
