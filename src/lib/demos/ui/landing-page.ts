@@ -123,6 +123,4 @@ export async function buildDemosHome(options: CatalogOptions | Options = {}): Pr
   }
 
   await fs.writeFile(outputPath, html)
-
-  console.log(`✅ Built ${config.mode === 'development' ? 'dev' : config.mode} page: ${outputPath}`)
 }

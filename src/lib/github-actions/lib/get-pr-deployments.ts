@@ -50,8 +50,8 @@ export async function fetchPullRequestDeployments(
 
       console.log(`  Status: ${status || 'no status'}`)
 
-      // Only include successful deployments
-      if (status === 'success') {
+      // Include successful and inactive deployments
+      if (status === 'success' || status === 'inactive') {
         const shortSha = deployment.sha.substring(0, 7)
 
         deployments.push({
