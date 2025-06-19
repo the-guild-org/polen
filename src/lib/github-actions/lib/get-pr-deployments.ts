@@ -4,7 +4,7 @@ export interface Deployment {
   sha: string
   shortSha: string
   createdAt: string
-  status?: 'success' | 'failure' | 'in_progress'
+  status?: string
   url?: string
 }
 
@@ -46,19 +46,19 @@ export async function fetchPullRequestDeployments(
       })
 
       const latestStatus = statuses[0]
-      const status = latestStatus?.state as Deployment['status']
+      const state = latestStatus?.state
 
-      console.log(`  Status: ${status || 'no status'}`)
+      console.log(`  Status: ${state || 'no status'}`)
 
       // Include successful and inactive deployments
-      if (status === 'success' || status === 'inactive') {
+      if (state === 'success' || state === 'inactive') {
         const shortSha = deployment.sha.substring(0, 7)
 
         deployments.push({
           sha: deployment.sha,
           shortSha,
           createdAt: deployment.created_at,
-          status,
+          status: state,
           url: latestStatus?.environment_url,
         })
         console.log(`  Added to deployments list`)
