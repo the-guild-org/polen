@@ -1,6 +1,6 @@
 import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
-import { buildDemosHome, demoBuilder, getDemoConfig } from '../../../src/lib/demos/index.ts'
+import { buildDemosHomeWithCatalog, demoBuilder, getDemoConfig } from '../../../src/lib/demos/index.ts'
 import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
 import { tryCatchMany } from '../../../src/lib/kit-temp.ts'
 
@@ -53,41 +53,12 @@ export default GitHubActions.createStep({
 
     core.info(`✅ Successfully built ${successes.length}/${versions.length} versions`)
 
-    // Get version info for trunk page
-    const allVersions = await versionHistory.getVersions()
-    const latestStable = await versionHistory.getLatestStableVersion()
-    const distTagInfos = await versionHistory.getDistTags()
+    // Get version catalog for trunk page
+    const catalog = await versionHistory.getVersionCatalog()
 
-    // Format trunk deployment data
-    const trunkDeployments = {
-      latest: latestStable
-        ? {
-          sha: latestStable.git.sha,
-          shortSha: latestStable.git.sha.substring(0, 7),
-          tag: latestStable.git.tag,
-        }
-        : null,
-      previous: allVersions
-        .filter(v => v.git.tag !== latestStable?.git.tag)
-        .slice(0, 10)
-        .map(v => ({
-          sha: v.git.sha,
-          shortSha: v.git.sha.substring(0, 7),
-          tag: v.git.tag,
-        })),
-    }
-
-    const distTags: Record<string, string> = {}
-    for (const info of distTagInfos) {
-      if (info.semverTag) {
-        distTags[info.name] = info.semverTag
-      }
-    }
-
-    await buildDemosHome({
+    await buildDemosHomeWithCatalog({
       basePath: `/${context.repo.repo}/`,
-      trunkDeployments,
-      distTags,
+      catalog,
       outputPath: 'gh-pages/index.html',
     })
 

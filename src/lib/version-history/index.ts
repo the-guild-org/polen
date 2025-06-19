@@ -2,49 +2,12 @@ import {
   compare as semverCompare,
   parse as semverParse,
   prerelease as semverPrerelease,
-  type Version,
+  type Version as SemverVersion,
 } from '@vltpkg/semver'
 import { type SimpleGit, simpleGit } from 'simple-git'
+import type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './types.ts'
 
-export interface VersionInfo {
-  /**
-   * Git-related information for this version
-   */
-  git: {
-    /**
-     * The git tag name for this version (e.g., "1.2.3" or "2.0.0-beta.1")
-     */
-    tag: string
-    /**
-     * The full git commit SHA associated with this version tag
-     */
-    sha: string
-  }
-  /**
-   * The date when this version tag was created
-   */
-  date: Date
-  /**
-   * Whether this version is a prerelease (contains -alpha, -beta, -rc, etc.)
-   */
-  isPrerelease: boolean
-  /**
-   * Parsed semver object containing major, minor, patch, and prerelease info
-   */
-  semver: Version
-}
-
-export interface DistTagInfo {
-  name: string
-  commit: string
-  semverTag?: string
-}
-
-export interface DevelopmentCycle {
-  stable: VersionInfo | null
-  prereleases: VersionInfo[]
-  all: VersionInfo[]
-}
+export type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './types.ts'
 
 export class VersionHistory {
   private git: SimpleGit
@@ -56,7 +19,7 @@ export class VersionHistory {
   /**
    * Parse a semver string into a Version object
    */
-  static parseSemver(tag: string): Version | null {
+  static parseSemver(tag: string): SemverVersion | null {
     return semverParse(tag) || null
   }
 
@@ -94,9 +57,9 @@ export class VersionHistory {
   /**
    * Get all versions from the repository
    */
-  async getVersions(): Promise<VersionInfo[]> {
+  async getVersions(): Promise<Version[]> {
     const tags = await this.git.tags()
-    const versions: VersionInfo[] = []
+    const versions: Version[] = []
 
     for (const tag of tags.all) {
       if (!VersionHistory.isSemverTag(tag)) continue
@@ -177,7 +140,7 @@ export class VersionHistory {
   /**
    * Get the latest stable version
    */
-  async getLatestStableVersion(): Promise<VersionInfo | null> {
+  async getLatestStableVersion(): Promise<Version | null> {
     const versions = await this.getVersions()
     return versions.find(v => !v.isPrerelease) || null
   }
@@ -185,7 +148,7 @@ export class VersionHistory {
   /**
    * Get the latest prerelease version
    */
-  async getLatestPrereleaseVersion(): Promise<VersionInfo | null> {
+  async getLatestPrereleaseVersion(): Promise<Version | null> {
     const versions = await this.getVersions()
     return versions.find(v => v.isPrerelease) || null
   }
@@ -193,7 +156,7 @@ export class VersionHistory {
   /**
    * Get version at a specific commit
    */
-  async getVersionAtCommit(commit: string): Promise<VersionInfo | null> {
+  async getVersionAtCommit(commit: string): Promise<Version | null> {
     const tags = await this.git.tag([`--points-at`, commit])
     const semverTags = tags.split('\n').filter(VersionHistory.isSemverTag)
 
@@ -207,7 +170,7 @@ export class VersionHistory {
   /**
    * Get deployment history for demos (versions that should have demos)
    */
-  async getDeploymentHistory(minimumVersion?: string): Promise<VersionInfo[]> {
+  async getDeploymentHistory(minimumVersion?: string): Promise<Version[]> {
     const versions = await this.getVersions()
 
     if (!minimumVersion) return versions
@@ -248,7 +211,7 @@ export class VersionHistory {
   /**
    * Get versions since a specific version (inclusive)
    */
-  async getVersionsSince(sinceVersion: string, skipVersions: string[] = []): Promise<VersionInfo[]> {
+  async getVersionsSince(sinceVersion: string, skipVersions: string[] = []): Promise<Version[]> {
     const sinceSemver = VersionHistory.parseSemver(sinceVersion)
     if (!sinceSemver) {
       throw new Error(`Invalid version: ${sinceVersion}`)
@@ -271,7 +234,7 @@ export class VersionHistory {
    *
    * Note: This only returns prereleases. Stable versions are not part of development cycles.
    */
-  async getPastDevelopmentCycles(): Promise<VersionInfo[]> {
+  async getPastDevelopmentCycles(): Promise<Version[]> {
     const allVersions = await this.getVersions()
     const currentCycle = await this.getCurrentDevelopmentCycle()
     const currentCycleTags = new Set(currentCycle.all.map(v => v.git.tag))
@@ -281,10 +244,42 @@ export class VersionHistory {
       return v.isPrerelease && !currentCycleTags.has(v.git.tag)
     })
   }
+
+  /**
+   * Get a complete registry of all versions and dist-tags
+   */
+  async getVersionCatalog(): Promise<VersionCatalog> {
+    const [allVersions, distTagInfos] = await Promise.all([
+      this.getVersions(),
+      this.getDistTags(),
+    ])
+
+    // Map dist-tags to versions
+    const distTags: VersionCatalog['distTags'] = {}
+    for (const tagInfo of distTagInfos) {
+      if (tagInfo.semverTag) {
+        const version = allVersions.find(v => v.git.tag === tagInfo.semverTag)
+        if (version) {
+          distTags[tagInfo.name] = version
+        }
+      }
+    }
+
+    // Separate stable and prerelease versions
+    const stable = allVersions.filter(v => !v.isPrerelease)
+    const prerelease = allVersions.filter(v => v.isPrerelease)
+
+    return {
+      distTags,
+      versions: allVersions,
+      stable,
+      prerelease,
+    }
+  }
 }
 
 // Export convenience functions
-export async function getVersions(repoPath?: string): Promise<VersionInfo[]> {
+export async function getVersions(repoPath?: string): Promise<Version[]> {
   const versionHistory = new VersionHistory(repoPath)
   return versionHistory.getVersions()
 }
@@ -294,7 +289,12 @@ export async function getDistTags(repoPath?: string): Promise<DistTagInfo[]> {
   return versionHistory.getDistTags()
 }
 
-export async function getLatestStableVersion(repoPath?: string): Promise<VersionInfo | null> {
+export async function getLatestStableVersion(repoPath?: string): Promise<Version | null> {
   const versionHistory = new VersionHistory(repoPath)
   return versionHistory.getLatestStableVersion()
+}
+
+export async function getVersionCatalog(repoPath?: string): Promise<VersionCatalog> {
+  const versionHistory = new VersionHistory(repoPath)
+  return versionHistory.getVersionCatalog()
 }
