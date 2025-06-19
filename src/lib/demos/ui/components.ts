@@ -496,10 +496,7 @@ export const generateHeader = (data: LandingPageData): string => {
   let title = config.ui.branding.title
   let description = config.ui.branding.description
 
-  if (mode === 'pr-index') {
-    title = 'Polen PR Previews'
-    description = 'Interactive demos for pull request previews'
-  } else if (prNumber) {
+  if (prNumber) {
     title = `${title} - PR #${prNumber} Preview`
     description = `Preview of changes in pull request #${prNumber}`
   }
@@ -733,4 +730,3 @@ export const generateFooter = (): string => {
     </div>
   `
 }
-

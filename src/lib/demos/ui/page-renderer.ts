@@ -59,7 +59,6 @@ export class DemoPageRenderer {
 </html>`
   }
 
-
   /**
    * Render development page with mock data
    */

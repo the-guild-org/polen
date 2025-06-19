@@ -61,7 +61,6 @@ export class DemoBuilder {
       prDeployments: undefined,
       trunkDeployments: undefined,
       distTags: undefined,
-      serve: false,
     })
   }
 

@@ -2,6 +2,7 @@
  * Utility functions for demo management
  */
 
+import type { VersionInfo } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 import { getDemoConfig } from './config.ts'
@@ -28,4 +29,15 @@ export async function getDemoExamples(): Promise<string[]> {
   // Use DemoConfig to filter and order examples
   const config = getDemoConfig()
   return config.getOrderedDemos(examples)
+}
+
+/**
+ * Get deployment path for a version
+ */
+export const getDistTagPath = (version: VersionInfo): string => {
+  return version.isPrerelease ? `/next/` : '/latest/'
+}
+
+export const getSemverPath = (version: VersionInfo): string => {
+  return `/${version.semver}/`
 }

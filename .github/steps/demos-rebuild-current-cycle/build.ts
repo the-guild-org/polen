@@ -25,9 +25,8 @@ export default GitHubActions.createStep({
     }
 
     const versions = cycle.all.map(v => v.tag)
-    const versionList = versions.join(', ')
 
-    core.info(`✅ Found ${cycle.all.length} versions to rebuild: ${versionList}`)
+    core.info(`✅ Found ${cycle.all.length} versions to rebuild: ${versions.join(', ')}`)
     core.info(`  Latest stable: ${cycle.stable.tag}`)
     if (cycle.prereleases.length > 0) {
       core.info(`  Prereleases: ${cycle.prereleases.map(v => v.tag).join(', ')}`)
