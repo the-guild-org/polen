@@ -40,29 +40,29 @@ export class DemoBuilder {
     }
   }
 
-  /**
-   * Build demos landing page
-   */
-  private async buildLandingPage(options: {
-    basePath: string
-    outputDir?: string
-    prNumber?: string
-    currentSha?: string
-  }): Promise<void> {
-    console.log(`  Building landing page...`)
+  // /**
+  //  * Build demos landing page
+  //  */
+  // private async buildLandingPage(options: {
+  //   basePath: string
+  //   outputDir?: string
+  //   prNumber?: string
+  //   currentSha?: string
+  // }): Promise<void> {
+  //   console.log(`  Building landing page...`)
 
-    // Import and call the build-demos-home module directly
-    const { buildDemosHome } = await import('./ui/landing-page.ts')
+  //   // Import and call the build-demos-home module directly
+  //   const { buildDemosHome } = await import('./ui/landing-page.ts')
 
-    await buildDemosHome({
-      basePath: options.basePath || '/',
-      prNumber: options.prNumber,
-      currentSha: options.currentSha,
-      prDeployments: undefined,
-      trunkDeployments: undefined,
-      distTags: undefined,
-    })
-  }
+  //   await buildDemosHome({
+  //     basePath: options.basePath || '/',
+  //     prNumber: options.prNumber,
+  //     currentSha: options.currentSha,
+  //     prDeployments: undefined,
+  //     trunkDeployments: undefined,
+  //     distTags: undefined,
+  //   })
+  // }
 
   /**
    * Build a single example
@@ -93,7 +93,7 @@ export class DemoBuilder {
     // Build with a timeout to prevent hanging
     try {
       // Use --yes to auto-confirm any npx prompts and set CI env
-      const result = await $`cd ${exampleDir} && CI=true npx --yes polen ${args}`.timeout('5m')
+      await $`cd ${exampleDir} && CI=true npx --yes polen ${args}`.timeout('5m')
       console.log(`  ✅ Built ${example}`)
     } catch (error) {
       console.error(`  ❌ Failed to build ${example}:`, error)
