@@ -131,8 +131,8 @@ export class PullRequestController {
     }
     return await fetchPullRequestDeployments(
       this.github,
-      this.context.repo.repo,
       this.context.repo.owner,
+      this.context.repo.repo,
       this.number,
     )
   }

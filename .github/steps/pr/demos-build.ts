@@ -92,15 +92,14 @@ export default GitHubActions.createStep({
 
     // Copy builds to commit-specific path
     for (const example of examples) {
-      // Polen outputs to 'dist' by default
-      const distDir = join('examples', example, 'dist')
+      const buildDir = join('examples', example, 'build')
       try {
-        await fs.access(distDir)
+        await fs.access(buildDir)
         const destDir = join(deployDir, shortSha, example)
-        await fs.cp(distDir, destDir, { recursive: true })
+        await fs.cp(buildDir, destDir, { recursive: true })
         core.info(`Copied ${example} demo`)
       } catch {
-        core.error(`Failed to copy ${example} - dist directory not found at ${distDir}`)
+        core.error(`Failed to copy ${example} - build directory not found at ${buildDir}`)
         throw new Error(`Demo build output not found for ${example}`)
       }
     }

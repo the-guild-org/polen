@@ -71,6 +71,7 @@ export async function fetchPullRequestDeployments(
     console.log(`Returning ${deployments.length} successful deployments for PR #${prNumber}`)
   } catch (error) {
     console.error(`Error fetching deployments for PR #${prNumber}:`, error)
+    throw error
   }
 
   return deployments
