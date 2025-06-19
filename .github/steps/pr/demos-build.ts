@@ -1,21 +1,15 @@
+import { buildDemosHome, demoBuilder, getDemoExamples } from '#lib/demos/index'
+import { GitHubActions } from '#lib/github-actions/index'
+import { VersionHistory } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { z } from 'zod/v4'
-import { buildDemosHome, demoBuilder, getDemoExamples } from '../../../src/lib/demos/index.ts'
-import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
-import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 import { DeploymentPathManager } from '../../lib/demos/path-manager.ts'
-
-const Outputs = z.object({
-  deployment_ready: z.boolean(),
-})
 
 /**
  * Prepare PR preview deployment
  */
 export default GitHubActions.createStep({
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
-  outputs: Outputs,
   context: GitHubActions.PullRequestContext,
   async run({ core, context, pr }) {
     const pr_number = context.payload.pull_request.number.toString()
@@ -46,13 +40,13 @@ export default GitHubActions.createStep({
     // Fetch previous deployments from gh-pages branch
     const deployments = await pr.fetchDeployments()
     core.info(`Fetched ${deployments.length} total deployments for PR #${pr_number}`)
-    
+
     // Convert deployment objects to just SHA strings for the UI
     // Also exclude the current deployment if it's already in the list
     const previousDeploymentShas = deployments
       .filter(d => d.shortSha !== shortSha)
       .map(d => d.shortSha)
-    
+
     core.info(`Found ${previousDeploymentShas.length} previous deployments: ${previousDeploymentShas.join(', ')}`)
 
     // Build landing page for PR with deployment history
@@ -60,7 +54,7 @@ export default GitHubActions.createStep({
       number: parseInt(pr_number, 10),
       sha: shortSha,
       ref: head_ref,
-      previousDeployments: previousDeploymentShas
+      previousDeployments: previousDeploymentShas,
     }]
 
     // Build individual demos with SHA-specific base path
@@ -104,21 +98,12 @@ export default GitHubActions.createStep({
         await fs.access(distDir)
         const destDir = join(deployDir, shortSha, example)
         await fs.cp(distDir, destDir, { recursive: true })
-        core.info(`Copied ${example} demo from dist`)
+        core.info(`Copied ${example} demo`)
       } catch {
-        // Fallback to 'build' directory if 'dist' doesn't exist
-        const buildDir = join('examples', example, 'build')
-        try {
-          await fs.access(buildDir)
-          const destDir = join(deployDir, shortSha, example)
-          await fs.cp(buildDir, destDir, { recursive: true })
-          core.info(`Copied ${example} demo from build`)
-        } catch {
-          core.debug(`Skipping ${example} - no dist or build directory found`)
-        }
+        core.error(`Failed to copy ${example} - dist directory not found at ${distDir}`)
+        throw new Error(`Demo build output not found for ${example}`)
       }
     }
-
     // Copy to latest and update paths
     const shaDir = join(deployDir, shortSha)
     const latestDir = join(deployDir, 'latest')
@@ -165,12 +150,5 @@ export default GitHubActions.createStep({
       prDeployments: prDeploymentsData,
       outputDir: `gh-pages-deploy/${shortSha}`,
     })
-
-    core.info(`✅ Successfully built PR demos for #${pr_number}`)
-    core.info('✅ PR preview deployment prepared successfully')
-
-    return {
-      deployment_ready: true,
-    }
   },
 })

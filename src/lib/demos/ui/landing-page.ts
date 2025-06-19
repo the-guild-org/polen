@@ -1,9 +1,9 @@
 /**
  * Main entry point for demo landing page generation
  */
+import type { VersionCatalog } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { dirname, extname, join } from 'node:path'
-import type { VersionCatalog } from '#lib/version-history/index'
 import { DemoDataCollector } from './data-collector.ts'
 import { DemoPageRenderer } from './page-renderer.ts'
 
@@ -37,15 +37,17 @@ export interface CatalogOptions {
  */
 export async function buildDemosHomeWithCatalog(options: CatalogOptions): Promise<void> {
   const { catalog, ...otherOptions } = options
-  
+
   // Transform catalog data inline
   const latestStable = catalog.distTags.latest || catalog.stable[0] || null
   const trunkDeployments = {
-    latest: latestStable ? {
-      sha: latestStable.git.sha,
-      shortSha: latestStable.git.sha.substring(0, 7),
-      tag: latestStable.git.tag,
-    } : null,
+    latest: latestStable
+      ? {
+        sha: latestStable.git.sha,
+        shortSha: latestStable.git.sha.substring(0, 7),
+        tag: latestStable.git.tag,
+      }
+      : null,
     previous: catalog.versions
       .filter(v => v.git.tag !== latestStable?.git.tag)
       .slice(0, 10)
@@ -55,14 +57,14 @@ export async function buildDemosHomeWithCatalog(options: CatalogOptions): Promis
         tag: v.git.tag,
       })),
   }
-  
+
   const distTags: Record<string, string> = {}
   for (const [name, version] of Object.entries(catalog.distTags)) {
     if (version) {
       distTags[name] = version.git.tag
     }
   }
-  
+
   // Use the existing function with transformed data
   return buildDemosHome({
     ...otherOptions,
