@@ -44,7 +44,7 @@ export interface LandingPageData {
   distTags?: DistTagsData
   config: {
     basePath: string
-    mode: 'demo' | 'pr-index' | 'dev'
+    mode: 'production' | 'development'
     prNumber?: string
     currentSha?: string
   }
@@ -60,7 +60,7 @@ export class DemoDataCollector {
    * Collect all data for landing page generation
    */
   async collectLandingPageData(options: {
-    mode?: 'demo' | 'pr-index' | 'dev'
+    mode?: 'production' | 'development'
     basePath?: string
     prNumber?: string
     currentSha?: string
@@ -70,7 +70,7 @@ export class DemoDataCollector {
   }): Promise<LandingPageData> {
     try {
       const {
-        mode = 'demo',
+        mode = 'production',
         basePath = '/',
         prNumber,
         currentSha,
@@ -86,13 +86,13 @@ export class DemoDataCollector {
       const demoMetadata = await this.loadDemoMetadata(demoExamples)
 
       // Parse deployment data based on mode
-      const parsedTrunkDeployments = mode === 'dev'
+      const parsedTrunkDeployments = mode === 'development'
         ? this.getMockTrunkDeployments()
         : this.parseTrunkDeployments(trunkDeployments)
 
       const parsedPrDeployments = this.parsePrDeployments(prDeployments)
 
-      const parsedDistTags = mode === 'dev'
+      const parsedDistTags = mode === 'development'
         ? this.getMockDistTags()
         : this.parseDistTags(distTags)
 

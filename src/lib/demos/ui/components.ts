@@ -724,43 +724,6 @@ export const generateVersionInfo = (data: LandingPageData): string => {
 }
 
 /**
- * Generate PR deployments section
- */
-export const generatePrSection = (data: LandingPageData): string => {
-  const { prDeployments } = data
-
-  if (!prDeployments || prDeployments.length === 0) {
-    return `
-      <div class="pr-section">
-        <h3>Pull Request Previews</h3>
-        <p>No active PR previews at the moment.</p>
-        <p><em>PR previews are automatically generated when pull requests are opened with demo changes.</em></p>
-      </div>
-    `
-  }
-
-  const prItems = prDeployments
-    .slice(0, 20) // Limit to recent PRs
-    .map(pr => `
-      <div class="pr-item">
-        <h4><a href="/polen/pr-${pr.number}/">PR #${pr.number}</a></h4>
-        ${pr.sha ? `<p>Latest commit: <code>${pr.sha.substring(0, 7)}</code></p>` : ''}
-        ${pr.ref ? `<p>Branch: <code>${pr.ref}</code></p>` : ''}
-      </div>
-    `)
-    .join('')
-
-  return `
-    <div class="pr-section">
-      <h3>Pull Request Previews</h3>
-      <div class="pr-list">
-        ${prItems}
-      </div>
-    </div>
-  `
-}
-
-/**
  * Generate footer section
  */
 export const generateFooter = (): string => {
@@ -771,16 +734,3 @@ export const generateFooter = (): string => {
   `
 }
 
-/**
- * Generate back navigation link
- */
-export const generateBackLink = (targetUrl: string, label: string = 'Back to Main'): string => {
-  return `
-    <a href="${targetUrl}" class="back-link">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 12H5M12 19L5 12L12 5"/>
-      </svg>
-      ${label}
-    </a>
-  `
-}

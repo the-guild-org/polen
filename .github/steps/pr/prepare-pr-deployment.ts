@@ -60,7 +60,6 @@ export default GitHubActions.createStep({
     // Build landing page for PR root (without currentSha to show overview)
     await buildDemosHome({
       basePath: prRootBasePath,
-      mode: 'demo',
       prNumber: pr_number,
       prDeployments: prDeploymentsData,
     })
@@ -152,7 +151,6 @@ export default GitHubActions.createStep({
     // Build SHA-specific landing page directly to deployment directory
     await buildDemosHome({
       basePath: shaBasePath,
-      mode: 'demo',
       prNumber: pr_number,
       currentSha: shortSha,
       prDeployments: prDeploymentsData,

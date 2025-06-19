@@ -8,17 +8,13 @@ const Outputs = z.object({
   did: z.boolean(),
 })
 
-/**
- * Build demos for current development cycle
- */
 export default GitHubActions.createStep({
-  description: 'Build demos for all versions in the current development cycle',
+  description: 'Build all demos for all versions in the current development cycle',
   outputs: Outputs,
-  async run({ core, fs, context }) {
+  async run({ core, context }) {
     const versionHistory = new VersionHistory()
     const config = getDemoConfig()
 
-    // Get the current development cycle
     const cycle = await versionHistory.getCurrentDevelopmentCycle()
 
     if (!cycle.stable) {
@@ -28,16 +24,6 @@ export default GitHubActions.createStep({
       }
     }
 
-    // Check if latest dist-tag exists and matches the stable version
-    const latestTag = await versionHistory.getDistTagLatest()
-    if (!latestTag || latestTag.semverTag !== cycle.stable.tag) {
-      core.warning(
-        `Latest dist-tag ${
-          latestTag ? `points to ${latestTag.semverTag}` : 'not found'
-        }, but latest stable is ${cycle.stable.tag}`,
-      )
-    }
-
     const versions = cycle.all.map(v => v.tag)
     const versionList = versions.join(', ')
 
@@ -45,10 +31,6 @@ export default GitHubActions.createStep({
     core.info(`  Latest stable: ${cycle.stable.tag}`)
     if (cycle.prereleases.length > 0) {
       core.info(`  Prereleases: ${cycle.prereleases.map(v => v.tag).join(', ')}`)
-    }
-
-    if (versions.length === 0) {
-      throw new Error('No versions to rebuild')
     }
 
     core.info(`Building demos for ${versions.length} versions: ${versions.join(', ')}`)
@@ -62,10 +44,8 @@ export default GitHubActions.createStep({
       return version
     })
 
-    const failedVersions = errors.map(e => e.context.item)
-
     if (errors.length > 0) {
-      core.error(`Failed to build ${failedVersions.length} versions: ${failedVersions.join(', ')}`)
+      core.error(`Failed to build ${errors.length} versions: ${errors.map(e => e.context.item).join(', ')}`)
     }
 
     if (errors.length === versions.length) {
@@ -73,9 +53,6 @@ export default GitHubActions.createStep({
     }
 
     core.info(`✅ Successfully built ${successes.length}/${versions.length} versions`)
-
-    // Update demos home page with all deployment data
-    core.info('Updating demos home page...')
 
     // Get version info for trunk page
     const allVersions = await versionHistory.getVersions()
@@ -109,15 +86,11 @@ export default GitHubActions.createStep({
     }
 
     await buildDemosHome({
-      mode: 'demo',
       basePath: `/${context.repo.repo}/`,
       trunkDeployments,
       distTags,
-      outputDir: 'dist-demos',
+      outputPath: 'gh-pages/index.html',
     })
-    // Copy to gh-pages root
-    await fs.copyFile('dist-demos/index.html', 'gh-pages/index.html')
-    core.info('✅ Successfully updated demos home page')
 
     return {
       did: true,

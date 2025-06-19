@@ -36,7 +36,6 @@ export default GitHubActions.createStep({
     // Build landing page
     await buildDemosHome({
       basePath,
-      mode: 'demo',
     })
 
     // Build individual demos

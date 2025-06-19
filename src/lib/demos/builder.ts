@@ -58,7 +58,6 @@ export class DemoBuilder {
       basePath: options.basePath || '/',
       prNumber: options.prNumber,
       currentSha: options.currentSha,
-      mode: options.prNumber ? 'demo' : 'demo',
       prDeployments: undefined,
       trunkDeployments: undefined,
       distTags: undefined,

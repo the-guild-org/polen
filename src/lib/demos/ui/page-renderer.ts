@@ -4,12 +4,10 @@
 
 import { getDemoConfig } from '../index.ts'
 import {
-  generateBackLink,
   generateDemosGrid,
   generateFooter,
   generateHeader,
   generatePrBanner,
-  generatePrSection,
   generateVersionInfo,
   getDemoPageStyles,
 } from './components.ts'
@@ -61,36 +59,6 @@ export class DemoPageRenderer {
 </html>`
   }
 
-  /**
-   * Render PR index page showing all PR previews
-   */
-  renderPrIndexPage(data: LandingPageData): string {
-    const backLinkHtml = generateBackLink('/', 'Back to Main Demos')
-    const headerHtml = generateHeader(data)
-    const prSectionHtml = generatePrSection(data)
-    const footerHtml = generateFooter()
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Polen PR Previews</title>
-  <meta name="description" content="Interactive demos for pull request previews">
-  <style>
-    ${getDemoPageStyles()}
-  </style>
-</head>
-<body>
-  <div class="container">
-    ${backLinkHtml}
-    ${headerHtml}
-    ${prSectionHtml}
-    ${footerHtml}
-  </div>
-</body>
-</html>`
-  }
 
   /**
    * Render development page with mock data
@@ -137,11 +105,9 @@ export class DemoPageRenderer {
     const { mode } = data.config
 
     switch (mode) {
-      case 'pr-index':
-        return this.renderPrIndexPage(data)
-      case 'dev':
+      case 'development':
         return this.renderDevPage(data)
-      case 'demo':
+      case 'production':
       default:
         return this.renderMainLandingPage(data)
     }
