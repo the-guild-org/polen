@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPRController } from './pr-controller.ts'
+import { createPullRequestController } from './pr-controller.ts'
 
 describe('createPRController', () => {
   const mockGitHub = {
@@ -37,14 +37,14 @@ describe('createPRController', () => {
       payload: {},
     }
 
-    const controller = createPRController(mockGitHub, nonPRContext)
+    const controller = createPullRequestController(mockGitHub, nonPRContext)
     expect(controller).toBeDefined()
     expect(controller.isActive).toBe(false)
     expect(controller.number).toBe(0)
   })
 
   it('returns active PR controller for PR events', () => {
-    const controller = createPRController(mockGitHub, mockContext)
+    const controller = createPullRequestController(mockGitHub, mockContext)
     expect(controller).toBeDefined()
     expect(controller.isActive).toBe(true)
     expect(controller.number).toBe(123)
@@ -54,7 +54,7 @@ describe('createPRController', () => {
     it('creates new comment when none exists', async () => {
       mockGitHub.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const controller = createPRController(mockGitHub, mockContext)!
+      const controller = createPullRequestController(mockGitHub, mockContext)!
       await controller.comment({ id: 'test', content: 'Hello world' })
 
       expect(mockGitHub.rest.issues.createComment).toHaveBeenCalledWith({
@@ -68,7 +68,7 @@ describe('createPRController', () => {
     it('uses default comment ID when not provided', async () => {
       mockGitHub.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const controller = createPRController(mockGitHub, mockContext, 'pr-comment')!
+      const controller = createPullRequestController(mockGitHub, mockContext, 'pr-comment')!
       await controller.comment({ content: 'Hello world' })
 
       expect(mockGitHub.rest.issues.createComment).toHaveBeenCalledWith({
@@ -89,7 +89,7 @@ describe('createPRController', () => {
         ],
       })
 
-      const controller = createPRController(mockGitHub, mockContext)!
+      const controller = createPullRequestController(mockGitHub, mockContext)!
       await controller.comment({ id: 'test', content: 'New content' })
 
       expect(mockGitHub.rest.issues.updateComment).toHaveBeenCalledWith({
@@ -110,7 +110,7 @@ describe('createPRController', () => {
         ],
       })
 
-      const controller = createPRController(mockGitHub, mockContext)!
+      const controller = createPullRequestController(mockGitHub, mockContext)!
       await controller.deleteComment('test')
 
       expect(mockGitHub.rest.issues.deleteComment).toHaveBeenCalledWith({
@@ -132,7 +132,7 @@ describe('createPRController', () => {
         },
       }
 
-      const controller = createPRController(mockGitHub, issueCommentContext)
+      const controller = createPullRequestController(mockGitHub, issueCommentContext)
       expect(controller).toBeDefined()
       expect(controller.number).toBe(789)
     })
@@ -146,7 +146,7 @@ describe('createPRController', () => {
         payload: {},
       }
 
-      const controller = createPRController(mockGitHub, nonPRContext)
+      const controller = createPullRequestController(mockGitHub, nonPRContext)
 
       await expect(controller.comment({ content: 'Test' })).rejects.toThrow(
         'Not in a PR context, cannot create comment',
@@ -161,7 +161,7 @@ describe('createPRController', () => {
         payload: {},
       }
 
-      const controller = createPRController(mockGitHub, nonPRContext)
+      const controller = createPullRequestController(mockGitHub, nonPRContext)
 
       await expect(controller.comment({ content: 'Test', optional: true })).resolves.not.toThrow()
       expect(consoleLogSpy).toHaveBeenCalledWith('[skip] Not in a PR context, cannot create comment')

@@ -186,7 +186,7 @@
     "dev:pokemon": "pnpm polen dev --project examples/pokemon",
     "dev:hive": "pnpm polen dev --project examples/hive",
     "dev:github": "pnpm polen dev --project examples/github",
-    "dev:demo-index": "node --no-warnings ./scripts/build-demos-home.ts --mode dev --serve",
+    "dev:demo-index": "node --no-warnings --experimental-transform-types --conditions source ./src/lib/demos/ui/landing-page-cli.ts --mode dev --serve",
     "build:demos": "zx ./scripts/build-demos.mjs",
     "build:clean": "pnpm tsc --build tsconfig.build.json --clean && rm -rf build",
     "build": "tsc --build tsconfig.build.json",

@@ -3,7 +3,7 @@
  */
 
 import { getDemoConfig } from '../index.ts'
-import type { DemoMetadata, LandingPageData, PrDeployment, TrunkDeployment } from './data-collector.ts'
+import type { DemoMetadata, LandingPageData } from './data-collector.ts'
 
 /**
  * CSS styles for the demo landing page
@@ -513,7 +513,7 @@ export const generateHeader = (data: LandingPageData): string => {
 }
 
 /**
- * Generate demo card HTML matching old build-demos-home.ts structure
+ * Generate demo card HTML for the demos landing page
  */
 export const generateDemoCard = (
   name: string,

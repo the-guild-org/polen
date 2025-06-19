@@ -129,6 +129,13 @@ export class VersionHistory {
   }
 
   /**
+   * Get the 'latest' dist-tag
+   */
+  async getDistTagLatest(): Promise<DistTagInfo | null> {
+    return this.getDistTag('latest')
+  }
+
+  /**
    * Get all dist-tags
    */
   async getDistTags(): Promise<DistTagInfo[]> {

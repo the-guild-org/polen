@@ -6,7 +6,7 @@
 import type { GitHub } from '@actions/github/lib/utils.ts'
 import { z } from 'zod/v4'
 import type { GitController } from './git-controller.ts'
-import type { PRController } from './pr-controller.ts'
+import type { PullRequestController } from './pr-controller.ts'
 import type { Context, ContextSchema as RealContextSchema } from './schemas/context.ts'
 
 /**
@@ -35,7 +35,7 @@ export interface Args<$Inputs extends Inputs = Inputs, $Context = Context> {
   fs: typeof import('node:fs/promises')
 
   /** PR controller for pull request operations (comment, review, etc.) */
-  pr: PRController
+  pr: PullRequestController
 
   /** Git controller for git operations (commit, push, etc.) without subprocess details */
   git: GitController
@@ -84,7 +84,7 @@ export interface Definition<
   $OutputsSchema extends OutputsSchema,
   $ContextSchema extends ContextSchema,
 > {
-  description: string
+  description?: string
   name?: string
   inputsSchema?: $InputsSchema
   outputsSchema?: $OutputsSchema
@@ -97,7 +97,7 @@ export interface CreateInput<
   $OutputsSchema extends OutputsSchema,
   $ContextSchema extends z.Schema,
 > {
-  description: string
+  description?: string
   name?: string
   inputs?: $InputsSchema
   outputs?: $OutputsSchema

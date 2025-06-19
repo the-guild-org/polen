@@ -35,7 +35,6 @@ jobs:
         with:
           name: get-dist-tag-info
           inputs: ${{ toJSON(inputs) }}
-          context: ${{ toJSON(github) }}
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -46,8 +45,8 @@ jobs:
       - name: Update dist-tag content
         uses: ./.github/actions/step
         with:
-          name: update-dist-tag-content
-          previous: ${{ toJSON(steps.dist-tag.outputs) }}
+          name: build
+          previous: ${{ steps.dist-tag.outputs.json }}
 
       - name: Commit and push changes
         uses: ./.github/actions/commit

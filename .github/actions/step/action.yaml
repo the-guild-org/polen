@@ -16,10 +16,6 @@ inputs:
     description: "JSON string of inputs for the step"
     required: false
     default: "{}"
-  context:
-    description: "GitHub context object (usually toJSON(github))"
-    required: false
-    default: "{}"
   previous:
     description: "Outputs from previous steps (e.g. toJSON(steps.previous.outputs))"
     required: false
@@ -35,7 +31,6 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         STEP_INPUTS: ${{ inputs.inputs }}
-        STEP_CONTEXT: ${{ inputs.context }}
         STEP_PREVIOUS: ${{ inputs.previous }}
       run: |
         # Use explicit workflow name if provided, otherwise fall back to github.workflow
@@ -44,4 +39,4 @@ runs:
           WORKFLOW_NAME="${{ github.workflow }}"
         fi
         PATH_OVERRIDE="${{ inputs.path }}"
-        node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$PATH_OVERRIDE" "$STEP_INPUTS" "$STEP_CONTEXT" "$STEP_PREVIOUS"
+        node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$PATH_OVERRIDE" "$STEP_INPUTS" "$STEP_PREVIOUS"

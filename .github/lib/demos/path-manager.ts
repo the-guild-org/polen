@@ -40,7 +40,9 @@ export class DeploymentPathManager {
         await this.updateFileBasePath(file, fromPath, toPath)
       }
     } catch (error) {
-      throw new GitHubActions.WorkflowError('path-manager', `Failed to update base paths in ${directory}`, error)
+      throw new Error(
+        `Failed to update base paths in ${directory}: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
@@ -59,7 +61,7 @@ export class DeploymentPathManager {
         await fs.writeFile(redirectPath, html)
       }
     } catch (error) {
-      throw new GitHubActions.WorkflowError('path-manager', 'Failed to generate redirects', error)
+      throw new Error(`Failed to generate redirects: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -150,7 +152,9 @@ export class DeploymentPathManager {
         }
       }
     } catch (error) {
-      throw new GitHubActions.WorkflowError('path-manager', `Failed to cleanup deployments in ${parentDir}`, error)
+      throw new Error(
+        `Failed to cleanup deployments in ${parentDir}: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
 
     return { removed, kept, errors }
@@ -192,7 +196,7 @@ export class DeploymentPathManager {
         await fs.writeFile(filePath, updatedContent)
       }
     } catch (error) {
-      throw new GitHubActions.WorkflowError('path-manager', `Failed to update file ${filePath}`, error)
+      throw new Error(`Failed to update file ${filePath}: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

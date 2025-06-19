@@ -8,9 +8,8 @@ import { Obj, Path, Str } from '@wollybeard/kit'
 import { promises as fs } from 'node:fs'
 import { z } from 'zod/v4'
 import { $ } from 'zx'
-import { WorkflowError } from './error-handling.ts'
 import { createGitController } from './git-controller.ts'
-import { createPRController } from './pr-controller.ts'
+import { createPullRequestController } from './pr-controller.ts'
 import { searchModule } from './search-module.ts'
 import type { Args, Step } from './step.ts'
 
@@ -20,11 +19,11 @@ import type { Args, Step } from './step.ts'
 export function createArgs(stepName: string): Args {
   const githubToken = process.env['GITHUB_TOKEN']
   if (!githubToken) {
-    throw new WorkflowError('runner', 'GITHUB_TOKEN environment variable is required')
+    throw new Error('GITHUB_TOKEN environment variable is required')
   }
 
   const github = getOctokit(githubToken)
-  const pr = createPRController(github, context, stepName)
+  const pr = createPullRequestController(github, context, stepName)
   const git = createGitController($)
 
   return {
@@ -54,7 +53,7 @@ export async function runStepByName(
     core.error(`Step '${stepName}' not found`)
     core.error(`Searched paths:`)
     moduleLocation.searchedPaths.forEach(path => core.error(`  - ${path}`))
-    throw new WorkflowError('runner', `Step '${stepName}' not found`)
+    throw new Error(`Step '${stepName}' not found`)
   }
 
   core.debug(`Found step at: ${moduleLocation.path}`)
@@ -122,7 +121,7 @@ export async function runStep(
         core.error(`Actual event: ${context.eventName}`)
 
         // For now, default to hard error. We can make this configurable later
-        throw new WorkflowError('runner', errorMessage)
+        throw new Error(errorMessage)
       }
       validatedContext = contextValidation.data
     }

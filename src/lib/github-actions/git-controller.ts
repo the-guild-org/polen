@@ -64,6 +64,12 @@ export function createGitController($: typeof ZxDollar): GitController {
         autoConfigureUser = true,
       } = options
 
+      const hasChanges = await api.hasChanges('gh-pages')
+      if (!hasChanges) {
+        console.log('No changes to commit')
+        return false
+      }
+
       if (autoConfigureUser) {
         await api.configureUser()
       }

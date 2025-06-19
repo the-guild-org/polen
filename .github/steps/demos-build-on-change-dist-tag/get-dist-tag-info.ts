@@ -1,6 +1,6 @@
 import { z } from 'zod/v4'
-import { GitHubActions } from '../../src/lib/github-actions/index.ts'
-import { VersionHistory } from '../../src/lib/version-history/index.ts'
+import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
+import { VersionHistory } from '../../../src/lib/version-history/index.ts'
 
 const Inputs = z.object({
   dist_tag: z.string().optional(),

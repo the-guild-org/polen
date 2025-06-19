@@ -35,24 +35,9 @@ export class DemoBuilder {
     const basePath = options.basePath || `/polen/${tag}/`
     const examples = options.examples || await getDemoExamples()
 
-    console.log(`📦 Building demos for ${tag}`)
-    console.log(`  Base path: ${basePath}`)
-    console.log(`  Examples: ${examples.join(', ')}`)
-
-    // Build landing page
-    await this.buildLandingPage({
-      basePath,
-      outputDir: options.outputDir,
-      prNumber: options.prNumber,
-      currentSha: options.currentSha,
-    })
-
-    // Build each example
     for (const example of examples) {
       await this.buildExample(example, `${basePath}${example}/`, options.outputDir)
     }
-
-    console.log(`✅ Successfully built demos for ${tag}`)
   }
 
   /**

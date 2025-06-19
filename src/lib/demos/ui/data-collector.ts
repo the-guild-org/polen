@@ -5,7 +5,6 @@
 import { Str } from '@wollybeard/kit'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { WorkflowError } from '../../github-actions/error-handling.ts'
 import { getDemoConfig, getDemoExamples } from '../index.ts'
 
 export interface DemoMetadata {
@@ -65,9 +64,9 @@ export class DemoDataCollector {
     basePath?: string
     prNumber?: string
     currentSha?: string
-    trunkDeployments?: string
-    prDeployments?: string
-    distTags?: string
+    trunkDeployments?: string | TrunkDeploymentsData
+    prDeployments?: string | PrDeployment[]
+    distTags?: string | DistTagsData
   }): Promise<LandingPageData> {
     try {
       const {
@@ -111,7 +110,7 @@ export class DemoDataCollector {
         },
       }
     } catch (error) {
-      throw new WorkflowError('data-collector', 'Failed to collect landing page data', error)
+      throw new Error(`Failed to collect landing page data: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -122,7 +121,7 @@ export class DemoDataCollector {
     try {
       return await getDemoExamples()
     } catch (error) {
-      throw new WorkflowError('data-collector', 'Failed to get demo examples', error)
+      throw new Error(`Failed to get demo examples: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -170,42 +169,54 @@ export class DemoDataCollector {
   }
 
   /**
-   * Parse trunk deployments from JSON string
+   * Parse trunk deployments from JSON string or object
    */
-  private parseTrunkDeployments(trunkDeployments?: string): TrunkDeploymentsData | undefined {
+  private parseTrunkDeployments(trunkDeployments?: string | TrunkDeploymentsData): TrunkDeploymentsData | undefined {
     if (!trunkDeployments) return undefined
 
-    try {
-      return JSON.parse(trunkDeployments) as TrunkDeploymentsData
-    } catch {
-      return undefined
+    if (typeof trunkDeployments === 'string') {
+      try {
+        return JSON.parse(trunkDeployments) as TrunkDeploymentsData
+      } catch {
+        return undefined
+      }
     }
+
+    return trunkDeployments
   }
 
   /**
-   * Parse PR deployments from JSON string
+   * Parse PR deployments from JSON string or array
    */
-  private parsePrDeployments(prDeployments?: string): PrDeployment[] | undefined {
+  private parsePrDeployments(prDeployments?: string | PrDeployment[]): PrDeployment[] | undefined {
     if (!prDeployments) return undefined
 
-    try {
-      return JSON.parse(prDeployments) as PrDeployment[]
-    } catch {
-      return undefined
+    if (typeof prDeployments === 'string') {
+      try {
+        return JSON.parse(prDeployments) as PrDeployment[]
+      } catch {
+        return undefined
+      }
     }
+
+    return prDeployments
   }
 
   /**
-   * Parse dist-tags from JSON string
+   * Parse dist-tags from JSON string or object
    */
-  private parseDistTags(distTags?: string): DistTagsData | undefined {
+  private parseDistTags(distTags?: string | DistTagsData): DistTagsData | undefined {
     if (!distTags) return undefined
 
-    try {
-      return JSON.parse(distTags) as DistTagsData
-    } catch {
-      return undefined
+    if (typeof distTags === 'string') {
+      try {
+        return JSON.parse(distTags) as DistTagsData
+      } catch {
+        return undefined
+      }
     }
+
+    return distTags
   }
 
   /**

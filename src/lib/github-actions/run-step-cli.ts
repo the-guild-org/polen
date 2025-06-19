@@ -14,13 +14,12 @@ async function main() {
   const workflowName = process.argv[3]
   const pathOverride = process.argv[4]
   const inputsJson = process.argv[5] || '{}'
-  const contextJson = process.argv[6] || '{}'
   const previousJson = process.argv[7] || '{}'
 
   if (!stepName) {
     core.setFailed('Missing required step name parameter')
     core.error(
-      'Usage: run-step-cli <step-name> <workflow-name> [path-override] [inputs-json] [context-json] [previous-json]',
+      'Usage: run-step-cli <step-name> <workflow-name> [path-override] [inputs-json] [previous-json]',
     )
     core.error('This runner expects steps to be in .github/steps/<name>.ts')
     process.exit(1)
@@ -33,18 +32,14 @@ async function main() {
 
     // Parse all inputs
     const inputs = JSON.parse(inputsJson)
-    const context = JSON.parse(contextJson)
     const previous = JSON.parse(previousJson)
 
     // Debug logging
     core.debug(`Parsed inputs: ${JSON.stringify(inputs)}`)
-    core.debug(`Parsed context keys: ${Object.keys(context).join(', ')}`)
     core.debug(`Parsed previous: ${JSON.stringify(previous)}`)
 
-    // Merge all inputs together, always including context and previous
     const mergedInputs = {
       ...inputs,
-      context,
       previous,
     }
 
@@ -66,12 +61,10 @@ async function main() {
       core.error(stack)
     }
 
-    // Log additional context
     core.error(`Step name: ${stepName}`)
     core.error(`Workflow name: ${workflowName || 'none'}`)
     core.error(`Path override: ${pathOverride || 'none'}`)
     core.error(`Inputs: ${inputsJson}`)
-    core.error(`Context: ${contextJson}`)
     core.error(`Previous: ${previousJson}`)
 
     // Check for common issues
