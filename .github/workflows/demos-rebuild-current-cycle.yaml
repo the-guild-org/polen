@@ -30,7 +30,6 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: build
-          previous: ${{ toJSON(steps.check.outputs) }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
