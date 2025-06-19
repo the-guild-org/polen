@@ -193,27 +193,27 @@ export class DemoBuilder {
    *    - Skips versions where Polen build fails
    *
    * 3. Git branch management:
-   *    - Optionally saves and restores the original branch when done
+   *    - By default, saves and restores the original branch when done
    *    - This prevents leaving the repo in a detached HEAD state
+   *    - Set restoreOriginalBranch: false to disable this behavior
    *
    * Example:
    * ```
    * // Build demos for versions 1.2.0 and 1.3.0-beta.1
    * const results = await buildMultipleVersions(
    *   ['1.2.0', '1.3.0-beta.1'],
-   *   'gh-pages',
-   *   { restoreOriginalBranch: true }
+   *   'gh-pages'
    * )
    * // Results: { built: ['1.2.0', '1.3.0-beta.1'], skipped: [] }
    * ```
    *
    * Note: This method modifies the git working directory by checking out tags.
-   * Always use restoreOriginalBranch: true in CI environments.
+   * The original branch is restored by default to prevent issues in CI environments.
    */
   async buildMultipleVersions(
     versions: string[],
     deployDir: string,
-    options: { restoreOriginalBranch?: boolean } = {},
+    options: { restoreOriginalBranch?: boolean } = { restoreOriginalBranch: true },
   ): Promise<{ built: string[]; skipped: string[] }> {
     const results = {
       built: [] as string[],
@@ -222,7 +222,7 @@ export class DemoBuilder {
 
     // Save current branch if needed
     let originalBranch: string | null = null
-    if (options.restoreOriginalBranch) {
+    if (options.restoreOriginalBranch !== false) {
       originalBranch = (await $`git rev-parse --abbrev-ref HEAD`).stdout.trim()
     }
 
@@ -269,8 +269,8 @@ export class DemoBuilder {
         results.built.push(version)
       }
     } finally {
-      // Restore original branch if requested
-      if (originalBranch && options.restoreOriginalBranch) {
+      // Restore original branch if requested (default behavior)
+      if (originalBranch && options.restoreOriginalBranch !== false) {
         await $`git checkout ${originalBranch}`
       }
     }
