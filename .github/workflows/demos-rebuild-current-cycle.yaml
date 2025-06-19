@@ -13,7 +13,7 @@ permissions:
   pages: write
 
 jobs:
-  update-current-cycle:
+  run:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
