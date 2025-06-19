@@ -1,6 +1,6 @@
 import { buildDemosHome, demoBuilder, getDemoExamples } from '#lib/demos/index'
 import { GitHubActions } from '#lib/github-actions/index'
-import { getLatestStableVersion } from '#lib/version-history/index'
+import { VersionHistory } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 import { DeploymentPathManager } from '../../lib/demos/path-manager.ts'
@@ -27,7 +27,7 @@ export default GitHubActions.createStep({
     core.info(`🚀 Building PR demos for #${pr_number} (${fullSha})`)
 
     // Get latest stable version for Polen CLI
-    const latestStable = await getLatestStableVersion()
+    const latestStable = await VersionHistory.getLatestStableVersion()
     if (!latestStable) {
       throw new Error('No stable version found for PR builds')
     }

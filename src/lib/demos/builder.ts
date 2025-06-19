@@ -282,8 +282,8 @@ export class DemoBuilder {
    * Build demos for current development cycle
    */
   async buildCurrentCycle(deployDir: string): Promise<void> {
-    const { getCurrentDevelopmentCycle } = await import('../version-history/index.ts')
-    const cycle = await getCurrentDevelopmentCycle()
+    const { VersionHistory } = await import('../version-history/index.ts')
+    const cycle = await VersionHistory.getCurrentDevelopmentCycle()
 
     if (!cycle.stable) {
       throw new Error('No stable release found')

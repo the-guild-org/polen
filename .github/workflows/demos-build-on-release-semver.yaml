@@ -8,6 +8,7 @@ permissions:
   contents: write
   pages: write
   statuses: write
+  deployments: write
 
 jobs:
   deploy:

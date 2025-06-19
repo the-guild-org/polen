@@ -1,6 +1,6 @@
+import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
 import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
-import { getDistTag } from '../../../src/lib/version-history/index.ts'
 
 const Inputs = z.object({
   dist_tag: z.string().optional(),
@@ -46,7 +46,7 @@ export default GitHubActions.createStep({
     }
 
     // Get the dist tag info
-    const distTag = await getDistTag(tagName)
+    const distTag = await VersionHistory.getDistTag(tagName)
     if (!distTag) {
       throw new Error(`Tag ${tagName} not found`)
     }

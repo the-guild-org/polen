@@ -1,4 +1,4 @@
-import { getCurrentDevelopmentCycle, getVersionCatalog, isStableVersion } from '#lib/version-history/index'
+import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
 import { buildDemosHomeWithCatalog, demoBuilder, getDemoConfig } from '../../../src/lib/demos/index.ts'
 import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
@@ -14,7 +14,7 @@ export default GitHubActions.createStep({
   async run({ core, context }) {
     const config = getDemoConfig()
 
-    const cycle = await getCurrentDevelopmentCycle()
+    const cycle = await VersionHistory.getCurrentDevelopmentCycle()
 
     if (!cycle.stable) {
       core.warning('No stable version found - skipping update')
@@ -35,7 +35,7 @@ export default GitHubActions.createStep({
 
     // Build each version
     const [successes, errors] = await tryCatchMany(versions, async (version) => {
-      const isStable = isStableVersion(version)
+      const isStable = VersionHistory.isStableVersion(version)
       const deploymentPath = config.getDeploymentPath(version, isStable)
       const basePath = `/${context.repo.repo}${deploymentPath}`
       await demoBuilder.build(version, { basePath })
@@ -53,7 +53,7 @@ export default GitHubActions.createStep({
     core.info(`✅ Successfully built ${successes.length}/${versions.length} versions`)
 
     // Get version catalog for trunk page
-    const catalog = await getVersionCatalog()
+    const catalog = await VersionHistory.getVersionCatalog()
 
     await buildDemosHomeWithCatalog({
       basePath: `/${context.repo.repo}/`,

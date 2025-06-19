@@ -1,5 +1,5 @@
 import { GitHubActions } from '#lib/github-actions/index'
-import { getCurrentDevelopmentCycle, getVersions } from '#lib/version-history/index'
+import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
 import { DeploymentPathManager } from '../../lib/demos/path-manager.ts'
 
@@ -24,11 +24,11 @@ export default GitHubActions.createStep({
     const pathManager = new DeploymentPathManager()
 
     // Get current development cycle versions to keep
-    const currentCycle = await getCurrentDevelopmentCycle()
+    const currentCycle = await VersionHistory.getCurrentDevelopmentCycle()
     const versionsToKeep = currentCycle.all.map(v => v.git.tag)
 
     // Also keep all stable versions
-    const allVersions = await getVersions()
+    const allVersions = await VersionHistory.getVersions()
     const stableVersions = allVersions.filter(v => !v.isPrerelease).map(v => v.git.tag)
 
     // Combine versions to keep
