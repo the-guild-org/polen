@@ -1,6 +1,6 @@
 import { buildDemosHome, demoBuilder, getDemoConfig } from '#lib/demos/index'
 import { GitHubActions } from '#lib/github-actions/index'
-import { VersionHistory } from '#lib/version-history/index'
+import { isStableVersion } from '#lib/version-history/index'
 import { z } from 'zod/v4'
 
 const Inputs = z.object({
@@ -29,7 +29,7 @@ export default GitHubActions.createStep({
     }
 
     // Determine deployment path
-    const isStable = VersionHistory.isStableVersion(semver)
+    const isStable = isStableVersion(semver)
     const deploymentPath = config.getDeploymentPath(semver, isStable)
     const basePath = `/${context.repo.repo}${deploymentPath}`
 

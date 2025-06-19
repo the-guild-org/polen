@@ -1,5 +1,5 @@
 import { GitHubActions } from '#lib/github-actions/index'
-import { VersionHistory } from '#lib/version-history/index'
+import { getCurrentDevelopmentCycle, getVersions } from '#lib/version-history/index'
 import { z } from 'zod/v4'
 import { DeploymentPathManager } from '../../lib/demos/path-manager.ts'
 
@@ -21,15 +21,14 @@ export default GitHubActions.createStep({
   async run({ core, git }) {
     core.info('🗑️  Starting garbage collection of old demos')
 
-    const versionHistory = new VersionHistory()
     const pathManager = new DeploymentPathManager()
 
     // Get current development cycle versions to keep
-    const currentCycle = await versionHistory.getCurrentDevelopmentCycle()
+    const currentCycle = await getCurrentDevelopmentCycle()
     const versionsToKeep = currentCycle.all.map(v => v.git.tag)
 
     // Also keep all stable versions
-    const allVersions = await versionHistory.getVersions()
+    const allVersions = await getVersions()
     const stableVersions = allVersions.filter(v => !v.isPrerelease).map(v => v.git.tag)
 
     // Combine versions to keep

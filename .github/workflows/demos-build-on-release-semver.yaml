@@ -47,10 +47,8 @@ jobs:
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          deploy_from: examples
-          additional_source_dirs: dist-demos
-          environment_tag: ${{ steps.release.outputs.tag }}
-          is_preview: false
+          publish_dir: gh-pages
+          keep_files: false
 
       - name: Add demos link to commit
         uses: ./.github/actions/step

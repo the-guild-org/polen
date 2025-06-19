@@ -37,7 +37,5 @@ jobs:
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          deploy_from: examples
-          additional_source_dirs: dist-demos
-          environment_tag: current-cycle
-          is_preview: false
+          publish_dir: gh-pages
+          keep_files: false

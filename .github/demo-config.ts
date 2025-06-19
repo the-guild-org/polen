@@ -7,7 +7,7 @@ import type { DemoConfigData } from '../src/lib/demos/config-schema.ts'
 
 export const demoConfig: DemoConfigData = {
   examples: {
-    exclude: ['github'],
+    exclude: ['github', 'hive'],
     order: ['hive', 'pokemon'],
     minimumPolenVersion: '0.9.0',
   },
