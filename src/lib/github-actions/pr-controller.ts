@@ -64,19 +64,26 @@ export function createPullRequestController(
  * Provides easy-to-use methods for interacting with pull requests
  */
 export class PullRequestController {
-  public readonly isActive = true
+  public readonly isActive: boolean
+  public readonly number: number
 
   constructor(
     private github: InstanceType<typeof GitHub>,
     private context: Context,
-    public number: number | null,
+    prNumber: number | null,
     private defaultCommentId?: string,
-  ) {}
+  ) {
+    this.isActive = prNumber !== null
+    this.number = prNumber || 0
+  }
 
   async comment(options: CommentOptions): Promise<void> {
-    if (!this.number) {
-      console.log(`Skipping PR comment: not in a PR context`)
-      return
+    if (!this.isActive) {
+      if (options.optional) {
+        console.log('[skip] Not in a PR context, cannot create comment')
+        return
+      }
+      throw new Error('Not in a PR context, cannot create comment')
     }
 
     const { owner, repo } = this.context.repo
@@ -118,8 +125,8 @@ export class PullRequestController {
   }
 
   async fetchDeployments(): Promise<Deployment[]> {
-    if (!this.number) {
-      console.log(`Skipping fetchPullRequestDeployments: not in a PR context`)
+    if (!this.isActive) {
+      console.log('[skip] Not in a PR context, cannot fetch deployments')
       return []
     }
     return await fetchPullRequestDeployments(
@@ -131,8 +138,8 @@ export class PullRequestController {
   }
 
   async deleteComment(id: string): Promise<void> {
-    if (!this.number) {
-      console.log('Skipping deleteComment: not in a PR context')
+    if (!this.isActive) {
+      console.log('[skip] Not in a PR context, cannot delete comment')
       return
     }
     const { owner, repo } = this.context.repo
