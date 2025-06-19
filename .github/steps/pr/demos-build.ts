@@ -17,7 +17,7 @@ export default GitHubActions.createStep({
   description: 'Prepare PR preview deployment by organizing built demos into deployment structure',
   outputs: Outputs,
   context: GitHubActions.PullRequestContext,
-  async run({ core, context }) {
+  async run({ core, context, pr }) {
     const pr_number = context.payload.pull_request.number.toString()
     const head_sha = context.payload.pull_request.head.sha
     const head_ref = context.payload.pull_request.head.ref
@@ -43,15 +43,24 @@ export default GitHubActions.createStep({
     const shaBasePath = `/polen/pr-${pr_number}/${shortSha}/`
     const prRootBasePath = `/polen/pr-${pr_number}/`
 
-    // For PR builds, we don't have access to GitHub API, so no previous deployments
-    const previousDeployments: string[] = []
+    // Fetch previous deployments from gh-pages branch
+    const deployments = await pr.fetchDeployments()
+    core.info(`Fetched ${deployments.length} total deployments for PR #${pr_number}`)
+    
+    // Convert deployment objects to just SHA strings for the UI
+    // Also exclude the current deployment if it's already in the list
+    const previousDeploymentShas = deployments
+      .filter(d => d.shortSha !== shortSha)
+      .map(d => d.shortSha)
+    
+    core.info(`Found ${previousDeploymentShas.length} previous deployments: ${previousDeploymentShas.join(', ')}`)
 
     // Build landing page for PR with deployment history
     const prDeploymentsData = [{
       number: parseInt(pr_number, 10),
       sha: shortSha,
       ref: head_ref,
-      previousDeployments: previousDeployments,
+      previousDeployments: previousDeploymentShas
     }]
 
     // Build individual demos with SHA-specific base path

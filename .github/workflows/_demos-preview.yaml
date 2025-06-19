@@ -29,13 +29,13 @@ jobs:
       - name: Build Polen
         uses: ./.github/actions/build-polen
 
-      - name: Prepare PR deployment
+      - name: Build demos
         uses: ./.github/actions/step
         with:
-          name: prepare-pr-deployment
+          name: demos-build
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy Demos
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
