@@ -12,8 +12,10 @@
 //
 //
 
-import { Arr, Err, Fs, Http, Path, Undefined } from '@wollybeard/kit'
+import { Arr, Err, Fs, Http, Path, type Ts, Undefined } from '@wollybeard/kit'
+import { never } from '@wollybeard/kit/language'
 import type { ResolveHookContext } from 'node:module'
+import type { IsNever } from 'type-fest'
 
 export const arrayEquals = (a: any[], b: any[]) => {
   if (a.length !== b.length) return false
@@ -60,23 +62,101 @@ export interface ImportEvent {
   context: ResolveHookContext
 }
 
-export const ObjPick = <T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Pick<T, K> => {
-  return keys.reduce((acc, key) => {
-    if (key in obj) {
-      acc[key] = obj[key]
+// dprint-ignore
+export type ObjPolicyFilter<
+  $Object extends object,
+  $Key extends Keyof<$Object>,
+  Mode extends 'allow' | 'deny',
+> = Mode extends 'allow'
+      ? Pick<$Object, Extract<$Key, keyof $Object>>
+      : Omit<$Object, Extract<$Key, keyof $Object>>
+
+/**
+ * Like keyof but returns PropertyKey for object
+ */
+type Keyof<$Object extends object> = object extends $Object ? PropertyKey : (keyof $Object)
+
+/**
+ * Filter object properties based on a policy mode and set of keys
+ *
+ * @param mode - 'allow' to keep only specified keys, 'deny' to remove specified keys
+ * @param obj - The object to filter
+ * @param keys - The keys to process
+ * @returns A filtered object with proper type inference
+ *
+ * @example
+ * ```ts
+ * const obj = { a: 1, b: 2, c: 3 }
+ *
+ * // Allow mode: keep only 'a' and 'c'
+ * objPolicyFilter('allow', obj, ['a', 'c']) // { a: 1, c: 3 }
+ *
+ * // Deny mode: remove 'a' and 'c'
+ * objPolicyFilter('deny', obj, ['a', 'c']) // { b: 2 }
+ * ```
+ */
+export const objPolicyFilter = <
+  obj extends object,
+  keyUnion extends Keyof<obj>,
+  mode extends 'allow' | 'deny',
+>(
+  mode: mode,
+  obj: obj,
+  keys: readonly keyUnion[],
+): ObjPolicyFilter<obj, keyUnion, mode> => {
+  const result: any = mode === 'deny' ? { ...obj } : {}
+
+  if (mode === 'allow') {
+    // For allow mode, only add specified keys
+    for (const key of keys) {
+      if (key in obj) {
+        // @ts-expect-error
+        result[key] = obj[key]
+      }
     }
-    return acc
-  }, {} as Pick<T, K>)
+  } else {
+    // For deny mode, remove specified keys
+    for (const key of keys) {
+      delete result[key]
+    }
+  }
+
+  return result
+}
+
+/**
+ * Filter an object using a predicate function
+ *
+ * @param obj - The object to filter
+ * @param predicate - Function that returns true to keep a key/value pair
+ * @returns A new object with only the key/value pairs where predicate returned true
+ *
+ * @example
+ * ```ts
+ * const obj = { a: 1, b: 2, c: 3 }
+ * objFilter(obj, (k, v) => v > 1) // { b: 2, c: 3 }
+ * objFilter(obj, k => k !== 'b') // { a: 1, c: 3 }
+ * ```
+ */
+export const objFilter = <T extends object>(
+  obj: T,
+  predicate: (key: keyof T, value: T[keyof T], obj: T) => boolean,
+): Partial<T> => {
+  const result = {} as Partial<T>
+  for (const key in obj) {
+    if (predicate(key, obj[key], obj)) {
+      result[key] = obj[key]
+    }
+  }
+  return result
+}
+
+export const ObjPick = <T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Pick<T, K> => {
+  return objPolicyFilter('allow', obj, keys) as any
 }
 
 export const ObjOmit = <T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Omit<T, K> => {
-  return keys.reduce((acc, key) => {
-    if (key in acc) {
-      // @ts-expect-error omitted already at type level
-      delete acc[key]
-    }
-    return acc
-  }, { ...obj } as Omit<T, K>)
+  return objPolicyFilter('deny', obj, keys) as any
 }
 
 export const ObjPartition = <T extends object, K extends keyof T>(
@@ -125,3 +205,16 @@ export async function tryCatchMany<item, result>(
   })).then(Arr.partitionErrors)
   return partitionedResults as any
 }
+
+/**
+ * Type-level helper to check if two types are exactly the same (invariant).
+ */
+export type IsExact<T, U> = T extends U ? U extends T ? true : false : false
+
+// dprint-ignore
+export type ExtendsExact<$Input, $Constraint> =
+  $Input extends $Constraint
+    ? $Constraint extends $Input
+      ? $Input
+      : never
+  : never

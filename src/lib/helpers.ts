@@ -1,4 +1,4 @@
-import { Manifest } from '@wollybeard/kit'
+import { Err, Manifest } from '@wollybeard/kit'
 
 /**
  * Check if a project has a package installed by examining its package.json
@@ -9,8 +9,9 @@ export async function checkIsProjectHasPackageInstalled(
 ): Promise<boolean> {
   const packageJson = await Manifest.resource.read(projectRoot)
 
-  if (!packageJson) {
-    return false
+  if (Err.is(packageJson)) {
+    if (packageJson._tag === 'ResourceErrorNotFound') return false
+    throw packageJson
   }
 
   // Check if React is in dependencies or devDependencies

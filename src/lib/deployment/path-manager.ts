@@ -4,7 +4,6 @@
 
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
 
 export interface RedirectConfig {
   from: string
@@ -15,36 +14,8 @@ export interface RedirectConfig {
 /**
  * Manages deployment paths and base path updates for demo files
  */
-export class DeploymentPathManager {
-  constructor(private rootPath: string = process.cwd()) {}
-
-  /**
-   * Update base paths in built demo files
-   * Replaces HTML/JS references from one base path to another
-   */
-  async updateBasePaths(
-    directory: string,
-    fromPath: string,
-    toPath: string,
-  ): Promise<void> {
-    try {
-      const files = await this.getAllFiles(directory)
-      const targetFiles = files.filter(file =>
-        file.endsWith('.html')
-        || file.endsWith('.js')
-        || file.endsWith('.css')
-        || file.endsWith('.json')
-      )
-
-      for (const file of targetFiles) {
-        await this.updateFileBasePath(file, fromPath, toPath)
-      }
-    } catch (error) {
-      throw new Error(
-        `Failed to update base paths in ${directory}: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  }
+export class PathManager {
+  constructor() {}
 
   /**
    * Generate HTML redirect pages
@@ -161,44 +132,6 @@ export class DeploymentPathManager {
   }
 
   // Private helper methods
-
-  private async getAllFiles(directory: string): Promise<string[]> {
-    const files: string[] = []
-
-    const processDirectory = async (dir: string): Promise<void> => {
-      const entries = await fs.readdir(dir, { withFileTypes: true })
-
-      for (const entry of entries) {
-        const fullPath = join(dir, entry.name)
-
-        if (entry.isDirectory()) {
-          await processDirectory(fullPath)
-        } else {
-          files.push(fullPath)
-        }
-      }
-    }
-
-    await processDirectory(directory)
-    return files
-  }
-
-  private async updateFileBasePath(
-    filePath: string,
-    fromPath: string,
-    toPath: string,
-  ): Promise<void> {
-    try {
-      const content = await fs.readFile(filePath, 'utf-8')
-      const updatedContent = content.replaceAll(fromPath, toPath)
-
-      if (content !== updatedContent) {
-        await fs.writeFile(filePath, updatedContent)
-      }
-    } catch (error) {
-      throw new Error(`Failed to update file ${filePath}: ${error instanceof Error ? error.message : String(error)}`)
-    }
-  }
 
   private createRedirectHtml(targetUrl: string): string {
     return `<!DOCTYPE html>

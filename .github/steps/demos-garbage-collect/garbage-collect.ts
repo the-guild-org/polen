@@ -1,7 +1,7 @@
 import { GitHubActions } from '#lib/github-actions/index'
 import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
-import { DeploymentPathManager } from '../../lib/demos/path-manager.ts'
+import { Deployment } from '#lib/deployment'
 
 const Outputs = z.object({
   removed: z.array(z.string()),
@@ -21,7 +21,7 @@ export default GitHubActions.createStep({
   async run({ core, git }) {
     core.info('🗑️  Starting garbage collection of old demos')
 
-    const pathManager = new DeploymentPathManager()
+    const pathManager = new Deployment.PathManager()
 
     // Get current development cycle versions to keep
     const currentCycle = await VersionHistory.getCurrentDevelopmentCycle()

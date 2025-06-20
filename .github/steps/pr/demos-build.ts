@@ -1,9 +1,11 @@
+import { Api } from '#api/index'
 import { buildDemosHome, demoBuilder, getDemoExamples } from '#lib/demos/index'
+import { Deployment } from '#lib/deployment'
 import { GitHubActions } from '#lib/github-actions/index'
 import { VersionHistory } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { DeploymentPathManager } from '../../lib/demos/path-manager.ts'
+import { glob } from 'tinyglobby'
 
 /**
  * Prepare PR preview deployment
@@ -23,6 +25,23 @@ export default GitHubActions.createStep({
     // Use short SHA for directory names to avoid issues with long paths
     const shortSha = shaString.substring(0, 7)
     const fullSha = shaString
+
+    const repoOwner = context.repo.owner
+    const repoName = context.repo.repo
+    const deploymentMetadata: Deployment.DeploymentMetadata = {
+      timestamp: new Date().toISOString(),
+      pullRequest: {
+        number: parseInt(pr_number, 10),
+        branch: head_ref || 'unknown',
+        commit: fullSha,
+        title: context.payload.pull_request.title,
+        author: context.payload.pull_request.user.login,
+      },
+      deployment: {
+        url: `https://${repoOwner}.github.io/${repoName}/pr-${pr_number}/`,
+        environment: `pr-${pr_number}`,
+      },
+    }
 
     core.info(`🚀 Building PR demos for #${pr_number} (${fullSha})`)
 
@@ -102,43 +121,39 @@ export default GitHubActions.createStep({
         throw new Error(`Demo build output not found for ${example}`)
       }
     }
-    // Copy to latest and update paths
+
     const shaDir = join(deployDir, shortSha)
-    const latestDir = join(deployDir, 'latest')
+    await Deployment.metadata.write(deploymentMetadata, shaDir)
 
-    // Copy landing page to latest
-    await fs.copyFile(landingPagePath, join(latestDir, 'index.html'))
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━ • Dist Tag (like) Latest
+    //
+    //
 
-    const entries = await fs.readdir(shaDir)
-    for (const entry of entries) {
-      await fs.cp(
-        join(shaDir, entry),
-        join(latestDir, entry),
-        { recursive: true },
-      )
+    const latestDirPath = join(deployDir, 'latest')
+
+    // Copy SHA directory first, then landing page to avoid overwriting
+    await fs.cp(shaDir, latestDirPath, { recursive: true })
+    await fs.copyFile(landingPagePath, join(latestDirPath, 'index.html'))
+
+    // Update base paths in latest directory subdirectories
+    const latestDirDemoPaths = await glob('*/', {
+      cwd: latestDirPath,
+      onlyDirectories: true,
+    })
+
+    for (const dir of latestDirDemoPaths) {
+      const entryPath = join(latestDirPath, dir)
+      await Api.Static.rebase({
+        changeMode: 'mutate',
+        sourcePath: entryPath,
+        newBasePath: `/polen/pr-${pr_number}/latest/`,
+      })
     }
 
-    // Update base paths in latest directory (but not the root index.html)
-    const pathManager = new DeploymentPathManager()
-    const latestEntries = await fs.readdir(latestDir)
-    for (const entry of latestEntries) {
-      if (entry !== 'index.html') {
-        const entryPath = join(latestDir, entry)
-        const stat = await fs.stat(entryPath)
-        if (stat.isDirectory()) {
-          await pathManager.updateBasePaths(
-            entryPath,
-            `/polen/pr-${pr_number}/${shortSha}/`,
-            `/polen/pr-${pr_number}/latest/`,
-          )
-        }
-      }
-    }
-
-    // Add PR metadata
-    const prInfo = `PR #${pr_number}\\nBranch: ${head_ref || 'unknown'}\\nCommit: ${fullSha}`
-    await fs.writeFile(join(latestDir, 'PR_INFO.txt'), prInfo)
-    await fs.writeFile(join(shaDir, 'PR_INFO.txt'), prInfo)
+    await Deployment.metadata.write(deploymentMetadata, latestDirPath)
 
     // Build SHA-specific landing page directly to deployment directory
     await buildDemosHome({

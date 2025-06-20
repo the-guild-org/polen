@@ -1,7 +1,8 @@
+import { Api } from '#api/index'
 import { GitHubActions } from '#lib/github-actions/index'
+import { Fs } from '@wollybeard/kit'
 import { promises as fs } from 'node:fs'
 import { z } from 'zod/v4'
-import { DeploymentPathManager } from '../../lib/demos/path-manager.ts'
 
 const Inputs = z.object({
   previous: z.object({
@@ -22,9 +23,8 @@ export default GitHubActions.createStep({
     const distTagPath = `gh-pages/${distTag}`
 
     // Check if semver deployment exists
-    try {
-      await fs.access(semverPath)
-    } catch {
+    const exists = await Fs.exists(semverPath)
+    if (!exists) {
       core.warning(`Semver deployment ${semverTag} not found at ${semverPath} - it may have been garbage collected`)
       // Skip updating if the source doesn't exist
       return
@@ -38,17 +38,13 @@ export default GitHubActions.createStep({
       // Directory might not exist, that's fine
     }
 
-    // Copy semver deployment to dist-tag path
-    await fs.cp(semverPath, distTagPath, { recursive: true })
-    core.debug(`Copied ${semverTag} to ${distTag}`)
-
-    // Update base paths using the path manager
-    const pathManager = new DeploymentPathManager()
-    await pathManager.updateBasePaths(
-      distTagPath,
-      `/polen/${semverTag}/`,
-      `/polen/${distTag}/`,
-    )
+    // Copy and rebase in one operation using Polen's rebasing API
+    await Api.Static.rebase({
+      changeMode: 'copy',
+      sourcePath: semverPath,
+      targetPath: distTagPath,
+      newBasePath: `/polen/${distTag}/`,
+    })
 
     core.info(`✅ Successfully updated ${distTag} to ${semverTag}`)
   },

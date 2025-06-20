@@ -1,7 +1,9 @@
 import type { Config } from '#api/config/index'
+import type { PolenBuildManifest } from '#api/static/manifest'
 import { Vite } from '#dep/vite/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { Fs, Path } from '@wollybeard/kit'
+import packageJson from '../../../../package.json' with { type: 'json' }
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.ts'
 import { polenVirtual } from '../vi.ts'
 
@@ -10,7 +12,7 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
 
   // const outDir = Path.join(config.paths.project.rootDir, `dist`)
 
-  return [Manifest(config), {
+  return [Manifest(config), BuildManifest(config), {
     name: `polen:build-client`,
     apply: `build`,
     applyToEnvironment: Vite.isEnvironmentClient,
@@ -142,5 +144,27 @@ const Manifest = (config: Config.Config): Vite.Plugin => {
         },
       },
     ),
+  }
+}
+
+const BuildManifest = (config: Config.Config): Vite.Plugin => {
+  return {
+    name: 'polen:build-manifest',
+    apply: 'build',
+    applyToEnvironment: Vite.isEnvironmentClient,
+    async generateBundle() {
+      const manifest: PolenBuildManifest = {
+        type: config.build.architecture === 'ssr' ? 'ssr' : 'ssg',
+        version: packageJson.version,
+        basePath: config.build.base || '/',
+      }
+
+      // Emit the manifest as an asset
+      this.emitFile({
+        type: 'asset',
+        fileName: '.polen/build.json',
+        source: JSON.stringify(manifest, null, 2),
+      })
+    },
   }
 }

@@ -35,7 +35,13 @@
     "#*": {
       "source": "./src/*.ts",
       "default": "./build/*.js"
-    }
+    },
+    "#lib/mask": "./src/lib/mask/$.ts",
+    "#lib/mask/mask": "./src/lib/mask/$$.ts",
+    "#lib/task": "./src/lib/task/$.ts",
+    "#lib/task/task": "./src/lib/task/$$.ts",
+    "#lib/deployment": "./src/lib/deployment/$.ts",
+    "#lib/deployment/deployment": "./src/lib/deployment/$$.ts"
   },
   "exports": {
     ".": {
@@ -88,7 +94,7 @@
     "@vitejs/plugin-react-oxc": "^0.2.3",
     "@vltpkg/semver": "0.0.0-15",
     "@vue/reactivity": "^3.5.16",
-    "@wollybeard/kit": "^0.36.0",
+    "@wollybeard/kit": "^0.40.0",
     "@wollybeard/projector": "^0.2.0",
     "ansis": "^4.1.0",
     "clean-stack": "^5.2.0",
@@ -158,6 +164,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "eslint-plugin-tsdoc": "^0.4.0",
     "eslint-plugin-unused-imports": "^4.1.4",
+    "fast-check": "^4.1.1",
     "fs-jetpack": "^5.1.0",
     "get-port-please": "^3.1.2",
     "globals": "^16.2.0",

@@ -701,9 +701,9 @@ export const generateVersionInfo = (data: LandingPageData): string => {
 
   const previousVersionsHtml = trunkDeployments.previous && trunkDeployments.previous.length > 0
     ? trunkDeployments.previous
-        .slice(0, 10) // Limit to recent versions
-        .map(version => `<a href="${basePath}${version.tag}/" class="version-tag">${version.tag}</a>`)
-        .join('')
+      .slice(0, 10) // Limit to recent versions
+      .map(version => `<a href="${basePath}${version.tag}/" class="version-tag">${version.tag}</a>`)
+      .join('')
     : ''
 
   // Only show the version info section if there's content to display

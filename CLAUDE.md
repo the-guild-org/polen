@@ -55,6 +55,7 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 ### Testing Architecture
 
 - Unit tests are co-located with modules (`.test.ts` files)
+- Type tests use `.test-d.ts` suffix and import type assertions from `@wollybeard/kit` Ts namespace
 - Integration tests test granular features in isolation
 - Example tests verify end-to-end functionality using real example projects
 
@@ -92,3 +93,16 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 
 - When debugging CI issues, use the `gh` CLI to investigate logs, workflows, and deployments directly
 - Check workflow runs, deployment statuses, and logs yourself before asking for debug information
+
+## Local Libraries
+
+Follow this layout:
+
+```
+src/lib/
+  ├── <NAME: kebab case>/
+  │   ├── index.ts                     (namespace export: `export * as <NAME: Pascal case> from './<NAME: kebab case>.ts'`)
+  │   ├── index.test.ts                (optional test file, imports namespace)
+  │   ├── <NAME: kebab case>.ts        (barrel export: `export * from './<...modules>.ts'`)
+  │   ├── <...modules: kebab case>.ts  (code modules)
+```

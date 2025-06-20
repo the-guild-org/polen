@@ -402,6 +402,18 @@ See docs for more details
 npx polen open --help
 ```
 
+### Static Rebase
+
+Polen includes a powerful feature to update the base path of your built documentation without rebuilding. This is especially useful for deploying to different environments or creating versioned documentation.
+
+Example:
+
+```sh
+npx polen static rebase ./build --new-base-path /docs/v2/
+```
+
+Learn more about this feature in the [Static Rebase documentation](./docs/features/static-rebase.md).
+
 ## Other
 
 ### Changelog
