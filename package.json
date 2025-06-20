@@ -48,6 +48,10 @@
       "source": "./src/exports/index.ts",
       "default": "./build/exports/index.js"
     },
+    "./components": {
+      "source": "./src/exports/components.ts",
+      "default": "./build/exports/components.js"
+    },
     "./polen": {
       "source": "./src/exports/polen.ts",
       "default": "./build/exports/polen.js"
