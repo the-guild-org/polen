@@ -1,4 +1,4 @@
-import { Codec, Err, Resource } from '@wollybeard/kit'
+import { Codec, Resource } from '@wollybeard/kit'
 import { z } from 'zod/v4'
 
 export const PolenBuildManifestSchema = z.object({
@@ -13,5 +13,4 @@ export const buildManifest = Resource.create({
   name: 'polen-build-manifest',
   path: '.polen/build.json',
   codec: Codec.fromZod(PolenBuildManifestSchema),
-
-}
+})
