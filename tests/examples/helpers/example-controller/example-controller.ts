@@ -107,12 +107,14 @@ export const create = async (parameters: {
         const serverReady = new Promise<ServerProcess>((resolve, reject) => {
           const processIterator = serverProcess[Symbol.asyncIterator]()
 
+          let urlFound = false
           const readLines = async () => {
             try {
               for await (const line of { [Symbol.asyncIterator]: () => processIterator }) {
                 const linePlain = stripAnsi(line)
                 const url = (logUrlPattern.exec(linePlain))?.[1]
-                if (url) {
+                if (url && !urlFound) {
+                  urlFound = true
                   resolve({
                     raw: serverProcess,
                     stop: async () => {
@@ -120,16 +122,16 @@ export const create = async (parameters: {
                     },
                     url,
                   })
-                  // Don't break - let the process continue running
-                  return
+                  // Continue consuming output to prevent EPIPE
+                  // Don't return here - keep the iterator alive
                 }
               }
-              reject(new Error(`Server process did not output a URL`))
+              if (!urlFound) {
+                reject(new Error(`Server process did not output a URL`))
+              }
             } catch (error) {
               // Ignore errors after we found the URL
-              // eslint-disable-next-line
-              if (!serverReady) {
-                // eslint-disable-next-line
+              if (!urlFound) {
                 reject(error)
               }
             }
