@@ -8,9 +8,9 @@ import { getPathActiveReport, Link } from '../Link.tsx'
 export const Items: React.FC<{ items: Content.Item[] }> = ({ items }) => {
   return (
     <Flex direction='column' gap='2px'>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <Item
-          key={item.pathExp}
+          key={`${item.pathExp}-${index}`}
           item={item}
         />
       ))}
@@ -121,9 +121,9 @@ const LinkedSection: React.FC<{
             borderLeft: `1px solid var(--gray-5)`,
           }}
         >
-          {section.links.map((link) => (
+          {section.links.map((link, index) => (
             <SectionLink
-              key={link.pathExp}
+              key={`${link.pathExp}-${index}`}
               link={link}
             />
           ))}
