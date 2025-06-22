@@ -16,16 +16,17 @@ import remarkGfm from 'remark-gfm'
 
 const debug = debugPolen.sub(`vite-plugin-pages`)
 
-export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
-export const viProjectPagesData = polenVirtual([`project`, `data`, 'pages.jsonsuper'], { allowPluginProcessing: true })
+export const viProjectRoutes = polenVirtual([`project`, `routes.jsx`], { allowPluginProcessing: true })
+export const viProjectPagesCatalog = polenVirtual([`project`, `data`, 'pages-catalog.jsonsuper'], {
+  allowPluginProcessing: true,
+})
 
 export interface Options {
   config: Config.Config
   navbarData?: NavbarDataRegistry
-  onChange?: (scanResult: Content.ScanResult) => void
 }
 
-export interface ProjectDataPages {
+export interface ProjectPagesCatalog {
   sidebarIndex: Content.SidebarIndex
   pages: Content.Page[]
 }
@@ -36,7 +37,6 @@ export interface ProjectDataPages {
 export const Pages = ({
   config,
   navbarData,
-  onChange,
 }: Options): Vite.Plugin[] => {
   const scanPages = Cache.memoize(debug.trace(async function scanPages() {
     const result = await Content.scan({
@@ -46,18 +46,27 @@ export const Pages = ({
     return result
   }))
 
-  const isPageFile = (file: string) => {
-    return (file.endsWith(`.md`) || file.endsWith(`.mdx`))
-      && file.includes(config.paths.project.absolute.pages)
+  const invalidateVirtualModules = (server: Vite.ViteDevServer) => {
+    const routesModule = server.moduleGraph.getModuleById(viProjectRoutes.id)
+    if (routesModule) {
+      server.moduleGraph.invalidateModule(routesModule)
+      debug(`Invalidated routes virtual module`)
+    }
+
+    const catalogModule = server.moduleGraph.getModuleById(viProjectPagesCatalog.id)
+    if (catalogModule) {
+      server.moduleGraph.invalidateModule(catalogModule)
+      debug(`Invalidated pages catalog virtual module`)
+    }
   }
 
-  const generatePagesModule = (pages: Content.Page[]): string => {
+  const generateRoutesModule = (pages: Content.Page[]): string => {
     const $ = {
-      pages: `pages`,
+      routes: `routes`,
     }
 
     const s = Str.Builder()
-    s`export const ${$.pages} = []`
+    s`export const ${$.routes} = []`
 
     // Generate imports and route objects
     for (const { route, metadata } of pages) {
@@ -71,7 +80,7 @@ export const Pages = ({
       s`
         import ${$$.Component} from '${filePathExp}'
 
-        ${$$.pages}.push({
+        ${$$.routes}.push({
           path: '${pathExp}',
           Component: ${$$.Component},
           metadata: ${JSON.stringify(metadata)}
@@ -121,12 +130,35 @@ export const Pages = ({
         // Add pages directory to watcher
         debug(`configureServer: watch pages directory`, config.paths.project.absolute.pages)
         server.watcher.add(config.paths.project.absolute.pages)
+
+        // Handle file additions and deletions
+        const handleFileStructureChange = async (file: string, event: 'add' | 'unlink') => {
+          if (!Content.isPageFile(file, config.paths.project.absolute.pages)) return
+
+          debug(`Page file ${event === 'add' ? 'added' : 'deleted'}:`, file)
+
+          // Clear cache and rescan
+          scanPages.clear()
+          const newScanResult = await scanPages()
+
+          // Invalidate virtual modules
+          invalidateVirtualModules(server)
+
+          // Report any diagnostics
+          reportDiagnostics(newScanResult.diagnostics)
+
+          // Trigger full reload to ensure routes are updated
+          server.ws.send({ type: 'full-reload' })
+        }
+
+        server.watcher.on('add', (file) => handleFileStructureChange(file, 'add'))
+        server.watcher.on('unlink', (file) => handleFileStructureChange(file, 'unlink'))
       },
 
-      // Hot update handling
+      // Hot update handling for existing files
       async handleHotUpdate({ file, server, modules }) {
         debug(`handleHotUpdate`, file)
-        if (!isPageFile(file)) return
+        if (!Content.isPageFile(file, config.paths.project.absolute.pages)) return
 
         debug(`Page file changed:`, file)
 
@@ -137,13 +169,16 @@ export const Pages = ({
         scanPages.clear()
         const newScanResult = await scanPages()
 
-        // Check if page structure changed (added/removed pages)
-        const isJustContentChange = oldPages && !Arr.equalShallowly(
+        // Check if the visible pages list changed. This can happen when:
+        // - A page's frontmatter `hidden` field changes (true <-> false)
+        // - A page's frontmatter affects its route (though we don't support this yet)
+        // If only the content changed (not frontmatter), we can use fast HMR.
+        const pageStructureChanged = !oldPages || !Arr.equalShallowly(
           oldPages.list.map(p => Path.format(p.route.file.path.absolute)),
           newScanResult.list.map(p => Path.format(p.route.file.path.absolute)),
         )
 
-        if (isJustContentChange) {
+        if (!pageStructureChanged) {
           debug(`Page content changed, allowing HMR`)
           // Let default HMR handle the MDX file change
           return modules
@@ -155,26 +190,15 @@ export const Pages = ({
 
         debug(`Page structure changed, triggering full reload`)
 
-        // Invalidate virtual module
-        const mod = server.moduleGraph.getModuleById(viProjectPages.id)
-        if (mod) {
-          server.moduleGraph.invalidateModule(mod)
-          debug(`Invalidated pages virtual module`)
-        }
-
-        // Notify about changes
-        if (onChange) {
-          reportDiagnostics(newScanResult.diagnostics)
-          onChange(newScanResult)
-        }
-
-        // Trigger full reload for structure changes
+        // Invalidate virtual modules and trigger reload
+        invalidateVirtualModules(server)
+        reportDiagnostics(newScanResult.diagnostics)
         server.ws.send({ type: `full-reload` })
         return []
       },
       resolveId(id) {
-        if (id === viProjectPagesData.id) {
-          return viProjectPagesData.resolved
+        if (id === viProjectPagesCatalog.id) {
+          return viProjectPagesCatalog.resolved
         }
       },
       load: {
@@ -182,8 +206,8 @@ export const Pages = ({
         //   id: viProjectPagesData.resolved,
         // },
         async handler(id) {
-          if (id !== viProjectPagesData.resolved) return
-          debug(`viProjectDataPages`)
+          if (id !== viProjectPagesCatalog.resolved) return
+          debug(`viProjectPagesCatalog`)
 
           const scanResult = await scanPages()
 
@@ -214,22 +238,22 @@ export const Pages = ({
           // ━━ Put It All together
           //
 
-          const projectDataPages: ProjectDataPages = {
+          const projectPagesCatalog: ProjectPagesCatalog = {
             sidebarIndex,
             pages: scanResult.list,
           }
 
           // Return just the JSON string - let the JSON plugin handle the transformation
-          return superjson.stringify(projectDataPages)
+          return superjson.stringify(projectPagesCatalog)
         },
       },
     },
-    // Plugin 3: Virtual Module for Pages Routes
+    // Plugin 3: Virtual Module for React Router Routes
     {
-      name: 'polen:pages:routes',
+      name: 'polen:routes',
       resolveId(id) {
-        if (id === viProjectPages.id) {
-          return viProjectPages.resolved
+        if (id === viProjectRoutes.id) {
+          return viProjectRoutes.resolved
         }
       },
       load: {
@@ -237,13 +261,13 @@ export const Pages = ({
         //   id: viProjectPages.resolved,
         // },
         handler: async (id) => {
-          if (id !== viProjectPages.resolved) return
+          if (id !== viProjectRoutes.resolved) return
 
-          debug(`Loading viProjectPages virtual module`)
+          debug(`Loading viProjectRoutes virtual module`)
 
           const scanResult = await scanPages()
           reportDiagnostics(scanResult.diagnostics)
-          const code = generatePagesModule(scanResult.list)
+          const code = generateRoutesModule(scanResult.list)
 
           // Generate the module code
           return {

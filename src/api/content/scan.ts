@@ -44,7 +44,42 @@ export const scan = async (options: {
     parentId: page.route.parentId,
   }))
 
-  const tree = Tree.fromList(pagesWithIds)
+  // Handle cases where there might be multiple root nodes
+  // If all pages are at root level (no parentId), create a virtual root
+  const hasMultipleRoots = pagesWithIds.filter(p => !p.parentId).length > 1
+
+  let tree: Tree.Tree<Page>
+  if (hasMultipleRoots) {
+    // Create a virtual root node to hold all root-level pages
+    const virtualRoot: Page & { id: string; parentId: null } = {
+      route: {
+        id: '__virtual_root__',
+        parentId: null,
+        file: {
+          path: {
+            absolute: Path.parse(''),
+            relative: Path.parse(''),
+          },
+        },
+        logical: {
+          path: [],
+        },
+      },
+      metadata: { hidden: true },
+      id: '__virtual_root__',
+      parentId: null,
+    }
+
+    // Update pages to have virtual root as parent if they don't have one
+    const pagesWithVirtualRoot = pagesWithIds.map(page => ({
+      ...page,
+      parentId: page.parentId || '__virtual_root__',
+    }))
+
+    tree = Tree.fromList([virtualRoot, ...pagesWithVirtualRoot])
+  } else {
+    tree = Tree.fromList(pagesWithIds)
+  }
 
   return {
     list: pages,

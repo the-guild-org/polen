@@ -106,14 +106,14 @@ describe('VersionHistory', () => {
 
     beforeEach(async () => {
       vi.clearAllMocks()
-      
+
       mockGit = {
         tags: vi.fn(),
         show: vi.fn(),
         revparse: vi.fn(),
         tag: vi.fn(),
       }
-      
+
       // Mock the simpleGit function to return our mock git instance
       const { simpleGit } = await import('simple-git')
       vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit)

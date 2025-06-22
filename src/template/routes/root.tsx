@@ -10,8 +10,8 @@ import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import projectDataNavbar from 'virtual:polen/project/data/navbar.jsonsuper'
-import projectDataPages from 'virtual:polen/project/data/pages.jsonsuper'
-import { pages } from 'virtual:polen/project/pages.jsx'
+import projectPagesCatalog from 'virtual:polen/project/data/pages-catalog.jsonsuper'
+import { routes } from 'virtual:polen/project/routes.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { HamburgerMenu } from '../components/HamburgerMenu.tsx'
 import { Link } from '../components/Link.tsx'
@@ -81,7 +81,7 @@ const Layout = () => {
   }
 
   const currentNavPathExp = getCurrentNavPathExp()
-  const sidebar = currentNavPathExp && projectDataPages.sidebarIndex[currentNavPathExp]
+  const sidebar = currentNavPathExp && projectPagesCatalog.sidebarIndex[currentNavPathExp]
   const isShowSidebar = sidebar && sidebar.items.length > 0
 
   const header = (
@@ -212,7 +212,7 @@ const Layout = () => {
 
 const children: ReactRouter.RouteObject[] = [
   index,
-  ...pages,
+  ...routes,
 ]
 
 //

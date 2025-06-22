@@ -19,12 +19,7 @@ test.describe('HMR', () => {
     await expect(page.getByRole('heading', { name: 'Updated' })).toBeVisible()
   })
 
-  test.skip('add new page', async ({ page, vite, project }) => {
-    // Skip reason: Adding new pages requires the virtual module to be invalidated
-    // and rebuilt, which doesn't happen automatically in the current implementation.
-    // This is a known limitation where the file router's virtual module doesn't
-    // watch for new files being added to the pages directory.
-    
+  test('add new page', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/home.md': '# Home' })
     const server = await vite.startDevelopmentServer(
       await Api.ConfigResolver.fromMemory({ root: project.layout.cwd, advanced: { isSelfContainedMode: true } }),
@@ -45,12 +40,14 @@ test.describe('HMR', () => {
 
     // Navigate to the new page
     await page.goto(server.url('/new').href)
-    
+
     // The heading should match the markdown content
     await expect(page.getByRole('heading', { name: 'New Page Content', level: 1 })).toBeVisible()
   })
 
   test.skip('delete page returns 404', async ({ page, vite, project }) => {
-    // Skipped: deletion causes import errors in virtual module (known limitation)
+    // Skipped: When a page is deleted, the virtual module still tries to import it,
+    // causing module resolution errors. This needs a more sophisticated solution
+    // where the route handler catches import errors and returns 404.
   })
 })

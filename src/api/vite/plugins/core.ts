@@ -22,8 +22,8 @@ const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
 const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
 
-export interface ProjectPagesModule {
-  pages: ReactRouter.RouteObject[]
+export interface ProjectRoutesModule {
+  routes: ReactRouter.RouteObject[]
 }
 
 export const Core = (config: Config.Config): Vite.PluginOption[] => {
