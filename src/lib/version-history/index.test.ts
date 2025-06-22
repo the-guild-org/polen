@@ -3,6 +3,11 @@ import type { SimpleGit } from 'simple-git'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 import { VersionHistory } from './index.ts'
 
+// Mock the simple-git module
+vi.mock('simple-git', () => ({
+  simpleGit: vi.fn(),
+}))
+
 describe('VersionHistory', () => {
   describe('parseSemver', () => {
     it('parses standard semver tags', () => {
@@ -99,16 +104,19 @@ describe('VersionHistory', () => {
       tag: Mock
     }
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      vi.clearAllMocks()
+      
       mockGit = {
         tags: vi.fn(),
         show: vi.fn(),
         revparse: vi.fn(),
         tag: vi.fn(),
       }
-      // versionHistory = new VersionHistory()
-      // @ts-expect-error - mocking private property
-      VersionHistory.git = mockGit as unknown as SimpleGit
+      
+      // Mock the simpleGit function to return our mock git instance
+      const { simpleGit } = await import('simple-git')
+      vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit)
     })
 
     it('returns latest stable and newer prereleases', async () => {
