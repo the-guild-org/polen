@@ -11,7 +11,9 @@
 export * from './types.ts'
 export * from './analysis.ts'
 export * from './schema-integration.ts'
+export * from './positioning-simple.ts'
 
 // Re-export key functions for convenience
 export { analyze, extractIdentifiers, analyzer } from './analysis.ts'
 export { createPolenSchemaResolver, analyzeWithSchema } from './schema-integration.ts'
+export { createSimplePositionCalculator, createSimpleOverlay } from './positioning-simple.ts'
