@@ -1,5 +1,6 @@
 import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
+import { createNavbar } from '#api/content/navbar'
 import type { NavbarDataRegistry } from '#api/vite/data/navbar'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
@@ -9,7 +10,6 @@ import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
 import rehypeShiki from '@shikijs/rehype'
-import { Tree } from '@wollybeard/kit'
 import { Arr, Cache, Path, Str } from '@wollybeard/kit'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -26,12 +26,8 @@ export interface Options {
 }
 
 export interface ProjectDataPages {
-  sidebarIndex: SidebarIndex
+  sidebarIndex: Content.SidebarIndex
   pages: Content.Page[]
-}
-
-export interface SidebarIndex {
-  [pathExpression: string]: Content.Sidebar
 }
 
 /**
@@ -204,57 +200,15 @@ export const Pages = ({
             const navbarPages = navbarData.get('pages')
             navbarPages.length = 0 // Clear existing
 
-            // Process first-level children as navigation items
-            if (scanResult.tree.root) {
-              for (const child of scanResult.tree.root.children) {
-                // Now we have Page objects in the tree
-                const page = child.value
-                const pathExp = FileRouter.routeToPathExpression(page.route)
-
-                // Skip hidden pages and index files at root level
-                if (page.metadata.hidden || page.route.logical.path.slice(-1)[0] === 'index') {
-                  continue
-                }
-
-                // Only include top-level pages (files directly in pages directory)
-                if (page.route.logical.path.length === 1) {
-                  const title = Str.titlizeSlug(page.route.logical.path[0]!)
-                  navbarPages.push({
-                    // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
-                    pathExp: pathExp.startsWith('/') ? pathExp : '/' + pathExp,
-                    title,
-                  })
-                }
-              }
-            }
+            const navbarItems = createNavbar(scanResult.list)
+            navbarPages.push(...navbarItems)
           }
 
           //
           // ━━ Build Sidebar
           //
 
-          const sidebarIndex: SidebarIndex = {}
-
-          // Build sidebar for each top-level directory using the page tree
-          if (scanResult.tree.root) {
-            Tree.visit(scanResult.tree, (node) => {
-              if (!node.value) return
-              const page = node.value as any
-              // Only process top-level directories (pages with logical path length > 1 indicate nested structure)
-              if (page.route.logical.path.length === 1 && node.children.length > 0) {
-                const topLevelDir = page.route.logical.path[0]!
-                const pathExp = `/${topLevelDir}`
-
-                // Create a subtree for this directory
-                const subtree = Tree.Tree(Tree.Node(page, node.children)) as Tree.Tree<any>
-
-                // Build sidebar using the new page tree builder
-                const sidebar = Content.buildFromPageTree(subtree, [topLevelDir])
-                debug(`Built sidebar for ${pathExp}:`, sidebar)
-                sidebarIndex[pathExp] = sidebar
-              }
-            })
-          }
+          const sidebarIndex = Content.buildSidebarIndex(scanResult)
 
           //
           // ━━ Put It All together

@@ -8,14 +8,14 @@ export const ThemeToggle: React.FC = () => {
 
   return (
     <IconButton
-      size="2"
-      variant="ghost"
-      color="gray"
+      size='2'
+      variant='ghost'
+      color='gray'
       onClick={toggleTheme}
       aria-label={`Switch to ${appearance === 'light' ? 'dark' : 'light'} theme`}
       style={{ cursor: 'pointer' }}
     >
-      {appearance === 'light' ? <MoonIcon width="18" height="18" /> : <SunIcon width="18" height="18" />}
+      {appearance === 'light' ? <MoonIcon width='18' height='18' /> : <SunIcon width='18' height='18' />}
     </IconButton>
   )
 }

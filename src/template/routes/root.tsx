@@ -1,10 +1,10 @@
-import { assetUrl } from '#api/utils/asset-url/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
-import { Box, Button, Grid, Heading, Text } from '@radix-ui/themes'
+import { Box, Grid } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
 import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Arr } from '@wollybeard/kit'
+import { useEffect, useState } from 'react'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
@@ -13,8 +13,10 @@ import projectDataNavbar from 'virtual:polen/project/data/navbar.jsonsuper'
 import projectDataPages from 'virtual:polen/project/data/pages.jsonsuper'
 import { pages } from 'virtual:polen/project/pages.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
+import { HamburgerMenu } from '../components/HamburgerMenu.tsx'
 import { Link } from '../components/Link.tsx'
 import { Logo } from '../components/Logo.tsx'
+import { NotFound } from '../components/NotFound.tsx'
 import { Sidebar } from '../components/sidebar/Sidebar.tsx'
 import { ThemeToggle } from '../components/ThemeToggle.tsx'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.tsx'
@@ -60,6 +62,12 @@ export const Component = () => {
 const Layout = () => {
   const location = useLocation()
   const { appearance } = useTheme()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location.pathname])
 
   // Determine if we should show sidebar based on current path
   const getCurrentNavPathExp = (): string | null => {
@@ -80,18 +88,30 @@ const Layout = () => {
     <Flex
       gridArea={'header'}
       align='center'
-      gap='8'
+      gap={{ initial: '4', md: '8' }}
       pb='4'
-      mb='8'
+      mb={{ initial: '4', md: '8' }}
       style={{
         borderBottom: `1px solid var(--gray-3)`,
       }}
     >
+      {/* Mobile menu - only show when sidebar exists */}
+      {isShowSidebar && (
+        <HamburgerMenu
+          isOpen={mobileMenuOpen}
+          onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onClose={() => setMobileMenuOpen(false)}
+          sidebarData={sidebar.items}
+        />
+      )}
+
       <LinkReactRouter
         to='/'
         style={{ color: `inherit`, textDecoration: `none` }}
       >
-        <Logo src={logoSrc} title={templateVariables.title} height={30} showTitle={true} />
+        <Box display={{ initial: 'block', md: 'block' }}>
+          <Logo src={logoSrc} title={templateVariables.title} height={30} showTitle={true} />
+        </Box>
       </LinkReactRouter>
       <Flex direction='row' gap='4' style={{ flex: 1 }}>
         {projectDataNavbar.map((item, key) => (
@@ -107,16 +127,36 @@ const Layout = () => {
   return (
     <Theme asChild appearance={appearance}>
       <Grid
-        width={{ initial: 'var(--container-4)' }}
-        areas="'header header header header header header header header' 'sidebar sidebar . content content content content content'"
+        width={{ initial: '100%', sm: '100%', md: 'var(--container-4)' }}
+        maxWidth='100vw'
+        areas={{
+          initial: "'header' 'content'",
+          sm: "'header' 'content'",
+          md:
+            "'header header header header header header header header' 'sidebar sidebar . content content content content content'",
+        }}
         rows='min-content auto'
-        columns='repeat(8, 1fr)'
-        gapX='2'
-        my='8'
+        columns={{ initial: '1fr', sm: '1fr', md: 'repeat(8, 1fr)' }}
+        gapX={{ initial: '0', sm: '0', md: '2' }}
+        my={{ initial: '0', sm: '0', md: '8' }}
         mx='auto'
+        px={{ initial: '4', sm: '4', md: '0' }}
+        py={{ initial: '4', sm: '4', md: '0' }}
       >
         <style>
           {`
+          /* Responsive container fixes */
+          @media (max-width: 768px) {
+            body {
+              overflow-x: hidden;
+            }
+          }
+          
+          /* Ensure proper centering on all screen sizes */
+          .rt-Grid {
+            box-sizing: border-box;
+          }
+
           /* Shiki code blocks */
           pre.shiki {
             margin: 1rem 0;
@@ -150,15 +190,18 @@ const Layout = () => {
         `}
         </style>
         {header}
+
+        {/* Desktop Sidebar */}
         {isShowSidebar && (
-          <Sidebar
+          <Box
+            display={{ initial: 'none', xs: 'none', sm: 'none', md: 'block' }}
             gridColumn='1 / 3'
             gridRow='2 / auto'
-            data={sidebar.items}
-            // ml='-100px'
-            // style={{ transform: 'translate(calc(-100% - var(--space-8)))' }}
-          />
+          >
+            <Sidebar data={sidebar.items} />
+          </Box>
         )}
+
         <Box gridArea='content / content / auto / 8'>
           <Outlet />
         </Box>
@@ -195,36 +238,10 @@ if (PROJECT_DATA.schema) {
 //
 //
 
-const NotFoundComponent = () => {
-  return (
-    <Flex direction='column' align='center' gap='6' style={{ textAlign: `center`, paddingTop: `4rem` }}>
-      <Heading size='9' style={{ color: `var(--gray-12)` }}>404</Heading>
-      <Box>
-        <Heading size='5' mb='2'>Page Not Found</Heading>
-        <Text size='3' color='gray'>
-          The page you're looking for doesn't exist or has been moved.
-        </Text>
-      </Box>
-      <Flex gap='3'>
-        <LinkReactRouter to='/'>
-          <Button variant='soft' size='3'>
-            Go Home
-          </Button>
-        </LinkReactRouter>
-        <LinkReactRouter to='/reference'>
-          <Button variant='outline' size='3'>
-            View API Reference
-          </Button>
-        </LinkReactRouter>
-      </Flex>
-    </Flex>
-  )
-}
-
 const notFoundRoute = createRoute({
   id: `*_not_found`,
   path: `*`,
-  Component: NotFoundComponent,
+  Component: NotFound,
   handle: {
     statusCode: 404,
   },

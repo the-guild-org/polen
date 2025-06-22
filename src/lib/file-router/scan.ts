@@ -87,7 +87,13 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
 }
 
 export const filePathToRouteLogical = (filePath: Path.Parsed): RouteLogical => {
-  const dirPath = Str.split(Str.removeSurrounding(filePath.dir, Path.sep), Path.sep)
+  const dirSegments = Str.split(Str.removeSurrounding(filePath.dir, Path.sep), Path.sep)
+
+  // Parse numbered prefixes from directory segments
+  const dirPath = dirSegments.map(segment => {
+    const prefixMatch = Str.match(segment, conventions.numberedPrefix.pattern)
+    return prefixMatch?.groups.name ?? segment
+  })
 
   // Parse numbered prefix from filename
   const prefixMatch = Str.match(filePath.name, conventions.numberedPrefix.pattern)
