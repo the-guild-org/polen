@@ -1,7 +1,7 @@
 import type { SelfContainedModeHooksData } from '#cli/_/self-contained-mode'
 import { assertOptionalPathAbsolute, pickFirstPathExisting } from '#lib/kit-temp'
 import { packagePaths } from '#package-paths'
-import { debug } from '#singletons/debug'
+import { debugPolen } from '#singletons/debug'
 import type { Prom } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
 import * as Module from 'node:module'
@@ -20,7 +20,7 @@ export interface LoadOptions {
 let isSelfContainedModeRegistered = false
 
 export const load = async (options: LoadOptions): Promise<ConfigInput> => {
-  const _debug = debug.sub(`load`)
+  const debug = debugPolen.sub(`load`)
   assertOptionalPathAbsolute(options.dir)
 
   //
@@ -35,7 +35,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
     const initializeData: SelfContainedModeHooksData = {
       projectDirPathExp: options.dir,
     }
-    _debug(`register node module hooks`, { data: initializeData })
+    debug(`register node module hooks`, { data: initializeData })
     // TODO: would be simpler to use sync hooks
     // https://nodejs.org/api/module.html#synchronous-hooks-accepted-by-moduleregisterhooks
     // Requires NodeJS 22.15+ -- which is not working with PW until its next release.
@@ -67,7 +67,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
       // eslint-disable-next-line
       module = await import(filePath)
     }
-    _debug(`imported config module`)
+    debug(`imported config module`)
 
     //       // Use dynamic import with file URL to support Windows
     //       const configUrl = pathToFileURL(configPath).href
@@ -97,7 +97,7 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
     configInput.advanced.isSelfContainedMode = true
   }
 
-  _debug(`loaded config input`, configInput)
+  debug(`loaded config input`, configInput)
 
   return configInput
 }

@@ -2,7 +2,7 @@ import type { Config } from '#api/api'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
 import { type ExistenceDiff, getMutationType, MutationType } from '#lib/mutation-type'
-import { debug } from '#singletons/debug'
+import { debugPolen } from '#singletons/debug'
 import { Fs } from '@wollybeard/kit'
 import type { Plugin } from 'vite'
 
@@ -15,8 +15,8 @@ const generateDefaultLogo = async () => {
 }
 
 export function Branding(config: Config.Config): Plugin {
-  const _debug = debug.sub('vite-plugin:branding')
-  _debug('initialized')
+  const debug = debugPolen.sub('vite-plugin:branding')
+  debug('initialized')
 
   return {
     name: 'polen:branding',
@@ -32,7 +32,7 @@ export function Branding(config: Config.Config): Plugin {
         changedFile: file,
         moduleId: viLogo.resolved,
         server,
-        debug: _debug,
+        debug: debug,
       })
     },
 

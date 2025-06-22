@@ -1,7 +1,7 @@
 import type { Vite } from '#dep/vite/index'
 import { type ImportEvent, isSpecifierFromPackage } from '#lib/kit-temp'
 import { packagePaths } from '#package-paths'
-import { debug } from '#singletons/debug'
+import { debugPolen } from '#singletons/debug'
 import type * as Module from 'node:module'
 import { fileURLToPath } from 'node:url'
 
@@ -18,7 +18,7 @@ export function initialize(data: SelfContainedModeHooksData) {
 export const resolve: Module.ResolveHook = async (specifier, context, nextResolve) => {
   if (!data_) throw new Error(`Self-contained mode not initialized`)
 
-  const _debug = debug.sub(`node-module-hooks`)
+  const debug = debugPolen.sub(`node-module-hooks`)
 
   const from: ImportEvent = {
     specifier,
@@ -32,7 +32,7 @@ export const resolve: Module.ResolveHook = async (specifier, context, nextResolv
       importerPathExpOrFileUrlExp: from.context.parentURL,
     })
   ) {
-    _debug(`resolve check`, { specifier, context })
+    debug(`resolve check`, { specifier, context })
 
     const to: ImportEvent = {
       specifier: from.specifier,
@@ -43,7 +43,7 @@ export const resolve: Module.ResolveHook = async (specifier, context, nextResolv
       },
     }
 
-    _debug(`resolve`, { from, to })
+    debug(`resolve`, { from, to })
 
     await nextResolve(to.specifier, to.context)
   }
@@ -66,7 +66,7 @@ export const checkIsSelfImportFromProject = (input: {
 }
 
 export const VitePluginSelfContainedMode = ({ projectDirPathExp }: { projectDirPathExp: string }): Vite.Plugin => {
-  const d = debug.sub(`vite-plugin:self-contained-import`)
+  const d = debugPolen.sub(`vite-plugin:self-contained-import`)
 
   return {
     name: `polen:self-contained-import`,

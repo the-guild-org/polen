@@ -1,4 +1,4 @@
-import { debug } from '#singletons/debug'
+import { debugPolen } from '#singletons/debug'
 import { type ConfigInput, normalizeInput } from '../config/configurator.ts'
 import { load, type LoadOptions } from '../config/load.ts'
 import { mergeInputs } from '../config/merge.ts'
@@ -12,7 +12,7 @@ export const fromFile = async (options: ResolveFromFileOptions): Promise<ViteUse
   const configInput = await load(options)
   const configInputMerged = mergeInputs(configInput, options.overrides)
   const config = await fromMemory(configInputMerged, options.dir)
-  debug(`resolved config`, config)
+  debugPolen(`resolved config`, config)
   return config
 }
 

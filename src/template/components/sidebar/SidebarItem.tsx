@@ -1,11 +1,11 @@
+import type { Content } from '#api/content/$'
 import type { React } from '#dep/react/index'
-import type { FileRouter } from '#lib/file-router/index'
 import { Texts } from '#template/components/Texts/index'
-import { Box, Flex, Text } from '@radix-ui/themes'
+import { Box, Flex } from '@radix-ui/themes'
 import { useLocation } from 'react-router'
 import { getPathActiveReport, Link } from '../Link.tsx'
 
-export const Items: React.FC<{ items: FileRouter.Sidebar.Item[] }> = ({ items }) => {
+export const Items: React.FC<{ items: Content.Item[] }> = ({ items }) => {
   return (
     <Flex direction='column' gap='2px'>
       {items.map((item) => (
@@ -26,7 +26,7 @@ export const Items: React.FC<{ items: FileRouter.Sidebar.Item[] }> = ({ items })
 //
 //
 
-export const Item: React.FC<{ item: FileRouter.Sidebar.Item }> = ({ item }) => {
+export const Item: React.FC<{ item: Content.Item }> = ({ item }) => {
   if (item.type === `ItemLink`) {
     return <SBLink link={item} />
   }
@@ -47,7 +47,7 @@ export const Item: React.FC<{ item: FileRouter.Sidebar.Item }> = ({ item }) => {
 //
 
 const SBLink: React.FC<{
-  link: FileRouter.Sidebar.ItemLink | FileRouter.Sidebar.ItemSection
+  link: Content.ItemLink | Content.ItemSection
 }> = ({ link }) => {
   const location = useLocation()
   const currentPathExp = location.pathname
@@ -81,7 +81,7 @@ const SBLink: React.FC<{
 //
 
 const Section: React.FC<{
-  section: FileRouter.Sidebar.ItemSection
+  section: Content.ItemSection
 }> = ({ section }) => {
   return (
     <Box mt='8'>
@@ -104,7 +104,7 @@ const Section: React.FC<{
 //
 
 const LinkedSection: React.FC<{
-  section: FileRouter.Sidebar.ItemSection
+  section: Content.ItemSection
 }> = ({ section }) => {
   return (
     <Box>
@@ -133,7 +133,7 @@ const LinkedSection: React.FC<{
   )
 }
 
-const SectionLink: React.FC<{ link: FileRouter.Sidebar.ItemLink }> = ({ link }) => {
+const SectionLink: React.FC<{ link: Content.ItemLink }> = ({ link }) => {
   const location = useLocation()
   const active = getPathActiveReport(link.pathExp, location.pathname)
 

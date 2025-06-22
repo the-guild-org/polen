@@ -13,6 +13,7 @@ npx polen build [options]
 ```
 
 Options:
+
 - `--type <type>` - Build type: `ssg` (default) or `ssr`
 - `--base <path>` - Base path for deployment (e.g., `/my-project/`)
 
@@ -25,6 +26,7 @@ npx polen dev [options]
 ```
 
 Options:
+
 - `--base <path>` - Base path for development (e.g., `/my-project/`)
 
 ### `polen open`
@@ -36,10 +38,12 @@ npx polen open [options]
 ```
 
 Options:
+
 - `--name <name>` - Name of a well-known schema (e.g., `github`)
 - `--help` - Show detailed help for the open command
 
 Example:
+
 ```sh
 npx polen open --name github
 ```
@@ -53,6 +57,7 @@ npx polen static rebase <source-path> [options]
 ```
 
 Options:
+
 - `--new-base-path <path>` - New base path (must start and end with `/`)
 - `--mode <mode>` - Change mode: `mutate` (default) or `copy`
 - `--target <path>` - Target directory (required when using `copy` mode)

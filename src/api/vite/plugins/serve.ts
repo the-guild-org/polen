@@ -3,7 +3,7 @@ import { reportError } from '#api/server/report-error'
 import type { Hono } from '#dep/hono/index'
 import type { Vite } from '#dep/vite/index'
 import { ResponseInternalServerError } from '#lib/kit-temp'
-import { debug } from '#singletons/debug'
+import { debugPolen } from '#singletons/debug'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err } from '@wollybeard/kit'
 
@@ -16,11 +16,11 @@ interface AppServerModule {
 export const Serve = (
   config: Config.Config,
 ): Vite.PluginOption => {
-  const _debug = debug.sub(`serve`)
+  const debug = debugPolen.sub(`serve`)
   let appPromise: Promise<App | Error>
 
   const reloadApp = async ({ server }: { server: Vite.ViteDevServer }): Promise<App | Error> => {
-    _debug('reloadApp')
+    debug('reloadApp')
     return server.ssrLoadModule(config.paths.framework.template.server.app)
       .then(module => module as AppServerModule)
       .then(module => module.app)
@@ -55,12 +55,12 @@ export const Serve = (
       }
     },
     handleHotUpdate({ server }) {
-      _debug('handleHotUpdate')
+      debug('handleHotUpdate')
       // Reload app server immediately in the background
       appPromise = reloadApp({ server })
     },
     async configureServer(server) {
-      _debug('configureServer')
+      debug('configureServer')
       // Initial load
       appPromise = reloadApp({ server })
 

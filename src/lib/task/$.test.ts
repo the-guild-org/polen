@@ -137,10 +137,10 @@ describe('runAndExit', () => {
     const double = async (x: number) => x * 2
 
     await expect(() => Task.runAndExit(double, 5, { name: 'double' })).rejects.toThrow('process.exit called')
-    
+
     expect(mockExit).toHaveBeenCalledWith(0)
     expect(mockLog).toHaveBeenCalled()
-    
+
     // Verify the logged output contains expected content
     const loggedOutput = mockLog.mock.calls[0]?.[0]
     expect(loggedOutput).toContain('double')
@@ -161,7 +161,7 @@ describe('runAndExit', () => {
     }
 
     await expect(() => Task.runAndExit(failing, null, { name: 'failing' })).rejects.toThrow('process.exit called')
-    
+
     expect(mockExit).toHaveBeenCalledWith(1)
     expect(mockLog).toHaveBeenCalled()
 

@@ -26,7 +26,7 @@ describe('metadata', () => {
     }
 
     await Deployment.metadata.write(metadata, testDir)
-    
+
     const result = await Deployment.metadata.read(testDir)
     expect(result).toEqual(metadata)
   })
@@ -46,7 +46,7 @@ describe('metadata', () => {
     }
 
     await Deployment.metadata.write(metadata, testDir)
-    
+
     const fileExists = await Fs.exists(`${testDir}/.deployment.json`)
     expect(fileExists).toBe(true)
   })

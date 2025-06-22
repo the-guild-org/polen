@@ -1,10 +1,10 @@
-import type { FileRouter } from '#lib/file-router/index'
+import type { Content } from '#api/content/$'
 import { Box } from '@radix-ui/themes'
 import type { BoxOwnProps, LayoutProps, MarginProps } from '@radix-ui/themes/props'
 import { Items } from './SidebarItem.tsx'
 
 interface SidebarProps extends LayoutProps, MarginProps, BoxOwnProps {
-  data: FileRouter.Sidebar.Item[]
+  data: Content.Item[]
   style?: React.CSSProperties
 }
 

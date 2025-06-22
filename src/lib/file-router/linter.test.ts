@@ -28,6 +28,8 @@ const createRoute = (path: string[], order?: number, isIndex = false): Route => 
         },
       },
     },
+    id: `/project/pages/${path.join('/')}/${name}.md`,
+    parentId: path.length > 1 ? `/project/pages/${path.slice(0, -1).join('/')}` : null,
   }
 }
 

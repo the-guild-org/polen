@@ -36,6 +36,8 @@ export const pathToExpression = (path: Path) => {
 export interface Route {
   logical: RouteLogical
   file: RouteFile
+  id: string // Absolute file path for unique identification
+  parentId: string | null // Parent directory path, null for root-level files
 }
 
 export interface RouteLogical {

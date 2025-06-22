@@ -1,7 +1,7 @@
+import { Deployment } from '#lib/deployment'
 import { GitHubActions } from '#lib/github-actions/index'
 import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
-import { Deployment } from '#lib/deployment'
 
 const Outputs = z.object({
   removed: z.array(z.string()),

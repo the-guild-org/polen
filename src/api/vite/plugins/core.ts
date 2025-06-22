@@ -6,7 +6,7 @@ import type { Vite } from '#dep/vite/index'
 import { VitePluginJson } from '#lib/vite-plugin-json/index'
 import { VitePluginReactiveData } from '#lib/vite-plugin-reactive-data/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
-import { debug } from '#singletons/debug'
+import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import { Json, Str } from '@wollybeard/kit'
 import type { ProjectData } from '../../../project-data.ts'
@@ -16,7 +16,7 @@ import { createLogger } from '../logger.ts'
 import { polenVirtual } from '../vi.ts'
 import { Pages } from './pages.ts'
 
-const _debug = debug.sub(`vite-plugin-core`)
+const debug = debugPolen.sub(`vite-plugin-core`)
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
@@ -87,7 +87,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       name: `polen:internal-import-alias`,
       enforce: 'pre' as const,
       resolveId(id, importer) {
-        const d = debug.sub(`vite-plugin:internal-import-alias`)
+        const d = debugPolen.sub(`vite-plugin:internal-import-alias`)
 
         const isPolenImporter = Boolean(
           importer
@@ -183,7 +183,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         {
           identifier: viProjectData,
           async loader() {
-            _debug(`loadingViProjectDataVirtualModule`)
+            debug(`loadingViProjectDataVirtualModule`)
             const schema = await readSchema()
 
             // ━ Schema presence causes adding some navbar items

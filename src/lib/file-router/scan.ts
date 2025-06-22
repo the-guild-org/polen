@@ -1,9 +1,7 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
-import { Tree } from '#lib/tree/index'
 import { Path, Str } from '@wollybeard/kit'
 import { type Diagnostic, lint } from './linter.ts'
-import { type Route, type RouteFile, type RouteLogical, routeToPathExpression } from './route.ts'
-import { scanTree } from './scan-tree.ts'
+import { type Route, type RouteFile, type RouteLogical } from './route.ts'
 
 //
 //
@@ -47,21 +45,21 @@ export const scan = async (parameters: {
   dir: string
   glob?: string
 }): Promise<ScanResult> => {
-  // Use tree-based scanner
-  const treeResult = await scanTree(parameters)
+  const { dir, glob = `**/*.{md,mdx}` } = parameters
 
-  // Flatten tree to get routes
-  const routes: Route[] = []
-  Tree.visit(treeResult.routeTree, (node) => {
-    if (node.value.type === 'file' && node.value.route) {
-      routes.push(node.value.route)
-    }
+  // Get all files directly
+  const filePaths = await TinyGlobby.glob(glob, {
+    absolute: true,
+    cwd: dir,
+    onlyFiles: true,
   })
+
+  // Convert to routes
+  const routes = filePaths.map(filePath => filePathToRoute(filePath, dir))
 
   // Apply linting
   const lintResult = lint(routes)
 
-  // Routes are already sorted by the tree structure
   return lintResult
 }
 
@@ -74,9 +72,17 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
   }
   const logical = filePathToRouteLogical(file.path.relative)
 
+  // Generate id and parentId for tree building
+  const id = filePathExpression // Use absolute path as unique ID
+  const relativePath = Path.relative(rootDir, filePathExpression)
+  const parentDir = Path.dirname(relativePath)
+  const parentId = parentDir === '.' ? null : Path.join(rootDir, parentDir)
+
   return {
     logical,
     file,
+    id,
+    parentId,
   }
 }
 

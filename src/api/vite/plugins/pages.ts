@@ -1,36 +1,37 @@
 import type { Config } from '#api/config/index'
+import { Content } from '#api/content/$'
 import type { NavbarDataRegistry } from '#api/vite/data/navbar'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
 import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { FileRouter } from '#lib/file-router/index'
-import { Tree } from '#lib/tree/index'
-import { debug } from '#singletons/debug'
+import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
 import rehypeShiki from '@shikijs/rehype'
-import { Path, Str } from '@wollybeard/kit'
+import { Tree } from '@wollybeard/kit'
+import { Arr, Cache, Path, Str } from '@wollybeard/kit'
+import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
-const _debug = debug.sub(`vite-plugin-pages`)
+const debug = debugPolen.sub(`vite-plugin-pages`)
 
 export const viProjectPages = polenVirtual([`project`, `pages.jsx`], { allowPluginProcessing: true })
 export const viProjectPagesData = polenVirtual([`project`, `data`, 'pages.jsonsuper'], { allowPluginProcessing: true })
 
-export interface PagesTreePluginOptions {
+export interface Options {
   config: Config.Config
   navbarData?: NavbarDataRegistry
-  onPagesChange?: (pages: FileRouter.ScanResult) => void
-  onTreeChange?: (tree: FileRouter.RouteTreeNode) => void
+  onChange?: (scanResult: Content.ScanResult) => void
 }
 
 export interface ProjectDataPages {
   sidebarIndex: SidebarIndex
-  pagesScanResult: FileRouter.ScanResult
+  pages: Content.Page[]
 }
 
 export interface SidebarIndex {
-  [pathExpression: string]: FileRouter.Sidebar.Sidebar
+  [pathExpression: string]: Content.Sidebar
 }
 
 /**
@@ -39,58 +40,22 @@ export interface SidebarIndex {
 export const Pages = ({
   config,
   navbarData,
-  onPagesChange,
-  onTreeChange,
-}: PagesTreePluginOptions): Vite.Plugin[] => {
-  let currentPagesData: FileRouter.ScanResult | null = null
-  let currentTreeData: FileRouter.RouteTreeNode | null = null
-
-  // State management
-  let pagesCache: FileRouter.ScanResult | null = null
-  let treeCache: FileRouter.RouteTreeNode | null = null
-
-  // Helper functions
-  const scanPages = async () => {
-    if (!pagesCache) {
-      _debug(`Scanning pages - cache is null, loading fresh data`)
-      pagesCache = await FileRouter.scan({
-        dir: config.paths.project.absolute.pages,
-        glob: `**/*.{md,mdx}`,
-      })
-      _debug(`Found ${String(pagesCache.routes.length)} pages`)
-    } else {
-      _debug(`Using cached pages`)
-    }
-    return pagesCache
-  }
-
-  const scanTree = async () => {
-    if (!treeCache) {
-      _debug(`Scanning tree - cache is null, loading fresh data`)
-      const result = await FileRouter.scanTree({
-        dir: config.paths.project.absolute.pages,
-        glob: `**/*.{md,mdx}`,
-      })
-      treeCache = result.routeTree
-      _debug(`Built route tree`)
-    } else {
-      _debug(`Using cached tree`)
-    }
-    return treeCache
-  }
-
-  const clearCache = () => {
-    _debug(`Clearing pages and tree cache`)
-    pagesCache = null
-    treeCache = null
-  }
+  onChange,
+}: Options): Vite.Plugin[] => {
+  const scanPages = Cache.memoize(debug.trace(async function scanPages() {
+    const result = await Content.scan({
+      dir: config.paths.project.absolute.pages,
+      glob: `**/*.{md,mdx}`,
+    })
+    return result
+  }))
 
   const isPageFile = (file: string) => {
     return (file.endsWith(`.md`) || file.endsWith(`.mdx`))
       && file.includes(config.paths.project.absolute.pages)
   }
 
-  const generatePagesModule = (pagesScanResult: FileRouter.ScanResult): string => {
+  const generatePagesModule = (pages: Content.Page[]): string => {
     const $ = {
       pages: `pages`,
     }
@@ -99,17 +64,21 @@ export const Pages = ({
     s`export const ${$.pages} = []`
 
     // Generate imports and route objects
-    for (const route of pagesScanResult.routes) {
+    for (const { route, metadata } of pages) {
       const filePathExp = Path.format(route.file.path.absolute)
       const pathExp = FileRouter.routeToPathExpression(route)
-      const ident = Str.Case.camel(`page ` + Str.titlizeSlug(pathExp))
+      const $$ = {
+        ...$,
+        Component: Str.Case.camel(`page ` + Str.titlizeSlug(pathExp)),
+      }
 
       s`
-        import ${ident} from '${filePathExp}'
+        import ${$$.Component} from '${filePathExp}'
 
-        ${$.pages}.push({
+        ${$$.pages}.push({
           path: '${pathExp}',
-          Component: ${ident}
+          Component: ${$$.Component},
+          metadata: ${JSON.stringify(metadata)}
         })
       `
     }
@@ -123,7 +92,11 @@ export const Pages = ({
       enforce: `pre` as const,
       ...mdx({
         jsxImportSource: `polen/react`,
-        remarkPlugins: [remarkGfm],
+        remarkPlugins: [
+          // Parse frontmatter blocks so they're removed from content
+          remarkFrontmatter,
+          remarkGfm,
+        ],
         rehypePlugins: [
           [
             rehypeShiki,
@@ -150,62 +123,58 @@ export const Pages = ({
       // Dev server configuration
       configureServer(server) {
         // Add pages directory to watcher
-        _debug(`configureServer: watch pages directory`, config.paths.project.absolute.pages)
+        debug(`configureServer: watch pages directory`, config.paths.project.absolute.pages)
         server.watcher.add(config.paths.project.absolute.pages)
       },
 
       // Hot update handling
       async handleHotUpdate({ file, server, modules }) {
-        _debug(`handleHotUpdate`, file)
+        debug(`handleHotUpdate`, file)
         if (!isPageFile(file)) return
 
-        _debug(`Page file changed:`, file)
+        debug(`Page file changed:`, file)
 
-        // Check if this is a content-only change to an existing page
-        const oldPages = pagesCache
+        // Get current pages before clearing cache
+        const oldPages = await scanPages()
 
         // Clear cache and rescan
-        clearCache()
-        const newPages = await scanPages()
-        currentPagesData = newPages
+        scanPages.clear()
+        const newScanResult = await scanPages()
 
         // Check if page structure changed (added/removed pages)
-        const structureChanged = !oldPages
-          || oldPages.routes.length !== newPages.routes.length
-          || !oldPages.routes.every((oldRoute, i) =>
-            oldRoute.file.path.absolute === newPages.routes[i]?.file.path.absolute
-          )
+        const isJustContentChange = oldPages && !Arr.equalShallowly(
+          oldPages.list.map(p => Path.format(p.route.file.path.absolute)),
+          newScanResult.list.map(p => Path.format(p.route.file.path.absolute)),
+        )
 
-        if (structureChanged) {
-          _debug(`Page structure changed, triggering full reload`)
-
-          // Invalidate virtual module
-          const mod = server.moduleGraph.getModuleById(viProjectPages.id)
-          if (mod) {
-            server.moduleGraph.invalidateModule(mod)
-            _debug(`Invalidated pages virtual module`)
-          }
-
-          // Notify about changes
-          if (onPagesChange) {
-            reportDiagnostics(newPages.diagnostics)
-            onPagesChange(newPages)
-          }
-
-          if (onTreeChange) {
-            const tree = await scanTree()
-            onTreeChange(tree)
-            currentTreeData = tree
-          }
-
-          // Trigger full reload for structure changes
-          server.ws.send({ type: `full-reload` })
-          return []
-        } else {
-          _debug(`Page content changed, allowing HMR`)
+        if (isJustContentChange) {
+          debug(`Page content changed, allowing HMR`)
           // Let default HMR handle the MDX file change
           return modules
         }
+
+        //
+        // ━━ Manual Invalidation
+        //
+
+        debug(`Page structure changed, triggering full reload`)
+
+        // Invalidate virtual module
+        const mod = server.moduleGraph.getModuleById(viProjectPages.id)
+        if (mod) {
+          server.moduleGraph.invalidateModule(mod)
+          debug(`Invalidated pages virtual module`)
+        }
+
+        // Notify about changes
+        if (onChange) {
+          reportDiagnostics(newScanResult.diagnostics)
+          onChange(newScanResult)
+        }
+
+        // Trigger full reload for structure changes
+        server.ws.send({ type: `full-reload` })
+        return []
       },
       resolveId(id) {
         if (id === viProjectPagesData.id) {
@@ -218,25 +187,13 @@ export const Pages = ({
         // },
         async handler(id) {
           if (id !== viProjectPagesData.resolved) return
-          _debug(`viProjectDataPages`)
+          debug(`viProjectDataPages`)
 
-          // Get pages data from the pages plugin or load initially
-          if (!currentPagesData) {
-            _debug(`loadingPagesDataInitially`)
-            currentPagesData = await FileRouter.scan({
-              dir: config.paths.project.absolute.pages,
-              glob: `**/*.{md,mdx}`,
-            })
-            // Report any diagnostics from initial scan
-            reportDiagnostics(currentPagesData.diagnostics)
-          }
-          if (!currentTreeData) {
-            _debug(`loadingTreeDataInitially`)
-            currentTreeData = await getRouteTree(config)
-          }
-          const pagesScanResult = currentPagesData
-          const routeTree = currentTreeData
-          _debug(`usingPageRoutesFromPagesPlugin`, pagesScanResult.routes.length)
+          const scanResult = await scanPages()
+
+          // Report any diagnostics
+          reportDiagnostics(scanResult.diagnostics)
+          debug(`Found ${String(scanResult.list.length)} visible pages`)
 
           //
           // ━━ Build Navbar
@@ -248,34 +205,26 @@ export const Pages = ({
             navbarPages.length = 0 // Clear existing
 
             // Process first-level children as navigation items
-            for (const child of routeTree.children) {
-              if (child.value.type === 'directory') {
-                // Check if this directory has an index file
-                const hasIndex = child.children.some(c => c.value.type === 'file' && c.value.name === 'index')
+            if (scanResult.tree.root) {
+              for (const child of scanResult.tree.root.children) {
+                // Now we have Page objects in the tree
+                const page = child.value
+                const pathExp = FileRouter.routeToPathExpression(page.route)
 
-                if (hasIndex) {
-                  const pathExp = FileRouter.pathToExpression([child.value.name])
-                  const title = Str.titlizeSlug(child.value.name)
+                // Skip hidden pages and index files at root level
+                if (page.metadata.hidden || page.route.logical.path.slice(-1)[0] === 'index') {
+                  continue
+                }
+
+                // Only include top-level pages (files directly in pages directory)
+                if (page.route.logical.path.length === 1) {
+                  const title = Str.titlizeSlug(page.route.logical.path[0]!)
                   navbarPages.push({
                     // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
-                    // Without the leading slash, React Router treats paths as relative, which causes
-                    // hydration mismatches between SSR (where base path is prepended) and client
-                    // (where basename is configured). This ensures consistent behavior.
                     pathExp: pathExp.startsWith('/') ? pathExp : '/' + pathExp,
                     title,
                   })
                 }
-              } else if (child.value.type === 'file' && child.value.name !== 'index') {
-                const pathExp = FileRouter.pathToExpression([child.value.name])
-                const title = Str.titlizeSlug(child.value.name)
-                navbarPages.push({
-                  // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
-                  // Without the leading slash, React Router treats paths as relative, which causes
-                  // hydration mismatches between SSR (where base path is prepended) and client
-                  // (where basename is configured). This ensures consistent behavior.
-                  pathExp: pathExp.startsWith('/') ? pathExp : '/' + pathExp,
-                  title,
-                })
               }
             }
           }
@@ -286,17 +235,25 @@ export const Pages = ({
 
           const sidebarIndex: SidebarIndex = {}
 
-          // Build sidebar for each top-level directory
-          for (const child of routeTree.children) {
-            if (child.value.type === 'directory') {
-              const pathExp = `/${child.value.name}`
-              // Create a subtree starting from this directory
-              const subtree = Tree.node(child.value, child.children)
-              // Pass the directory name as base path so paths are built correctly
-              const sidebar = FileRouter.Sidebar.buildFromTree(subtree, [child.value.name])
-              _debug(`Built sidebar for ${pathExp}:`, sidebar)
-              sidebarIndex[pathExp] = sidebar
-            }
+          // Build sidebar for each top-level directory using the page tree
+          if (scanResult.tree.root) {
+            Tree.visit(scanResult.tree, (node) => {
+              if (!node.value) return
+              const page = node.value as any
+              // Only process top-level directories (pages with logical path length > 1 indicate nested structure)
+              if (page.route.logical.path.length === 1 && node.children.length > 0) {
+                const topLevelDir = page.route.logical.path[0]!
+                const pathExp = `/${topLevelDir}`
+
+                // Create a subtree for this directory
+                const subtree = Tree.Tree(Tree.Node(page, node.children)) as Tree.Tree<any>
+
+                // Build sidebar using the new page tree builder
+                const sidebar = Content.buildFromPageTree(subtree, [topLevelDir])
+                debug(`Built sidebar for ${pathExp}:`, sidebar)
+                sidebarIndex[pathExp] = sidebar
+              }
+            })
           }
 
           //
@@ -305,7 +262,7 @@ export const Pages = ({
 
           const projectDataPages: ProjectDataPages = {
             sidebarIndex,
-            pagesScanResult: pagesScanResult,
+            pages: scanResult.list,
           }
 
           // Return just the JSON string - let the JSON plugin handle the transformation
@@ -313,7 +270,7 @@ export const Pages = ({
         },
       },
     },
-    // Plugin 4: Virtual Module for Pages Routes
+    // Plugin 3: Virtual Module for Pages Routes
     {
       name: 'polen:pages:routes',
       resolveId(id) {
@@ -328,30 +285,19 @@ export const Pages = ({
         handler: async (id) => {
           if (id !== viProjectPages.resolved) return
 
-          _debug(`Loading viProjectPages virtual module`)
+          debug(`Loading viProjectPages virtual module`)
 
-          // Ensure we have pages data
-          if (!currentPagesData) {
-            currentPagesData = await scanPages()
-            reportDiagnostics(currentPagesData.diagnostics)
-          }
+          const scanResult = await scanPages()
+          reportDiagnostics(scanResult.diagnostics)
+          const code = generatePagesModule(scanResult.list)
 
           // Generate the module code
           return {
-            code: generatePagesModule(currentPagesData),
+            code,
             moduleType: 'js',
           }
         },
       },
     },
   ]
-}
-
-// Helper to get tree
-export const getRouteTree = async (config: Config.Config): Promise<FileRouter.RouteTreeNode> => {
-  const result = await FileRouter.scanTree({
-    dir: config.paths.project.absolute.pages,
-    glob: `**/*.{md,mdx}`,
-  })
-  return result.routeTree
 }

@@ -46,7 +46,7 @@ import { Api } from 'polen'
 await Api.Static.rebase({
   changeMode: 'mutate',
   sourcePath: './build',
-  newBasePath: '/docs/v2/'
+  newBasePath: '/docs/v2/',
 })
 
 // Create a copy with new paths
@@ -54,7 +54,7 @@ await Api.Static.rebase({
   changeMode: 'copy',
   sourcePath: './build',
   targetPath: './build-v2',
-  newBasePath: '/docs/v2/'
+  newBasePath: '/docs/v2/',
 })
 ```
 
