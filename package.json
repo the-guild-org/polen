@@ -42,6 +42,8 @@
     "#lib/task/task": "./src/lib/task/$$.ts",
     "#lib/deployment": "./src/lib/deployment/$.ts",
     "#lib/deployment/deployment": "./src/lib/deployment/$$.ts",
+    "#lib/graphql-document": "./src/lib/graphql-document/$.ts",
+    "#lib/graphql-document/graphql-document": "./src/lib/graphql-document/$$.ts",
     "#template/components/content/$$": "./src/template/components/content/$$.ts"
   },
   "exports": {
