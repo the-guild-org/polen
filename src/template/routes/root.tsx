@@ -13,13 +13,15 @@ import projectDataNavbar from 'virtual:polen/project/data/navbar.jsonsuper'
 import projectDataPages from 'virtual:polen/project/data/pages.jsonsuper'
 import { pages } from 'virtual:polen/project/pages.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
-import { Link } from '../components/Link.jsx'
-import { Logo } from '../components/Logo.jsx'
-import { Sidebar } from '../components/sidebar/Sidebar.jsx'
+import { Link } from '../components/Link.tsx'
+import { Logo } from '../components/Logo.tsx'
+import { Sidebar } from '../components/sidebar/Sidebar.tsx'
+import { ThemeToggle } from '../components/ThemeToggle.tsx'
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext.tsx'
 import entryClientUrl from '../entry.client.jsx?url'
-import { changelog } from './changelog.jsx'
-import { index } from './index.jsx'
-import { reference } from './reference.jsx'
+import { changelog } from './changelog.tsx'
+import { index } from './index.tsx'
+import { reference } from './reference.tsx'
 
 // todo: not needed anymore because not using hono dev vite plugin right?
 const reactRefreshPreamble = `
@@ -45,7 +47,9 @@ export const Component = () => {
         {/* <meta name='theme-color' content='#000000' /> */}
       </head>
       <body style={{ margin: 0 }}>
-        <Layout />
+        <ThemeProvider>
+          <Layout />
+        </ThemeProvider>
         <ScrollRestoration />
         {import.meta.env.DEV && <script type='module' src={entryClientUrl}></script>}
       </body>
@@ -55,6 +59,7 @@ export const Component = () => {
 
 const Layout = () => {
   const location = useLocation()
+  const { appearance } = useTheme()
 
   // Determine if we should show sidebar based on current path
   const getCurrentNavPathExp = (): string | null => {
@@ -88,18 +93,19 @@ const Layout = () => {
       >
         <Logo src={logoSrc} title={templateVariables.title} height={30} showTitle={true} />
       </LinkReactRouter>
-      <Flex direction='row' gap='4'>
+      <Flex direction='row' gap='4' style={{ flex: 1 }}>
         {projectDataNavbar.map((item, key) => (
           <Link key={key} color='gray' to={item.pathExp}>
             {item.title}
           </Link>
         ))}
       </Flex>
+      <ThemeToggle />
     </Flex>
   )
 
   return (
-    <Theme asChild>
+    <Theme asChild appearance={appearance}>
       <Grid
         width={{ initial: 'var(--container-4)' }}
         areas="'header header header header header header header header' 'sidebar sidebar . content content content content content'"
