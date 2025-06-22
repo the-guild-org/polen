@@ -143,7 +143,9 @@ export const objFilter = <T extends object>(
   predicate: (key: keyof T, value: T[keyof T], obj: T) => boolean,
 ): Partial<T> => {
   const result = {} as Partial<T>
-  for (const key in obj) {
+  // Use Object.keys to get all enumerable own properties
+  // This matches the behavior of for...in but only for own properties
+  for (const key of Object.keys(obj) as (keyof T)[]) {
     if (predicate(key, obj[key], obj)) {
       result[key] = obj[key]
     }

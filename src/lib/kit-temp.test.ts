@@ -61,7 +61,7 @@ describe('property-based tests', () => {
   test('objPolicyFilter allow/deny are complementary', () => {
     fc.assert(
       fc.property(
-        fc.dictionary(fc.string(), fc.anything()),
+        fc.object(),
         fc.array(fc.string()),
         (obj, keys) => {
           const allowed = objPolicyFilter('allow', obj, keys)
@@ -84,7 +84,7 @@ describe('property-based tests', () => {
   test('objFilter preserves values unchanged', () => {
     fc.assert(
       fc.property(
-        fc.dictionary(fc.string(), fc.anything()),
+        fc.object(),
         (obj) => {
           const filtered = objFilter(obj, () => true)
           expect(filtered).toEqual(obj)
@@ -101,7 +101,7 @@ describe('property-based tests', () => {
   test('objPolicyFilter is immutable', () => {
     fc.assert(
       fc.property(
-        fc.dictionary(fc.string(), fc.anything()),
+        fc.object(),
         fc.array(fc.string()),
         fc.oneof(fc.constant('allow' as const), fc.constant('deny' as const)),
         (obj, keys, mode) => {
@@ -116,7 +116,7 @@ describe('property-based tests', () => {
   test('empty keys behavior', () => {
     fc.assert(
       fc.property(
-        fc.dictionary(fc.string(), fc.anything()),
+        fc.object(),
         (obj) => {
           expect(objPolicyFilter('allow', obj, [])).toEqual({})
           expect(objPolicyFilter('deny', obj, [])).toEqual(obj)
