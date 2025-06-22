@@ -10,6 +10,8 @@
 
 export * from './types.ts'
 export * from './analysis.ts'
+export * from './schema-integration.ts'
 
 // Re-export key functions for convenience
 export { analyze, extractIdentifiers, analyzer } from './analysis.ts'
+export { createPolenSchemaResolver, analyzeWithSchema } from './schema-integration.ts'
