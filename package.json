@@ -36,15 +36,58 @@
       "source": "./src/*.ts",
       "default": "./build/*.js"
     },
-    "#lib/mask": "./src/lib/mask/$.ts",
-    "#lib/mask/mask": "./src/lib/mask/$$.ts",
-    "#lib/task": "./src/lib/task/$.ts",
-    "#lib/task/task": "./src/lib/task/$$.ts",
-    "#lib/deployment": "./src/lib/deployment/$.ts",
-    "#lib/deployment/deployment": "./src/lib/deployment/$$.ts",
-    "#lib/graphql-document": "./src/lib/graphql-document/$.ts",
-    "#lib/graphql-document/graphql-document": "./src/lib/graphql-document/$$.ts",
-    "#template/components/content/$$": "./src/template/components/content/$$.ts"
+    "#lib/mask": {
+      "source": "./src/lib/mask/$.ts",
+      "default": "./build/lib/mask/$.js"
+    },
+    "#lib/mask/mask": {
+      "source": "./src/lib/mask/$$.ts",
+      "default": "./build/lib/mask/$$.js"
+    },
+    "#lib/task": {
+      "source": "./src/lib/task/$.ts",
+      "default": "./build/lib/task/$.js"
+    },
+    "#lib/task/task": {
+      "source": "./src/lib/task/$$.ts",
+      "default": "./build/lib/task/$$.js"
+    },
+    "#lib/deployment": {
+      "source": "./src/lib/deployment/$.ts",
+      "default": "./build/lib/deployment/$.js"
+    },
+    "#lib/deployment/deployment": {
+      "source": "./src/lib/deployment/$$.ts",
+      "default": "./build/lib/deployment/$$.js"
+    },
+    "#lib/graphql-document": {
+      "source": "./src/lib/graphql-document/$.ts",
+      "default": "./build/lib/graphql-document/$.js"
+    },
+    "#lib/graphql-document/graphql-document": {
+      "source": "./src/lib/graphql-document/$$.ts",
+      "default": "./build/lib/graphql-document/$$.js"
+    },
+    "#lib/graphql-document/components/index": {
+      "source": "./src/lib/graphql-document/components/index.ts",
+      "default": "./build/lib/graphql-document/components/index.js"
+    },
+    "#lib/graphql-document/components/GraphQLDocumentWithSchema": {
+      "source": "./src/lib/graphql-document/components/GraphQLDocumentWithSchema.tsx",
+      "default": "./build/lib/graphql-document/components/GraphQLDocumentWithSchema.js"
+    },
+    "#lib/graphql-document/components/GraphQLDocument": {
+      "source": "./src/lib/graphql-document/components/GraphQLDocument.tsx",
+      "default": "./build/lib/graphql-document/components/GraphQLDocument.js"
+    },
+    "#lib/graphql-document/schema-context": {
+      "source": "./src/lib/graphql-document/schema-context.tsx",
+      "default": "./build/lib/graphql-document/schema-context.js"
+    },
+    "#template/components/content/$$": {
+      "source": "./src/template/components/content/$$.ts",
+      "default": "./build/template/components/content/$$.js"
+    }
   },
   "exports": {
     ".": {
@@ -53,6 +96,7 @@
     },
     "./components": {
       "source": "./src/exports/components.ts",
+      "import": "./build/exports/components.js",
       "default": "./build/exports/components.js"
     },
     "./polen": {

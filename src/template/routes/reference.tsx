@@ -3,8 +3,8 @@ import { createLoader, useLoaderData } from '#lib/react-router-loader/react-rout
 import { Box } from '@radix-ui/themes'
 import { Outlet } from 'react-router'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { MissingSchema } from '../components/MissingSchema.jsx'
-import { reference$type } from './reference.$type.jsx'
+import { MissingSchema } from '../components/MissingSchema.tsx'
+import { reference$type } from './reference.$type.tsx'
 
 const loader = createLoader(() => {
   const latestSchemaVersion = PROJECT_DATA.schema?.versions[0].after ?? null
@@ -21,7 +21,7 @@ const Component = () => {
   }
 
   return (
-    <Box className="prose">
+    <Box className='prose'>
       <Outlet />
     </Box>
   )

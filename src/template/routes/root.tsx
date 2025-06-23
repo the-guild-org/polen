@@ -15,11 +15,12 @@ import projectDataNavbar from 'virtual:polen/project/data/navbar.jsonsuper'
 import projectPagesCatalog from 'virtual:polen/project/data/pages-catalog.jsonsuper'
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
+import { GraphQLSchemaProvider } from '../../lib/graphql-document/schema-context.tsx'
+import { CodeBlockEnhancer } from '../components/CodeBlockEnhancer.tsx'
 import { HamburgerMenu } from '../components/HamburgerMenu.tsx'
 import { Link } from '../components/Link.tsx'
 import { Logo } from '../components/Logo.tsx'
 import { NotFound } from '../components/NotFound.tsx'
-import { CodeBlockEnhancer } from '../components/CodeBlockEnhancer.tsx'
 import { Sidebar } from '../components/sidebar/Sidebar.tsx'
 import { ThemeToggle } from '../components/ThemeToggle.tsx'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.tsx'
@@ -38,6 +39,14 @@ window.__vite_plugin_react_preamble_installed__ = true;
 `
 
 export const Component = () => {
+  const schema = PROJECT_DATA.schema?.versions[0]?.after || null
+  console.log('Root component - schema:', schema ? 'EXISTS' : 'NULL')
+
+  // Make schema available globally for MDX components
+  if (typeof window !== 'undefined' && schema) {
+    ;(window as any).__POLEN_GRAPHQL_SCHEMA__ = schema
+  }
+
   return (
     <html lang='en'>
       <head>
@@ -53,8 +62,10 @@ export const Component = () => {
       </head>
       <body style={{ margin: 0 }}>
         <ThemeProvider>
-          <Layout />
-          <CodeBlockEnhancer />
+          <GraphQLSchemaProvider schema={schema}>
+            <Layout />
+            <CodeBlockEnhancer />
+          </GraphQLSchemaProvider>
         </ThemeProvider>
         <ScrollRestoration />
         {import.meta.env.DEV && <script type='module' src={entryClientUrl}></script>}
@@ -86,16 +97,16 @@ const Layout = () => {
 
   const currentNavPathExp = getCurrentNavPathExp()
   const isReferencePage = currentNavPathExp === '/reference'
-  
+
   const sidebar = (() => {
     if (isReferencePage && PROJECT_DATA.schema) {
       // Build reference sidebar from schema types
       const schema = PROJECT_DATA.schema.versions[0].after
       const kindMap = GrafaidOld.getKindMap(schema)
-      
+
       const sidebarItems: Content.Item[] = []
       const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
-      
+
       for (const [title, types] of kindEntries) {
         sidebarItems.push({
           type: 'ItemSection' as const,
@@ -109,14 +120,14 @@ const Layout = () => {
           })),
         })
       }
-      
+
       return { items: sidebarItems }
     } else {
       // Use regular page sidebar
       return currentNavPathExp ? projectPagesCatalog.sidebarIndex[currentNavPathExp] || null : null
     }
   })()
-  
+
   const isShowSidebar = sidebar && sidebar.items.length > 0
 
   const header = (
@@ -182,7 +193,7 @@ const Layout = () => {
           {`
           /* Import Inter font */
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
+
           /* Typography improvements */
           body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -191,46 +202,46 @@ const Layout = () => {
             text-rendering: optimizeLegibility;
             font-feature-settings: 'kern', 'liga', 'calt', 'ss01', 'ss02';
           }
-          
+
           /* Improved paragraph spacing */
           .prose p {
             line-height: 1.7;
             margin-bottom: 1.25rem;
           }
-          
+
           .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
             font-weight: 600;
             letter-spacing: -0.02em;
             margin-top: 2rem;
             margin-bottom: 1rem;
           }
-          
+
           .prose h1 { font-size: 2.25rem; line-height: 1.2; }
           .prose h2 { font-size: 1.875rem; line-height: 1.3; }
           .prose h3 { font-size: 1.5rem; line-height: 1.4; }
           .prose h4 { font-size: 1.25rem; line-height: 1.5; }
-          
+
           .prose ul, .prose ol {
             margin-bottom: 1.25rem;
             padding-left: 1.5rem;
           }
-          
+
           .prose li {
             margin-bottom: 0.5rem;
             line-height: 1.7;
           }
-          
+
           .prose a {
             color: var(--accent-9);
             text-decoration: none;
             border-bottom: 1px solid transparent;
             transition: border-color 0.2s;
           }
-          
+
           .prose a:hover {
             border-bottom-color: var(--accent-9);
           }
-          
+
           .prose blockquote {
             border-left: 4px solid var(--accent-6);
             padding-left: 1rem;
@@ -238,14 +249,14 @@ const Layout = () => {
             font-style: italic;
             color: var(--gray-11);
           }
-          
+
           /* Responsive container fixes */
           @media (max-width: 768px) {
             body {
               overflow-x: hidden;
             }
           }
-          
+
           /* Ensure proper centering on all screen sizes */
           .rt-Grid {
             box-sizing: border-box;
@@ -283,7 +294,7 @@ const Layout = () => {
             background: transparent;
             display: block;
           }
-          
+
           /* Inline code */
           .prose code:not(pre code) {
             background-color: var(--gray-3);
@@ -292,14 +303,14 @@ const Layout = () => {
             font-size: 0.875em;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
           }
-          
+
           /* Tables */
           .prose table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 1.5rem;
           }
-          
+
           .prose th {
             background-color: var(--gray-3);
             font-weight: 600;
@@ -307,12 +318,12 @@ const Layout = () => {
             padding: 0.75rem;
             border-bottom: 2px solid var(--gray-5);
           }
-          
+
           .prose td {
             padding: 0.75rem;
             border-bottom: 1px solid var(--gray-4);
           }
-          
+
           .prose tbody tr:last-child td {
             border-bottom: none;
           }
@@ -331,7 +342,7 @@ const Layout = () => {
           </Box>
         )}
 
-        <Box gridArea='content / content / auto / 8' className="prose">
+        <Box gridArea='content / content / auto / 8' className='prose'>
           <Outlet />
         </Box>
       </Grid>

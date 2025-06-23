@@ -2,6 +2,8 @@
 description: Learn how to manage organization members via the Hive Console GraphQL API.
 ---
 
+import { GraphQLDocumentWithSchema } from 'polen/components'
+
 # Member Management via the GraphQL API
 
 Organization members, roles, and invites can be managed via the GraphQL API. For more information,
@@ -14,8 +16,8 @@ A list of permissions that are assignable to member roles can be retrieved via t
 `Organization.availableMemberPermissionGroups` field. It returns a list of all permission groups and
 their permissions.
 
-```graphql filename="Example: Retrieve permissions by group"
-query OrganizationPermissions($organizationSlug: String!) {
+<GraphQLDocumentWithSchema>
+{`query OrganizationPermissions($organizationSlug: String!) {
   organization(reference: { bySelector: { organizationSlug: $organizationSlug } }) {
     id
     slug
@@ -28,8 +30,8 @@ query OrganizationPermissions($organizationSlug: String!) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Create a Member Role
 
@@ -41,8 +43,8 @@ role via the `CreateMemberRoleInput.selectedPermissions` field.
 **Note:** A member role only has permissions and not resources assigned. Resources are assigned when
 assigning a member role to a user.
 
-```graphql filename="Example: Create a Member Role"
-mutation CreateMemberRole($input: CreateMemberRoleInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation CreateMemberRole($input: CreateMemberRoleInput!) {
   createMemberRole(input: $input) {
     ok {
       createdMemberRole {
@@ -60,15 +62,15 @@ mutation CreateMemberRole($input: CreateMemberRoleInput!) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Update a Member Role
 
 Use the `Mutation.updateMemberRole` field for updating a member role.
 
-```graphql filename="Example: Update Member Role"
-mutation UpdatedMemberRole($input: UpdateMemberRoleInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation UpdatedMemberRole($input: UpdateMemberRoleInput!) {
   updateMemberRole(input: $input) {
     ok {
       updatedRole {
@@ -86,15 +88,15 @@ mutation UpdatedMemberRole($input: UpdateMemberRoleInput!) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Delete a Member Role
 
 Use the `Mutation.deleteMemberRole` field for deleting a member role.
 
-```graphql filename="Example: Delete a Member Role"
-mutation UpdatedMemberRole($input: DeleteMemberRoleInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation UpdatedMemberRole($input: DeleteMemberRoleInput!) {
   deleteMemberRole(input: $input) {
     ok {
       deletedMemberRoleId
@@ -103,15 +105,15 @@ mutation UpdatedMemberRole($input: DeleteMemberRoleInput!) {
       message
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Assigning Member Roles
 
 Use the `Mutation.assignMemberRole` field for assigning a member role to a user.
 
-```graphql filename="Example: Assign a Member Role"
-mutation AssignMemberRole($input: AssignMemberRoleInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation AssignMemberRole($input: AssignMemberRoleInput!) {
   assignMemberRole(input: $input) {
     ok {
       updatedMember {
@@ -127,8 +129,8 @@ mutation AssignMemberRole($input: AssignMemberRoleInput!) {
       message
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ### Resource Assignment
 
@@ -184,8 +186,8 @@ permissions granted by the role should apply. Permissions are inherited by all s
 
 ## Retrieve list of Member Invitations
 
-```graphql filename="Example: Member Invitations"
-query Invitations($organizationSlug: String!, $after: String) {
+<GraphQLDocumentWithSchema>
+{`query Invitations($organizationSlug: String!, $after: String) {
   organization(reference: { bySelector: { organizationSlug: $organizationSlug } }) {
     invitations(first: 10, after: $after) {
       edges {
@@ -197,16 +199,16 @@ query Invitations($organizationSlug: String!, $after: String) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Create member invitation
 
 Use the `Mutation.inviteToOrganizationByEmail` field for sending an email invite to the
 organization.
 
-```graphql filename="Example: Invite Members"
-mutation InviteUserToOrganization($input: InviteToOrganizationByEmailInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation InviteUserToOrganization($input: InviteToOrganizationByEmailInput!) {
   inviteToOrganizationByEmail(input: $input) {
     ok {
       createdOrganizationInvitation {
@@ -219,15 +221,15 @@ mutation InviteUserToOrganization($input: InviteToOrganizationByEmailInput!) {
       message
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Revoke member invitation
 
 Use the `Mutation.deleteOrganizationInvitation` field for deleting an organization invitation.
 
-```graphql
-mutation DeleteOrganizationInvitation($input: DeleteOrganizationInvitationInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation DeleteOrganizationInvitation($input: DeleteOrganizationInvitationInput!) {
   deleteOrganizationInvitation(input: $input) {
     ok {
       deletedOrganizationInvitationId
@@ -236,5 +238,5 @@ mutation DeleteOrganizationInvitation($input: DeleteOrganizationInvitationInput!
       message
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>

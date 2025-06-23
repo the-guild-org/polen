@@ -19,6 +19,10 @@ export interface HoverTooltipProps {
   hasError?: boolean
   /** Reference URL for "View docs" link */
   referenceUrl: string
+  /** Callback to close the tooltip */
+  onClose?: () => void
+  /** Callback to navigate to docs */
+  onNavigate?: () => void
 }
 
 /**
@@ -33,6 +37,8 @@ export const HoverTooltip: React.FC<HoverTooltipProps> = ({
   position,
   hasError = false,
   referenceUrl,
+  onClose,
+  onNavigate,
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
@@ -99,19 +105,47 @@ export const HoverTooltip: React.FC<HoverTooltipProps> = ({
         left: tooltipPosition.left,
         zIndex: 100,
         maxWidth: '400px',
-        pointerEvents: 'none', // Prevent tooltip from blocking clicks
+        pointerEvents: 'auto', // Make tooltip interactive
       }}
     >
       <Card size='2' variant='surface'>
         <Flex direction='column' gap='2'>
-          {/* Header with name and kind */}
+          {/* Header with name, kind, and close button */}
           <Flex justify='between' align='center'>
-            <Text size='2' weight='bold'>
-              {identifier.name}
-            </Text>
-            <Badge color={getBadgeColor()} size='1'>
-              {identifier.kind}
-            </Badge>
+            <Flex align='center' gap='2'>
+              <Text size='2' weight='bold'>
+                {identifier.name}
+              </Text>
+              <Badge color={getBadgeColor()} size='1'>
+                {identifier.kind}
+              </Badge>
+            </Flex>
+            {onClose && (
+              <button
+                onClick={onClose}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: 'var(--gray-11)',
+                  fontSize: '18px',
+                  lineHeight: '1',
+                  fontWeight: 'bold',
+                  borderRadius: '4px',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--gray-a3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }}
+                aria-label='Close tooltip'
+              >
+                ×
+              </button>
+            )}
           </Flex>
 
           {/* Type signature */}
@@ -185,27 +219,35 @@ export const HoverTooltip: React.FC<HoverTooltipProps> = ({
           </Box>
 
           {/* View docs link */}
-          <Box>
-            <Text size='1'>
-              <a
-                href={referenceUrl}
-                style={{
-                  color: 'var(--accent-9)',
-                  textDecoration: 'none',
-                  borderBottom: '1px solid transparent',
-                  transition: 'border-color 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderBottomColor = 'var(--accent-9)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderBottomColor = 'transparent'
-                }}
-              >
-                View full documentation →
-              </a>
-            </Text>
-          </Box>
+          {onNavigate && (
+            <Box>
+              <Text size='1'>
+                <a
+                  href={referenceUrl}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onNavigate()
+                    onClose?.()
+                  }}
+                  style={{
+                    color: 'var(--accent-9)',
+                    textDecoration: 'none',
+                    borderBottom: '1px solid transparent',
+                    transition: 'border-color 0.2s',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderBottomColor = 'var(--accent-9)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderBottomColor = 'transparent'
+                  }}
+                >
+                  View full documentation →
+                </a>
+              </Text>
+            </Box>
+          )}
         </Flex>
       </Card>
     </div>

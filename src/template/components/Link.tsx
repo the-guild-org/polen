@@ -3,8 +3,8 @@ import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter, useLocation } from 'react-router'
 // todo: #lib/kit-temp does not work as import
 import { ObjPartition } from '../../lib/kit-temp.ts'
-import type { LinkPropsRadix } from './RadixLink.jsx'
-import { LinkRadix } from './RadixLink.jsx'
+import type { LinkPropsRadix } from './RadixLink.tsx'
+import { LinkRadix } from './RadixLink.tsx'
 
 const reactRouterPropKeys = [
   'discover',

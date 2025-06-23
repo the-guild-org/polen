@@ -16,8 +16,6 @@ import { createLogger } from '../logger.ts'
 import { polenVirtual } from '../vi.ts'
 import { Pages } from './pages.ts'
 
-const debug = debugPolen.sub(`vite-plugin-core`)
-
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
 const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
@@ -183,7 +181,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         {
           identifier: viProjectData,
           async loader() {
-            debug(`loadingViProjectDataVirtualModule`)
             const schema = await readSchema()
 
             // ━ Schema presence causes adding some navbar items

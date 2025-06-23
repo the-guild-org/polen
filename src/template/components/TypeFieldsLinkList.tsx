@@ -1,7 +1,7 @@
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
 import type { FC } from 'react'
-import { Link } from './Link.jsx'
+import { Link } from './Link.tsx'
 
 export interface Props {
   type: GraphQLObjectType | GraphQLInterfaceType

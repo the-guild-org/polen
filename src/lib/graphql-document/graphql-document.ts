@@ -20,22 +20,18 @@
  * </GraphQLDocument>
  * ```
  *
- * @see {@link createPolenRehypePlugin} for MDX integration
+ * @see {@link GraphQLDocumentWithSchema} for MDX integration
  * @see {@link GraphQLDocument} for the main React component
  */
 
 export * from './analysis.ts'
 export * from './components/index.ts'
-export * from './polen-integration.ts'
 export * from './positioning-simple.ts'
-export * from './rehype-plugin-simple.ts'
 export * from './schema-integration.ts'
 export * from './types.ts'
 
 // Re-export key functions for convenience
 export { analyze, analyzer, extractIdentifiers } from './analysis.ts'
 export { GraphQLDocument } from './components/GraphQLDocument.tsx'
-export { createPolenGraphQLPlugin, createPolenRehypePlugin } from './polen-integration.ts'
 export { createSimpleOverlay, createSimplePositionCalculator } from './positioning-simple.ts'
-export { createRehypeGraphQLSimple, rehypeGraphQLSimple } from './rehype-plugin-simple.ts'
 export { analyzeWithSchema, createPolenSchemaResolver } from './schema-integration.ts'

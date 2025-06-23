@@ -50,32 +50,21 @@ export class SimplePositionCalculator {
     containerElement: Element,
     identifiers: Identifier[],
   ): void {
-    // Group identifiers by line for efficiency
-    const identifiersByLine = new Map<number, Identifier[]>()
-
-    for (const identifier of identifiers) {
-      const line = identifier.position.line
-      if (!identifiersByLine.has(line)) {
-        identifiersByLine.set(line, [])
+    // Sort all identifiers by position (right to left, bottom to top)
+    const sortedIdentifiers = [...identifiers].sort((a, b) => {
+      // Sort by line first (bottom to top)
+      if (a.position.line !== b.position.line) {
+        return b.position.line - a.position.line
       }
-      identifiersByLine.get(line)!.push(identifier)
-    }
+      // Then by column (right to left)
+      return b.position.column - a.position.column
+    })
 
-    // Process each line
-    const lines = containerElement.querySelectorAll('.line')
-
-    for (const [lineNumber, lineIdentifiers] of identifiersByLine) {
-      const lineElement = lines[lineNumber - 1]
-      if (!lineElement) continue
-
-      // Sort identifiers by column position (right to left to avoid offset issues)
-      const sortedIdentifiers = [...lineIdentifiers].sort(
-        (a, b) => b.position.column - a.position.column,
-      )
-
-      for (const identifier of sortedIdentifiers) {
-        this.wrapIdentifier(lineElement, identifier)
-      }
+    // Process all identifiers
+    let wrappedCount = 0
+    for (const identifier of sortedIdentifiers) {
+      const wrapped = this.wrapIdentifier(containerElement, identifier)
+      if (wrapped) wrappedCount++
     }
   }
 
@@ -84,23 +73,29 @@ export class SimplePositionCalculator {
    */
   getIdentifierPositions(
     containerElement: Element,
+    relativeToElement?: Element,
   ): Map<string, PositionResult> {
     const results = new Map<string, PositionResult>()
-    const containerRect = containerElement.getBoundingClientRect()
 
     // Find all wrapped identifiers
     const wrappedIdentifiers = containerElement.querySelectorAll('[data-graphql-id]')
+
+    // Use the provided element for relative positioning, or the container itself
+    const referenceElement = relativeToElement || containerElement
 
     for (const element of wrappedIdentifiers) {
       const id = element.getAttribute('data-graphql-id')
       if (!id) continue
 
-      const rect = element.getBoundingClientRect()
+      // Get position relative to the reference element
+      const referenceRect = referenceElement.getBoundingClientRect()
+      const elementRect = element.getBoundingClientRect()
+
       const position: DOMPosition = {
-        top: rect.top - containerRect.top,
-        left: rect.left - containerRect.left,
-        width: rect.width,
-        height: rect.height,
+        top: elementRect.top - referenceRect.top,
+        left: elementRect.left - referenceRect.left,
+        width: elementRect.width,
+        height: elementRect.height,
       }
 
       // Reconstruct identifier from data attributes
@@ -125,65 +120,96 @@ export class SimplePositionCalculator {
 
   /**
    * Wrap an identifier in a span for positioning
+   * Returns true if the identifier was successfully wrapped
    */
-  private wrapIdentifier(lineElement: Element, identifier: Identifier): void {
+  private wrapIdentifier(containerElement: Element, identifier: Identifier): boolean {
     const walker = document.createTreeWalker(
-      lineElement,
+      containerElement,
       NodeFilter.SHOW_TEXT,
       null,
     )
 
-    let currentPos = 0
+    let currentLine = 1
+    let currentColumn = 1
     let node: Node | null
 
     while (node = walker.nextNode()) {
       const textNode = node as Text
       const text = textNode.textContent || ''
 
-      // Check if this text node contains our identifier
-      const identifierIndex = text.indexOf(identifier.name)
-      if (identifierIndex !== -1) {
-        // Create a unique ID for this identifier
-        const id = `${identifier.position.start}-${identifier.name}-${identifier.kind}`
-
-        // Check if already wrapped
-        if (textNode.parentElement?.hasAttribute('data-graphql-id')) {
-          return
+      // Check if already wrapped
+      if (textNode.parentElement?.hasAttribute('data-graphql-id')) {
+        // Update position tracking and continue
+        for (const char of text) {
+          if (char === '\n') {
+            currentLine++
+            currentColumn = 1
+          } else {
+            currentColumn++
+          }
         }
-
-        // Split the text node and wrap the identifier
-        const before = text.substring(0, identifierIndex)
-        const after = text.substring(identifierIndex + identifier.name.length)
-
-        const span = document.createElement('span')
-        span.setAttribute('data-graphql-id', id)
-        span.setAttribute('data-graphql-name', identifier.name)
-        span.setAttribute('data-graphql-kind', identifier.kind)
-        span.setAttribute('data-graphql-start', String(identifier.position.start))
-        span.setAttribute('data-graphql-end', String(identifier.position.end))
-        span.setAttribute('data-graphql-line', String(identifier.position.line))
-        span.setAttribute('data-graphql-column', String(identifier.position.column))
-        span.setAttribute('data-graphql-path', identifier.schemaPath.join(','))
-        span.textContent = identifier.name
-
-        const parent = textNode.parentNode!
-
-        if (before) {
-          parent.insertBefore(document.createTextNode(before), textNode)
-        }
-
-        parent.insertBefore(span, textNode)
-
-        if (after) {
-          parent.insertBefore(document.createTextNode(after), textNode)
-        }
-
-        parent.removeChild(textNode)
-        return
+        continue
       }
 
-      currentPos += text.length
+      // Track position in the text
+      let textIndex = 0
+      while (textIndex < text.length) {
+        // Check if we're at the identifier's position
+        if (
+          currentLine === identifier.position.line
+          && currentColumn === identifier.position.column
+        ) {
+          // Verify it's actually our identifier
+          const remainingText = text.substring(textIndex)
+          if (remainingText.startsWith(identifier.name)) {
+            // Create a unique ID for this identifier
+            const id = `${identifier.position.start}-${identifier.name}-${identifier.kind}`
+
+            // Split the text node and wrap the identifier
+            const before = text.substring(0, textIndex)
+            const after = text.substring(textIndex + identifier.name.length)
+
+            const span = document.createElement('span')
+            span.setAttribute('data-graphql-id', id)
+            span.setAttribute('data-graphql-name', identifier.name)
+            span.setAttribute('data-graphql-kind', identifier.kind)
+            span.setAttribute('data-graphql-start', String(identifier.position.start))
+            span.setAttribute('data-graphql-end', String(identifier.position.end))
+            span.setAttribute('data-graphql-line', String(identifier.position.line))
+            span.setAttribute('data-graphql-column', String(identifier.position.column))
+            span.setAttribute('data-graphql-path', identifier.schemaPath.join(','))
+            span.textContent = identifier.name
+
+            const parent = textNode.parentNode!
+
+            if (before) {
+              parent.insertBefore(document.createTextNode(before), textNode)
+            }
+
+            parent.insertBefore(span, textNode)
+
+            if (after) {
+              parent.insertBefore(document.createTextNode(after), textNode)
+            }
+
+            parent.removeChild(textNode)
+            return true
+          }
+        }
+
+        // Update position tracking
+        const char = text[textIndex]
+        if (char === '\n') {
+          currentLine++
+          currentColumn = 1
+        } else {
+          currentColumn++
+        }
+        textIndex++
+      }
     }
+
+    return false // Identifier not found
   }
 }
 

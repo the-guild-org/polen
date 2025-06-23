@@ -1,7 +1,7 @@
 import { Box, Flex, Heading, Text } from '@radix-ui/themes'
 import type { GraphQLArgument } from 'graphql'
 import type { FC } from 'react'
-import { TypeAnnotation } from './TypeAnnotation.jsx'
+import { TypeAnnotation } from './TypeAnnotation.tsx'
 
 export interface Props {
   args: readonly GraphQLArgument[]

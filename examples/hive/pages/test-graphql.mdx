@@ -1,0 +1,19 @@
+---
+title: Test GraphQL Document
+---
+
+import { GraphQLDocumentWithSchema, TestComponent } from 'polen/components'
+
+# Test GraphQL Document
+
+This is a test page to verify GraphQL documents are working.
+
+<TestComponent>Hello from MDX</TestComponent>
+
+<GraphQLDocumentWithSchema>
+{`query TestQuery {
+  __typename
+}`}
+</GraphQLDocumentWithSchema>
+
+Done!

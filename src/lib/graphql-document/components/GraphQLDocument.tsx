@@ -33,7 +33,7 @@ export interface GraphQLDocumentProps {
   /** The GraphQL document source code */
   children: string
   /** GraphQL schema for validation and linking */
-  schema: GraphQLSchema
+  schema?: GraphQLSchema
   /** Component options */
   options?: GraphQLDocumentOptions
   /** Pre-rendered Shiki HTML (from build time) */
@@ -66,12 +66,42 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   // Container ref for positioning calculations
   const containerRef = useRef<HTMLDivElement>(null)
   const [isReady, setIsReady] = useState(false)
+  const [openTooltipId, setOpenTooltipId] = useState<string | null>(null)
+
+  // Handle click outside to close tooltips
+  useEffect(() => {
+    if (!openTooltipId) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the tooltip and identifier links
+      const target = event.target as HTMLElement
+
+      // Don't close if clicking on an identifier link or tooltip
+      if (
+        target.closest('.graphql-identifier-overlay')
+        || target.closest('.graphql-hover-tooltip')
+      ) {
+        return
+      }
+
+      // Close the tooltip
+      setOpenTooltipId(null)
+    }
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openTooltipId])
 
   // Layer 1: Parse and analyze
   const analysisResult = useMemo(() => {
     if (plain) return null
-    return analyze(children)
-  }, [children, plain])
+    const result = analyze(children, { schema })
+    return result
+  }, [children, plain, schema])
 
   // Layer 2: Schema resolution
   const resolver = useMemo(() => {
@@ -80,7 +110,9 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   }, [schema, plain])
 
   const resolutions = useMemo(() => {
-    if (!analysisResult || !resolver) return new Map()
+    if (!analysisResult || !resolver) {
+      return new Map()
+    }
 
     const results = new Map()
     for (const [position, identifier] of analysisResult.identifiers.byPosition) {
@@ -108,6 +140,8 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
 
     // Get the code element within the container
     const codeElement = containerRef.current.querySelector('pre.shiki code')
+      || containerRef.current.querySelector('pre code')
+      || containerRef.current.querySelector('code')
     if (!codeElement) {
       return
     }
@@ -118,9 +152,12 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
 
     // Get positions after DOM update
     requestAnimationFrame(() => {
-      const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element)
-      setPositions(newPositions)
-      setIsReady(true)
+      // Pass containerRef.current as the reference element for positioning
+      if (containerRef.current) {
+        const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
+        setPositions(newPositions)
+        setIsReady(true)
+      }
     })
   }, [analysisResult, positionCalculator, plain, highlightedHtml])
 
@@ -130,8 +167,10 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
 
     const handleResize = () => {
       const codeElement = containerRef.current?.querySelector('pre.shiki code')
-      if (codeElement) {
-        const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element)
+        || containerRef.current?.querySelector('pre code')
+        || containerRef.current?.querySelector('code')
+      if (codeElement && containerRef.current) {
+        const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
         setPositions(newPositions)
       }
     }
@@ -165,7 +204,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
 
         {/* Interactive overlay layer */}
         {!plain && isReady && (
-          <div className='graphql-interaction-layer'>
+          <div className='graphql-interaction-layer' style={{ pointerEvents: 'none' }}>
             {Array.from(positions.entries()).map(([id, { position, identifier }]) => {
               const startPos = identifier.position.start
               const resolution = resolutions.get(startPos)
@@ -180,6 +219,8 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
                   position={position}
                   onNavigate={handleNavigate}
                   debug={debug}
+                  isOpen={openTooltipId === id}
+                  onToggle={(open) => setOpenTooltipId(open ? id : null)}
                 />
               )
             })}
@@ -189,7 +230,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         {/* Validation errors overlay */}
         {validationErrors.length > 0 && (
           <div className='graphql-validation-errors'>
-            {validationErrors.map((error, index) => (
+            {validationErrors.map((error: any, index: number) => (
               <div key={index} className='graphql-error'>
                 {error.message}
               </div>

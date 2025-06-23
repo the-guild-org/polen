@@ -3,7 +3,7 @@ import type { ReactRouter } from '#dep/react-router/index'
 import { app } from '#template/server/app'
 import * as NodeFs from 'node:fs/promises'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { renderPage } from '../render-page.jsx'
+import { renderPage } from '../render-page.tsx'
 import { getRoutesPaths } from './get-route-paths.ts'
 
 export const generate = async (view: ReactRouter.StaticHandler) => {

@@ -4,7 +4,7 @@ import { Favicon } from '#lib/favicon/index'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Http } from '@wollybeard/kit'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { renderPage } from './render-page.jsx'
+import { renderPage } from './render-page.tsx'
 import { view } from './view.ts'
 
 export const app = new Hono.Hono()

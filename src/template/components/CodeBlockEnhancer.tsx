@@ -10,13 +10,13 @@ export const CodeBlockEnhancer = () => {
     // Add styles for code block enhancements
     const styleId = 'code-block-enhancer-styles'
     let styleElement = document.getElementById(styleId) as HTMLStyleElement
-    
+
     if (!styleElement) {
       styleElement = document.createElement('style')
       styleElement.id = styleId
       document.head.appendChild(styleElement)
     }
-    
+
     styleElement.textContent = `
       /* Enhanced code block styles */
       pre.shiki {
@@ -89,7 +89,7 @@ export const CodeBlockEnhancer = () => {
         color: white !important;
       }
     `
-    
+
     return () => {
       if (styleElement && styleElement.parentNode) {
         styleElement.parentNode.removeChild(styleElement)
@@ -100,22 +100,22 @@ export const CodeBlockEnhancer = () => {
   useEffect(() => {
     const enhanceCodeBlocks = () => {
       const codeBlocks = document.querySelectorAll('pre.shiki:not([data-enhanced])')
-      
+
       codeBlocks.forEach((block) => {
         const preElement = block as HTMLPreElement
         preElement.setAttribute('data-enhanced', 'true')
-        
+
         // Get language from class name
         const classes = preElement.className.split(' ')
         const language = classes.find(c => c !== 'shiki' && c !== 'shiki-light' && c !== 'shiki-dark') || 'text'
-        
+
         // Check for title in first line
         const codeElement = preElement.querySelector('code')
         if (!codeElement) return
-        
+
         const firstLine = codeElement.textContent?.split('\n')[0] || ''
         let title = ''
-        
+
         const titleMatch = firstLine.match(/^\/\/\s*title:\s*(.+)$/i)
         if (titleMatch && titleMatch[1]) {
           title = titleMatch[1]
@@ -124,27 +124,27 @@ export const CodeBlockEnhancer = () => {
           if (firstLineElement) {
             firstLineElement.style.display = 'none'
           }
-          
+
           // Set data attributes for CSS
           preElement.setAttribute('data-title', title)
           preElement.setAttribute('data-language', language)
           preElement.style.marginTop = '3rem'
         }
-        
+
         // Create copy button
         const copyButton = document.createElement('button')
         copyButton.className = 'code-block-copy'
         copyButton.textContent = 'Copy'
         copyButton.setAttribute('data-copied', 'false')
-        
+
         copyButton.onclick = async (e) => {
           e.preventDefault()
           e.stopPropagation()
-          
+
           // Get clean code without the title line
           const code = codeElement.textContent || ''
           const cleanCode = title ? code.split('\n').slice(1).join('\n') : code
-          
+
           try {
             await navigator.clipboard.writeText(cleanCode)
             copyButton.textContent = 'Copied!'
@@ -157,15 +157,15 @@ export const CodeBlockEnhancer = () => {
             console.error('Failed to copy:', err)
           }
         }
-        
+
         // Append copy button directly to pre element
         preElement.appendChild(copyButton)
       })
     }
-    
+
     // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(enhanceCodeBlocks, 100)
-    
+
     return () => {
       clearTimeout(timeoutId)
       // Clean up enhanced code blocks
@@ -181,12 +181,12 @@ export const CodeBlockEnhancer = () => {
         const firstLine = block.querySelector('span.line') as HTMLElement
         if (firstLine && firstLine.style.display === 'none') {
           firstLine.style.display = ''
-        }
-        // Reset margin
-        (block as HTMLElement).style.marginTop = ''
+        } // Reset margin
+
+        ;(block as HTMLElement).style.marginTop = ''
       })
     }
   }, [location.pathname]) // Re-run when route changes
-  
+
   return null
 }

@@ -110,7 +110,7 @@ export const Pages = ({
                 light: `github-light`,
                 dark: `tokyo-night`,
               },
-              defaultColor: false,
+              defaultColor: 'light',
               cssVariablePrefix: `--shiki-`,
               transformers: [
                 // Line numbers will be handled via CSS

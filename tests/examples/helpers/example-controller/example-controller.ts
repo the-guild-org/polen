@@ -108,10 +108,25 @@ export const create = async (parameters: {
           const processIterator = serverProcess[Symbol.asyncIterator]()
 
           let urlFound = false
+          const serverErrors: string[] = []
           const readLines = async () => {
             try {
               for await (const line of { [Symbol.asyncIterator]: () => processIterator }) {
+                console.log(line)
+
                 const linePlain = stripAnsi(line)
+
+                const isError = line.toLowerCase().includes('error') || line.includes('Error')
+
+                if (isError) {
+                  serverErrors.push(line)
+                  // If we haven't found URL yet and hit an error, reject immediately
+                  if (!urlFound) {
+                    reject(new Error(`Server failed to start: ${line}`))
+                    return
+                  }
+                }
+
                 const url = (logUrlPattern.exec(linePlain))?.[1]
                 if (url && !urlFound) {
                   urlFound = true
@@ -127,10 +142,14 @@ export const create = async (parameters: {
                 }
               }
               if (!urlFound) {
-                reject(new Error(`Server process did not output a URL`))
+                const errorDetails = serverErrors.length > 0
+                  ? `\nServer errors:\n${serverErrors.join('\n')}`
+                  : ''
+                reject(new Error(`Server process did not output a URL${errorDetails}`))
               }
             } catch (error) {
-              // Ignore errors after we found the URL
+              // Log any errors that occur
+              console.error('[DEV SERVER ERROR]', error)
               if (!urlFound) {
                 reject(error)
               }

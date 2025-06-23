@@ -1,7 +1,7 @@
 import { Grafaid } from '#lib/grafaid/index'
 import { Code, Flex } from '@radix-ui/themes'
-import { Link } from '../Link.jsx'
-import { TypeKindIcon } from './graphql.jsx'
+import { Link } from '../Link.tsx'
+import { TypeKindIcon } from './graphql.tsx'
 import { typeKindTokensIndex } from './type-kind-tokens.ts'
 
 export const TypeLink: React.FC<{ type: Grafaid.Schema.TypesLike.Named }> = ({ type }) => {

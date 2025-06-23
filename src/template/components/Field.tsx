@@ -2,10 +2,10 @@ import { GrafaidOld } from '#lib/grafaid-old/index'
 import type { BoxProps } from '@radix-ui/themes'
 import { Box, Text } from '@radix-ui/themes'
 import type { FC } from 'react'
-import { ArgumentListAnnotation } from './ArgumentListAnnotation.jsx'
-import { DeprecationReason } from './DeprecationReason.jsx'
-import { Description } from './Description.jsx'
-import { TypeAnnotation } from './TypeAnnotation.jsx'
+import { ArgumentListAnnotation } from './ArgumentListAnnotation.tsx'
+import { DeprecationReason } from './DeprecationReason.tsx'
+import { Description } from './Description.tsx'
+import { TypeAnnotation } from './TypeAnnotation.tsx'
 
 export type Props = BoxProps & {
   data: GrafaidOld.GraphQLField

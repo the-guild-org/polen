@@ -2,9 +2,9 @@ import { Grafaid } from '#lib/grafaid/index'
 import { ReactRouterAid } from '#lib/react-router-aid/index'
 import { useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { useParams } from 'react-router'
-import { Field } from '../components/Field.jsx'
-import { MissingSchema } from '../components/MissingSchema.jsx'
-import type { reference } from './reference.jsx'
+import { Field } from '../components/Field.tsx'
+import { MissingSchema } from '../components/MissingSchema.tsx'
+import type { reference } from './reference.tsx'
 
 const Component = () => {
   const params = useParams() as { type: string; field: string }

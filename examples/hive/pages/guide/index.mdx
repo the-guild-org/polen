@@ -1,4 +1,4 @@
-import { Tabs } from 'polen/components'
+import { Tabs, GraphQLDocumentWithSchema } from 'polen/components'
 
 # Using the GraphQL API
 
@@ -142,8 +142,8 @@ To paginate using cursor-based pagination in GraphQL:
 
 Repeat this process until `hasNextPage` is `false`.
 
-```graphql filename="Example: Paginated schema versions"
-query PaginatedSchemaVersions($targetSelector: TargetSelectorInput, $first: Int!, $after: String) {
+<GraphQLDocumentWithSchema>
+{`query PaginatedSchemaVersions($targetSelector: TargetSelectorInput, $first: Int!, $after: String) {
   target(reference: { bySelector: $targetSelector }) {
     id
     schemaVersions(first: $first, after: $after) {
@@ -159,8 +159,8 @@ query PaginatedSchemaVersions($targetSelector: TargetSelectorInput, $first: Int!
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 This method ensures stable pagination even if the underlying data changes (e.g. new items are
 inserted).
@@ -175,8 +175,8 @@ case the mutation fails (e.g. due to a input validation error), the `ok` field i
 `error` field is non-null containing an error message and often additional information on the source
 of the error.
 
-```graphql filename="Example: Create project mutation"
-mutation CreateProjectMutation($input: CreateProjectInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation CreateProjectMutation($input: CreateProjectInput!) {
   createProject(input: $input) {
     ok {
       createdProject {
@@ -191,5 +191,5 @@ mutation CreateProjectMutation($input: CreateProjectInput!) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>

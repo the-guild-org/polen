@@ -20,48 +20,45 @@ The implementation follows a layered architecture:
 3. **Positioning Engine** - Maps source positions to DOM coordinates
 4. **UI Components** - React components for interactivity
 5. **Orchestration** - Main component tying everything together
-6. **Polen Integration** - Rehype plugin and build pipeline
+6. **Polen Integration** - Virtual modules and Vite plugin
 
 ## Usage
 
 ### Basic Setup
 
-1. Add the rehype plugin to your MDX configuration:
+1. Import the component in your MDX files:
 
 ```typescript
-import { createPolenRehypePlugin } from 'polen/lib/graphql-document'
-
-// In your pages plugin
-rehypePlugins: ;
-;[
-  // ... other plugins
-  createPolenRehypePlugin({
-    schema: yourGraphQLSchema,
-    validateAtBuildTime: true,
-  }),
-]
+import { GraphQLDocumentWithSchema } from 'polen/components'
 ```
 
-2. Use GraphQL code blocks in your markdown:
+2. Use the component with GraphQL documents:
 
-```markdown
-\`\`\`graphql
-query GetUser($id: ID!) {
-user(id: $id) {
-name
-email
-}
-}
-\`\`\`
+```mdx
+<GraphQLDocumentWithSchema>
+{`query GetUser($id: ID!) {
+  user(id: $id) {
+    name
+    email
+  }
+}`}
+</GraphQLDocumentWithSchema>
 ```
 
-### Options
+### Component Props
 
-Control behavior with language options:
+The `GraphQLDocumentWithSchema` component automatically loads the schema from Polen's virtual modules. You can pass options:
 
-- `\`\`\`graphql plain\`\`\` - Disable interactivity
-- `\`\`\`graphql debug\`\`\` - Show debug overlays
-- `\`\`\`graphql validate=false\`\`\` - Skip validation
+```mdx
+<GraphQLDocumentWithSchema 
+  options={{ 
+    debug: true,
+    onNavigate: (url) => console.log('Navigate to:', url)
+  }}
+>
+{`query { user { name } }`}
+</GraphQLDocumentWithSchema>
+```
 
 ### React Component
 
@@ -82,7 +79,7 @@ import { GraphQLDocument } from 'polen/lib/graphql-document'
 - `GraphQLDocument` - Main React component
 - `IdentifierLink` - Interactive overlay for identifiers
 - `HoverTooltip` - Tooltip showing type information
-- `rehypeGraphQLSimple` - MDX transformation plugin
+- `GraphQLDocumentWithSchema` - Wrapper that loads schema from Polen
 - `PolenSchemaResolver` - Schema integration
 
 ### Testing

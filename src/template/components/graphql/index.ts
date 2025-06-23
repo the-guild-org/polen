@@ -1,1 +1,1 @@
-export * as Graphql from './graphql.jsx'
+export * as Graphql from './graphql.tsx'

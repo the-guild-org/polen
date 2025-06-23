@@ -36,3 +36,4 @@ dist-demos
 .github/**/*.js.map
 .github/**/*.d.ts
 .github/**/*.d.ts.map
+examples/hive/*.log

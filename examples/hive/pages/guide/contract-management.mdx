@@ -2,6 +2,8 @@
 description: Learn how to manage contracts via the Hive Console GraphQL API.
 ---
 
+import { GraphQLDocumentWithSchema } from 'polen/components'
+
 # Contract Management via the GraphQL API
 
 The contracts of a target can be managed via the Hive Console GraphQL API. For more information,
@@ -11,8 +13,8 @@ please refer to our [schema contracts documentation](/docs/schema-registry/contr
 
 Use the `Target.contracts` field for retrieving a list of all contracts within the target.
 
-```graphql
-query ContractTargets($targetId: ID!) {
+<GraphQLDocumentWithSchema>
+{`query ContractTargets($targetId: ID!) {
   target(reference: { byId: $targetId }) {
     id
     contracts {
@@ -32,15 +34,15 @@ query ContractTargets($targetId: ID!) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Retrieve a list of all Active Contracts in Target
 
 Use the `Target.activeContracts` field for retrieving a list of all contracts within the target.
 
-```graphql
-query ActiveContractTargets($targetId: ID!) {
+<GraphQLDocumentWithSchema>
+{`query ActiveContractTargets($targetId: ID!) {
   target(reference: { byId: $targetId }) {
     id
     activeContracts {
@@ -60,15 +62,15 @@ query ActiveContractTargets($targetId: ID!) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ### Create a Contract
 
 Use the `Mutation.createContract` field for creating a new contract.
 
-```graphql
-mutation CreateContract($input: CreateContractInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation CreateContract($input: CreateContractInput!) {
   createContract(input: $input) {
     ok {
       createdContract {
@@ -90,16 +92,16 @@ mutation CreateContract($input: CreateContractInput!) {
       }
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Disable a Contract
 
 Use the `Mutation.disableContract` field for disabling a contract. **Note:** A disabled contract
 cannot be made active again.
 
-```graphql
-mutation DisableContract($input: DisableContractInput!) {
+<GraphQLDocumentWithSchema>
+{`mutation DisableContract($input: DisableContractInput!) {
   disableContract(input: $input) {
     ok {
       disabledContract {
@@ -115,8 +117,8 @@ mutation DisableContract($input: DisableContractInput!) {
       message
     }
   }
-}
-```
+}`}
+</GraphQLDocumentWithSchema>
 
 ## Delete a Contract
 

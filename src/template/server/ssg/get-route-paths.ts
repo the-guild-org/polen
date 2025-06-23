@@ -3,7 +3,7 @@ import { visit } from 'graphql'
 // Or your specific import path for this type
 import { ReactRouterAid } from '#lib/react-router-aid/index'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { routes } from '../../routes.jsx'
+import { routes } from '../../routes.tsx'
 
 // todo: Frameworks tend to colocate ssg data loaders with routes to solve the following
 // problem which is we have to map data loaders to paramterized routes.

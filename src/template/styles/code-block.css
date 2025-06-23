@@ -33,6 +33,36 @@
   color-scheme: dark;
 }
 
+/* Shiki token colors for light theme (github-light) */
+:root {
+  --shiki-color-text: #24292e;
+  --shiki-color-background: #f6f8fa;
+  --shiki-token-constant: #005cc5;
+  --shiki-token-string: #032f62;
+  --shiki-token-comment: #6a737d;
+  --shiki-token-keyword: #d73a49;
+  --shiki-token-parameter: #e36209;
+  --shiki-token-function: #6f42c1;
+  --shiki-token-string-expression: #032f62;
+  --shiki-token-punctuation: #24292e;
+  --shiki-token-link: #032f62;
+}
+
+/* Shiki token colors for dark theme (tokyo-night) */
+.dark {
+  --shiki-color-text: #c0caf5;
+  --shiki-color-background: #1a1b26;
+  --shiki-token-constant: #ff9e64;
+  --shiki-token-string: #9ece6a;
+  --shiki-token-comment: #565f89;
+  --shiki-token-keyword: #bb9af7;
+  --shiki-token-parameter: #e0af68;
+  --shiki-token-function: #7aa2f7;
+  --shiki-token-string-expression: #9ece6a;
+  --shiki-token-punctuation: #c0caf5;
+  --shiki-token-link: #9ece6a;
+}
+
 /* Shiki code blocks */
 pre.shiki {
   margin: 1rem 0;
@@ -41,6 +71,8 @@ pre.shiki {
   overflow-x: auto;
   font-size: 14px;
   line-height: 1.6;
+  background-color: var(--shiki-color-background);
+  color: var(--shiki-color-text);
 }
 
 pre.shiki code {

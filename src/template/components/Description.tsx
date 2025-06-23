@@ -1,6 +1,6 @@
 import { Text } from '@radix-ui/themes'
 import type { FC } from 'react'
-import { Markdown } from './Markdown.jsx'
+import { Markdown } from './Markdown.tsx'
 // import type { Grafaid } from '#lib/grafaid'
 import type { GrafaidOld } from '#lib/grafaid-old/index'
 import type { GraphQLNamedType } from 'graphql'

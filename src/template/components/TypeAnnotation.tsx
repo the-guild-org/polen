@@ -2,7 +2,7 @@ import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'
 import type { FC } from 'react'
-import { Link } from './Link.jsx'
+import { Link } from './Link.tsx'
 
 export interface Props {
   type: GraphQLType // Can be either GraphQLInputType or GraphQLOutputType

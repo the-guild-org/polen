@@ -53,6 +53,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
   extractIdentifiers(ast: DocumentNode, config: AnalysisConfig = {}): IdentifierMap {
     const identifiers: Identifier[] = []
     const errors: AnalysisError[] = []
+    const schema = config.schema
 
     // Context tracking during traversal
     let currentOperationType: 'query' | 'mutation' | 'subscription' | undefined
@@ -77,11 +78,35 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
           currentOperationType = node.operation
           currentOperationName = node.name?.value
           selectionPath = []
-          parentTypes = []
+
+          // Set the root type based on operation type
+          if (schema) {
+            if (node.operation === 'query' && schema.getQueryType()) {
+              parentTypes = [schema.getQueryType()!.name]
+            } else if (node.operation === 'mutation' && schema.getMutationType()) {
+              parentTypes = [schema.getMutationType()!.name]
+            } else if (node.operation === 'subscription' && schema.getSubscriptionType()) {
+              parentTypes = [schema.getSubscriptionType()!.name]
+            } else {
+              parentTypes = []
+            }
+          } else {
+            // Fallback to default root type names
+            if (node.operation === 'query') {
+              parentTypes = ['Query']
+            } else if (node.operation === 'mutation') {
+              parentTypes = ['Mutation']
+            } else if (node.operation === 'subscription') {
+              parentTypes = ['Subscription']
+            } else {
+              parentTypes = []
+            }
+          }
         },
         leave: () => {
           currentOperationType = undefined
           currentOperationName = undefined
+          parentTypes = []
         },
       },
 
@@ -132,17 +157,39 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
           })
 
           // Track parent type for nested selections
-          // Note: In a real implementation, we'd resolve the field's return type
-          // For now, we'll use a simplified approach
-          if (this.isObjectField(fieldName)) {
-            parentTypes.push(this.inferReturnType(parentType, fieldName))
-          }
+          // Resolve the field's return type from schema if available
+          let pushedType = false
+          if (schema && parentType) {
+            const type = schema.getType(parentType)
+            if (type && ('getFields' in type)) {
+              const fields = (type as any).getFields()
+              const field = fields[fieldName]
+              if (field) {
+                // Get the base type name (unwrap NonNull and List wrappers)
+                let fieldType = field.type
+                while (fieldType.ofType) {
+                  fieldType = fieldType.ofType
+                }
+                if (fieldType.name) {
+                  parentTypes.push(fieldType.name)
+                  pushedType = true
+                }
+              }
+            }
+          } else if (this.isObjectField(fieldName)) {
+            // Fallback to inference if no schema
+            const inferredType = this.inferReturnType(parentType, fieldName)
+            parentTypes.push(inferredType)
+            pushedType = true
+          } // Store whether we pushed a type for this field
+
+          ;(node as any)._pushedType = pushedType
         },
         leave: (node: FieldNode) => {
           selectionPath.pop()
 
-          // Remove parent type if we added one
-          if (this.isObjectField(node.name.value)) {
+          // Remove parent type if we added one in enter
+          if ((node as any)._pushedType) {
             parentTypes.pop()
           }
         },
@@ -277,9 +324,27 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
   }
 
   private isObjectField(fieldName: string): boolean {
-    // In a real implementation, this would check against the schema
-    // For now, we'll use common patterns
-    const objectFieldPatterns = ['user', 'post', 'comment', 'profile', 'settings']
+    // This is only used as a fallback when no schema is available
+    // Common patterns for object-returning fields
+    const objectFieldPatterns = [
+      'user',
+      'users',
+      'post',
+      'posts',
+      'comment',
+      'comments',
+      'profile',
+      'settings',
+      'organization',
+      'project',
+      'target',
+      'member',
+      'members',
+      'node',
+      'nodes',
+      'edge',
+      'edges',
+    ]
     return objectFieldPatterns.some(pattern => fieldName.toLowerCase().includes(pattern))
   }
 
