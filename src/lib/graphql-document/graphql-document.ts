@@ -1,11 +1,27 @@
 /**
- * GraphQL Document Analysis Library
+ * GraphQL Document Component Library
  *
- * Provides tools for analyzing GraphQL documents to extract identifiers,
- * positions, and context information for interactive documentation features.
+ * Transform static GraphQL code blocks into interactive documentation with
+ * hyperlinks, tooltips, and schema validation.
  *
- * This is the foundation layer for the GraphQL Document Component that will
- * transform static GraphQL code blocks into hyperlinked, interactive documentation.
+ * ## Features
+ * - Hyperlinked identifiers that navigate to reference documentation
+ * - Hover tooltips showing type information and descriptions
+ * - Schema validation with error highlighting
+ * - Build-time GraphQL validation
+ * - Support for all GraphQL operations (queries, mutations, subscriptions, fragments)
+ *
+ * ## Usage
+ * ```typescript
+ * import { GraphQLDocument } from 'polen/lib/graphql-document'
+ *
+ * <GraphQLDocument schema={schema}>
+ *   {`query { user { name } }`}
+ * </GraphQLDocument>
+ * ```
+ *
+ * @see {@link createPolenRehypePlugin} for MDX integration
+ * @see {@link GraphQLDocument} for the main React component
  */
 
 export * from './analysis.ts'
