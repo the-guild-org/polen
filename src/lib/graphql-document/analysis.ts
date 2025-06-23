@@ -1,26 +1,26 @@
 import {
+  type ArgumentNode,
+  type ASTNode,
+  type DirectiveNode,
+  type DocumentNode,
+  type FieldNode,
+  type FragmentDefinitionNode,
+  type GraphQLError,
+  type GraphQLSchema,
+  type OperationDefinitionNode,
   parse,
   validate,
-  visit,
-  type DocumentNode,
-  type GraphQLSchema,
-  type GraphQLError,
-  type OperationDefinitionNode,
-  type FragmentDefinitionNode,
-  type FieldNode,
-  type ArgumentNode,
   type VariableDefinitionNode,
-  type DirectiveNode,
-  type ASTNode
+  visit,
 } from 'graphql'
 import type {
-  GraphQLAnalyzer,
-  AnalysisResult,
   AnalysisConfig,
+  AnalysisError,
+  AnalysisResult,
+  GraphQLAnalyzer,
   Identifier,
-  IdentifierMap,
   IdentifierContext,
-  AnalysisError
+  IdentifierMap,
 } from './types.ts'
 
 /**
@@ -32,8 +32,8 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
    */
   parse(source: string): DocumentNode {
     try {
-      return parse(source, { 
-        noLocation: false // We need location info for positioning
+      return parse(source, {
+        noLocation: false, // We need location info for positioning
       })
     } catch (error) {
       throw new Error(`Failed to parse GraphQL document: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -67,7 +67,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
         operationType: currentOperationType,
         operationName: currentOperationName,
         inFragment: currentFragment,
-        selectionPath: [...selectionPath]
+        selectionPath: [...selectionPath],
       }
     }
 
@@ -82,7 +82,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
         leave: () => {
           currentOperationType = undefined
           currentOperationName = undefined
-        }
+        },
       },
 
       FragmentDefinition: {
@@ -97,7 +97,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
             kind: 'Fragment',
             position: this.getPosition(node.name),
             schemaPath: [node.name.value],
-            context: createContext()
+            context: createContext(),
           })
 
           // Add type condition as identifier
@@ -106,20 +106,20 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
             kind: 'Type',
             position: this.getPosition(node.typeCondition.name),
             schemaPath: [node.typeCondition.name.value],
-            context: createContext()
+            context: createContext(),
           })
         },
         leave: () => {
           currentFragment = undefined
           parentTypes = []
-        }
+        },
       },
 
       Field: {
         enter: (node: FieldNode) => {
           const fieldName = node.name.value
           const parentType = parentTypes[parentTypes.length - 1]
-          
+
           selectionPath.push(fieldName)
 
           this.addIdentifier(identifiers, {
@@ -128,7 +128,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
             position: this.getPosition(node.name),
             parentType,
             schemaPath: parentType ? [parentType, fieldName] : [fieldName],
-            context: createContext()
+            context: createContext(),
           })
 
           // Track parent type for nested selections
@@ -140,12 +140,12 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
         },
         leave: (node: FieldNode) => {
           selectionPath.pop()
-          
+
           // Remove parent type if we added one
           if (this.isObjectField(node.name.value)) {
             parentTypes.pop()
           }
-        }
+        },
       },
 
       Argument: {
@@ -159,12 +159,12 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
             kind: 'Argument',
             position: this.getPosition(node.name),
             parentType,
-            schemaPath: parentType && fieldName 
+            schemaPath: parentType && fieldName
               ? [parentType, fieldName, argName]
               : [argName],
-            context: createContext()
+            context: createContext(),
           })
-        }
+        },
       },
 
       VariableDefinition: {
@@ -174,7 +174,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
             kind: 'Variable',
             position: this.getPosition(node.variable.name),
             schemaPath: [node.variable.name.value],
-            context: createContext()
+            context: createContext(),
           })
 
           // Also add the type reference
@@ -185,10 +185,10 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
               kind: 'Type',
               position: this.getTypePosition(node.type),
               schemaPath: [typeName],
-              context: createContext()
+              context: createContext(),
             })
           }
-        }
+        },
       },
 
       Directive: {
@@ -198,10 +198,10 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
             kind: 'Directive',
             position: this.getPosition(node.name),
             schemaPath: [node.name.value],
-            context: createContext()
+            context: createContext(),
           })
-        }
-      }
+        },
+      },
     })
 
     return this.createIdentifierMap(identifiers, errors)
@@ -214,7 +214,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
     try {
       const ast = this.parse(source)
       const identifiers = this.extractIdentifiers(ast, config)
-      
+
       let validationErrors: GraphQLError[] = []
       if (config.validateAgainstSchema && config.schema) {
         validationErrors = this.validateAgainstSchema(ast, config.schema)
@@ -224,17 +224,17 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
         ast,
         identifiers,
         isValid: validationErrors.length === 0,
-        errors: validationErrors
+        errors: validationErrors,
       }
     } catch (error) {
       return {
         ast: { kind: 'Document', definitions: [] } as DocumentNode,
         identifiers: this.createIdentifierMap([], [{
           message: error instanceof Error ? error.message : 'Unknown parsing error',
-          severity: 'error'
+          severity: 'error',
         }]),
         isValid: false,
-        errors: []
+        errors: [],
       }
     }
   }
@@ -255,7 +255,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
       start: loc.start,
       end: loc.end,
       line: loc.startToken.line,
-      column: loc.startToken.column
+      column: loc.startToken.column,
     }
   }
 
@@ -295,13 +295,13 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
     operationType?: 'query' | 'mutation' | 'subscription',
     operationName?: string,
     inFragment?: string,
-    selectionPath: string[] = []
+    selectionPath: string[] = [],
   ): IdentifierContext {
     return {
       operationType,
       operationName,
       inFragment,
-      selectionPath: [...selectionPath]
+      selectionPath: [...selectionPath],
     }
   }
 
@@ -324,7 +324,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
       byPosition,
       byKind,
       errors,
-      all: identifiers
+      all: identifiers,
     }
   }
 }

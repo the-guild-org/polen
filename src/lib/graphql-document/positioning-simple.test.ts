@@ -2,8 +2,8 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
-import { createSimplePositionCalculator, createSimpleOverlay } from './positioning-simple.ts'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createSimpleOverlay, createSimplePositionCalculator } from './positioning-simple.ts'
 import type { Identifier } from './types.ts'
 
 // Helper to create test identifier
@@ -11,7 +11,7 @@ const createTestIdentifier = (
   name: string,
   line: number,
   column: number,
-  kind: Identifier['kind'] = 'Field'
+  kind: Identifier['kind'] = 'Field',
 ): Identifier => ({
   name,
   kind,
@@ -19,10 +19,10 @@ const createTestIdentifier = (
     start: column - 1,
     end: column - 1 + name.length,
     line,
-    column
+    column,
   },
   schemaPath: [name],
-  context: { selectionPath: [] }
+  context: { selectionPath: [] },
 })
 
 describe('Simple Positioning Engine', () => {
@@ -46,7 +46,7 @@ describe('Simple Positioning Engine', () => {
       const identifiers = [
         createTestIdentifier('query', 1, 1),
         createTestIdentifier('user', 2, 3, 'Field'),
-        createTestIdentifier('name', 3, 5, 'Field')
+        createTestIdentifier('name', 3, 5, 'Field'),
       ]
 
       calculator.prepareCodeBlock(container, identifiers)
@@ -76,7 +76,7 @@ describe('Simple Positioning Engine', () => {
         createTestIdentifier('query', 1, 1),
         createTestIdentifier('GetUserById', 1, 7),
         createTestIdentifier('$id', 1, 19, 'Variable'),
-        createTestIdentifier('ID', 1, 24, 'Type')
+        createTestIdentifier('ID', 1, 24, 'Type'),
       ]
 
       calculator.prepareCodeBlock(container, identifiers)
@@ -105,7 +105,7 @@ describe('Simple Positioning Engine', () => {
         height: 100,
         x: 0,
         y: 0,
-        toJSON: () => ({})
+        toJSON: () => ({}),
       })
 
       const userSpan = container.querySelector('[data-graphql-id]') as HTMLElement
@@ -118,7 +118,7 @@ describe('Simple Positioning Engine', () => {
         height: 20,
         x: 20,
         y: 10,
-        toJSON: () => ({})
+        toJSON: () => ({}),
       })
 
       const positions = calculator.getIdentifierPositions(container)
@@ -130,7 +130,7 @@ describe('Simple Positioning Engine', () => {
         top: 10,
         left: 20,
         width: 40,
-        height: 20
+        height: 20,
       })
       expect(result!.identifier.name).toBe('user')
       expect(result!.identifier.kind).toBe('Field')
@@ -147,7 +147,7 @@ describe('Simple Positioning Engine', () => {
       `
 
       const identifiers = [
-        createTestIdentifier('user', 1, 1)
+        createTestIdentifier('user', 1, 1),
       ]
 
       calculator.prepareCodeBlock(container, identifiers)
@@ -172,7 +172,7 @@ describe('Simple Positioning Engine', () => {
 
       const identifiers = [
         createTestIdentifier('query', 1, 1),
-        createTestIdentifier('user', 3, 3)
+        createTestIdentifier('user', 3, 3),
       ]
 
       expect(() => {
@@ -188,9 +188,9 @@ describe('Simple Positioning Engine', () => {
     it('should create positioned overlay element', () => {
       const position = { top: 10, left: 20, width: 40, height: 20 }
       const identifier = createTestIdentifier('user', 1, 1)
-      
+
       const overlay = createSimpleOverlay(position, identifier)
-      
+
       expect(overlay.style.position).toBe('absolute')
       expect(overlay.style.top).toBe('10px')
       expect(overlay.style.left).toBe('20px')
@@ -206,15 +206,17 @@ describe('Simple Positioning Engine', () => {
       const position = { top: 10, left: 20, width: 40, height: 20 }
       const identifier = createTestIdentifier('user', 1, 1)
       let clickedIdentifier: Identifier | null = null
-      
+
       const overlay = createSimpleOverlay(position, identifier, {
-        onClick: (id) => { clickedIdentifier = id }
+        onClick: (id) => {
+          clickedIdentifier = id
+        },
       })
-      
+
       // Simulate click
       const event = new MouseEvent('click')
       overlay.dispatchEvent(event)
-      
+
       expect(clickedIdentifier).toBe(identifier)
     })
 
@@ -222,26 +224,28 @@ describe('Simple Positioning Engine', () => {
       const position = { top: 10, left: 20, width: 40, height: 20 }
       const identifier = createTestIdentifier('user', 1, 1)
       let hoveredIdentifier: Identifier | null = null
-      
+
       const overlay = createSimpleOverlay(position, identifier, {
-        onHover: (id) => { hoveredIdentifier = id }
+        onHover: (id) => {
+          hoveredIdentifier = id
+        },
       })
-      
+
       // Simulate hover
       const event = new MouseEvent('mouseenter')
       overlay.dispatchEvent(event)
-      
+
       expect(hoveredIdentifier).toBe(identifier)
     })
 
     it('should apply custom className', () => {
       const position = { top: 10, left: 20, width: 40, height: 20 }
       const identifier = createTestIdentifier('user', 1, 1)
-      
+
       const overlay = createSimpleOverlay(position, identifier, {
-        className: 'custom-overlay-class'
+        className: 'custom-overlay-class',
       })
-      
+
       expect(overlay.className).toBe('custom-overlay-class')
     })
   })

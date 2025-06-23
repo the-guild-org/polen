@@ -1,34 +1,34 @@
 /**
  * Layer 2: Schema Integration
- * 
+ *
  * Bridge between GraphQL analysis and Polen's schema system.
  * Resolves identifiers against the actual schema, extracts documentation,
  * and generates reference URLs for navigation.
  */
 
 import {
+  getNamedType,
+  type GraphQLEnumType,
+  type GraphQLField,
+  type GraphQLInputField,
+  type GraphQLInputObjectType,
+  type GraphQLInterfaceType,
+  type GraphQLObjectType,
+  type GraphQLScalarType,
   type GraphQLSchema,
   type GraphQLType,
-  type GraphQLObjectType,
-  type GraphQLInterfaceType,
-  type GraphQLField,
-  type GraphQLInputObjectType,
-  type GraphQLInputField,
-  type GraphQLEnumType,
-  type GraphQLScalarType,
   type GraphQLUnionType,
-  isObjectType,
-  isInterfaceType,
-  isInputObjectType,
   isEnumType,
+  isInputObjectType,
+  isInterfaceType,
+  isListType,
+  isNonNullType,
+  isObjectType,
   isScalarType,
   isUnionType,
-  isNonNullType,
-  isListType,
-  getNamedType
 } from 'graphql'
-import type { Identifier } from './types.ts'
 import { analyze } from './analysis.ts'
+import type { Identifier } from './types.ts'
 
 /**
  * Documentation extracted from GraphQL schema
@@ -112,7 +112,7 @@ export interface RouteConfig {
 export class PolenSchemaResolver implements SchemaResolver {
   constructor(
     private schema: GraphQLSchema,
-    private routeConfig: RouteConfig = {}
+    private routeConfig: RouteConfig = {},
   ) {}
 
   /**
@@ -124,13 +124,13 @@ export class PolenSchemaResolver implements SchemaResolver {
     switch (identifier.kind) {
       case 'Type':
         return this.resolveType(identifier, basePath)
-      
+
       case 'Field':
         return this.resolveField(identifier, basePath)
-      
+
       case 'Argument':
         return this.resolveArgument(identifier, basePath)
-      
+
       case 'Variable':
         // Variables don't have schema resolution
         return {
@@ -138,13 +138,13 @@ export class PolenSchemaResolver implements SchemaResolver {
           referenceUrl: `${basePath}#variables`,
           documentation: {
             typeInfo: 'Variable',
-            description: `Query variable: $${identifier.name}`
-          }
+            description: `Query variable: $${identifier.name}`,
+          },
         }
-      
+
       case 'Directive':
         return this.resolveDirective(identifier, basePath)
-      
+
       case 'Fragment':
         // Fragments don't have schema resolution
         return {
@@ -152,10 +152,10 @@ export class PolenSchemaResolver implements SchemaResolver {
           referenceUrl: `${basePath}#fragments`,
           documentation: {
             typeInfo: 'Fragment',
-            description: `Fragment: ${identifier.name}`
-          }
+            description: `Fragment: ${identifier.name}`,
+          },
         }
-      
+
       default:
         return null
     }
@@ -179,9 +179,11 @@ export class PolenSchemaResolver implements SchemaResolver {
       return {
         typeInfo: this.getTypeSignature(type),
         description: type.description || undefined,
-        deprecated: 'deprecationReason' in type ? {
-          reason: (type as any).deprecationReason,
-        } : undefined
+        deprecated: 'deprecationReason' in type
+          ? {
+            reason: (type as any).deprecationReason,
+          }
+          : undefined,
       }
     }
 
@@ -193,9 +195,11 @@ export class PolenSchemaResolver implements SchemaResolver {
       return {
         typeInfo: this.getTypeSignature(field.type),
         description: field.description || undefined,
-        deprecated: field.deprecationReason ? {
-          reason: field.deprecationReason
-        } : undefined
+        deprecated: field.deprecationReason
+          ? {
+            reason: field.deprecationReason,
+          }
+          : undefined,
       }
     }
 
@@ -210,9 +214,9 @@ export class PolenSchemaResolver implements SchemaResolver {
       return {
         typeInfo: this.getTypeSignature(arg.type),
         description: arg.description || undefined,
-        defaultValue: arg.defaultValue !== undefined 
-          ? String(arg.defaultValue) 
-          : undefined
+        defaultValue: arg.defaultValue !== undefined
+          ? String(arg.defaultValue)
+          : undefined,
       }
     }
 
@@ -269,15 +273,17 @@ export class PolenSchemaResolver implements SchemaResolver {
 
   private resolveType(identifier: Identifier, basePath: string): SchemaResolution {
     const type = this.schema.getType(identifier.name)
-    
+
     return {
       exists: !!type,
       graphqlType: type || undefined,
       referenceUrl: `${basePath}/${identifier.name}`,
-      documentation: type ? {
-        typeInfo: this.getTypeSignature(type),
-        description: type.description || undefined
-      } : undefined
+      documentation: type
+        ? {
+          typeInfo: this.getTypeSignature(type),
+          description: type.description || undefined,
+        }
+        : undefined,
     }
   }
 
@@ -285,7 +291,7 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (!identifier.parentType) {
       return {
         exists: false,
-        referenceUrl: `${basePath}#${identifier.name}`
+        referenceUrl: `${basePath}#${identifier.name}`,
       }
     }
 
@@ -293,25 +299,31 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (!parentType) {
       return {
         exists: false,
-        referenceUrl: `${basePath}/${identifier.parentType}#${identifier.name}`
+        referenceUrl: `${basePath}/${identifier.parentType}#${identifier.name}`,
       }
     }
 
     const field = this.getFieldFromType(parentType, identifier.name)
-    
+
     return {
       exists: !!field,
       referenceUrl: `${basePath}/${identifier.parentType}#${identifier.name}`,
-      documentation: field ? {
-        typeInfo: this.getTypeSignature(field.type),
-        description: field.description || undefined,
-        deprecated: field.deprecationReason ? {
-          reason: field.deprecationReason
-        } : undefined
-      } : undefined,
-      deprecated: field?.deprecationReason ? {
-        reason: field.deprecationReason
-      } : undefined
+      documentation: field
+        ? {
+          typeInfo: this.getTypeSignature(field.type),
+          description: field.description || undefined,
+          deprecated: field.deprecationReason
+            ? {
+              reason: field.deprecationReason,
+            }
+            : undefined,
+        }
+        : undefined,
+      deprecated: field?.deprecationReason
+        ? {
+          reason: field.deprecationReason,
+        }
+        : undefined,
     }
   }
 
@@ -320,7 +332,7 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (schemaPath.length < 3) {
       return {
         exists: false,
-        referenceUrl: `${basePath}#${identifier.name}`
+        referenceUrl: `${basePath}#${identifier.name}`,
       }
     }
 
@@ -328,7 +340,7 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (!typeName || !fieldName) {
       return {
         exists: false,
-        referenceUrl: `${basePath}#${identifier.name}`
+        referenceUrl: `${basePath}#${identifier.name}`,
       }
     }
 
@@ -336,7 +348,7 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (!parentType) {
       return {
         exists: false,
-        referenceUrl: `${basePath}/${typeName}#${fieldName}-${identifier.name}`
+        referenceUrl: `${basePath}/${typeName}#${fieldName}-${identifier.name}`,
       }
     }
 
@@ -344,35 +356,39 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (!field || !('args' in field)) {
       return {
         exists: false,
-        referenceUrl: `${basePath}/${typeName}#${fieldName}-${identifier.name}`
+        referenceUrl: `${basePath}/${typeName}#${fieldName}-${identifier.name}`,
       }
     }
 
     const arg = field.args.find((a: any) => a.name === identifier.name)
-    
+
     return {
       exists: !!arg,
       referenceUrl: `${basePath}/${typeName}#${fieldName}-${identifier.name}`,
-      documentation: arg ? {
-        typeInfo: this.getTypeSignature(arg.type),
-        description: arg.description || undefined,
-        defaultValue: arg.defaultValue !== undefined 
-          ? String(arg.defaultValue) 
-          : undefined
-      } : undefined
+      documentation: arg
+        ? {
+          typeInfo: this.getTypeSignature(arg.type),
+          description: arg.description || undefined,
+          defaultValue: arg.defaultValue !== undefined
+            ? String(arg.defaultValue)
+            : undefined,
+        }
+        : undefined,
     }
   }
 
   private resolveDirective(identifier: Identifier, basePath: string): SchemaResolution {
     const directive = this.schema.getDirective(identifier.name)
-    
+
     return {
       exists: !!directive,
       referenceUrl: `${basePath}/directives#${identifier.name}`,
-      documentation: directive ? {
-        typeInfo: 'Directive',
-        description: directive.description || undefined
-      } : undefined
+      documentation: directive
+        ? {
+          typeInfo: 'Directive',
+          description: directive.description || undefined,
+        }
+        : undefined,
     }
   }
 
@@ -380,11 +396,11 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (isObjectType(type) || isInterfaceType(type)) {
       return type.getFields()[fieldName] || null
     }
-    
+
     if (isInputObjectType(type)) {
       return type.getFields()[fieldName] || null
     }
-    
+
     return null
   }
 
@@ -392,11 +408,11 @@ export class PolenSchemaResolver implements SchemaResolver {
     if (isNonNullType(type)) {
       return `${this.getTypeSignature(type.ofType)}!`
     }
-    
+
     if (isListType(type)) {
       return `[${this.getTypeSignature(type.ofType)}]`
     }
-    
+
     return getNamedType(type).name
   }
 }
@@ -405,8 +421,8 @@ export class PolenSchemaResolver implements SchemaResolver {
  * Create a schema resolver for Polen
  */
 export const createPolenSchemaResolver = (
-  schema: GraphQLSchema, 
-  routeConfig?: RouteConfig
+  schema: GraphQLSchema,
+  routeConfig?: RouteConfig,
 ): SchemaResolver => {
   return new PolenSchemaResolver(schema, routeConfig)
 }
@@ -433,13 +449,12 @@ export interface SchemaAwareAnalysisResult {
 export const analyzeWithSchema = (
   source: string,
   schema: GraphQLSchema,
-  routeConfig?: RouteConfig
+  routeConfig?: RouteConfig,
 ): SchemaAwareAnalysisResult => {
-  
   const analysis = analyze(source, {
     schema,
     validateAgainstSchema: true,
-    includePositions: true
+    includePositions: true,
   })
 
   const resolver = createPolenSchemaResolver(schema, routeConfig)
@@ -450,25 +465,25 @@ export const analyzeWithSchema = (
   for (const identifier of analysis.identifiers.all) {
     const key = `${identifier.position.start}-${identifier.name}-${identifier.kind}`
     const resolution = resolver.resolveIdentifier(identifier)
-    
+
     if (resolution) {
       resolutions.set(key, resolution)
-      
+
       // Add validation errors for non-existent identifiers
       if (!resolution.exists && (identifier.kind === 'Type' || identifier.kind === 'Field')) {
         schemaErrors.push({
           identifier,
           message: `${identifier.kind} "${identifier.name}" does not exist in schema`,
-          severity: 'error'
+          severity: 'error',
         })
       }
-      
+
       // Add deprecation warnings
       if (resolution.deprecated) {
         schemaErrors.push({
           identifier,
           message: `${identifier.kind} "${identifier.name}" is deprecated: ${resolution.deprecated.reason}`,
-          severity: 'warning'
+          severity: 'warning',
         })
       }
     }
@@ -477,6 +492,6 @@ export const analyzeWithSchema = (
   return {
     analysis,
     resolutions,
-    schemaErrors
+    schemaErrors,
   }
 }

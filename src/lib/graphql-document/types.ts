@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLSchema, GraphQLError } from 'graphql'
+import type { DocumentNode, GraphQLError, GraphQLSchema } from 'graphql'
 
 /**
  * Represents a GraphQL identifier found in a document
@@ -119,7 +119,7 @@ export interface GraphQLAnalyzer {
    */
   validateAgainstSchema(
     ast: DocumentNode,
-    schema: GraphQLSchema
+    schema: GraphQLSchema,
   ): GraphQLError[]
 
   /**

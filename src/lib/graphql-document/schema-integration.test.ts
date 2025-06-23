@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
 import { buildSchema } from 'graphql'
-import { createPolenSchemaResolver, analyzeWithSchema } from './schema-integration.ts'
+import { describe, expect, it } from 'vitest'
+import { analyzeWithSchema, createPolenSchemaResolver } from './schema-integration.ts'
 
 // Test schema
 const testSchema = buildSchema(`
@@ -98,7 +98,7 @@ describe('Schema Integration', () => {
           kind: 'Type' as const,
           position: { start: 0, end: 4, line: 1, column: 1 },
           schemaPath: ['User'],
-          context: { selectionPath: [] }
+          context: { selectionPath: [] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -116,7 +116,7 @@ describe('Schema Integration', () => {
           kind: 'Type' as const,
           position: { start: 0, end: 15, line: 1, column: 1 },
           schemaPath: ['NonExistentType'],
-          context: { selectionPath: [] }
+          context: { selectionPath: [] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -136,7 +136,7 @@ describe('Schema Integration', () => {
           position: { start: 0, end: 4, line: 1, column: 1 },
           parentType: 'User',
           schemaPath: ['User', 'name'],
-          context: { selectionPath: ['name'] }
+          context: { selectionPath: ['name'] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -155,7 +155,7 @@ describe('Schema Integration', () => {
           position: { start: 0, end: 6, line: 1, column: 1 },
           parentType: 'User',
           schemaPath: ['User', 'avatar'],
-          context: { selectionPath: ['avatar'] }
+          context: { selectionPath: ['avatar'] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -173,7 +173,7 @@ describe('Schema Integration', () => {
           position: { start: 0, end: 16, line: 1, column: 1 },
           parentType: 'User',
           schemaPath: ['User', 'nonExistentField'],
-          context: { selectionPath: ['nonExistentField'] }
+          context: { selectionPath: ['nonExistentField'] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -192,7 +192,7 @@ describe('Schema Integration', () => {
           position: { start: 0, end: 5, line: 1, column: 1 },
           parentType: 'User',
           schemaPath: ['User', 'posts', 'first'],
-          context: { selectionPath: ['posts'] }
+          context: { selectionPath: ['posts'] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -213,7 +213,7 @@ describe('Schema Integration', () => {
           kind: 'Variable' as const,
           position: { start: 0, end: 2, line: 1, column: 1 },
           schemaPath: ['id'],
-          context: { selectionPath: [] }
+          context: { selectionPath: [] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -233,7 +233,7 @@ describe('Schema Integration', () => {
           kind: 'Directive' as const,
           position: { start: 0, end: 8, line: 1, column: 1 },
           schemaPath: ['validate'],
-          context: { selectionPath: [] }
+          context: { selectionPath: [] },
         }
 
         const resolution = resolver.resolveIdentifier(identifier)
@@ -248,7 +248,7 @@ describe('Schema Integration', () => {
     describe('URL Generation', () => {
       it('should generate correct URLs with custom base path', () => {
         const customResolver = createPolenSchemaResolver(testSchema, {
-          basePath: '/docs/schema'
+          basePath: '/docs/schema',
         })
 
         expect(customResolver.generateReferenceLink(['User'])).toBe('/docs/schema/User')
@@ -258,7 +258,7 @@ describe('Schema Integration', () => {
 
       it('should handle fragment configuration', () => {
         const noFragmentResolver = createPolenSchemaResolver(testSchema, {
-          includeFragments: false
+          includeFragments: false,
         })
 
         expect(noFragmentResolver.generateReferenceLink(['User', 'name'])).toBe('/reference/User')
@@ -330,7 +330,7 @@ describe('Schema Integration', () => {
 
       // Should have deprecation warning for avatar field
       const deprecationWarning = result.schemaErrors.find(
-        error => error.message.includes('avatar') && error.message.includes('deprecated')
+        error => error.message.includes('avatar') && error.message.includes('deprecated'),
       )
       expect(deprecationWarning).toBeDefined()
       expect(deprecationWarning!.severity).toBe('warning')
@@ -349,7 +349,7 @@ describe('Schema Integration', () => {
 
       // Find the name field resolution
       const nameField = result.analysis.identifiers.all.find(
-        id => id.name === 'name' && id.kind === 'Field'
+        id => id.name === 'name' && id.kind === 'Field',
       )
       expect(nameField).toBeDefined()
 

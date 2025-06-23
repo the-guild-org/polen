@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { GraphQLDocument } from './$.ts'
 
 describe('GraphQLDocument', () => {
@@ -17,7 +17,7 @@ describe('GraphQLDocument', () => {
 
       expect(result.isValid).toBe(true)
       expect(result.identifiers.all.length).toBeGreaterThan(0)
-      
+
       // Should find variable
       const variables = result.identifiers.byKind.get('Variable') || []
       expect(variables).toHaveLength(1)
@@ -69,7 +69,7 @@ describe('GraphQLDocument', () => {
 
       const fields = result.identifiers.byKind.get('Field') || []
       const userField = fields.find(f => f.name === 'user')
-      
+
       expect(userField?.context.operationType).toBe('query')
       expect(userField?.context.operationName).toBe('GetUserPosts')
       expect(userField?.context.selectionPath).toEqual(['user'])
@@ -90,7 +90,7 @@ describe('GraphQLDocument', () => {
 
       const fields = result.identifiers.byKind.get('Field') || []
       const titleField = fields.find(f => f.name === 'title')
-      
+
       expect(titleField?.schemaPath).toEqual(['Post', 'title'])
     })
   })
@@ -102,7 +102,7 @@ describe('GraphQLDocument', () => {
       const identifiers = GraphQLDocument.extractIdentifiers(source)
 
       expect(identifiers.all.length).toBeGreaterThan(0)
-      
+
       // Each identifier should have position information
       for (const identifier of identifiers.all) {
         expect(identifier.position.start).toBeTypeOf('number')
@@ -122,7 +122,7 @@ describe('GraphQLDocument', () => {
 
       // Should have kind index
       expect(identifiers.byKind.size).toBeGreaterThan(0)
-      
+
       // All identifiers should be indexed
       for (const identifier of identifiers.all) {
         expect(identifiers.byPosition.get(identifier.position.start)).toBe(identifier)

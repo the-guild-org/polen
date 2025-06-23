@@ -1,6 +1,6 @@
 /**
  * Example usage of the GraphQL Document Analysis library
- * 
+ *
  * This demonstrates how to use the foundational layer for extracting
  * identifiers and context from GraphQL documents - the building block
  * for the interactive GraphQL Document Component.
@@ -38,9 +38,9 @@ const exampleQuery = `
  */
 export const analyzeExample = () => {
   console.log('🔍 Analyzing GraphQL Document...\n')
-  
+
   const result = GraphQLDocument.analyze(exampleQuery)
-  
+
   console.log(`✅ Valid: ${result.isValid}`)
   console.log(`📊 Total identifiers: ${result.identifiers.all.length}`)
   console.log(`🚨 Errors: ${result.errors.length}\n`)
@@ -65,16 +65,16 @@ export const analyzeExample = () => {
  */
 export const demonstratePositionLookup = () => {
   console.log('📍 Position-based Identifier Lookup...\n')
-  
+
   const identifiers = GraphQLDocument.extractIdentifiers(exampleQuery)
-  
+
   // Find identifier at a specific position (e.g., cursor position in an editor)
   const targetPosition = 180 // Approximate position of "abilities" field
-  
+
   // Find the closest identifier to this position
   let closestIdentifier = null
   let closestDistance = Infinity
-  
+
   for (const identifier of identifiers.all) {
     const distance = Math.abs(identifier.position.start - targetPosition)
     if (distance < closestDistance) {
@@ -82,7 +82,7 @@ export const demonstratePositionLookup = () => {
       closestIdentifier = identifier
     }
   }
-  
+
   if (closestIdentifier) {
     console.log(`🎯 Identifier near position ${targetPosition}:`)
     console.log(`   Name: ${closestIdentifier.name}`)
@@ -97,22 +97,22 @@ export const demonstratePositionLookup = () => {
  */
 export const demonstrateHyperlinkGeneration = () => {
   console.log('🔗 Hyperlink Generation Preview...\n')
-  
+
   const identifiers = GraphQLDocument.extractIdentifiers(exampleQuery)
-  
+
   // Show how each identifier could become a hyperlink
   const typeIdentifiers = identifiers.byKind.get('Type') || []
   const fieldIdentifiers = identifiers.byKind.get('Field') || []
-  
+
   console.log('📝 Type References → Schema Links:')
   for (const identifier of typeIdentifiers) {
     const referenceUrl = `/reference/${identifier.name}`
     console.log(`  ${identifier.name} → ${referenceUrl}`)
   }
-  
+
   console.log('\n📝 Field References → Schema Links:')
   for (const identifier of fieldIdentifiers.slice(0, 5)) { // Show first 5
-    const referenceUrl = identifier.parentType 
+    const referenceUrl = identifier.parentType
       ? `/reference/${identifier.parentType}#${identifier.name}`
       : `/reference/${identifier.name}`
     console.log(`  ${identifier.name} → ${referenceUrl}`)
@@ -124,12 +124,12 @@ export const demonstrateHyperlinkGeneration = () => {
  */
 export const demonstrateTooltipFoundation = () => {
   console.log('💬 Tooltip Foundation...\n')
-  
+
   const identifiers = GraphQLDocument.extractIdentifiers(exampleQuery)
-  
+
   // Show context information that would be displayed in tooltips
   const fieldIdentifiers = identifiers.byKind.get('Field') || []
-  
+
   for (const identifier of fieldIdentifiers.slice(0, 3)) { // Show first 3
     console.log(`🏷️  ${identifier.name}:`)
     console.log(`    Position: Line ${identifier.position.line}, Column ${identifier.position.column}`)
@@ -149,7 +149,7 @@ function getKindEmoji(kind: string): string {
     'Argument': '⚙️',
     'Variable': '💰',
     'Directive': '🎯',
-    'Fragment': '🧩'
+    'Fragment': '🧩',
   }
   return emojis[kind] || '❓'
 }

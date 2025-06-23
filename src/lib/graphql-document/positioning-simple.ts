@@ -1,6 +1,6 @@
 /**
  * Layer 3: Simplified Positioning & Layout Engine
- * 
+ *
  * Maps GraphQL AST positions to DOM coordinates for overlay placement.
  * This simplified version focuses on working with Polen's existing infrastructure.
  */
@@ -33,12 +33,12 @@ export interface PositionResult {
 
 /**
  * Simplified position calculator for Shiki-rendered code
- * 
+ *
  * This version uses a more straightforward approach:
  * 1. Find the line element by line number
  * 2. Search for the identifier text within that line
  * 3. Create a span around the identifier for positioning
- * 
+ *
  * This approach modifies the DOM but is more reliable for testing
  * and works well with React's reconciliation.
  */
@@ -48,11 +48,11 @@ export class SimplePositionCalculator {
    */
   prepareCodeBlock(
     containerElement: Element,
-    identifiers: Identifier[]
+    identifiers: Identifier[],
   ): void {
     // Group identifiers by line for efficiency
     const identifiersByLine = new Map<number, Identifier[]>()
-    
+
     for (const identifier of identifiers) {
       const line = identifier.position.line
       if (!identifiersByLine.has(line)) {
@@ -63,16 +63,16 @@ export class SimplePositionCalculator {
 
     // Process each line
     const lines = containerElement.querySelectorAll('.line')
-    
+
     for (const [lineNumber, lineIdentifiers] of identifiersByLine) {
       const lineElement = lines[lineNumber - 1]
       if (!lineElement) continue
-      
+
       // Sort identifiers by column position (right to left to avoid offset issues)
       const sortedIdentifiers = [...lineIdentifiers].sort(
-        (a, b) => b.position.column - a.position.column
+        (a, b) => b.position.column - a.position.column,
       )
-      
+
       for (const identifier of sortedIdentifiers) {
         this.wrapIdentifier(lineElement, identifier)
       }
@@ -83,26 +83,26 @@ export class SimplePositionCalculator {
    * Get positions of all wrapped identifiers
    */
   getIdentifierPositions(
-    containerElement: Element
+    containerElement: Element,
   ): Map<string, PositionResult> {
     const results = new Map<string, PositionResult>()
     const containerRect = containerElement.getBoundingClientRect()
-    
+
     // Find all wrapped identifiers
     const wrappedIdentifiers = containerElement.querySelectorAll('[data-graphql-id]')
-    
+
     for (const element of wrappedIdentifiers) {
       const id = element.getAttribute('data-graphql-id')
       if (!id) continue
-      
+
       const rect = element.getBoundingClientRect()
       const position: DOMPosition = {
         top: rect.top - containerRect.top,
         left: rect.left - containerRect.left,
         width: rect.width,
-        height: rect.height
+        height: rect.height,
       }
-      
+
       // Reconstruct identifier from data attributes
       const identifier: Identifier = {
         name: element.getAttribute('data-graphql-name') || '',
@@ -111,15 +111,15 @@ export class SimplePositionCalculator {
           start: parseInt(element.getAttribute('data-graphql-start') || '0'),
           end: parseInt(element.getAttribute('data-graphql-end') || '0'),
           line: parseInt(element.getAttribute('data-graphql-line') || '1'),
-          column: parseInt(element.getAttribute('data-graphql-column') || '1')
+          column: parseInt(element.getAttribute('data-graphql-column') || '1'),
         },
         schemaPath: (element.getAttribute('data-graphql-path') || '').split(',').filter(Boolean),
-        context: { selectionPath: [] }
+        context: { selectionPath: [] },
       }
-      
+
       results.set(id, { position, identifier })
     }
-    
+
     return results
   }
 
@@ -130,31 +130,31 @@ export class SimplePositionCalculator {
     const walker = document.createTreeWalker(
       lineElement,
       NodeFilter.SHOW_TEXT,
-      null
+      null,
     )
-    
+
     let currentPos = 0
     let node: Node | null
-    
+
     while (node = walker.nextNode()) {
       const textNode = node as Text
       const text = textNode.textContent || ''
-      
+
       // Check if this text node contains our identifier
       const identifierIndex = text.indexOf(identifier.name)
       if (identifierIndex !== -1) {
         // Create a unique ID for this identifier
         const id = `${identifier.position.start}-${identifier.name}-${identifier.kind}`
-        
+
         // Check if already wrapped
         if (textNode.parentElement?.hasAttribute('data-graphql-id')) {
           return
         }
-        
+
         // Split the text node and wrap the identifier
         const before = text.substring(0, identifierIndex)
         const after = text.substring(identifierIndex + identifier.name.length)
-        
+
         const span = document.createElement('span')
         span.setAttribute('data-graphql-id', id)
         span.setAttribute('data-graphql-name', identifier.name)
@@ -165,23 +165,23 @@ export class SimplePositionCalculator {
         span.setAttribute('data-graphql-column', String(identifier.position.column))
         span.setAttribute('data-graphql-path', identifier.schemaPath.join(','))
         span.textContent = identifier.name
-        
+
         const parent = textNode.parentNode!
-        
+
         if (before) {
           parent.insertBefore(document.createTextNode(before), textNode)
         }
-        
+
         parent.insertBefore(span, textNode)
-        
+
         if (after) {
           parent.insertBefore(document.createTextNode(after), textNode)
         }
-        
+
         parent.removeChild(textNode)
         return
       }
-      
+
       currentPos += text.length
     }
   }
@@ -197,10 +197,10 @@ export const createSimpleOverlay = (
     onClick?: (identifier: Identifier) => void
     onHover?: (identifier: Identifier, event: MouseEvent) => void
     className?: string
-  }
+  },
 ): HTMLElement => {
   const overlay = document.createElement('div')
-  
+
   // Base styles for positioning
   overlay.style.position = 'absolute'
   overlay.style.top = `${position.top}px`
@@ -209,17 +209,17 @@ export const createSimpleOverlay = (
   overlay.style.height = `${position.height}px`
   overlay.style.cursor = 'pointer'
   overlay.style.zIndex = '10'
-  
+
   // Add custom class if provided
   if (options?.className) {
     overlay.className = options.className
   }
-  
+
   // Data attributes
   overlay.setAttribute('data-graphql-overlay', 'true')
   overlay.setAttribute('data-graphql-name', identifier.name)
   overlay.setAttribute('data-graphql-kind', identifier.kind)
-  
+
   // Event handlers
   if (options?.onClick) {
     overlay.addEventListener('click', (e) => {
@@ -227,13 +227,13 @@ export const createSimpleOverlay = (
       options.onClick!(identifier)
     })
   }
-  
+
   if (options?.onHover) {
     overlay.addEventListener('mouseenter', (e) => {
       options.onHover!(identifier, e)
     })
   }
-  
+
   return overlay
 }
 
