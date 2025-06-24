@@ -1,16 +1,79 @@
-# Test GraphQL Tooltips
+# Testing GraphQL Document Features
 
-This page tests the new hover tooltip functionality. Try hovering over the GraphQL identifiers below!
+This page tests hover tooltips and copy functionality for GraphQL documents.
 
-## Basic Query Test
+## Basic Query with Copy Button
 
-Hover over `Pokemon`, `name`, `type` to see tooltips:
+Hover over the identifiers below to see tooltips. Click the copy button in the top-right corner.
 
 ```graphql
-query GetPokemon($id: ID!) {
-  pokemon(id: $id) {
+query GetPokemon {
+  pokemon(id: "1") {
+    id
     name
-    type
+    types
+  }
+}
+```
+
+## Query with Variables
+
+Test copying queries with variables:
+
+```graphql
+query GetPokemonByName($name: String!) {
+  pokemon(name: $name) {
+    id
+    name
+    height
+    weight
+  }
+}
+```
+
+## Fragment Example
+
+Complex query with fragments:
+
+```graphql
+fragment PokemonDetails on Pokemon {
+  id
+  name
+  types
+  height
+  weight
+}
+
+query GetMultiplePokemon {
+  pokemon1: pokemon(id: "1") {
+    ...PokemonDetails
+  }
+  pokemon2: pokemon(id: "4") {
+    ...PokemonDetails
+  }
+}
+```
+
+## Mutation Example
+
+```graphql
+mutation UpdatePokemon($id: ID!, $name: String!) {
+  updatePokemon(id: $id, name: $name) {
+    id
+    name
+    updatedAt
+  }
+}
+```
+
+## Subscription Example
+
+```graphql
+subscription OnPokemonUpdate($id: ID!) {
+  pokemonUpdated(id: $id) {
+    id
+    name
+    types
     stats {
       hp
       attack
@@ -19,54 +82,3 @@ query GetPokemon($id: ID!) {
   }
 }
 ```
-
-## Error Test
-
-This query has an error - `nonExistentField` doesn't exist:
-
-```graphql
-query BadQuery {
-  pokemon(id: "1") {
-    name
-    nonExistentField  # This should show an error
-  }
-}
-```
-
-## Multiple Types Test
-
-Test hovering over different identifier types:
-
-```graphql
-mutation CreatePokemon($input: PokemonInput!) {
-  createPokemon(input: $input) {
-    id
-    name
-  }
-}
-
-fragment PokemonFields on Pokemon {
-  id
-  name
-  type
-}
-
-query WithFragment {
-  pokemon(id: "1") {
-    ...PokemonFields
-    stats {
-      hp
-    }
-  }
-}
-```
-
-## Testing Instructions
-
-1. **Hover Test**: Hover over any type/field name - tooltip should appear after ~300ms
-2. **Click to Pin**: Click on any identifier to pin its tooltip open
-3. **Multiple Pins**: Click multiple identifiers - all tooltips should stay open
-4. **Escape Key**: Press Escape to close all pinned tooltips
-5. **Navigation**: Click "View full documentation" in tooltip to navigate to reference
-6. **Visual Feedback**: Notice the underline on hoverable items
-7. **Error States**: Hover over `nonExistentField` to see error tooltip
