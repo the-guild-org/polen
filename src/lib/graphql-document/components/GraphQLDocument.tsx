@@ -1,14 +1,14 @@
 import type { React } from '#dep/react/index'
+import { React as ReactHooks } from '#dep/react/index'
 import type { GraphQLSchema } from 'graphql'
-import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { analyze } from '../analysis.ts'
+import { useTooltipState } from '../hooks/use-tooltip-state.ts'
 import { createSimplePositionCalculator } from '../positioning-simple.ts'
 import { createPolenSchemaResolver } from '../schema-integration.ts'
 import type { Identifier } from '../types.ts'
-import { hoverTooltipStyles } from './HoverTooltip.tsx'
+import { graphqlDocumentStyles } from './graphql-document-styles.ts'
 import { IdentifierLink } from './IdentifierLink.tsx'
-import { identifierLinkStyles } from './IdentifierLink.tsx'
 
 /**
  * Options for the GraphQL document component
@@ -64,52 +64,44 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   const handleNavigate = onNavigate || ((url: string) => navigate(url))
 
   // Container ref for positioning calculations
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [isReady, setIsReady] = useState(false)
-  const [openTooltipId, setOpenTooltipId] = useState<string | null>(null)
+  const containerRef = ReactHooks.useRef<HTMLDivElement>(null)
+  const [isReady, setIsReady] = ReactHooks.useState(false)
 
-  // Handle click outside to close tooltips
-  useEffect(() => {
-    if (!openTooltipId) return
+  // Use tooltip state management
+  const tooltipState = useTooltipState({
+    showDelay: 300,
+    hideDelay: 200, // Increased for smoother experience
+    allowMultiplePins: true,
+  })
 
-    const handleClickOutside = (event: MouseEvent) => {
-      // Check if click is outside the tooltip and identifier links
-      const target = event.target as HTMLElement
-
-      // Don't close if clicking on an identifier link or tooltip
-      if (
-        target.closest('.graphql-identifier-overlay')
-        || target.closest('.graphql-hover-tooltip')
-      ) {
-        return
+  // Handle escape key to unpin all
+  ReactHooks.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        tooltipState.unpinAll()
       }
-
-      // Close the tooltip
-      setOpenTooltipId(null)
     }
 
-    // Add event listener
-    document.addEventListener('mousedown', handleClickOutside)
-
+    document.addEventListener('keydown', handleKeyDown)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [openTooltipId])
+  }, [tooltipState])
 
   // Layer 1: Parse and analyze
-  const analysisResult = useMemo(() => {
+  const analysisResult = ReactHooks.useMemo(() => {
     if (plain) return null
     const result = analyze(children, { schema })
     return result
   }, [children, plain, schema])
 
   // Layer 2: Schema resolution
-  const resolver = useMemo(() => {
+  const resolver = ReactHooks.useMemo(() => {
     if (!schema || plain) return null
     return createPolenSchemaResolver(schema)
   }, [schema, plain])
 
-  const resolutions = useMemo(() => {
+  const resolutions = ReactHooks.useMemo(() => {
     if (!analysisResult || !resolver) {
       return new Map()
     }
@@ -125,15 +117,17 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   }, [analysisResult, resolver])
 
   // Layer 3: Position calculation
-  const positionCalculator = useMemo(() => {
+  const positionCalculator = ReactHooks.useMemo(() => {
     if (plain) return null
     return createSimplePositionCalculator()
   }, [plain])
 
-  const [positions, setPositions] = useState<Map<string, { position: any; identifier: Identifier }>>(new Map())
+  const [positions, setPositions] = ReactHooks.useState<Map<string, { position: any; identifier: Identifier }>>(
+    new Map(),
+  )
 
   // Prepare code block and calculate positions after render
-  useEffect(() => {
+  ReactHooks.useEffect(() => {
     if (!containerRef.current || !analysisResult || !positionCalculator || plain) {
       return
     }
@@ -162,7 +156,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   }, [analysisResult, positionCalculator, plain, highlightedHtml])
 
   // Handle resize events
-  useEffect(() => {
+  ReactHooks.useEffect(() => {
     if (!containerRef.current || !positionCalculator || plain) return
 
     const handleResize = () => {
@@ -180,20 +174,19 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   }, [positionCalculator, plain])
 
   // Validation errors
-  const validationErrors = useMemo(() => {
+  const validationErrors = ReactHooks.useMemo(() => {
     if (!validate || !analysisResult || !schema) return []
     return analysisResult.errors
   }, [validate, analysisResult, schema])
 
   return (
     <>
-      {/* Inject styles */}
-      <style dangerouslySetInnerHTML={{ __html: identifierLinkStyles + '\n' + hoverTooltipStyles }} />
-
+      <style dangerouslySetInnerHTML={{ __html: graphqlDocumentStyles }} />
       <div
         ref={containerRef}
-        className={`graphql-document ${className} ${debug ? 'graphql-debug-mode' : ''}`}
-        style={{ position: 'relative' }}
+        className={`graphql-document ${className} ${debug ? 'graphql-debug-mode' : ''} ${
+          !isReady && !plain ? 'graphql-loading' : ''
+        }`}
       >
         {/* Base syntax highlighting */}
         {highlightedHtml ? <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} /> : (
@@ -219,8 +212,12 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
                   position={position}
                   onNavigate={handleNavigate}
                   debug={debug}
-                  isOpen={openTooltipId === id}
-                  onToggle={(open) => setOpenTooltipId(open ? id : null)}
+                  isOpen={tooltipState.isOpen(id)}
+                  isPinned={tooltipState.isPinned(id)}
+                  onHoverStart={() => tooltipState.onHoverStart(id)}
+                  onHoverEnd={() => tooltipState.onHoverEnd(id)}
+                  onTogglePin={() => tooltipState.onTogglePin(id)}
+                  onTooltipHover={() => tooltipState.onTooltipHover(id)}
                 />
               )
             })}
@@ -241,44 +238,3 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     </>
   )
 }
-
-/**
- * Default styles for the GraphQL document component
- */
-export const graphqlDocumentStyles = `
-.graphql-document {
-  position: relative;
-}
-
-.graphql-interaction-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-}
-
-.graphql-interaction-layer > * {
-  pointer-events: auto;
-}
-
-.graphql-validation-errors {
-  margin-top: 1rem;
-  padding: 0.5rem;
-  background-color: var(--red-2);
-  border: 1px solid var(--red-6);
-  border-radius: 4px;
-}
-
-.graphql-error {
-  color: var(--red-11);
-  font-size: 0.875rem;
-  margin: 0.25rem 0;
-}
-
-.graphql-debug-mode [data-graphql-id] {
-  background-color: rgba(59, 130, 246, 0.1);
-  outline: 1px solid rgba(59, 130, 246, 0.3);
-}
-`

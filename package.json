@@ -199,6 +199,7 @@
     "@octokit/types": "^14.1.0",
     "@playwright/browser-chromium": "^1.53.0",
     "@stylistic/eslint-plugin": "^4.4.1",
+    "@testing-library/react": "^16.3.0",
     "@tsconfig/node-lts": "^22.0.1",
     "@tsconfig/node22": "^22.0.2",
     "@tsconfig/strictest": "^2.0.5",

@@ -1,0 +1,72 @@
+# Test GraphQL Tooltips
+
+This page tests the new hover tooltip functionality. Try hovering over the GraphQL identifiers below!
+
+## Basic Query Test
+
+Hover over `Pokemon`, `name`, `type` to see tooltips:
+
+```graphql
+query GetPokemon($id: ID!) {
+  pokemon(id: $id) {
+    name
+    type
+    stats {
+      hp
+      attack
+      defense
+    }
+  }
+}
+```
+
+## Error Test
+
+This query has an error - `nonExistentField` doesn't exist:
+
+```graphql
+query BadQuery {
+  pokemon(id: "1") {
+    name
+    nonExistentField  # This should show an error
+  }
+}
+```
+
+## Multiple Types Test
+
+Test hovering over different identifier types:
+
+```graphql
+mutation CreatePokemon($input: PokemonInput!) {
+  createPokemon(input: $input) {
+    id
+    name
+  }
+}
+
+fragment PokemonFields on Pokemon {
+  id
+  name
+  type
+}
+
+query WithFragment {
+  pokemon(id: "1") {
+    ...PokemonFields
+    stats {
+      hp
+    }
+  }
+}
+```
+
+## Testing Instructions
+
+1. **Hover Test**: Hover over any type/field name - tooltip should appear after ~300ms
+2. **Click to Pin**: Click on any identifier to pin its tooltip open
+3. **Multiple Pins**: Click multiple identifiers - all tooltips should stay open
+4. **Escape Key**: Press Escape to close all pinned tooltips
+5. **Navigation**: Click "View full documentation" in tooltip to navigate to reference
+6. **Visual Feedback**: Notice the underline on hoverable items
+7. **Error States**: Hover over `nonExistentField` to see error tooltip
