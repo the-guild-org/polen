@@ -121,7 +121,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     },
     jsonsuper,
     VitePluginReactiveData.create({
-      moduleId: `virtual:polen/project/data/navbar.json`,
+      moduleId: `virtual:polen/project/data/navbar.jsonsuper`,
+      codec: superjson,
       data: navbarData.value,
       name: `polen-navbar`,
     }),

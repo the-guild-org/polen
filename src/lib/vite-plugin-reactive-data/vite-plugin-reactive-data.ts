@@ -17,8 +17,6 @@ interface ReactiveDataOptions {
    * - A reactive value directly
    */
   data: ComputedRef<object | unknown[]> | (() => object | unknown[]) | object | unknown[]
-  /** Debounce updates (ms). If not set, uses process.nextTick for batching */
-  debounce?: number
   /**
    * JSON codec to use (e.g., superjson)
    * Default: JSON
@@ -40,7 +38,7 @@ export const create = (options: ReactiveDataOptions): Plugin => {
   const name = options.name ?? `reactive-data`
 
   const debug = pluginDebug.sub(name)
-  debug('constructor', { moduleId, debounce: options.debounce })
+  debug('constructor', { moduleId })
 
   let $server: ViteDevServer
   let $invalidationScheduled = false
@@ -118,7 +116,10 @@ export const create = (options: ReactiveDataOptions): Plugin => {
       const data = getData()
       debug('hook load', { data })
 
-      return codec.stringify(data)
+      return {
+        code: codec.stringify(data),
+        map: null,
+      }
     },
   }
 }
