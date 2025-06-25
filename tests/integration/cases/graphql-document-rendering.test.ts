@@ -10,7 +10,7 @@ import { test } from '../helpers/test.ts'
 test('GraphQL documents render with syntax highlighting', async ({ page, vite, project }) => {
   const fixture: FsLayout.Tree = {
     'pages/test.mdx': [
-      'import { GraphQLDocumentWithSchema } from \'polen/components\'',
+      "import { GraphQLDocumentWithSchema } from 'polen/components'",
       '',
       '# Test Page',
       '',
@@ -24,7 +24,7 @@ test('GraphQL documents render with syntax highlighting', async ({ page, vite, p
       '  }',
       '}',
       '</GraphQLDocumentWithSchema>',
-    ].join('\n')
+    ].join('\n'),
   }
 
   await project.layout.set(fixture)
@@ -52,7 +52,7 @@ test('GraphQL documents render with syntax highlighting', async ({ page, vite, p
 test('GraphQL documents handle schema-less rendering gracefully', async ({ page, vite, project }) => {
   const fixture: FsLayout.Tree = {
     'pages/test.mdx': [
-      'import { GraphQLDocumentWithSchema } from \'polen/components\'',
+      "import { GraphQLDocumentWithSchema } from 'polen/components'",
       '',
       '# Test Page Without Schema',
       '',
@@ -64,7 +64,7 @@ test('GraphQL documents handle schema-less rendering gracefully', async ({ page,
       '  }',
       '}',
       '</GraphQLDocumentWithSchema>',
-    ].join('\n')
+    ].join('\n'),
   }
 
   await project.layout.set(fixture)
@@ -90,7 +90,7 @@ test('GraphQL documents handle schema-less rendering gracefully', async ({ page,
 test('Multiple GraphQL documents on same page work correctly', async ({ page, vite, project }) => {
   const fixture: FsLayout.Tree = {
     'pages/test.mdx': [
-      'import { GraphQLDocumentWithSchema } from \'polen/components\'',
+      "import { GraphQLDocumentWithSchema } from 'polen/components'",
       '',
       '# Multiple GraphQL Documents',
       '',
@@ -115,7 +115,7 @@ test('Multiple GraphQL documents on same page work correctly', async ({ page, vi
       '  }',
       '}',
       '</GraphQLDocumentWithSchema>',
-    ].join('\n')
+    ].join('\n'),
   }
 
   await project.layout.set(fixture)

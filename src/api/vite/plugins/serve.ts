@@ -6,6 +6,7 @@ import { ResponseInternalServerError } from '#lib/kit-temp'
 import { debugPolen } from '#singletons/debug'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err, Obj } from '@wollybeard/kit'
+import * as Theme from '../../../lib/theme/theme.ts'
 
 type App = Hono.Hono
 
@@ -34,17 +35,24 @@ export const Serve = (
 
     // Check if the module or any of its dependencies are invalidated
     const checkInvalidated = (mod: Vite.ModuleNode, visited = new Set<string>()): boolean => {
-      console.log(Obj.pick(mod, ['ssrInvalidationState', 'invalidationState', 'lastInvalidationTimestamp']))
-      // if (!mod.id || visited.has(mod.id)) return false
-      // visited.add(mod.id)
+      if (!mod.id || visited.has(mod.id)) return false
+      visited.add(mod.id)
 
-      // // Check if this module is invalidated
-      // if (mod.transformResult === null) return true
+      // Check if this module is invalidated
+      // SSR modules use ssrInvalidationState, client modules use invalidationState
+      if (mod.ssrInvalidationState === 'HARD_INVALIDATED' || mod.invalidationState === 'HARD_INVALIDATED') {
+        return true
+      }
 
-      // // Check all imported modules recursively
-      // for (const imported of mod.importedModules) {
-      //   if (checkInvalidated(imported, visited)) return true
-      // }
+      // Also check if transformResult is null (indicates invalidation)
+      if (mod.ssrTransformResult === null && mod.transformResult === null) {
+        return true
+      }
+
+      // Check all imported modules recursively
+      for (const imported of mod.importedModules) {
+        if (checkInvalidated(imported, visited)) return true
+      }
 
       return false
     }
@@ -61,6 +69,23 @@ export const Serve = (
         return module.createApp({
           hooks: {
             transformHtml: [
+              // Inject theme class to html element (CSS will be handled by React)
+              (html: string, ctx) => {
+                const themeManager = Theme.createThemeManager({
+                  cookieName: 'polen-theme-preference',
+                })
+
+                // Get theme from request cookies
+                const cookies = ctx.req.header('cookie') || ''
+                const cookieTheme = themeManager.readCookie(cookies)
+
+                // Only apply theme class to html element if user has preference
+                if (cookieTheme) {
+                  return html.replace('<html', `<html class="${cookieTheme}"`)
+                }
+
+                return html
+              },
               // Inject entry client script for development
               (html: string, _ctx) => {
                 const entryClientPath = config.paths.framework.template.client.entrypoint
@@ -125,8 +150,11 @@ export const Serve = (
 
         // Add middleware that runs our entry server
         server.middlewares.use((req, res, ___next) => {
-          debug('request')
-          // isNeedAppLoadOrReload(server)
+          // Check if app needs reloading due to module invalidation
+          if (isNeedAppLoadOrReload(server)) {
+            appPromise = reloadApp(server)
+          }
+
           void HonoNodeServer.getRequestListener(async request => {
             // Always await the current app promise
             const app = await appPromise

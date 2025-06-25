@@ -87,6 +87,10 @@
     "#template/components/content/$$": {
       "source": "./src/template/components/content/$$.ts",
       "default": "./build/template/components/content/$$.js"
+    },
+    "#lib/theme": {
+      "source": "./src/lib/theme/$.ts",
+      "default": "./build/lib/theme/$.js"
     }
   },
   "exports": {
