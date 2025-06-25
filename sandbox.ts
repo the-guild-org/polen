@@ -15,76 +15,27 @@
 //
 
 /**
- * Manual test for GraphQL document hover tooltips
+ * Temporary sandbox for testing
  */
 
-import { buildSchema } from 'graphql'
-import { analyzeWithSchema } from './src/lib/graphql-document/schema-integration.ts'
+import { analyze } from './src/lib/graphql-document/analysis.ts'
 
-const schema = buildSchema(`
-  type Query {
-    user(id: ID!): User
-    posts(limit: Int = 10): [Post!]!
-  }
-
-  type User {
-    id: ID!
-    name: String!
-    email: String!
-    posts: [Post!]!
-    
-    # Deprecated field for testing
-    oldField: String @deprecated(reason: "Use 'name' instead")
-  }
-
-  type Post {
-    id: ID!
-    title: String!
-    content: String!
-    author: User!
-  }
-`)
-
-const testQuery = `
-query GetUserPosts($userId: ID!) {
-  user(id: $userId) {
+const query = `query GetOrganization {
+  organization(reference: { slug: "example" }) {
     id
     name
-    email
-    oldField  # This should show deprecated warning
-    posts {
-      title
-      content
-    }
+    slug
+    createdAt
   }
-  
-  # This should show as an error
-  nonExistentField
-  
-  posts(limit: 5) {
-    id
-    title
-    author {
-      name
-    }
-  }
-}
-`
+}`
 
-console.log('Testing GraphQL document analysis...\n')
-
-const { analysis, resolutions } = analyzeWithSchema(testQuery, schema)
-
-console.log('Found identifiers:')
-analysis.identifiers.all.forEach(id => {
-  const key = `${id.position.start}-${id.name}-${id.kind}`
-  const resolution = resolutions.get(key)
-  console.log(
-    `- ${id.kind} "${id.name}" at line ${id.position.line}:${id.position.column}`,
-    resolution?.exists ? '✓' : '✗',
-    resolution?.deprecated ? '(deprecated)' : '',
-  )
+const result = analyze(query)
+console.log('Analysis result:', {
+  identifierCount: result.identifiers.byPosition.size,
+  errors: result.errors,
 })
 
-console.log('\nErrors:', analysis.errors)
-console.log('\nTo test the UI, run: pnpm dev')
+console.log('\nIdentifier details:')
+Array.from(result.identifiers.byPosition.values()).forEach(id => {
+  console.log(`- ${id.name} (${id.kind}) at line ${id.position.line}, column ${id.position.column}`)
+})

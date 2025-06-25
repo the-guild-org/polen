@@ -4,7 +4,6 @@ import { GrafaidOld } from '#lib/grafaid-old/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { Box, Grid } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
-import radixStylesUrl from '@radix-ui/themes/styles.css?url'
 import { Arr } from '@wollybeard/kit'
 import { useEffect, useState } from 'react'
 import { Link as LinkReactRouter } from 'react-router'
@@ -24,23 +23,12 @@ import { NotFound } from '../components/NotFound.tsx'
 import { Sidebar } from '../components/sidebar/Sidebar.tsx'
 import { ThemeToggle } from '../components/ThemeToggle.tsx'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.tsx'
-import entryClientUrl from '../entry.client.jsx?url'
 import { changelog } from './changelog.tsx'
 import { index } from './index.tsx'
 import { reference } from './reference.tsx'
 
-// todo: not needed anymore because not using hono dev vite plugin right?
-const reactRefreshPreamble = `
-import RefreshRuntime from "/@react-refresh";
-RefreshRuntime.injectIntoGlobalHook(window);
-window.$RefreshReg$ = () => {};
-window.$RefreshSig$ = () => (type) => type;
-window.__vite_plugin_react_preamble_installed__ = true;
-`
-
 export const Component = () => {
   const schema = PROJECT_DATA.schema?.versions[0]?.after || null
-  console.log('Root component - schema:', schema ? 'EXISTS' : 'NULL')
 
   // Make schema available globally for MDX components
   if (typeof window !== 'undefined' && schema) {
@@ -50,15 +38,9 @@ export const Component = () => {
   return (
     <html lang='en'>
       <head>
-        {import.meta.env.DEV && <script type='module'>{reactRefreshPreamble}</script>}
-        {import.meta.env.DEV && <script type='module' src='/@vite/client'></script>}
         <meta charSet='utf-8' />
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <title>{templateVariables.title}</title>
-        {import.meta.env.DEV && <link rel='stylesheet' href={radixStylesUrl} />}
-        {/* <link rel='icon' type='image/svg+xml' href={assetUrl('/favicon.svg', PROJECT_DATA.basePath)} /> */}
-        {/* <link rel='manifest' href={assetUrl('/manifest.json', PROJECT_DATA.basePath)} /> */}
-        {/* <meta name='theme-color' content='#000000' /> */}
       </head>
       <body style={{ margin: 0 }}>
         <ThemeProvider>
@@ -68,7 +50,6 @@ export const Component = () => {
           </GraphQLSchemaProvider>
         </ThemeProvider>
         <ScrollRestoration />
-        {import.meta.env.DEV && <script type='module' src={entryClientUrl}></script>}
       </body>
     </html>
   )
@@ -189,146 +170,6 @@ const Layout = () => {
         px={{ initial: '4', sm: '4', md: '0' }}
         py={{ initial: '4', sm: '4', md: '0' }}
       >
-        <style>
-          {`
-          /* Import Inter font */
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-          /* Typography improvements */
-          body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
-            font-feature-settings: 'kern', 'liga', 'calt', 'ss01', 'ss02';
-          }
-
-          /* Improved paragraph spacing */
-          .prose p {
-            line-height: 1.7;
-            margin-bottom: 1.25rem;
-          }
-
-          .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-          }
-
-          .prose h1 { font-size: 2.25rem; line-height: 1.2; }
-          .prose h2 { font-size: 1.875rem; line-height: 1.3; }
-          .prose h3 { font-size: 1.5rem; line-height: 1.4; }
-          .prose h4 { font-size: 1.25rem; line-height: 1.5; }
-
-          .prose ul, .prose ol {
-            margin-bottom: 1.25rem;
-            padding-left: 1.5rem;
-          }
-
-          .prose li {
-            margin-bottom: 0.5rem;
-            line-height: 1.7;
-          }
-
-          .prose a {
-            color: var(--accent-9);
-            text-decoration: none;
-            border-bottom: 1px solid transparent;
-            transition: border-color 0.2s;
-          }
-
-          .prose a:hover {
-            border-bottom-color: var(--accent-9);
-          }
-
-          .prose blockquote {
-            border-left: 4px solid var(--accent-6);
-            padding-left: 1rem;
-            margin-left: 0;
-            font-style: italic;
-            color: var(--gray-11);
-          }
-
-          /* Responsive container fixes */
-          @media (max-width: 768px) {
-            body {
-              overflow-x: hidden;
-            }
-          }
-
-          /* Ensure proper centering on all screen sizes */
-          .rt-Grid {
-            box-sizing: border-box;
-          }
-
-          /* Shiki code blocks */
-          pre.shiki {
-            margin: 0;
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 14px;
-            line-height: 1.6;
-            background-color: #f6f8fa;
-            border: 1px solid var(--gray-4);
-          }
-
-          /* Light mode: use --shiki-light CSS variables from inline styles */
-          pre.shiki span {
-            color: var(--shiki-light);
-          }
-
-          /* Dark mode - Radix Themes uses [data-is-root-theme="dark"] */
-          [data-is-root-theme="dark"] pre.shiki {
-            background-color: #1a1b26;
-            border-color: var(--gray-7);
-          }
-
-          [data-is-root-theme="dark"] pre.shiki span {
-            color: var(--shiki-dark);
-          }
-
-          pre.shiki code {
-            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
-            background: transparent;
-            display: block;
-          }
-
-          /* Inline code */
-          .prose code:not(pre code) {
-            background-color: var(--gray-3);
-            padding: 0.125rem 0.25rem;
-            border-radius: 0.25rem;
-            font-size: 0.875em;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-          }
-
-          /* Tables */
-          .prose table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1.5rem;
-          }
-
-          .prose th {
-            background-color: var(--gray-3);
-            font-weight: 600;
-            text-align: left;
-            padding: 0.75rem;
-            border-bottom: 2px solid var(--gray-5);
-          }
-
-          .prose td {
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--gray-4);
-          }
-
-          .prose tbody tr:last-child td {
-            border-bottom: none;
-          }
-        `}
-        </style>
         {header}
 
         {/* Desktop Sidebar */}

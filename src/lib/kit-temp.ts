@@ -12,10 +12,8 @@
 //
 //
 
-import { Arr, Err, Fs, Http, Path, type Ts, Undefined } from '@wollybeard/kit'
-import { never } from '@wollybeard/kit/language'
+import { Arr, Err, Fs, Http, Path, Undefined } from '@wollybeard/kit'
 import type { ResolveHookContext } from 'node:module'
-import type { IsNever } from 'type-fest'
 
 export const arrayEquals = (a: any[], b: any[]) => {
   if (a.length !== b.length) return false
@@ -109,7 +107,7 @@ export const objPolicyFilter = <
   if (mode === 'allow') {
     // For allow mode, only add specified keys
     for (const key of keys) {
-      if (key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         // @ts-expect-error
         result[key] = obj[key]
       }
@@ -220,3 +218,305 @@ export type ExtendsExact<$Input, $Constraint> =
       ? $Input
       : never
   : never
+
+/**
+ * Split an array into chunks of specified size
+ *
+ * @param array - The array to chunk
+ * @param size - The size of each chunk
+ * @returns Array of chunks
+ *
+ * @example
+ * ```ts
+ * chunk([1, 2, 3, 4, 5], 2) // [[1, 2], [3, 4], [5]]
+ * chunk(['a', 'b', 'c'], 3) // [['a', 'b', 'c']]
+ * ```
+ */
+export const chunk = <T>(array: readonly T[], size: number): T[][] => {
+  if (size <= 0) throw new Error('Chunk size must be greater than 0')
+  if (array.length === 0) return []
+
+  const chunks: T[][] = []
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size))
+  }
+  return chunks
+}
+
+export interface AsyncParallelOptions {
+  /**
+   * Maximum number of items to process concurrently
+   * @default 10
+   */
+  concurrency?: number
+
+  /**
+   * If true, stops processing on first error
+   * If false, continues processing all items even if some fail
+   * @default false
+   */
+  failFast?: boolean
+
+  /**
+   * Size of batches to process items in
+   * If not specified, all items are processed with the specified concurrency
+   */
+  batchSize?: number
+}
+
+export interface AsyncParallelResult<T, R> {
+  /** Successfully processed results */
+  results: R[]
+  /** Errors that occurred during processing */
+  errors: (Error & { item: T })[]
+  /** Whether all items were processed successfully */
+  success: boolean
+}
+
+/**
+ * Process items in parallel with configurable options
+ *
+ * @param items - Items to process
+ * @param operation - Async function to apply to each item (with optional index)
+ * @param options - Configuration options
+ * @returns Results and errors from processing
+ *
+ * @example
+ * ```ts
+ * const items = [1, 2, 3, 4, 5]
+ * const result = await asyncParallel(items, async (n, index) => n * 2, {
+ *   concurrency: 2,
+ *   batchSize: 3,
+ *   failFast: false
+ * })
+ * // result.results: [2, 4, 6, 8, 10]
+ * // result.errors: []
+ * // result.success: true
+ * ```
+ */
+export const asyncParallel = async <T, R>(
+  items: readonly T[],
+  operation: (item: T, index: number) => Promise<R>,
+  options: AsyncParallelOptions = {},
+): Promise<AsyncParallelResult<T, R>> => {
+  const { concurrency = 10, failFast = false, batchSize } = options
+
+  if (items.length === 0) {
+    return { results: [], errors: [], success: true }
+  }
+
+  const allResults: R[] = []
+  const allErrors: (Error & { item: T })[] = []
+
+  // If batchSize is specified, process in batches
+  if (batchSize !== undefined) {
+    const batches = chunk(items, batchSize)
+    let globalIndex = 0
+
+    for (const batch of batches) {
+      const batchResult = await processBatch(batch, operation, concurrency, failFast, globalIndex)
+      allResults.push(...batchResult.results)
+      allErrors.push(...batchResult.errors)
+      globalIndex += batch.length
+
+      if (failFast && batchResult.errors.length > 0) {
+        break
+      }
+    }
+  } else {
+    // Process all items with specified concurrency
+    const result = await processBatch(items, operation, concurrency, failFast, 0)
+    allResults.push(...result.results)
+    allErrors.push(...result.errors)
+  }
+
+  return {
+    results: allResults,
+    errors: allErrors,
+    success: allErrors.length === 0,
+  }
+}
+
+/**
+ * Process a batch of items with limited concurrency
+ */
+const processBatch = async <T, R>(
+  items: readonly T[],
+  operation: (item: T, index: number) => Promise<R>,
+  concurrency: number,
+  failFast: boolean,
+  startIndex: number = 0,
+): Promise<AsyncParallelResult<T, R>> => {
+  const results: R[] = []
+  const errors: (Error & { item: T })[] = []
+
+  // Process items in chunks based on concurrency limit
+  const chunks = chunk(items, concurrency)
+  let currentIndex = startIndex
+
+  for (const chunkItems of chunks) {
+    const promises = chunkItems.map(async (item, chunkIndex) => {
+      const globalIndex = currentIndex + chunkIndex
+      try {
+        const result = await operation(item, globalIndex)
+        return { success: true, result, item }
+      } catch (error) {
+        const enhancedError = error instanceof Error ? error : new Error(String(error))
+        Object.assign(enhancedError, { item })
+        return { success: false, error: enhancedError as Error & { item: T }, item }
+      }
+    })
+
+    currentIndex += chunkItems.length
+
+    const chunkResults = await Promise.allSettled(promises)
+
+    for (const promiseResult of chunkResults) {
+      if (promiseResult.status === 'fulfilled') {
+        const { success, result, error, item } = promiseResult.value
+        if (success) {
+          results.push(result!)
+        } else {
+          errors.push(error!)
+          if (failFast) {
+            return { results, errors, success: false }
+          }
+        }
+      } else {
+        // This shouldn't happen since we're catching errors above
+        // But handle it just in case
+        const error = new Error('Unexpected promise rejection') as Error & { item: any }
+        errors.push(error)
+        if (failFast) {
+          return { results, errors, success: false }
+        }
+      }
+    }
+  }
+
+  return { results, errors, success: errors.length === 0 }
+}
+
+// /**
+//  * Reduce an array asynchronously, processing each item in sequence
+//  *
+//  * @param items - Array of items to process
+//  * @param reducer - Async function that takes accumulator and current item
+//  * @param initial - Initial value for the accumulator
+//  * @returns Final accumulated value
+//  *
+//  * @example
+//  * ```ts
+//  * const numbers = [1, 2, 3, 4]
+//  * const sum = await asyncReduce(numbers, async (acc, n) => acc + n, 0)
+//  * // sum: 10
+//  *
+//  * const transforms = [addHeader, addFooter, minify]
+//  * const html = await asyncReduce(transforms, async (html, transform) => transform(html), initialHtml)
+//  * ```
+//  */
+// export const asyncReduce = async <T, R>(
+//   items: readonly T[],
+//   reducer: (accumulator: R, current: T, index: number) => Promise<R> | R,
+//   initial: R,
+// ): Promise<R> => {
+//   let result = initial
+//   for (let i = 0; i < items.length; i++) {
+//     const item = items[i]!
+//     result = await reducer(result, item, i)
+//   }
+//   return result
+// }
+
+// /**
+//  * Curried version of asyncReduce for functions that transform a value
+//  *
+//  * @param transformers - Array of transformer functions
+//  * @returns A function that takes an initial value and applies all transformers
+//  *
+//  * @example
+//  * ```ts
+//  * const transformers = [addHeader, addFooter, minify]
+//  * const applyTransforms = asyncReduceWith(transformers)
+//  * const finalHtml = await applyTransforms(initialHtml)
+//  *
+//  * // For simple pipelines where each function transforms the same type
+//  * const htmlPipeline = asyncReduceWith([
+//  *   (html) => html.replace('foo', 'bar'),
+//  *   async (html) => await prettify(html),
+//  *   (html) => html.trim()
+//  * ])
+//  * ```
+//  */
+// export const asyncReduceWith = <T>(
+//   transformers: readonly ((value: T) => Promise<T> | T)[],
+// ) => {
+//   return async (initial: T): Promise<T> => {
+//     return asyncReduce(transformers, (value, transform) => transform(value), initial)
+//   }
+// }
+
+/**
+ * Reduce an array asynchronously with context, processing each item in sequence
+ *
+ * @param items - Array of items to process
+ * @param reducer - Async function that takes accumulator, current item, and context
+ * @param initial - Initial value for the accumulator
+ * @param context - Context object passed to each reducer call
+ * @returns Final accumulated value
+ *
+ * @example
+ * ```ts
+ * const transformers = [transformer1, transformer2]
+ * const ctx = { request: req, response: res }
+ * const result = await asyncReduceWithContext(
+ *   transformers,
+ *   async (html, transformer) => transformer(html, ctx),
+ *   initialHtml,
+ *   ctx
+ * )
+ * ```
+ */
+export const asyncReduce = async <T, R, C>(
+  items: readonly T[],
+  reducer: (accumulator: R, current: T, context: C, index: number) => Promise<R> | R,
+  initial: R,
+  context: C,
+): Promise<R> => {
+  let result = initial
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]!
+    result = await reducer(result, item, context, i)
+  }
+  return result
+}
+
+/**
+ * Curried version of asyncReduceWithContext for functions that transform a value with context
+ *
+ * @param transformers - Array of transformer functions that take value and context
+ * @returns A function that takes an initial value and context, and applies all transformers
+ *
+ * @example
+ * ```ts
+ * const transformers = [
+ *   (html, ctx) => html.replace('{{url}}', ctx.req.url),
+ *   async (html, ctx) => await ctx.minify(html),
+ * ]
+ * const applyTransforms = asyncReduceWithContextWith(transformers)
+ * const finalHtml = await applyTransforms(initialHtml, ctx)
+ * ```
+ */
+export const asyncReduceWith = <T, C>(
+  transformers: readonly ((value: T, context: C) => Promise<T> | T)[],
+  context: C,
+) => {
+  return async (initial: T): Promise<T> => {
+    return asyncReduce(
+      transformers,
+      (value, transform, ctx) => transform(value, ctx),
+      initial,
+      context,
+    )
+  }
+}

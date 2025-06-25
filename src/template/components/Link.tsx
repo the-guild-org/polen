@@ -3,6 +3,7 @@ import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter, useLocation } from 'react-router'
 // todo: #lib/kit-temp does not work as import
 import { ObjPartition } from '../../lib/kit-temp.ts'
+import { useClientOnly } from '../hooks/useClientOnly.ts'
 import type { LinkPropsRadix } from './RadixLink.tsx'
 import { LinkRadix } from './RadixLink.tsx'
 
@@ -22,18 +23,25 @@ const reactRouterPropKeys = [
 export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = props => {
   const location = useLocation()
   const toPathExp = typeof props.to === 'string' ? props.to : props.to.pathname || ''
-  const active = getPathActiveReport(toPathExp, location.pathname)
+
+  const active = useClientOnly(
+    () => getPathActiveReport(toPathExp, location.pathname),
+    { is: false, isDirect: false, isDescendant: false },
+  )
 
   const { picked: reactRouterProps, omitted: radixProps } = ObjPartition(props, reactRouterPropKeys)
 
+  // Only add data attributes if they're true
+  const linkRadixProps = {
+    ...radixProps,
+    asChild: true,
+    ...(active.is && { 'data-active': true }),
+    ...(active.isDirect && { 'data-active-direct': true }),
+    ...(active.isDescendant && { 'data-active-descendant': true }),
+  }
+
   return (
-    <LinkRadix
-      asChild
-      {...radixProps}
-      data-active={active.is || undefined}
-      data-active-direct={active.isDirect || undefined}
-      data-active-descendant={active.isdescendant || undefined}
-    >
+    <LinkRadix {...linkRadixProps}>
       <LinkReactRouter {...reactRouterProps} />
     </LinkRadix>
   )
@@ -42,7 +50,7 @@ export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = 
 export interface PathActiveReport {
   is: boolean
   isDirect: boolean
-  isdescendant: boolean
+  isDescendant: boolean
 }
 
 export const getPathActiveReport = (
@@ -54,13 +62,13 @@ export const getPathActiveReport = (
   const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
 
   const isDirect = normalizedCurrentPath === normalizedPath
-  const isdescendant = normalizedCurrentPath.startsWith(normalizedPath + '/')
+  const isDescendant = normalizedCurrentPath.startsWith(normalizedPath + '/')
     && normalizedCurrentPath !== normalizedPath
-  const is = isDirect || isdescendant
+  const is = isDirect || isDescendant
 
   return {
     is,
     isDirect,
-    isdescendant,
+    isDescendant,
   }
 }

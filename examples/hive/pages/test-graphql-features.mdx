@@ -10,7 +10,7 @@ This page demonstrates all the interactive features of GraphQL documents.
 
 ## Simple Query
 
-<GraphQLDocumentWithSchema>
+<GraphQLDocumentWithSchema options={{ debug: true }}>
 {`query GetOrganization {
   organization(reference: { slug: "example" }) {
     id
@@ -23,7 +23,7 @@ This page demonstrates all the interactive features of GraphQL documents.
 
 ## Query with Multiple Types
 
-<GraphQLDocumentWithSchema>
+<GraphQLDocumentWithSchema options={{ debug: true }}>
 {`query GetProjectDetails {
   project(reference: { orgSlug: "example", projectSlug: "api" }) {
     id
@@ -42,7 +42,7 @@ This page demonstrates all the interactive features of GraphQL documents.
 
 ## Mutation Example
 
-<GraphQLDocumentWithSchema>
+<GraphQLDocumentWithSchema options={{ debug: true }}>
 {`mutation CreateNewProject {
   createProject(input: {
     organization: { slug: "example" }
@@ -65,7 +65,7 @@ This page demonstrates all the interactive features of GraphQL documents.
 
 ## Complex Nested Query
 
-<GraphQLDocumentWithSchema>
+<GraphQLDocumentWithSchema options={{ debug: true }}>
 {`query GetTargetWithStats {
   target(reference: { 
     orgSlug: "example"
@@ -91,7 +91,7 @@ This page demonstrates all the interactive features of GraphQL documents.
 
 This query contains types and fields that don't exist in the schema to test error tooltips:
 
-<GraphQLDocumentWithSchema>
+<GraphQLDocumentWithSchema options={{ debug: true }}>
 {`query TestErrors {
   # These don't exist - should show error tooltips
   nonExistentField

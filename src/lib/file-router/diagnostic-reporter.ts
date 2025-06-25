@@ -13,10 +13,10 @@ export const reportDiagnostics = (diagnostics: Diagnostic[]) => {
     infos.length > 0 && `${infos.length} info${infos.length === 1 ? '' : 's'}`,
   ].filter(Boolean).join(', ')
 
-  console.warn(`\n🔍 Polen found ${summary}:\n`)
+  console.warn(`\nPolen found ${summary}:\n`)
 
   diagnostics.forEach((diagnostic, index) => {
-    const icon = diagnostic.severity === 'error' ? '❌' : diagnostic.severity === 'warning' ? '⚠️ ' : 'ℹ️ '
+    const icon = diagnostic.severity === 'error' ? '✗' : diagnostic.severity === 'warning' ? '⚠' : 'ⓘ'
     console.warn(`${icon} ${index + 1}. ${diagnostic.message}\n`)
   })
 }

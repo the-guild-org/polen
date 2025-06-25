@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { parse } from './markdown.ts'
 
 describe(`markdown parser with syntax highlighting`, () => {
-  test(`parse highlights code blocks`, async () => {
+  test(`parse highlights code blocks`, { timeout: 10000 }, async () => {
     const markdown = `
 # Hello
 

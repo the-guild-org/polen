@@ -59,7 +59,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     onNavigate,
     validate = true,
     className = '',
-  } = options || {}
+  } = options
 
   const navigate = useNavigate()
   const handleNavigate = onNavigate || ((url: string) => navigate(url))
@@ -93,8 +93,9 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   const analysisResult = ReactHooks.useMemo(() => {
     if (plain) return null
     const result = analyze(children, { schema })
+    // Debug logging handled by debug prop
     return result
-  }, [children, plain, schema])
+  }, [children, plain, schema, debug])
 
   // Layer 2: Schema resolution
   const resolver = ReactHooks.useMemo(() => {
@@ -130,6 +131,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   // Prepare code block and calculate positions after render
   ReactHooks.useEffect(() => {
     if (!containerRef.current || !analysisResult || !positionCalculator || plain) {
+      // Skip position calculation - debug handled by debug prop
       return
     }
 
@@ -138,11 +140,13 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
       || containerRef.current.querySelector('pre code')
       || containerRef.current.querySelector('code')
     if (!codeElement) {
+      // No code element found - skip
       return
     }
 
     // Prepare the code block (wrap identifiers)
     const identifiers = Array.from(analysisResult.identifiers.byPosition.values())
+    // Prepare code block with identifiers
     positionCalculator.prepareCodeBlock(codeElement as Element, identifiers)
 
     // Get positions after DOM update
@@ -150,28 +154,36 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
       // Pass containerRef.current as the reference element for positioning
       if (containerRef.current) {
         const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
+        // Position calculation complete
         setPositions(newPositions)
         setIsReady(true)
       }
     })
   }, [analysisResult, positionCalculator, plain, highlightedHtml])
 
-  // Handle resize events
+  // Handle resize events with debouncing
   ReactHooks.useEffect(() => {
     if (!containerRef.current || !positionCalculator || plain) return
 
+    let resizeTimer: NodeJS.Timeout
     const handleResize = () => {
-      const codeElement = containerRef.current?.querySelector('pre.shiki code')
-        || containerRef.current?.querySelector('pre code')
-        || containerRef.current?.querySelector('code')
-      if (codeElement && containerRef.current) {
-        const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
-        setPositions(newPositions)
-      }
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => {
+        const codeElement = containerRef.current?.querySelector('pre.shiki code')
+          || containerRef.current?.querySelector('pre code')
+          || containerRef.current?.querySelector('code')
+        if (codeElement && containerRef.current) {
+          const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
+          setPositions(newPositions)
+        }
+      }, 100) // Debounce resize events
     }
 
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      clearTimeout(resizeTimer)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [positionCalculator, plain])
 
   // Validation errors
