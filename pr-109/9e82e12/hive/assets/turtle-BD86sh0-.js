@@ -1,0 +1,1 @@
+import{turtle_default as e}from"./turtle-COvdM3vH.js";export{e as default};

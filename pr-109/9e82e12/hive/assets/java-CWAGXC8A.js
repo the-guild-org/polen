@@ -1,0 +1,1 @@
+import{java_default as e}from"./java-P95sWqy-.js";export{e as default};

@@ -1,0 +1,1 @@
+import{data as e}from"./entry.client-u_7M__hO.js";export{e as default};
