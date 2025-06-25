@@ -54,16 +54,11 @@ export class SimplePositionCalculator {
     const fullText = containerElement.textContent || ''
     const lines = fullText.split('\n')
 
-    // console.log('[SimplePositionCalculator] prepareCodeBlock called with', identifiers.length, 'identifiers')
-    // if (identifiers.length > 0) {
-    //   console.log('[SimplePositionCalculator] First identifier:', identifiers[0])
-    //   console.log('[SimplePositionCalculator] Container text preview:', fullText.substring(0, 100) + '...')
-    // }
-
     // Build a map of line start positions in the full text
     const lineStartPositions: number[] = [0]
     for (let i = 0; i < lines.length - 1; i++) {
-      lineStartPositions.push(lineStartPositions[i] + lines[i].length + 1) // +1 for newline
+      const lineLength = lines[i]?.length ?? 0
+      lineStartPositions.push(lineStartPositions[i]! + lineLength + 1) // +1 for newline
     }
 
     // Process identifiers by line
@@ -75,9 +70,10 @@ export class SimplePositionCalculator {
       const columnIndex = identifier.position.column - 1
 
       // Check if the identifier exists at the expected position
-      if (lineText.substring(columnIndex).startsWith(identifier.name)) {
+      if (lineText && lineText.substring(columnIndex).startsWith(identifier.name)) {
         // Calculate the absolute position in the full text
-        const absolutePosition = lineStartPositions[lineIndex] + columnIndex
+        const lineStartPosition = lineStartPositions[lineIndex] ?? 0
+        const absolutePosition = lineStartPosition + columnIndex
 
         // Check if already wrapped at this specific position
         const existingWrapped = containerElement.querySelectorAll(`[data-graphql-id]`)

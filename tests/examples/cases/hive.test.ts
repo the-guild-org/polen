@@ -35,7 +35,7 @@ test('no hydration errors on navigation links', async ({ runDev, page }) => {
   // Verify navigation links exist
   const navLinks = await page.locator('a[href]').count()
   expect(navLinks).toBeGreaterThan(0)
-  
+
   // Also verify no console errors
   expect(errors).toHaveLength(0)
 })

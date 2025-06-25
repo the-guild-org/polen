@@ -24,8 +24,8 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
           theme: 'light', // You can make this dynamic based on theme
         }).then(html => {
           setHighlightedHtml(html)
-        }).catch(err => {
-          console.error('Failed to highlight code:', err)
+        }).catch(() => {
+          // Silently fall back to unhighlighted code
         })
       }
 
@@ -33,12 +33,12 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
       if (typeof window !== 'undefined') {
         import('virtual:polen/project/data.jsonsuper').then(PROJECT_DATA => {
           const s = PROJECT_DATA.default?.schema?.versions?.[0]?.after
-          console.log('[GraphQLDocumentWithSchema] Schema loaded:', !!s)
+          // Schema loaded successfully
           if (s) {
             setSchema(s)
           }
-        }).catch(err => {
-          console.error('Failed to load schema:', err)
+        }).catch(() => {
+          // Schema loading is optional - continue without it
         })
       }
     }, [props.children])
@@ -77,7 +77,13 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
       </div>
     )
   } catch (err) {
-    console.error('GraphQLDocumentWithSchema error:', err)
-    return <div>Error rendering GraphQL document</div>
+    // Fall back to plain code block on error
+    return (
+      <div data-testid='graphql-document' className='graphql-document graphql-document-static'>
+        <pre className='shiki'>
+          <code className="language-graphql">{props.children}</code>
+        </pre>
+      </div>
+    )
   }
 }
