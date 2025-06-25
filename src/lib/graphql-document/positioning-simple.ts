@@ -50,21 +50,88 @@ export class SimplePositionCalculator {
     containerElement: Element,
     identifiers: Identifier[],
   ): void {
-    // Sort all identifiers by position (right to left, bottom to top)
-    const sortedIdentifiers = [...identifiers].sort((a, b) => {
-      // Sort by line first (bottom to top)
-      if (a.position.line !== b.position.line) {
-        return b.position.line - a.position.line
-      }
-      // Then by column (right to left)
-      return b.position.column - a.position.column
-    })
+    // Find all line elements
+    const lineElements = containerElement.querySelectorAll('.line')
 
-    // Process all identifiers
-    let wrappedCount = 0
-    for (const identifier of sortedIdentifiers) {
-      const wrapped = this.wrapIdentifier(containerElement, identifier)
-      if (wrapped) wrappedCount++
+    // Process identifiers by line
+    for (const identifier of identifiers) {
+      const lineIndex = identifier.position.line - 1
+      const lineElement = lineElements[lineIndex]
+
+      if (!lineElement) continue
+
+      // Get the text content of the line
+      const lineText = lineElement.textContent || ''
+      const columnIndex = identifier.position.column - 1
+
+      // Check if the identifier exists at the expected position
+      if (lineText.substring(columnIndex).startsWith(identifier.name)) {
+        // Check if already wrapped at this specific position
+        const existingWrapped = lineElement.querySelector(`[data-graphql-id]`)
+        if (existingWrapped && existingWrapped.textContent === identifier.name) {
+          // Check if it's at the same position
+          const wrappedText = lineElement.textContent || ''
+          const wrappedIndex = wrappedText.indexOf(identifier.name)
+          if (wrappedIndex === columnIndex) continue
+        }
+
+        // Create wrapper span
+        const wrapper = document.createElement('span')
+        const id = `${identifier.position.start}-${identifier.name}-${identifier.kind}`
+        wrapper.setAttribute('data-graphql-id', id)
+        wrapper.setAttribute('data-graphql-name', identifier.name)
+        wrapper.setAttribute('data-graphql-kind', identifier.kind)
+        wrapper.setAttribute('data-graphql-start', String(identifier.position.start))
+        wrapper.setAttribute('data-graphql-end', String(identifier.position.end))
+        wrapper.setAttribute('data-graphql-line', String(identifier.position.line))
+        wrapper.setAttribute('data-graphql-column', String(identifier.position.column))
+        wrapper.setAttribute('data-graphql-path', identifier.schemaPath.join(','))
+
+        // Find the position in the line and wrap the text
+        const walker = document.createTreeWalker(
+          lineElement,
+          NodeFilter.SHOW_TEXT,
+          null,
+        )
+
+        let currentPos = 0
+        let node: Node | null
+
+        while (node = walker.nextNode()) {
+          const textNode = node as Text
+          const text = textNode.textContent || ''
+
+          // Check if this text node contains our identifier
+          if (currentPos <= columnIndex && columnIndex < currentPos + text.length) {
+            const relativePos = columnIndex - currentPos
+
+            if (text.substring(relativePos).startsWith(identifier.name)) {
+              // Split the text node
+              const before = text.substring(0, relativePos)
+              const identifierText = identifier.name
+              const after = text.substring(relativePos + identifierText.length)
+
+              const parent = textNode.parentNode!
+
+              if (before) {
+                parent.insertBefore(document.createTextNode(before), textNode)
+              }
+
+              wrapper.textContent = identifierText
+              parent.insertBefore(wrapper, textNode)
+
+              if (after) {
+                parent.insertBefore(document.createTextNode(after), textNode)
+              }
+
+              parent.removeChild(textNode)
+              break
+            }
+          }
+
+          currentPos += text.length
+        }
+      }
     }
   }
 
@@ -116,100 +183,6 @@ export class SimplePositionCalculator {
     }
 
     return results
-  }
-
-  /**
-   * Wrap an identifier in a span for positioning
-   * Returns true if the identifier was successfully wrapped
-   */
-  private wrapIdentifier(containerElement: Element, identifier: Identifier): boolean {
-    const walker = document.createTreeWalker(
-      containerElement,
-      NodeFilter.SHOW_TEXT,
-      null,
-    )
-
-    let currentLine = 1
-    let currentColumn = 1
-    let node: Node | null
-
-    while (node = walker.nextNode()) {
-      const textNode = node as Text
-      const text = textNode.textContent || ''
-
-      // Check if already wrapped
-      if (textNode.parentElement?.hasAttribute('data-graphql-id')) {
-        // Update position tracking and continue
-        for (const char of text) {
-          if (char === '\n') {
-            currentLine++
-            currentColumn = 1
-          } else {
-            currentColumn++
-          }
-        }
-        continue
-      }
-
-      // Track position in the text
-      let textIndex = 0
-      while (textIndex < text.length) {
-        // Check if we're at the identifier's position
-        if (
-          currentLine === identifier.position.line
-          && currentColumn === identifier.position.column
-        ) {
-          // Verify it's actually our identifier
-          const remainingText = text.substring(textIndex)
-          if (remainingText.startsWith(identifier.name)) {
-            // Create a unique ID for this identifier
-            const id = `${identifier.position.start}-${identifier.name}-${identifier.kind}`
-
-            // Split the text node and wrap the identifier
-            const before = text.substring(0, textIndex)
-            const after = text.substring(textIndex + identifier.name.length)
-
-            const span = document.createElement('span')
-            span.setAttribute('data-graphql-id', id)
-            span.setAttribute('data-graphql-name', identifier.name)
-            span.setAttribute('data-graphql-kind', identifier.kind)
-            span.setAttribute('data-graphql-start', String(identifier.position.start))
-            span.setAttribute('data-graphql-end', String(identifier.position.end))
-            span.setAttribute('data-graphql-line', String(identifier.position.line))
-            span.setAttribute('data-graphql-column', String(identifier.position.column))
-            span.setAttribute('data-graphql-path', identifier.schemaPath.join(','))
-            span.textContent = identifier.name
-
-            const parent = textNode.parentNode!
-
-            if (before) {
-              parent.insertBefore(document.createTextNode(before), textNode)
-            }
-
-            parent.insertBefore(span, textNode)
-
-            if (after) {
-              parent.insertBefore(document.createTextNode(after), textNode)
-            }
-
-            parent.removeChild(textNode)
-            return true
-          }
-        }
-
-        // Update position tracking
-        const char = text[textIndex]
-        if (char === '\n') {
-          currentLine++
-          currentColumn = 1
-        } else {
-          currentColumn++
-        }
-        textIndex++
-      }
-    }
-
-    return false // Identifier not found
   }
 }
 
