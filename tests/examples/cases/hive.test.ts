@@ -4,6 +4,42 @@ import { test } from '../helpers/test.ts'
 
 test.use(getFixtureOptions(import.meta))
 
+test('no hydration errors on navigation links', async ({ runDev, page }) => {
+  const baseUrl = runDev.url.endsWith('/') ? runDev.url.slice(0, -1) : runDev.url
+
+  // Capture console errors
+  const errors: string[] = []
+  page.on('console', msg => {
+    if (msg.type() === 'error') {
+      errors.push(msg.text())
+      console.error('Console error:', msg.text())
+    }
+  })
+
+  // Navigate to guide page
+  const response = await page.goto(`${baseUrl}/guide`, { waitUntil: 'networkidle' })
+  expect(response?.ok()).toBe(true)
+
+  // Wait for hydration
+  await page.waitForTimeout(2000)
+
+  // Check for hydration errors
+  const hydrationErrors = errors.filter(error =>
+    error.includes('Hydration failed')
+    || error.includes('hydration-mismatch')
+  )
+
+  // Assert no hydration errors
+  expect(hydrationErrors).toHaveLength(0)
+
+  // Verify the guide link has correct data attributes
+  const guideLink = await page.locator('a[href="/guide"]').first()
+  await expect(guideLink).toBeVisible()
+
+  const dataActive = await guideLink.getAttribute('data-active')
+  expect(dataActive).toBe('true')
+})
+
 test('hive guide page renders with MDX content', async ({ runDev, page }) => {
   // Fix double slash issue
   const baseUrl = runDev.url.endsWith('/') ? runDev.url.slice(0, -1) : runDev.url

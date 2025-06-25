@@ -1,95 +1,91 @@
 import { Hono } from '#dep/hono/index'
 import type { ReactRouter } from '#dep/react-router/index'
-import { app } from '#template/server/app'
+import { asyncParallel, chunk } from '#lib/kit-temp'
+import { debugPolen } from '#singletons/debug'
 import * as NodeFs from 'node:fs/promises'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { renderPage } from '../render-page.tsx'
+import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
+import { createPageHtmlResponse } from '../create-page-html-response.tsx'
+import { injectManifestIntoHtml } from '../manifest.ts'
 import { getRoutesPaths } from './get-route-paths.ts'
 
 export const generate = async (view: ReactRouter.StaticHandler) => {
-  const handler: Hono.Handler = async (ctx) => {
-    // For SSG, we need to create a request with the base path prepended
-    // so React Router can match it correctly
-    const url = new URL(ctx.req.raw.url)
-    const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
-
-    // Create a new request with the base path prepended to the pathname
-    const modifiedRequest = new Request(
-      `${url.protocol}//${url.host}${basePath}${url.pathname}${url.search}`,
-      {
-        method: ctx.req.raw.method,
-        headers: ctx.req.raw.headers,
-        body: ctx.req.raw.body,
-      },
-    )
-
-    const staticHandlerContext = await view.query(modifiedRequest)
-    if (staticHandlerContext instanceof Response) {
-      return staticHandlerContext
-    }
-    return renderPage(staticHandlerContext)
-  }
+  const debug = debugPolen.sub(`ssg`)
 
   const routePaths = getRoutesPaths()
-
-  for (const routePath of routePaths) {
-    app.get(routePath, handler)
-  }
-
-  // For large schemas, we need to process in smaller batches to avoid memory issues
-  const BATCH_SIZE = 50
   const totalPaths = routePaths.length
-  console.log(`[info] Generating ${totalPaths} static pages...`)
+  debug(`start`, { totalPaths })
 
-  for (let i = 0; i < totalPaths; i += BATCH_SIZE) {
-    const batchPaths = routePaths.slice(i, i + BATCH_SIZE)
-    const batchApp = new Hono.Hono()
+  // Process routes in batches using the new utilities
+  const batchSize = 50
+  const batches = chunk(routePaths, batchSize)
 
-    // Create a custom handler for batch processing that includes base path handling
-    const batchHandler: Hono.Handler = async (ctx) => {
-      // For SSG, we need to create a request with the base path prepended
-      const url = new URL(ctx.req.raw.url)
-      const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
+  const result = await asyncParallel(
+    batches,
+    async (batchPaths, batchIndex) => {
+      const batchApp = new Hono.Hono()
 
-      // Create a new request with the base path prepended to the pathname
-      const modifiedRequest = new Request(
-        `${url.protocol}//${url.host}${basePath}${url.pathname}${url.search}`,
-        {
-          method: ctx.req.raw.method,
-          headers: ctx.req.raw.headers,
-          body: ctx.req.raw.body,
-        },
-      )
+      // Create a custom handler for batch processing that includes base path handling
+      const batchHandler: Hono.Handler = async (ctx) => {
+        // For SSG, we need to create a request with the base path prepended
+        const url = new URL(ctx.req.raw.url)
+        const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
 
-      const staticHandlerContext = await view.query(modifiedRequest)
-      if (staticHandlerContext instanceof Response) {
-        return staticHandlerContext
+        // Create a new request with the base path prepended to the pathname
+        const modifiedRequest = new Request(
+          `${url.protocol}//${url.host}${basePath}${url.pathname}${url.search}`,
+          {
+            method: ctx.req.raw.method,
+            headers: ctx.req.raw.headers,
+            body: ctx.req.raw.body,
+          },
+        )
+
+        const staticHandlerContext = await view.query(modifiedRequest)
+        if (staticHandlerContext instanceof Response) {
+          return staticHandlerContext
+        }
+
+        // SSG uses manifest-based transformation directly
+        const transformHtml = (html: string) => {
+          return injectManifestIntoHtml(html, viteClientAssetManifest, PROJECT_DATA.basePath)
+        }
+        return createPageHtmlResponse(staticHandlerContext, { transformHtml })
       }
-      return renderPage(staticHandlerContext)
-    }
 
-    // Register only the routes for this batch
-    for (const routePath of batchPaths) {
-      batchApp.get(routePath, batchHandler)
-    }
+      // Register only the routes for this batch
+      for (const routePath of batchPaths) {
+        batchApp.get(routePath, batchHandler)
+      }
 
-    console.log(
-      `[info] Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${
-        Math.ceil(totalPaths / BATCH_SIZE)
-      } (${batchPaths.length} pages)...`,
-    )
-
-    const result = await Hono.SSG.toSSG(batchApp, NodeFs, {
-      concurrency: 5, // Reduced concurrency for memory efficiency
-      dir: PROJECT_DATA.paths.relative.build.root,
-    })
-
-    if (!result.success) {
-      throw new Error(`Failed to generate static site at batch ${Math.floor(i / BATCH_SIZE) + 1}`, {
-        cause: result.error,
+      debug(`batch:start`, {
+        batchIndex: batchIndex + 1,
+        totalBatches: batches.length,
+        pagesInBatch: batchPaths.length,
       })
-    }
+
+      const ssgResult = await Hono.SSG.toSSG(batchApp, NodeFs, {
+        concurrency: 5, // Reduced concurrency for memory efficiency
+        dir: PROJECT_DATA.paths.relative.build.root,
+      })
+
+      if (!ssgResult.success) {
+        throw new Error(`Failed to generate static site at batch ${batchIndex + 1}`, {
+          cause: ssgResult.error,
+        })
+      }
+
+      return ssgResult
+    },
+    {
+      concurrency: 1, // Process batches sequentially to avoid memory issues
+      failFast: true, // Stop on first batch failure
+    },
+  )
+
+  if (!result.success) {
+    throw new Error(`SSG generation failed`, { cause: result.errors[0] })
   }
 
-  console.log(`[info] Successfully generated ${totalPaths} static pages.`)
+  debug(`complete`, { totalPaths })
 }

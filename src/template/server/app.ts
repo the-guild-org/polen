@@ -1,35 +1,45 @@
 import { Hono } from '#dep/hono/index'
-import { AppleTouchIcon } from '#lib/apple-touch-icon/index'
-import { Favicon } from '#lib/favicon/index'
 import { serveStatic } from '@hono/node-server/serve-static'
-import { Http } from '@wollybeard/kit'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { renderPage } from './render-page.tsx'
-import { view } from './view.ts'
+import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
+import { injectManifestIntoHtml } from './manifest.ts'
+import { PageMiddleware } from './middleware/page.ts'
+import { UnsupportedAssetsMiddleware } from './middleware/unsupported-assets.ts'
 
-export const app = new Hono.Hono()
+export type HtmlTransformer = (html: string, ctx: Hono.Context) => Promise<string> | string
 
-if (__BUILDING__) {
-  app.use(
-    PROJECT_DATA.server.static.route,
-    serveStatic({ root: PROJECT_DATA.server.static.directory }),
-  )
+export interface AppHooks {
+  transformHtml?: HtmlTransformer[]
 }
 
-app.all(`*`, async (ctx) => {
-  const staticHandlerContext = await view.query(ctx.req.raw)
+export interface AppOptions {
+  hooks?: AppHooks
+}
 
-  if (staticHandlerContext instanceof Response) {
-    return staticHandlerContext
+export const createApp = (options: AppOptions = {}) => {
+  const app = new Hono.Hono()
+
+  // Collect all HTML transformers
+  const htmlTransformers: HtmlTransformer[] = [...(options.hooks?.transformHtml || [])]
+
+  // Core middleware
+  app.use('*', UnsupportedAssetsMiddleware())
+
+  // Production-specific setup
+  if (__BUILDING__) {
+    // Add manifest transformer
+    htmlTransformers.push((html, _ctx) => {
+      return injectManifestIntoHtml(html, viteClientAssetManifest, PROJECT_DATA.basePath)
+    })
+
+    // Static file serving
+    app.use(
+      PROJECT_DATA.server.static.route,
+      serveStatic({ root: PROJECT_DATA.server.static.directory }),
+    )
   }
 
-  if (Favicon.fileNamePattern.test(ctx.req.path)) {
-    return Http.Response.notFound
-  }
+  app.all('*', PageMiddleware(htmlTransformers))
 
-  if (AppleTouchIcon.fileNamePattern.test(ctx.req.path)) {
-    return Http.Response.notFound
-  }
-
-  return renderPage(staticHandlerContext)
-})
+  return app
+}

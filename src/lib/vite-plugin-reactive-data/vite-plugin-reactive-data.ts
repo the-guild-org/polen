@@ -1,8 +1,6 @@
-import { ensureEnd } from '#lib/kit-temp'
 import { VitePluginJson } from '#lib/vite-plugin-json/index'
-import { superjson } from '#singletons/superjson'
+import { debugPolen } from '#singletons/debug'
 import { type ComputedRef, effect, isRef } from '@vue/reactivity'
-import { Debug } from '@wollybeard/kit'
 import type { Plugin, ViteDevServer } from 'vite'
 
 interface ReactiveDataOptions {
@@ -23,7 +21,7 @@ interface ReactiveDataOptions {
   debounce?: number
   /**
    * JSON codec to use (e.g., superjson)
-   * Default: superjson
+   * Default: JSON
    * Only used when includeJsonPlugin is true
    */
   codec?: VitePluginJson.Codec
@@ -32,47 +30,46 @@ interface ReactiveDataOptions {
    @default 'reactive-data'
    */
   name?: string
-  /**
-   * Module type to return. Default: 'json'
-   * Use 'superjson' to avoid conflicts with built-in JSON plugin
-   */
-  moduleType?: string
 }
 
-const debug = Debug.create('vite-plugin-reactive-data')
+const pluginDebug = debugPolen.sub('vite-reactive-data')
 
 export const create = (options: ReactiveDataOptions): Plugin => {
-  const codec = options.codec ?? superjson
-  const moduleType = options.moduleType ?? 'json'
-  const moduleId = ensureEnd(options.moduleId, `.${moduleType}`)
+  const codec = options.codec ?? JSON
+  const moduleId = options.moduleId
   const name = options.name ?? `reactive-data`
 
-  let server: ViteDevServer
-  let updateTimer: NodeJS.Timeout | undefined
-  let updateScheduled = false
+  const debug = pluginDebug.sub(name)
+  debug('constructor', { moduleId, debounce: options.debounce })
 
-  const doUpdate = () => {
-    debug('update')
-    updateTimer = undefined
-    updateScheduled = false
-    if (!server) return
-    const moduleNode = server.moduleGraph.getModuleById(moduleId)
+  let $server: ViteDevServer
+  let $invalidationScheduled = false
+
+  const tryInvalidate = () => {
+    $invalidationScheduled = false
+    // updateTimer = undefined
+    if (!$server) throw new Error('Server not available yet - this should be impossible')
+    const moduleNode = $server.moduleGraph.getModuleById(moduleId)
     if (moduleNode) {
-      server.moduleGraph.invalidateModule(moduleNode)
+      debug('invalidate', { id: moduleNode.id })
+      $server.moduleGraph.invalidateModule(moduleNode)
+    } else {
+      debug('cannot invalidate', {
+        reason: 'notInModuleGraph',
+        moduleId,
+        hint: 'maybe it was not loaded yet',
+      })
     }
   }
 
-  const scheduleUpdate = () => {
-    if (options.debounce) {
-      // User wants actual debouncing for rapid updates
-      if (updateTimer) clearTimeout(updateTimer)
-      updateTimer = setTimeout(doUpdate, options.debounce)
-    } else {
-      // Just batch synchronous updates using nextTick
-      if (updateScheduled) return
-      updateScheduled = true
-      process.nextTick(doUpdate)
-    }
+  const scheduleInvalidate = () => {
+    if ($invalidationScheduled) return // already scheduled
+
+    $invalidationScheduled = true
+
+    if (!$server) return // server will flush when ready
+
+    tryInvalidate()
   }
 
   // Helper to get the current data value
@@ -90,20 +87,21 @@ export const create = (options: ReactiveDataOptions): Plugin => {
   effect(() => {
     // Access data to track dependencies
     const data = getData()
-    debug('data changed:', data)
-    // Trigger update only if server is available
-    if (server) {
-      scheduleUpdate()
-    }
+    debug('effect triggered', { data })
+
+    scheduleInvalidate()
   })
 
   return {
     name,
 
     configureServer(_server) {
-      server = _server
-      // Trigger initial update since server is now available
-      scheduleUpdate()
+      debug('hook configureServer')
+      $server = _server
+      if ($invalidationScheduled) {
+        debug('try invalidate scheduled before server was ready')
+        tryInvalidate()
+      }
     },
 
     resolveId(id) {
@@ -112,20 +110,14 @@ export const create = (options: ReactiveDataOptions): Plugin => {
       }
     },
 
-    load: {
-      // todo: doesn't work for some reason, prefer over handler
-      // filter: {
-      //   id: {
-      //     include: moduleId,
-      //   },
-      // },
-      handler: (id) => {
-        if (id !== moduleId) return
+    // todo make use of Vite's builtin json plugin
+    // for example, call it here somehow
+    load(id) {
+      if (id !== moduleId) return
 
-        const data = getData()
-        // Return just the raw JSON string - let the JSON plugin handle the transformation
-        return codec.stringify(data)
-      },
+      const data = getData()
+      debug('hook load', { data })
+      return `export default ${codec.stringify(data)}`
     },
   }
 }

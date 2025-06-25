@@ -14,7 +14,7 @@ import { Arr, Cache, Path, Str } from '@wollybeard/kit'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
-const debug = debugPolen.sub(`vite-plugin-pages`)
+const debug = debugPolen.sub(`vite-pages`)
 
 export const viProjectRoutes = polenVirtual([`project`, `routes.jsx`], { allowPluginProcessing: true })
 export const viProjectPagesCatalog = polenVirtual([`project`, `data`, 'pages-catalog.jsonsuper'], {
@@ -207,25 +207,27 @@ export const Pages = ({
         // },
         async handler(id) {
           if (id !== viProjectPagesCatalog.resolved) return
-          debug(`viProjectPagesCatalog`)
+          debug(`hook load`)
 
           const scanResult = await scanPages()
 
-          // Report any diagnostics
           reportDiagnostics(scanResult.diagnostics)
-          debug(`Found ${String(scanResult.list.length)} visible pages`)
+          debug(`found visible`, { count: scanResult.list.length })
 
           //
           // ━━ Build Navbar
           //
 
-          // Update navbar if provided
           if (navbarData) {
             const navbarPages = navbarData.get('pages')
+
             navbarPages.length = 0 // Clear existing
 
-            const navbarItems = createNavbar(scanResult.list)
-            navbarPages.push(...navbarItems)
+            const data = createNavbar(scanResult.list)
+
+            debug('update navbar', data)
+
+            navbarPages.push(...data)
           }
 
           //

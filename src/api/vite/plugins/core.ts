@@ -57,7 +57,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     }))
   }
 
-  const json = VitePluginJson.create({
+  const jsonsuper = VitePluginJson.create({
     codec: {
       validate: superjson,
       importPath: import.meta.resolve('#singletons/superjson'),
@@ -85,7 +85,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       name: `polen:internal-import-alias`,
       enforce: 'pre' as const,
       resolveId(id, importer) {
-        const d = debugPolen.sub(`vite-plugin:internal-import-alias`)
+        // const debug = debugPolen.sub(`vite-plugin:internal-import-alias`)
 
         const isPolenImporter = Boolean(
           importer
@@ -107,25 +107,23 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         )
 
         if (!isPolenImporter) return null
-        d(`check candidate`, { id, importer, isPolenImporter })
+        // debug(`check candidate`, { id, importer, isPolenImporter })
 
         const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
         const match = Str.match(id, find)
         if (!match) return null
 
         const to = `${config.paths.framework.sourceDir}/${match.groups.path}${config.paths.framework.sourceExtension}`
-        d(`did resolve`, { from: id, to })
+        // debug(`did resolve`, { from: id, to })
 
         return to
       },
     },
-    json,
+    jsonsuper,
     VitePluginReactiveData.create({
-      moduleId: `virtual:polen/project/data/navbar`,
+      moduleId: `virtual:polen/project/data/navbar.json`,
       data: navbarData.value,
-      codec: superjson,
       name: `polen-navbar`,
-      moduleType: 'jsonsuper',
     }),
     ...Pages({
       config,
@@ -181,12 +179,18 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         {
           identifier: viProjectData,
           async loader() {
+            const debug = debugPolen.sub(`module-project-data`)
+
+            debug('load', { id: viProjectData.id })
+
             const schema = await readSchema()
 
             // ━ Schema presence causes adding some navbar items
-            const schemaNavbar = navbarData.get('schema')
-            schemaNavbar.length = 0 // Clear existing
             if (schema) {
+              const schemaNavbar = navbarData.get('schema')
+              schemaNavbar.length = 0 // Clear existing
+              debug('update navbar', { message: 'for schema' })
+
               // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
               // Without the leading slash, React Router treats paths as relative, which causes
               // hydration mismatches between SSR (where base path is prepended) and client

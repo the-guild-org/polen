@@ -1,18 +1,20 @@
 import { reportError } from '#api/server/report-error'
 import type { ReactRouter } from '#dep/react-router/index'
+import { React } from '#dep/react/index'
 import { ResponseInternalServerError } from '#lib/kit-temp'
 import type { ReactRouterAid } from '#lib/react-router-aid/index'
 import { Arr } from '@wollybeard/kit'
-import { StrictMode } from 'react'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
-import { injectManifestIntoHtml } from './manifest.ts'
 import { view } from './view.ts'
 
-export const renderPage = (
+interface RenderHooks {
+  transformHtml?: (html: string) => Promise<string> | string
+}
+
+export const createPageHtmlResponse = async (
   staticHandlerContext: ReactRouter.StaticHandlerContext,
+  hooks?: RenderHooks,
 ) => {
   const router = createStaticRouter(view.dataRoutes, staticHandlerContext)
 
@@ -20,24 +22,25 @@ export const renderPage = (
 
   try {
     html = ReactDomServer.renderToString(
-      <StrictMode>
-        <StaticRouterProvider router={router} context={staticHandlerContext} />
-      </StrictMode>,
+      React.createElement(
+        React.StrictMode,
+        null,
+        React.createElement(StaticRouterProvider, {
+          router,
+          context: staticHandlerContext,
+        }),
+      ),
     )
   } catch (cause) {
     reportError(new Error(`Failed to server side render the HTML`, { cause }))
     return ResponseInternalServerError()
   }
 
-  if (__BUILDING__) {
-    html = injectManifestIntoHtml(html, viteClientAssetManifest, PROJECT_DATA.basePath)
-  }
+  // Create the full HTML document
 
-  // todo: what is this?
-  if (import.meta.env.DEV) {
-    // const env = ctx.env as { viteDevServer: Vite.ViteDevServer }
-    // html = await env.viteDevServer.transformIndexHtml(ctx.req.url, html)
-    // await env.viteDevServer.transformIndexHtml(ctx.req.url, html)
+  // Apply HTML transformation hook to the full document
+  if (hooks?.transformHtml) {
+    html = await hooks.transformHtml(html)
   }
 
   const headers = getRouteHeaders(staticHandlerContext)

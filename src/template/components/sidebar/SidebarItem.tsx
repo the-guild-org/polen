@@ -63,7 +63,7 @@ const SBLink: React.FC<{
         display: `block`,
         textDecoration: `none`,
         color: active.is ? `var(--accent-12)` : undefined,
-        backgroundColor: active.isDirect ? `var(--accent-2)` : active.isdescendant ? `var(--accent-1)` : `transparent`,
+        backgroundColor: active.isDirect ? `var(--accent-2)` : active.isDescendant ? `var(--accent-1)` : `transparent`,
         borderRadius: `var(--radius-2)`,
       }}
     >
@@ -145,7 +145,7 @@ const SectionLink: React.FC<{ link: Content.ItemLink }> = ({ link }) => {
       style={{
         textDecoration: `none`,
         color: active.is ? `var(--accent-12)` : undefined,
-        backgroundColor: active.isDirect ? `var(--accent-2)` : active.isdescendant ? `var(--accent-1)` : `transparent`,
+        backgroundColor: active.isDirect ? `var(--accent-2)` : active.isDescendant ? `var(--accent-1)` : `transparent`,
         borderBottomRightRadius: `var(--radius-2)`,
         borderTopRightRadius: `var(--radius-2)`,
       }}

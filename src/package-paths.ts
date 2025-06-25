@@ -49,11 +49,11 @@ export const packagePaths: PackagePaths = {
   template: {
     rootDir: templateDir,
     server: {
-      app: Path.join(templateDir, `server/app.js`),
-      entrypoint: Path.join(templateDir, `server/main.js`),
+      app: Path.join(templateDir, `server/app${sourceKind}`),
+      entrypoint: Path.join(templateDir, `server/main${sourceKind}`),
     },
     client: {
-      entrypoint: Path.join(templateDir, `entry.client.jsx`),
+      entrypoint: Path.join(templateDir, `entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
     },
   },
 }
