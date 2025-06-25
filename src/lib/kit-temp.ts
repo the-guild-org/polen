@@ -107,7 +107,7 @@ export const objPolicyFilter = <
   if (mode === 'allow') {
     // For allow mode, only add specified keys
     for (const key of keys) {
-      if (key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         // @ts-expect-error
         result[key] = obj[key]
       }
