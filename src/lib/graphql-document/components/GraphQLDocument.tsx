@@ -93,8 +93,15 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   const analysisResult = ReactHooks.useMemo(() => {
     if (plain) return null
     const result = analyze(children, { schema })
+    if (debug) {
+      console.log('[GraphQLDocument] Analysis result:', {
+        identifierCount: result.identifiers.byPosition.size,
+        errorCount: result.errors.length,
+        hasSchema: !!schema,
+      })
+    }
     return result
-  }, [children, plain, schema])
+  }, [children, plain, schema, debug])
 
   // Layer 2: Schema resolution
   const resolver = ReactHooks.useMemo(() => {
@@ -130,6 +137,14 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   // Prepare code block and calculate positions after render
   ReactHooks.useEffect(() => {
     if (!containerRef.current || !analysisResult || !positionCalculator || plain) {
+      if (debug) {
+        console.log('[GraphQLDocument] Skipping position calculation:', {
+          hasContainer: !!containerRef.current,
+          hasAnalysis: !!analysisResult,
+          hasCalculator: !!positionCalculator,
+          isPlain: plain,
+        })
+      }
       return
     }
 
@@ -138,11 +153,15 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
       || containerRef.current.querySelector('pre code')
       || containerRef.current.querySelector('code')
     if (!codeElement) {
+      if (debug) console.log('[GraphQLDocument] No code element found')
       return
     }
 
     // Prepare the code block (wrap identifiers)
     const identifiers = Array.from(analysisResult.identifiers.byPosition.values())
+    if (debug) {
+      console.log('[GraphQLDocument] Preparing code block with identifiers:', identifiers.length)
+    }
     positionCalculator.prepareCodeBlock(codeElement as Element, identifiers)
 
     // Get positions after DOM update
@@ -150,6 +169,9 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
       // Pass containerRef.current as the reference element for positioning
       if (containerRef.current) {
         const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
+        if (debug) {
+          console.log('[GraphQLDocument] Got positions:', newPositions.size)
+        }
         setPositions(newPositions)
         setIsReady(true)
       }

@@ -33,6 +33,7 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
       if (typeof window !== 'undefined') {
         import('virtual:polen/project/data.jsonsuper').then(PROJECT_DATA => {
           const s = PROJECT_DATA.default?.schema?.versions?.[0]?.after
+          console.log('[GraphQLDocumentWithSchema] Schema loaded:', !!s)
           if (s) {
             setSchema(s)
           }
@@ -68,9 +69,9 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
           schema={schema}
           highlightedHtml={highlightedHtml || undefined}
           options={{
+            debug: false, // Default to false for shipping
             ...props.options,
             onNavigate: handleNavigate,
-            debug: false, // Disable debug mode for shipping
           }}
         />
       </div>

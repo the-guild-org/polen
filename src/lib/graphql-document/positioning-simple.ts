@@ -50,30 +50,48 @@ export class SimplePositionCalculator {
     containerElement: Element,
     identifiers: Identifier[],
   ): void {
-    // Find all line elements
-    const lineElements = containerElement.querySelectorAll('.line')
+    // Get the full text content of the container
+    const fullText = containerElement.textContent || ''
+    const lines = fullText.split('\n')
+
+    // console.log('[SimplePositionCalculator] prepareCodeBlock called with', identifiers.length, 'identifiers')
+    // if (identifiers.length > 0) {
+    //   console.log('[SimplePositionCalculator] First identifier:', identifiers[0])
+    //   console.log('[SimplePositionCalculator] Container text preview:', fullText.substring(0, 100) + '...')
+    // }
+
+    // Build a map of line start positions in the full text
+    const lineStartPositions: number[] = [0]
+    for (let i = 0; i < lines.length - 1; i++) {
+      lineStartPositions.push(lineStartPositions[i] + lines[i].length + 1) // +1 for newline
+    }
 
     // Process identifiers by line
     for (const identifier of identifiers) {
       const lineIndex = identifier.position.line - 1
-      const lineElement = lineElements[lineIndex]
+      if (lineIndex >= lines.length) continue
 
-      if (!lineElement) continue
-
-      // Get the text content of the line
-      const lineText = lineElement.textContent || ''
+      const lineText = lines[lineIndex]
       const columnIndex = identifier.position.column - 1
 
       // Check if the identifier exists at the expected position
       if (lineText.substring(columnIndex).startsWith(identifier.name)) {
+        // Calculate the absolute position in the full text
+        const absolutePosition = lineStartPositions[lineIndex] + columnIndex
+
         // Check if already wrapped at this specific position
-        const existingWrapped = lineElement.querySelector(`[data-graphql-id]`)
-        if (existingWrapped && existingWrapped.textContent === identifier.name) {
-          // Check if it's at the same position
-          const wrappedText = lineElement.textContent || ''
-          const wrappedIndex = wrappedText.indexOf(identifier.name)
-          if (wrappedIndex === columnIndex) continue
+        const existingWrapped = containerElement.querySelectorAll(`[data-graphql-id]`)
+        let alreadyWrapped = false
+        for (const wrapped of existingWrapped) {
+          if (wrapped.textContent === identifier.name) {
+            const startPos = parseInt(wrapped.getAttribute('data-graphql-start') || '0')
+            if (startPos === identifier.position.start) {
+              alreadyWrapped = true
+              break
+            }
+          }
         }
+        if (alreadyWrapped) continue
 
         // Create wrapper span
         const wrapper = document.createElement('span')
@@ -87,9 +105,9 @@ export class SimplePositionCalculator {
         wrapper.setAttribute('data-graphql-column', String(identifier.position.column))
         wrapper.setAttribute('data-graphql-path', identifier.schemaPath.join(','))
 
-        // Find the position in the line and wrap the text
+        // Find the position in the container and wrap the text
         const walker = document.createTreeWalker(
-          lineElement,
+          containerElement,
           NodeFilter.SHOW_TEXT,
           null,
         )
@@ -102,8 +120,8 @@ export class SimplePositionCalculator {
           const text = textNode.textContent || ''
 
           // Check if this text node contains our identifier
-          if (currentPos <= columnIndex && columnIndex < currentPos + text.length) {
-            const relativePos = columnIndex - currentPos
+          if (currentPos <= absolutePosition && absolutePosition < currentPos + text.length) {
+            const relativePos = absolutePosition - currentPos
 
             if (text.substring(relativePos).startsWith(identifier.name)) {
               // Split the text node

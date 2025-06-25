@@ -33,13 +33,11 @@ describe('Simple Positioning Engine', () => {
       const container = document.createElement('div')
       container.innerHTML = `
         <pre class="shiki">
-          <code>
-            <span class="line">query GetUser {</span>
-            <span class="line">  user {</span>
-            <span class="line">    name</span>
-            <span class="line">  }</span>
-            <span class="line">}</span>
-          </code>
+          <code>query GetUser {
+  user {
+    name
+  }
+}</code>
         </pre>
       `
 
@@ -49,7 +47,8 @@ describe('Simple Positioning Engine', () => {
         createTestIdentifier('name', 3, 5, 'Field'),
       ]
 
-      calculator.prepareCodeBlock(container, identifiers)
+      const codeElement = container.querySelector('code')!
+      calculator.prepareCodeBlock(codeElement, identifiers)
 
       // Check that identifiers were wrapped
       const wrappedElements = container.querySelectorAll('[data-graphql-id]')
@@ -66,9 +65,7 @@ describe('Simple Positioning Engine', () => {
       const container = document.createElement('div')
       container.innerHTML = `
         <pre class="shiki">
-          <code>
-            <span class="line">query GetUserById($id: ID!) {</span>
-          </code>
+          <code>query GetUserById($id: ID!) {</code>
         </pre>
       `
 
@@ -79,7 +76,8 @@ describe('Simple Positioning Engine', () => {
         createTestIdentifier('ID', 1, 24, 'Type'),
       ]
 
-      calculator.prepareCodeBlock(container, identifiers)
+      const codeElement = container.querySelector('code')!
+      calculator.prepareCodeBlock(codeElement, identifiers)
 
       const wrappedElements = container.querySelectorAll('[data-graphql-id]')
       expect(wrappedElements.length).toBe(4)
@@ -140,9 +138,7 @@ describe('Simple Positioning Engine', () => {
       const container = document.createElement('div')
       container.innerHTML = `
         <pre class="shiki">
-          <code>
-            <span class="line"><span data-graphql-id="existing">user</span> {</span>
-          </code>
+          <code><span data-graphql-id="existing">user</span> {</code>
         </pre>
       `
 
@@ -150,7 +146,8 @@ describe('Simple Positioning Engine', () => {
         createTestIdentifier('user', 1, 1),
       ]
 
-      calculator.prepareCodeBlock(container, identifiers)
+      const codeElement = container.querySelector('code')!
+      calculator.prepareCodeBlock(codeElement, identifiers)
 
       // Should still only have one wrapped element
       const wrappedElements = container.querySelectorAll('[data-graphql-id]')
@@ -162,11 +159,9 @@ describe('Simple Positioning Engine', () => {
       const container = document.createElement('div')
       container.innerHTML = `
         <pre class="shiki">
-          <code>
-            <span class="line">query {</span>
-            <span class="line"></span>
-            <span class="line">  user</span>
-          </code>
+          <code>query {
+
+  user</code>
         </pre>
       `
 
@@ -175,8 +170,9 @@ describe('Simple Positioning Engine', () => {
         createTestIdentifier('user', 3, 3),
       ]
 
+      const codeElement = container.querySelector('code')!
       expect(() => {
-        calculator.prepareCodeBlock(container, identifiers)
+        calculator.prepareCodeBlock(codeElement, identifiers)
       }).not.toThrow()
 
       const wrappedElements = container.querySelectorAll('[data-graphql-id]')
