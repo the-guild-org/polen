@@ -1,0 +1,1 @@
+import{gdscript_default as e}from"./gdscript-BpIt6EHQ.js";export{e as default};

@@ -1,0 +1,1 @@
+import{gdscript_default as e}from"./gdscript-bbLyKMTb.js";export{e as default};
