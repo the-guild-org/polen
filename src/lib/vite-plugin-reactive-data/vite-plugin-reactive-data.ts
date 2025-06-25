@@ -117,7 +117,8 @@ export const create = (options: ReactiveDataOptions): Plugin => {
 
       const data = getData()
       debug('hook load', { data })
-      return `export default ${codec.stringify(data)}`
+
+      return codec.stringify(data)
     },
   }
 }
