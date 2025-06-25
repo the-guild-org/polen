@@ -269,7 +269,7 @@
     "prepack": "pnpm build",
     "build:cli:chmodx": "chmod +x ./build/cli/index.js",
     "postbuild": "pnpm run build:cli:chmodx && pnpm run build:copy-assets",
-    "build:copy-assets": "cp -r src/template/styles build/template/",
+    "build:copy-assets": "mkdir -p build/template && cp -r src/template/styles build/template/",
     "test": "vitest",
     "check": "pnpm run '/^check:(?!pedantic:).+/'",
     "checkAll": "pnpm run '/^check:.+/'",
