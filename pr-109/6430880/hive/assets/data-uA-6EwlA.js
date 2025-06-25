@@ -1,0 +1,1 @@
+import{data as e}from"./entry.client-BAB-1nlj.js";export{e as default};

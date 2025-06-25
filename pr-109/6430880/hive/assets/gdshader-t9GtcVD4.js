@@ -1,0 +1,1 @@
+import{gdshader_default as e}from"./gdshader-CHfBLMGI.js";export{e as default};

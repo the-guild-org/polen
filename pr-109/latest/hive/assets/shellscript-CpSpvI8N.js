@@ -1,0 +1,1 @@
+import{shellscript_default as e}from"./shellscript-CebynKLR.js";export{e as default};

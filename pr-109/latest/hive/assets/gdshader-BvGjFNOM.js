@@ -1,0 +1,1 @@
+import{gdshader_default as e}from"./gdshader-8jwBgdWo.js";export{e as default};

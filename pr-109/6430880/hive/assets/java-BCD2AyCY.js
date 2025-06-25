@@ -1,0 +1,1 @@
+import{java_default as e}from"./java-CMOoN7De.js";export{e as default};

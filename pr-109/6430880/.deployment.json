@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-06-25T18:42:26.641Z",
+  "pullRequest": {
+    "number": 109,
+    "branch": "fix/dev/change-detection-and-hydration",
+    "commit": "64308804b2d811d3bcdd698854cc6e745932f6e3",
+    "title": "fix(dev): navbar change detection on load + hydration",
+    "author": "jasonkuhrt"
+  },
+  "deployment": {
+    "url": "https://the-guild-org.github.io/polen/pr-109/",
+    "environment": "pr-109"
+  }
+}
