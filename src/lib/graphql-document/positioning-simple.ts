@@ -64,13 +64,15 @@ export class SimplePositionCalculator {
     // Process identifiers by line
     for (const identifier of identifiers) {
       const lineIndex = identifier.position.line - 1
-      if (lineIndex >= lines.length) continue
+      if (lineIndex >= lines.length || lineIndex < 0) continue
 
       const lineText = lines[lineIndex]
+      if (!lineText) continue
+
       const columnIndex = identifier.position.column - 1
 
       // Check if the identifier exists at the expected position
-      if (lineText && lineText.substring(columnIndex).startsWith(identifier.name)) {
+      if (lineText.substring(columnIndex).startsWith(identifier.name)) {
         // Calculate the absolute position in the full text
         const lineStartPosition = lineStartPositions[lineIndex] ?? 0
         const absolutePosition = lineStartPosition + columnIndex
