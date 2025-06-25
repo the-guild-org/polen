@@ -1,9 +1,9 @@
 import type { FC } from 'react'
-import { useEffect, useState } from 'react'
 import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter, useLocation } from 'react-router'
 // todo: #lib/kit-temp does not work as import
 import { ObjPartition } from '../../lib/kit-temp.ts'
+import { useClientOnly } from '../hooks/useClientOnly.ts'
 import type { LinkPropsRadix } from './RadixLink.tsx'
 import { LinkRadix } from './RadixLink.tsx'
 
@@ -34,7 +34,7 @@ export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = 
   // Only add data attributes if they're true
   const linkRadixProps = {
     ...radixProps,
-    asChild: true as const,
+    asChild: true,
     ...(active.is && { 'data-active': true }),
     ...(active.isDirect && { 'data-active-direct': true }),
     ...(active.isDescendant && { 'data-active-descendant': true }),
@@ -73,15 +73,3 @@ export const getPathActiveReport = (
   }
 }
 
-export function useClientOnly<T>(
-  clientValue: () => T,
-  serverValue: T,
-): T {
-  const [value, setValue] = useState<T>(serverValue)
-
-  useEffect(() => {
-    setValue(clientValue())
-  }, [])
-
-  return value
-}
