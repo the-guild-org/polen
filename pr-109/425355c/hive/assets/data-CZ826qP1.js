@@ -1,0 +1,1 @@
+import{data as e}from"../app.js";export{e as default};

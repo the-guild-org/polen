@@ -1,0 +1,1 @@
+import{typescript_default as e}from"./typescript-BfdiXV25.js";export{e as default};

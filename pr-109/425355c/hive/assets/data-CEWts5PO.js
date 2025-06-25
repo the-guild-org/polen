@@ -1,0 +1,1 @@
+import{data as e}from"./entry.client-BHRhg1z3.js";export{e as default};
