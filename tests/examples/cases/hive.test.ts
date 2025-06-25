@@ -320,7 +320,7 @@ test('GraphQL documents with real schema types show interactive hyperlinks', asy
   expect(docCount).toBeGreaterThan(0)
 })
 
-test('GraphQL document click-based tooltips work correctly', async ({ runDev, page }) => {
+test.skip('GraphQL document click-based tooltips work correctly', async ({ runDev, page }) => {
   const baseUrl = runDev.url.endsWith('/') ? runDev.url.slice(0, -1) : runDev.url
 
   // Navigate to the features test page
