@@ -74,17 +74,15 @@ jobs:
 
   tests-integration:
     if: github.event.action != 'closed'
-    uses: ./.github/workflows/_build-polen.yaml
+    uses: ./.github/workflows/_playwright-test.yaml
     with:
-      install-playwright: true
-      run-tests: "pnpm test:integration"
+      project-name: integration
 
   tests-e2e:
     if: github.event.action != 'closed'
-    uses: ./.github/workflows/_build-polen.yaml
+    uses: ./.github/workflows/_playwright-test.yaml
     with:
-      install-playwright: true
-      run-tests: "pnpm test:examples"
+      project-name: examples
 
   demos:
     uses: ./.github/workflows/_demos-preview.yaml
