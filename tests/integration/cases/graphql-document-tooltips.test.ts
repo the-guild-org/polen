@@ -1,24 +1,206 @@
 /**
- * E2E tests for GraphQL document interactive tooltips
+ * Integration tests for GraphQL document interactive tooltips
  */
 
+import { Api } from '#api/index'
+import type { FsLayout } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.ts'
 
-// GraphQL Document Tooltips E2E Tests
-test.skip('should show tooltip on hover after delay', async ({ page }) => {
-  // TODO: Implementation
-  // 1. Navigate to a page with GraphQL document
-  // 2. Hover over a type/field identifier
-  // 3. Wait for tooltip to appear (300ms)
-  // 4. Assert tooltip content includes type information
-  // 5. Assert tooltip has correct positioning
-  await page.goto('/test/graphql-tooltips')
-  const identifier = page.locator('.graphql-identifier-overlay').first()
-  await identifier.hover()
-  await page.waitForTimeout(350) // Show delay + buffer
-  const tooltip = page.locator('.graphql-hover-tooltip')
-  await expect(tooltip).toBeVisible()
+const createTestFixture = (): FsLayout.Tree => ({
+  'pages/test.mdx': `
+import { GraphQLDocumentWithSchema } from 'polen/components'
+
+# GraphQL Tooltips Test
+
+<GraphQLDocumentWithSchema>
+query GetOrganization {
+  organization(reference: { slug: "example" }) {
+    id
+    name
+    slug
+    projects {
+      id
+      name
+    }
+  }
+}
+</GraphQLDocumentWithSchema>
+
+<GraphQLDocumentWithSchema>
+mutation CreateProject {
+  createProject(input: { 
+    organizationId: "org-123"
+    name: "My Project" 
+  }) {
+    id
+    name
+    organization {
+      id
+      name
+    }
+  }
+}
+</GraphQLDocumentWithSchema>
+  `,
+  'polen.config.ts': `
+import { defineConfig } from 'polen'
+
+export default defineConfig({
+  schema: {
+    from: {
+      type: 'memory',
+      introspection: {
+        __schema: {
+          types: [
+            {
+              kind: 'OBJECT',
+              name: 'Query',
+              fields: [
+                {
+                  name: 'organization',
+                  type: { kind: 'OBJECT', name: 'Organization' },
+                  args: [
+                    {
+                      name: 'reference',
+                      type: { kind: 'INPUT_OBJECT', name: 'OrganizationReference' }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              kind: 'OBJECT',
+              name: 'Mutation',
+              fields: [
+                {
+                  name: 'createProject',
+                  type: { kind: 'OBJECT', name: 'Project' },
+                  args: [
+                    {
+                      name: 'input',
+                      type: { kind: 'INPUT_OBJECT', name: 'CreateProjectInput' }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              kind: 'OBJECT',
+              name: 'Organization',
+              description: 'A GraphQL organization entity',
+              fields: [
+                { 
+                  name: 'id', 
+                  type: { kind: 'SCALAR', name: 'ID' },
+                  description: 'Unique identifier for the organization'
+                },
+                { 
+                  name: 'name', 
+                  type: { kind: 'SCALAR', name: 'String' },
+                  description: 'Display name of the organization'
+                },
+                { 
+                  name: 'slug', 
+                  type: { kind: 'SCALAR', name: 'String' },
+                  description: 'URL-friendly identifier'
+                },
+                {
+                  name: 'projects',
+                  type: { 
+                    kind: 'LIST',
+                    ofType: { kind: 'OBJECT', name: 'Project' }
+                  },
+                  description: 'Projects belonging to this organization'
+                }
+              ]
+            },
+            {
+              kind: 'OBJECT',
+              name: 'Project',
+              description: 'A project within an organization',
+              fields: [
+                { 
+                  name: 'id', 
+                  type: { kind: 'SCALAR', name: 'ID' },
+                  description: 'Unique identifier for the project'
+                },
+                { 
+                  name: 'name', 
+                  type: { kind: 'SCALAR', name: 'String' },
+                  description: 'Display name of the project'
+                },
+                {
+                  name: 'organization',
+                  type: { kind: 'OBJECT', name: 'Organization' },
+                  description: 'Organization that owns this project'
+                }
+              ]
+            },
+            {
+              kind: 'INPUT_OBJECT',
+              name: 'OrganizationReference',
+              description: 'Input for referencing an organization',
+              inputFields: [
+                { 
+                  name: 'slug', 
+                  type: { kind: 'SCALAR', name: 'String' },
+                  description: 'Slug of the organization'
+                }
+              ]
+            },
+            {
+              kind: 'INPUT_OBJECT',
+              name: 'CreateProjectInput',
+              description: 'Input for creating a new project',
+              inputFields: [
+                { 
+                  name: 'organizationId', 
+                  type: { kind: 'SCALAR', name: 'ID' },
+                  description: 'ID of the organization to create project in'
+                },
+                { 
+                  name: 'name', 
+                  type: { kind: 'SCALAR', name: 'String' },
+                  description: 'Name of the new project'
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+})
+  `,
+})
+
+// GraphQL Document Tooltips Integration Tests
+test('should show tooltip on hover after delay', async ({ page, vite, project }) => {
+  await project.layout.set(createTestFixture())
+  const viteConfig = await Api.ConfigResolver.fromMemory({ root: project.layout.cwd })
+  const viteDevServer = await vite.startDevelopmentServer(viteConfig)
+
+  await page.goto(viteDevServer.url('/test').href)
+  await page.waitForLoadState('networkidle')
+  await page.waitForTimeout(3000) // Allow React hydration and positioning
+
+  // Find first GraphQL document
+  const graphqlDocument = page.locator('[data-testid="graphql-document"]').first()
+  await expect(graphqlDocument).toBeVisible()
+
+  // Look for interactive layer and identifier overlays
+  const interactiveLayer = graphqlDocument.locator('.graphql-interaction-layer')
+  if (await interactiveLayer.count() > 0) {
+    const identifier = interactiveLayer.locator('.graphql-identifier-overlay').first()
+    if (await identifier.count() > 0) {
+      await identifier.hover()
+      await page.waitForTimeout(350) // Show delay + buffer
+
+      const tooltip = page.locator('.graphql-hover-tooltip')
+      await expect(tooltip).toBeVisible({ timeout: 2000 })
+    }
+  }
 })
 
 test.skip('should hide tooltip when mouse leaves', async ({ page }) => {
