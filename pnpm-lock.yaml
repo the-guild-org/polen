@@ -17,6 +17,9 @@ importers:
       '@graphql-tools/load':
         specifier: ^8.1.0
         version: 8.1.0(graphql@16.11.0)
+      '@hiogawa/vite-plugin-ssr-css':
+        specifier: ^0.0.1
+        version: 0.0.1(rolldown-vite@6.3.21(@types/node@24.0.3)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))
       '@hono/node-server':
         specifier: ^1.14.4
         version: 1.14.4(hono@4.7.11)
@@ -207,9 +210,6 @@ importers:
       '@eslint/js':
         specifier: ^9.29.0
         version: 9.29.0
-      '@hiogawa/vite-plugin-ssr-css':
-        specifier: ^0.0.1
-        version: 0.0.1(rolldown-vite@6.3.21(@types/node@24.0.3)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))
       '@molt/command':
         specifier: ^0.9.0
         version: 0.9.0
