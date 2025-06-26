@@ -1,5 +1,6 @@
 import type { Config } from '#api/config/index'
 import type { Vite } from '#dep/vite/index'
+import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
 import ViteReact from '@vitejs/plugin-react-oxc'
 // import { Arr, Path } from '@wollybeard/kit'
 // import Inspect from 'vite-plugin-inspect'
@@ -35,6 +36,9 @@ export const Main = (
 
   plugins.push(
     ViteReact(),
+    vitePluginSsrCss({ 
+      entries: ['/src/template/entry.client.tsx'] 
+    }),
     Branding(config),
     Core(config),
     Serve(config),
