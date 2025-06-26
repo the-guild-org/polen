@@ -1,5 +1,5 @@
 import { Api } from '#api/index'
-import { Vite } from '#dep/vite/index'
+import type { Vite } from '#dep/vite/index'
 import type { Polen } from '#exports/index'
 
 export const defaultViteConfig: Vite.UserConfig = {

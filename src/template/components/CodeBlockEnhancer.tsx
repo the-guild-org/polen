@@ -8,11 +8,11 @@ export const CodeBlockEnhancer = () => {
 
   useEffect(() => {
     // Add styles for code block enhancements
-    const styleId = 'code-block-enhancer-styles'
+    const styleId = `code-block-enhancer-styles`
     let styleElement = document.getElementById(styleId) as HTMLStyleElement
 
     if (!styleElement) {
-      styleElement = document.createElement('style')
+      styleElement = document.createElement(`style`)
       styleElement.id = styleId
       document.head.appendChild(styleElement)
     }
@@ -35,9 +35,9 @@ export const CodeBlockEnhancer = () => {
         top: -2.5rem;
         left: -1px;
         right: -1px;
-        background-color: ${appearance === 'dark' ? '#2a2b3d' : '#f3f4f6'};
+        background-color: ${appearance === `dark` ? `#2a2b3d` : `#f3f4f6`};
         border: 1px solid var(--gray-4);
-        border-bottom: 1px solid ${appearance === 'dark' ? '#3a3b4d' : '#e5e7eb'};
+        border-bottom: 1px solid ${appearance === `dark` ? `#3a3b4d` : `#e5e7eb`};
         border-radius: 8px 8px 0 0;
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
@@ -66,9 +66,9 @@ export const CodeBlockEnhancer = () => {
         border: none;
         border-radius: 4px;
         transition: all 0.2s;
-        background-color: ${appearance === 'dark' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.8)'};
+        background-color: ${appearance === `dark` ? `rgba(0, 0, 0, 0.5)` : `rgba(255, 255, 255, 0.8)`};
         backdrop-filter: blur(4px);
-        color: ${appearance === 'dark' ? '#fff' : '#000'};
+        color: ${appearance === `dark` ? `#fff` : `#000`};
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       }
       
@@ -99,62 +99,62 @@ export const CodeBlockEnhancer = () => {
 
   useEffect(() => {
     const enhanceCodeBlocks = () => {
-      const codeBlocks = document.querySelectorAll('pre.shiki:not([data-enhanced])')
+      const codeBlocks = document.querySelectorAll(`pre.shiki:not([data-enhanced])`)
 
       codeBlocks.forEach((block) => {
         const preElement = block as HTMLPreElement
-        preElement.setAttribute('data-enhanced', 'true')
+        preElement.setAttribute(`data-enhanced`, `true`)
 
         // Get language from class name
-        const classes = preElement.className.split(' ')
-        const language = classes.find(c => c !== 'shiki' && c !== 'shiki-light' && c !== 'shiki-dark') || 'text'
+        const classes = preElement.className.split(` `)
+        const language = classes.find(c => c !== `shiki` && c !== `shiki-light` && c !== `shiki-dark`) || `text`
 
         // Check for title in first line
-        const codeElement = preElement.querySelector('code')
+        const codeElement = preElement.querySelector(`code`)
         if (!codeElement) return
 
-        const firstLine = codeElement.textContent?.split('\n')[0] || ''
-        let title = ''
+        const firstLine = codeElement.textContent?.split(`\n`)[0] || ``
+        let title = ``
 
-        const titleMatch = firstLine.match(/^\/\/\s*title:\s*(.+)$/i)
-        if (titleMatch && titleMatch[1]) {
+        const titleMatch = /^\/\/\s*title:\s*(.+)$/i.exec(firstLine)
+        if (titleMatch?.[1]) {
           title = titleMatch[1]
           // Remove title line from display
-          const firstLineElement = codeElement.querySelector('span.line') as HTMLElement
+          const firstLineElement = codeElement.querySelector(`span.line`) as HTMLElement | null
           if (firstLineElement) {
-            firstLineElement.style.display = 'none'
+            firstLineElement.style.display = `none`
           }
 
           // Set data attributes for CSS
-          preElement.setAttribute('data-title', title)
-          preElement.setAttribute('data-language', language)
-          preElement.style.marginTop = '3rem'
+          preElement.setAttribute(`data-title`, title)
+          preElement.setAttribute(`data-language`, language)
+          preElement.style.marginTop = `3rem`
         }
 
         // Create copy button
-        const copyButton = document.createElement('button')
-        copyButton.className = 'code-block-copy'
-        copyButton.textContent = 'Copy'
-        copyButton.setAttribute('data-copied', 'false')
+        const copyButton = document.createElement(`button`)
+        copyButton.className = `code-block-copy`
+        copyButton.textContent = `Copy`
+        copyButton.setAttribute(`data-copied`, `false`)
 
         copyButton.onclick = async (e) => {
           e.preventDefault()
           e.stopPropagation()
 
           // Get clean code without the title line
-          const code = codeElement.textContent || ''
-          const cleanCode = title ? code.split('\n').slice(1).join('\n') : code
+          const code = codeElement.textContent || ``
+          const cleanCode = title ? code.split(`\n`).slice(1).join(`\n`) : code
 
           try {
             await navigator.clipboard.writeText(cleanCode)
-            copyButton.textContent = 'Copied!'
-            copyButton.setAttribute('data-copied', 'true')
+            copyButton.textContent = `Copied!`
+            copyButton.setAttribute(`data-copied`, `true`)
             setTimeout(() => {
-              copyButton.textContent = 'Copy'
-              copyButton.setAttribute('data-copied', 'false')
+              copyButton.textContent = `Copy`
+              copyButton.setAttribute(`data-copied`, `false`)
             }, 2000)
           } catch (err) {
-            console.error('Failed to copy:', err)
+            console.error(`Failed to copy:`, err)
           }
         }
 
@@ -169,21 +169,21 @@ export const CodeBlockEnhancer = () => {
     return () => {
       clearTimeout(timeoutId)
       // Clean up enhanced code blocks
-      document.querySelectorAll('pre.shiki[data-enhanced]').forEach(block => {
-        block.removeAttribute('data-enhanced')
-        block.removeAttribute('data-title')
-        block.removeAttribute('data-language')
-        const copyButton = block.querySelector('.code-block-copy')
+      document.querySelectorAll(`pre.shiki[data-enhanced]`).forEach(block => {
+        block.removeAttribute(`data-enhanced`)
+        block.removeAttribute(`data-title`)
+        block.removeAttribute(`data-language`)
+        const copyButton = block.querySelector(`.code-block-copy`)
         if (copyButton) {
           copyButton.remove()
         }
         // Restore hidden title lines
-        const firstLine = block.querySelector('span.line') as HTMLElement
-        if (firstLine && firstLine.style.display === 'none') {
-          firstLine.style.display = ''
+        const firstLine = block.querySelector(`span.line`) as HTMLElement | null
+        if (firstLine && firstLine.style.display === `none`) {
+          firstLine.style.display = ``
         } // Reset margin
 
-        ;(block as HTMLElement).style.marginTop = ''
+        ;(block as HTMLElement).style.marginTop = ``
       })
     }
   }, [location.pathname]) // Re-run when route changes

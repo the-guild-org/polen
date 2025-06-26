@@ -1,5 +1,4 @@
 import React from 'react'
-import { useNavigate } from 'react-router'
 import { GraphQLDocument } from '../../../lib/graphql-document/components/GraphQLDocument.tsx'
 import type { GraphQLDocumentProps } from '../../../lib/graphql-document/components/GraphQLDocument.tsx'
 import { highlightCode } from '../../../lib/shiki/shiki.ts'
@@ -7,7 +6,7 @@ import { highlightCode } from '../../../lib/shiki/shiki.ts'
 /**
  * Client-side wrapper that hydrates GraphQL documents with schema
  */
-export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'schema'>> = (props) => {
+export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `schema`>> = (props) => {
   try {
     const [schema, setSchema] = React.useState<any>(null)
     const [isClient, setIsClient] = React.useState(false)
@@ -17,11 +16,11 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
       setIsClient(true)
 
       // Highlight the code
-      if (typeof props.children === 'string') {
+      if (typeof props.children === `string`) {
         highlightCode({
           code: props.children,
-          lang: 'graphql',
-          theme: 'light', // You can make this dynamic based on theme
+          lang: `graphql`,
+          theme: `light`, // You can make this dynamic based on theme
         }).then(html => {
           setHighlightedHtml(html)
         }).catch(() => {
@@ -30,8 +29,8 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
       }
 
       // Access virtual module only on client side
-      if (typeof window !== 'undefined') {
-        import('virtual:polen/project/data.jsonsuper').then(PROJECT_DATA => {
+      if (typeof window !== `undefined`) {
+        import(`virtual:polen/project/data.jsonsuper`).then(PROJECT_DATA => {
           const s = PROJECT_DATA.default?.schema?.versions?.[0]?.after
           // Schema loaded successfully
           if (s) {
@@ -57,7 +56,7 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
     // During client render, use the full component
     // Pass a custom navigate function that doesn't require router
     const handleNavigate = (url: string) => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== `undefined`) {
         window.location.href = url
       }
     }

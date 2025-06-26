@@ -17,9 +17,9 @@ import type { Args, Step } from './step.ts'
  * Create a workflow context with all necessary tools
  */
 export function createArgs(stepName: string): Args {
-  const githubToken = process.env['GITHUB_TOKEN']
+  const githubToken = process.env[`GITHUB_TOKEN`]
   if (!githubToken) {
-    throw new Error('GITHUB_TOKEN environment variable is required')
+    throw new Error(`GITHUB_TOKEN environment variable is required`)
   }
 
   const github = getOctokit(githubToken)
@@ -52,7 +52,9 @@ export async function runStepByName(
   if (!moduleLocation.found || !moduleLocation.path) {
     core.error(`Step '${stepName}' not found`)
     core.error(`Searched paths:`)
-    moduleLocation.searchedPaths.forEach(path => core.error(`  - ${path}`))
+    moduleLocation.searchedPaths.forEach(path => {
+      core.error(`  - ${path}`)
+    })
     throw new Error(`Step '${stepName}' not found`)
   }
 
@@ -74,13 +76,13 @@ export async function runStep(
     let stepModule: any
 
     // Check if this is a test scenario (mocked module)
-    if (process.env['NODE_ENV'] === 'test' && stepPath.startsWith('./test-')) {
+    if (process.env[`NODE_ENV`] === `test` && stepPath.startsWith(`./test-`)) {
       // For tests, use direct import path
       stepModule = await import(stepPath)
     } else {
       // For real usage, convert to absolute path
-      const { resolve } = await import('node:path')
-      const { pathToFileURL } = await import('node:url')
+      const { resolve } = await import(`node:path`)
+      const { pathToFileURL } = await import(`node:url`)
 
       // Resolve to absolute path and convert to file URL for proper ESM import
       const absolutePath = resolve(process.cwd(), stepPath)
@@ -91,7 +93,7 @@ export async function runStep(
 
     const step: Step = stepModule.default
 
-    if (!step || !step.run || !step.definition) {
+    if (!step?.run || !step.definition) {
       throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
     }
 
@@ -141,16 +143,16 @@ export async function runStep(
 
       // todo: let step define if it wants to silence this warning
       // Check for excess properties if using object schema
-      if (definition.inputsSchema instanceof z.ZodObject && typeof rawInputs === 'object' && rawInputs !== null) {
+      if (definition.inputsSchema instanceof z.ZodObject && typeof rawInputs === `object` && rawInputs !== null) {
         const knownKeys = Object.keys(definition.inputsSchema.shape)
         const providedKeys = Object.keys(rawInputs)
         const unknownKeys = providedKeys.filter(key => !knownKeys.includes(key))
 
         if (unknownKeys.length > 0) {
           core.warning(
-            `Step '${stepName}' received unknown inputs: ${unknownKeys.join(', ')}. These inputs will be ignored.`,
+            `Step '${stepName}' received unknown inputs: ${unknownKeys.join(`, `)}. These inputs will be ignored.`,
           )
-          core.debug(`Known inputs: ${knownKeys.join(', ')}`)
+          core.debug(`Known inputs: ${knownKeys.join(`, `)}`)
           core.debug(`Provided inputs: ${JSON.stringify(rawInputs, null, 2)}`)
         }
       }
@@ -191,7 +193,7 @@ export async function runStep(
     if (definition.outputsSchema) {
       const outputs = definition.outputsSchema.parse(outputRaw)
       const json = JSON.stringify(outputs)
-      core.setOutput('json', json)
+      core.setOutput(`json`, json)
       for (const [key, value] of Obj.entries(outputs)) {
         // todo: if key === json raise an error, it is a reserved name
         core.setOutput(key, Str.is(value) ? value : JSON.stringify(value))

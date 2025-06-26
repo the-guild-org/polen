@@ -64,8 +64,8 @@ export interface ImportEvent {
 export type ObjPolicyFilter<
   $Object extends object,
   $Key extends Keyof<$Object>,
-  Mode extends 'allow' | 'deny',
-> = Mode extends 'allow'
+  Mode extends `allow` | `deny`,
+> = Mode extends `allow`
       ? Pick<$Object, Extract<$Key, keyof $Object>>
       : Omit<$Object, Extract<$Key, keyof $Object>>
 
@@ -96,15 +96,15 @@ type Keyof<$Object extends object> = object extends $Object ? PropertyKey : (key
 export const objPolicyFilter = <
   obj extends object,
   keyUnion extends Keyof<obj>,
-  mode extends 'allow' | 'deny',
+  mode extends `allow` | `deny`,
 >(
   mode: mode,
   obj: obj,
   keys: readonly keyUnion[],
 ): ObjPolicyFilter<obj, keyUnion, mode> => {
-  const result: any = mode === 'deny' ? { ...obj } : {}
+  const result: any = mode === `deny` ? { ...obj } : {}
 
-  if (mode === 'allow') {
+  if (mode === `allow`) {
     // For allow mode, only add specified keys
     for (const key of keys) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -152,11 +152,11 @@ export const objFilter = <T extends object>(
 }
 
 export const ObjPick = <T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Pick<T, K> => {
-  return objPolicyFilter('allow', obj, keys) as any
+  return objPolicyFilter(`allow`, obj, keys) as any
 }
 
 export const ObjOmit = <T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Omit<T, K> => {
-  return objPolicyFilter('deny', obj, keys) as any
+  return objPolicyFilter(`deny`, obj, keys) as any
 }
 
 export const ObjPartition = <T extends object, K extends keyof T>(
@@ -233,7 +233,7 @@ export type ExtendsExact<$Input, $Constraint> =
  * ```
  */
 export const chunk = <T>(array: readonly T[], size: number): T[][] => {
-  if (size <= 0) throw new Error('Chunk size must be greater than 0')
+  if (size <= 0) throw new Error(`Chunk size must be greater than 0`)
   if (array.length === 0) return []
 
   const chunks: T[][] = []
@@ -345,7 +345,7 @@ const processBatch = async <T, R>(
   operation: (item: T, index: number) => Promise<R>,
   concurrency: number,
   failFast: boolean,
-  startIndex: number = 0,
+  startIndex = 0,
 ): Promise<AsyncParallelResult<T, R>> => {
   const results: R[] = []
   const errors: (Error & { item: T })[] = []
@@ -372,7 +372,7 @@ const processBatch = async <T, R>(
     const chunkResults = await Promise.allSettled(promises)
 
     for (const promiseResult of chunkResults) {
-      if (promiseResult.status === 'fulfilled') {
+      if (promiseResult.status === `fulfilled`) {
         const { success, result, error, item } = promiseResult.value
         if (success) {
           results.push(result!)
@@ -385,7 +385,7 @@ const processBatch = async <T, R>(
       } else {
         // This shouldn't happen since we're catching errors above
         // But handle it just in case
-        const error = new Error('Unexpected promise rejection') as Error & { item: any }
+        const error = new Error(`Unexpected promise rejection`) as Error & { item: any }
         errors.push(error)
         if (failFast) {
           return { results, errors, success: false }

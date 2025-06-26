@@ -9,7 +9,7 @@ export const DemoConfigSchema = z.object({
   examples: z.object({
     exclude: z.array(z.string()).default([]),
     order: z.array(z.string()).default([]),
-    minimumPolenVersion: z.string().default('0.1.0'),
+    minimumPolenVersion: z.string().default(`0.1.0`),
   }),
   deployment: z.object({
     basePaths: z.record(z.string()).default({}),
@@ -25,14 +25,14 @@ export const DemoConfigSchema = z.object({
   }),
   ui: z.object({
     theme: z.object({
-      primaryColor: z.string().default('#000'),
-      backgroundColor: z.string().default('#fff'),
-      textColor: z.string().default('#000'),
-      mutedTextColor: z.string().default('#666'),
+      primaryColor: z.string().default(`#000`),
+      backgroundColor: z.string().default(`#fff`),
+      textColor: z.string().default(`#000`),
+      mutedTextColor: z.string().default(`#666`),
     }).default({}),
     branding: z.object({
-      title: z.string().default('Polen Demos'),
-      description: z.string().default('Interactive GraphQL API documentation'),
+      title: z.string().default(`Polen Demos`),
+      description: z.string().default(`Interactive GraphQL API documentation`),
       logoUrl: z.string().optional(),
     }).default({}),
   }),

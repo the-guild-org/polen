@@ -11,13 +11,25 @@ export interface PackagePaths {
   sourceExtension: `.js` | `.ts`
   sourceDir: string
   template: {
-    rootDir: string
-    server: {
-      app: string
-      entrypoint: string
+    absolute: {
+      rootDir: string
+      server: {
+        app: string
+        entrypoint: string
+      }
+      client: {
+        entrypoint: string
+      }
     }
-    client: {
-      entrypoint: string
+    relative: {
+      rootDir: string
+      server: {
+        app: string
+        entrypoint: string
+      }
+      client: {
+        entrypoint: string
+      }
     }
   }
 }
@@ -36,6 +48,8 @@ const isRunningFromSource = sourceDir.endsWith(sourceDirRelativeExp)
 
 const sourceKind = isRunningFromSource ? `.ts` : `.js`
 
+const templateDirRelative = isRunningFromSource ? `src/template` : `build/template`
+
 export const packagePaths: PackagePaths = {
   name: `polen`,
   isRunningFromSource,
@@ -47,13 +61,25 @@ export const packagePaths: PackagePaths = {
   rootDir: rootDir,
   sourceDir,
   template: {
-    rootDir: templateDir,
-    server: {
-      app: Path.join(templateDir, `server/app${sourceKind}`),
-      entrypoint: Path.join(templateDir, `server/main${sourceKind}`),
+    absolute: {
+      rootDir: templateDir,
+      server: {
+        app: Path.join(templateDir, `server/app${sourceKind}`),
+        entrypoint: Path.join(templateDir, `server/main${sourceKind}`),
+      },
+      client: {
+        entrypoint: Path.join(templateDir, `entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
+      },
     },
-    client: {
-      entrypoint: Path.join(templateDir, `entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
+    relative: {
+      rootDir: templateDirRelative,
+      server: {
+        app: `${templateDirRelative}/server/app${sourceKind}`,
+        entrypoint: `${templateDirRelative}/server/main${sourceKind}`,
+      },
+      client: {
+        entrypoint: `${templateDirRelative}/entry.client${isRunningFromSource ? `.tsx` : `.js`}`,
+      },
     },
   },
 }

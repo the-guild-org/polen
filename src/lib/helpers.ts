@@ -10,7 +10,7 @@ export async function checkIsProjectHasPackageInstalled(
   const packageJson = await Manifest.resource.read(projectRoot)
 
   if (Err.is(packageJson)) {
-    if (packageJson._tag === 'ResourceErrorNotFound') return false
+    if (packageJson._tag === `ResourceErrorNotFound`) return false
     throw packageJson
   }
 

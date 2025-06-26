@@ -13,7 +13,7 @@ export interface CopyButtonProps {
   /** Optional className */
   className?: string
   /** Size variant */
-  size?: '1' | '2' | '3'
+  size?: `1` | `2` | `3`
 }
 
 /**
@@ -23,8 +23,8 @@ export interface CopyButtonProps {
  */
 export const CopyButton: React.FC<CopyButtonProps> = ({
   text,
-  className = '',
-  size = '1',
+  className = ``,
+  size = `1`,
 }) => {
   const [copied, setCopied] = ReactHooks.useState(false)
   const timeoutRef = ReactHooks.useRef<NodeJS.Timeout | null>(null)
@@ -48,7 +48,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
         timeoutRef.current = null
       }, 2000)
     } catch (err) {
-      console.error('Failed to copy text:', err)
+      console.error(`Failed to copy text:`, err)
     }
   }, [text])
 
@@ -67,7 +67,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
       variant='ghost'
       className={`graphql-copy-button ${className}`}
       onClick={handleCopy}
-      aria-label={copied ? 'Copied!' : 'Copy code'}
+      aria-label={copied ? `Copied!` : `Copy code`}
       data-copied={copied}
     >
       {copied ? <CheckIcon width='16' height='16' /> : <CopyIcon width='16' height='16' />}

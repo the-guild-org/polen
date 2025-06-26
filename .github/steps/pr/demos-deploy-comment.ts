@@ -28,12 +28,12 @@ export default GitHubActions.createStep({
 
     // Get current timestamp
     const now = new Date()
-    const timestamp = now.toLocaleString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+    const timestamp = now.toLocaleString(`en-US`, {
+      hour: `2-digit`,
+      minute: `2-digit`,
+      day: `numeric`,
+      month: `long`,
+      year: `numeric`,
       hour12: false,
     })
     s`**<sup>Last updated at ${timestamp}</sup>**`
@@ -52,7 +52,7 @@ export default GitHubActions.createStep({
         const deploymentLinks = previousDeployments
           .slice(0, 10)
           .map(deployment => `[\`${deployment.shortSha}\`](${baseUrl}/${deployment.shortSha}/${example}/)`)
-          .join(' / ')
+          .join(` / `)
 
         let previousDeploymentsText = `Previous Deployments: ${deploymentLinks}`
         if (previousDeployments.length > 10) {
@@ -70,6 +70,6 @@ export default GitHubActions.createStep({
       content: s.toString(),
     })
 
-    core.info('✅ PR comment created/updated successfully')
+    core.info(`✅ PR comment created/updated successfully`)
   },
 })

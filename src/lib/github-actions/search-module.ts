@@ -45,7 +45,7 @@ export function searchModule(options: Options): ModuleSearchResult {
   const searchedPaths: string[] = []
 
   if (workflowName) {
-    const workflowSpecificPath = join(baseDir, '.github/steps', workflowName, `${stepName}.ts`)
+    const workflowSpecificPath = join(baseDir, `.github/steps`, workflowName, `${stepName}.ts`)
     searchedPaths.push(workflowSpecificPath)
 
     if (existsSync(workflowSpecificPath)) {
@@ -58,7 +58,7 @@ export function searchModule(options: Options): ModuleSearchResult {
   }
 
   // Try general path
-  const generalPath = join(baseDir, '.github/steps', `${stepName}.ts`)
+  const generalPath = join(baseDir, `.github/steps`, `${stepName}.ts`)
   searchedPaths.push(generalPath)
 
   if (existsSync(generalPath)) {

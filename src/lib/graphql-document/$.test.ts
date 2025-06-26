@@ -97,7 +97,7 @@ describe('GraphQLDocument', () => {
 
   describe('extractIdentifiers', () => {
     it('should extract identifiers with positions', () => {
-      const source = `query { user { name } }`
+      const source = 'query { user { name } }'
 
       const identifiers = GraphQLDocument.extractIdentifiers(source)
 
@@ -113,7 +113,7 @@ describe('GraphQLDocument', () => {
     })
 
     it('should create proper index maps', () => {
-      const source = `query { user { name } }`
+      const source = 'query { user { name } }'
 
       const identifiers = GraphQLDocument.extractIdentifiers(source)
 

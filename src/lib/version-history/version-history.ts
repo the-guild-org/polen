@@ -47,7 +47,7 @@ export function isStableVersion(tag: string): boolean {
  * Get the deployment path for a version
  * Stable versions go to /latest/, prereleases go to /[version]/
  */
-export function getDeploymentPath(version: string, prefix: string = '/polen'): string {
+export function getDeploymentPath(version: string, prefix = `/polen`): string {
   const isStable = isStableVersion(version)
   return isStable ? `${prefix}/latest/` : `${prefix}/${version}/`
 }
@@ -68,7 +68,7 @@ export async function getVersions(repoPath?: string): Promise<Version[]> {
 
     try {
       const tagInfo = await git.show([`${tag}^{commit}`, `--format=%H %at`])
-      const [commit, timestamp] = tagInfo.trim().split(' ')
+      const [commit, timestamp] = tagInfo.trim().split(` `)
 
       if (!commit) continue
 
@@ -77,7 +77,7 @@ export async function getVersions(repoPath?: string): Promise<Version[]> {
           tag,
           sha: commit,
         },
-        date: new Date(parseInt(timestamp || '0', 10) * 1000),
+        date: new Date(parseInt(timestamp || `0`, 10) * 1000),
         isPrerelease: isPrerelease(tag),
         semver,
       })
@@ -101,7 +101,7 @@ export async function getDistTag(tagName: string, repoPath?: string): Promise<Di
 
     // Find semver tag at this commit
     const tags = await git.tag([`--points-at`, commit])
-    const semverTags = tags.split('\n').filter(isSemverTag)
+    const semverTags = tags.split(`\n`).filter(isSemverTag)
 
     return {
       name: tagName,
@@ -117,14 +117,14 @@ export async function getDistTag(tagName: string, repoPath?: string): Promise<Di
  * Get the 'latest' dist-tag
  */
 export async function getDistTagLatest(repoPath?: string): Promise<DistTagInfo | null> {
-  return getDistTag('latest', repoPath)
+  return getDistTag(`latest`, repoPath)
 }
 
 /**
  * Get all dist-tags
  */
 export async function getDistTags(repoPath?: string): Promise<DistTagInfo[]> {
-  const commonDistTags = ['latest', 'next', 'beta', 'alpha', 'canary']
+  const commonDistTags = [`latest`, `next`, `beta`, `alpha`, `canary`]
   const distTags: DistTagInfo[] = []
 
   for (const tag of commonDistTags) {
@@ -159,7 +159,7 @@ export async function getLatestPrereleaseVersion(repoPath?: string): Promise<Ver
 export async function getVersionAtCommit(commit: string, repoPath?: string): Promise<Version | null> {
   const git = getGit(repoPath)
   const tags = await git.tag([`--points-at`, commit])
-  const semverTags = tags.split('\n').filter(isSemverTag)
+  const semverTags = tags.split(`\n`).filter(isSemverTag)
 
   if (semverTags.length === 0) return null
 
@@ -260,7 +260,7 @@ export async function getVersionCatalog(repoPath?: string): Promise<VersionCatal
   ])
 
   // Map dist-tags to versions
-  const distTags: VersionCatalog['distTags'] = {}
+  const distTags: VersionCatalog[`distTags`] = {}
   for (const tagInfo of distTagInfos) {
     if (tagInfo.semverTag) {
       const version = allVersions.find(v => v.git.tag === tagInfo.semverTag)

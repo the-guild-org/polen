@@ -1,11 +1,15 @@
 import { reportError } from '#api/server/report-error'
+import type { Hono } from '#dep/hono/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import { React } from '#dep/react/index'
 import { ResponseInternalServerError } from '#lib/kit-temp'
 import type { ReactRouterAid } from '#lib/react-router-aid/index'
+import * as Theme from '#lib/theme/theme'
 import { Arr } from '@wollybeard/kit'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
+import { templateVariables } from 'virtual:polen/template/variables'
+import type { PolenGlobalData } from '../constants.ts'
 import { view } from './view.ts'
 
 interface RenderHooks {
@@ -15,13 +19,32 @@ interface RenderHooks {
 export const createPageHtmlResponse = async (
   staticHandlerContext: ReactRouter.StaticHandlerContext,
   hooks?: RenderHooks,
+  ctx?: Hono.Context,
 ) => {
+  // Set up Polen global data before React SSR if context is provided
+  if (ctx) {
+    const themeManager = Theme.createThemeManager({
+      cookieName: `polen-theme-preference`,
+    })
+    const cookies = ctx.req.header(`cookie`) || ``
+    const cookieTheme = themeManager.readCookie(cookies)
+
+    const polenData: PolenGlobalData = {
+      serverContext: {
+        theme: cookieTheme || 'system', // No cookie means system preference
+        isDev: !__BUILDING__,
+      },
+    }
+
+    globalThis.__POLEN__ = polenData
+  }
+
   const router = createStaticRouter(view.dataRoutes, staticHandlerContext)
 
-  let html = ``
+  let appHtml = ``
 
   try {
-    html = ReactDomServer.renderToString(
+    appHtml = ReactDomServer.renderToString(
       React.createElement(
         React.StrictMode,
         null,
@@ -36,7 +59,19 @@ export const createPageHtmlResponse = async (
     return ResponseInternalServerError()
   }
 
-  // Create the full HTML document
+  // Create the base HTML document
+  let html = `
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${templateVariables.title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  </head>
+  <body>
+    <div id="app">${appHtml}</div>
+  </body>
+</html>`
 
   // Apply HTML transformation hook to the full document
   if (hooks?.transformHtml) {
@@ -64,7 +99,7 @@ const getStatusCode = (
   }
 
   // Then check for custom status in route handle
-  const handle = Arr.getLast(context.matches)?.route.handle as undefined | ReactRouterAid.RouteHandle
+  const handle = Arr.getLast(context.matches)?.route.handle as ReactRouterAid.RouteHandle | undefined
   if (handle?.statusCode) {
     return handle.statusCode
   }

@@ -54,7 +54,7 @@ describe('createPRController', () => {
     it('creates new comment when none exists', async () => {
       mockGitHub.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const controller = createPullRequestController(mockGitHub, mockContext)!
+      const controller = createPullRequestController(mockGitHub, mockContext)
       await controller.comment({ id: 'test', content: 'Hello world' })
 
       expect(mockGitHub.rest.issues.createComment).toHaveBeenCalledWith({
@@ -68,7 +68,7 @@ describe('createPRController', () => {
     it('uses default comment ID when not provided', async () => {
       mockGitHub.rest.issues.listComments.mockResolvedValue({ data: [] })
 
-      const controller = createPullRequestController(mockGitHub, mockContext, 'pr-comment')!
+      const controller = createPullRequestController(mockGitHub, mockContext, 'pr-comment')
       await controller.comment({ content: 'Hello world' })
 
       expect(mockGitHub.rest.issues.createComment).toHaveBeenCalledWith({
@@ -89,7 +89,7 @@ describe('createPRController', () => {
         ],
       })
 
-      const controller = createPullRequestController(mockGitHub, mockContext)!
+      const controller = createPullRequestController(mockGitHub, mockContext)
       await controller.comment({ id: 'test', content: 'New content' })
 
       expect(mockGitHub.rest.issues.updateComment).toHaveBeenCalledWith({
@@ -110,7 +110,7 @@ describe('createPRController', () => {
         ],
       })
 
-      const controller = createPullRequestController(mockGitHub, mockContext)!
+      const controller = createPullRequestController(mockGitHub, mockContext)
       await controller.deleteComment('test')
 
       expect(mockGitHub.rest.issues.deleteComment).toHaveBeenCalledWith({

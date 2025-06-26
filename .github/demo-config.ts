@@ -7,23 +7,23 @@ import type { DemoConfigData } from '../src/lib/demos/config-schema.ts'
 
 export const demoConfig: DemoConfigData = {
   examples: {
-    exclude: ['github'],
-    order: ['hive', 'pokemon'],
-    minimumPolenVersion: '0.9.0',
+    exclude: [`github`],
+    order: [`hive`, `pokemon`],
+    minimumPolenVersion: `0.9.0`,
   },
   deployment: {
     basePaths: {
-      '/latest/': 'Stable releases',
-      '/next/': 'Next/beta releases',
+      '/latest/': `Stable releases`,
+      '/next/': `Next/beta releases`,
     },
     redirects: [
       {
-        from: 'pokemon',
-        to: '/latest/pokemon/',
+        from: `pokemon`,
+        to: `/latest/pokemon/`,
       },
       {
-        from: 'star-wars',
-        to: '/latest/star-wars/',
+        from: `star-wars`,
+        to: `/latest/star-wars/`,
       },
     ],
     gc: {
@@ -34,22 +34,22 @@ export const demoConfig: DemoConfigData = {
   },
   ui: {
     theme: {
-      primaryColor: '#000',
-      backgroundColor: '#fff',
-      textColor: '#000',
-      mutedTextColor: '#666',
+      primaryColor: `#000`,
+      backgroundColor: `#fff`,
+      textColor: `#000`,
+      mutedTextColor: `#666`,
     },
     branding: {
-      title: 'Polen Demos',
-      description: 'Interactive GraphQL API documentation',
+      title: `Polen Demos`,
+      description: `Interactive GraphQL API documentation`,
     },
   },
   metadata: {
     disabledDemos: {
       github: {
-        title: 'GitHub API',
-        description: "Browse GitHub's extensive GraphQL API with over 1600 types.",
-        reason: 'Currently disabled due to build performance.',
+        title: `GitHub API`,
+        description: `Browse GitHub's extensive GraphQL API with over 1600 types.`,
+        reason: `Currently disabled due to build performance.`,
       },
     },
   },

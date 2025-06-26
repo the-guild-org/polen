@@ -137,7 +137,7 @@ describe('runner', () => {
 
       const core = await import('@actions/core')
       expect(core.warning).toHaveBeenCalledWith(
-        `Step 'test-step' received unknown inputs: unknown1, unknown2. These inputs will be ignored.`,
+        "Step 'test-step' received unknown inputs: unknown1, unknown2. These inputs will be ignored.",
       )
     })
 

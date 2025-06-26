@@ -25,9 +25,9 @@ export default GitHubActions.createStep({
     }
 
     // Check if this is a prerelease
-    const isPrerelease = tag.includes('-')
+    const isPrerelease = tag.includes(`-`)
 
-    core.info(`Building demos for ${isPrerelease ? 'prerelease' : 'stable release'}: ${tag}`)
+    core.info(`Building demos for ${isPrerelease ? `prerelease` : `stable release`}: ${tag}`)
 
     return {
       tag,

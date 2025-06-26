@@ -1,12 +1,12 @@
 import { Idx, Path } from '@wollybeard/kit'
 import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.ts'
 
-export type DiagnosticSeverity = 'error' | 'warning' | 'info'
+export type DiagnosticSeverity = `error` | `warning` | `info`
 
 export type Diagnostic = DiagnosticIndexConflict | DiagnosticNumberedPrefixConflict | DiagnosticNumberedPrefixOnIndex
 
 export interface DiagnosticIndexConflict {
-  type: 'index-conflict'
+  type: `index-conflict`
   severity: DiagnosticSeverity
   message: string
   literal: {
@@ -18,7 +18,7 @@ export interface DiagnosticIndexConflict {
 }
 
 export interface DiagnosticNumberedPrefixConflict {
-  type: 'numbered-prefix-conflict'
+  type: `numbered-prefix-conflict`
   severity: DiagnosticSeverity
   message: string
   kept: {
@@ -32,7 +32,7 @@ export interface DiagnosticNumberedPrefixConflict {
 }
 
 export interface DiagnosticNumberedPrefixOnIndex {
-  type: 'numbered-prefix-on-index'
+  type: `numbered-prefix-on-index`
   severity: DiagnosticSeverity
   message: string
   file: RouteFile
@@ -53,8 +53,8 @@ export const lint = (routes: Route[]): LintResult => {
   for (const route of routes) {
     if (routeIsFromIndexFile(route) && route.logical.order !== undefined) {
       const diagnostic: DiagnosticNumberedPrefixOnIndex = {
-        type: 'numbered-prefix-on-index',
-        severity: 'warning',
+        type: `numbered-prefix-on-index`,
+        severity: `warning`,
         message: `Numbered prefix on index file has no effect. The file:\n  ${
           Path.format(route.file.path.relative)
         }\n\nhas a numbered prefix (${route.logical.order}_) which doesn't affect ordering since index files represent their parent directory.`,
@@ -85,8 +85,8 @@ export const lint = (routes: Route[]): LintResult => {
           : `The file with lower order number (${dropped.logical.order}) is being dropped in favor of the one with higher order (${kept.logical.order}).`
 
         const diagnostic: DiagnosticNumberedPrefixConflict = {
-          type: 'numbered-prefix-conflict',
-          severity: 'error',
+          type: `numbered-prefix-conflict`,
+          severity: `error`,
           // dprint-ignore
           message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\n${orderMessage}`,
           kept: {
@@ -110,8 +110,8 @@ export const lint = (routes: Route[]): LintResult => {
 
       // Report
       const diagnostic: DiagnosticIndexConflict = {
-        type: 'index-conflict',
-        severity: 'error',
+        type: `index-conflict`,
+        severity: `error`,
         // dprint-ignore
         message: `Your files represent conflicting routes. This index file route:\n  ${Path.format(index.file.path.relative)}\n\nconflicts with this literal file route:\n\n  ${Path.format(literal.file.path.relative)}.\n\nYour index route is being ignored.`,
         literal: {

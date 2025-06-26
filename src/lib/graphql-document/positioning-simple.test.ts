@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createSimpleOverlay, createSimplePositionCalculator } from './positioning-simple.ts'
 import type { Identifier } from './types.ts'
 
@@ -106,7 +106,7 @@ describe('Simple Positioning Engine', () => {
         toJSON: () => ({}),
       })
 
-      const userSpan = container.querySelector('[data-graphql-id]') as HTMLElement
+      const userSpan = container.querySelector('[data-graphql-id]')!
       userSpan.getBoundingClientRect = () => ({
         top: 10,
         left: 20,

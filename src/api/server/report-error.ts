@@ -19,7 +19,7 @@ export const reportError = async (value: unknown): Promise<void> => {
   const snippets = createSnippets(parsedError)
 
   if (snippets) {
-    console.log('\n\n\n\n' + snippets)
+    console.log(`\n\n\n\n` + snippets)
   }
 }
 
@@ -27,15 +27,15 @@ const createSnippets = (parsedError: ParsedError) => {
   const snippets = parsedError.frames.map((frame) => {
     let snippet = createSnippet(frame)
 
-    snippet = frame.fileName + '\n' + frame.lineNumber + '\n\n' + snippet
+    snippet = frame.fileName + `\n` + frame.lineNumber + `\n\n` + snippet
     return snippet
-  }).join('\n\n----------------------------------------------------------------------------------\n\n')
+  }).join(`\n\n----------------------------------------------------------------------------------\n\n`)
   return snippets
 }
 
 const createSnippet = (stackFrame: StackFrame) => {
   const snippet = stackFrame.source?.map(line => {
-    return line.lineNumber.toString().padStart(4, ' ') + `: ` + line.chunk
+    return line.lineNumber.toString().padStart(4, ` `) + `: ` + line.chunk
   }).join(`\n`)
 
   return snippet
@@ -45,7 +45,9 @@ const createSnippet = (stackFrame: StackFrame) => {
 // pathFilter: Fn.compose(Str.isMatchWith(excludePattern), Bool.negate)
 const cleanStackRecursive = (value: unknown, excludePattern: RegExp) => {
   if (value instanceof AggregateError) {
-    value.errors.forEach((error) => cleanStackRecursive(error, excludePattern))
+    value.errors.forEach((error) => {
+      cleanStackRecursive(error, excludePattern)
+    })
   }
   // console.log(`Filtering path: ${path}`, isInclude ? 'Included' : 'Excluded')
   if (value instanceof Error) {

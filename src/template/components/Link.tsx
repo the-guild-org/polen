@@ -8,21 +8,21 @@ import type { LinkPropsRadix } from './RadixLink.tsx'
 import { LinkRadix } from './RadixLink.tsx'
 
 const reactRouterPropKeys = [
-  'discover',
-  'prefetch',
-  'reloadDocument',
-  'replace',
-  'state',
-  'preventScrollReset',
-  'relative',
-  'to',
-  'viewTransition',
-  'children',
+  `discover`,
+  `prefetch`,
+  `reloadDocument`,
+  `replace`,
+  `state`,
+  `preventScrollReset`,
+  `relative`,
+  `to`,
+  `viewTransition`,
+  `children`,
 ] as const
 
-export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, 'asChild'>> = props => {
+export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, `asChild`>> = props => {
   const location = useLocation()
-  const toPathExp = typeof props.to === 'string' ? props.to : props.to.pathname || ''
+  const toPathExp = typeof props.to === `string` ? props.to : props.to.pathname || ``
 
   const active = useClientOnly(
     () => getPathActiveReport(toPathExp, location.pathname),
@@ -58,11 +58,11 @@ export const getPathActiveReport = (
   currentPathExp: string,
 ): PathActiveReport => {
   // Normalize both paths for comparison
-  const normalizedPath = pathExp.startsWith('/') ? pathExp.slice(1) : pathExp
-  const normalizedCurrentPath = currentPathExp.startsWith('/') ? currentPathExp.slice(1) : currentPathExp
+  const normalizedPath = pathExp.startsWith(`/`) ? pathExp.slice(1) : pathExp
+  const normalizedCurrentPath = currentPathExp.startsWith(`/`) ? currentPathExp.slice(1) : currentPathExp
 
   const isDirect = normalizedCurrentPath === normalizedPath
-  const isDescendant = normalizedCurrentPath.startsWith(normalizedPath + '/')
+  const isDescendant = normalizedCurrentPath.startsWith(normalizedPath + `/`)
     && normalizedCurrentPath !== normalizedPath
   const is = isDirect || isDescendant
 

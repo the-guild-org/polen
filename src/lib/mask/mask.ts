@@ -44,13 +44,13 @@ export type Mask<$Data = any> = BinaryMask<$Data> | PropertiesMask<$Data extends
 export const create = <$Data = unknown>(
   options: InferOptions<$Data>,
 ): Mask<$Data> => {
-  if (typeof options === 'boolean') {
+  if (typeof options === `boolean`) {
     return createBinary(options) as any
   }
 
   // Array input -> PropertiesMask with 'allow' mode
   if (Array.isArray(options)) {
-    return createProperties('allow', options as any) as any
+    return createProperties(`allow`, options as any) as any
   }
 
   // Object input -> PropertiesMask based on true/false values
@@ -66,11 +66,11 @@ export const create = <$Data = unknown>(
 
   // If we have denied keys, use deny mode
   if (deniedKeys.length > 0 && allowedKeys.length === 0) {
-    return createProperties('deny', deniedKeys) as any
+    return createProperties(`deny`, deniedKeys) as any
   }
 
   // Default to allow mode with allowed keys
-  return createProperties('allow', allowedKeys) as any
+  return createProperties(`allow`, allowedKeys) as any
 }
 
 /**
@@ -104,9 +104,9 @@ export type InferOptions<$Data> = unknown extends $Data ? boolean | string[] | R
  * @template $Data - The object type being masked
  */
 export interface PropertiesMask<$Data extends object = object> {
-  type: 'properties'
+  type: `properties`
   /** Whether to allow only specified properties or deny them */
-  mode: 'allow' | 'deny'
+  mode: `allow` | `deny`
   /** The list of property keys to allow or deny */
   properties: (keyof $Data)[]
 }
@@ -119,10 +119,10 @@ export interface PropertiesMask<$Data extends object = object> {
  * @returns A PropertiesMask
  */
 export const createProperties = <$Data extends object = object>(
-  mode: 'allow' | 'deny',
+  mode: `allow` | `deny`,
   properties: (keyof $Data)[],
 ): PropertiesMask<$Data> => ({
-  type: 'properties',
+  type: `properties`,
   mode,
   properties,
 })
@@ -140,8 +140,8 @@ export const createProperties = <$Data extends object = object>(
  *
  * @template _$Data - The data type being masked (used for type inference)
  */
-export type BinaryMask<_$Data = any> = {
-  type: 'binary'
+export interface BinaryMask<_$Data = any> {
+  type: `binary`
   /** Whether to show (true) or hide (false) the data */
   show: boolean
 }
@@ -153,7 +153,7 @@ export type BinaryMask<_$Data = any> = {
  * @returns A BinaryMask
  */
 export const createBinary = <$Data = any>(show: boolean): BinaryMask<$Data> => ({
-  type: 'binary',
+  type: `binary`,
   show,
 })
 
@@ -170,7 +170,7 @@ export const createBinary = <$Data = any>(show: boolean): BinaryMask<$Data> => (
  * @returns A BinaryMask with show=true
  */
 export const show = (): BinaryMask => ({
-  type: 'binary',
+  type: `binary`,
   show: true,
 })
 
@@ -179,7 +179,7 @@ export const show = (): BinaryMask => ({
  * @returns A BinaryMask with show=false
  */
 export const hide = (): BinaryMask => ({
-  type: 'binary',
+  type: `binary`,
   show: false,
 })
 
@@ -198,8 +198,8 @@ export const hide = (): BinaryMask => ({
 export const pick = <$Data extends object = object>(
   properties: (keyof $Data)[],
 ): PropertiesMask<$Data> => ({
-  type: 'properties',
-  mode: 'allow',
+  type: `properties`,
+  mode: `allow`,
   properties,
 })
 
@@ -218,8 +218,8 @@ export const pick = <$Data extends object = object>(
 export const omit = <$Data extends object = object>(
   properties: (keyof $Data)[],
 ): PropertiesMask<$Data> => ({
-  type: 'properties',
-  mode: 'deny',
+  type: `properties`,
+  mode: `deny`,
   properties,
 })
 
@@ -238,7 +238,7 @@ export const omit = <$Data extends object = object>(
  * @returns The data type the mask is designed for
  */
 // dprint-ignore
-export type GetDataType<$Mask extends Mask<any>> =
+export type GetDataType<$Mask extends Mask> =
   $Mask extends BinaryMask<infer $Data>     ? $Data :
   $Mask extends PropertiesMask<infer $Data> ? $Data
                                             : never

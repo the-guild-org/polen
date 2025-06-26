@@ -2,7 +2,7 @@ import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import type { Page } from './page.ts'
 import type { ScanResult } from './scan.ts'
-import { buildSidebarIndex, type Item, type SidebarIndex } from './sidebar.ts'
+import { buildSidebarIndex } from './sidebar.ts'
 
 // Generators
 const pathSegmentArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,19}$/)

@@ -16,11 +16,11 @@ interface CodeProps {
  */
 const Pre: React.FC<PreProps> = ({ children, className, ...props }) => {
   // Check if this is a Shiki-enhanced code block
-  const isShiki = props['data-enhanced'] === 'true'
+  const isShiki = props[`data-enhanced`] === `true`
 
   // Extract the code element
   const codeElement = React.Children.toArray(children).find(
-    child => React.isValidElement(child) && child.type === 'code',
+    child => React.isValidElement(child) && child.type === `code`,
   ) as React.ReactElement<CodeProps> | undefined
 
   if (!codeElement) {
@@ -28,8 +28,8 @@ const Pre: React.FC<PreProps> = ({ children, className, ...props }) => {
   }
 
   // Check if it's a GraphQL code block
-  const codeClassName = codeElement.props.className || ''
-  const isGraphQL = codeClassName.includes('language-graphql') || codeClassName.includes('language-gql')
+  const codeClassName = codeElement.props.className || ``
+  const isGraphQL = codeClassName.includes(`language-graphql`) || codeClassName.includes(`language-gql`)
 
   if (isGraphQL && isShiki) {
     // Extract the plain text content from the code element
@@ -52,12 +52,12 @@ const Pre: React.FC<PreProps> = ({ children, className, ...props }) => {
  * Extract plain text from React children (recursive)
  */
 function extractPlainText(children: React.ReactNode): string {
-  if (typeof children === 'string') {
+  if (typeof children === `string`) {
     return children
   }
 
   if (Array.isArray(children)) {
-    return children.map(extractPlainText).join('')
+    return children.map(extractPlainText).join(``)
   }
 
   if (React.isValidElement(children)) {
@@ -67,7 +67,7 @@ function extractPlainText(children: React.ReactNode): string {
     }
   }
 
-  return ''
+  return ``
 }
 
 /**
@@ -75,25 +75,25 @@ function extractPlainText(children: React.ReactNode): string {
  */
 function renderToStaticMarkup(element: React.ReactNode): string {
   // For server-side, we just need to preserve the structure
-  if (typeof element === 'string') return element
+  if (typeof element === `string`) return element
 
   if (React.isValidElement(element)) {
     const { type, props } = element as React.ReactElement<any>
-    const tagName = typeof type === 'string' ? type : 'div'
+    const tagName = typeof type === `string` ? type : `div`
     const attrs = Object.entries(props || {})
-      .filter(([key]) => key !== 'children' && !key.startsWith('__'))
+      .filter(([key]) => key !== `children` && !key.startsWith(`__`))
       .map(([key, value]) => `${key}="${value}"`)
-      .join(' ')
+      .join(` `)
 
-    const children = props?.children ? renderToStaticMarkup(props.children) : ''
-    return `<${tagName}${attrs ? ' ' + attrs : ''}>${children}</${tagName}>`
+    const children = props?.children ? renderToStaticMarkup(props.children) : ``
+    return `<${tagName}${attrs ? ` ` + attrs : ``}>${children}</${tagName}>`
   }
 
   if (Array.isArray(element)) {
-    return element.map(renderToStaticMarkup).join('')
+    return element.map(renderToStaticMarkup).join(``)
   }
 
-  return ''
+  return ``
 }
 
 export const mdxComponents = {

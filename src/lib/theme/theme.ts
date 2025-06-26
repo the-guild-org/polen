@@ -46,7 +46,7 @@ export interface ThemeManager {
   getCSS(): string
 }
 
-export type Theme = 'light' | 'dark'
+export type Theme = `light` | `dark` | `system`
 
 export interface ThemeOptions {
   /**
@@ -79,29 +79,32 @@ export interface ThemeOptions {
  */
 export const createThemeManager = (options: ThemeOptions = {}): ThemeManager => {
   const {
-    cookieName = 'theme',
-    classPrefix = '',
+    cookieName = `theme`,
+    classPrefix = ``,
     maxAge = 31536000, // 1 year
-    path = '/',
+    path = `/`,
   } = options
 
   const getThemeClass = (theme: Theme): string => classPrefix ? `${classPrefix}${theme}` : theme
 
   const readCookie = (cookieString?: string): Theme | null => {
-    const cookies = cookieString || (typeof document !== 'undefined' ? document.cookie : '')
+    const cookies = cookieString || (typeof document !== `undefined` ? document.cookie : ``)
     if (!cookies) return null
 
-    const match = cookies.match(new RegExp(`(^| )${cookieName}=([^;]+)`))
+    const match = new RegExp(`(^| )${cookieName}=([^;]+)`).exec(cookies)
     const value = match?.[2]
 
-    return value === 'light' || value === 'dark' ? value : null
+    return value === `light` || value === `dark` || value === `system` ? value : null
   }
 
   const writeCookie = (theme: Theme): string => {
-    const cookieValue = `${cookieName}=${theme}; Max-Age=${maxAge}; Path=${path}; SameSite=Strict`
+    // If system is selected, delete the cookie by setting Max-Age to 0
+    const cookieValue = theme === `system`
+      ? `${cookieName}=; Max-Age=0; Path=${path}; SameSite=Strict`
+      : `${cookieName}=${theme}; Max-Age=${maxAge}; Path=${path}; SameSite=Strict`
 
     // Set cookie if in browser
-    if (typeof document !== 'undefined') {
+    if (typeof document !== `undefined`) {
       document.cookie = cookieValue
     }
 
@@ -109,23 +112,31 @@ export const createThemeManager = (options: ThemeOptions = {}): ThemeManager => 
   }
 
   const applyToDOM = (theme: Theme): void => {
-    if (typeof document === 'undefined') return
+    if (typeof document === `undefined`) return
 
-    const themeClass = getThemeClass(theme)
-    const otherTheme = theme === 'light' ? 'dark' : 'light'
+    // If system, detect the actual theme to apply
+    const actualTheme = theme === `system`
+      ? (globalThis.matchMedia(`(prefers-color-scheme: dark)`).matches ? `dark` : `light`)
+      : theme
+
+    const themeClass = getThemeClass(actualTheme)
+    const otherTheme = actualTheme === `light` ? `dark` : `light`
     const otherClass = getThemeClass(otherTheme)
 
     document.documentElement.classList.remove(otherClass)
     document.documentElement.classList.add(themeClass)
+
+    // Also update data-theme attribute for consistency with SSR
+    document.documentElement.setAttribute('data-theme', actualTheme)
   }
 
   const getCurrentFromDOM = (): Theme | null => {
-    if (typeof document === 'undefined') return null
+    if (typeof document === `undefined`) return null
 
     const classList = document.documentElement.classList
 
-    if (classList.contains(getThemeClass('dark'))) return 'dark'
-    if (classList.contains(getThemeClass('light'))) return 'light'
+    if (classList.contains(getThemeClass(`dark`))) return `dark`
+    if (classList.contains(getThemeClass(`light`))) return `light`
 
     return null
   }
@@ -136,22 +147,29 @@ export const createThemeManager = (options: ThemeOptions = {}): ThemeManager => 
   }
 
   const toggle = (): Theme => {
-    // Get current theme from DOM or cookie, fallback to system preference
-    let currentTheme = getCurrentFromDOM() || readCookie()
+    // Get current theme preference from cookie
+    const cookieTheme = readCookie()
 
-    if (!currentTheme && typeof window !== 'undefined') {
-      // Fallback to system preference
-      currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    // Determine next theme in cycle: system → light → dark → system
+    let newTheme: Theme
+    if (!cookieTheme || cookieTheme === `system`) {
+      // Currently on system, go to light
+      newTheme = `light`
+    } else if (cookieTheme === `light`) {
+      // Currently on light, go to dark
+      newTheme = `dark`
+    } else {
+      // Currently on dark, go back to system
+      newTheme = `system`
     }
 
-    const newTheme: Theme = currentTheme === 'dark' ? 'light' : 'dark'
     set(newTheme)
     return newTheme
   }
 
   const getCSS = (): string => {
-    const lightClass = getThemeClass('light')
-    const darkClass = getThemeClass('dark')
+    const lightClass = getThemeClass(`light`)
+    const darkClass = getThemeClass(`dark`)
 
     return `
 /* Theme CSS - handles both system preference and user override */

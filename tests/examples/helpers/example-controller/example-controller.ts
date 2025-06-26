@@ -116,7 +116,7 @@ export const create = async (parameters: {
 
                 const linePlain = stripAnsi(line)
 
-                const isError = line.toLowerCase().includes('error') || line.includes('Error')
+                const isError = line.toLowerCase().includes(`error`) || line.includes(`Error`)
 
                 if (isError) {
                   serverErrors.push(line)
@@ -143,13 +143,13 @@ export const create = async (parameters: {
               }
               if (!urlFound) {
                 const errorDetails = serverErrors.length > 0
-                  ? `\nServer errors:\n${serverErrors.join('\n')}`
-                  : ''
+                  ? `\nServer errors:\n${serverErrors.join(`\n`)}`
+                  : ``
                 reject(new Error(`Server process did not output a URL${errorDetails}`))
               }
             } catch (error) {
               // Log any errors that occur
-              console.error('[DEV SERVER ERROR]', error)
+              console.error(`[DEV SERVER ERROR]`, error)
               if (!urlFound) {
                 reject(error)
               }

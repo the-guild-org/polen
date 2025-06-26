@@ -58,15 +58,15 @@ export function createGitController($: typeof ZxDollar): GitController {
       const {
         message,
         body,
-        add = '.',
+        add = `.`,
         cwd,
         push = true,
         autoConfigureUser = true,
       } = options
 
-      const hasChanges = await api.hasChanges('gh-pages')
+      const hasChanges = await api.hasChanges(`gh-pages`)
       if (!hasChanges) {
-        console.log('No changes to commit')
+        console.log(`No changes to commit`)
         return false
       }
 
@@ -136,8 +136,8 @@ export function createGitController($: typeof ZxDollar): GitController {
 
     async configureUser(name, email) {
       try {
-        const userName = name || 'github-actions[bot]'
-        const userEmail = email || 'github-actions[bot]@users.noreply.github.com'
+        const userName = name || `github-actions[bot]`
+        const userEmail = email || `github-actions[bot]@users.noreply.github.com`
 
         await $`git config user.name ${userName}`
         await $`git config user.email ${userEmail}`

@@ -73,7 +73,7 @@ export const create = (options: VitePluginJsonImportsOptions = {}): Plugin => {
   const pluginName = options.name ?? `json-imports`
 
   // Always exclude \0 prefixed modules
-  // eslint-disable-next-line no-control-regex
+
   const baseExcludePatterns: (string | RegExp)[] = [/^\0/]
   const moduleTypes = options.filter?.moduleTypes ?? [`json`]
   const isCustomCodec = Boolean(options.codec?.importPath)
@@ -81,7 +81,7 @@ export const create = (options: VitePluginJsonImportsOptions = {}): Plugin => {
   // Check if we should handle this file based on extension
   const shouldHandle = (id: string) => {
     // Exclude internal modules with \0 prefix
-    if (id.startsWith('\0')) return false
+    if (id.startsWith(`\0`)) return false
 
     // Check if it has one of our configured extensions
     return moduleTypes.some(type => id.endsWith(`.${type}`))
@@ -89,14 +89,14 @@ export const create = (options: VitePluginJsonImportsOptions = {}): Plugin => {
 
   return {
     name: pluginName,
-    enforce: 'pre' as const,
+    enforce: `pre` as const,
     // Transform files based on extension
     transform(code, id) {
       if (!shouldHandle(id)) return
 
       try {
         // Skip validation for superjson since the codec validates the envelope format
-        if (options.codec?.validate && !options.codec.importPath?.includes('superjson')) {
+        if (options.codec?.validate && !options.codec.importPath?.includes(`superjson`)) {
           codec.parse(code)
         }
 

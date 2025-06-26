@@ -19,16 +19,16 @@ import type { GetDataType, Mask } from './mask.ts'
  * - Non-objects throw an error at runtime
  */
 // dprint-ignore
-export type Apply<Data, M extends Mask<any>> =
-    M extends { type: 'binary', show: boolean }
-      ? M['show'] extends true
+export type Apply<Data, M extends Mask> =
+    M extends { type: `binary`, show: boolean }
+      ? M[`show`] extends true
         ? Data
         : undefined
-      : M extends { type: 'properties', mode: string, properties: any[] }
+      : M extends { type: `properties`, mode: string, properties: any[] }
         ? Data extends object
-          ? M['mode'] extends 'allow'
-            ? Pick<Data, Extract<M['properties'][number], keyof Data>>
-            : Omit<Data, Extract<M['properties'][number], keyof Data>>
+          ? M[`mode`] extends `allow`
+            ? Pick<Data, Extract<M[`properties`][number], keyof Data>>
+            : Omit<Data, Extract<M[`properties`][number], keyof Data>>
           : never  // Non-objects not allowed with property masks
         : never
 
@@ -50,7 +50,7 @@ export type Apply<Data, M extends Mask<any>> =
  */
 export const apply = <
   data extends GetDataType<mask>,
-  mask extends Mask<any>,
+  mask extends Mask,
 >(data: data, mask: mask): Apply<data, mask> => {
   return applyInternal(data, mask) as Apply<data, mask>
 }
@@ -74,7 +74,7 @@ export const apply = <
  */
 export const applyPartial = <
   data extends Partial<GetDataType<mask>>,
-  mask extends Mask<any>,
+  mask extends Mask,
 >(data: data, mask: mask): Apply<data, mask> => {
   return applyInternal(data, mask) as Apply<data, mask>
 }
@@ -105,7 +105,7 @@ export const applyPartial = <
  */
 export const applyExact = <
   data,
-  mask extends Mask<any>,
+  mask extends Mask,
 >(
   data: ExtendsExact<data, GetDataType<mask>>,
   mask: mask,
@@ -114,17 +114,17 @@ export const applyExact = <
 }
 
 // Internal implementation
-const applyInternal = (data: any, mask: Mask<any>): any => {
+const applyInternal = (data: any, mask: Mask): any => {
   // ━ Handle binary mask
-  if (mask.type === 'binary') {
+  if (mask.type === `binary`) {
     return mask.show ? data : undefined
   }
 
   // ━ Handle properties mask
-  if (mask.type === 'properties') {
+  if (mask.type === `properties`) {
     // Properties mask requires object data
     if (!Obj.is(data)) {
-      throw new Error('Cannot apply properties mask to non-object data')
+      throw new Error(`Cannot apply properties mask to non-object data`)
     }
 
     return objPolicyFilter(mask.mode, data, mask.properties)

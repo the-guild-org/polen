@@ -10,12 +10,12 @@ export const createLogger = (config: Config.Config): Vite.Logger => {
     ...baseLogger,
     info(msg, options) {
       // Filter out optimization-related messages
-      const msgString = typeof msg === 'string' ? msg : String(msg)
+      const msgString = typeof msg === `string` ? msg : String(msg)
       if (
-        msgString.includes('new dependencies optimized')
-        || msgString.includes('optimized dependencies changed')
-        || msgString.includes('Re-optimizing dependencies')
-        || msgString.includes('Forced re-optimization')
+        msgString.includes(`new dependencies optimized`)
+        || msgString.includes(`optimized dependencies changed`)
+        || msgString.includes(`Re-optimizing dependencies`)
+        || msgString.includes(`Forced re-optimization`)
       ) {
         return
       }

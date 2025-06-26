@@ -44,7 +44,7 @@ export interface LandingPageData {
   distTags?: DistTagsData
   config: {
     basePath: string
-    mode: 'production' | 'development'
+    mode: `production` | `development`
     prNumber?: string
     currentSha?: string
   }
@@ -60,7 +60,7 @@ export class DemoDataCollector {
    * Collect all data for landing page generation
    */
   async collectLandingPageData(options: {
-    mode?: 'production' | 'development'
+    mode?: `production` | `development`
     basePath?: string
     prNumber?: string
     currentSha?: string
@@ -70,8 +70,8 @@ export class DemoDataCollector {
   }): Promise<LandingPageData> {
     try {
       const {
-        mode = 'production',
-        basePath = '/',
+        mode = `production`,
+        basePath = `/`,
         prNumber,
         currentSha,
         trunkDeployments,
@@ -86,13 +86,13 @@ export class DemoDataCollector {
       const demoMetadata = await this.loadDemoMetadata(demoExamples)
 
       // Parse deployment data based on mode
-      const parsedTrunkDeployments = mode === 'development'
+      const parsedTrunkDeployments = mode === `development`
         ? this.getMockTrunkDeployments()
         : this.parseTrunkDeployments(trunkDeployments)
 
       const parsedPrDeployments = this.parsePrDeployments(prDeployments)
 
-      const parsedDistTags = mode === 'development'
+      const parsedDistTags = mode === `development`
         ? this.getMockDistTags()
         : this.parseDistTags(distTags)
 
@@ -135,8 +135,8 @@ export class DemoDataCollector {
     // Load metadata from package.json files for enabled examples
     for (const example of demoExamples) {
       try {
-        const packageJsonPath = join(this.workingDir, 'examples', example, 'package.json')
-        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+        const packageJsonPath = join(this.workingDir, `examples`, example, `package.json`)
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, `utf-8`))
 
         metadata[example] = {
           title: packageJson.displayName || Str.Case.title(packageJson.name || example),
@@ -174,7 +174,7 @@ export class DemoDataCollector {
   private parseTrunkDeployments(trunkDeployments?: string | TrunkDeploymentsData): TrunkDeploymentsData | undefined {
     if (!trunkDeployments) return undefined
 
-    if (typeof trunkDeployments === 'string') {
+    if (typeof trunkDeployments === `string`) {
       try {
         return JSON.parse(trunkDeployments) as TrunkDeploymentsData
       } catch {
@@ -191,7 +191,7 @@ export class DemoDataCollector {
   private parsePrDeployments(prDeployments?: string | PrDeployment[]): PrDeployment[] | undefined {
     if (!prDeployments) return undefined
 
-    if (typeof prDeployments === 'string') {
+    if (typeof prDeployments === `string`) {
       try {
         return JSON.parse(prDeployments) as PrDeployment[]
       } catch {
@@ -208,7 +208,7 @@ export class DemoDataCollector {
   private parseDistTags(distTags?: string | DistTagsData): DistTagsData | undefined {
     if (!distTags) return undefined
 
-    if (typeof distTags === 'string') {
+    if (typeof distTags === `string`) {
       try {
         return JSON.parse(distTags) as DistTagsData
       } catch {
@@ -224,12 +224,12 @@ export class DemoDataCollector {
    */
   private getMockTrunkDeployments(): TrunkDeploymentsData {
     return {
-      latest: { sha: '1.2.0', shortSha: '1.2.0', tag: '1.2.0' },
+      latest: { sha: `1.2.0`, shortSha: `1.2.0`, tag: `1.2.0` },
       previous: [
-        { sha: '1.1.0', shortSha: '1.1.0', tag: '1.1.0' },
-        { sha: '1.0.0', shortSha: '1.0.0', tag: '1.0.0' },
-        { sha: '0.9.1', shortSha: '0.9.1', tag: '0.9.1' },
-        { sha: '0.9.0', shortSha: '0.9.0', tag: '0.9.0' },
+        { sha: `1.1.0`, shortSha: `1.1.0`, tag: `1.1.0` },
+        { sha: `1.0.0`, shortSha: `1.0.0`, tag: `1.0.0` },
+        { sha: `0.9.1`, shortSha: `0.9.1`, tag: `0.9.1` },
+        { sha: `0.9.0`, shortSha: `0.9.0`, tag: `0.9.0` },
       ],
     }
   }
@@ -239,8 +239,8 @@ export class DemoDataCollector {
    */
   private getMockDistTags(): DistTagsData {
     return {
-      latest: '1.2.0',
-      next: '1.3.0-beta.2',
+      latest: `1.2.0`,
+      next: `1.3.0-beta.2`,
     }
   }
 }

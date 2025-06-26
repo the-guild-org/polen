@@ -19,8 +19,8 @@ export const DeploymentMetadataSchema = z.object({
 export type DeploymentMetadata = z.infer<typeof DeploymentMetadataSchema>
 
 export const metadata = Resource.create({
-  name: 'deployment-metadata',
-  path: '.deployment.json',
+  name: `deployment-metadata`,
+  path: `.deployment.json`,
   codec: Codec.fromZod(DeploymentMetadataSchema),
   init: {
     auto: true,
@@ -28,12 +28,12 @@ export const metadata = Resource.create({
       timestamp: new Date().toISOString(),
       pullRequest: {
         number: 0,
-        branch: 'unknown',
-        commit: 'unknown',
+        branch: `unknown`,
+        commit: `unknown`,
       },
       deployment: {
-        url: '',
-        environment: 'unknown',
+        url: ``,
+        environment: `unknown`,
       },
     }),
   },

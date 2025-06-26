@@ -31,7 +31,7 @@ export const Item: React.FC<{ item: Content.Item }> = ({ item }) => {
     return <SBLink link={item} />
   }
 
-  if (item.type === 'ItemSection' && item.isLinkToo) {
+  if (item.type === `ItemSection` && item.isLinkToo) {
     return <LinkedSection section={item} />
   }
 
@@ -113,7 +113,7 @@ const LinkedSection: React.FC<{
         <Flex
           direction='column'
           gap='2'
-          id={`section-${section.pathExp.replace(/\//g, '-')}`}
+          id={`section-${section.pathExp.replace(/\//g, `-`)}`}
           role='group'
           ml='5'
           py='2px'
@@ -140,7 +140,7 @@ const SectionLink: React.FC<{ link: Content.ItemLink }> = ({ link }) => {
   return (
     <Link
       role='Sidebar Link'
-      to={'/' + link.pathExp}
+      to={`/` + link.pathExp}
       color={active.is ? `iris` : `gray`}
       style={{
         textDecoration: `none`,

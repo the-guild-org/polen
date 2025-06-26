@@ -51,8 +51,8 @@ export class SimplePositionCalculator {
     identifiers: Identifier[],
   ): void {
     // Get the full text content of the container
-    const fullText = containerElement.textContent || ''
-    const lines = fullText.split('\n')
+    const fullText = containerElement.textContent || ``
+    const lines = fullText.split(`\n`)
 
     // Build a map of line start positions in the full text
     const lineStartPositions: number[] = [0]
@@ -82,7 +82,7 @@ export class SimplePositionCalculator {
         let alreadyWrapped = false
         for (const wrapped of existingWrapped) {
           if (wrapped.textContent === identifier.name) {
-            const startPos = parseInt(wrapped.getAttribute('data-graphql-start') || '0')
+            const startPos = parseInt(wrapped.getAttribute(`data-graphql-start`) || `0`)
             if (startPos === identifier.position.start) {
               alreadyWrapped = true
               break
@@ -92,16 +92,16 @@ export class SimplePositionCalculator {
         if (alreadyWrapped) continue
 
         // Create wrapper span
-        const wrapper = document.createElement('span')
+        const wrapper = document.createElement(`span`)
         const id = `${identifier.position.start}-${identifier.name}-${identifier.kind}`
-        wrapper.setAttribute('data-graphql-id', id)
-        wrapper.setAttribute('data-graphql-name', identifier.name)
-        wrapper.setAttribute('data-graphql-kind', identifier.kind)
-        wrapper.setAttribute('data-graphql-start', String(identifier.position.start))
-        wrapper.setAttribute('data-graphql-end', String(identifier.position.end))
-        wrapper.setAttribute('data-graphql-line', String(identifier.position.line))
-        wrapper.setAttribute('data-graphql-column', String(identifier.position.column))
-        wrapper.setAttribute('data-graphql-path', identifier.schemaPath.join(','))
+        wrapper.setAttribute(`data-graphql-id`, id)
+        wrapper.setAttribute(`data-graphql-name`, identifier.name)
+        wrapper.setAttribute(`data-graphql-kind`, identifier.kind)
+        wrapper.setAttribute(`data-graphql-start`, String(identifier.position.start))
+        wrapper.setAttribute(`data-graphql-end`, String(identifier.position.end))
+        wrapper.setAttribute(`data-graphql-line`, String(identifier.position.line))
+        wrapper.setAttribute(`data-graphql-column`, String(identifier.position.column))
+        wrapper.setAttribute(`data-graphql-path`, identifier.schemaPath.join(`,`))
 
         // Find the position in the container and wrap the text
         const walker = document.createTreeWalker(
@@ -115,7 +115,7 @@ export class SimplePositionCalculator {
 
         while (node = walker.nextNode()) {
           const textNode = node as Text
-          const text = textNode.textContent || ''
+          const text = textNode.textContent || ``
 
           // Check if this text node contains our identifier
           if (currentPos <= absolutePosition && absolutePosition < currentPos + text.length) {
@@ -161,13 +161,13 @@ export class SimplePositionCalculator {
     const results = new Map<string, PositionResult>()
 
     // Find all wrapped identifiers
-    const wrappedIdentifiers = containerElement.querySelectorAll('[data-graphql-id]')
+    const wrappedIdentifiers = containerElement.querySelectorAll(`[data-graphql-id]`)
 
     // Use the provided element for relative positioning, or the container itself
     const referenceElement = relativeToElement || containerElement
 
     for (const element of wrappedIdentifiers) {
-      const id = element.getAttribute('data-graphql-id')
+      const id = element.getAttribute(`data-graphql-id`)
       if (!id) continue
 
       // Get position relative to the reference element
@@ -183,15 +183,15 @@ export class SimplePositionCalculator {
 
       // Reconstruct identifier from data attributes
       const identifier: Identifier = {
-        name: element.getAttribute('data-graphql-name') || '',
-        kind: (element.getAttribute('data-graphql-kind') || 'Field') as Identifier['kind'],
+        name: element.getAttribute(`data-graphql-name`) || ``,
+        kind: (element.getAttribute(`data-graphql-kind`) || `Field`) as Identifier[`kind`],
         position: {
-          start: parseInt(element.getAttribute('data-graphql-start') || '0'),
-          end: parseInt(element.getAttribute('data-graphql-end') || '0'),
-          line: parseInt(element.getAttribute('data-graphql-line') || '1'),
-          column: parseInt(element.getAttribute('data-graphql-column') || '1'),
+          start: parseInt(element.getAttribute(`data-graphql-start`) || `0`),
+          end: parseInt(element.getAttribute(`data-graphql-end`) || `0`),
+          line: parseInt(element.getAttribute(`data-graphql-line`) || `1`),
+          column: parseInt(element.getAttribute(`data-graphql-column`) || `1`),
         },
-        schemaPath: (element.getAttribute('data-graphql-path') || '').split(',').filter(Boolean),
+        schemaPath: (element.getAttribute(`data-graphql-path`) || ``).split(`,`).filter(Boolean),
         context: { selectionPath: [] },
       }
 
@@ -214,16 +214,16 @@ export const createSimpleOverlay = (
     className?: string
   },
 ): HTMLElement => {
-  const overlay = document.createElement('div')
+  const overlay = document.createElement(`div`)
 
   // Base styles for positioning
-  overlay.style.position = 'absolute'
+  overlay.style.position = `absolute`
   overlay.style.top = `${position.top}px`
   overlay.style.left = `${position.left}px`
   overlay.style.width = `${position.width}px`
   overlay.style.height = `${position.height}px`
-  overlay.style.cursor = 'pointer'
-  overlay.style.zIndex = '10'
+  overlay.style.cursor = `pointer`
+  overlay.style.zIndex = `10`
 
   // Add custom class if provided
   if (options?.className) {
@@ -231,20 +231,20 @@ export const createSimpleOverlay = (
   }
 
   // Data attributes
-  overlay.setAttribute('data-graphql-overlay', 'true')
-  overlay.setAttribute('data-graphql-name', identifier.name)
-  overlay.setAttribute('data-graphql-kind', identifier.kind)
+  overlay.setAttribute(`data-graphql-overlay`, `true`)
+  overlay.setAttribute(`data-graphql-name`, identifier.name)
+  overlay.setAttribute(`data-graphql-kind`, identifier.kind)
 
   // Event handlers
   if (options?.onClick) {
-    overlay.addEventListener('click', (e) => {
+    overlay.addEventListener(`click`, (e) => {
       e.preventDefault()
       options.onClick!(identifier)
     })
   }
 
   if (options?.onHover) {
-    overlay.addEventListener('mouseenter', (e) => {
+    overlay.addEventListener(`mouseenter`, (e) => {
       options.onHover!(identifier, e)
     })
   }

@@ -12,7 +12,7 @@ export interface ShikiOptions {
     dark: BundledTheme
   }
   langs?: BundledLanguage[]
-  defaultTheme?: 'light' | 'dark'
+  defaultTheme?: `light` | `dark`
 }
 
 const DEFAULT_THEMES = {
@@ -85,7 +85,7 @@ export async function getHighlighter(options: ShikiOptions = {}): Promise<Highli
 export interface CodeHighlightOptions {
   code: string
   lang?: string
-  theme?: 'light' | 'dark'
+  theme?: `light` | `dark`
   showLineNumbers?: boolean
   highlightLines?: number[]
   diffLines?: { add: number[]; remove: number[] }

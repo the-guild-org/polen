@@ -76,10 +76,10 @@ describe('property-based tests', () => {
 
           // Combined they reconstruct the original object (only own properties)
           const reconstructed = { ...allowed, ...denied }
-          const ownPropsObj = Object.keys(obj).reduce((acc, key) => {
+          const ownPropsObj = Object.keys(obj).reduce<any>((acc, key) => {
             acc[key] = obj[key]
             return acc
-          }, {} as any)
+          }, {})
           expect(reconstructed).toEqual(ownPropsObj)
         },
       ),
@@ -94,10 +94,10 @@ describe('property-based tests', () => {
           const filtered = objFilter(obj, () => true)
 
           // Object.keys doesn't include __proto__, so we need to handle it specially
-          const objWithoutProto = Object.keys(obj).reduce((acc, key) => {
+          const objWithoutProto = Object.keys(obj).reduce<any>((acc, key) => {
             acc[key] = obj[key]
             return acc
-          }, {} as any)
+          }, {})
 
           expect(filtered).toEqual(objWithoutProto)
 

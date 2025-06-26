@@ -7,7 +7,7 @@ import type { GraphQLDocumentProps } from '../../../lib/graphql-document/compone
  * Wrapper component that provides schema from virtual module directly to GraphQLDocument
  * This bypasses the context issue with MDX components
  */
-export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'schema'>> = (props) => {
+export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `schema`>> = (props) => {
   const schema = PROJECT_DATA.schema?.versions[0]?.after
   return <GraphQLDocument {...props} schema={schema} />
 }

@@ -7,7 +7,7 @@ import { DemoConfigSchema, LegacyDemoConfigSchema } from './config-schema.ts'
 let importedConfig: DemoConfigData | null = null
 try {
   // @ts-ignore - This import might fail if the file doesn't exist
-  const configModule = await import('../../../.github/demo-config.ts')
+  const configModule = await import(`../../../.github/demo-config.ts`)
   importedConfig = configModule.default || configModule.demoConfig
 } catch {
   // Config file doesn't exist or failed to load
@@ -18,7 +18,7 @@ const DEFAULT_CONFIG: DemoConfigData = {
   examples: {
     exclude: [],
     order: [],
-    minimumPolenVersion: '0.1.0',
+    minimumPolenVersion: `0.1.0`,
   },
   deployment: {
     basePaths: {},
@@ -31,22 +31,22 @@ const DEFAULT_CONFIG: DemoConfigData = {
   },
   ui: {
     theme: {
-      primaryColor: '#000',
-      backgroundColor: '#fff',
-      textColor: '#000',
-      mutedTextColor: '#666',
+      primaryColor: `#000`,
+      backgroundColor: `#fff`,
+      textColor: `#000`,
+      mutedTextColor: `#666`,
     },
     branding: {
-      title: 'Polen Demos',
-      description: 'Interactive GraphQL API documentation',
+      title: `Polen Demos`,
+      description: `Interactive GraphQL API documentation`,
     },
   },
   metadata: {
     disabledDemos: {
       github: {
-        title: 'GitHub API',
-        description: "Browse GitHub's extensive GraphQL API with over 1600 types.",
-        reason: 'Currently disabled due to build performance.',
+        title: `GitHub API`,
+        description: `Browse GitHub's extensive GraphQL API with over 1600 types.`,
+        reason: `Currently disabled due to build performance.`,
       },
     },
   },
@@ -56,14 +56,14 @@ export class DemoConfig {
   private data: DemoConfigData
   private configPath: string
 
-  constructor(configPath: string = '.github/demo-config') {
+  constructor(configPath = `.github/demo-config`) {
     this.configPath = configPath
     this.data = this.loadConfig()
   }
 
   private loadConfig(): DemoConfigData {
     // Check if we're loading the default config path and have an imported TypeScript config
-    if (this.configPath === '.github/demo-config' && importedConfig) {
+    if (this.configPath === `.github/demo-config` && importedConfig) {
       const parsed = DemoConfigSchema.safeParse(importedConfig)
       if (parsed.success) {
         return parsed.data
@@ -73,7 +73,7 @@ export class DemoConfig {
     // Try JSON config
     try {
       const jsonConfigPath = `${this.configPath}.json`
-      const raw = JSON.parse(readFileSync(jsonConfigPath, 'utf-8'))
+      const raw = JSON.parse(readFileSync(jsonConfigPath, `utf-8`))
 
       // Try to parse as modern config first
       const modernParse = DemoConfigSchema.safeParse(raw)
@@ -97,7 +97,7 @@ export class DemoConfig {
         }
       }
 
-      throw new Error('Invalid config format')
+      throw new Error(`Invalid config format`)
     } catch (e) {
       console.warn(`No config file found at ${this.configPath}.json, using defaults`)
       return DEFAULT_CONFIG
@@ -172,8 +172,8 @@ export class DemoConfig {
   /**
    * Get deployment path for a version
    */
-  getDeploymentPath(version: string, isStable: boolean = false): string {
-    return isStable ? '/latest/' : `/${version}/`
+  getDeploymentPath(version: string, isStable = false): string {
+    return isStable ? `/latest/` : `/${version}/`
   }
 
   /**

@@ -11,7 +11,7 @@ import { getDemoConfig } from './config.ts'
  * Get list of demo examples from the examples directory
  */
 export async function getDemoExamples(): Promise<string[]> {
-  const examplesDir = join(process.cwd(), 'examples')
+  const examplesDir = join(process.cwd(), `examples`)
   const examples: string[] = []
 
   // Read all directories in examples/
@@ -35,7 +35,7 @@ export async function getDemoExamples(): Promise<string[]> {
  * Get deployment path for a version
  */
 export const getDistTagPath = (version: Version): string => {
-  return version.isPrerelease ? `/next/` : '/latest/'
+  return version.isPrerelease ? `/next/` : `/latest/`
 }
 
 export const getSemverPath = (version: Version): string => {

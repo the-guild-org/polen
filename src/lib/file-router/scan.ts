@@ -16,7 +16,7 @@ const conventions = {
     name: `index`,
   },
   numberedPrefix: {
-    pattern: Str.pattern<{ groups: ['order', 'name'] }>(/^(?<order>\d+)[_-](?<name>.+)$/),
+    pattern: Str.pattern<{ groups: [`order`, `name`] }>(/^(?<order>\d+)[_-](?<name>.+)$/),
   },
 }
 
@@ -76,7 +76,7 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
   const id = filePathExpression // Use absolute path as unique ID
   const relativePath = Path.relative(rootDir, filePathExpression)
   const parentDir = Path.dirname(relativePath)
-  const parentId = parentDir === '.' ? null : Path.join(rootDir, parentDir)
+  const parentId = parentDir === `.` ? null : Path.join(rootDir, parentDir)
 
   return {
     logical,

@@ -4,7 +4,7 @@
 
 // import type { Context } from '@actions/github/lib/context.ts'
 import type { GitHub } from '@actions/github/lib/utils.ts'
-import { z } from 'zod/v4'
+import type { z } from 'zod/v4'
 import type { GitController } from './git-controller.ts'
 import type { PullRequestController } from './pr-controller.ts'
 import type { Context, ContextSchema as RealContextSchema } from './schemas/context.ts'

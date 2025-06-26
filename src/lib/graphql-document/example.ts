@@ -37,7 +37,7 @@ const exampleQuery = `
  * Demonstrate basic analysis
  */
 export const analyzeExample = () => {
-  console.log('🔍 Analyzing GraphQL Document...\n')
+  console.log(`🔍 Analyzing GraphQL Document...\n`)
 
   const result = GraphQLDocument.analyze(exampleQuery)
 
@@ -50,8 +50,8 @@ export const analyzeExample = () => {
     console.log(`${getKindEmoji(kind)} ${kind} (${identifiers.length}):`)
     for (const identifier of identifiers) {
       const pos = `${identifier.position.line}:${identifier.position.column}`
-      const path = identifier.schemaPath.join(' → ')
-      const parent = identifier.parentType ? ` (in ${identifier.parentType})` : ''
+      const path = identifier.schemaPath.join(` → `)
+      const parent = identifier.parentType ? ` (in ${identifier.parentType})` : ``
       console.log(`  • ${identifier.name}${parent} → ${path} @ ${pos}`)
     }
     console.log()
@@ -64,7 +64,7 @@ export const analyzeExample = () => {
  * Demonstrate identifier lookup by position
  */
 export const demonstratePositionLookup = () => {
-  console.log('📍 Position-based Identifier Lookup...\n')
+  console.log(`📍 Position-based Identifier Lookup...\n`)
 
   const identifiers = GraphQLDocument.extractIdentifiers(exampleQuery)
 
@@ -87,7 +87,7 @@ export const demonstratePositionLookup = () => {
     console.log(`🎯 Identifier near position ${targetPosition}:`)
     console.log(`   Name: ${closestIdentifier.name}`)
     console.log(`   Kind: ${closestIdentifier.kind}`)
-    console.log(`   Schema Path: ${closestIdentifier.schemaPath.join(' → ')}`)
+    console.log(`   Schema Path: ${closestIdentifier.schemaPath.join(` → `)}`)
     console.log(`   Context: ${JSON.stringify(closestIdentifier.context, null, 2)}`)
   }
 }
@@ -96,21 +96,21 @@ export const demonstratePositionLookup = () => {
  * Demonstrate how this enables hyperlink generation
  */
 export const demonstrateHyperlinkGeneration = () => {
-  console.log('🔗 Hyperlink Generation Preview...\n')
+  console.log(`🔗 Hyperlink Generation Preview...\n`)
 
   const identifiers = GraphQLDocument.extractIdentifiers(exampleQuery)
 
   // Show how each identifier could become a hyperlink
-  const typeIdentifiers = identifiers.byKind.get('Type') || []
-  const fieldIdentifiers = identifiers.byKind.get('Field') || []
+  const typeIdentifiers = identifiers.byKind.get(`Type`) || []
+  const fieldIdentifiers = identifiers.byKind.get(`Field`) || []
 
-  console.log('📝 Type References → Schema Links:')
+  console.log(`📝 Type References → Schema Links:`)
   for (const identifier of typeIdentifiers) {
     const referenceUrl = `/reference/${identifier.name}`
     console.log(`  ${identifier.name} → ${referenceUrl}`)
   }
 
-  console.log('\n📝 Field References → Schema Links:')
+  console.log(`\n📝 Field References → Schema Links:`)
   for (const identifier of fieldIdentifiers.slice(0, 5)) { // Show first 5
     const referenceUrl = identifier.parentType
       ? `/reference/${identifier.parentType}#${identifier.name}`
@@ -123,20 +123,20 @@ export const demonstrateHyperlinkGeneration = () => {
  * Show the foundation for hover tooltips
  */
 export const demonstrateTooltipFoundation = () => {
-  console.log('💬 Tooltip Foundation...\n')
+  console.log(`💬 Tooltip Foundation...\n`)
 
   const identifiers = GraphQLDocument.extractIdentifiers(exampleQuery)
 
   // Show context information that would be displayed in tooltips
-  const fieldIdentifiers = identifiers.byKind.get('Field') || []
+  const fieldIdentifiers = identifiers.byKind.get(`Field`) || []
 
   for (const identifier of fieldIdentifiers.slice(0, 3)) { // Show first 3
     console.log(`🏷️  ${identifier.name}:`)
     console.log(`    Position: Line ${identifier.position.line}, Column ${identifier.position.column}`)
-    console.log(`    Schema Path: ${identifier.schemaPath.join(' → ')}`)
-    console.log(`    Parent Type: ${identifier.parentType || 'Root'}`)
-    console.log(`    Operation: ${identifier.context.operationType || 'None'}`)
-    console.log(`    Selection Path: ${identifier.context.selectionPath.join(' → ')}`)
+    console.log(`    Schema Path: ${identifier.schemaPath.join(` → `)}`)
+    console.log(`    Parent Type: ${identifier.parentType || `Root`}`)
+    console.log(`    Operation: ${identifier.context.operationType || `None`}`)
+    console.log(`    Selection Path: ${identifier.context.selectionPath.join(` → `)}`)
     console.log()
   }
 }
@@ -144,14 +144,14 @@ export const demonstrateTooltipFoundation = () => {
 // Helper function
 function getKindEmoji(kind: string): string {
   const emojis: Record<string, string> = {
-    'Type': '🏷️',
-    'Field': '📋',
-    'Argument': '⚙️',
-    'Variable': '💰',
-    'Directive': '🎯',
-    'Fragment': '🧩',
+    'Type': `🏷️`,
+    'Field': `📋`,
+    'Argument': `⚙️`,
+    'Variable': `💰`,
+    'Directive': `🎯`,
+    'Fragment': `🧩`,
   }
-  return emojis[kind] || '❓'
+  return emojis[kind] || `❓`
 }
 
 // Run example if executed directly

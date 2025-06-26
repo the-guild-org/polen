@@ -96,7 +96,7 @@ const PullRequest = z.object({
   /** Pull request number (unique per repository) */
   number: z.number(),
   /** Current state: 'open' or 'closed' */
-  state: z.enum(['open', 'closed']),
+  state: z.enum([`open`, `closed`]),
   /** Whether pull request is locked */
   locked: z.boolean(),
   /** Pull request title */
@@ -179,23 +179,23 @@ export const PullRequestEvent = z.object({
    * Common actions: opened, closed, reopened, synchronize, edited
    */
   action: z.enum([
-    'opened',
-    'edited',
-    'closed',
-    'assigned',
-    'unassigned',
-    'review_requested',
-    'review_request_removed',
-    'ready_for_review',
-    'converted_to_draft',
-    'labeled',
-    'unlabeled',
-    'synchronize',
-    'auto_merge_enabled',
-    'auto_merge_disabled',
-    'locked',
-    'unlocked',
-    'reopened',
+    `opened`,
+    `edited`,
+    `closed`,
+    `assigned`,
+    `unassigned`,
+    `review_requested`,
+    `review_request_removed`,
+    `ready_for_review`,
+    `converted_to_draft`,
+    `labeled`,
+    `unlabeled`,
+    `synchronize`,
+    `auto_merge_enabled`,
+    `auto_merge_disabled`,
+    `locked`,
+    `unlocked`,
+    `reopened`,
   ]),
   /** Pull request number (same as pull_request.number) */
   number: z.number(),
@@ -307,7 +307,7 @@ export const WorkflowDispatchEvent = z.object({
  */
 export const ReleaseEvent = z.object({
   /** Action that triggered the event */
-  action: z.enum(['published', 'unpublished', 'created', 'edited', 'deleted', 'prereleased', 'released']),
+  action: z.enum([`published`, `unpublished`, `created`, `edited`, `deleted`, `prereleased`, `released`]),
   /** Release information */
   release: z.object({
     /** Unique release ID */
@@ -382,7 +382,7 @@ export type Context = z.output<typeof Context>
 export const PullRequestContext = z.object({
   ...Context.shape,
   /** Will always be 'pull_request' */
-  eventName: z.literal('pull_request'),
+  eventName: z.literal(`pull_request`),
   /** Pull request event payload */
   payload: PullRequestEvent,
 })
@@ -394,7 +394,7 @@ export const PullRequestContext = z.object({
 export const PushContext = z.object({
   ...Context.shape,
   /** Will always be 'push' */
-  eventName: z.literal('push'),
+  eventName: z.literal(`push`),
   /** Push event payload */
   payload: PushEvent,
 })
@@ -406,7 +406,7 @@ export const PushContext = z.object({
 export const WorkflowDispatchContext = z.object({
   ...Context.shape,
   /** Will always be 'workflow_dispatch' */
-  eventName: z.literal('workflow_dispatch'),
+  eventName: z.literal(`workflow_dispatch`),
   /** Workflow dispatch event payload */
   payload: WorkflowDispatchEvent,
 })
@@ -418,7 +418,7 @@ export const WorkflowDispatchContext = z.object({
 export const ReleaseContext = z.object({
   ...Context.shape,
   /** Will always be 'release' */
-  eventName: z.literal('release'),
+  eventName: z.literal(`release`),
   /** Release event payload */
   payload: ReleaseEvent,
 })

@@ -10,7 +10,7 @@ import { polenVirtual } from '../vi.ts'
 
 export const Build = (config: Config.Config): Vite.Plugin[] => {
   const debug = debugPolen.sub(`vite-build`)
-  debug('construct')
+  debug(`construct`)
   // let viteConfigResolved: Vite.ResolvedConfig
 
   // const outDir = Path.join(config.paths.project.rootDir, `dist`)
@@ -53,7 +53,7 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
               build: {
                 manifest: true,
                 rollupOptions: {
-                  input: [config.paths.framework.template.client.entrypoint],
+                  input: [config.paths.framework.template.absolute.client.entrypoint],
                   external: id => id.startsWith(`node:`),
                   onwarn(message) {
                     if (isKitUnusedExternalImport(message)) return
@@ -86,7 +86,7 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
                 // The SSR build will follow the client build, and emptying the dir would lose the output of the client build.
                 emptyOutDir: false,
                 rollupOptions: {
-                  input: [config.paths.framework.template.server.entrypoint],
+                  input: [config.paths.framework.template.absolute.server.entrypoint],
                   output: {
                     entryFileNames: config.paths.project.relative.build.relative.serverEntrypoint,
                   },
@@ -157,20 +157,20 @@ const Manifest = (config: Config.Config): Vite.Plugin => {
 
 const BuildManifest = (config: Config.Config): Vite.Plugin => {
   return {
-    name: 'polen:build-manifest',
-    apply: 'build',
+    name: `polen:build-manifest`,
+    apply: `build`,
     applyToEnvironment: Vite.isEnvironmentClient,
     async generateBundle() {
       const manifest: PolenBuildManifest = {
-        type: config.build.architecture === 'ssr' ? 'ssr' : 'ssg',
+        type: config.build.architecture === `ssr` ? `ssr` : `ssg`,
         version: packageJson.version,
-        basePath: config.build.base || '/',
+        basePath: config.build.base || `/`,
       }
 
       // Emit the manifest as an asset
       this.emitFile({
-        type: 'asset',
-        fileName: '.polen/build.json',
+        type: `asset`,
+        fileName: `.polen/build.json`,
         source: JSON.stringify(manifest, null, 2),
       })
     },

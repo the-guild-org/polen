@@ -164,7 +164,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
     }
 
     // Get the immediate parent path (e.g., for ['guide', 'advanced', 'tips'], parent is ['guide', 'advanced'])
-    const parentPath = page.route.logical.path.slice(0, -1).join('/')
+    const parentPath = page.route.logical.path.slice(0, -1).join(`/`)
 
     if (!pagesByParent.has(parentPath)) {
       pagesByParent.set(parentPath, [])
@@ -178,12 +178,12 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
   // Sort pages by their directory order (extracted from file path)
   const sortedTopLevelPages = [...topLevelPages].sort((a, b) => {
     // For sections, we need to look at the directory name in the file path
-    const dirA = a.route.file.path.relative.dir.split('/').pop() || ''
-    const dirB = b.route.file.path.relative.dir.split('/').pop() || ''
+    const dirA = a.route.file.path.relative.dir.split(`/`).pop() || ``
+    const dirB = b.route.file.path.relative.dir.split(`/`).pop() || ``
 
     // Extract order from directory names like "10_b", "20_c"
-    const orderMatchA = dirA.match(/^(\d+)[_-]/)
-    const orderMatchB = dirB.match(/^(\d+)[_-]/)
+    const orderMatchA = /^(\d+)[_-]/.exec(dirA)
+    const orderMatchB = /^(\d+)[_-]/.exec(dirB)
 
     const orderA = orderMatchA ? parseInt(orderMatchA[1]!, 10) : Number.MAX_SAFE_INTEGER
     const orderB = orderMatchB ? parseInt(orderMatchB[1]!, 10) : Number.MAX_SAFE_INTEGER
@@ -196,7 +196,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
 
   for (const page of sortedTopLevelPages) {
     const pageName = page.route.logical.path[page.route.logical.path.length - 1]!
-    const childPath = page.route.logical.path.join('/')
+    const childPath = page.route.logical.path.join(`/`)
     const childPages = pagesByParent.get(childPath) || []
 
     if (childPages.length > 0 || FileRouter.routeIsFromIndexFile(page.route)) {
@@ -204,7 +204,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
       const hasIndex = FileRouter.routeIsFromIndexFile(page.route)
 
       const section: ItemSection = {
-        type: 'ItemSection',
+        type: `ItemSection`,
         title: Str.titlizeSlug(pageName),
         pathExp: childPath,
         isLinkToo: hasIndex,
@@ -221,9 +221,9 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
       for (const childPage of sortedChildPages) {
         if (!FileRouter.routeIsFromIndexFile(childPage.route)) {
           section.links.push({
-            type: 'ItemLink',
+            type: `ItemLink`,
             title: Str.titlizeSlug(childPage.route.logical.path[childPage.route.logical.path.length - 1]!),
-            pathExp: childPage.route.logical.path.join('/'),
+            pathExp: childPage.route.logical.path.join(`/`),
           })
         }
       }
@@ -232,7 +232,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
       const allDescendants: Page[] = []
       for (const [parentPath, pagesInParent] of pagesByParent) {
         // Check if this path is a descendant (but not direct child)
-        if (parentPath.startsWith(childPath + '/')) {
+        if (parentPath.startsWith(childPath + `/`)) {
           for (const descendantPage of pagesInParent) {
             if (!FileRouter.routeIsFromIndexFile(descendantPage.route)) {
               allDescendants.push(descendantPage)
@@ -258,11 +258,11 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
 
       for (const descendantPage of allDescendants) {
         section.links.push({
-          type: 'ItemLink',
+          type: `ItemLink`,
           title: Str.titlizeSlug(
             descendantPage.route.logical.path[descendantPage.route.logical.path.length - 1]!,
           ),
-          pathExp: descendantPage.route.logical.path.join('/'),
+          pathExp: descendantPage.route.logical.path.join(`/`),
         })
       }
 
@@ -272,9 +272,9 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
     } else {
       // This is a simple link
       items.push({
-        type: 'ItemLink',
+        type: `ItemLink`,
         title: Str.titlizeSlug(pageName),
-        pathExp: page.route.logical.path.join('/'),
+        pathExp: page.route.logical.path.join(`/`),
       })
     }
   }

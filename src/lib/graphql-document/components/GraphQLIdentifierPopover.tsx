@@ -6,7 +6,7 @@
 
 import type { React } from '#dep/react/index'
 import { Cross2Icon } from '@radix-ui/react-icons'
-import { Badge, Box, Card, Flex, IconButton, Link, Popover, Text } from '@radix-ui/themes'
+import { Badge, Box, Flex, IconButton, Link, Popover, Text } from '@radix-ui/themes'
 import type { Documentation } from '../schema-integration.ts'
 import type { Identifier } from '../types.ts'
 
@@ -48,20 +48,20 @@ export const GraphQLIdentifierPopover: React.FC<GraphQLIdentifierPopoverProps> =
   // Determine badge color based on identifier kind
   const getBadgeColor = () => {
     switch (identifier.kind) {
-      case 'Type':
-        return 'blue'
-      case 'Field':
-        return 'green'
-      case 'Argument':
-        return 'orange'
-      case 'Variable':
-        return 'purple'
-      case 'Directive':
-        return 'amber'
-      case 'Fragment':
-        return 'cyan'
+      case `Type`:
+        return `blue`
+      case `Field`:
+        return `green`
+      case `Argument`:
+        return `orange`
+      case `Variable`:
+        return `purple`
+      case `Directive`:
+        return `amber`
+      case `Fragment`:
+        return `cyan`
       default:
-        return 'gray'
+        return `gray`
     }
   }
 
@@ -96,7 +96,9 @@ export const GraphQLIdentifierPopover: React.FC<GraphQLIdentifierPopoverProps> =
               <IconButton
                 size='1'
                 variant='ghost'
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  onOpenChange(false)
+                }}
                 aria-label='Close popover'
               >
                 <Cross2Icon />
@@ -107,7 +109,7 @@ export const GraphQLIdentifierPopover: React.FC<GraphQLIdentifierPopoverProps> =
           {/* Type signature */}
           <Box>
             <Text size='1' color='gray'>
-              Type: <Text as='span' size='1' style={{ fontFamily: 'monospace' }}>{documentation.typeInfo}</Text>
+              Type: <Text as='span' size='1' style={{ fontFamily: `monospace` }}>{documentation.typeInfo}</Text>
             </Text>
           </Box>
 
@@ -124,8 +126,8 @@ export const GraphQLIdentifierPopover: React.FC<GraphQLIdentifierPopoverProps> =
           {documentation.defaultValue && (
             <Box>
               <Text size='1' color='gray'>
-                Default:{' '}
-                <Text as='span' size='1' style={{ fontFamily: 'monospace' }}>{documentation.defaultValue}</Text>
+                Default:{` `}
+                <Text as='span' size='1' style={{ fontFamily: `monospace` }}>{documentation.defaultValue}</Text>
               </Text>
             </Box>
           )}
@@ -134,10 +136,10 @@ export const GraphQLIdentifierPopover: React.FC<GraphQLIdentifierPopoverProps> =
           {documentation.deprecated && (
             <Box
               style={{
-                padding: '8px',
-                backgroundColor: 'var(--amber-2)',
-                borderRadius: '4px',
-                border: '1px solid var(--amber-6)',
+                padding: `8px`,
+                backgroundColor: `var(--amber-2)`,
+                borderRadius: `4px`,
+                border: `1px solid var(--amber-6)`,
               }}
             >
               <Text size='1' color='amber'>
@@ -155,10 +157,10 @@ export const GraphQLIdentifierPopover: React.FC<GraphQLIdentifierPopoverProps> =
           {hasError && (
             <Box
               style={{
-                padding: '8px',
-                backgroundColor: 'var(--red-2)',
-                borderRadius: '4px',
-                border: '1px solid var(--red-6)',
+                padding: `8px`,
+                backgroundColor: `var(--red-2)`,
+                borderRadius: `4px`,
+                border: `1px solid var(--red-6)`,
               }}
             >
               <Text size='1' color='red'>
@@ -170,7 +172,7 @@ export const GraphQLIdentifierPopover: React.FC<GraphQLIdentifierPopoverProps> =
           {/* Schema path */}
           <Box>
             <Text size='1' color='gray'>
-              Path: {identifier.schemaPath.join(' → ')}
+              Path: {identifier.schemaPath.join(` → `)}
             </Text>
           </Box>
 

@@ -6,13 +6,13 @@ import { buildManifest, type PolenBuildManifest } from './manifest.ts'
 export type RebasePlan = RebaseOverwritePlan | RebaseCopyPlan
 
 export interface RebaseOverwritePlan {
-  changeMode: 'mutate'
+  changeMode: `mutate`
   newBasePath: string
   sourcePath: string
 }
 
 export interface RebaseCopyPlan {
-  changeMode: 'copy'
+  changeMode: `copy`
   newBasePath: string
   sourcePath: string
   targetPath: string
@@ -22,7 +22,7 @@ export const rebase = async (plan: RebasePlan): Promise<void> => {
   // 1. Validate source is a Polen build
   const manifestResult = await buildManifest.read(plan.sourcePath)
   if (Err.is(manifestResult)) {
-    throw new Error(`Polen build manifest not found at: ${Path.join(plan.sourcePath, '.polen', 'build.json')}`)
+    throw new Error(`Polen build manifest not found at: ${Path.join(plan.sourcePath, `.polen`, `build.json`)}`)
   }
   const manifest = manifestResult
 
@@ -33,7 +33,7 @@ export const rebase = async (plan: RebasePlan): Promise<void> => {
 
   // 3. Handle copy vs mutate
   let workingPath: string
-  if (plan.changeMode === 'copy') {
+  if (plan.changeMode === `copy`) {
     if (await Fs.exists(plan.targetPath)) {
       const isEmpty = await Fs.isEmptyDir(plan.targetPath)
       if (!isEmpty) {
@@ -64,8 +64,8 @@ export const rebase = async (plan: RebasePlan): Promise<void> => {
 // TODO: this is very generic, factor out to kit-temp
 const isValidUrlPath = (path: string): boolean => {
   // URL path should start with / and not contain invalid characters
-  if (!path.startsWith('/')) return false
-  if (!path.endsWith('/')) return false
+  if (!path.startsWith(`/`)) return false
+  if (!path.endsWith(`/`)) return false
 
   // Basic validation - no spaces, proper URL characters
   const urlPathRegex = /^\/[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]*\/$/
@@ -82,7 +82,7 @@ const updateHtmlFiles = async (buildPath: string, oldBasePath: string, newBasePa
 }
 
 const findHtmlFiles = async (dir: string): Promise<string[]> => {
-  return await TinyGlobby.glob('**/*.html', {
+  return await TinyGlobby.glob(`**/*.html`, {
     absolute: true,
     cwd: dir,
     onlyFiles: true,
@@ -108,10 +108,10 @@ const updateHtmlFile = async (filePath: string, oldBasePath: string, newBasePath
   } else {
     // Insert new base tag in head
     const headRegex = /<head[^>]*>/i
-    const headMatch = content.match(headRegex)
+    const headMatch = headRegex.exec(content)
 
     if (headMatch) {
-      const insertPosition = headMatch.index! + headMatch[0].length
+      const insertPosition = headMatch.index + headMatch[0].length
       updatedContent = content.slice(0, insertPosition)
         + `\n  <base href="${newBasePath}">`
         + content.slice(insertPosition)
@@ -124,7 +124,7 @@ const updateHtmlFile = async (filePath: string, oldBasePath: string, newBasePath
 }
 
 const updateManifest = async (buildPath: string, updates: Partial<PolenBuildManifest>): Promise<void> => {
-  const manifestPath = Path.join(buildPath, '.polen', 'build.json')
+  const manifestPath = Path.join(buildPath, `.polen`, `build.json`)
   const manifestResult = await buildManifest.read(buildPath)
   if (Err.is(manifestResult)) {
     throw new Error(`Polen build manifest not found at: ${manifestPath}`)

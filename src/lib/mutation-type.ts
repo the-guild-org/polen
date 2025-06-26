@@ -1,7 +1,7 @@
 export const MutationType = {
-  Create: 'create',
-  Update: 'update',
-  Delete: 'delete',
+  Create: `create`,
+  Update: `update`,
+  Delete: `delete`,
 } as const
 
 export type MutationType = typeof MutationType[keyof typeof MutationType]

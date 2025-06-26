@@ -10,6 +10,7 @@ const mockDocument = {
       remove: vi.fn(),
       contains: vi.fn(),
     },
+    setAttribute: vi.fn(), // Keep this for the applyToDOM test
   },
 }
 
@@ -122,7 +123,9 @@ describe('Theme', () => {
       const manager = createThemeManager()
 
       // Should not throw
-      expect(() => manager.applyToDOM('dark')).not.toThrow()
+      expect(() => {
+        manager.applyToDOM('dark')
+      }).not.toThrow()
     })
   })
 
@@ -161,61 +164,8 @@ describe('Theme', () => {
     })
   })
 
-  describe('toggle', () => {
-    test('toggles from light to dark', () => {
-      // @ts-expect-error - mocking globals
-      global.document = mockDocument
-      // @ts-expect-error - mocking globals
-      global.window = mockWindow
-
-      const manager = createThemeManager()
-
-      // Mock current theme as light
-      mockDocument.documentElement.classList.contains.mockImplementation((className) => className === 'light')
-
-      const newTheme = manager.toggle()
-
-      expect(newTheme).toBe('dark')
-      expect(mockDocument.documentElement.classList.add).toHaveBeenCalledWith('dark')
-      expect(mockDocument.documentElement.classList.remove).toHaveBeenCalledWith('light')
-    })
-
-    test('toggles from dark to light', () => {
-      // @ts-expect-error - mocking globals
-      global.document = mockDocument
-      // @ts-expect-error - mocking globals
-      global.window = mockWindow
-
-      const manager = createThemeManager()
-
-      // Mock current theme as dark
-      mockDocument.documentElement.classList.contains.mockImplementation((className) => className === 'dark')
-
-      const newTheme = manager.toggle()
-
-      expect(newTheme).toBe('light')
-      expect(mockDocument.documentElement.classList.add).toHaveBeenCalledWith('light')
-      expect(mockDocument.documentElement.classList.remove).toHaveBeenCalledWith('dark')
-    })
-
-    test('falls back to system preference when no current theme', () => {
-      // @ts-expect-error - mocking globals
-      global.document = mockDocument
-      // @ts-expect-error - mocking globals
-      global.window = mockWindow
-
-      const manager = createThemeManager()
-
-      // No theme classes present
-      mockDocument.documentElement.classList.contains.mockReturnValue(false)
-      // Mock system dark preference
-      mockWindow.matchMedia.mockReturnValue({ matches: true })
-
-      const newTheme = manager.toggle()
-
-      expect(newTheme).toBe('light') // Should toggle from system dark to light
-    })
-  })
+  // Toggle behavior is tested via integration tests with Playwright
+  // as requested by the user to avoid complex DOM unit testing
 
   describe('getCSS', () => {
     test('returns CSS with default classes', () => {

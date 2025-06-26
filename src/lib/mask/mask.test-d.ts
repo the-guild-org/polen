@@ -12,7 +12,7 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
   // All of these should be valid options
   const option1: Options = true
   const option2: Options = false
-  const option3: Options = ['name', 'age']
+  const option3: Options = [`name`, `age`]
   const option4: Options = []
   const option5: Options = { name: true, age: false }
   const option6: Options = {}
@@ -28,9 +28,9 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
   Ts.assertEqual<MaskType<unknown>>()(mask2)
 
   // Array options (no type parameter needed)
-  const mask3 = Mask.create(['name', 'age'])
+  const mask3 = Mask.create([`name`, `age`])
   const mask4 = Mask.create([])
-  const mask5 = Mask.create(['a', 'b', 'c'])
+  const mask5 = Mask.create([`a`, `b`, `c`])
   // Returns union type with inferred properties
   Ts.assertEqual<MaskType<{ name: any; age: any }>>()(mask3)
   Ts.assertEqual<MaskType<unknown>>()(mask4)
@@ -48,11 +48,15 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
 
 // Test 3: With specific data type, options are constrained
 {
-  type User = { name: string; age: number; email: string }
+  interface User {
+    name: string
+    age: number
+    email: string
+  }
 
   // Valid options
   const mask1 = Mask.create<User>(true)
-  const mask2 = Mask.create<User>(['name', 'age'])
+  const mask2 = Mask.create<User>([`name`, `age`])
   const mask3 = Mask.create<User>({ name: true, age: false, email: true })
 
   // With explicit type parameter, still returns union type
@@ -81,18 +85,18 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
 // Test 5: Test inference in practical scenarios
 {
   // Should infer PropertiesMask with object data type
-  const userMask = Mask.create(['name', 'email', 'password'])
+  const userMask = Mask.create([`name`, `email`, `password`])
   Ts.assertEqual<MaskType<{ name: any; email: any; password: any }>>()(userMask)
 
   // When mask is a union type, apply returns a union of possible results
-  const user1 = { name: 'John', email: 'john@example.com', password: 'secret', extra: 'data' }
+  const user1 = { name: `John`, email: `john@example.com`, password: `secret`, extra: `data` }
   const maskedUser1 = Mask.apply(user1, userMask)
   // Result is a union type that includes the properties mask result
   type MaskedUser1 = typeof maskedUser1
   // Can't use assertSub with union types
 
   // For partial data, use applyPartial
-  const user2 = { name: 'Jane', email: 'jane@example.com' }
+  const user2 = { name: `Jane`, email: `jane@example.com` }
   const maskedUser2 = Mask.applyPartial(user2, userMask)
   // Result is a union type
   type MaskedUser2 = typeof maskedUser2
@@ -100,16 +104,20 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
 
 // Test 6: Pick and omit helpers
 {
-  const pick1 = Mask.pick(['name', 'email'])
-  const omit1 = Mask.omit(['password', 'secret'])
+  const pick1 = Mask.pick([`name`, `email`])
+  const omit1 = Mask.omit([`password`, `secret`])
 
   // Infers specific property types
   Ts.assertEqual<PropertiesMask<{ name: any; email: any }>>()(pick1)
   Ts.assertEqual<PropertiesMask<{ password: any; secret: any }>>()(omit1)
 
-  type User = { name: string; email: string; password: string }
-  const pick2 = Mask.pick<User>(['name', 'email'])
-  const omit2 = Mask.omit<User>(['password'])
+  interface User {
+    name: string
+    email: string
+    password: string
+  }
+  const pick2 = Mask.pick<User>([`name`, `email`])
+  const omit2 = Mask.omit<User>([`password`])
 
   Ts.assertEqual<PropertiesMask<User>>()(pick2)
   Ts.assertEqual<PropertiesMask<User>>()(omit2)
@@ -117,8 +125,12 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
 
 // Test 7: Apply type transformations
 {
-  type User = { name: string; email: string; password: string }
-  const user: User = { name: 'John', email: 'john@example.com', password: 'secret' }
+  interface User {
+    name: string
+    email: string
+    password: string
+  }
+  const user: User = { name: `John`, email: `john@example.com`, password: `secret` }
 
   // Binary mask
   const showMask = Mask.create<User>(true)
@@ -131,7 +143,7 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
   type HiddenType = typeof hidden // Omit<User, keyof User> | undefined
 
   // Properties mask - allow mode
-  const allowMask = Mask.create<User>(['name', 'email'])
+  const allowMask = Mask.create<User>([`name`, `email`])
   const allowed = Mask.apply(user, allowMask)
   // Result is a union due to mask being a union type
   type AllowedType = typeof allowed

@@ -47,10 +47,10 @@ export async function fetchPullRequestDeployments(
       const latestStatus = statuses[0]
       const state = latestStatus?.state
 
-      console.log(`  Status: ${state || 'no status'}`)
+      console.log(`  Status: ${state || `no status`}`)
 
       // Include successful and inactive deployments
-      if (state === 'success' || state === 'inactive') {
+      if (state === `success` || state === `inactive`) {
         const shortSha = deployment.sha.substring(0, 7)
 
         deployments.push({

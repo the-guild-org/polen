@@ -21,8 +21,13 @@ const router = createBrowserRouter(routes, {
   basename: PROJECT_DATA.basePath === `/` ? undefined : PROJECT_DATA.basePath.slice(0, -1), // Remove trailing slash for React Router
 })
 
+const rootElement = document.getElementById(`app`)
+if (!rootElement) {
+  throw new Error(`Could not find app root element`)
+}
+
 ReactDomClient.hydrateRoot(
-  document,
+  rootElement,
   (
     <StrictMode>
       <RouterProvider router={router} />

@@ -72,7 +72,7 @@ export class DemoBuilder {
     basePath: string,
     outputDir?: string,
   ): Promise<void> {
-    const exampleDir = path.join('examples', example)
+    const exampleDir = path.join(`examples`, example)
 
     // Check if example exists
     try {
@@ -85,15 +85,15 @@ export class DemoBuilder {
     console.log(`  Building ${example}...`)
 
     // Build using Polen CLI
-    const args = ['build', '--base', basePath]
+    const args = [`build`, `--base`, basePath]
     if (outputDir) {
-      args.push('--outputDir', path.join(outputDir, example))
+      args.push(`--outputDir`, path.join(outputDir, example))
     }
 
     // Build with a timeout to prevent hanging
     try {
       // Use --yes to auto-confirm any npx prompts and set CI env
-      await $`cd ${exampleDir} && CI=true npx --yes polen ${args}`.timeout('5m')
+      await $`cd ${exampleDir} && CI=true npx --yes polen ${args}`.timeout(`5m`)
       console.log(`  ✅ Built ${example}`)
     } catch (error) {
       console.error(`  ❌ Failed to build ${example}:`, error)
@@ -114,17 +114,17 @@ export class DemoBuilder {
     await fs.mkdir(targetDir, { recursive: true })
 
     // Copy demos landing page if it exists
-    const landingPageSrc = path.join(sourceDir, 'index.html')
+    const landingPageSrc = path.join(sourceDir, `index.html`)
     try {
       await fs.access(landingPageSrc)
-      await fs.copyFile(landingPageSrc, path.join(targetDir, 'index.html'))
+      await fs.copyFile(landingPageSrc, path.join(targetDir, `index.html`))
       console.log(`  Copied landing page`)
     } catch {
       // Check dist-demos-home directory as alternative source
       try {
-        const altLandingPage = path.join('dist-demos-home', 'index.html')
+        const altLandingPage = path.join(`dist-demos-home`, `index.html`)
         await fs.access(altLandingPage)
-        await fs.copyFile(altLandingPage, path.join(targetDir, 'index.html'))
+        await fs.copyFile(altLandingPage, path.join(targetDir, `index.html`))
         console.log(`  Copied landing page from dist-demos-home`)
       } catch {
         console.log(`  No landing page found`)
@@ -134,7 +134,7 @@ export class DemoBuilder {
     // Copy each example's build output
     const examples = await getDemoExamples()
     for (const example of examples) {
-      const buildDir = path.join('examples', example, 'build')
+      const buildDir = path.join(`examples`, example, `build`)
       const destDir = path.join(targetDir, example)
 
       try {
@@ -173,7 +173,7 @@ export class DemoBuilder {
   ): Promise<void> {
     // Find all HTML, JS, CSS, and JSON files and update paths
     await $`find ${dir} -type f \\( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" \\) | while read file; do
-      perl -i -pe "s|${oldPath.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')}|${newPath}|g" "$file"
+      perl -i -pe "s|${oldPath.replace(/[|\\{}()[\]^$+*?.]/g, `\\$&`)}|${newPath}|g" "$file"
     done`
   }
 
@@ -262,7 +262,7 @@ export class DemoBuilder {
         const targetDir = path.join(deployDir, version)
 
         await this.deploy({
-          sourceDir: 'dist-demos',
+          sourceDir: `dist-demos`,
           targetDir,
         })
 
@@ -282,11 +282,11 @@ export class DemoBuilder {
    * Build demos for current development cycle
    */
   async buildCurrentCycle(deployDir: string): Promise<void> {
-    const { VersionHistory } = await import('../version-history/index.ts')
+    const { VersionHistory } = await import(`../version-history/index.ts`)
     const cycle = await VersionHistory.getCurrentDevelopmentCycle()
 
     if (!cycle.stable) {
-      throw new Error('No stable release found')
+      throw new Error(`No stable release found`)
     }
 
     const versions = cycle.all.map(v => v.git.tag)

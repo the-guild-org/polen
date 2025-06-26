@@ -35,7 +35,7 @@ export function createPullRequestController(
   if (context.payload.pull_request?.number) {
     // Direct PR events
     prNumber = context.payload.pull_request.number
-  } else if (context.eventName === 'issue_comment' && context.payload.issue?.['pull_request']) {
+  } else if (context.eventName === `issue_comment` && context.payload.issue?.[`pull_request`]) {
     // Issue comment on a PR (not on a regular issue)
     prNumber = context.payload.issue.number
   }
@@ -80,16 +80,16 @@ export class PullRequestController {
   async comment(options: CommentOptions): Promise<void> {
     if (!this.isActive) {
       if (options.optional) {
-        console.log('[skip] Not in a PR context, cannot create comment')
+        console.log(`[skip] Not in a PR context, cannot create comment`)
         return
       }
-      throw new Error('Not in a PR context, cannot create comment')
+      throw new Error(`Not in a PR context, cannot create comment`)
     }
 
     const { owner, repo } = this.context.repo
 
     // Use provided ID or fall back to default
-    const commentId = options.id || this.defaultCommentId || 'default'
+    const commentId = options.id || this.defaultCommentId || `default`
 
     // Search for existing comment with the ID in the body
     const commentMarker = createCommentMarker(commentId)
@@ -126,7 +126,7 @@ export class PullRequestController {
 
   async fetchDeployments(): Promise<Deployment[]> {
     if (!this.isActive) {
-      console.log('[skip] Not in a PR context, cannot fetch deployments')
+      console.log(`[skip] Not in a PR context, cannot fetch deployments`)
       return []
     }
     return await fetchPullRequestDeployments(
@@ -139,7 +139,7 @@ export class PullRequestController {
 
   async deleteComment(id: string): Promise<void> {
     if (!this.isActive) {
-      console.log('[skip] Not in a PR context, cannot delete comment')
+      console.log(`[skip] Not in a PR context, cannot delete comment`)
       return
     }
     const { owner, repo } = this.context.repo

@@ -23,7 +23,7 @@ export const scan = async (options: {
   // Scan for routes
   const routeScanResult = await FileRouter.scan({
     dir: options.dir,
-    glob: options.glob ?? '**/*.{md,mdx}',
+    glob: options.glob ?? `**/*.{md,mdx}`,
   })
 
   // Create pages with metadata (id/parentId now come from route)
@@ -53,12 +53,12 @@ export const scan = async (options: {
     // Create a virtual root node to hold all root-level pages
     const virtualRoot: Page & { id: string; parentId: null } = {
       route: {
-        id: '__virtual_root__',
+        id: `__virtual_root__`,
         parentId: null,
         file: {
           path: {
-            absolute: Path.parse(''),
-            relative: Path.parse(''),
+            absolute: Path.parse(``),
+            relative: Path.parse(``),
           },
         },
         logical: {
@@ -66,14 +66,14 @@ export const scan = async (options: {
         },
       },
       metadata: { hidden: true },
-      id: '__virtual_root__',
+      id: `__virtual_root__`,
       parentId: null,
     }
 
     // Update pages to have virtual root as parent if they don't have one
     const pagesWithVirtualRoot = pagesWithIds.map(page => ({
       ...page,
-      parentId: page.parentId || '__virtual_root__',
+      parentId: page.parentId || `__virtual_root__`,
     }))
 
     tree = Tree.fromList([virtualRoot, ...pagesWithVirtualRoot])

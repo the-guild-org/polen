@@ -7,6 +7,8 @@ import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
 import { createPageHtmlResponse } from '../create-page-html-response.tsx'
 import { injectManifestIntoHtml } from '../manifest.ts'
+import { createPolenDataInjector } from '../transformers/inject-polen-data.ts'
+import { createThemeInitInjector } from '../transformers/inject-theme-init.ts'
 import { getRoutesPaths } from './get-route-paths.ts'
 
 export const generate = async (view: ReactRouter.StaticHandler) => {
@@ -29,7 +31,7 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
       const batchHandler: Hono.Handler = async (ctx) => {
         // For SSG, we need to create a request with the base path prepended
         const url = new URL(ctx.req.raw.url)
-        const basePath = PROJECT_DATA.basePath === '/' ? '' : PROJECT_DATA.basePath.slice(0, -1)
+        const basePath = PROJECT_DATA.basePath === `/` ? `` : PROJECT_DATA.basePath.slice(0, -1)
 
         // Create a new request with the base path prepended to the pathname
         const modifiedRequest = new Request(
@@ -46,11 +48,19 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
           return staticHandlerContext
         }
 
-        // SSG uses manifest-based transformation directly
-        const transformHtml = (html: string) => {
+        // SSG needs Polen data injection, theme init, and manifest transformation
+        const polenDataInjector = createPolenDataInjector()
+        const themeInitInjector = createThemeInitInjector()
+        const transformHtml = async (html: string) => {
+          // First inject Polen data
+          html = await polenDataInjector(html, ctx)
+          // Then inject theme initialization
+          html = await themeInitInjector(html, ctx)
+          // Finally inject manifest
           return injectManifestIntoHtml(html, viteClientAssetManifest, PROJECT_DATA.basePath)
         }
-        return createPageHtmlResponse(staticHandlerContext, { transformHtml })
+        // Pass ctx for SSG to set up Polen data
+        return createPageHtmlResponse(staticHandlerContext, { transformHtml }, ctx)
       }
 
       // Register only the routes for this batch

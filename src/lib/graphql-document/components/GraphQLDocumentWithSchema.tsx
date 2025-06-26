@@ -9,7 +9,7 @@ let highlighterCache: any = null
 /**
  * GraphQL Document component that uses the schema context and handles syntax highlighting
  */
-export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'schema' | 'highlightedHtml'>> = (
+export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `schema` | `highlightedHtml`>> = (
   props,
 ) => {
   const schema = useGraphQLSchema()
@@ -23,25 +23,25 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
       try {
         // Load highlighter if not cached
         if (!highlighterCache) {
-          const { highlightCode } = await import('#lib/shiki/index')
+          const { highlightCode } = await import(`#lib/shiki/index`)
           highlighterCache = highlightCode
         }
 
         // Generate highlighted HTML
         const highlighted = await highlighterCache({
-          code: props['children'],
-          lang: 'graphql',
-          theme: 'light',
+          code: props.children,
+          lang: `graphql`,
+          theme: `light`,
         })
 
         setHighlightedHtml(highlighted)
       } catch (error) {
-        console.error('Failed to load GraphQL document highlighter:', error)
+        console.error(`Failed to load GraphQL document highlighter:`, error)
       }
     }
 
     loadHighlighter()
-  }, [props['children']])
+  }, [props.children])
 
   // Always render the same structure to avoid hydration issues
   const isInteractive = mounted && schema && highlightedHtml
@@ -52,9 +52,9 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, 'sch
       <div className='graphql-document graphql-document-static' data-testid='graphql-document'>
         <pre
           className='shiki shiki-themes github-light tokyo-night'
-          style={{ backgroundColor: 'var(--shiki-light-bg)', color: 'var(--shiki-light)' }}
+          style={{ backgroundColor: `var(--shiki-light-bg)`, color: `var(--shiki-light)` }}
         >
-          <code className="language-graphql">{props['children']}</code>
+          <code className="language-graphql">{props.children}</code>
         </pre>
       </div>
     )

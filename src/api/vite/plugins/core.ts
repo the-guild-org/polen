@@ -60,11 +60,11 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
   const jsonsuper = VitePluginJson.create({
     codec: {
       validate: superjson,
-      importPath: import.meta.resolve('#singletons/superjson'),
-      importExport: 'superjson',
+      importPath: import.meta.resolve(`#singletons/superjson`),
+      importExport: `superjson`,
     },
     filter: {
-      moduleTypes: ['jsonsuper'],
+      moduleTypes: [`jsonsuper`],
     },
   })
 
@@ -83,7 +83,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
      */
     {
       name: `polen:internal-import-alias`,
-      enforce: 'pre' as const,
+      enforce: `pre` as const,
       resolveId(id, importer) {
         // const debug = debugPolen.sub(`vite-plugin:internal-import-alias`)
 
@@ -182,15 +182,15 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
           async loader() {
             const debug = debugPolen.sub(`module-project-data`)
 
-            debug('load', { id: viProjectData.id })
+            debug(`load`, { id: viProjectData.id })
 
             const schema = await readSchema()
 
             // ━ Schema presence causes adding some navbar items
             if (schema) {
-              const schemaNavbar = navbarData.get('schema')
+              const schemaNavbar = navbarData.get(`schema`)
               schemaNavbar.length = 0 // Clear existing
-              debug('update navbar', { message: 'for schema' })
+              debug(`update navbar`, { message: `for schema` })
 
               // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
               // Without the leading slash, React Router treats paths as relative, which causes

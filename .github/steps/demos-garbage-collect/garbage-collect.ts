@@ -15,11 +15,11 @@ const Outputs = z.object({
  * Garbage collect old demo deployments
  */
 export default GitHubActions.createStep({
-  description: 'Remove old demo deployments to save space and commit changes',
+  description: `Remove old demo deployments to save space and commit changes`,
   inputs: z.object({}),
   outputs: Outputs,
   async run({ core, git }) {
-    core.info('🗑️  Starting garbage collection of old demos')
+    core.info(`🗑️  Starting garbage collection of old demos`)
 
     const pathManager = new Deployment.PathManager()
 
@@ -34,10 +34,10 @@ export default GitHubActions.createStep({
     // Combine versions to keep
     const keepVersions = [...new Set([...versionsToKeep, ...stableVersions])]
 
-    core.info(`Keeping ${keepVersions.length} versions: ${keepVersions.join(', ')}`)
+    core.info(`Keeping ${keepVersions.length} versions: ${keepVersions.join(`, `)}`)
 
     // Determine the gh-pages directory to clean
-    const ghPagesDir = process.env['WORKING_DIR'] || 'gh-pages'
+    const ghPagesDir = process.env[`WORKING_DIR`] || `gh-pages`
     core.debug(`Operating on directory: ${ghPagesDir}`)
 
     // Clean up deployments (removes everything except keepVersions)
@@ -48,33 +48,33 @@ export default GitHubActions.createStep({
     )
 
     if (result.removed.length > 0) {
-      core.info(`✅ Removed ${result.removed.length} old deployments: ${result.removed.join(', ')}`)
+      core.info(`✅ Removed ${result.removed.length} old deployments: ${result.removed.join(`, `)}`)
     } else {
-      core.info('✅ No old deployments to remove')
+      core.info(`✅ No old deployments to remove`)
     }
 
     if (result.errors.length > 0) {
-      core.error(`Errors during cleanup: ${result.errors.join(', ')}`)
+      core.error(`Errors during cleanup: ${result.errors.join(`, `)}`)
     }
 
     const committed = await git.commit({
-      message: 'chore(demos): garbage collect past development cycle deployments',
-      body: `Removed: ${result.removed.join(', ')}`,
-      cwd: 'gh-pages',
+      message: `chore(demos): garbage collect past development cycle deployments`,
+      body: `Removed: ${result.removed.join(`, `)}`,
+      cwd: `gh-pages`,
       push: true,
     })
 
     if (committed) {
-      core.info('✅ Changes committed and pushed successfully')
+      core.info(`✅ Changes committed and pushed successfully`)
     } else {
-      core.info('No changes to commit after garbage collection')
+      core.info(`No changes to commit after garbage collection`)
     }
 
     return {
       removed: result.removed,
       removed_count: result.removed.length,
       has_changes: result.removed.length > 0,
-      removed_deployments: result.removed.join(', '), // For backwards compatibility
+      removed_deployments: result.removed.join(`, `), // For backwards compatibility
       committed,
     }
   },

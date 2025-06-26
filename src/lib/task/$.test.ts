@@ -28,7 +28,7 @@ describe('create', () => {
     const report = await failing(null)
 
     expect(report.execution.output).toBeInstanceOf(Error)
-    expect((report.execution.output as Error).message).toBe('Failed')
+    expect(report.execution.output.message).toBe('Failed')
   })
 })
 

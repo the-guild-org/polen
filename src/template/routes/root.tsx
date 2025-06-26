@@ -15,6 +15,7 @@ import projectPagesCatalog from 'virtual:polen/project/data/pages-catalog.jsonsu
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { GraphQLSchemaProvider } from '../../lib/graphql-document/schema-context.tsx'
+import * as ThemeUtils from '../../lib/theme/theme.ts'
 import { CodeBlockEnhancer } from '../components/CodeBlockEnhancer.tsx'
 import { HamburgerMenu } from '../components/HamburgerMenu.tsx'
 import { Link } from '../components/Link.tsx'
@@ -27,31 +28,31 @@ import { changelog } from './changelog.tsx'
 import { index } from './index.tsx'
 import { reference } from './reference.tsx'
 
+// Create theme manager instance to read cookie
+const themeManager = ThemeUtils.createThemeManager({
+  cookieName: `polen-theme-preference`,
+})
+
+// RootDocument component removed - HTML structure handled server-side
+
 export const Component = () => {
   const schema = PROJECT_DATA.schema?.versions[0]?.after || null
 
   // Make schema available globally for MDX components
-  if (typeof window !== 'undefined' && schema) {
+  if (typeof window !== `undefined` && schema) {
     ;(window as any).__POLEN_GRAPHQL_SCHEMA__ = schema
   }
 
   return (
-    <html lang='en'>
-      <head>
-        <meta charSet='utf-8' />
-        <meta name='viewport' content='width=device-width, initial-scale=1' />
-        <title>{templateVariables.title}</title>
-      </head>
-      <body style={{ margin: 0 }}>
-        <ThemeProvider>
-          <GraphQLSchemaProvider schema={schema}>
-            <Layout />
-            <CodeBlockEnhancer />
-          </GraphQLSchemaProvider>
-        </ThemeProvider>
-        <ScrollRestoration />
-      </body>
-    </html>
+    <>
+      <ThemeProvider>
+        <GraphQLSchemaProvider schema={schema}>
+          <Layout />
+          <CodeBlockEnhancer />
+        </GraphQLSchemaProvider>
+      </ThemeProvider>
+      <ScrollRestoration />
+    </>
   )
 }
 
@@ -77,7 +78,7 @@ const Layout = () => {
   }
 
   const currentNavPathExp = getCurrentNavPathExp()
-  const isReferencePage = currentNavPathExp === '/reference'
+  const isReferencePage = currentNavPathExp === `/reference`
 
   const sidebar = (() => {
     if (isReferencePage && PROJECT_DATA.schema) {
@@ -90,12 +91,12 @@ const Layout = () => {
 
       for (const [title, types] of kindEntries) {
         sidebarItems.push({
-          type: 'ItemSection' as const,
+          type: `ItemSection` as const,
           title,
           pathExp: `reference-${title.toLowerCase()}`,
           isLinkToo: false,
           links: types.map(type => ({
-            type: 'ItemLink' as const,
+            type: `ItemLink` as const,
             title: type.name,
             pathExp: `reference/${type.name}`,
           })),
@@ -113,11 +114,11 @@ const Layout = () => {
 
   const header = (
     <Flex
-      gridArea={'header'}
+      gridArea={`header`}
       align='center'
-      gap={{ initial: '4', md: '8' }}
+      gap={{ initial: `4`, md: `8` }}
       pb='4'
-      mb={{ initial: '4', md: '8' }}
+      mb={{ initial: `4`, md: `8` }}
       style={{
         borderBottom: `1px solid var(--gray-3)`,
       }}
@@ -126,8 +127,12 @@ const Layout = () => {
       {isShowSidebar && (
         <HamburgerMenu
           isOpen={mobileMenuOpen}
-          onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-          onClose={() => setMobileMenuOpen(false)}
+          onToggle={() => {
+            setMobileMenuOpen(!mobileMenuOpen)
+          }}
+          onClose={() => {
+            setMobileMenuOpen(false)
+          }}
           sidebarData={sidebar.items}
         />
       )}
@@ -136,7 +141,7 @@ const Layout = () => {
         to='/'
         style={{ color: `inherit`, textDecoration: `none` }}
       >
-        <Box display={{ initial: 'block', md: 'block' }}>
+        <Box display={{ initial: `block`, md: `block` }}>
           <Logo src={logoSrc} title={templateVariables.title} height={30} showTitle={true} />
         </Box>
       </LinkReactRouter>
@@ -154,28 +159,28 @@ const Layout = () => {
   return (
     <Theme asChild appearance={appearance}>
       <Grid
-        width={{ initial: '100%', sm: '100%', md: 'var(--container-4)' }}
+        width={{ initial: `100%`, sm: `100%`, md: `var(--container-4)` }}
         maxWidth='100vw'
         areas={{
-          initial: "'header' 'content'",
-          sm: "'header' 'content'",
+          initial: `'header' 'content'`,
+          sm: `'header' 'content'`,
           md:
-            "'header header header header header header header header' 'sidebar sidebar . content content content content content'",
+            `'header header header header header header header header' 'sidebar sidebar . content content content content content'`,
         }}
         rows='min-content auto'
-        columns={{ initial: '1fr', sm: '1fr', md: 'repeat(8, 1fr)' }}
-        gapX={{ initial: '0', sm: '0', md: '2' }}
-        my={{ initial: '0', sm: '0', md: '8' }}
+        columns={{ initial: `1fr`, sm: `1fr`, md: `repeat(8, 1fr)` }}
+        gapX={{ initial: `0`, sm: `0`, md: `2` }}
+        my={{ initial: `0`, sm: `0`, md: `8` }}
         mx='auto'
-        px={{ initial: '4', sm: '4', md: '0' }}
-        py={{ initial: '4', sm: '4', md: '0' }}
+        px={{ initial: `4`, sm: `4`, md: `0` }}
+        py={{ initial: `4`, sm: `4`, md: `0` }}
       >
         {header}
 
         {/* Desktop Sidebar */}
         {isShowSidebar && (
           <Box
-            display={{ initial: 'none', xs: 'none', sm: 'none', md: 'block' }}
+            display={{ initial: `none`, xs: `none`, sm: `none`, md: `block` }}
             gridColumn='1 / 3'
             gridRow='2 / auto'
           >

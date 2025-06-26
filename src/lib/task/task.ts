@@ -37,7 +37,7 @@ export const create = <$Input, $Output>(
   },
 ): Task<$Input, $Output> => {
   const definition: Definition<$Input, $Output> = {
-    name: options?.name ?? (fn.name || 'anonymous'),
+    name: options?.name ?? (fn.name || `anonymous`),
     mask: options?.mask,
   }
 

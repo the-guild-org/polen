@@ -19,7 +19,7 @@ const Context = GitHubActions.ReleaseContext
  * Add demos link to commit status
  */
 export default GitHubActions.createStep({
-  description: 'Add a GitHub commit status with link to the deployed demos',
+  description: `Add a GitHub commit status with link to the deployed demos`,
   inputs: Inputs,
   outputs: Outputs,
   context: Context,
@@ -31,7 +31,7 @@ export default GitHubActions.createStep({
     const releasePayload = context.payload
     sha = releasePayload.release.target_commitish
     if (!sha) {
-      core.warning('No target commitish provided')
+      core.warning(`No target commitish provided`)
       return { link_added: false }
     }
 
@@ -41,10 +41,10 @@ export default GitHubActions.createStep({
         owner: context.repo.owner,
         repo: context.repo.repo,
         sha: sha,
-        state: 'success',
+        state: `success`,
         target_url: `https://${context.repo.owner}.github.io/polen/${tag}/`,
         description: `View demos for ${tag}`,
-        context: 'polen/demos',
+        context: `polen/demos`,
       })
 
       core.info(`✅ Successfully added demos link to commit ${sha}`)

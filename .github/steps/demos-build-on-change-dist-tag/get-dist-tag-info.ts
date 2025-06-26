@@ -22,7 +22,7 @@ const DistTagContext = z.union([
  * Extract dist-tag information and find corresponding semver version
  */
 export default GitHubActions.createStep({
-  description: 'Resolve npm dist-tags to their actual semver versions',
+  description: `Resolve npm dist-tags to their actual semver versions`,
   inputs: Inputs,
   outputs: Outputs,
   context: DistTagContext,
@@ -31,18 +31,18 @@ export default GitHubActions.createStep({
 
     // Get the tag name from push event or manual input
     let tagName: string
-    if (context.eventName === 'workflow_dispatch') {
+    if (context.eventName === `workflow_dispatch`) {
       if (!dist_tag) {
-        throw new Error('dist_tag input is required for workflow_dispatch')
+        throw new Error(`dist_tag input is required for workflow_dispatch`)
       }
       tagName = dist_tag
     } else {
       // Push event
       const { payload } = context
-      if (!payload.ref || !payload.ref.startsWith('refs/tags/')) {
-        throw new Error('Invalid ref for tag push event')
+      if (!payload.ref?.startsWith(`refs/tags/`)) {
+        throw new Error(`Invalid ref for tag push event`)
       }
-      tagName = payload.ref.replace('refs/tags/', '')
+      tagName = payload.ref.replace(`refs/tags/`, ``)
     }
 
     // Get the dist tag info

@@ -144,20 +144,20 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
         },
         pages: `pages`,
         public: {
-          root: 'public',
-          logo: 'logo.svg',
+          root: `public`,
+          logo: `logo.svg`,
         },
       },
       absolute: {
         pages: rootAbsolute(`pages`),
         build: {
-          root: buildAbsolute('.'),
+          root: buildAbsolute(`.`),
           serverEntrypoint: buildAbsolute(`app.js`),
           assets: buildAbsolute(`assets`),
         },
         public: {
-          root: publicAbsolute('.'),
-          logo: publicAbsolute('logo.svg'),
+          root: publicAbsolute(`.`),
+          logo: publicAbsolute(`logo.svg`),
         },
       },
     },

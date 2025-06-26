@@ -2,10 +2,12 @@ import type { React } from '#dep/react/index'
 import { createContext, useContext, useEffect, useState } from 'react'
 import * as Theme from '../../lib/theme/theme.ts'
 
-type ThemeAppearance = 'light' | 'dark'
+type ThemeAppearance = `light` | `dark`
+type ThemePreference = `light` | `dark` | `system`
 
 interface ThemeContextValue {
   appearance: ThemeAppearance
+  preference: ThemePreference
   toggleTheme: () => void
 }
 
@@ -13,7 +15,7 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 // Create theme manager instance
 const themeManager = Theme.createThemeManager({
-  cookieName: 'polen-theme-preference',
+  cookieName: `polen-theme-preference`,
 })
 
 // Theme CSS component to ensure consistent CSS on server and client
@@ -24,35 +26,56 @@ const ThemeCSS: React.FC = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [appearance, setAppearance] = useState<ThemeAppearance>(() => {
-    // Try to read from cookie first (works on both server and client)
-    const cookieTheme = themeManager.readCookie()
-    if (cookieTheme) {
-      return cookieTheme
+    // Initial appearance from server or browser
+    const serverTheme = globalThis.__POLEN__.serverContext.theme
+    if (serverTheme === 'system') {
+      // During SSR, default to light for system preference
+      // Client will detect actual preference on mount
+      return typeof globalThis.window !== 'undefined'
+        ? (globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : 'light'
     }
+    return serverTheme
+  })
 
-    // Fallback to system preference on client
-    if (typeof window !== 'undefined') {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark'
-      }
-    }
-
-    // Default fallback
-    return 'light'
+  const [preference, setPreference] = useState<ThemePreference>(() => {
+    // Initial preference from server-rendered theme
+    const serverTheme = globalThis.__POLEN__.serverContext.theme
+    // If server sent a specific theme (from cookie), use that as preference
+    // Otherwise it's system preference
+    return serverTheme
   })
 
   useEffect(() => {
-    // Apply current theme to DOM on mount (for client-side navigation)
-    themeManager.applyToDOM(appearance)
-  }, [appearance])
+    // Apply theme preference to DOM on mount and when it changes
+    themeManager.applyToDOM(preference)
+
+    // Update appearance based on preference
+    if (preference === 'system') {
+      const systemTheme = globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      setAppearance(systemTheme)
+
+      // Listen for system theme changes
+      const mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = (e: MediaQueryListEvent) => {
+        if (preference === 'system') {
+          setAppearance(e.matches ? 'dark' : 'light')
+        }
+      }
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    } else {
+      setAppearance(preference)
+    }
+  }, [preference])
 
   const toggleTheme = () => {
-    const newTheme = themeManager.toggle()
-    setAppearance(newTheme)
+    const newPref = themeManager.toggle() as ThemePreference
+    setPreference(newPref)
   }
 
   return (
-    <ThemeContext.Provider value={{ appearance, toggleTheme }}>
+    <ThemeContext.Provider value={{ appearance, preference, toggleTheme }}>
       <ThemeCSS />
       {children}
     </ThemeContext.Provider>
@@ -62,7 +85,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 export const useTheme = () => {
   const context = useContext(ThemeContext)
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider')
+    throw new Error(`useTheme must be used within a ThemeProvider`)
   }
   return context
 }

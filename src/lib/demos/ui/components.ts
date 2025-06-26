@@ -457,8 +457,8 @@ export const getDemoPageStyles = () => {
  */
 export const generatePrBanner = (prNumber: string): string => {
   // These should be set by the GitHub Actions environment
-  const repoOwner = process.env['GITHUB_REPOSITORY_OWNER'] || 'the-guild-org'
-  const repoName = process.env['GITHUB_REPOSITORY']?.split('/')[1] || 'polen'
+  const repoOwner = process.env[`GITHUB_REPOSITORY_OWNER`] || `the-guild-org`
+  const repoName = process.env[`GITHUB_REPOSITORY`]?.split(`/`)[1] || `polen`
 
   return `
     <div class="pr-banner">
@@ -535,7 +535,7 @@ export const generateDemoCard = (
   let previousDeployments: string[] = []
   if (prNumber && prDeployments) {
     const currentPr = prDeployments.find(pr => pr.number.toString() === prNumber)
-    if (currentPr && currentPr.previousDeployments) {
+    if (currentPr?.previousDeployments) {
       previousDeployments = currentPr.previousDeployments.filter(sha => sha !== currentSha)
     }
   }
@@ -551,10 +551,10 @@ export const generateDemoCard = (
         ? `<div class="dist-tags">
               ${
           Object.entries(distTags)
-            .sort(([a], [b]) => a === 'latest' ? -1 : b === 'latest' ? 1 : 0)
+            .sort(([a], [b]) => a === `latest` ? -1 : b === `latest` ? 1 : 0)
             .filter(([tag, version]) => {
               // If next points to the same version as latest, filter it out
-              if (tag === 'next' && distTags['latest'] === version) {
+              if (tag === `next` && distTags[`latest`] === version) {
                 return false
               }
               return true
@@ -569,22 +569,22 @@ export const generateDemoCard = (
                       </a>
                       <a href="${basePath}${version}/${name}/" class="dist-tag-version">${version}<span class="permalink-icon">¶</span></a>
                     </div>
-                  `).join('')
+                  `).join(``)
         }
             ${
           // Show "no prereleases" message if next === latest
-          distTags && distTags['next'] && distTags['next'] === distTags['latest']
-            ? '<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>'
-            : ''}
+          distTags?.[`next`] && distTags[`next`] === distTags[`latest`]
+            ? `<div class="disabled" style="margin-top: 0.75rem;"><span class="demo-link" style="width: 100%; justify-content: center;">No pre-releases since latest</span></div>`
+            : ``}
             </div>`
-        : trunkDeployments && trunkDeployments.latest
+        : trunkDeployments?.latest
         ? `<a href="${basePath}latest/${name}/" class="demo-link">
               View Latest (${trunkDeployments.latest.tag || trunkDeployments.latest.shortSha})
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>`
-        : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
+        : `<p style="color: #666; font-size: 0.875rem;">No deployments available</p>`
       // For PR deployments
       : prDeployments && prDeployments.length > 0
       ? currentSha
@@ -617,8 +617,8 @@ export const generateDemoCard = (
         }<span class="permalink-icon">¶</span></a>
               </div>
             </div>`
-        : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'
-      : '<p style="color: #666; font-size: 0.875rem;">No deployments available</p>'}
+        : `<p style="color: #666; font-size: 0.875rem;">No deployments available</p>`
+      : `<p style="color: #666; font-size: 0.875rem;">No deployments available</p>`}
             <div class="previous-versions">
               <h3>Previous Versions</h3>
               ${
@@ -631,20 +631,20 @@ export const generateDemoCard = (
             // For semver deployments, tag and sha are the same, so just show once
             const label = deployment.tag || deployment.shortSha
             return `<a href="${basePath}${deployment.sha}/${name}/" class="commit-link">${label}</a>`
-          }).join('')
+          }).join(``)
         }
               </div>`
-        : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'
+        : `<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>`
       // For PR deployments, use the existing logic
       : previousDeployments.length > 0
       ? `<div class="commit-links">
                 ${
         previousDeployments.map(sha => `
                   <a href="${basePath}${sha}/${name}/" class="commit-link">${sha.substring(0, 7)}</a>
-                `).join('')
+                `).join(``)
       }
               </div>`
-      : '<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>'}
+      : `<p style="color: #666; font-size: 0.875rem; margin: 0;">(none)</p>`}
             </div>
           </div>
         </div>`
@@ -666,8 +666,8 @@ export const generateDemosGrid = (data: LandingPageData): string => {
   }
 
   const demoCards = allDemos
-    .map(name => generateDemoCard(name, demoMetadata[name] || { title: name, description: '', enabled: true }, data))
-    .join('')
+    .map(name => generateDemoCard(name, demoMetadata[name] || { title: name, description: ``, enabled: true }, data))
+    .join(``)
 
   return `
     <div class="demos-grid">
@@ -682,46 +682,46 @@ export const generateDemosGrid = (data: LandingPageData): string => {
 export const generateVersionInfo = (data: LandingPageData): string => {
   const { trunkDeployments, distTags } = data
 
-  if (!trunkDeployments) return ''
+  if (!trunkDeployments) return ``
 
-  const basePath = data.config.basePath || '/'
+  const basePath = data.config.basePath || `/`
 
   const distTagsHtml = distTags
     ? Object.entries(distTags)
       .map(([tag, version]) => {
-        const className = tag === 'latest'
-          ? 'version-tag latest'
-          : tag === 'next'
-          ? 'version-tag next'
-          : 'version-tag'
+        const className = tag === `latest`
+          ? `version-tag latest`
+          : tag === `next`
+          ? `version-tag next`
+          : `version-tag`
         return `<a href="${basePath}${version}/" class="${className}">${tag}: ${version}</a>`
       })
-      .join('')
-    : ''
+      .join(``)
+    : ``
 
   const previousVersionsHtml = trunkDeployments.previous && trunkDeployments.previous.length > 0
     ? trunkDeployments.previous
       .slice(0, 10) // Limit to recent versions
       .map(version => `<a href="${basePath}${version.tag}/" class="version-tag">${version.tag}</a>`)
-      .join('')
-    : ''
+      .join(``)
+    : ``
 
   // Only show the version info section if there's content to display
   if (!distTagsHtml && !previousVersionsHtml) {
-    return ''
+    return ``
   }
 
   return `
     <div class="version-info">
       <h3>Available Versions</h3>
-      ${distTagsHtml ? `<div class="version-list">${distTagsHtml}</div>` : ''}
+      ${distTagsHtml ? `<div class="version-list">${distTagsHtml}</div>` : ``}
       ${
     previousVersionsHtml
       ? `
         <h4 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: #666;">Previous Versions:</h4>
         <div class="version-list">${previousVersionsHtml}</div>
       `
-      : ''
+      : ``
   }
     </div>
   `

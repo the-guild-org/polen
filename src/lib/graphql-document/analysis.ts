@@ -36,7 +36,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
         noLocation: false, // We need location info for positioning
       })
     } catch (error) {
-      throw new Error(`Failed to parse GraphQL document: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw new Error(`Failed to parse GraphQL document: ${error instanceof Error ? error.message : `Unknown error`}`)
     }
   }
 
@@ -56,7 +56,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
     const schema = config.schema
 
     // Context tracking during traversal
-    let currentOperationType: 'query' | 'mutation' | 'subscription' | undefined
+    let currentOperationType: `query` | `mutation` | `subscription` | undefined
     let currentOperationName: string | undefined
     let currentFragment: string | undefined
     let selectionPath: string[] = []
@@ -81,23 +81,23 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
 
           // Set the root type based on operation type
           if (schema) {
-            if (node.operation === 'query' && schema.getQueryType()) {
+            if (node.operation === `query` && schema.getQueryType()) {
               parentTypes = [schema.getQueryType()!.name]
-            } else if (node.operation === 'mutation' && schema.getMutationType()) {
+            } else if (node.operation === `mutation` && schema.getMutationType()) {
               parentTypes = [schema.getMutationType()!.name]
-            } else if (node.operation === 'subscription' && schema.getSubscriptionType()) {
+            } else if (node.operation === `subscription` && schema.getSubscriptionType()) {
               parentTypes = [schema.getSubscriptionType()!.name]
             } else {
               parentTypes = []
             }
           } else {
             // Fallback to default root type names
-            if (node.operation === 'query') {
-              parentTypes = ['Query']
-            } else if (node.operation === 'mutation') {
-              parentTypes = ['Mutation']
-            } else if (node.operation === 'subscription') {
-              parentTypes = ['Subscription']
+            if (node.operation === `query`) {
+              parentTypes = [`Query`]
+            } else if (node.operation === `mutation`) {
+              parentTypes = [`Mutation`]
+            } else if (node.operation === `subscription`) {
+              parentTypes = [`Subscription`]
             } else {
               parentTypes = []
             }
@@ -119,7 +119,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
           // Add fragment name as identifier
           this.addIdentifier(identifiers, {
             name: node.name.value,
-            kind: 'Fragment',
+            kind: `Fragment`,
             position: this.getPosition(node.name),
             schemaPath: [node.name.value],
             context: createContext(),
@@ -128,7 +128,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
           // Add type condition as identifier
           this.addIdentifier(identifiers, {
             name: node.typeCondition.name.value,
-            kind: 'Type',
+            kind: `Type`,
             position: this.getPosition(node.typeCondition.name),
             schemaPath: [node.typeCondition.name.value],
             context: createContext(),
@@ -149,7 +149,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
 
           this.addIdentifier(identifiers, {
             name: fieldName,
-            kind: 'Field',
+            kind: `Field`,
             position: this.getPosition(node.name),
             parentType,
             schemaPath: parentType ? [parentType, fieldName] : [fieldName],
@@ -161,7 +161,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
           let pushedType = false
           if (schema && parentType) {
             const type = schema.getType(parentType)
-            if (type && ('getFields' in type)) {
+            if (type && (`getFields` in type)) {
               const fields = (type as any).getFields()
               const field = fields[fieldName]
               if (field) {
@@ -203,7 +203,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
 
           this.addIdentifier(identifiers, {
             name: argName,
-            kind: 'Argument',
+            kind: `Argument`,
             position: this.getPosition(node.name),
             parentType,
             schemaPath: parentType && fieldName
@@ -218,7 +218,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
         enter: (node: VariableDefinitionNode) => {
           this.addIdentifier(identifiers, {
             name: node.variable.name.value,
-            kind: 'Variable',
+            kind: `Variable`,
             position: this.getPosition(node.variable.name),
             schemaPath: [node.variable.name.value],
             context: createContext(),
@@ -229,7 +229,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
           if (typeName) {
             this.addIdentifier(identifiers, {
               name: typeName,
-              kind: 'Type',
+              kind: `Type`,
               position: this.getTypePosition(node.type),
               schemaPath: [typeName],
               context: createContext(),
@@ -242,7 +242,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
         enter: (node: DirectiveNode) => {
           this.addIdentifier(identifiers, {
             name: node.name.value,
-            kind: 'Directive',
+            kind: `Directive`,
             position: this.getPosition(node.name),
             schemaPath: [node.name.value],
             context: createContext(),
@@ -275,10 +275,10 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
       }
     } catch (error) {
       return {
-        ast: { kind: 'Document', definitions: [] } as DocumentNode,
+        ast: { kind: `Document`, definitions: [] } as DocumentNode,
         identifiers: this.createIdentifierMap([], [{
-          message: error instanceof Error ? error.message : 'Unknown parsing error',
-          severity: 'error',
+          message: error instanceof Error ? error.message : `Unknown parsing error`,
+          severity: `error`,
         }]),
         isValid: false,
         errors: [],
@@ -292,7 +292,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
     identifiers.push(identifier)
   }
 
-  private getPosition(node: ASTNode): Identifier['position'] {
+  private getPosition(node: ASTNode): Identifier[`position`] {
     const loc = node.loc
     if (!loc) {
       return { start: 0, end: 0, line: 1, column: 1 }
@@ -306,7 +306,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
     }
   }
 
-  private getTypePosition(node: ASTNode): Identifier['position'] {
+  private getTypePosition(node: ASTNode): Identifier[`position`] {
     // For type nodes, we need to extract the base type name position
     // This is a simplified implementation
     return this.getPosition(node)
@@ -314,10 +314,10 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
 
   private extractTypeName(typeNode: any): string | null {
     // Recursively extract the base type name from wrapped types (NonNull, List)
-    if (typeNode.kind === 'NamedType') {
+    if (typeNode.kind === `NamedType`) {
       return typeNode.name.value
     }
-    if (typeNode.kind === 'NonNullType' || typeNode.kind === 'ListType') {
+    if (typeNode.kind === `NonNullType` || typeNode.kind === `ListType`) {
       return this.extractTypeName(typeNode.type)
     }
     return null
@@ -327,37 +327,37 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
     // This is only used as a fallback when no schema is available
     // Common patterns for object-returning fields
     const objectFieldPatterns = [
-      'user',
-      'users',
-      'post',
-      'posts',
-      'comment',
-      'comments',
-      'profile',
-      'settings',
-      'organization',
-      'project',
-      'target',
-      'member',
-      'members',
-      'node',
-      'nodes',
-      'edge',
-      'edges',
+      `user`,
+      `users`,
+      `post`,
+      `posts`,
+      `comment`,
+      `comments`,
+      `profile`,
+      `settings`,
+      `organization`,
+      `project`,
+      `target`,
+      `member`,
+      `members`,
+      `node`,
+      `nodes`,
+      `edge`,
+      `edges`,
     ]
     return objectFieldPatterns.some(pattern => fieldName.toLowerCase().includes(pattern))
   }
 
   private inferReturnType(parentType: string | undefined, fieldName: string): string {
     // Simplified type inference - in real implementation would use schema
-    if (fieldName === 'user') return 'User'
-    if (fieldName === 'posts') return 'Post'
-    if (fieldName === 'comments') return 'Comment'
+    if (fieldName === `user`) return `User`
+    if (fieldName === `posts`) return `Post`
+    if (fieldName === `comments`) return `Comment`
     return fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
   }
 
   private createContext(
-    operationType?: 'query' | 'mutation' | 'subscription',
+    operationType?: `query` | `mutation` | `subscription`,
     operationName?: string,
     inFragment?: string,
     selectionPath: string[] = [],
@@ -372,7 +372,7 @@ export class DefaultGraphQLAnalyzer implements GraphQLAnalyzer {
 
   private createIdentifierMap(identifiers: Identifier[], errors: AnalysisError[]): IdentifierMap {
     const byPosition = new Map<number, Identifier>()
-    const byKind = new Map<Identifier['kind'], Identifier[]>()
+    const byKind = new Map<Identifier[`kind`], Identifier[]>()
 
     for (const identifier of identifiers) {
       // Index by position

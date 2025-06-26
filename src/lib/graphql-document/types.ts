@@ -7,7 +7,7 @@ export interface Identifier {
   /** The name of the identifier (e.g., 'User', 'name', 'id') */
   name: string
   /** The kind of GraphQL construct this identifier represents */
-  kind: 'Type' | 'Field' | 'Argument' | 'Directive' | 'Variable' | 'Fragment'
+  kind: `Type` | `Field` | `Argument` | `Directive` | `Variable` | `Fragment`
   /** Position information in the source document */
   position: {
     /** Character offset from start of document */
@@ -32,7 +32,7 @@ export interface Identifier {
  */
 export interface IdentifierContext {
   /** The operation type if this identifier is within an operation */
-  operationType?: 'query' | 'mutation' | 'subscription'
+  operationType?: `query` | `mutation` | `subscription`
   /** The operation name if this identifier is within a named operation */
   operationName?: string
   /** Whether this identifier is in a fragment definition */
@@ -48,7 +48,7 @@ export interface IdentifierMap {
   /** Quick lookup by character position */
   byPosition: Map<number, Identifier>
   /** Grouped by identifier kind for easy filtering */
-  byKind: Map<Identifier['kind'], Identifier[]>
+  byKind: Map<Identifier[`kind`], Identifier[]>
   /** Any validation errors found during analysis */
   errors: AnalysisError[]
   /** All identifiers as a flat array */
@@ -64,7 +64,7 @@ export interface AnalysisError {
   /** Human-readable error message */
   message: string
   /** Error severity level */
-  severity: 'error' | 'warning' | 'info'
+  severity: `error` | `warning` | `info`
   /** Position in the document where the error occurred */
   position?: {
     line: number

@@ -17,7 +17,7 @@ import remarkGfm from 'remark-gfm'
 const debug = debugPolen.sub(`vite-pages`)
 
 export const viProjectRoutes = polenVirtual([`project`, `routes.jsx`], { allowPluginProcessing: true })
-export const viProjectPagesCatalog = polenVirtual([`project`, `data`, 'pages-catalog.jsonsuper'], {
+export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-catalog.jsonsuper`], {
   allowPluginProcessing: true,
 })
 
@@ -110,7 +110,7 @@ export const Pages = ({
                 light: `github-light`,
                 dark: `tokyo-night`,
               },
-              defaultColor: 'light',
+              defaultColor: `light`,
               cssVariablePrefix: `--shiki-`,
               transformers: [
                 // Line numbers will be handled via CSS
@@ -132,10 +132,10 @@ export const Pages = ({
         server.watcher.add(config.paths.project.absolute.pages)
 
         // Handle file additions and deletions
-        const handleFileStructureChange = async (file: string, event: 'add' | 'unlink') => {
+        const handleFileStructureChange = async (file: string, event: `add` | `unlink`) => {
           if (!Content.isPageFile(file, config.paths.project.absolute.pages)) return
 
-          debug(`Page file ${event === 'add' ? 'added' : 'deleted'}:`, file)
+          debug(`Page file ${event === `add` ? `added` : `deleted`}:`, file)
 
           // Clear cache and rescan
           scanPages.clear()
@@ -148,11 +148,11 @@ export const Pages = ({
           reportDiagnostics(newScanResult.diagnostics)
 
           // Trigger full reload to ensure routes are updated
-          server.ws.send({ type: 'full-reload' })
+          server.ws.send({ type: `full-reload` })
         }
 
-        server.watcher.on('add', (file) => handleFileStructureChange(file, 'add'))
-        server.watcher.on('unlink', (file) => handleFileStructureChange(file, 'unlink'))
+        server.watcher.on(`add`, (file) => handleFileStructureChange(file, `add`))
+        server.watcher.on(`unlink`, (file) => handleFileStructureChange(file, `unlink`))
       },
 
       // Hot update handling for existing files
@@ -219,13 +219,13 @@ export const Pages = ({
           //
 
           if (navbarData) {
-            const navbarPages = navbarData.get('pages')
+            const navbarPages = navbarData.get(`pages`)
 
             navbarPages.length = 0 // Clear existing
 
             const data = createNavbar(scanResult.list)
 
-            debug('update navbar', data)
+            debug(`update navbar`, data)
 
             navbarPages.push(...data)
           }
@@ -252,7 +252,7 @@ export const Pages = ({
     },
     // Plugin 3: Virtual Module for React Router Routes
     {
-      name: 'polen:routes',
+      name: `polen:routes`,
       resolveId(id) {
         if (id === viProjectRoutes.id) {
           return viProjectRoutes.resolved
@@ -274,7 +274,7 @@ export const Pages = ({
           // Generate the module code
           return {
             code,
-            moduleType: 'js',
+            moduleType: `js`,
           }
         },
       },

@@ -29,7 +29,7 @@ export class DemoPageRenderer {
       pageTitle = `${pageTitle} - PR #${prNumber} Preview`
     }
 
-    const prBannerHtml = prNumber ? generatePrBanner(prNumber) : ''
+    const prBannerHtml = prNumber ? generatePrBanner(prNumber) : ``
     const headerHtml = generateHeader(data)
     const demosGridHtml = generateDemosGrid(data)
     const versionInfoHtml = generateVersionInfo(data)
@@ -42,7 +42,7 @@ export class DemoPageRenderer {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${pageTitle}</title>
   <meta name="description" content="${config.ui.branding.description}">
-  ${config.ui.branding.logoUrl ? `<link rel="icon" href="${config.ui.branding.logoUrl}">` : ''}
+  ${config.ui.branding.logoUrl ? `<link rel="icon" href="${config.ui.branding.logoUrl}">` : ``}
   <style>
     ${getDemoPageStyles()}
   </style>
@@ -104,9 +104,9 @@ export class DemoPageRenderer {
     const { mode } = data.config
 
     switch (mode) {
-      case 'development':
+      case `development`:
         return this.renderDevPage(data)
-      case 'production':
+      case `production`:
       default:
         return this.renderMainLandingPage(data)
     }

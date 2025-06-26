@@ -8,24 +8,15 @@
 
 import {
   getNamedType,
-  type GraphQLEnumType,
   type GraphQLField,
   type GraphQLInputField,
-  type GraphQLInputObjectType,
-  type GraphQLInterfaceType,
-  type GraphQLObjectType,
-  type GraphQLScalarType,
   type GraphQLSchema,
   type GraphQLType,
-  type GraphQLUnionType,
-  isEnumType,
   isInputObjectType,
   isInterfaceType,
   isListType,
   isNonNullType,
   isObjectType,
-  isScalarType,
-  isUnionType,
 } from 'graphql'
 import { analyze } from './analysis.ts'
 import type { Identifier } from './types.ts'
@@ -119,39 +110,39 @@ export class PolenSchemaResolver implements SchemaResolver {
    * Resolve an identifier against the schema
    */
   resolveIdentifier(identifier: Identifier): SchemaResolution | null {
-    const basePath = this.routeConfig.basePath || '/reference'
+    const basePath = this.routeConfig.basePath || `/reference`
 
     switch (identifier.kind) {
-      case 'Type':
+      case `Type`:
         return this.resolveType(identifier, basePath)
 
-      case 'Field':
+      case `Field`:
         return this.resolveField(identifier, basePath)
 
-      case 'Argument':
+      case `Argument`:
         return this.resolveArgument(identifier, basePath)
 
-      case 'Variable':
+      case `Variable`:
         // Variables don't have schema resolution
         return {
           exists: true,
           referenceUrl: `${basePath}#variables`,
           documentation: {
-            typeInfo: 'Variable',
+            typeInfo: `Variable`,
             description: `Query variable: $${identifier.name}`,
           },
         }
 
-      case 'Directive':
+      case `Directive`:
         return this.resolveDirective(identifier, basePath)
 
-      case 'Fragment':
+      case `Fragment`:
         // Fragments don't have schema resolution
         return {
           exists: true,
           referenceUrl: `${basePath}#fragments`,
           documentation: {
-            typeInfo: 'Fragment',
+            typeInfo: `Fragment`,
             description: `Fragment: ${identifier.name}`,
           },
         }
@@ -179,7 +170,7 @@ export class PolenSchemaResolver implements SchemaResolver {
       return {
         typeInfo: this.getTypeSignature(type),
         description: type.description || undefined,
-        deprecated: 'deprecationReason' in type
+        deprecated: `deprecationReason` in type
           ? {
             reason: (type as any).deprecationReason,
           }
@@ -206,7 +197,7 @@ export class PolenSchemaResolver implements SchemaResolver {
     // Argument-level documentation
     if (fieldName && argName && schemaPath.length === 3) {
       const field = this.getFieldFromType(type, fieldName)
-      if (!field || !('args' in field)) return null
+      if (!field || !(`args` in field)) return null
 
       const arg = field.args.find((a: any) => a.name === argName)
       if (!arg) return null
@@ -227,7 +218,7 @@ export class PolenSchemaResolver implements SchemaResolver {
    * Generate a reference URL for a schema path
    */
   generateReferenceLink(schemaPath: string[]): string {
-    const basePath = this.routeConfig.basePath || '/reference'
+    const basePath = this.routeConfig.basePath || `/reference`
     const includeFragments = this.routeConfig.includeFragments !== false
 
     if (schemaPath.length === 0) return basePath
@@ -241,13 +232,13 @@ export class PolenSchemaResolver implements SchemaResolver {
 
     // Field reference
     if (fieldName && schemaPath.length === 2) {
-      const fragment = includeFragments ? `#${fieldName}` : ''
+      const fragment = includeFragments ? `#${fieldName}` : ``
       return `${basePath}/${typeName}${fragment}`
     }
 
     // Argument reference
     if (fieldName && argName && schemaPath.length === 3) {
-      const fragment = includeFragments ? `#${fieldName}-${argName}` : ''
+      const fragment = includeFragments ? `#${fieldName}-${argName}` : ``
       return `${basePath}/${typeName}${fragment}`
     }
 
@@ -266,7 +257,7 @@ export class PolenSchemaResolver implements SchemaResolver {
    */
   getAllTypes(): string[] {
     return Object.keys(this.schema.getTypeMap())
-      .filter(name => !name.startsWith('__')) // Filter out introspection types
+      .filter(name => !name.startsWith(`__`)) // Filter out introspection types
   }
 
   // Private helper methods
@@ -353,7 +344,7 @@ export class PolenSchemaResolver implements SchemaResolver {
     }
 
     const field = this.getFieldFromType(parentType, fieldName)
-    if (!field || !('args' in field)) {
+    if (!field || !(`args` in field)) {
       return {
         exists: false,
         referenceUrl: `${basePath}/${typeName}#${fieldName}-${identifier.name}`,
@@ -385,7 +376,7 @@ export class PolenSchemaResolver implements SchemaResolver {
       referenceUrl: `${basePath}/directives#${identifier.name}`,
       documentation: directive
         ? {
-          typeInfo: 'Directive',
+          typeInfo: `Directive`,
           description: directive.description || undefined,
         }
         : undefined,
@@ -436,11 +427,11 @@ export interface SchemaAwareAnalysisResult {
   /** Schema resolutions for all identifiers */
   resolutions: Map<string, SchemaResolution>
   /** Validation errors from schema checking */
-  schemaErrors: Array<{
+  schemaErrors: {
     identifier: Identifier
     message: string
-    severity: 'error' | 'warning'
-  }>
+    severity: `error` | `warning`
+  }[]
 }
 
 /**
@@ -459,7 +450,7 @@ export const analyzeWithSchema = (
 
   const resolver = createPolenSchemaResolver(schema, routeConfig)
   const resolutions = new Map<string, SchemaResolution>()
-  const schemaErrors: SchemaAwareAnalysisResult['schemaErrors'] = []
+  const schemaErrors: SchemaAwareAnalysisResult[`schemaErrors`] = []
 
   // Resolve all identifiers against schema
   for (const identifier of analysis.identifiers.all) {
@@ -470,11 +461,11 @@ export const analyzeWithSchema = (
       resolutions.set(key, resolution)
 
       // Add validation errors for non-existent identifiers
-      if (!resolution.exists && (identifier.kind === 'Type' || identifier.kind === 'Field')) {
+      if (!resolution.exists && (identifier.kind === `Type` || identifier.kind === `Field`)) {
         schemaErrors.push({
           identifier,
           message: `${identifier.kind} "${identifier.name}" does not exist in schema`,
-          severity: 'error',
+          severity: `error`,
         })
       }
 
@@ -483,7 +474,7 @@ export const analyzeWithSchema = (
         schemaErrors.push({
           identifier,
           message: `${identifier.kind} "${identifier.name}" is deprecated: ${resolution.deprecated.reason}`,
-          severity: 'warning',
+          severity: `warning`,
         })
       }
     }

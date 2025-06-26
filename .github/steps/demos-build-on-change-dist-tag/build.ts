@@ -12,7 +12,7 @@ const Inputs = z.object({
 })
 
 export default GitHubActions.createStep({
-  description: 'Copy content from semver deployment to dist-tag directory',
+  description: `Copy content from semver deployment to dist-tag directory`,
   inputs: Inputs,
   async run({ inputs, core }) {
     const { tag_name: distTag, semver_tag: semverTag } = inputs.previous
@@ -40,7 +40,7 @@ export default GitHubActions.createStep({
 
     // Copy and rebase in one operation using Polen's rebasing API
     await Api.Static.rebase({
-      changeMode: 'copy',
+      changeMode: `copy`,
       sourcePath: semverPath,
       targetPath: distTagPath,
       newBasePath: `/polen/${distTag}/`,

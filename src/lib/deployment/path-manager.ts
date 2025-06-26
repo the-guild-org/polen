@@ -8,7 +8,7 @@ import { join } from 'node:path'
 export interface RedirectConfig {
   from: string
   to: string
-  type?: 'html' | 'meta'
+  type?: `html` | `meta`
 }
 
 /**
@@ -23,7 +23,7 @@ export class PathManager {
   async generateRedirects(redirects: RedirectConfig[], outputDir: string): Promise<void> {
     try {
       for (const redirect of redirects) {
-        const redirectPath = join(outputDir, redirect.from, 'index.html')
+        const redirectPath = join(outputDir, redirect.from, `index.html`)
         const redirectDir = join(outputDir, redirect.from)
 
         await fs.mkdir(redirectDir, { recursive: true })
@@ -42,7 +42,7 @@ export class PathManager {
   async createDemoRedirects(
     examples: string[],
     outputDir: string,
-    targetBasePath: string = '/latest/',
+    targetBasePath = `/latest/`,
   ): Promise<void> {
     const redirects: RedirectConfig[] = examples.map(example => ({
       from: example,
@@ -73,10 +73,10 @@ export class PathManager {
 
     try {
       // Check for index.html
-      const indexPath = join(deploymentDir, 'index.html')
+      const indexPath = join(deploymentDir, `index.html`)
       await fs.access(indexPath)
     } catch {
-      warnings.push('No index.html found in deployment root')
+      warnings.push(`No index.html found in deployment root`)
     }
 
     return {
@@ -92,7 +92,7 @@ export class PathManager {
   async cleanupOldDeployments(
     parentDir: string,
     keepVersions: string[],
-    dryRun: boolean = false,
+    dryRun = false,
   ): Promise<{ removed: string[]; kept: string[]; errors: string[] }> {
     const removed: string[] = []
     const kept: string[] = []

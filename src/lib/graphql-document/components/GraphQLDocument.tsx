@@ -58,7 +58,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     plain = false,
     onNavigate,
     validate = true,
-    className = '',
+    className = ``,
   } = options
 
   const navigate = useNavigate()
@@ -78,14 +78,14 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   // Handle escape key to unpin all
   ReactHooks.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === `Escape`) {
         tooltipState.unpinAll()
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener(`keydown`, handleKeyDown)
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener(`keydown`, handleKeyDown)
     }
   }, [tooltipState])
 
@@ -136,9 +136,9 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     }
 
     // Get the code element within the container
-    const codeElement = containerRef.current.querySelector('pre.shiki code')
-      || containerRef.current.querySelector('pre code')
-      || containerRef.current.querySelector('code')
+    const codeElement = containerRef.current.querySelector(`pre.shiki code`)
+      || containerRef.current.querySelector(`pre code`)
+      || containerRef.current.querySelector(`code`)
     if (!codeElement) {
       // No code element found - skip
       return
@@ -147,13 +147,13 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     // Prepare the code block (wrap identifiers)
     const identifiers = Array.from(analysisResult.identifiers.byPosition.values())
     // Prepare code block with identifiers
-    positionCalculator.prepareCodeBlock(codeElement as Element, identifiers)
+    positionCalculator.prepareCodeBlock(codeElement, identifiers)
 
     // Get positions after DOM update
     requestAnimationFrame(() => {
       // Pass containerRef.current as the reference element for positioning
       if (containerRef.current) {
-        const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
+        const newPositions = positionCalculator.getIdentifierPositions(codeElement, containerRef.current)
         // Position calculation complete
         setPositions(newPositions)
         setIsReady(true)
@@ -169,20 +169,20 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     const handleResize = () => {
       clearTimeout(resizeTimer)
       resizeTimer = setTimeout(() => {
-        const codeElement = containerRef.current?.querySelector('pre.shiki code')
-          || containerRef.current?.querySelector('pre code')
-          || containerRef.current?.querySelector('code')
+        const codeElement = containerRef.current?.querySelector(`pre.shiki code`)
+          || containerRef.current?.querySelector(`pre code`)
+          || containerRef.current?.querySelector(`code`)
         if (codeElement && containerRef.current) {
-          const newPositions = positionCalculator.getIdentifierPositions(codeElement as Element, containerRef.current)
+          const newPositions = positionCalculator.getIdentifierPositions(codeElement, containerRef.current)
           setPositions(newPositions)
         }
       }, 100) // Debounce resize events
     }
 
-    window.addEventListener('resize', handleResize)
+    window.addEventListener(`resize`, handleResize)
     return () => {
       clearTimeout(resizeTimer)
-      window.removeEventListener('resize', handleResize)
+      window.removeEventListener(`resize`, handleResize)
     }
   }, [positionCalculator, plain])
 
@@ -197,8 +197,8 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
       <style dangerouslySetInnerHTML={{ __html: graphqlDocumentStyles }} />
       <div
         ref={containerRef}
-        className={`graphql-document ${className} ${debug ? 'graphql-debug-mode' : ''} ${
-          !isReady && !plain ? 'graphql-loading' : ''
+        className={`graphql-document ${className} ${debug ? `graphql-debug-mode` : ``} ${
+          !isReady && !plain ? `graphql-loading` : ``
         }`}
       >
         {/* Base syntax highlighting */}
@@ -219,7 +219,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
 
         {/* Interactive overlay layer */}
         {!plain && isReady && (
-          <div className='graphql-interaction-layer' style={{ pointerEvents: 'none' }}>
+          <div className='graphql-interaction-layer' style={{ pointerEvents: `none` }}>
             {Array.from(positions.entries()).map(([id, { position, identifier }]) => {
               const startPos = identifier.position.start
               const resolution = resolutions.get(startPos)
@@ -236,10 +236,18 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
                   debug={debug}
                   isOpen={tooltipState.isOpen(id)}
                   isPinned={tooltipState.isPinned(id)}
-                  onHoverStart={() => tooltipState.onHoverStart(id)}
-                  onHoverEnd={() => tooltipState.onHoverEnd(id)}
-                  onTogglePin={() => tooltipState.onTogglePin(id)}
-                  onTooltipHover={() => tooltipState.onTooltipHover(id)}
+                  onHoverStart={() => {
+                    tooltipState.onHoverStart(id)
+                  }}
+                  onHoverEnd={() => {
+                    tooltipState.onHoverEnd(id)
+                  }}
+                  onTogglePin={() => {
+                    tooltipState.onTogglePin(id)
+                  }}
+                  onTooltipHover={() => {
+                    tooltipState.onTooltipHover(id)
+                  }}
                 />
               )
             })}

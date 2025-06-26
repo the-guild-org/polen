@@ -20,21 +20,21 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = `hidden`
     } else {
-      document.body.style.overflow = ''
+      document.body.style.overflow = ``
     }
 
     // Cleanup
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = ``
     }
   }, [isOpen])
 
   return (
     <>
       {/* Mobile menu button - show on mobile/tablet, hide on desktop */}
-      <Box display={{ initial: 'block', xs: 'block', sm: 'block', md: 'none', lg: 'none', xl: 'none' }}>
+      <Box display={{ initial: `block`, xs: `block`, sm: `block`, md: `none`, lg: `none`, xl: `none` }}>
         <IconButton
           size='2'
           variant='ghost'
@@ -53,11 +53,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             position='fixed'
             inset='0'
             style={{
-              backgroundColor: 'var(--black-a9)',
+              backgroundColor: `var(--black-a9)`,
               zIndex: 50,
             }}
             onClick={onClose}
-            display={{ initial: 'block', xs: 'block', sm: 'block', md: 'none', lg: 'none', xl: 'none' }}
+            display={{ initial: `block`, xs: `block`, sm: `block`, md: `none`, lg: `none`, xl: `none` }}
           />
 
           {/* Drawer */}
@@ -68,13 +68,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             bottom='0'
             width='280px'
             style={{
-              backgroundColor: 'var(--color-background)',
-              boxShadow: 'var(--shadow-6)',
+              backgroundColor: `var(--color-background)`,
+              boxShadow: `var(--shadow-6)`,
               zIndex: 100,
-              overflowY: 'auto',
+              overflowY: `auto`,
             }}
             p='4'
-            display={{ initial: 'block', xs: 'block', sm: 'block', md: 'none', lg: 'none', xl: 'none' }}
+            display={{ initial: `block`, xs: `block`, sm: `block`, md: `none`, lg: `none`, xl: `none` }}
           >
             <Flex justify='between' align='center' mb='4'>
               <Text size='5' weight='bold'>Navigation</Text>

@@ -12,7 +12,7 @@ export interface Options {
   basePath?: string
   prNumber?: string
   currentSha?: string
-  mode?: 'production' | 'development'
+  mode?: `production` | `development`
   prDeployments?: string | any[]
   trunkDeployments?: string | any
   distTags?: string | Record<string, string>
@@ -25,7 +25,7 @@ export interface CatalogOptions {
   basePath?: string
   prNumber?: string
   currentSha?: string
-  mode?: 'production' | 'development'
+  mode?: `production` | `development`
   prDeployments?: string | any[]
   catalog: VersionCatalog
   outputDir?: string
@@ -82,13 +82,13 @@ export async function buildDemosHome(options?: Options): Promise<void>
  */
 export async function buildDemosHome(options: CatalogOptions | Options = {}): Promise<void> {
   // Check if catalog is provided
-  if ('catalog' in options && options.catalog) {
-    return buildDemosHomeWithCatalog(options as CatalogOptions)
+  if (`catalog` in options && options.catalog) {
+    return buildDemosHomeWithCatalog(options)
   }
   const config = {
-    basePath: '/',
-    mode: 'production' as const,
-    outputDir: 'dist-demos',
+    basePath: `/`,
+    mode: `production` as const,
+    outputDir: `dist-demos`,
     ...options,
   }
 
@@ -109,7 +109,7 @@ export async function buildDemosHome(options: CatalogOptions | Options = {}): Pr
 
     // If it's a directory (no extension), append the filename
     if (!extname(outputPath)) {
-      const fileName = 'index.html'
+      const fileName = `index.html`
       outputPath = join(outputPath, fileName)
     }
 
@@ -118,7 +118,7 @@ export async function buildDemosHome(options: CatalogOptions | Options = {}): Pr
   } else {
     // Use outputDir (legacy behavior)
     await fs.mkdir(config.outputDir, { recursive: true })
-    const fileName = 'index.html'
+    const fileName = `index.html`
     outputPath = join(config.outputDir, fileName)
   }
 

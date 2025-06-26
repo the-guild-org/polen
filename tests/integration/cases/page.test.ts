@@ -203,7 +203,7 @@ testCases.forEach(({ fixture, result, title, additionalChecks }) => {
         const sidebar = page.getByTestId('sidebar')
         const sidebarLinks = await sidebar.locator('a').all()
         const sidebarTexts = await Promise.all(sidebarLinks.map(link => link.textContent()))
-        const actualOrder = sidebarTexts.filter(text => text !== null).map(text => text!.trim())
+        const actualOrder = sidebarTexts.filter(text => text !== null).map(text => text.trim())
 
         // Verify each expected item appears in order
         let lastIndex = -1

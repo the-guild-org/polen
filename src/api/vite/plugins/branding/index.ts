@@ -6,7 +6,7 @@ import { debugPolen } from '#singletons/debug'
 import { Fs } from '@wollybeard/kit'
 import type { Plugin } from 'vite'
 
-const viLogo = polenVirtual(['project', 'assets', 'logo.svg'])
+const viLogo = polenVirtual([`project`, `assets`, `logo.svg`])
 
 const generateDefaultLogo = async () => {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
@@ -15,12 +15,12 @@ const generateDefaultLogo = async () => {
 }
 
 export function Branding(config: Config.Config): Plugin {
-  const debug = debugPolen.sub('vite-plugin:branding')
-  debug('initialized')
+  const debug = debugPolen.sub(`vite-plugin:branding`)
+  debug(`initialized`)
 
   return {
-    name: 'polen:branding',
-    enforce: 'pre',
+    name: `polen:branding`,
+    enforce: `pre`,
 
     async buildStart() {
       this.addWatchFile(config.paths.project.absolute.public.logo)
@@ -46,7 +46,7 @@ export function Branding(config: Config.Config): Plugin {
       if (id === viLogo.resolved) {
         const logoFileContent = await Fs.read(config.paths.project.absolute.public.logo)
         const content = logoFileContent ? logoFileContent : await generateDefaultLogo()
-        const dataUrl = `data:image/svg+xml;base64,${Buffer.from(content).toString('base64')}`
+        const dataUrl = `data:image/svg+xml;base64,${Buffer.from(content).toString(`base64`)}`
         return `export default ${JSON.stringify(dataUrl)}`
       }
     },
@@ -63,7 +63,7 @@ interface HandleWatchedFileChangeParams {
 
 const handleWatchedFileChange = async (
   params: HandleWatchedFileChangeParams,
-): Promise<Array<Vite.ModuleNode> | void> => {
+): Promise<Vite.ModuleNode[] | void> => {
   const { watchedFile, changedFile, moduleId, server, debug } = params
 
   // Check if change is for watched file
@@ -93,8 +93,8 @@ const handleWatchedFileChange = async (
     case MutationType.Create:
       // Full reload needed - module never existed
       server.ws.send({
-        type: 'full-reload',
-        path: '*',
+        type: `full-reload`,
+        path: `*`,
       })
       break
 

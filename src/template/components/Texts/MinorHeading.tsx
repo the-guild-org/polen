@@ -8,10 +8,10 @@ export const MinorHeading: React.FC<TextProps> = (props) => {
       weight='bold'
       style={{
         ...props.style,
-        color: 'var(--accent-10)',
-        fontSize: '0.6rem',
-        letterSpacing: '0.025rem',
-        textTransform: 'uppercase',
+        color: `var(--accent-10)`,
+        fontSize: `0.6rem`,
+        letterSpacing: `0.025rem`,
+        textTransform: `uppercase`,
       }}
     />
   )

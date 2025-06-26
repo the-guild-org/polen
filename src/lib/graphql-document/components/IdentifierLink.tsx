@@ -54,20 +54,20 @@ export const IdentifierLink: React.FC<IdentifierLinkProps> = ({
 }) => {
   // Determine visual state
   const isClickable = resolution.exists
-  const hasError = !resolution.exists && (identifier.kind === 'Type' || identifier.kind === 'Field')
+  const hasError = !resolution.exists && (identifier.kind === `Type` || identifier.kind === `Field`)
   const isDeprecated = !!resolution.deprecated
 
   // Build class names
   const classNames = [
-    'graphql-identifier-overlay',
+    `graphql-identifier-overlay`,
     `graphql-${identifier.kind.toLowerCase()}`,
-    isClickable && 'graphql-clickable',
-    hasError && 'graphql-error',
-    isDeprecated && 'graphql-deprecated',
-    isOpen && 'graphql-hovered',
-    isOpen && 'graphql-tooltip-open',
-    debug && 'graphql-debug',
-  ].filter(Boolean).join(' ')
+    isClickable && `graphql-clickable`,
+    hasError && `graphql-error`,
+    isDeprecated && `graphql-deprecated`,
+    isOpen && `graphql-hovered`,
+    isOpen && `graphql-tooltip-open`,
+    debug && `graphql-debug`,
+  ].filter(Boolean).join(` `)
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -80,22 +80,22 @@ export const IdentifierLink: React.FC<IdentifierLinkProps> = ({
     ? (
       <a
         href={resolution.referenceUrl}
-        className={classNames + ' graphql-identifier-link'}
+        className={classNames + ` graphql-identifier-link`}
         style={{
-          position: 'absolute',
+          position: `absolute`,
           top: position.top,
           left: position.left,
           width: position.width,
           height: position.height,
-          cursor: 'pointer',
+          cursor: `pointer`,
           zIndex: 10,
-          pointerEvents: 'auto',
-          display: 'block',
-          textDecoration: 'none',
+          pointerEvents: `auto`,
+          display: `block`,
+          textDecoration: `none`,
           // Debug mode visual
           ...(debug && {
-            backgroundColor: hasError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-            border: `1px solid ${hasError ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+            backgroundColor: hasError ? `rgba(239, 68, 68, 0.1)` : `rgba(59, 130, 246, 0.1)`,
+            border: `1px solid ${hasError ? `rgba(239, 68, 68, 0.3)` : `rgba(59, 130, 246, 0.3)`}`,
           }),
         }}
         onClick={handleClick}
@@ -110,17 +110,17 @@ export const IdentifierLink: React.FC<IdentifierLinkProps> = ({
       <div
         className={classNames}
         style={{
-          position: 'absolute',
+          position: `absolute`,
           top: position.top,
           left: position.left,
           width: position.width,
           height: position.height,
-          cursor: 'pointer', // Make it clickable even for errors
+          cursor: `pointer`, // Make it clickable even for errors
           zIndex: 10,
-          pointerEvents: 'auto',
+          pointerEvents: `auto`,
           // Debug mode visual
           ...(debug && {
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            backgroundColor: `rgba(239, 68, 68, 0.1)`,
             border: `1px solid rgba(239, 68, 68, 0.3)`,
           }),
         }}

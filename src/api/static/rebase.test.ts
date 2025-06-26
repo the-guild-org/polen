@@ -4,7 +4,7 @@ import { rebase, type RebasePlan } from './rebase.ts'
 
 const testDir = 'temp/rebase-test'
 
-const createTestBuild = async (dir: string, basePath: string = '/') => {
+const createTestBuild = async (dir: string, basePath = '/') => {
   await Fs.makeDirectory(dir)
 
   // Create Polen build manifest

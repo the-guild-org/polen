@@ -1,4 +1,4 @@
-import { VitePluginJson } from '#lib/vite-plugin-json/index'
+import type { VitePluginJson } from '#lib/vite-plugin-json/index'
 import { debugPolen } from '#singletons/debug'
 import { type ComputedRef, effect, isRef } from '@vue/reactivity'
 import type { Plugin, ViteDevServer } from 'vite'
@@ -30,7 +30,7 @@ interface ReactiveDataOptions {
   name?: string
 }
 
-const pluginDebug = debugPolen.sub('vite-reactive-data')
+const pluginDebug = debugPolen.sub(`vite-reactive-data`)
 
 export const create = (options: ReactiveDataOptions): Plugin => {
   const codec = options.codec ?? JSON
@@ -38,7 +38,7 @@ export const create = (options: ReactiveDataOptions): Plugin => {
   const name = options.name ?? `reactive-data`
 
   const debug = pluginDebug.sub(name)
-  debug('constructor', { moduleId })
+  debug(`constructor`, { moduleId })
 
   let $server: ViteDevServer
   let $invalidationScheduled = false
@@ -46,16 +46,16 @@ export const create = (options: ReactiveDataOptions): Plugin => {
   const tryInvalidate = () => {
     $invalidationScheduled = false
     // updateTimer = undefined
-    if (!$server) throw new Error('Server not available yet - this should be impossible')
+    if (!$server) throw new Error(`Server not available yet - this should be impossible`)
     const moduleNode = $server.moduleGraph.getModuleById(moduleId)
     if (moduleNode) {
-      debug('invalidate', { id: moduleNode.id })
+      debug(`invalidate`, { id: moduleNode.id })
       $server.moduleGraph.invalidateModule(moduleNode)
     } else {
-      debug('cannot invalidate', {
-        reason: 'notInModuleGraph',
+      debug(`cannot invalidate`, {
+        reason: `notInModuleGraph`,
         moduleId,
-        hint: 'maybe it was not loaded yet',
+        hint: `maybe it was not loaded yet`,
       })
     }
   }
@@ -74,7 +74,7 @@ export const create = (options: ReactiveDataOptions): Plugin => {
   const getData = () => {
     if (isRef(options.data)) {
       return options.data.value
-    } else if (typeof options.data === 'function') {
+    } else if (typeof options.data === `function`) {
       return options.data()
     } else {
       return options.data
@@ -85,7 +85,7 @@ export const create = (options: ReactiveDataOptions): Plugin => {
   effect(() => {
     // Access data to track dependencies
     const data = getData()
-    debug('effect triggered', { data })
+    debug(`effect triggered`, { data })
 
     scheduleInvalidate()
   })
@@ -94,10 +94,10 @@ export const create = (options: ReactiveDataOptions): Plugin => {
     name,
 
     configureServer(_server) {
-      debug('hook configureServer')
+      debug(`hook configureServer`)
       $server = _server
       if ($invalidationScheduled) {
-        debug('try invalidate scheduled before server was ready')
+        debug(`try invalidate scheduled before server was ready`)
         tryInvalidate()
       }
     },
@@ -114,7 +114,7 @@ export const create = (options: ReactiveDataOptions): Plugin => {
       if (id !== moduleId) return
 
       const data = getData()
-      debug('hook load', { data })
+      debug(`hook load`, { data })
 
       return {
         code: codec.stringify(data),

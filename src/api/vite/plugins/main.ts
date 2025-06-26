@@ -2,7 +2,6 @@ import type { Config } from '#api/config/index'
 import type { Vite } from '#dep/vite/index'
 import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
 import ViteReact from '@vitejs/plugin-react-oxc'
-import { Path } from '@wollybeard/kit'
 // import { Arr, Path } from '@wollybeard/kit'
 // import Inspect from 'vite-plugin-inspect'
 // import Restart from 'vite-plugin-restart'
@@ -35,16 +34,10 @@ export const Main = (
   //   plugins.push(plugin)
   // }
 
-  // Convert absolute path to relative for vite-plugin-ssr-css
-  const clientEntryRelative = Path.relative(
-    config.paths.framework.rootDir,
-    config.paths.framework.template.client.entrypoint
-  )
-
   plugins.push(
     ViteReact(),
-    vitePluginSsrCss({ 
-      entries: [`/${clientEntryRelative}`] 
+    vitePluginSsrCss({
+      entries: [`/${config.paths.framework.template.relative.client.entrypoint}`],
     }),
     Branding(config),
     Core(config),

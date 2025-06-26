@@ -93,7 +93,7 @@ query GetUser($id: ID!) {
     })
 
     it('should detect non-existent fields', () => {
-      const invalidQuery = `query { nonExistentField }`
+      const invalidQuery = 'query { nonExistentField }'
       const result = analyze(invalidQuery)
       const resolver = createPolenSchemaResolver(testSchema)
 
