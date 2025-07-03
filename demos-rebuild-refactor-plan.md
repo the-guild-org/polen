@@ -133,13 +133,6 @@ Three new step files:
 
 ### Phase 1: Plumbing (No Breaking Changes)
 
-#### Step 3: Refactor version-history to use SemVerInput
-
-- Update function signatures to accept `SemVerInput` instead of just strings
-- Use consistent parameter naming (`semVerInput`)
-- Add function overloads for backward compatibility where needed
-- This eliminates repeated parsing and improves performance
-
 #### Step 4: Add Version Selector Utility
 
 - Create `version-selector.ts`
