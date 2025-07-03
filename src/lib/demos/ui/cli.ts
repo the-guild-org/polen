@@ -2,7 +2,7 @@
 
 import { Command } from '@molt/command'
 import { z } from 'zod'
-import { buildDemosHome } from './landing-page.ts'
+import { buildHome } from './home.ts'
 
 /**
  * CLI entry point
@@ -20,4 +20,4 @@ const command = Command.create()
   .parameter(`outputPath`, z.string().optional().describe(`Output file path (overrides outputDir)`))
 
 const args = await command.parse()
-await buildDemosHome(args)
+await buildHome(args)

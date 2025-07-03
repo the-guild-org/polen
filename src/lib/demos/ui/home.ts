@@ -19,10 +19,11 @@ export interface Options {
   currentSha?: string
   mode?: `production` | `development`
   prDeployments?: string | any[]
-  trunkDeployments?: string | any
-  distTags?: string | Record<string, string>
   outputDir?: string
   outputPath?: string
+  // diff
+  trunkDeployments?: string | any
+  distTags?: string | Record<string, string>
 }
 
 // Options when using a version catalog
@@ -32,9 +33,10 @@ export interface CatalogOptions {
   currentSha?: string
   mode?: `production` | `development`
   prDeployments?: string | any[]
-  catalog: VersionHistory.VersionCatalog
   outputDir?: string
   outputPath?: string
+  // diff
+  catalog: VersionHistory.Catalog
 }
 
 /**
@@ -45,7 +47,7 @@ export async function buildDemosHomeWithCatalog(options: CatalogOptions): Promis
   const { trunkDeployments, distTags } = transformCatalogToDeployments(catalog)
 
   // Use the existing function with transformed data
-  return buildDemosHome({
+  return buildHome({
     ...otherOptions,
     trunkDeployments,
     distTags,
@@ -53,13 +55,13 @@ export async function buildDemosHomeWithCatalog(options: CatalogOptions): Promis
 }
 
 // Function overloads
-export async function buildDemosHome(options: CatalogOptions): Promise<void>
-export async function buildDemosHome(options?: Options): Promise<void>
+export async function buildHome(options: CatalogOptions): Promise<void>
+export async function buildHome(options?: Options): Promise<void>
 
 /**
  * Main function that builds the demos home page
  */
-export async function buildDemosHome(options: CatalogOptions | Options = {}): Promise<void> {
+export async function buildHome(options: CatalogOptions | Options = {}): Promise<void> {
   // Check if catalog is provided
   if (`catalog` in options && options.catalog) {
     return buildDemosHomeWithCatalog(options)

@@ -23,5 +23,5 @@ export {
   loadConfig,
   meetsMinimumPolenVersion,
 } from './config.ts'
-export { buildDemosHome, buildDemosHomeWithCatalog, type CatalogOptions, type Options } from './ui/landing-page.ts'
+export { buildDemosHomeWithCatalog, buildHome, type CatalogOptions, type Options } from './ui/home.ts'
 export { getDemoExamples } from './utils.ts'
