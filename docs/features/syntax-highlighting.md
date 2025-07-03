@@ -70,7 +70,6 @@ Markdown content in GraphQL schema descriptions also benefits from syntax highli
 ## Future Enhancements
 
 - **Line Numbers**: Display line numbers for code blocks
-- **Copy Button**: One-click code copying
 - **Shiki Twoslash**: TypeScript type information on hover
 - **Custom Themes**: Support for additional color themes
 - **Code Block Titles**: File names or descriptions for code blocks

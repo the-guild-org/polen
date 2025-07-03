@@ -9,7 +9,10 @@ export const DemoConfigSchema = z.object({
   examples: z.object({
     exclude: z.array(z.string()).default([]),
     order: z.array(z.string()).default([]),
-    minimumPolenVersion: z.string().default(`0.1.0`),
+    /**
+     * Minimum version of this package needed to run the demos.
+     */
+    minimumVersion: z.string().default(`0.1.0`),
   }),
   deployment: z.object({
     basePaths: z.record(z.string()).default({}),

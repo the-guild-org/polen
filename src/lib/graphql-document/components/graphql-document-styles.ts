@@ -141,27 +141,4 @@ export const graphqlDocumentStyles = `
   to {
     transform: rotate(360deg);
   }
-}
-
-/* Copy button */
-.graphql-document-copy {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 10;
-}
-
-.graphql-document:hover .graphql-document-copy {
-  opacity: 0.8;
-}
-
-.graphql-document-copy:hover {
-  opacity: 1 !important;
-}
-
-.graphql-document-copy[data-copied="true"] {
-  opacity: 1 !important;
-  color: var(--green-9);
 }`

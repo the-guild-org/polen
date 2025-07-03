@@ -7,7 +7,6 @@ import { useTooltipState } from '../hooks/use-tooltip-state.ts'
 import { createSimplePositionCalculator } from '../positioning-simple.ts'
 import { createPolenSchemaResolver } from '../schema-integration.ts'
 import type { Identifier } from '../types.ts'
-import { CopyButton } from './CopyButton.tsx'
 import { graphqlDocumentStyles } from './graphql-document-styles.ts'
 import { IdentifierLink } from './IdentifierLink.tsx'
 
@@ -208,14 +207,6 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
           </pre>
         )}
 
-        {/* Copy button */}
-        {!plain && (
-          <CopyButton
-            text={children}
-            className='graphql-document-copy'
-            size='2'
-          />
-        )}
 
         {/* Interactive overlay layer */}
         {!plain && isReady && (

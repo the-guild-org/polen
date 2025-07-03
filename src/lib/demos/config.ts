@@ -18,7 +18,7 @@ const DEFAULT_CONFIG: DemoConfigData = {
   examples: {
     exclude: [],
     order: [],
-    minimumPolenVersion: `0.1.0`,
+    minimumVersion: `0.1.0`,
   },
   deployment: {
     basePaths: {},
@@ -91,8 +91,8 @@ export class DemoConfig {
             ...DEFAULT_CONFIG.examples,
             exclude: legacy.excludeDemos || DEFAULT_CONFIG.examples.exclude,
             order: legacy.order || DEFAULT_CONFIG.examples.order,
-            minimumPolenVersion: legacy.minimumPolenVersion || legacy.minimumVersion
-              || DEFAULT_CONFIG.examples.minimumPolenVersion,
+            minimumVersion: legacy.minimumPolenVersion || legacy.minimumVersion
+              || DEFAULT_CONFIG.examples.minimumVersion,
           },
         }
       }
@@ -109,7 +109,7 @@ export class DemoConfig {
   }
 
   get minimumPolenVersion(): string {
-    return this.data.examples.minimumPolenVersion
+    return this.data.examples.minimumVersion
   }
 
   get order(): string[] {
