@@ -207,7 +207,6 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
           </pre>
         )}
 
-
         {/* Interactive overlay layer */}
         {!plain && isReady && (
           <div className='graphql-interaction-layer' style={{ pointerEvents: `none` }}>

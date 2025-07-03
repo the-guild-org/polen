@@ -1,5 +1,5 @@
 import { Api } from '#api/index'
-import { buildDemosHome, demoBuilder, getDemoExamples } from '#lib/demos/index'
+import { build, buildDemosHome, getDemoExamples } from '#lib/demos/index'
 import { Deployment } from '#lib/deployment'
 import { GitHubActions } from '#lib/github-actions/index'
 import { VersionHistory } from '#lib/version-history/index'
@@ -76,7 +76,7 @@ export default GitHubActions.createStep({
     }]
 
     // Build individual demos with SHA-specific base path
-    await demoBuilder.build(version, { basePath: shaBasePath })
+    await build(version, { basePath: shaBasePath })
 
     // Build landing page for PR root (without currentSha to show overview)
     await buildDemosHome({

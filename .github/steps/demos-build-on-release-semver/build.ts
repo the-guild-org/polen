@@ -1,4 +1,4 @@
-import { buildDemosHome, demoBuilder, getDemoConfig } from '#lib/demos/index'
+import { build, buildDemosHome, getDeploymentPath, loadConfig, meetsMinimumPolenVersion } from '#lib/demos/index'
 import { GitHubActions } from '#lib/github-actions/index'
 import { VersionHistory } from '#lib/version-history/index'
 import { z } from 'zod/v4'
@@ -20,17 +20,17 @@ export default GitHubActions.createStep({
   outputs: Outputs,
   async run({ inputs, context }) {
     const { tag: semver } = inputs.previous
-    const config = getDemoConfig()
+    const config = await loadConfig()
 
     // Check minimum version requirement
-    if (!config.meetsMinimumPolenVersion(semver)) {
-      const minVersion = config.minimumPolenVersion
+    if (!meetsMinimumPolenVersion(config, semver)) {
+      const minVersion = config.examples.minimumVersion
       throw new Error(`Version ${semver} is below minimum ${minVersion}`)
     }
 
     // Determine deployment path
     const isStable = VersionHistory.isStableVersion(semver)
-    const deploymentPath = config.getDeploymentPath(semver, isStable)
+    const deploymentPath = getDeploymentPath(config, semver, isStable)
     const basePath = `/${context.repo.repo}${deploymentPath}`
 
     // Build landing page
@@ -39,7 +39,7 @@ export default GitHubActions.createStep({
     })
 
     // Build individual demos
-    await demoBuilder.build(semver, { basePath })
+    await build(semver, { basePath })
 
     return {
       build_complete: true,

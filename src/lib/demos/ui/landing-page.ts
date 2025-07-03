@@ -4,8 +4,9 @@
 import type { VersionCatalog } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { dirname, extname, join } from 'node:path'
+import { loadConfig } from '../config.ts'
 import { DemoDataCollector } from './data-collector.ts'
-import { DemoPageRenderer } from './page-renderer.ts'
+import { renderDemoLandingPage } from './page-renderer.ts'
 
 // Define the interface for the build options
 export interface Options {
@@ -92,13 +93,15 @@ export async function buildDemosHome(options: CatalogOptions | Options = {}): Pr
     ...options,
   }
 
+  // Load demo config
+  const demoConfig = await loadConfig()
+
   // Collect all required data
   const dataCollector = new DemoDataCollector()
   const data = await dataCollector.collectLandingPageData(config)
 
   // Render the page
-  const renderer = new DemoPageRenderer()
-  const html = renderer.renderPage(data)
+  const html = renderDemoLandingPage(demoConfig, data)
 
   // Determine output path
   let outputPath: string

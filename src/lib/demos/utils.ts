@@ -5,7 +5,7 @@
 import type { Version } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
-import { getDemoConfig } from './config.ts'
+import { getOrderedDemos, loadConfig } from './config.ts'
 
 /**
  * Get list of demo examples from the examples directory
@@ -27,8 +27,8 @@ export async function getDemoExamples(): Promise<string[]> {
   }
 
   // Use DemoConfig to filter and order examples
-  const config = getDemoConfig()
-  return config.getOrderedDemos(examples)
+  const config = await loadConfig()
+  return getOrderedDemos(config, examples)
 }
 
 /**

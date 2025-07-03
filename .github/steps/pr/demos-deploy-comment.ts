@@ -1,6 +1,6 @@
+import { getDemoExamples } from '#lib/demos/index'
+import { GitHubActions } from '#lib/github-actions/index'
 import { Str } from '@wollybeard/kit'
-import { getDemoExamples } from '../../../src/lib/demos/index.ts'
-import { GitHubActions } from '../../../src/lib/github-actions/index.ts'
 
 export default GitHubActions.createStep({
   context: GitHubActions.PullRequestContext,
