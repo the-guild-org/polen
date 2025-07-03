@@ -5,9 +5,4 @@ export type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './t
 
 // Re-export SemVer types and utilities
 export type { SemVerInput, SemVerString } from './semver.ts'
-export {
-  getSemVerString,
-  isSemVerString,
-  normalizeSemVerInput,
-  SemVerSchema,
-} from './semver.ts'
+export { getSemVerString, isSemVerString, normalizeSemVerInput, SemVerStringSchema } from './semver.ts'

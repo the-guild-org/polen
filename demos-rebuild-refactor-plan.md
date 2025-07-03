@@ -15,89 +15,6 @@ Use GitHub Actions matrix strategy to build each version in parallel on separate
 
 ## Discrete Implementation Chunks
 
-### 1. ~~**Refactor DemoBuilder from Class to Pure Functions**~~ ✅ COMPLETED
-
-This task has been completed. The DemoBuilder class has been successfully refactored to pure functions with backward compatibility maintained.
-
-### 2. **Create Flexible SemVer Type System** (Plumbing)
-
-**What**: Create a flexible type system that accepts both string and parsed semver objects\
-**Why**: Avoid repeated parsing, provide type safety, maintain flexibility\
-**Complexity**: Medium - creates foundation for all version handling\
-**Location**: Add to version-history module, with generic brand helper in kit-temp
-
-The SemVer type system will use a union type approach:
-
-```typescript
-// src/lib/version-history/schemas.ts (new file)
-import { type Brand } from '#lib/kit-temp'
-import type { Version as SemVerObject } from '@vltpkg/semver'
-import { parse as semverParse } from '@vltpkg/semver'
-import { z } from 'zod/v4'
-
-// Branded type for validated semver strings
-export type SemVerString = Brand<string, 'SemVer'>
-
-// Union type that accepts either form
-export type SemVerInput = SemVerString | SemVerObject
-
-// Zod schema for validation
-export const SemVerSchema = z.string()
-  .refine(
-    (val) => semverParse(val) !== undefined,
-    { message: 'Must be valid semver format' },
-  )
-  .transform((val) => val as SemVerString)
-
-// Helper to normalize input to parsed object
-export function normalizeSemVerInput(semVerInput: SemVerInput): SemVerObject {
-  if (typeof semVerInput === 'string') {
-    const parsed = semverParse(semVerInput)
-    if (!parsed) throw new Error(`Invalid semver: ${semVerInput}`)
-    return parsed
-  }
-  return semVerInput
-}
-
-// Helper to get string representation
-export function getSemVerString(semVerInput: SemVerInput): string {
-  if (typeof semVerInput === 'string') {
-    return semVerInput
-  }
-  return semVerInput.format()
-}
-
-// Type guard
-export function isSemVerString(value: unknown): value is SemVerString {
-  return SemVerSchema.safeParse(value).success
-}
-```
-
-**Key Benefits:**
-
-1. **No Repeated Parsing**: Functions can accept already-parsed objects
-2. **Type Safety**: Branded strings prevent invalid semver values
-3. **Flexibility**: Accept either form based on what's available
-4. **Performance**: Skip parsing when working with Version objects
-5. **Consistent Naming**: Clear distinction between String/Object/Input
-
-**Example Usage:**
-
-```typescript
-// Functions can now accept either form
-export function isPrerelease(semVerInput: SemVerInput): boolean {
-  const parsed = normalizeSemVerInput(semVerInput)
-  return parsed.prerelease !== undefined && parsed.prerelease.length > 0
-}
-
-// Can pass version.semver directly (already parsed)
-const version: Version = await getVersion()
-if (isPrerelease(version.semver)) { /* ... */ }
-
-// Or pass a string
-if (isPrerelease('1.2.3-beta.1')) { /* ... */ }
-```
-
 ### 3. **Matrix Workflow Job Architecture** (Core Change)
 
 **What**: Split the current single-job workflow into three matrix jobs\
@@ -216,21 +133,6 @@ Three new step files:
 
 ### Phase 1: Plumbing (No Breaking Changes)
 
-#### ~~Step 1: Add Generic Brand Type Helper~~ ✅ COMPLETED
-
-- Added `Brand<$BaseType, $BrandName>` type to `kit-temp.ts`
-- Added `brand()` helper function with comprehensive JSDoc
-- Used $ prefix convention for type parameters
-- Fixed TypeScript implementation to use `__brand` field instead of unique symbol
-
-#### Step 2: Create SemVer Type System
-
-- Create `version-history/schemas.ts`
-- Define `SemVerString` branded type, `SemVerObject` type alias, and `SemVerInput` union
-- Add `SemVerSchema` for validation
-- Add `normalizeSemVerInput()` and `getSemVerString()` helpers
-- Export from version-history index
-
 #### Step 3: Refactor version-history to use SemVerInput
 
 - Update function signatures to accept `SemVerInput` instead of just strings
@@ -251,19 +153,13 @@ Three new step files:
 - Generic utility for handling build artifacts
 - No dependencies on other steps
 
-### Phase 2: Refactoring (Backward Compatible)
-
-4. ~~Refactor DemoBuilder to functions (#1)~~ ✅ COMPLETED
-   - Kept old class export for compatibility
-   - Updated all internal usages
-
-### Phase 3: Workflow Update (The Fix)
+### Phase 2: Workflow Update (The Fix)
 
 5. Create new workflow steps (#7)
 6. Update workflow to use matrix strategy (#3)
 7. Test thoroughly with a few versions
 
-### Phase 4: Cleanup
+### Phase 3: Cleanup
 
 8. Remove old buildMultipleVersions method (#6)
 9. Remove compatibility exports if safe

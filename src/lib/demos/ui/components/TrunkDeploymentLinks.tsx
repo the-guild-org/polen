@@ -1,34 +1,7 @@
 import React from 'react'
 import type { TrunkDeployments } from '../types.ts'
+import { DistTagButton } from './DistTagButton.tsx'
 import { ArrowRightIcon } from './Icons.tsx'
-
-const DistTagButton = ({
-  tag,
-  version,
-  demoName,
-  basePath,
-}: {
-  tag: string
-  version: string
-  demoName: string
-  basePath: string
-}) => {
-  const tagHref = `${basePath}${tag}/${demoName}/`
-  const versionHref = `${basePath}${version}/${demoName}/`
-
-  return (
-    <div className='dist-tag-button'>
-      <a href={tagHref} className='dist-tag-label'>
-        {tag}
-        <ArrowRightIcon />
-      </a>
-      <a href={versionHref} className='dist-tag-version'>
-        {version}
-        <span className='permalink-icon'>¶</span>
-      </a>
-    </div>
-  )
-}
 
 export const TrunkDeploymentLinks = ({
   deployment,

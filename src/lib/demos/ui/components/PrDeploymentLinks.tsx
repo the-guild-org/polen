@@ -1,36 +1,6 @@
 import React from 'react'
 import type { PrDeployments } from '../types.ts'
-import { ArrowRightIcon } from './Icons.tsx'
-
-const DistTagButton = ({
-  tag,
-  version,
-  demoName,
-  basePath,
-  fullSha,
-}: {
-  tag: string
-  version: string
-  demoName: string
-  basePath: string
-  fullSha?: string
-}) => {
-  const tagHref = `${basePath}${tag}/${demoName}/`
-  const versionHref = `${basePath}${fullSha || version}/${demoName}/`
-
-  return (
-    <div className='dist-tag-button'>
-      <a href={tagHref} className='dist-tag-label'>
-        {tag}
-        <ArrowRightIcon />
-      </a>
-      <a href={versionHref} className='dist-tag-version'>
-        {version}
-        <span className='permalink-icon'>¶</span>
-      </a>
-    </div>
-  )
-}
+import { DistTagButton } from './DistTagButton.tsx'
 
 export const PrDeploymentLinks = ({
   deployment,

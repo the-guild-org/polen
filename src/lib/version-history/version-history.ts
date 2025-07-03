@@ -5,6 +5,7 @@ import {
   type Version as SemverVersion,
 } from '@vltpkg/semver'
 import { type SimpleGit, simpleGit } from 'simple-git'
+import { getSemVerString, normalizeSemVerInput, type SemVerInput } from './semver.ts'
 import type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './types.ts'
 
 export type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './types.ts'
@@ -23,33 +24,51 @@ export function parseSemver(tag: string): SemverVersion | null {
 
 /**
  * Check if a tag is a semver tag
+ *
+ * @param semVerInput - Either a string, SemVerString or SemVerObject
+ * @returns True if the input is a valid semver
  */
-export function isSemverTag(tag: string): boolean {
-  return semverParse(tag) !== undefined
+export function isSemverTag(semVerInput: string | SemVerInput): boolean {
+  if (typeof semVerInput === 'string') {
+    return semverParse(semVerInput) !== undefined
+  }
+  // If it's already a parsed object, it's valid
+  return true
 }
 
 /**
  * Check if a version is a prerelease
+ *
+ * @param semVerInput - Either a SemVerString or SemVerObject
+ * @returns True if the version has prerelease components
  */
-export function isPrerelease(tag: string): boolean {
-  const prereleaseArray = semverPrerelease(tag)
-  return prereleaseArray !== undefined && prereleaseArray.length > 0
+export function isPrerelease(semVerInput: SemVerInput): boolean {
+  const parsed = normalizeSemVerInput(semVerInput)
+  return parsed.prerelease !== undefined && parsed.prerelease.length > 0
 }
 
 /**
  * Check if a version is stable (not a prerelease)
+ *
+ * @param semVerInput - Either a SemVerString or SemVerObject
+ * @returns True if the version is stable (no prerelease components)
  */
-export function isStableVersion(tag: string): boolean {
-  return !isPrerelease(tag)
+export function isStableVersion(semVerInput: SemVerInput): boolean {
+  return !isPrerelease(semVerInput)
 }
 
 /**
  * Get the deployment path for a version
  * Stable versions go to /latest/, prereleases go to /[version]/
+ *
+ * @param semVerInput - Either a SemVerString or SemVerObject
+ * @param prefix - Path prefix (defaults to `/polen`)
+ * @returns The deployment path for the version
  */
-export function getDeploymentPath(version: string, prefix = `/polen`): string {
-  const isStable = isStableVersion(version)
-  return isStable ? `${prefix}/latest/` : `${prefix}/${version}/`
+export function getDeploymentPath(semVerInput: SemVerInput, prefix = `/polen`): string {
+  const isStable = isStableVersion(semVerInput)
+  const versionString = getSemVerString(semVerInput)
+  return isStable ? `${prefix}/latest/` : `${prefix}/${versionString}/`
 }
 
 /**
@@ -170,14 +189,17 @@ export async function getVersionAtCommit(commit: string, repoPath?: string): Pro
 
 /**
  * Get deployment history for demos (versions that should have demos)
+ *
+ * @param minimumVersion - Minimum version to include (optional)
+ * @param repoPath - Path to the repository (optional)
+ * @returns Array of versions that meet the minimum version requirement
  */
-export async function getDeploymentHistory(minimumVersion?: string, repoPath?: string): Promise<Version[]> {
+export async function getDeploymentHistory(minimumVersion?: SemVerInput, repoPath?: string): Promise<Version[]> {
   const versions = await getVersions(repoPath)
 
   if (!minimumVersion) return versions
 
-  const minSemver = parseSemver(minimumVersion)
-  if (!minSemver) return versions
+  const minSemver = normalizeSemVerInput(minimumVersion)
 
   return versions.filter(v => semverCompare(v.semver, minSemver) >= 0)
 }

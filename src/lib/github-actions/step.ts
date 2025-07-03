@@ -58,11 +58,11 @@ export interface Step<
   $OutputsSchema extends OutputsSchema = OutputsSchema,
   $ContextSchema extends ContextSchema = ContextSchema,
 > {
-  definition: Definition<
-    $InputsSchema,
-    $OutputsSchema,
-    $ContextSchema
-  >
+  name?: string
+  description?: string
+  inputs?: $InputsSchema
+  outputs?: $OutputsSchema
+  context?: $ContextSchema
   run: Runner<
     z.output<$InputsSchema>,
     z.output<$OutputsSchema>,

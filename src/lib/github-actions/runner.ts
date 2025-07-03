@@ -95,30 +95,30 @@ export async function runStep(
 
     // Check if the module exports a StepsCollection
     let step: Step
-    
+
     if (isStepsCollection(stepModule.default)) {
       // Extract the requested step from the collection
       if (!requestedStepName) {
         throw new Error(`Step name is required when using a steps collection`)
       }
-      
+
       const collection = stepModule.default
       const stepDef = collection.steps[requestedStepName]
-      
+
       if (!stepDef) {
         const availableSteps = Object.keys(collection.steps)
         throw new Error(
-          `Step '${requestedStepName}' not found in collection.\n` +
-          `Available steps: ${availableSteps.join(', ')}`
+          `Step '${requestedStepName}' not found in collection.\n`
+            + `Available steps: ${availableSteps.join(', ')}`,
         )
       }
-      
+
       // Convert the step definition to a standard Step
       step = convertToStep(stepDef, requestedStepName, collection)
     } else {
       // Regular step export
       step = stepModule.default
-      
+
       if (!step?.run || !step.definition) {
         throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
       }

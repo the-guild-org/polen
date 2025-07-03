@@ -31,6 +31,7 @@ jobs:
         uses: ./.github/actions/step
         with:
           name: build
+          workflow: demos-rebuild-current-cycle
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages

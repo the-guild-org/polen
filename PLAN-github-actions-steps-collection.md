@@ -11,6 +11,7 @@ Create a new `createSteps` API that allows multiple workflow steps to be defined
 ### ✓ Phase 1: Core API Implementation (COMPLETED)
 
 The core StepsCollection API has been implemented with:
+
 - ✓ Created `src/lib/github-actions/create-steps.ts` with Brand type for type-safe identification
 - ✓ Implemented overloaded `createSteps` function supporting both simple and configured modes
 - ✓ Updated runner to detect and extract steps from collections
@@ -22,15 +23,15 @@ The core StepsCollection API has been implemented with:
 
 ## Phase 2: Migration Pilot
 
-### 2.1 Migrate demos-rebuild-current-cycle (Simplest)
+### ✓ 2.1 Migrate demos-rebuild-current-cycle (Simplest) - COMPLETED
 
-- [ ] Create `.github/workflows/demos-rebuild-current-cycle.steps.ts`
-- [ ] Convert single step to use `createSteps` API
-- [ ] Update workflow YAML:
-  - [ ] Reference step by name
-  - [ ] Add workflow name to step action
-- [ ] Test the workflow
-- [ ] Delete old `.github/steps/demos-rebuild-current-cycle/` directory
+- ✓ Created `.github/workflows/demos-rebuild-current-cycle.steps.ts`
+- ✓ Converted single step to use `createSteps` API
+- ✓ Updated workflow YAML:
+  - ✓ Referenced step by name (`build`)
+  - ✓ Added workflow name to step action (`workflow: demos-rebuild-current-cycle`)
+- ✓ Tested the workflow (discovery working, TypeScript compiles)
+- ✓ Deleted old `.github/steps/demos-rebuild-current-cycle/` directory
 
 ### 2.2 Migrate demos-build-on-release-semver (Multiple Steps)
 
