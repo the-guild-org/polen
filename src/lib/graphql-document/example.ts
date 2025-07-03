@@ -142,7 +142,7 @@ export const demonstrateTooltipFoundation = () => {
 }
 
 // Helper function
-function getKindEmoji(kind: string): string {
+const getKindEmoji = (kind: string): string => {
   const emojis: Record<string, string> = {
     'Type': `🏷️`,
     'Field': `📋`,

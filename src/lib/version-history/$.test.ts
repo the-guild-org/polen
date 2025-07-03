@@ -9,9 +9,9 @@ vi.mock('simple-git', () => ({
 }))
 
 describe('VersionHistory', () => {
-  describe('parseSemver', () => {
+  describe('parseSemVer', () => {
     it('parses standard semver tags', () => {
-      const version = VersionHistory.parseSemver('1.2.3')
+      const version = VersionHistory.parseSemVer('1.2.3')
       expect(version).not.toBeNull()
       expect(version?.major).toBe(1)
       expect(version?.minor).toBe(2)
@@ -20,7 +20,7 @@ describe('VersionHistory', () => {
     })
 
     it('parses semver tags with v prefix', () => {
-      const version = VersionHistory.parseSemver('v1.2.3')
+      const version = VersionHistory.parseSemVer('v1.2.3')
       expect(version).not.toBeNull()
       expect(version?.major).toBe(1)
       expect(version?.minor).toBe(2)
@@ -28,7 +28,7 @@ describe('VersionHistory', () => {
     })
 
     it('parses prerelease versions', () => {
-      const version = VersionHistory.parseSemver('1.2.3-beta.1')
+      const version = VersionHistory.parseSemVer('1.2.3-beta.1')
       expect(version).not.toBeNull()
       expect(version?.major).toBe(1)
       expect(version?.minor).toBe(2)
@@ -37,26 +37,26 @@ describe('VersionHistory', () => {
     })
 
     it('returns null for invalid semver', () => {
-      expect(VersionHistory.parseSemver('not-a-version')).toBeNull()
-      expect(VersionHistory.parseSemver('1.2')).toBeNull()
-      expect(VersionHistory.parseSemver('latest')).toBeNull()
+      expect(VersionHistory.parseSemVer('not-a-version')).toBeNull()
+      expect(VersionHistory.parseSemVer('1.2')).toBeNull()
+      expect(VersionHistory.parseSemVer('latest')).toBeNull()
     })
   })
 
-  describe('isSemverTag', () => {
+  describe('isSemVerTag', () => {
     it('identifies valid semver tags', () => {
-      expect(VersionHistory.isSemverTag('1.2.3')).toBe(true)
-      expect(VersionHistory.isSemverTag('v1.2.3')).toBe(true)
-      expect(VersionHistory.isSemverTag('1.0.0-beta.1')).toBe(true)
-      expect(VersionHistory.isSemverTag('0.0.1')).toBe(true)
+      expect(VersionHistory.isSemVerTag('1.2.3')).toBe(true)
+      expect(VersionHistory.isSemVerTag('v1.2.3')).toBe(true)
+      expect(VersionHistory.isSemVerTag('1.0.0-beta.1')).toBe(true)
+      expect(VersionHistory.isSemVerTag('0.0.1')).toBe(true)
     })
 
     it('rejects invalid semver tags', () => {
-      expect(VersionHistory.isSemverTag('latest')).toBe(false)
-      expect(VersionHistory.isSemverTag('next')).toBe(false)
-      expect(VersionHistory.isSemverTag('1.2')).toBe(false)
-      expect(VersionHistory.isSemverTag('v1.2')).toBe(false)
-      expect(VersionHistory.isSemverTag('not-a-version')).toBe(false)
+      expect(VersionHistory.isSemVerTag('latest')).toBe(false)
+      expect(VersionHistory.isSemVerTag('next')).toBe(false)
+      expect(VersionHistory.isSemVerTag('1.2')).toBe(false)
+      expect(VersionHistory.isSemVerTag('v1.2')).toBe(false)
+      expect(VersionHistory.isSemVerTag('not-a-version')).toBe(false)
     })
   })
 

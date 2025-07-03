@@ -1,6 +1,7 @@
 import type { DemoOptions } from '#lib/demos/config-options'
 import { DemoOptionsSchema } from '#lib/demos/config-options'
 import { gte as semverGte, parse as semverParse } from '@vltpkg/semver'
+import { defu } from 'defu'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod/v4'
 
@@ -80,47 +81,14 @@ export const DEFAULT_CONFIG: DemoConfig = {
 /**
  * Merge partial config with defaults
  */
-export function mergeWithDefaults(config: Partial<DemoOptions>): DemoConfig {
-  return {
-    examples: {
-      exclude: config.examples?.exclude !== undefined ? config.examples.exclude : DEFAULT_CONFIG.examples.exclude,
-      order: config.examples?.order !== undefined ? config.examples.order : DEFAULT_CONFIG.examples.order,
-      minimumVersion: config.examples?.minimumVersion !== undefined
-        ? config.examples.minimumVersion
-        : DEFAULT_CONFIG.examples.minimumVersion,
-      disabled: config.examples?.disabled !== undefined ? config.examples.disabled : DEFAULT_CONFIG.examples.disabled,
-    },
-    deployment: {
-      basePaths: config.deployment?.basePaths ?? DEFAULT_CONFIG.deployment.basePaths,
-      redirects: config.deployment?.redirects ?? DEFAULT_CONFIG.deployment.redirects,
-      gc: {
-        retainStableVersions: config.deployment?.gc?.retainStableVersions
-          ?? DEFAULT_CONFIG.deployment.gc.retainStableVersions,
-        retainCurrentCycle: config.deployment?.gc?.retainCurrentCycle
-          ?? DEFAULT_CONFIG.deployment.gc.retainCurrentCycle,
-        retainDays: config.deployment?.gc?.retainDays ?? DEFAULT_CONFIG.deployment.gc.retainDays,
-      },
-    },
-    ui: {
-      theme: {
-        primaryColor: config.ui?.theme?.primaryColor ?? DEFAULT_CONFIG.ui.theme.primaryColor,
-        backgroundColor: config.ui?.theme?.backgroundColor ?? DEFAULT_CONFIG.ui.theme.backgroundColor,
-        textColor: config.ui?.theme?.textColor ?? DEFAULT_CONFIG.ui.theme.textColor,
-        mutedTextColor: config.ui?.theme?.mutedTextColor ?? DEFAULT_CONFIG.ui.theme.mutedTextColor,
-      },
-      content: {
-        title: config.ui?.content?.title ?? DEFAULT_CONFIG.ui.content.title,
-        description: config.ui?.content?.description ?? DEFAULT_CONFIG.ui.content.description,
-        logoUrl: config.ui?.content?.logoUrl,
-      },
-    },
-  }
+export const mergeWithDefaults = (config: Partial<DemoOptions>): DemoConfig => {
+  return defu(config, DEFAULT_CONFIG) as DemoConfig
 }
 
 /**
  * Load config from file (async)
  */
-export async function loadConfig(configPath = `.github/demo-config`): Promise<DemoConfig> {
+export const loadConfig = async (configPath = `.github/demo-config`): Promise<DemoConfig> => {
   // Try to import TypeScript config first
   if (configPath === `.github/demo-config`) {
     try {
@@ -175,7 +143,7 @@ export async function loadConfig(configPath = `.github/demo-config`): Promise<De
 /**
  * Check if a Polen version meets the minimum requirement
  */
-export function meetsMinimumPolenVersion(config: DemoConfig, polenVersion: string): boolean {
+export const meetsMinimumPolenVersion = (config: DemoConfig, polenVersion: string): boolean => {
   const versionParsed = semverParse(polenVersion)
   const minVersionParsed = semverParse(config.examples.minimumVersion)
 
@@ -189,7 +157,7 @@ export function meetsMinimumPolenVersion(config: DemoConfig, polenVersion: strin
 /**
  * Check if a demo is excluded
  */
-export function isDemoExcluded(config: DemoConfig, demoName: string): boolean {
+export const isDemoExcluded = (config: DemoConfig, demoName: string): boolean => {
   return config.examples.exclude.includes(demoName)
 }
 
@@ -199,7 +167,7 @@ export function isDemoExcluded(config: DemoConfig, demoName: string): boolean {
  * @param availableDemos List of all available demo names
  * @returns Ordered list with configured order first, then alphabetical
  */
-export function getOrderedDemos(config: DemoConfig, availableDemos: string[]): string[] {
+export const getOrderedDemos = (config: DemoConfig, availableDemos: string[]): string[] => {
   const nonExcluded = availableDemos.filter(demo => !isDemoExcluded(config, demo))
   const orderedDemos: string[] = []
   const remainingDemos = [...nonExcluded]
@@ -225,25 +193,14 @@ export function getOrderedDemos(config: DemoConfig, availableDemos: string[]): s
 /**
  * Get deployment path for a version
  */
-export function getDeploymentPath(config: DemoConfig, version: string, isStable = false): string {
+export const getDeploymentPath = (config: DemoConfig, version: string, isStable = false): string => {
   return isStable ? `/latest/` : `/${version}/`
-}
-
-/**
- * Get all disabled demos with metadata
- * @deprecated Use getDisabledExamples instead
- */
-export function getDisabledDemos(
-  config: DemoConfig,
-): Record<string, { title: string; description: string; reason?: string }> {
-  // For backward compatibility, return empty object
-  return {}
 }
 
 /**
  * Get disabled examples from the new structure
  */
-export function getDisabledExamples(config: DemoConfig): Array<{ example: string; reason: string }> {
+export const getDisabledExamples = (config: DemoConfig): Array<{ example: string; reason: string }> => {
   return config.examples.disabled
 }
 

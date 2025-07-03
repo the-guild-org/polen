@@ -33,7 +33,8 @@ jobs:
         id: dist-tag
         uses: ./.github/actions/step
         with:
-          name: get-dist-tag-info
+          workflow: demos-build-on-change-dist-tag
+          name: getDistTagInfo
           inputs: ${{ toJSON(inputs) }}
 
       - name: Checkout gh-pages
@@ -45,8 +46,12 @@ jobs:
       - name: Update dist-tag content
         uses: ./.github/actions/step
         with:
+          workflow: demos-build-on-change-dist-tag
           name: build
-          previous: ${{ steps.dist-tag.outputs.json }}
+          previous: |
+            {
+              "getDistTagInfo": ${{ toJSON(steps.dist-tag.outputs) }}
+            }
 
       - name: Commit and push changes
         uses: ./.github/actions/commit

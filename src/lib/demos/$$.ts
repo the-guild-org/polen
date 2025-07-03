@@ -16,12 +16,12 @@ export type { DemoOptions } from './config-options.ts'
 export {
   type DemoConfig,
   getDeploymentPath,
-  getDisabledDemos,
   getDisabledExamples,
   getOrderedDemos,
   isDemoExcluded,
   loadConfig,
   meetsMinimumPolenVersion,
 } from './config.ts'
-export { buildDemosHomeWithCatalog, buildHome, type CatalogOptions, type Options } from './ui/home.ts'
+export { type BuildableVersions, getBuildableVersions, getBuildableVersionsAsMatrix } from './get-buildable-versions.ts'
+export { type BuildConfig, buildHome } from './ui/home.ts'
 export { getDemoExamples } from './utils.ts'

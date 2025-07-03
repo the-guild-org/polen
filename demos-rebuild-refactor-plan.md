@@ -13,149 +13,86 @@ The current `demos-rebuild-current-cycle` workflow has a fundamental flaw: it us
 
 Use GitHub Actions matrix strategy to build each version in parallel on separate runners.
 
-## Discrete Implementation Chunks
+## Implementation Status
 
-### 3. **Matrix Workflow Job Architecture** (Core Change)
+### ✅ Completed
 
-**What**: Split the current single-job workflow into three matrix jobs\
-**Why**: Enable parallel builds, fix the git checkout issue\
-**Complexity**: Medium - changes workflow architecture
+1. **GitHub Actions Step System Refactor**
+   - Removed single step support - only collections now
+   - Merged Step and StepDefinition interfaces
+   - Simplified runner to remove excess warnings
+   - Moved schemas/context.ts to runner-args-context.ts
+   - All steps now have guaranteed names
+   - Clean architecture with single source of truth in step.ts
 
-```yaml
-jobs:
-  determine-versions:
-    outputs:
-      versions: ${{ steps.get-versions.outputs.versions }}
-      stable-version: ${{ steps.get-versions.outputs.stable }}
-      has-versions: ${{ steps.get-versions.outputs.has-versions }}
-      
-  build-version:
-    needs: determine-versions
-    strategy:
-      matrix:
-        version: ${{ fromJSON(needs.determine-versions.outputs.versions) }}
-        
-  deploy:
-    needs: [determine-versions, build-version]
-```
+2. **Type System Improvements**
+   - StepInput type for user authoring (function or object with optional name)
+   - Step interface with required name for runtime
+   - Automatic name injection from collection keys
+   - Input transformation proxy for kebab-case to camelCase access
 
-### 4. **Version List Generator Step** (Plumbing)
+3. **Version List Generator** ✅
+   - Created `getBuildableVersions()` utility in get-buildable-versions.ts
+   - Returns versions array, stable version, and hasVersions flag
+   - Filters versions based on minimum Polen version requirements
 
-**What**: Extract logic to determine which versions to build\
-**Why**: Reusable across workflows, testable\
-**Complexity**: Low - extract existing logic
+### ✅ Completed (Phase 3)
 
-```typescript
-// src/lib/demos/version-selector.ts (new file)
-import { VersionHistory } from '#lib/version-history/index'
-import { type DemoConfig, meetsMinimumPolenVersion } from './config.ts'
+4. **Matrix Workflow Architecture**
+   - Split workflow into three jobs: determine-versions, build-version (matrix), deploy
+   - Each version builds in parallel on separate runners
+   - Artifacts uploaded and consolidated in deploy job
+   - Implemented in demos-rebuild-current-cycle.yaml
 
-export async function getVersionsToBuild(config: DemoConfig): Promise<{
-  versions: string[]
-  stable?: string
-}> {
-  const cycle = await VersionHistory.getCurrentDevelopmentCycle()
+5. **Workflow Steps Implementation**
+   - Created three steps in demos-rebuild-current-cycle.steps.ts:
+     - `get-versions`: Uses getBuildableVersions() to determine what to build
+     - `build-version`: Builds single version from matrix
+     - `deploy`: Consolidates artifacts and deploys to GitHub Pages
+   - All steps use simplified approach without explicit schemas
 
-  if (!cycle.stable) {
-    return { versions: [], stable: undefined }
-  }
+6. **Output Type Inference Feature**
+   - Enhanced step system to support output type inference
+   - Runner now exports outputs even without explicit schema
+   - Enables cleaner step definitions with less boilerplate
+   - Type safety maintained through TypeScript inference
 
-  const versions = cycle.all
-    .filter(v => meetsMinimumPolenVersion(config, v.git.tag))
-    .map(v => v.git.tag)
+### 📋 TODO
 
-  return {
-    versions,
-    stable: cycle.stable.git.tag,
-  }
-}
-```
+7. **Testing & Verification**
+   - Test the new matrix workflow with a few versions
+   - Verify parallel execution in GitHub Actions UI
+   - Check that deployed demos work correctly
+   - Test failure scenarios (one version fails to build)
 
-### 5. **Artifact Consolidator Utility** (Plumbing)
+8. **Cleanup** (After verification)
+   - Remove `buildMultipleVersions` method from builder.ts
+   - Remove any other sequential build logic
+   - Update documentation to reflect new architecture
 
-**What**: Generic utility to consolidate build artifacts\
-**Why**: Hide complexity of artifact handling\
-**Complexity**: Low - generic utility
+## Implementation Summary
 
-```typescript
-// src/lib/github-actions/artifact-utils.ts (new file)
-import { promises as fs } from 'node:fs'
-import * as path from 'node:path'
+### Phase 1: Foundation ✅
 
-export async function consolidateArtifacts(options: {
-  artifactDir: string
-  outputDir: string
-  artifactPrefix: string
-  transformer?: (artifactName: string) => string
-}): Promise<string[]> {
-  const { artifactDir, outputDir, artifactPrefix, transformer } = options
-  const processed: string[] = []
+- GitHub Actions step system refactor
+- Type system improvements
+- Clean architecture with collections-only approach
 
-  const entries = await fs.readdir(artifactDir)
+### Phase 2: Utilities ✅
 
-  for (const entry of entries) {
-    if (entry.startsWith(artifactPrefix)) {
-      const name = transformer
-        ? transformer(entry)
-        : entry.replace(artifactPrefix, '')
-      const sourcePath = path.join(artifactDir, entry)
-      const targetPath = path.join(outputDir, name)
+- Version list generator (getBuildableVersions)
+- Output type inference feature
 
-      await fs.cp(sourcePath, targetPath, { recursive: true })
-      processed.push(name)
-    }
-  }
+### Phase 3: Matrix Implementation ✅
 
-  return processed
-}
-```
+- Updated workflow YAML to use matrix strategy
+- Created three workflow steps (get-versions, build-version, deploy)
+- Implemented artifact consolidation in deploy step
 
-### 6. **Remove buildMultipleVersions Method** (Cleanup)
+### Phase 4: Testing & Cleanup (Pending)
 
-**What**: Delete the problematic sequential build method\
-**Why**: It's the root cause of the issue\
-**Complexity**: Low - just deletion\
-**When**: After new workflow is tested and working
-
-### 7. **Update Deployment Steps** (Integration)
-
-**What**: Update the three workflow steps to use new patterns\
-**Why**: Wire everything together\
-**Complexity**: Medium - integrate all pieces
-
-Three new step files:
-
-- `get-versions-to-build.ts` - Uses version-selector utility
-- `build-single-version.ts` - Uses refactored DemoBuilder
-- `consolidate-demos.ts` - Uses artifact-utils
-
-## Implementation Order
-
-### Phase 1: Plumbing (No Breaking Changes)
-
-#### Step 4: Add Version Selector Utility
-
-- Create `version-selector.ts`
-- Extract logic from existing code
-- Use the new `SemVerInput` types
-- Return results using the flexible type system
-
-#### Step 5: Add Artifact Consolidator Utility
-
-- Create `artifact-utils.ts` in github-actions lib
-- Generic utility for handling build artifacts
-- No dependencies on other steps
-
-### Phase 2: Workflow Update (The Fix)
-
-5. Create new workflow steps (#7)
-6. Update workflow to use matrix strategy (#3)
-7. Test thoroughly with a few versions
-
-### Phase 3: Cleanup
-
-8. Remove old buildMultipleVersions method (#6)
-9. Remove compatibility exports if safe
+- Verify the new workflow in GitHub Actions
+- Remove buildMultipleVersions after verification
 
 ## Key Design Decisions
 
@@ -226,3 +163,21 @@ isPrerelease(input) // Parsed internally
 - We can test the new workflow alongside the old one
 - Once verified, we can remove the old implementation
 - No changes needed to PR workflows or release workflows
+
+## Recent Architecture Changes
+
+### GitHub Actions Step System
+
+- **Single file architecture**: All step types now in `step.ts`
+- **Collections only**: No more single step support
+- **Guaranteed names**: All steps have names from collection keys or explicit override
+- **Clean imports**: No more circular dependencies
+- **Simplified runner**: Removed excess property warnings and test scenarios
+
+### Benefits of New Architecture
+
+1. **Simplicity**: One way to define steps (collections)
+2. **Type Safety**: All steps have names, clear input/output types
+3. **Clean API**: Intuitive access to step outputs via inputs
+4. **No Magic**: Explicit data flow in workflow YAML
+5. **Maintainability**: Single source of truth, no duplication

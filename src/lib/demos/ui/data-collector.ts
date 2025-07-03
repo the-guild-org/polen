@@ -5,8 +5,9 @@
 import { Str } from '@wollybeard/kit'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { getDisabledDemos, loadConfig } from '../config.ts'
+import { getDisabledExamples, loadConfig } from '../config.ts'
 import { getDemoExamples } from '../utils.ts'
+import { MOCK_DIST_TAGS, MOCK_TRUNK_DEPLOYMENTS } from './mock-data.ts'
 
 export interface DemoMetadata {
   title: string
@@ -88,14 +89,14 @@ export class DemoDataCollector {
 
       // Parse deployment data based on mode
       const parsedTrunkDeployments = mode === `development`
-        ? this.getMockTrunkDeployments()
-        : this.parseTrunkDeployments(trunkDeployments)
+        ? MOCK_TRUNK_DEPLOYMENTS
+        : this.parseJsonData<TrunkDeploymentsData>(trunkDeployments)
 
-      const parsedPrDeployments = this.parsePrDeployments(prDeployments)
+      const parsedPrDeployments = this.parseJsonData<PrDeployment[]>(prDeployments)
 
       const parsedDistTags = mode === `development`
-        ? this.getMockDistTags()
-        : this.parseDistTags(distTags)
+        ? MOCK_DIST_TAGS
+        : this.parseJsonData<DistTagsData>(distTags)
 
       return {
         demoMetadata,
@@ -156,13 +157,13 @@ export class DemoDataCollector {
     }
 
     // Add disabled demos from configuration
-    const disabledDemos = getDisabledDemos(config)
-    for (const [name, disabledDemo] of Object.entries(disabledDemos)) {
-      metadata[name] = {
-        title: disabledDemo.title,
-        description: disabledDemo.description,
+    const disabledExamples = getDisabledExamples(config)
+    for (const { example, reason } of disabledExamples) {
+      metadata[example] = {
+        title: Str.Case.title(example),
+        description: `This demo is currently unavailable.`,
         enabled: false,
-        reason: disabledDemo.reason,
+        reason,
       }
     }
 
@@ -170,78 +171,19 @@ export class DemoDataCollector {
   }
 
   /**
-   * Parse trunk deployments from JSON string or object
+   * Generic JSON parser
    */
-  private parseTrunkDeployments(trunkDeployments?: string | TrunkDeploymentsData): TrunkDeploymentsData | undefined {
-    if (!trunkDeployments) return undefined
+  private parseJsonData<T>(data?: string | T): T | undefined {
+    if (!data) return undefined
 
-    if (typeof trunkDeployments === `string`) {
+    if (typeof data === `string`) {
       try {
-        return JSON.parse(trunkDeployments) as TrunkDeploymentsData
+        return JSON.parse(data) as T
       } catch {
         return undefined
       }
     }
 
-    return trunkDeployments
-  }
-
-  /**
-   * Parse PR deployments from JSON string or array
-   */
-  private parsePrDeployments(prDeployments?: string | PrDeployment[]): PrDeployment[] | undefined {
-    if (!prDeployments) return undefined
-
-    if (typeof prDeployments === `string`) {
-      try {
-        return JSON.parse(prDeployments) as PrDeployment[]
-      } catch {
-        return undefined
-      }
-    }
-
-    return prDeployments
-  }
-
-  /**
-   * Parse dist-tags from JSON string or object
-   */
-  private parseDistTags(distTags?: string | DistTagsData): DistTagsData | undefined {
-    if (!distTags) return undefined
-
-    if (typeof distTags === `string`) {
-      try {
-        return JSON.parse(distTags) as DistTagsData
-      } catch {
-        return undefined
-      }
-    }
-
-    return distTags
-  }
-
-  /**
-   * Get mock data for development mode
-   */
-  private getMockTrunkDeployments(): TrunkDeploymentsData {
-    return {
-      latest: { sha: `1.2.0`, shortSha: `1.2.0`, tag: `1.2.0` },
-      previous: [
-        { sha: `1.1.0`, shortSha: `1.1.0`, tag: `1.1.0` },
-        { sha: `1.0.0`, shortSha: `1.0.0`, tag: `1.0.0` },
-        { sha: `0.9.1`, shortSha: `0.9.1`, tag: `0.9.1` },
-        { sha: `0.9.0`, shortSha: `0.9.0`, tag: `0.9.0` },
-      ],
-    }
-  }
-
-  /**
-   * Get mock dist-tags for development mode
-   */
-  private getMockDistTags(): DistTagsData {
-    return {
-      latest: `1.2.0`,
-      next: `1.3.0-beta.2`,
-    }
+    return data
   }
 }

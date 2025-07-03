@@ -24,11 +24,11 @@ export interface CommentOptions {
 /**
  * Create a PR controller. Returns a no-op controller when not in PR context.
  */
-export function createPullRequestController(
+export const createPullRequestController = (
   github: InstanceType<typeof GitHub>,
   context: Context,
   defaultCommentId?: string,
-): PullRequestController {
+): PullRequestController => {
   // Check if this is a PR-related event
   let prNumber: number | null = null
 

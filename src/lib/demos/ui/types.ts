@@ -1,6 +1,30 @@
 /**
  * Unified types for demo UI
  */
+import type { VersionHistory } from '#lib/version-history/index'
+
+export interface BuildConfigBase {
+  basePath?: string
+  outputDir?: string
+  outputPath?: string
+}
+
+export type BuildConfig =
+  | (BuildConfigBase & {
+    mode: 'trunk'
+    catalog: VersionHistory.Catalog
+  })
+  | (BuildConfigBase & {
+    mode: 'preview'
+    prNumber: string
+    currentSha?: string
+    prDeployments: Array<{
+      number: number
+      sha?: string
+      ref?: string
+      previousDeployments?: string[]
+    }>
+  })
 
 export interface DemoPageData {
   // From config
@@ -60,10 +84,8 @@ export type PrDeployments = {
   type: 'pr'
   prNumber: string
   currentSha?: string
-  deployments: Array<{
-    number: number
-    sha?: string
-    ref?: string
-    previousDeployments?: string[]
+  previousVersions: Array<{
+    sha: string
+    shortSha: string
   }>
 }

@@ -48,7 +48,7 @@ export const createConfig = (options?: Readonly<Options> | null | undefined): Op
  *
  * Uses Rolldown.
  */
-export function VitePluginMdx(options?: Readonly<Options> | null): Plugin {
+export const VitePluginMdx = (options?: Readonly<Options> | null): Plugin => {
   const config = createConfig(options)
 
   const filter = createFilter(config.include, config.exclude)

@@ -91,6 +91,14 @@
     "#lib/theme": {
       "source": "./src/lib/theme/$.ts",
       "default": "./build/lib/theme/$.js"
+    },
+    "#lib/github-actions": {
+      "source": "./src/lib/github-actions/$.ts",
+      "default": "./build/lib/github-actions/$.js"
+    },
+    "#lib/github-actions/github-actions": {
+      "source": "./src/lib/github-actions/$$.ts",
+      "default": "./build/lib/github-actions/$$.js"
     }
   },
   "exports": {

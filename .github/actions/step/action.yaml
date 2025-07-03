@@ -47,13 +47,13 @@ runs:
           WORKFLOW_NAME="${{ github.workflow }}"
         fi
         PATH_OVERRIDE="${{ inputs.path }}"
-        
+
         # Create a temporary file for outputs
         OUTPUT_FILE=$(mktemp)
-        
+
         # Run the step with output file environment variable
-        GITHUB_OUTPUT="$OUTPUT_FILE" node --no-warnings --experimental-transform-types ./src/lib/github-actions/run-step-cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$PATH_OVERRIDE" "$STEP_INPUTS" "$STEP_PREVIOUS"
-        
+        GITHUB_OUTPUT="$OUTPUT_FILE" node --no-warnings --experimental-transform-types ./src/lib/github-actions/cli.ts ${{ inputs.name }} "$WORKFLOW_NAME" "$PATH_OVERRIDE" "$STEP_INPUTS" "$STEP_PREVIOUS"
+
         # Copy outputs to the real GitHub output file
         if [ -f "$OUTPUT_FILE" ]; then
           cat "$OUTPUT_FILE" >> $GITHUB_OUTPUT

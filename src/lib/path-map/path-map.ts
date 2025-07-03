@@ -141,17 +141,17 @@ export function create<T extends PathInput>(paths: T, base?: string): RelativePa
  * prod.absolute.src.lib.utils // '/prod/src/lib/utils.ts'
  * ```
  */
-export function rebase<T extends PathInput>(
+export const rebase = <T extends PathInput>(
   pathMap: PathMap<T> | RelativePathMap<T>,
   base: string,
-): PathMap<T> {
+): PathMap<T> => {
   // Extract the input structure from the relative paths
   const input = extractInput(pathMap)
   return create(input, base) as PathMap<T>
 }
 
 // Helper to process paths for relative variant (local to parent)
-function processRelativePaths(input: PathInput, currentPath: string[]): any {
+const processRelativePaths = (input: PathInput, currentPath: string[]): any => {
   const result: any = {}
 
   // Add $ property for directory (just the last segment)
@@ -173,7 +173,7 @@ function processRelativePaths(input: PathInput, currentPath: string[]): any {
 }
 
 // Helper to process paths for rooted variant (from PathMap root)
-function processRootedPaths(input: PathInput, currentPath: string[]): any {
+const processRootedPaths = (input: PathInput, currentPath: string[]): any => {
   const result: any = {}
 
   // Add $ property for directory (full path from root)
@@ -194,7 +194,7 @@ function processRootedPaths(input: PathInput, currentPath: string[]): any {
 }
 
 // Helper to process paths for absolute variant
-function processAbsolutePaths(input: PathInput, base: string, currentPath: string[]): any {
+const processAbsolutePaths = (input: PathInput, base: string, currentPath: string[]): any => {
   const result: any = {}
 
   // Normalize base to not end with slash unless it's root
@@ -220,7 +220,7 @@ function processAbsolutePaths(input: PathInput, base: string, currentPath: strin
 }
 
 // Helper to extract input structure from processed paths
-function extractInput(pathMap: any): PathInput {
+const extractInput = (pathMap: any): PathInput => {
   const input: PathInput = {}
 
   // Get the source - could be relative from PathMap or the whole thing for RelativePathMap

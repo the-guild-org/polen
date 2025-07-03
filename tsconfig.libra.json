@@ -28,7 +28,9 @@
       "#lib/deployment": ["./src/lib/deployment/$.ts"],
       "#lib/deployment/*": ["./src/lib/deployment/*.ts"],
       "#lib/task": ["./src/lib/task/$.ts"],
-      "#lib/task/*": ["./src/lib/task/*.ts"]
+      "#lib/task/*": ["./src/lib/task/*.ts"],
+      "#lib/github-actions": ["./src/lib/github-actions/$.ts"],
+      "#lib/github-actions/*": ["./src/lib/github-actions/*.ts"]
     },
 
     // DX covered by ESLint:

@@ -52,7 +52,7 @@ export interface GitController {
 /**
  * Create a git controller instance
  */
-export function createGitController($: typeof ZxDollar): GitController {
+export const createGitController = ($: typeof ZxDollar): GitController => {
   const api: GitController = {
     async commit(options) {
       const {

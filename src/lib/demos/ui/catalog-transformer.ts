@@ -22,7 +22,7 @@ export interface CatalogDeploymentData {
 /**
  * Transforms version catalog into deployment data structure
  */
-export function transformCatalogToDeployments(catalog: VersionHistory.Catalog): CatalogDeploymentData {
+export const transformCatalogToDeployments = (catalog: VersionHistory.Catalog): CatalogDeploymentData => {
   const latestStable = catalog.distTags.latest || catalog.stable[0] || null
 
   const trunkDeployments = {

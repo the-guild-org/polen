@@ -36,51 +36,27 @@ export interface ModuleSearchResult {
 }
 
 /**
- * Discover a workflow step module using the convention:
- * 1. First try: .github/workflows/<workflow-name>.steps.ts (new collection pattern)
- * 2. Second try: .github/steps/<workflow-name>/<step-name>.ts
- * 3. Third try: .github/steps/<step-name>.ts
+ * Find a workflow step collection using the convention:
+ * .github/workflows/<workflow-name>.steps.ts
  */
-export function searchModule(options: Options): ModuleSearchResult {
-  const { stepName, workflowName, baseDir = process.cwd() } = options
+export const searchModule = (options: Options): ModuleSearchResult => {
+  const { workflowName, baseDir = process.cwd() } = options
   const searchedPaths: string[] = []
 
-  // Try new collection pattern first
-  if (workflowName) {
-    const collectionPath = join(baseDir, `.github/workflows`, `${workflowName}.steps.ts`)
-    searchedPaths.push(collectionPath)
-
-    if (existsSync(collectionPath)) {
-      return {
-        found: true,
-        path: collectionPath,
-        searchedPaths,
-      }
+  if (!workflowName) {
+    return {
+      found: false,
+      searchedPaths: [],
     }
   }
 
-  // Try existing patterns
-  if (workflowName) {
-    const workflowSpecificPath = join(baseDir, `.github/steps`, workflowName, `${stepName}.ts`)
-    searchedPaths.push(workflowSpecificPath)
+  const collectionPath = join(baseDir, `.github/workflows`, `${workflowName}.steps.ts`)
+  searchedPaths.push(collectionPath)
 
-    if (existsSync(workflowSpecificPath)) {
-      return {
-        found: true,
-        path: workflowSpecificPath,
-        searchedPaths,
-      }
-    }
-  }
-
-  // Try general path
-  const generalPath = join(baseDir, `.github/steps`, `${stepName}.ts`)
-  searchedPaths.push(generalPath)
-
-  if (existsSync(generalPath)) {
+  if (existsSync(collectionPath)) {
     return {
       found: true,
-      path: generalPath,
+      path: collectionPath,
       searchedPaths,
     }
   }

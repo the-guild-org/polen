@@ -31,7 +31,8 @@ jobs:
         id: release
         uses: ./.github/actions/step
         with:
-          name: extract-release-info
+          workflow: demos-build-on-release-semver
+          name: extractReleaseInfo
 
       - name: Build Polen
         uses: ./.github/actions/build-polen
@@ -41,8 +42,12 @@ jobs:
       - name: Build demos
         uses: ./.github/actions/step
         with:
+          workflow: demos-build-on-release-semver
           name: build
-          previous: ${{ toJSON(steps.release.outputs) }}
+          previous: |
+            {
+              "extractReleaseInfo": ${{ toJSON(steps.release.outputs) }}
+            }
 
       - name: Deploy to GitHub Pages
         uses: ./.github/actions/gh-pages
@@ -54,5 +59,9 @@ jobs:
       - name: Add demos link to commit
         uses: ./.github/actions/step
         with:
-          name: add-demos-link
-          previous: ${{ toJSON(steps.release.outputs) }}
+          workflow: demos-build-on-release-semver
+          name: addDemosLink
+          previous: |
+            {
+              "extractReleaseInfo": ${{ toJSON(steps.release.outputs) }}
+            }

@@ -9,11 +9,11 @@ import type { Demo, DemoPageData, PrDeployments, TrunkDeployments } from './type
 /**
  * Transforms demo metadata and examples into Demo array
  */
-export function transformDemoMetadata(
+export const transformDemoMetadata = (
   demoConfig: DemoConfig,
   demoExamples: string[],
   demoMetadata: Record<string, DemoMetadata>,
-): Demo[] {
+): Demo[] => {
   const orderedExamples = getOrderedDemos(demoConfig, demoExamples)
   const allDemos: Demo[] = []
 
@@ -50,26 +50,16 @@ export function transformDemoMetadata(
 /**
  * Creates deployment data structure based on PR or trunk mode
  */
-export function createDeploymentsData(
+export const createDeploymentsData = (
   config: { prNumber?: string; currentSha?: string },
   data: {
-    prDeployments?: Array<{ number: number; sha?: string; ref?: string; previousDeployments?: string[] }>
     trunkDeployments?: {
       latest: { sha: string; shortSha: string; tag: string | null } | null
       previous: Array<{ sha: string; shortSha: string; tag: string | null }>
     }
     distTags?: Record<string, string>
   },
-): TrunkDeployments | PrDeployments {
-  if (config.prNumber) {
-    return {
-      type: 'pr',
-      prNumber: config.prNumber,
-      currentSha: config.currentSha,
-      deployments: data.prDeployments || [],
-    }
-  }
-
+): TrunkDeployments => {
   return {
     type: 'trunk',
     distTags: data.distTags || {},
@@ -81,12 +71,12 @@ export function createDeploymentsData(
 /**
  * Creates the final DemoPageData structure
  */
-export function createDemoPageData(
+export const createDemoPageData = (
   config: { basePath: string; prNumber?: string; currentSha?: string },
   demoConfig: DemoConfig,
   demos: Demo[],
   deployments: TrunkDeployments | PrDeployments,
-): DemoPageData {
+): DemoPageData => {
   return {
     theme: demoConfig.ui.theme,
     content: demoConfig.ui.content,

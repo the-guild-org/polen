@@ -33,18 +33,11 @@ export const DemoCard = ({ demo, data }: { demo: Demo; data: DemoPageData }) => 
         href: `${basePath}${deployment.sha}/${name}/`,
       }))
     } else {
-      // For PR deployments, find the current PR
-      const currentPr = deployments.deployments.find(
-        pr => pr.number.toString() === deployments.prNumber,
-      )
-      if (currentPr?.previousDeployments) {
-        previousVersions = currentPr.previousDeployments
-          .filter(sha => sha !== deployments.currentSha)
-          .map(sha => ({
-            label: sha.substring(0, 7),
-            href: `${basePath}${sha}/${name}/`,
-          }))
-      }
+      // For PR deployments, use pre-processed previous versions
+      previousVersions = deployments.previousVersions.map(version => ({
+        label: version.shortSha,
+        href: `${basePath}${version.sha}/${name}/`,
+      }))
     }
 
     return (

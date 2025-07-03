@@ -11,7 +11,7 @@
  * // Returns: <script>globalThis.__MY_APP__ = {"user":{"id":1,"name":"John"}};</script>
  * ```
  */
-export function createGlobalDataScript(globalName: string, data: unknown): string {
+export const createGlobalDataScript = (globalName: string, data: unknown): string => {
   // Validate global name to prevent injection attacks
   if (!/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(globalName)) {
     throw new Error(`Invalid global variable name: ${globalName}`)
@@ -40,11 +40,11 @@ export function createGlobalDataScript(globalName: string, data: unknown): strin
  * `)
  * ```
  */
-export function createGlobalDataScriptWithInit(
+export const createGlobalDataScriptWithInit = (
   globalName: string,
   data: unknown,
   initCode?: string,
-): string {
+): string => {
   const dataScript = createGlobalDataScript(globalName, data)
 
   if (!initCode) {
@@ -65,12 +65,12 @@ export function createGlobalDataScriptWithInit(
  * @param initCode - Optional initialization code
  * @returns Modified HTML with script injected
  */
-export function injectGlobalDataIntoHTML(
+export const injectGlobalDataIntoHTML = (
   html: string,
   globalName: string,
   data: unknown,
   initCode?: string,
-): string {
+): string => {
   const script = initCode
     ? createGlobalDataScriptWithInit(globalName, data, initCode)
     : createGlobalDataScript(globalName, data)

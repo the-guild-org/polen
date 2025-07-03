@@ -1,43 +1,18 @@
-/**
- * Runner utilities for executing workflow steps in GitHub Actions
- */
-
+import { createRunnerArgs, type RunnerArgs } from '#lib/github-actions/runner-args'
 import * as core from '@actions/core'
-import { context, getOctokit } from '@actions/github'
+import { context } from '@actions/github'
 import { Obj, Path, Str } from '@wollybeard/kit'
-import { promises as fs } from 'node:fs'
 import { z } from 'zod/v4'
-import { $ } from 'zx'
-import { convertToStep, isStepsCollection } from './create-steps.ts'
-import { createGitController } from './git-controller.ts'
-import { createPullRequestController } from './pr-controller.ts'
+import type { Context } from './runner-args-context.ts'
 import { searchModule } from './search-module.ts'
-import type { Args, Step } from './step.ts'
+import { convertToStep, isStepCollection } from './step-collection.ts'
+import type { Inputs, Outputs, Step } from './step.ts'
 
-/**
- * Create a workflow context with all necessary tools
- */
-export function createArgs(stepName: string): Args {
-  const githubToken = process.env[`GITHUB_TOKEN`]
-  if (!githubToken) {
-    throw new Error(`GITHUB_TOKEN environment variable is required`)
-  }
-
-  const github = getOctokit(githubToken)
-  const pr = createPullRequestController(github, context, stepName)
-  const git = createGitController($)
-
-  return {
-    core,
-    github,
-    context,
-    $,
-    fs,
-    pr,
-    git,
-    inputs: {},
-  }
-}
+export type Runner<
+  $Inputs extends Inputs = Inputs,
+  $Outputs extends Outputs = Outputs,
+  $Context = Context,
+> = <args extends RunnerArgs<$Inputs, $Context>>(args: args) => Promise<$Outputs>
 
 /**
  * Run a workflow step by name using discovery
@@ -77,52 +52,39 @@ export async function runStep(
     // Dynamically import the step module
     let stepModule: any
 
-    // Check if this is a test scenario (mocked module)
-    if (process.env[`NODE_ENV`] === `test` && stepPath.startsWith(`./test-`)) {
-      // For tests, use direct import path
-      stepModule = await import(stepPath)
-    } else {
-      // For real usage, convert to absolute path
-      const { resolve } = await import(`node:path`)
-      const { pathToFileURL } = await import(`node:url`)
+    // Convert to absolute path for import
+    const { resolve } = await import(`node:path`)
+    const { pathToFileURL } = await import(`node:url`)
 
-      // Resolve to absolute path and convert to file URL for proper ESM import
-      const absolutePath = resolve(process.cwd(), stepPath)
-      const importUrl = pathToFileURL(absolutePath).href
+    // Resolve to absolute path and convert to file URL for proper ESM import
+    const absolutePath = resolve(process.cwd(), stepPath)
+    const importUrl = pathToFileURL(absolutePath).href
 
-      stepModule = await import(importUrl)
+    stepModule = await import(importUrl)
+
+    // Module must export a StepCollection
+    if (!isStepCollection(stepModule.default)) {
+      throw new Error(`Module at ${stepPath} does not export a valid step collection as default export`)
     }
 
-    // Check if the module exports a StepsCollection
-    let step: Step
-
-    if (isStepsCollection(stepModule.default)) {
-      // Extract the requested step from the collection
-      if (!requestedStepName) {
-        throw new Error(`Step name is required when using a steps collection`)
-      }
-
-      const collection = stepModule.default
-      const stepDef = collection.steps[requestedStepName]
-
-      if (!stepDef) {
-        const availableSteps = Object.keys(collection.steps)
-        throw new Error(
-          `Step '${requestedStepName}' not found in collection.\n`
-            + `Available steps: ${availableSteps.join(', ')}`,
-        )
-      }
-
-      // Convert the step definition to a standard Step
-      step = convertToStep(stepDef, requestedStepName, collection)
-    } else {
-      // Regular step export
-      step = stepModule.default
-
-      if (!step?.run) {
-        throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
-      }
+    // Extract the requested step from the collection
+    if (!requestedStepName) {
+      throw new Error(`Step name is required when using a steps collection`)
     }
+
+    const collection = stepModule.default
+    const stepDef = collection.steps[requestedStepName]
+
+    if (!stepDef) {
+      const availableSteps = Object.keys(collection.steps)
+      throw new Error(
+        `Step '${requestedStepName}' not found in collection.\n`
+          + `Available steps: ${availableSteps.join(', ')}`,
+      )
+    }
+
+    // Convert the step definition to a standard Step
+    const step = convertToStep(stepDef, requestedStepName, collection)
 
     //
     //
@@ -135,7 +97,7 @@ export async function runStep(
     //
     //
 
-    const stepName = step.name ?? requestedStepName ?? Path.parse(stepPath).name
+    const stepName = step.name
 
     // todo: allow step definition to opt-out of runtime validation
     // Validate context if schema is provided
@@ -166,22 +128,6 @@ export async function runStep(
         core.debug(`Received data: ${JSON.stringify(rawInputs, null, 2)}`)
         throw parseResult.error
       }
-
-      // todo: let step define if it wants to silence this warning
-      // Check for excess properties if using object schema
-      if (step.inputs instanceof z.ZodObject && typeof rawInputs === `object` && rawInputs !== null) {
-        const knownKeys = Object.keys(step.inputs.shape)
-        const providedKeys = Object.keys(rawInputs)
-        const unknownKeys = providedKeys.filter(key => !knownKeys.includes(key))
-
-        if (unknownKeys.length > 0) {
-          core.warning(
-            `Step '${stepName}' received unknown inputs: ${unknownKeys.join(`, `)}. These inputs will be ignored.`,
-          )
-          core.debug(`Known inputs: ${knownKeys.join(`, `)}`)
-          core.debug(`Provided inputs: ${JSON.stringify(rawInputs, null, 2)}`)
-        }
-      }
     }
 
     //
@@ -193,14 +139,14 @@ export async function runStep(
     //
 
     // Create context with validated inputs
-    const args = createArgs(stepName)
+    const args = createRunnerArgs(stepName)
     const stepArgs = {
       ...args,
       context: validatedContext,
       inputs: inputs as any,
     }
 
-    core.startGroup(`${step.name ?? 'Step'}: ${step.description ?? ''}`)
+    core.startGroup(`${step.name}: ${step.description ?? ''}`)
     core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
     // Execute step
@@ -214,9 +160,9 @@ export async function runStep(
     //
     //
 
-    // Validate & Export outputs
-    // todo: allow step definition to opt-out of output validation
+    // Handle outputs
     if (step.outputs) {
+      // If schema is provided, validate outputs
       const outputs = step.outputs.parse(outputRaw)
       const json = JSON.stringify(outputs)
       core.setOutput(`json`, json)
@@ -224,12 +170,16 @@ export async function runStep(
         // todo: if key === json raise an error, it is a reserved name
         core.setOutput(key, Str.is(value) ? value : JSON.stringify(value))
       }
-    } else if (outputRaw !== undefined && outputRaw !== null) {
-      core.warning(
-        `Step did not define outputs schema, but returned outputs. These will not be validated or exported. Outputs were: ${
-          JSON.stringify(outputRaw)
-        }`,
-      )
+    } else if (outputRaw !== undefined && outputRaw !== null && typeof outputRaw === 'object') {
+      // No schema provided, but outputs were returned - use them directly
+      // This enables output type inference without explicit schemas
+      const outputs = outputRaw as Record<string, unknown>
+      const json = JSON.stringify(outputs)
+      core.setOutput(`json`, json)
+      for (const [key, value] of Obj.entries(outputs)) {
+        core.setOutput(key, Str.is(value) ? value : JSON.stringify(value))
+      }
+      core.debug(`Step returned outputs without schema validation: ${json}`)
     }
 
     core.endGroup()

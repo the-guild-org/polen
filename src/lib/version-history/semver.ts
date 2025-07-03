@@ -72,7 +72,7 @@ export type SemVerInput = SemVerString | SemVerObject
  * const obj2 = normalizeSemVerInput(alreadyParsedObject)
  * // obj1 and obj2 are both SemVerObject instances
  */
-export function normalizeSemVerInput(semVerInput: SemVerInput): SemVerObject {
+export const normalizeSemVerInput = (semVerInput: SemVerInput): SemVerObject => {
   if (typeof semVerInput === 'string') {
     const parsed = semverParse(semVerInput)
     if (!parsed) {
@@ -96,7 +96,7 @@ export function normalizeSemVerInput(semVerInput: SemVerInput): SemVerObject {
  * const str1 = getSemVerString('1.2.3' as SemVerString) // '1.2.3'
  * const str2 = getSemVerString(parsedObject) // e.g., '1.2.3-beta.1'
  */
-export function getSemVerString(semVerInput: SemVerInput): string {
+export const getSemVerString = (semVerInput: SemVerInput): string => {
   if (typeof semVerInput === 'string') {
     return semVerInput
   }
@@ -119,6 +119,6 @@ export function getSemVerString(semVerInput: SemVerInput): string {
  *   const parsed = normalizeSemVerInput(input)
  * }
  */
-export function isSemVerString(value: unknown): value is SemVerString {
+export const isSemVerString = (value: unknown): value is SemVerString => {
   return SemVerStringSchema.safeParse(value).success
 }

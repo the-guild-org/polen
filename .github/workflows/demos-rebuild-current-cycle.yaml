@@ -14,7 +14,68 @@ permissions:
   deployments: write
 
 jobs:
-  run:
+  get-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get-versions.outputs.json }}
+      has-versions: ${{ steps.get-versions.outputs.has-versions }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Build Polen
+        uses: ./.github/actions/build-polen
+
+      - name: Get versions to build
+        id: get-versions
+        uses: ./.github/actions/step
+        with:
+          name: get-versions
+          workflow: demos-rebuild-current-cycle
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-version:
+    needs: get-versions
+    if: fromJSON(needs.get-versions.outputs.has-versions)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.get-versions.outputs.versions).versions }}
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version }}
+
+      - name: Build Polen
+        uses: ./.github/actions/build-polen
+
+      - name: Build version ${{ matrix.version }}
+        id: build-version
+        uses: ./.github/actions/step
+        with:
+          name: build-version
+          workflow: demos-rebuild-current-cycle
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: |
+            {
+              "version": "${{ matrix.version }}"
+            }
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-${{ matrix.version }}
+          path: dist/
+          retention-days: 1
+
+  deploy:
+    needs: [get-versions, build-version]
+    if: always() && needs.get-versions.result == 'success' && needs.build-version.result != 'failure'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,16 +87,26 @@ jobs:
       - name: Build Polen
         uses: ./.github/actions/build-polen
 
-      - name: Build current cycle
-        id: build
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          pattern: demo-*
+
+      - name: Deploy consolidated demos
+        id: deploy
         uses: ./.github/actions/step
         with:
-          name: build
+          name: deploy
           workflow: demos-rebuild-current-cycle
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: |
+            {
+              "get-versions": "${{ fromJSON(needs.get-versions.outputs) }}"
+            }
 
       - name: Deploy to GitHub Pages
-        if: fromJSON(steps.build.outputs.json).did
+        if: fromJSON(steps.deploy.outputs.json).deployed
         uses: ./.github/actions/gh-pages
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

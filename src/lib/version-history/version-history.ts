@@ -6,14 +6,14 @@ import type { Catalog, DevelopmentCycle, DistTagInfo, Version } from './types.ts
 export type { Catalog, DevelopmentCycle, DistTagInfo, Version } from './types.ts'
 
 // Helper to get git instance
-function getGit(repoPath: string = process.cwd()): SimpleGit {
+const getGit = (repoPath: string = process.cwd()): SimpleGit => {
   return simpleGit(repoPath)
 }
 
 /**
  * Parse a semver string into a Version object
  */
-export function parseSemVer(tag: string): SemVerVersion | null {
+export const parseSemVer = (tag: string): SemVerVersion | null => {
   return semverParse(tag) || null
 }
 
@@ -23,7 +23,7 @@ export function parseSemVer(tag: string): SemVerVersion | null {
  * @param semVerInput - Either a string, SemVerString or SemVerObject
  * @returns True if the input is a valid semver
  */
-export function isSemVerTag(semVerInput: string | SemVerInput): boolean {
+export const isSemVerTag = (semVerInput: string | SemVerInput): boolean => {
   if (typeof semVerInput === 'string') {
     return semverParse(semVerInput) !== undefined
   }
@@ -37,7 +37,7 @@ export function isSemVerTag(semVerInput: string | SemVerInput): boolean {
  * @param semVerInput - Either a string, SemVerString or SemVerObject
  * @returns True if the version has prerelease components
  */
-export function isPrerelease(semVerInput: string | SemVerInput): boolean {
+export const isPrerelease = (semVerInput: string | SemVerInput): boolean => {
   // If it's an object (parsed semver), use normalizeSemVerInput
   if (typeof semVerInput === 'object') {
     const parsed = normalizeSemVerInput(semVerInput)
@@ -56,7 +56,7 @@ export function isPrerelease(semVerInput: string | SemVerInput): boolean {
  * @param semVerInput - Either a string, SemVerString or SemVerObject
  * @returns True if the version is stable (no prerelease components)
  */
-export function isStableVersion(semVerInput: string | SemVerInput): boolean {
+export const isStableVersion = (semVerInput: string | SemVerInput): boolean => {
   return !isPrerelease(semVerInput)
 }
 
@@ -68,7 +68,7 @@ export function isStableVersion(semVerInput: string | SemVerInput): boolean {
  * @param prefix - Path prefix (defaults to `/polen`)
  * @returns The deployment path for the version
  */
-export function getDeploymentPath(semVerInput: string | SemVerInput, prefix = `/polen`): string {
+export const getDeploymentPath = (semVerInput: string | SemVerInput, prefix = `/polen`): string => {
   const isStable = isStableVersion(semVerInput)
 
   // If it's a plain string, use it directly
@@ -84,7 +84,7 @@ export function getDeploymentPath(semVerInput: string | SemVerInput, prefix = `/
 /**
  * Get all versions from the repository
  */
-export async function getVersions(repoPath?: string): Promise<Version[]> {
+export const getVersions = async (repoPath?: string): Promise<Version[]> => {
   const git = getGit(repoPath)
   const tags = await git.tags()
   const versions: Version[] = []
@@ -123,7 +123,7 @@ export async function getVersions(repoPath?: string): Promise<Version[]> {
 /**
  * Get dist-tag information (latest, next, etc.)
  */
-export async function getDistTag(tagName: string, repoPath?: string): Promise<DistTagInfo | null> {
+export const getDistTag = async (tagName: string, repoPath?: string): Promise<DistTagInfo | null> => {
   const git = getGit(repoPath)
   try {
     const commit = await git.revparse([tagName])
@@ -145,14 +145,14 @@ export async function getDistTag(tagName: string, repoPath?: string): Promise<Di
 /**
  * Get the 'latest' dist-tag
  */
-export async function getDistTagLatest(repoPath?: string): Promise<DistTagInfo | null> {
+export const getDistTagLatest = async (repoPath?: string): Promise<DistTagInfo | null> => {
   return getDistTag(`latest`, repoPath)
 }
 
 /**
  * Get all dist-tags
  */
-export async function getDistTags(repoPath?: string): Promise<DistTagInfo[]> {
+export const getDistTags = async (repoPath?: string): Promise<DistTagInfo[]> => {
   const commonDistTags = [`latest`, `next`, `beta`, `alpha`, `canary`]
   const distTags: DistTagInfo[] = []
 
@@ -169,7 +169,7 @@ export async function getDistTags(repoPath?: string): Promise<DistTagInfo[]> {
 /**
  * Get the latest stable version
  */
-export async function getLatestStableVersion(repoPath?: string): Promise<Version | null> {
+export const getLatestStableVersion = async (repoPath?: string): Promise<Version | null> => {
   const versions = await getVersions(repoPath)
   return versions.find(v => !v.isPrerelease) || null
 }
@@ -177,7 +177,7 @@ export async function getLatestStableVersion(repoPath?: string): Promise<Version
 /**
  * Get the latest prerelease version
  */
-export async function getLatestPrereleaseVersion(repoPath?: string): Promise<Version | null> {
+export const getLatestPrereleaseVersion = async (repoPath?: string): Promise<Version | null> => {
   const versions = await getVersions(repoPath)
   return versions.find(v => v.isPrerelease) || null
 }
@@ -185,10 +185,10 @@ export async function getLatestPrereleaseVersion(repoPath?: string): Promise<Ver
 /**
  * Get version at a specific commit
  */
-export async function getVersionAtCommit(commit: string, repoPath?: string): Promise<Version | null> {
+export const getVersionAtCommit = async (commit: string, repoPath?: string): Promise<Version | null> => {
   const git = getGit(repoPath)
   const tags = await git.tag([`--points-at`, commit])
-  const semverTags = tags.split(`\n`).filter(isSemverTag)
+  const semverTags = tags.split(`\n`).filter(isSemVerTag)
 
   if (semverTags.length === 0) return null
 
@@ -204,10 +204,10 @@ export async function getVersionAtCommit(commit: string, repoPath?: string): Pro
  * @param repoPath - Path to the repository (optional)
  * @returns Array of versions that meet the minimum version requirement
  */
-export async function getDeploymentHistory(
+export const getDeploymentHistory = async (
   minimumVersion?: string | SemVerInput,
   repoPath?: string,
-): Promise<Version[]> {
+): Promise<Version[]> => {
   const versions = await getVersions(repoPath)
 
   if (!minimumVersion) return versions
@@ -227,7 +227,7 @@ export async function getDeploymentHistory(
 /**
  * Get the current development cycle: latest stable + all newer prereleases
  */
-export async function getCurrentDevelopmentCycle(repoPath?: string): Promise<DevelopmentCycle> {
+export const getCurrentDevelopmentCycle = async (repoPath?: string): Promise<DevelopmentCycle> => {
   const latestStable = await getLatestStableVersion(repoPath)
   if (!latestStable) {
     // No stable version yet, return all versions as prereleases
@@ -254,11 +254,11 @@ export async function getCurrentDevelopmentCycle(repoPath?: string): Promise<Dev
 /**
  * Get versions since a specific version (inclusive)
  */
-export async function getVersionsSince(
+export const getVersionsSince = async (
   sinceVersion: string,
   skipVersions: string[] = [],
   repoPath?: string,
-): Promise<Version[]> {
+): Promise<Version[]> => {
   const sinceSemver = parseSemVer(sinceVersion)
   if (!sinceSemver) {
     throw new Error(`Invalid version: ${sinceVersion}`)
@@ -281,7 +281,7 @@ export async function getVersionsSince(
  *
  * Note: This only returns prereleases. Stable versions are not part of development cycles.
  */
-export async function getPastDevelopmentCycles(repoPath?: string): Promise<Version[]> {
+export const getPastDevelopmentCycles = async (repoPath?: string): Promise<Version[]> => {
   const allVersions = await getVersions(repoPath)
   const currentCycle = await getCurrentDevelopmentCycle(repoPath)
   const currentCycleTags = new Set(currentCycle.all.map(v => v.git.tag))
@@ -295,7 +295,7 @@ export async function getPastDevelopmentCycles(repoPath?: string): Promise<Versi
 /**
  * Get a complete registry of all versions and dist-tags
  */
-export async function getVersionCatalog(repoPath?: string): Promise<Catalog> {
+export const getVersionCatalog = async (repoPath?: string): Promise<Catalog> => {
   const [allVersions, distTagInfos] = await Promise.all([
     getVersions(repoPath),
     getDistTags(repoPath),
