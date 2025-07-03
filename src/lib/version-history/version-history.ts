@@ -1,14 +1,9 @@
-import {
-  compare as semverCompare,
-  parse as semverParse,
-  prerelease as semverPrerelease,
-  type Version as SemverVersion,
-} from '@vltpkg/semver'
+import { compare as semverCompare, parse as semverParse, type Version as SemVerVersion } from '@vltpkg/semver'
 import { type SimpleGit, simpleGit } from 'simple-git'
 import { getSemVerString, normalizeSemVerInput, type SemVerInput } from './semver.ts'
-import type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './types.ts'
+import type { Catalog, DevelopmentCycle, DistTagInfo, Version } from './types.ts'
 
-export type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './types.ts'
+export type { Catalog, DevelopmentCycle, DistTagInfo, Version } from './types.ts'
 
 // Helper to get git instance
 function getGit(repoPath: string = process.cwd()): SimpleGit {
@@ -18,7 +13,7 @@ function getGit(repoPath: string = process.cwd()): SimpleGit {
 /**
  * Parse a semver string into a Version object
  */
-export function parseSemver(tag: string): SemverVersion | null {
+export function parseSemVer(tag: string): SemVerVersion | null {
   return semverParse(tag) || null
 }
 
@@ -28,7 +23,7 @@ export function parseSemver(tag: string): SemverVersion | null {
  * @param semVerInput - Either a string, SemVerString or SemVerObject
  * @returns True if the input is a valid semver
  */
-export function isSemverTag(semVerInput: string | SemVerInput): boolean {
+export function isSemVerTag(semVerInput: string | SemVerInput): boolean {
   if (typeof semVerInput === 'string') {
     return semverParse(semVerInput) !== undefined
   }
@@ -95,9 +90,9 @@ export async function getVersions(repoPath?: string): Promise<Version[]> {
   const versions: Version[] = []
 
   for (const tag of tags.all) {
-    if (!isSemverTag(tag)) continue
+    if (!isSemVerTag(tag)) continue
 
-    const semver = parseSemver(tag)
+    const semver = parseSemVer(tag)
     if (!semver) continue
 
     try {
@@ -135,7 +130,7 @@ export async function getDistTag(tagName: string, repoPath?: string): Promise<Di
 
     // Find semver tag at this commit
     const tags = await git.tag([`--points-at`, commit])
-    const semverTags = tags.split(`\n`).filter(isSemverTag)
+    const semverTags = tags.split(`\n`).filter(isSemVerTag)
 
     return {
       name: tagName,
@@ -219,7 +214,7 @@ export async function getDeploymentHistory(
 
   // If it's a plain string, parse it
   if (typeof minimumVersion === 'string') {
-    const minSemver = parseSemver(minimumVersion)
+    const minSemver = parseSemVer(minimumVersion)
     if (!minSemver) return versions
     return versions.filter(v => semverCompare(v.semver, minSemver) >= 0)
   }
@@ -264,7 +259,7 @@ export async function getVersionsSince(
   skipVersions: string[] = [],
   repoPath?: string,
 ): Promise<Version[]> {
-  const sinceSemver = parseSemver(sinceVersion)
+  const sinceSemver = parseSemVer(sinceVersion)
   if (!sinceSemver) {
     throw new Error(`Invalid version: ${sinceVersion}`)
   }
@@ -300,14 +295,14 @@ export async function getPastDevelopmentCycles(repoPath?: string): Promise<Versi
 /**
  * Get a complete registry of all versions and dist-tags
  */
-export async function getVersionCatalog(repoPath?: string): Promise<VersionCatalog> {
+export async function getVersionCatalog(repoPath?: string): Promise<Catalog> {
   const [allVersions, distTagInfos] = await Promise.all([
     getVersions(repoPath),
     getDistTags(repoPath),
   ])
 
   // Map dist-tags to versions
-  const distTags: VersionCatalog[`distTags`] = {}
+  const distTags: Catalog[`distTags`] = {}
   for (const tagInfo of distTagInfos) {
     if (tagInfo.semverTag) {
       const version = allVersions.find(v => v.git.tag === tagInfo.semverTag)
@@ -332,8 +327,8 @@ export async function getVersionCatalog(repoPath?: string): Promise<VersionCatal
 // Legacy class export for backward compatibility
 // TODO: Remove this once all usages are migrated
 export class VersionHistory {
-  static parseSemver = parseSemver
-  static isSemverTag = isSemverTag
+  static parseSemVer = parseSemVer
+  static isSemVerTag = isSemVerTag
   static isPrerelease = isPrerelease
   static isStableVersion = isStableVersion
   static getDeploymentPath = getDeploymentPath

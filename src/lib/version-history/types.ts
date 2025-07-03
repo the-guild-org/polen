@@ -2,7 +2,7 @@
  * Version history types
  */
 
-import type { Version as Semver } from '@vltpkg/semver'
+import type { Version as SemVer } from '@vltpkg/semver'
 
 export interface Version {
   /**
@@ -29,7 +29,7 @@ export interface Version {
   /**
    * Parsed semver object containing major, minor, patch, and prerelease info
    */
-  semver: Semver
+  semver: SemVer
 }
 
 export interface DistTagInfo {
@@ -47,7 +47,7 @@ export interface DevelopmentCycle {
 /**
  * Complete registry of all versions and dist-tags in the repository
  */
-export interface VersionCatalog {
+export interface Catalog {
   /**
    * All dist-tags mapped to their corresponding versions
    */

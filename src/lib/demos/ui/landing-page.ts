@@ -1,7 +1,7 @@
 /**
  * Main entry point for demo landing page generation
  */
-import type { VersionCatalog } from '#lib/version-history/index'
+import { type VersionHistory } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { dirname, extname, join } from 'node:path'
 import React from 'react'
@@ -32,7 +32,7 @@ export interface CatalogOptions {
   currentSha?: string
   mode?: `production` | `development`
   prDeployments?: string | any[]
-  catalog: VersionCatalog
+  catalog: VersionHistory.VersionCatalog
   outputDir?: string
   outputPath?: string
 }

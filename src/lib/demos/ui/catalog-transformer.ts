@@ -1,7 +1,7 @@
 /**
  * Utilities for transforming version catalog data
  */
-import type { VersionCatalog } from '#lib/version-history/index'
+import { type VersionHistory } from '#lib/version-history/index'
 
 export interface CatalogDeploymentData {
   trunkDeployments: {
@@ -22,7 +22,7 @@ export interface CatalogDeploymentData {
 /**
  * Transforms version catalog into deployment data structure
  */
-export function transformCatalogToDeployments(catalog: VersionCatalog): CatalogDeploymentData {
+export function transformCatalogToDeployments(catalog: VersionHistory.VersionCatalog): CatalogDeploymentData {
   const latestStable = catalog.distTags.latest || catalog.stable[0] || null
 
   const trunkDeployments = {

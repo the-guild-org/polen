@@ -1,8 +1,5 @@
-export * as VersionHistory from './version-history.ts'
+/**
+ * Version history library for managing Git-based semver versions
+ */
 
-// Re-export types at the top level for convenience
-export type { DevelopmentCycle, DistTagInfo, Version, VersionCatalog } from './types.ts'
-
-// Re-export SemVer types and utilities
-export type { SemVerInput, SemVerString } from './semver.ts'
-export { getSemVerString, isSemVerString, normalizeSemVerInput, SemVerStringSchema } from './semver.ts'
+export * from './$.ts'

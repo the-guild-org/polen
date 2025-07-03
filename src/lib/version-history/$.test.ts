@@ -1,7 +1,7 @@
 import { parse as semverParse } from '@vltpkg/semver'
 import type { SimpleGit } from 'simple-git'
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
-import { VersionHistory } from './index.ts'
+import { VersionHistory } from './$.ts'
 
 // Mock the simple-git module
 vi.mock('simple-git', () => ({
