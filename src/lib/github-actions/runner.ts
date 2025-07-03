@@ -8,6 +8,7 @@ import { Obj, Path, Str } from '@wollybeard/kit'
 import { promises as fs } from 'node:fs'
 import { z } from 'zod/v4'
 import { $ } from 'zx'
+import { convertToStep, isStepsCollection } from './create-steps.ts'
 import { createGitController } from './git-controller.ts'
 import { createPullRequestController } from './pr-controller.ts'
 import { searchModule } from './search-module.ts'
@@ -59,7 +60,7 @@ export async function runStepByName(
   }
 
   core.debug(`Found step at: ${moduleLocation.path}`)
-  await runStep(moduleLocation.path, inputsJson)
+  await runStep(moduleLocation.path, inputsJson, stepName)
 }
 
 /**
@@ -68,6 +69,7 @@ export async function runStepByName(
 export async function runStep(
   stepPath: string,
   inputsJson?: string,
+  requestedStepName?: string,
 ): Promise<void> {
   const rawInputs = inputsJson ? JSON.parse(inputsJson) : {}
 
@@ -91,10 +93,35 @@ export async function runStep(
       stepModule = await import(importUrl)
     }
 
-    const step: Step = stepModule.default
-
-    if (!step?.run || !step.definition) {
-      throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
+    // Check if the module exports a StepsCollection
+    let step: Step
+    
+    if (isStepsCollection(stepModule.default)) {
+      // Extract the requested step from the collection
+      if (!requestedStepName) {
+        throw new Error(`Step name is required when using a steps collection`)
+      }
+      
+      const collection = stepModule.default
+      const stepDef = collection.steps[requestedStepName]
+      
+      if (!stepDef) {
+        const availableSteps = Object.keys(collection.steps)
+        throw new Error(
+          `Step '${requestedStepName}' not found in collection.\n` +
+          `Available steps: ${availableSteps.join(', ')}`
+        )
+      }
+      
+      // Convert the step definition to a standard Step
+      step = convertToStep(stepDef, requestedStepName, collection)
+    } else {
+      // Regular step export
+      step = stepModule.default
+      
+      if (!step?.run || !step.definition) {
+        throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
+      }
     }
 
     //

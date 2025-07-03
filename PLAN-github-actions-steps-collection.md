@@ -4,43 +4,21 @@
 
 Create a new `createSteps` API that allows multiple workflow steps to be defined in a single file, with automatic type inference, shared configuration, and better ergonomics. Move step files to be colocated with workflow YAML files.
 
-## Status: Not Started
+## Status: Phase 1 Complete ✓
 
-## Phase 1: Core API Implementation
+## Completed Phases
 
-### 1.1 Create Steps Collection Module
+### ✓ Phase 1: Core API Implementation (COMPLETED)
 
-- [ ] Create `src/lib/github-actions/create-steps.ts`
-  - [ ] Define `StepsCollection` type with discriminated union for simple vs configured mode
-  - [ ] Define `StepDefinition` types that support both object and function shorthand
-  - [ ] Create `ConfigDefinition` and `SetupFunction` types
-  - [ ] Implement proper type inference for `previous` context with namespaced outputs
-  - [ ] Use `Brand` type from kit-temp for type-safe StepsCollection identification
+The core StepsCollection API has been implemented with:
+- ✓ Created `src/lib/github-actions/create-steps.ts` with Brand type for type-safe identification
+- ✓ Implemented overloaded `createSteps` function supporting both simple and configured modes
+- ✓ Updated runner to detect and extract steps from collections
+- ✓ Added helpful error messages in `previous` proxy showing exact YAML needed
+- ✓ Updated module discovery to check `.github/workflows/<workflow-name>.steps.ts` first
+- ✓ Re-exported from barrel file
 
-### 1.2 Implement createSteps Function
-
-- [ ] In `src/lib/github-actions/create-steps.ts`:
-  - [ ] Add overloaded `createSteps` function signatures
-  - [ ] Simple mode: `createSteps(steps)`
-  - [ ] Config mode: `createSteps({ config?, setup?, steps })`
-  - [ ] Return a `StepsCollection` object with metadata for discovery
-- [ ] Re-export from `src/lib/github-actions/github-actions.ts` barrel file
-
-### 1.3 Update Step Runner
-
-- [ ] Modify `src/lib/github-actions/runner.ts`:
-  - [ ] Add support for importing and detecting steps collections (use Brand type check)
-  - [ ] Implement step extraction from collection by name
-  - [ ] Create the `previous` proxy with helpful error messages showing exact YAML needed
-  - [ ] Handle `setup` function execution and result injection
-  - [ ] Apply shared `config` to all steps
-
-### 1.4 Update Module Discovery
-
-- [ ] Modify `src/lib/github-actions/search-module.ts`:
-  - [ ] Add search pattern for `.github/workflows/<workflow-name>.steps.ts`
-  - [ ] Check if module default export is a steps collection
-  - [ ] Extract individual step from collection when found
+## Remaining Phases
 
 ## Phase 2: Migration Pilot
 
