@@ -119,7 +119,7 @@ export async function runStep(
       // Regular step export
       step = stepModule.default
 
-      if (!step?.run || !step.definition) {
+      if (!step?.run) {
         throw new Error(`Module at ${stepPath} does not export a valid workflow step as default export`)
       }
     }
@@ -135,14 +135,13 @@ export async function runStep(
     //
     //
 
-    const { definition } = step
-    const stepName = definition.name ?? Path.parse(stepPath).name
+    const stepName = step.name ?? requestedStepName ?? Path.parse(stepPath).name
 
     // todo: allow step definition to opt-out of runtime validation
     // Validate context if schema is provided
     let validatedContext: any = context
-    if (definition.contextSchema) {
-      const contextValidation = definition.contextSchema.safeParse(context)
+    if (step.context) {
+      const contextValidation = step.context.safeParse(context)
       if (!contextValidation.success) {
         const errorMessage = `Step '${stepName}' expects a different GitHub event context`
         core.error(errorMessage)
@@ -157,8 +156,8 @@ export async function runStep(
 
     // Validate inputs
     let inputs: Record<string, unknown> = {}
-    if (definition.inputsSchema) {
-      const parseResult = definition.inputsSchema.safeParse(rawInputs)
+    if (step.inputs) {
+      const parseResult = step.inputs.safeParse(rawInputs)
       if (parseResult.success) {
         inputs = parseResult.data
       } else {
@@ -170,8 +169,8 @@ export async function runStep(
 
       // todo: let step define if it wants to silence this warning
       // Check for excess properties if using object schema
-      if (definition.inputsSchema instanceof z.ZodObject && typeof rawInputs === `object` && rawInputs !== null) {
-        const knownKeys = Object.keys(definition.inputsSchema.shape)
+      if (step.inputs instanceof z.ZodObject && typeof rawInputs === `object` && rawInputs !== null) {
+        const knownKeys = Object.keys(step.inputs.shape)
         const providedKeys = Object.keys(rawInputs)
         const unknownKeys = providedKeys.filter(key => !knownKeys.includes(key))
 
@@ -201,7 +200,7 @@ export async function runStep(
       inputs: inputs as any,
     }
 
-    core.startGroup(`${definition.name}: ${definition.description}`)
+    core.startGroup(`${step.name ?? 'Step'}: ${step.description ?? ''}`)
     core.debug(`Inputs: ${JSON.stringify(inputs)}`)
 
     // Execute step
@@ -217,8 +216,8 @@ export async function runStep(
 
     // Validate & Export outputs
     // todo: allow step definition to opt-out of output validation
-    if (definition.outputsSchema) {
-      const outputs = definition.outputsSchema.parse(outputRaw)
+    if (step.outputs) {
+      const outputs = step.outputs.parse(outputRaw)
       const json = JSON.stringify(outputs)
       core.setOutput(`json`, json)
       for (const [key, value] of Obj.entries(outputs)) {

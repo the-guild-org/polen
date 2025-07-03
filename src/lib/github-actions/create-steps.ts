@@ -253,13 +253,11 @@ export function convertToStep<$Inputs extends Inputs, $Outputs extends Outputs, 
 
   // Return as a standard Step
   return {
-    definition: {
-      name: stepName,
-      description: stepObj.description || collection.config?.description,
-      inputsSchema: stepObj.inputs as any,
-      outputsSchema: stepObj.outputs as any,
-      contextSchema: mergedContext as any,
-    },
+    name: stepName,
+    description: stepObj.description || collection.config?.description,
+    inputs: stepObj.inputs as any,
+    outputs: stepObj.outputs as any,
+    context: mergedContext as any,
     run: wrappedRun as any,
   }
 }

@@ -79,19 +79,6 @@ export type Runner<
 ) => Promise<$Outputs>
 
 // Generic workflow step definition
-export interface Definition<
-  $InputsSchema extends InputsSchema,
-  $OutputsSchema extends OutputsSchema,
-  $ContextSchema extends ContextSchema,
-> {
-  description?: string
-  name?: string
-  inputsSchema?: $InputsSchema
-  outputsSchema?: $OutputsSchema
-  contextSchema?: $ContextSchema
-}
-
-// Generic workflow step definition
 export interface CreateInput<
   $InputsSchema extends InputsSchema,
   $OutputsSchema extends OutputsSchema,
@@ -218,15 +205,13 @@ export function createStep<
 >(
   input: CreateInput<$InputsSchema, $OutputsSchema, $ContextSchema>,
 ): Step<$InputsSchema, $OutputsSchema, $ContextSchema> {
-  const { run, inputs, outputs, context, ...rest } = input
-  const definition: Definition<$InputsSchema, $OutputsSchema, $ContextSchema> = {
-    ...rest,
-    inputsSchema: inputs,
-    outputsSchema: outputs,
-    contextSchema: context,
-  }
+  const { run, inputs, outputs, context, name, description } = input
   return {
-    definition,
+    name,
+    description,
+    inputs,
+    outputs,
+    context,
     run,
   } as any
 }

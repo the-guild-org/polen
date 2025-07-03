@@ -76,8 +76,8 @@ describe('defineWorkflowStep', () => {
     })
 
     // Outputs are validated in the runner, not in execute
-    expect(TestStep.definition.outputsSchema).toBeDefined()
-    expect(TestStep.definition.inputsSchema).toBeDefined()
+    expect(TestStep.outputs).toBeDefined()
+    expect(TestStep.inputs).toBeDefined()
   })
 
   it('step definition contains all metadata', async () => {
@@ -93,10 +93,10 @@ describe('defineWorkflowStep', () => {
       },
     })
 
-    expect(TestStep.definition.name).toBe('test-step')
-    expect(TestStep.definition.description).toBe('Test step')
-    expect(TestStep.definition.inputsSchema).toBeDefined()
-    expect(TestStep.definition.outputsSchema).toBeDefined()
+    expect(TestStep.name).toBe('test-step')
+    expect(TestStep.description).toBe('Test step')
+    expect(TestStep.inputs).toBeDefined()
+    expect(TestStep.outputs).toBeDefined()
   })
 
   // todo: this test is now a static type error, update to refelct that
