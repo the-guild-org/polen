@@ -1,12 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import React from 'react'
-import type { DemoConfig } from '../../config.ts'
-import type { LandingPageData } from '../data-collector.ts'
-import { DemosGrid } from './DemosGrid.tsx'
-import { Footer } from './Footer.tsx'
-import { Header } from './Header.tsx'
-import { PrBanner } from './PrBanner.tsx'
+import { getOrderedDemos } from '../../config.ts'
+import type { DemoPageData } from '../types.ts'
+import { DemoCard } from './DemoCard.tsx'
+import { PageHeader } from './PageHeader.tsx'
 import { VersionInfo } from './VersionInfo.tsx'
 
 // Read CSS file once at module level
@@ -15,28 +13,17 @@ const demosCSS = readFileSync(
   'utf-8',
 )
 
-const getPageTitle = (config: DemoConfig, data: LandingPageData): string => {
-  let title = config.ui.content.title
-  if (data.config.prNumber) {
-    title = `${title} - PR #${data.config.prNumber} Preview`
-  }
-  return title
-}
-
-export const DemosPage: React.FC<{
-  config: DemoConfig
-  data: LandingPageData
-}> = ({ config, data }) => {
-  const { theme } = config.ui
+export const DemosPage = ({ data }: { data: DemoPageData }) => {
+  const { theme, content, demos } = data
 
   return (
     <html lang='en'>
       <head>
         <meta charSet='UTF-8' />
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-        <title>{getPageTitle(config, data)}</title>
-        <meta name='description' content={config.ui.content.description} />
-        {config.ui.content.logoUrl && <link rel='icon' href={config.ui.content.logoUrl} />}
+        <title>{content.title}{data.prNumber && ` - PR #${data.prNumber} Preview`}</title>
+        <meta name='description' content={content.description} />
+        {content.logoUrl && <link rel='icon' href={content.logoUrl} />}
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -51,12 +38,21 @@ export const DemosPage: React.FC<{
         />
       </head>
       <body>
-        {data.config.prNumber && <PrBanner prNumber={data.config.prNumber} />}
+        <PageHeader data={data} />
         <div className='container'>
-          <Header config={config} data={data} />
-          <DemosGrid config={config} data={data} />
+          <div className='demos-grid'>
+            {demos.map(demo => <DemoCard key={demo.name} demo={demo} data={data} />)}
+          </div>
           <VersionInfo data={data} />
-          <Footer />
+          <div className='footer'>
+            <p>
+              Built with{' '}
+              <a href='https://github.com/the-guild-org/polen' target='_blank' rel='noreferrer'>
+                Polen
+              </a>{' '}
+              - The delightful GraphQL documentation framework
+            </p>
+          </div>
         </div>
       </body>
     </html>

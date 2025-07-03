@@ -19,57 +19,29 @@ Use GitHub Actions matrix strategy to build each version in parallel on separate
 
 This task has been completed. The DemoBuilder class has been successfully refactored to pure functions with backward compatibility maintained.
 
-### 2. **Create Reusable Semver Schema with Branded Type** (Plumbing)
+### 2. **Create Flexible SemVer Type System** (Plumbing)
 
-**What**: Extract a reusable Zod schema for semver validation with branded types\
-**Why**: Stronger typing across all workflows, eliminate duplicate validation logic, prevent invalid strings\
-**Complexity**: Low - pure utility that can also refactor version-history itself\
-**Location**: Add to existing version-history module, with generic brand helper in kit-temp\
-**Additional Benefit**: Can refactor version-history to use this schema internally
+**What**: Create a flexible type system that accepts both string and parsed semver objects\
+**Why**: Avoid repeated parsing, provide type safety, maintain flexibility\
+**Complexity**: Medium - creates foundation for all version handling\
+**Location**: Add to version-history module, with generic brand helper in kit-temp
 
-First, add generic brand helper to kit-temp:
-
-````typescript
-// src/lib/kit-temp.ts (add to existing file)
-
-/**
- * Create a branded type using a unique symbol
- *
- * @example
- * ```ts
- * type UserId = Brand<string, 'UserId'>
- * type Email = Brand<string, 'Email'>
- *
- * const userId: UserId = 'abc' as UserId
- * const email: Email = 'test@example.com' as Email
- *
- * // Type error: can't assign different brands
- * const id: UserId = email // Error!
- * ```
- */
-export type Brand<T, B extends string> =
-  & T
-  & { readonly [brandKey in `__brand_${B}`]: unique symbol }
-
-/**
- * Helper to create a branded value (with runtime validation)
- */
-export const brand = <T, B extends string>(value: T): Brand<T, B> => {
-  return value as Brand<T, B>
-}
-````
-
-Then create the semver schema with branded type:
+The SemVer type system will use a union type approach:
 
 ```typescript
 // src/lib/version-history/schemas.ts (new file)
 import { type Brand } from '#lib/kit-temp'
+import type { Version as SemVerObject } from '@vltpkg/semver'
 import { parse as semverParse } from '@vltpkg/semver'
 import { z } from 'zod/v4'
 
 // Branded type for validated semver strings
 export type SemVerString = Brand<string, 'SemVer'>
 
+// Union type that accepts either form
+export type SemVerInput = SemVerString | SemVerObject
+
+// Zod schema for validation
 export const SemVerSchema = z.string()
   .refine(
     (val) => semverParse(val) !== undefined,
@@ -77,37 +49,53 @@ export const SemVerSchema = z.string()
   )
   .transform((val) => val as SemVerString)
 
-// Helper to create SemVerString from validated input
-export function semVerString(value: string): SemVerString {
-  return SemVerSchema.parse(value)
+// Helper to normalize input to parsed object
+export function normalizeSemVerInput(semVerInput: SemVerInput): SemVerObject {
+  if (typeof semVerInput === 'string') {
+    const parsed = semverParse(semVerInput)
+    if (!parsed) throw new Error(`Invalid semver: ${semVerInput}`)
+    return parsed
+  }
+  return semVerInput
+}
+
+// Helper to get string representation
+export function getSemVerString(semVerInput: SemVerInput): string {
+  if (typeof semVerInput === 'string') {
+    return semVerInput
+  }
+  return semVerInput.format()
 }
 
 // Type guard
 export function isSemVerString(value: unknown): value is SemVerString {
   return SemVerSchema.safeParse(value).success
 }
-
-// Export from index
-// src/lib/version-history/index.ts
-export * from './schemas.ts'
 ```
 
-**Benefits of branded types:**
+**Key Benefits:**
 
-1. Can't accidentally pass any string where a semver is expected
-2. Type-safe at compile time, zero runtime overhead
-3. Clean autocomplete (no visible brand properties)
-4. Gradual migration possible with overloads
+1. **No Repeated Parsing**: Functions can accept already-parsed objects
+2. **Type Safety**: Branded strings prevent invalid semver values
+3. **Flexibility**: Accept either form based on what's available
+4. **Performance**: Skip parsing when working with Version objects
+5. **Consistent Naming**: Clear distinction between String/Object/Input
 
-**Refactoring opportunity**: Update version-history functions to accept/return `SemVerString`:
+**Example Usage:**
 
 ```typescript
-// Before
-export function isStableVersion(tag: string): boolean
+// Functions can now accept either form
+export function isPrerelease(semVerInput: SemVerInput): boolean {
+  const parsed = normalizeSemVerInput(semVerInput)
+  return parsed.prerelease !== undefined && parsed.prerelease.length > 0
+}
 
-// After (with overload for migration)
-export function isStableVersion(tag: SemVerString): boolean
-export function isStableVersion(tag: string): boolean // deprecated overload
+// Can pass version.semver directly (already parsed)
+const version: Version = await getVersion()
+if (isPrerelease(version.semver)) { /* ... */ }
+
+// Or pass a string
+if (isPrerelease('1.2.3-beta.1')) { /* ... */ }
 ```
 
 ### 3. **Matrix Workflow Job Architecture** (Core Change)
@@ -228,15 +216,40 @@ Three new step files:
 
 ### Phase 1: Plumbing (No Breaking Changes)
 
-1. Add brand helper to kit-temp
-   - Generic `Brand<T, B>` type and `brand()` helper
-   - Can be reused for other branded types in the future
-2. Add semver schema with branded type (#2)
-   - Create `version-history/schemas.ts` with `SemVerString` branded type
-   - Export from version-history index
-   - Optionally refactor version-history to use the schema internally
-3. Add version selector utility (#4)
-4. Add artifact consolidator utility (#5)
+#### ~~Step 1: Add Generic Brand Type Helper~~ ✅ COMPLETED
+
+- Added `Brand<$BaseType, $BrandName>` type to `kit-temp.ts`
+- Added `brand()` helper function with comprehensive JSDoc
+- Used $ prefix convention for type parameters
+- Fixed TypeScript implementation to use `__brand` field instead of unique symbol
+
+#### Step 2: Create SemVer Type System
+
+- Create `version-history/schemas.ts`
+- Define `SemVerString` branded type, `SemVerObject` type alias, and `SemVerInput` union
+- Add `SemVerSchema` for validation
+- Add `normalizeSemVerInput()` and `getSemVerString()` helpers
+- Export from version-history index
+
+#### Step 3: Refactor version-history to use SemVerInput
+
+- Update function signatures to accept `SemVerInput` instead of just strings
+- Use consistent parameter naming (`semVerInput`)
+- Add function overloads for backward compatibility where needed
+- This eliminates repeated parsing and improves performance
+
+#### Step 4: Add Version Selector Utility
+
+- Create `version-selector.ts`
+- Extract logic from existing code
+- Use the new `SemVerInput` types
+- Return results using the flexible type system
+
+#### Step 5: Add Artifact Consolidator Utility
+
+- Create `artifact-utils.ts` in github-actions lib
+- Generic utility for handling build artifacts
+- No dependencies on other steps
 
 ### Phase 2: Refactoring (Backward Compatible)
 
@@ -263,33 +276,40 @@ Three new step files:
 - No repo name in base path (GitHub Pages adds it automatically)
 - Only use Polen rebase for dist-tags that need path updates
 
-### Semver Validation: @vltpkg/semver vs Zod Schema
+### SemVer Type System Design
 
-**What @vltpkg/semver provides:**
+**Why SemVerInput Union Type:**
 
-- Full semver parsing: `parse()` returns a structured object with major, minor, patch, prerelease, etc.
-- Comparison functions: `compare()`, `gt()`, `lt()`, etc.
-- Manipulation functions: `inc()`, `diff()`, etc.
-- Validation: `parse()` returns undefined for invalid semver
+The `SemVerInput` union type (`SemVerString | SemVerObject`) solves several problems:
 
-**What our Zod SemVerSchema adds:**
+1. **Avoids Repeated Parsing**: When you have a `Version` object with `semver` already parsed, you can pass it directly
+2. **Type Safety**: Branded `SemVerString` ensures only validated strings are used
+3. **Performance**: Skip parsing when the object form is available
+4. **Flexibility**: Functions work with whatever form you have
+5. **Gradual Migration**: Can update functions incrementally
 
-- Runtime type validation with TypeScript integration
-- Composability with other Zod schemas
-- Better error messages for validation failures
-- Integration with form validation, API validation, etc.
-- Can be used in places where we just need validation, not parsing
+**Naming Consistency:**
 
-**The overlap:**
+- `SemVerString` - Branded string type for validated semver
+- `SemVerObject` - Type alias for parsed semver from @vltpkg/semver
+- `SemVerInput` - Union accepting either form
+- `semVerInput` - Parameter name for functions accepting the union
+- `normalizeSemVerInput()` - Converts any input to parsed object
+- `getSemVerString()` - Gets string representation from any input
 
-- Both validate semver strings
-- Our schema uses @vltpkg/semver's `parse()` internally for validation
+**Usage Example:**
 
-**When to use which:**
+```typescript
+// Version already has parsed semver
+const version = await getVersion()
+isPrerelease(version.semver) // No parsing needed!
 
-- Use `@vltpkg/semver` when you need to parse, compare, or manipulate versions
-- Use `SemVerSchema` when you need runtime validation in Zod contexts (API inputs, config files, etc.)
-- They complement each other - the schema ensures valid input before using @vltpkg/semver functions
+// String from user input
+const input = '1.2.3-beta'
+isPrerelease(input) // Parsed internally
+
+// Both work seamlessly
+```
 
 ### Type Safety
 

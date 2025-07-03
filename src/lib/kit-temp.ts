@@ -520,3 +520,75 @@ export const asyncReduceWith = <T, C>(
     )
   }
 }
+
+/**
+ * Create a branded type that provides nominal typing in TypeScript.
+ *
+ * Branded types allow you to create distinct types from primitives or other types,
+ * preventing accidental mixing of values that are structurally identical but
+ * semantically different.
+ *
+ * @template $BaseType - The underlying type to brand (e.g., string, number)
+ * @template $BrandName - A unique string literal to distinguish this brand
+ *
+ * @example
+ * ```ts
+ * // Create distinct ID types that can't be mixed
+ * type UserId = Brand<string, 'UserId'>
+ * type PostId = Brand<string, 'PostId'>
+ *
+ * function getUser(id: UserId) { ... }
+ *
+ * const userId = 'u123' as UserId
+ * const postId = 'p456' as PostId
+ *
+ * getUser(userId)  // ✓ OK
+ * getUser(postId)  // ✗ Type error - can't use PostId where UserId expected
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Brand primitive types for domain modeling
+ * type Email = Brand<string, 'Email'>
+ * type Url = Brand<string, 'Url'>
+ * type PositiveNumber = Brand<number, 'PositiveNumber'>
+ * ```
+ */
+export type Brand<$BaseType, $BrandName extends string> =
+  & $BaseType
+  & {
+    readonly __brand: $BrandName
+  }
+
+/**
+ * Helper function to create a branded value.
+ *
+ * This is a simple type assertion helper. For runtime validation,
+ * combine with validation functions or schemas.
+ *
+ * @template $BaseType - The underlying type to brand
+ * @template $BrandName - The brand name to apply
+ * @param value - The value to brand
+ * @returns The value with the brand type applied
+ *
+ * @example
+ * ```ts
+ * type UserId = Brand<string, 'UserId'>
+ *
+ * // Simple branding (no runtime validation)
+ * const id = brand<string, 'UserId'>('u123')
+ *
+ * // With validation (recommended)
+ * function createUserId(value: string): UserId {
+ *   if (!value.startsWith('u')) {
+ *     throw new Error('User IDs must start with "u"')
+ *   }
+ *   return brand<string, 'UserId'>(value)
+ * }
+ * ```
+ */
+export const brand = <$BaseType, $BrandName extends string>(
+  value: $BaseType,
+): Brand<$BaseType, $BrandName> => {
+  return value as Brand<$BaseType, $BrandName>
+}

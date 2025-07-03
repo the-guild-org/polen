@@ -406,6 +406,33 @@ body {
   height: 16px;
 }
 
+/* Utility classes */
+.text-muted {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.text-muted-inline {
+  color: #666;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
+.demo-link-full {
+  width: 100%;
+  justify-content: center;
+}
+
+.version-subheader {
+  margin: 1rem 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;

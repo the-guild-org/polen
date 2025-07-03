@@ -4,9 +4,12 @@
 import type { VersionCatalog } from '#lib/version-history/index'
 import { promises as fs } from 'node:fs'
 import { dirname, extname, join } from 'node:path'
-import { loadConfig } from '../config.ts'
+import React from 'react'
+import { renderToString } from 'react-dom/server'
+import { getOrderedDemos, loadConfig } from '../config.ts'
+import { DemosPage } from './components/DemosPage.tsx'
 import { DemoDataCollector } from './data-collector.ts'
-import { renderDemoLandingPage } from './page-renderer.ts'
+import type { Demo, DemoPageData, PrDeployments, TrunkDeployments } from './types.ts'
 
 // Define the interface for the build options
 export interface Options {
@@ -100,8 +103,78 @@ export async function buildDemosHome(options: CatalogOptions | Options = {}): Pr
   const dataCollector = new DemoDataCollector()
   const data = await dataCollector.collectLandingPageData(config)
 
+  // Transform to unified data structure
+  const orderedExamples = getOrderedDemos(demoConfig, data.demoExamples)
+
+  // Add disabled demos to the list
+  const allDemos: Demo[] = []
+  const { demoMetadata } = data
+
+  // Add enabled demos first (in order)
+  for (const name of orderedExamples) {
+    const metadata = demoMetadata[name]
+    if (metadata) {
+      allDemos.push({
+        name,
+        title: metadata.title,
+        description: metadata.description,
+        enabled: metadata.enabled,
+        reason: metadata.reason,
+      })
+    }
+  }
+
+  // Add disabled demos
+  for (const [name, metadata] of Object.entries(demoMetadata)) {
+    if (!metadata.enabled && !orderedExamples.includes(name)) {
+      allDemos.push({
+        name,
+        title: metadata.title,
+        description: metadata.description,
+        enabled: metadata.enabled,
+        reason: metadata.reason,
+      })
+    }
+  }
+
+  // Create deployments structure
+  let deployments: TrunkDeployments | PrDeployments
+  if (config.prNumber) {
+    deployments = {
+      type: 'pr',
+      prNumber: config.prNumber,
+      currentSha: config.currentSha,
+      deployments: data.prDeployments || [],
+    }
+  } else {
+    deployments = {
+      type: 'trunk',
+      distTags: data.distTags || {},
+      latest: data.trunkDeployments?.latest || undefined,
+      previous: data.trunkDeployments?.previous || [],
+    }
+  }
+
+  const pageData: DemoPageData = {
+    theme: demoConfig.ui.theme,
+    content: demoConfig.ui.content,
+    repo: {
+      owner: process.env['GITHUB_REPOSITORY_OWNER'] || 'the-guild-org',
+      name: process.env['GITHUB_REPOSITORY']?.split('/')[1] || 'polen',
+    },
+    basePath: config.basePath,
+    prNumber: config.prNumber,
+    currentSha: config.currentSha,
+    demos: allDemos,
+    deployments,
+  }
+
   // Render the page
-  const html = renderDemoLandingPage(demoConfig, data)
+  const html = `<!DOCTYPE html>\n${
+    renderToString(
+      React.createElement(DemosPage, { data: pageData }),
+    )
+  }`
 
   // Determine output path
   let outputPath: string
