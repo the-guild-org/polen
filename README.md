@@ -60,8 +60,7 @@ Featured examples:
 Find complete example projects in the [examples](./examples) directory:
 
 - `pokemon` - Fun Pokemon API documentation
-- `github` - GitHub GraphQL API (coming soon)
-- `minimal` - Minimal setup example
+- `hive` - GraphQL Hive API documentation
 
 ## Why Polen?
 

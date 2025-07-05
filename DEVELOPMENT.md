@@ -6,7 +6,7 @@
 pnpm install
 # One of:
 pnpm polen dev examples/pokemon
-pnpm polen dev examples/github
+pnpm polen dev examples/hive
 ```
 
 ## Architectural Pillars Overview
