@@ -27,16 +27,10 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "#*": ["./src/*.ts"],
-      "#lib/demos": ["./src/lib/demos/$.ts"],
-      "#lib/demos/*": ["./src/lib/demos/*.ts"],
       "#lib/mask": ["./src/lib/mask/$.ts"],
       "#lib/mask/*": ["./src/lib/mask/*.ts"],
-      "#lib/deployment": ["./src/lib/deployment/$.ts"],
-      "#lib/deployment/*": ["./src/lib/deployment/*.ts"],
       "#lib/task": ["./src/lib/task/$.ts"],
-      "#lib/task/*": ["./src/lib/task/*.ts"],
-      "#lib/github-actions": ["./src/lib/github-actions/$.ts"],
-      "#lib/github-actions/*": ["./src/lib/github-actions/*.ts"]
+      "#lib/task/*": ["./src/lib/task/*.ts"]
     },
 
     // DX covered by ESLint:

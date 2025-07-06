@@ -52,14 +52,6 @@
       "source": "./src/lib/task/$$.ts",
       "default": "./build/lib/task/$$.js"
     },
-    "#lib/deployment": {
-      "source": "./src/lib/deployment/$.ts",
-      "default": "./build/lib/deployment/$.js"
-    },
-    "#lib/deployment/deployment": {
-      "source": "./src/lib/deployment/$$.ts",
-      "default": "./build/lib/deployment/$$.js"
-    },
     "#lib/graphql-document": {
       "source": "./src/lib/graphql-document/$.ts",
       "default": "./build/lib/graphql-document/$.js"
@@ -91,14 +83,6 @@
     "#lib/theme": {
       "source": "./src/lib/theme/$.ts",
       "default": "./build/lib/theme/$.js"
-    },
-    "#lib/github-actions": {
-      "source": "./src/lib/github-actions/$.ts",
-      "default": "./build/lib/github-actions/$.js"
-    },
-    "#lib/github-actions/github-actions": {
-      "source": "./src/lib/github-actions/$$.ts",
-      "default": "./build/lib/github-actions/$$.js"
     }
   },
   "exports": {
@@ -261,8 +245,6 @@
     "dev": "pnpm build:watch:emit",
     "dev:pokemon": "pnpm polen dev --project examples/pokemon",
     "dev:hive": "pnpm polen dev --project examples/hive",
-    "dev:demo-index": "node --no-warnings --experimental-transform-types --conditions source ./src/lib/demos/ui/cli.ts --mode dev --serve",
-    "build:demos": "zx ./scripts/build-demos.mjs",
     "build:clean": "pnpm tsc --build tsconfig.build.json --clean && rm -rf build",
     "build": "tsc --build tsconfig.build.json",
     "build:watch": "tsc --build tsconfig.build.json --watch",

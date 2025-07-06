@@ -83,7 +83,3 @@ jobs:
     uses: ./.github/workflows/_playwright-test.yaml
     with:
       project-name: examples
-
-  demos:
-    uses: ./.github/workflows/_demos-preview.yaml
-    secrets: inherit
