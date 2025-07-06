@@ -10,26 +10,26 @@ import { GraphQLDocument } from './$.ts'
 
 // Example GraphQL query with various constructs
 const exampleQuery = `
-  query GetPokemonWithAbilities($id: ID!, $limit: Int = 10) {
-    pokemon(id: $id) {
+  query GetUserWithProjects($id: ID!, $limit: Int = 10) {
+    user(id: $id) {
       name
-      abilities(first: $limit) {
+      projects(first: $limit) {
         name
-        isHidden
-        pokemon {
+        isPrivate
+        owner {
           name
         }
       }
-      ... on ElectricPokemon {
-        voltage
+      ... on EnterpriseUser {
+        organization
       }
     }
   }
 
-  fragment PokemonBasics on Pokemon {
+  fragment UserBasics on User {
     name
-    type
-    level
+    email
+    role
   }
 `
 

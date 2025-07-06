@@ -1,8 +1,6 @@
 import { z } from 'zod'
 
 export const ExampleNameEnum = {
-  pokemon: `pokemon`,
-  github: `github`,
   hive: `hive`,
 } as const
 

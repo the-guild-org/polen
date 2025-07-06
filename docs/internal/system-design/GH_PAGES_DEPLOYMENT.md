@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document outlines the design for a GitHub Actions workflow that deploys Polen example projects (specifically the Pokemon example) to GitHub Pages. The solution should be reusable, efficient, and provide a good developer experience.
+This document outlines the design for a GitHub Actions workflow that deploys Polen example projects (specifically the Hive example) to GitHub Pages. The solution should be reusable, efficient, and provide a good developer experience.
 
 ## Requirements
 
@@ -18,14 +18,14 @@ This document outlines the design for a GitHub Actions workflow that deploys Pol
 ### Primary Workflow File
 
 ```yaml
-# .github/workflows/deploy-pokemon-example.yml
-name: Deploy Pokemon Example to GitHub Pages
+# .github/workflows/deploy-hive-example.yml
+name: Deploy Hive Example to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
-      - 'examples/pokemon/**'
+      - 'examples/hive/**'
       - 'src/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -69,13 +69,13 @@ jobs:
       - name: Build Polen
         run: pnpm build
         
-      - name: Build Pokemon example
-        working-directory: examples/pokemon
+      - name: Build Hive example
+        working-directory: examples/hive
         run: |
           pnpm install
           pnpm build
         env:
-          POLEN_BASE_PATH: /polen/examples/pokemon
+          POLEN_BASE_PATH: /polen/examples/hive
 ```
 
 #### 1.2 Deploy Job
@@ -108,11 +108,11 @@ deploy:
     restore-keys: |
       ${{ runner.os }}-polen-
       
-- name: Cache Pokemon example build
+- name: Cache Hive example build
   uses: actions/cache@v3
   with:
-    path: examples/pokemon/dist
-    key: ${{ runner.os }}-pokemon-${{ hashFiles('examples/pokemon/**') }}
+    path: examples/hive/dist
+    key: ${{ runner.os }}-hive-${{ hashFiles('examples/hive/**') }}
 ```
 
 #### 2.2 Artifact Management
@@ -121,7 +121,7 @@ deploy:
 - name: Upload artifact
   uses: actions/upload-pages-artifact@v2
   with:
-    path: ./examples/pokemon/dist
+    path: ./examples/hive/dist
     
 - name: Setup Pages
   uses: actions/configure-pages@v4
@@ -141,7 +141,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'examples/pokemon/**'
+      - 'examples/hive/**'
       - 'src/**'
 
 jobs:
@@ -155,7 +155,7 @@ jobs:
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
         with:
-          source-dir: ./examples/pokemon/dist
+          source-dir: ./examples/hive/dist
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: deploy
@@ -166,7 +166,7 @@ jobs:
 ### Polen Config Adjustments
 
 ```typescript
-// examples/pokemon/polen.config.ts
+// examples/hive/polen.config.ts
 export default defineConfig({
   // Base path configuration for GitHub Pages
   base: process.env.POLEN_BASE_PATH || '/',
@@ -214,7 +214,7 @@ jobs:
     
   build-example:
     needs: build-polen
-    # Build Pokemon example
+    # Build Hive example
     
   deploy:
     needs: build-example
@@ -263,7 +263,7 @@ jobs:
 - name: Notify on success
   if: success()
   run: |
-    echo "::notice::Pokemon example deployed to ${{ steps.deployment.outputs.page_url }}"
+    echo "::notice::Hive example deployed to ${{ steps.deployment.outputs.page_url }}"
     
 - name: Create issue on failure
   if: failure()
@@ -273,7 +273,7 @@ jobs:
       github.rest.issues.create({
         owner: context.repo.owner,
         repo: context.repo.repo,
-        title: 'Pokemon example deployment failed',
+        title: 'Hive example deployment failed',
         body: 'Deployment failed for commit ${{ github.sha }}'
       })
 ```
@@ -292,14 +292,14 @@ jobs:
 ```yaml
 strategy:
   matrix:
-    example: [pokemon, github, starwars]
+    example: [hive, github, starwars]
 ```
 
 ### 2. Custom Domain Support
 
 ```yaml
 - name: Configure custom domain
-  run: echo "pokemon.polen.dev" > ./examples/pokemon/dist/CNAME
+  run: echo "hive.polen.dev" > ./examples/hive/dist/CNAME
 ```
 
 ### 3. Performance Metrics
@@ -331,7 +331,7 @@ strategy:
 1. Fork the Polen repository
 2. Enable GitHub Pages in repository settings
 3. Push changes to trigger deployment
-4. Access at: https://[username].github.io/polen/examples/pokemon
+4. Access at: https://[username].github.io/polen/examples/hive
 ```
 
 ### Maintenance Documentation

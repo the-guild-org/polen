@@ -4,8 +4,7 @@
 
 ```sh
 pnpm install
-# One of:
-pnpm polen dev examples/pokemon
+# Run development mode:
 pnpm polen dev examples/hive
 ```
 

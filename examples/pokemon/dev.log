@@ -1,9 +1,0 @@
-
-> pokemon@ dev /Users/jasonkuhrt/projects/the-guild-org/polen/examples/pokemon
-> polen dev
-
-Port 3000 is in use, trying another one...
-Port 3001 is in use, trying another one...
-  ➜  Local:   http://localhost:3002/
-  ➜  Network: use --host to expose
- ELIFECYCLE  Command failed with exit code 143.

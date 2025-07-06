@@ -38,8 +38,7 @@ Experience Polen in action with our live documentation sites:
 
 Featured examples:
 
-- **[Pokemon GraphQL API](https://the-guild-org.github.io/polen/latest/pokemon/)** - Explore a fun GraphQL API with rich schema documentation
-- **GitHub GraphQL API** (Coming soon) - Browse GitHub's extensive GraphQL API documentation
+- **[Hive GraphQL API](https://the-guild-org.github.io/polen/latest/hive/)** - Explore GraphQL Hive's API documentation
 
 ## Documentation
 
@@ -59,7 +58,6 @@ Featured examples:
 
 Find complete example projects in the [examples](./examples) directory:
 
-- `pokemon` - Fun Pokemon API documentation
 - `hive` - GraphQL Hive API documentation
 
 ## Why Polen?

@@ -243,7 +243,6 @@
     "test:integration": "playwright test --config 'tests/playwright.config.ts' --project=integration",
     "test:unit": "vitest",
     "dev": "pnpm build:watch:emit",
-    "dev:pokemon": "pnpm polen dev --project examples/pokemon",
     "dev:hive": "pnpm polen dev --project examples/hive",
     "build:clean": "pnpm tsc --build tsconfig.build.json --clean && rm -rf build",
     "build": "tsc --build tsconfig.build.json",

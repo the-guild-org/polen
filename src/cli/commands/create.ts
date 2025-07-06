@@ -7,7 +7,7 @@ import consola from 'consola'
 import { z } from 'zod'
 import { $ } from 'zx'
 
-const Examples = z.enum([`github`, `pokemon`])
+const Examples = z.enum([`hive`])
 
 const args = Command
   .create()
@@ -33,7 +33,7 @@ const args = Command
     `version`,
     z.string().optional().describe(`Version of Polen to use. Defaults to latest release. Ignored if --link is used.`),
   )
-  .parameter(`example`, Examples.default(`pokemon`).describe(`The example to use to scaffold your project.`))
+  .parameter(`example`, Examples.default(`hive`).describe(`The example to use to scaffold your project.`))
   .settings({
     parameters: {
       environment: {

@@ -20,7 +20,7 @@ export interface WorkerFixtures {
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   polenLink: [undefined, { option: true, scope: `worker` }],
-  exampleName: [`pokemon`, { option: true, scope: `worker` }],
+  exampleName: [`hive`, { option: true, scope: `worker` }],
   project: [async ({ exampleName, polenLink }, use) => {
     const project = await ExampleController.create({
       exampleName,

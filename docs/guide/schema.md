@@ -84,7 +84,7 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   templateVariables: {
-    title: `Pokemon Developer Portal`,
+    title: `GraphQL Developer Portal`,
   },
   schemaAugmentations: [
     {
