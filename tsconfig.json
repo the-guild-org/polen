@@ -14,7 +14,6 @@
     // Output
     "verbatimModuleSyntax": true,
     "jsx": "react-jsx",
-    "rewriteRelativeImportExtensions": true,
 
     // DX
     "moduleDetection": "force",

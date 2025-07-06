@@ -1,2 +1,2 @@
-export * from './apply.ts'
-export * from './mask.ts'
+export * from './apply.js'
+export * from './mask.js'

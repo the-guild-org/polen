@@ -1,5 +1,5 @@
 import type { FileRouter } from '#lib/file-router/index'
-import type { Metadata } from './metadata.ts'
+import type { Metadata } from './metadata.js'
 
 export type { Metadata }
 

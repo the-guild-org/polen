@@ -1,2 +1,2 @@
 // Namespace export
-export * as Theme from './theme.ts'
+export * as Theme from './theme.js'

@@ -3,7 +3,7 @@ import type { React } from '#dep/react/index'
 import { Texts } from '#template/components/Texts/index'
 import { Box, Flex } from '@radix-ui/themes'
 import { useLocation } from 'react-router'
-import { getPathActiveReport, Link } from '../Link.tsx'
+import { getPathActiveReport, Link } from '../Link.js'
 
 export const Items: React.FC<{ items: Content.Item[] }> = ({ items }) => {
   return (

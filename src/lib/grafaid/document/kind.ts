@@ -4,6 +4,6 @@
 
 import type { Kind as GraphQLKind } from 'graphql'
 
-export * as Kind from './kinds.ts'
+export * as Kind from './kinds.js'
 
 export type Kind = GraphQLKind

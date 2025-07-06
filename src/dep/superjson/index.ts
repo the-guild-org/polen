@@ -1,1 +1,1 @@
-export * as Superjson from './superjson.ts'
+export * as Superjson from './superjson.js'

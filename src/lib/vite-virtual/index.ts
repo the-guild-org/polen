@@ -1,1 +1,1 @@
-export * as ViteVirtual from './vite-virtual.ts'
+export * as ViteVirtual from './vite-virtual.js'

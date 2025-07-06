@@ -1,1 +1,1 @@
-export * as FileRouter from './file-router.ts'
+export * as FileRouter from './file-router.js'

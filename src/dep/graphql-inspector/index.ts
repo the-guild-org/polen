@@ -1,1 +1,1 @@
-export * as GraphqlInspector from './graphql-inspector.ts'
+export * as GraphqlInspector from './graphql-inspector.js'

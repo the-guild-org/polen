@@ -21,7 +21,7 @@ import type {
   Identifier,
   IdentifierContext,
   IdentifierMap,
-} from './types.ts'
+} from './types.js'
 
 /**
  * Default GraphQL document analyzer implementation

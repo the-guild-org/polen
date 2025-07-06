@@ -1,7 +1,7 @@
 import React from 'react'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { GraphQLDocument } from '../../../lib/graphql-document/components/GraphQLDocument.tsx'
-import type { GraphQLDocumentProps } from '../../../lib/graphql-document/components/GraphQLDocument.tsx'
+import { GraphQLDocument } from '../../../lib/graphql-document/components/GraphQLDocument.js'
+import type { GraphQLDocumentProps } from '../../../lib/graphql-document/components/GraphQLDocument.js'
 
 /**
  * Wrapper component that provides schema from virtual module directly to GraphQLDocument

@@ -1,1 +1,1 @@
-export * as HonoAid from './hono-aid.ts'
+export * as HonoAid from './hono-aid.js'

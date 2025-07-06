@@ -1,1 +1,1 @@
-export * as Mask from './$$.ts'
+export * as Mask from './$$.js'

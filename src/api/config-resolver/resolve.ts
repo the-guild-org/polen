@@ -1,8 +1,8 @@
 import { debugPolen } from '#singletons/debug'
-import { type ConfigInput, normalizeInput } from '../config/configurator.ts'
-import { load, type LoadOptions } from '../config/load.ts'
-import { mergeInputs } from '../config/merge.ts'
-import { toViteUserConfig, type ViteUserConfigWithPolen } from './vite.ts'
+import { type ConfigInput, normalizeInput } from '../config/configurator.js'
+import { load, type LoadOptions } from '../config/load.js'
+import { mergeInputs } from '../config/merge.js'
+import { toViteUserConfig, type ViteUserConfigWithPolen } from './vite.js'
 
 interface ResolveFromFileOptions extends LoadOptions {
   overrides?: ConfigInput

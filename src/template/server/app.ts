@@ -3,11 +3,11 @@ import { createHtmlTransformer, type HtmlTransformer } from '#lib/html-utils/htm
 import { serveStatic } from '@hono/node-server/serve-static'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
-import { injectManifestIntoHtml } from './manifest.ts'
-import { PageMiddleware } from './middleware/page.ts'
-import { UnsupportedAssetsMiddleware } from './middleware/unsupported-assets.ts'
-import { createPolenDataInjector } from './transformers/inject-polen-data.ts'
-import { createThemeInitInjector } from './transformers/inject-theme-init.ts'
+import { injectManifestIntoHtml } from './manifest.js'
+import { PageMiddleware } from './middleware/page.js'
+import { UnsupportedAssetsMiddleware } from './middleware/unsupported-assets.js'
+import { createPolenDataInjector } from './transformers/inject-polen-data.js'
+import { createThemeInitInjector } from './transformers/inject-theme-init.js'
 
 export interface AppHooks {
   transformHtml?: HtmlTransformer[]

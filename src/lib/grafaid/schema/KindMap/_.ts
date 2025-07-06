@@ -1,10 +1,10 @@
 import type { GraphQLInterfaceType } from 'graphql'
-import { getRootTypeMap } from '../RootTypeMap.ts'
-import type { Schema } from '../schema.ts'
-import * as Type from '../type.ts'
-import { isRoot } from '../type.ts'
-import { isScalarTypeCustom } from '../typeGuards.ts'
-import type { KindMap } from './__.ts'
+import { getRootTypeMap } from '../RootTypeMap.js'
+import type { Schema } from '../schema.js'
+import * as Type from '../type.js'
+import { isRoot } from '../type.js'
+import { isScalarTypeCustom } from '../typeGuards.js'
+import type { KindMap } from './__.js'
 
 export const Name = {
   Root: `Root`,

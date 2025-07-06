@@ -1,6 +1,6 @@
 import { Ts } from '@wollybeard/kit'
-import { Mask } from './$.ts'
-import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.ts'
+import { Mask } from './$.js'
+import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.js'
 
 // Test 1: InferOptions with unknown should accept all option types
 {

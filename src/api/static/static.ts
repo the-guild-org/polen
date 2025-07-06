@@ -1,2 +1,2 @@
-export * from './manifest.ts'
-export * from './rebase.ts'
+export * from './manifest.js'
+export * from './rebase.js'

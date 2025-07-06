@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router'
-import { useTheme } from '../contexts/ThemeContext.tsx'
+import { useTheme } from '../contexts/ThemeContext.js'
 
 export const CodeBlockEnhancer = () => {
   const { appearance } = useTheme()

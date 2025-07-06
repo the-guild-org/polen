@@ -3,8 +3,8 @@ import { assertPathAbsolute } from '#lib/kit-temp'
 import { type PackagePaths, packagePaths } from '#package-paths'
 import { Path } from '@wollybeard/kit'
 import { z } from 'zod'
-import type { SchemaAugmentation } from '../../api/schema-augmentation/index.ts'
-import type { Schema } from '../schema/index.ts'
+import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
+import type { Schema } from '../schema/index.js'
 
 export const BuildArchitectureEnum = {
   ssg: `ssg`,

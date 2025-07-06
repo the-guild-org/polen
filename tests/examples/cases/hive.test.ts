@@ -1,6 +1,6 @@
 import { expect } from 'playwright/test'
-import { getFixtureOptions } from '../helpers/helpers.ts'
-import { test } from '../helpers/test.ts'
+import { getFixtureOptions } from '../helpers/helpers.js'
+import { test } from '../helpers/test.js'
 
 test.use(getFixtureOptions(import.meta))
 

@@ -5,11 +5,11 @@ import { debugPolen } from '#singletons/debug'
 import * as NodeFs from 'node:fs/promises'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import viteClientAssetManifest from 'virtual:polen/vite/client/manifest'
-import { createPageHtmlResponse } from '../create-page-html-response.tsx'
-import { injectManifestIntoHtml } from '../manifest.ts'
-import { createPolenDataInjector } from '../transformers/inject-polen-data.ts'
-import { createThemeInitInjector } from '../transformers/inject-theme-init.ts'
-import { getRoutesPaths } from './get-route-paths.ts'
+import { createPageHtmlResponse } from '../create-page-html-response.js'
+import { injectManifestIntoHtml } from '../manifest.js'
+import { createPolenDataInjector } from '../transformers/inject-polen-data.js'
+import { createThemeInitInjector } from '../transformers/inject-theme-init.js'
+import { getRoutesPaths } from './get-route-paths.js'
 
 export const generate = async (view: ReactRouter.StaticHandler) => {
   const debug = debugPolen.sub(`ssg`)

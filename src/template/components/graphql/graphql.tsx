@@ -1,2 +1,2 @@
-export * from './type-kind-icon.tsx'
-export * from './type-link.tsx'
+export * from './type-kind-icon.js'
+export * from './type-link.js'

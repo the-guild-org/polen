@@ -6,7 +6,7 @@
  * for the interactive GraphQL Document Component.
  */
 
-import { GraphQLDocument } from './$.ts'
+import { GraphQLDocument } from './$.js'
 
 // Example GraphQL query with various constructs
 const exampleQuery = `

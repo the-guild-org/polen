@@ -1,1 +1,1 @@
-export * as Schema from './schema.ts'
+export * as Schema from './schema.js'

@@ -1,1 +1,1 @@
-export * as Nodes from './document.ts'
+export * as Nodes from './document.js'

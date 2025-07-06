@@ -9,12 +9,12 @@ import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import { Json, Str } from '@wollybeard/kit'
-import type { ProjectData } from '../../../project-data.ts'
-import { SchemaAugmentation } from '../../schema-augmentation/index.ts'
-import { Schema } from '../../schema/index.ts'
-import { createLogger } from '../logger.ts'
-import { polenVirtual } from '../vi.ts'
-import { Pages } from './pages.ts'
+import type { ProjectData } from '../../../project-data.js'
+import { SchemaAugmentation } from '../../schema-augmentation/index.js'
+import { Schema } from '../../schema/index.js'
+import { createLogger } from '../logger.js'
+import { polenVirtual } from '../vi.js'
+import { Pages } from './pages.js'
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])

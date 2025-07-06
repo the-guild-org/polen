@@ -1,1 +1,1 @@
-export * as StackProcessor from './stack-processor.ts'
+export * as StackProcessor from './stack-processor.js'

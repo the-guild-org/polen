@@ -1,7 +1,7 @@
 import type { React } from '#dep/react/index'
 import { useEffect, useState } from 'react'
-import { useGraphQLSchema } from '../schema-context.tsx'
-import { GraphQLDocument, type GraphQLDocumentProps } from './GraphQLDocument.tsx'
+import { useGraphQLSchema } from '../schema-context.js'
+import { GraphQLDocument, type GraphQLDocumentProps } from './GraphQLDocument.js'
 
 // Cache for highlighter
 let highlighterCache: any = null

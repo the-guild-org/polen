@@ -1,1 +1,1 @@
-export * from './shiki.ts'
+export * from './shiki.js'

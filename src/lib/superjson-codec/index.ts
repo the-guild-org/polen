@@ -1,1 +1,1 @@
-export * as SuperjsonCodecs from './exports.ts'
+export * as SuperjsonCodecs from './exports.js'

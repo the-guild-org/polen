@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { assetUrl, faviconUrl, joinPaths, pageUrl } from './asset-url.ts'
+import { assetUrl, faviconUrl, joinPaths, pageUrl } from './asset-url.js'
 
 describe('asset-url helpers', () => {
   describe('joinPaths', () => {

@@ -3,10 +3,10 @@
  */
 
 import type { React } from '#dep/react/index'
-import type { DOMPosition } from '../positioning-simple.ts'
-import type { SchemaResolution } from '../schema-integration.ts'
-import type { Identifier } from '../types.ts'
-import { GraphQLIdentifierPopover } from './GraphQLIdentifierPopover.tsx'
+import type { DOMPosition } from '../positioning-simple.js'
+import type { SchemaResolution } from '../schema-integration.js'
+import type { Identifier } from '../types.js'
+import { GraphQLIdentifierPopover } from './GraphQLIdentifierPopover.js'
 
 export interface IdentifierLinkProps {
   /** The GraphQL identifier */

@@ -1,1 +1,1 @@
-export * as GraphQLHTTP from './http.ts'
+export * as GraphQLHTTP from './http.js'

@@ -2,7 +2,7 @@ import { Grafaid } from '#lib/grafaid/index'
 import { Box, Heading } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'
-import { FieldList } from './FieldList.tsx'
+import { FieldList } from './FieldList.js'
 
 export interface Props {
   data: GraphQLNamedType

@@ -1,4 +1,4 @@
-import { createId, markNoPlugins, normalizeId } from './id.ts'
+import { createId, markNoPlugins, normalizeId } from './id.js'
 
 export interface Options {
   /**

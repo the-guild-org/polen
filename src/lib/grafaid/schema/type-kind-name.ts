@@ -1,5 +1,5 @@
 import type { GraphQLNamedType } from 'graphql'
-import { TypeClassNameEnum, type TypeClassToName, typeClassToName } from './type-class-name.ts'
+import { TypeClassNameEnum, type TypeClassToName, typeClassToName } from './type-class-name.js'
 
 export const TypeKindNameEnum = {
   Scalar: `Scalar`,

@@ -1,1 +1,1 @@
-export * as Grafaid from './grafaid.ts'
+export * as Grafaid from './grafaid.js'

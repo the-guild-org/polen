@@ -1,4 +1,4 @@
-import type { Diagnostic } from './linter.ts'
+import type { Diagnostic } from './linter.js'
 
 export const reportDiagnostics = (diagnostics: Diagnostic[]) => {
   if (diagnostics.length === 0) return

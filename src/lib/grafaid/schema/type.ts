@@ -9,7 +9,7 @@ import {
   type GraphQLUnionType,
   isNamedType,
 } from 'graphql'
-import type { RootTypeMap } from './RootTypeMap.ts'
+import type { RootTypeMap } from './RootTypeMap.js'
 
 // dprint-ignore
 export {

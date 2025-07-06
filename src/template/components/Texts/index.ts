@@ -1,1 +1,1 @@
-export * as Texts from './texts.ts'
+export * as Texts from './texts.js'

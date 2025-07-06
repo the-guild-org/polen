@@ -1,8 +1,8 @@
 import { serve } from '@hono/node-server' // TODO: support non-node platforms.
 import { neverCase } from '@wollybeard/kit/language'
-import { createApp } from './app.ts'
-import { generate } from './ssg/generate.ts'
-import { view } from './view.ts'
+import { createApp } from './app.js'
+import { generate } from './ssg/generate.js'
+import { view } from './view.js'
 
 if (__BUILDING__) {
   switch (__BUILD_ARCHITECTURE__) {

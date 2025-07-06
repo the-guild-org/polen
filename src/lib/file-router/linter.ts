@@ -1,5 +1,5 @@
 import { Idx, Path } from '@wollybeard/kit'
-import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.ts'
+import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.js'
 
 export type DiagnosticSeverity = `error` | `warning` | `info`
 

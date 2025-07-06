@@ -1,1 +1,1 @@
-export * from './build-logger.ts'
+export * from './build-logger.js'

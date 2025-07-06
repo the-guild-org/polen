@@ -5,7 +5,7 @@
  * This simplified version focuses on working with Polen's existing infrastructure.
  */
 
-import type { Identifier } from './types.ts'
+import type { Identifier } from './types.js'
 
 /**
  * DOM position for rendering overlays

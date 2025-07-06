@@ -5,8 +5,8 @@ import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { Fs, Path } from '@wollybeard/kit'
 import packageJson from '../../../../package.json' with { type: 'json' }
-import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.ts'
-import { polenVirtual } from '../vi.ts'
+import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
+import { polenVirtual } from '../vi.js'
 
 export const Build = (config: Config.Config): Vite.Plugin[] => {
   const debug = debugPolen.sub(`vite-build`)

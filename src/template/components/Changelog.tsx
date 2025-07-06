@@ -4,8 +4,8 @@ import type { GraphqlChange } from '#lib/graphql-change/index'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { Box, Code } from '@radix-ui/themes'
 import type React from 'react'
-import type { Schema as ChangelogData } from '../../api/schema/index.ts'
-import { Graphql } from './graphql/index.ts'
+import type { Schema as ChangelogData } from '../../api/schema/index.js'
+import { Graphql } from './graphql/index.js'
 
 export const renderDate = (date: Date) => {
   return date.toLocaleString(`default`, {

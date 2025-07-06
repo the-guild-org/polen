@@ -1,6 +1,6 @@
 import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
-import { PathMap } from './$.ts'
+import { PathMap } from './$.js'
 
 describe('PathMap', () => {
   describe('create', () => {

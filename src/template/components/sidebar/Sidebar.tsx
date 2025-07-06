@@ -1,7 +1,7 @@
 import type { Content } from '#api/content/$'
 import { Box } from '@radix-ui/themes'
 import type { BoxOwnProps, LayoutProps, MarginProps } from '@radix-ui/themes/props'
-import { Items } from './SidebarItem.tsx'
+import { Items } from './SidebarItem.js'
 
 interface SidebarProps extends LayoutProps, MarginProps, BoxOwnProps {
   data: Content.Item[]

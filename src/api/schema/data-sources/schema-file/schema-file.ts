@@ -2,7 +2,7 @@ import { Grafaid } from '#lib/grafaid/index'
 import { GraphqlChange } from '#lib/graphql-change/index'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { Path } from '@wollybeard/kit'
-import type { Schema } from '../../schema.ts'
+import type { Schema } from '../../schema.js'
 
 const defaultPaths = {
   schemaFile: `./schema.graphql`,

@@ -24,14 +24,14 @@
  * @see {@link GraphQLDocument} for the main React component
  */
 
-export * from './analysis.ts'
-export * from './components/index.ts'
-export * from './positioning-simple.ts'
-export * from './schema-integration.ts'
-export * from './types.ts'
+export * from './analysis.js'
+export * from './components/index.js'
+export * from './positioning-simple.js'
+export * from './schema-integration.js'
+export * from './types.js'
 
 // Re-export key functions for convenience
-export { analyze, analyzer, extractIdentifiers } from './analysis.ts'
-export { GraphQLDocument } from './components/GraphQLDocument.tsx'
-export { createSimpleOverlay, createSimplePositionCalculator } from './positioning-simple.ts'
-export { analyzeWithSchema, createPolenSchemaResolver } from './schema-integration.ts'
+export { analyze, analyzer, extractIdentifiers } from './analysis.js'
+export { GraphQLDocument } from './components/GraphQLDocument.js'
+export { createSimpleOverlay, createSimplePositionCalculator } from './positioning-simple.js'
+export { analyzeWithSchema, createPolenSchemaResolver } from './schema-integration.js'

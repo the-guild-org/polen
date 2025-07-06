@@ -1,6 +1,6 @@
 import { Api } from '#api/index'
 import { expect } from 'playwright/test'
-import { test } from '../helpers/test.ts'
+import { test } from '../helpers/test.js'
 
 test.describe('Theme functionality', () => {
   test('starts with system theme preference', async ({ page, vite, project }) => {

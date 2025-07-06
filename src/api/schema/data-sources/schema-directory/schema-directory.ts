@@ -4,8 +4,8 @@ import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { debugPolen } from '#singletons/debug'
 import { Arr, Path } from '@wollybeard/kit'
 import { glob } from 'tinyglobby'
-import type { Schema } from '../../schema.ts'
-import { FileNameExpression } from './file-name-expression/index.ts'
+import type { Schema } from '../../schema.js'
+import { FileNameExpression } from './file-name-expression/index.js'
 
 // const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
 const debug = debugPolen.sub(`schema:data-source-schema-directory`)

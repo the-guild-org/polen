@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { parse } from './markdown.ts'
+import { parse } from './markdown.js'
 
 describe('markdown parser with syntax highlighting', () => {
   test('parse highlights code blocks', { timeout: 10000 }, async () => {

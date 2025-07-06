@@ -1,8 +1,8 @@
 import { FileRouter } from '#lib/file-router/index'
 import { Fs, Path, Tree } from '@wollybeard/kit'
 import matter from 'gray-matter'
-import { MetadataSchema } from './metadata.ts'
-import type { Page } from './page.ts'
+import { MetadataSchema } from './metadata.js'
+import type { Page } from './page.js'
 
 export interface ScanResult {
   list: Page[]

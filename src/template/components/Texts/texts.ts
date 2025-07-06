@@ -1,1 +1,1 @@
-export * from './MinorHeading.tsx'
+export * from './MinorHeading.js'

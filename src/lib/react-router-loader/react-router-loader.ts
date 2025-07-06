@@ -1,6 +1,6 @@
 import type { Fn } from '@wollybeard/kit'
 import { useLoaderData as useLoaderDataRR, useRouteLoaderData as useRouteLoaderDataRR } from 'react-router'
-import { superjson } from '../../singletons/superjson.ts'
+import { superjson } from '../../singletons/superjson.js'
 
 type Loader = Fn.AnyAny
 

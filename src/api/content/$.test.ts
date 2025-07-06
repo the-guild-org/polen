@@ -1,6 +1,6 @@
 import { Fs, Path } from '@wollybeard/kit'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import { Content } from './$.ts'
+import { Content } from './$.js'
 
 describe('content', () => {
   let testDir: string

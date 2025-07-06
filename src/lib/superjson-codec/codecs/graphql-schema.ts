@@ -1,5 +1,5 @@
 import { Grafaid } from '#lib/grafaid/index'
-import { create } from '../codec.ts'
+import { create } from '../codec.js'
 
 export const GraphQLSchema = create({
   name: `GraphQLSchema`,

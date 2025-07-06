@@ -1,8 +1,8 @@
 import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
-import type { Page } from './page.ts'
-import type { ScanResult } from './scan.ts'
-import { buildSidebarIndex } from './sidebar.ts'
+import type { Page } from './page.js'
+import type { ScanResult } from './scan.js'
+import { buildSidebarIndex } from './sidebar.js'
 
 // Generators
 const pathSegmentArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,19}$/)

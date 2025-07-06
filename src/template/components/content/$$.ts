@@ -1,2 +1,2 @@
 export { Callout, Tabs } from '@radix-ui/themes'
-export { GraphQLDocumentWithSchema } from './GraphQLDocumentWithSchema.tsx'
+export { GraphQLDocumentWithSchema } from './GraphQLDocumentWithSchema.js'

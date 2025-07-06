@@ -1,6 +1,6 @@
 import { Fs, Path } from '@wollybeard/kit'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import { rebase, type RebasePlan } from './rebase.ts'
+import { rebase, type RebasePlan } from './rebase.js'
 
 const testDir = 'temp/rebase-test'
 

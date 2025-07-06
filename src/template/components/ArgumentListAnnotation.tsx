@@ -2,8 +2,8 @@ import { GrafaidOld } from '#lib/grafaid-old/index'
 import { Box, Text } from '@radix-ui/themes'
 import type { GraphQLField } from 'graphql'
 import type { FC } from 'react'
-import { ArgumentAnnotation } from './ArgumentAnnotation.tsx'
-import { FieldList } from './FieldList.tsx'
+import { ArgumentAnnotation } from './ArgumentAnnotation.js'
+import { FieldList } from './FieldList.js'
 
 export interface Props {
   field: GraphQLField<any, any>

@@ -1,6 +1,6 @@
 import type { React } from '#dep/react/index'
 import { createContext, useContext, useEffect, useState } from 'react'
-import * as Theme from '../../lib/theme/theme.ts'
+import * as Theme from '../../lib/theme/theme.js'
 
 type ThemeAppearance = `light` | `dark`
 type ThemePreference = `light` | `dark` | `system`

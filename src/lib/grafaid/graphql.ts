@@ -1,8 +1,8 @@
 import { neverCase } from '@wollybeard/kit/language'
 import type { GraphQLNamedType, GraphQLScalarType } from 'graphql'
 import { isEnumType, isInputObjectType, isInterfaceType, isObjectType, isScalarType, isUnionType } from 'graphql'
-import type { KindMap } from './schema/schema.ts'
-import { isScalarTypeCustom } from './schema/schema.ts'
+import type { KindMap } from './schema/schema.js'
+import { isScalarTypeCustom } from './schema/schema.js'
 
 export {
   type ExecutionResult,
@@ -11,7 +11,7 @@ export {
   type GraphQLFormattedError as FormattedExecutionResultError,
 } from 'graphql'
 
-export * from './_Nodes.ts'
+export * from './_Nodes.js'
 
 export const StandardScalarTypeNames = {
   String: `String`,

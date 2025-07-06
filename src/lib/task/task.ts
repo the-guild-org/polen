@@ -1,6 +1,6 @@
 import type { Mask } from '#lib/mask'
-import type { Report } from './report.ts'
-import { exitWithReport } from './report.ts'
+import type { Report } from './report.js'
+import { exitWithReport } from './report.js'
 
 export interface Definition<$Input = any, $Output = any> {
   name: string

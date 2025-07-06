@@ -1,1 +1,1 @@
-export * as DataSources from './data-sources.ts'
+export * as DataSources from './data-sources.js'

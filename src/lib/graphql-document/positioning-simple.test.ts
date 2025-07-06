@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { createSimpleOverlay, createSimplePositionCalculator } from './positioning-simple.ts'
-import type { Identifier } from './types.ts'
+import { createSimpleOverlay, createSimplePositionCalculator } from './positioning-simple.js'
+import type { Identifier } from './types.js'
 
 // Helper to create test identifier
 const createTestIdentifier = (

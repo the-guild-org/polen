@@ -18,8 +18,8 @@ import {
   isNonNullType,
   isObjectType,
 } from 'graphql'
-import { analyze } from './analysis.ts'
-import type { Identifier } from './types.ts'
+import { analyze } from './analysis.js'
+import type { Identifier } from './types.js'
 
 /**
  * Documentation extracted from GraphQL schema
@@ -423,7 +423,7 @@ export const createPolenSchemaResolver = (
  */
 export interface SchemaAwareAnalysisResult {
   /** Original analysis result */
-  analysis: import('./types.ts').AnalysisResult
+  analysis: import('./types.js').AnalysisResult
   /** Schema resolutions for all identifiers */
   resolutions: Map<string, SchemaResolution>
   /** Validation errors from schema checking */

@@ -1,3 +1,3 @@
-export * as Id from './id.ts'
-export * as IdentifiedLoader from './identified-loader.ts'
-export * as Identifier from './identifier.ts'
+export * as Id from './id.js'
+export * as IdentifiedLoader from './identified-loader.js'
+export * as Identifier from './identifier.js'

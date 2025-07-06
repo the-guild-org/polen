@@ -7,8 +7,8 @@
 import type { React } from '#dep/react/index'
 import { Cross2Icon } from '@radix-ui/react-icons'
 import { Badge, Box, Flex, IconButton, Link, Popover, Text } from '@radix-ui/themes'
-import type { Documentation } from '../schema-integration.ts'
-import type { Identifier } from '../types.ts'
+import type { Documentation } from '../schema-integration.js'
+import type { Identifier } from '../types.js'
 
 export interface GraphQLIdentifierPopoverProps {
   /** The identifier being shown */

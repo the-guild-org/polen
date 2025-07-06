@@ -1,7 +1,7 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
 import { Path, Str } from '@wollybeard/kit'
-import { type Diagnostic, lint } from './linter.ts'
-import { type Route, type RouteFile, type RouteLogical } from './route.ts'
+import { type Diagnostic, lint } from './linter.js'
+import { type Route, type RouteFile, type RouteLogical } from './route.js'
 
 //
 //

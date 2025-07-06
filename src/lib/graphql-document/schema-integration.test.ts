@@ -1,6 +1,6 @@
 import { buildSchema } from 'graphql'
 import { describe, expect, it } from 'vitest'
-import { analyzeWithSchema, createPolenSchemaResolver } from './schema-integration.ts'
+import { analyzeWithSchema, createPolenSchemaResolver } from './schema-integration.js'
 
 // Test schema
 const testSchema = buildSchema(`

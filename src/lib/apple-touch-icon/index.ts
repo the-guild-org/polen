@@ -1,1 +1,1 @@
-export * as AppleTouchIcon from './apple-touch-icon.ts'
+export * as AppleTouchIcon from './apple-touch-icon.js'

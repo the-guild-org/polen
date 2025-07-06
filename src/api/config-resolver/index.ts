@@ -1,1 +1,1 @@
-export * as ConfigResolver from './config-resolver.ts'
+export * as ConfigResolver from './config-resolver.js'

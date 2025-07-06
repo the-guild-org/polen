@@ -1,8 +1,8 @@
 import { Box, Heading, Text } from '@radix-ui/themes'
 import { type GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'
-import { FieldListSection } from './FieldListSection.tsx'
-import { Markdown } from './Markdown.tsx'
+import { FieldListSection } from './FieldListSection.js'
+import { Markdown } from './Markdown.js'
 
 export interface Props {
   data: GraphQLNamedType

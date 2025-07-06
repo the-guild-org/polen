@@ -1,7 +1,7 @@
 import { Grafaid } from '#lib/grafaid/index'
 import { Box } from '@radix-ui/themes'
 import type { FC } from 'react'
-import { Field } from './Field.tsx'
+import { Field } from './Field.js'
 
 export interface Props {
   data: Grafaid.Schema.TypesLike.Named

@@ -1,1 +1,1 @@
-export * as ExtensibleData from './extensible-data.ts'
+export * as ExtensibleData from './extensible-data.js'

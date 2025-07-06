@@ -1,6 +1,6 @@
 import { Mask } from '#lib/mask'
 import { Err, Str } from '@wollybeard/kit'
-import type { Definition, MaskOptions } from './task.ts'
+import type { Definition, MaskOptions } from './task.js'
 
 export interface Report<$Input, $Output> {
   task: Definition<$Input, $Output>

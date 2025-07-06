@@ -5,4 +5,4 @@
 import type { OperationTypeNode as GraphQLOperationTypeNode } from 'graphql'
 
 export type OperationTypeNode = GraphQLOperationTypeNode
-export * as OperationTypeNode from './OperationTypeNodes.ts'
+export * as OperationTypeNode from './OperationTypeNodes.js'

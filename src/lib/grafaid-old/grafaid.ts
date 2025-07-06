@@ -29,7 +29,7 @@ import {
   isUnionType,
 } from 'graphql'
 
-export * as Schema from './schema.ts'
+export * as Schema from './schema.js'
 
 export namespace Groups {
   export type Describable = GraphQLNamedType | GraphQLField

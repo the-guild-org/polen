@@ -1,6 +1,6 @@
 import * as fc from 'fast-check'
 import { describe, expect, test } from 'vitest'
-import { Mask } from './$.ts'
+import { Mask } from './$.js'
 
 describe('Mask.create', () => {
   test('boolean options create binary masks', () => {

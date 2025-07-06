@@ -1,5 +1,5 @@
 import { Str } from '@wollybeard/kit'
-import type { Page } from './page.ts'
+import type { Page } from './page.js'
 
 export interface NavbarItem {
   pathExp: string

@@ -3,7 +3,7 @@ import { Box, Flex, Heading } from '@radix-ui/themes'
 import { Obj } from '@wollybeard/kit'
 import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
 import type { FC } from 'react'
-import { Link } from './Link.tsx'
+import { Link } from './Link.js'
 
 export interface Props {
   schema: GraphQLSchema

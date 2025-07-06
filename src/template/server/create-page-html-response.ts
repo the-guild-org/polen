@@ -9,8 +9,8 @@ import { Arr } from '@wollybeard/kit'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
 import { templateVariables } from 'virtual:polen/template/variables'
-import type { PolenGlobalData } from '../constants.ts'
-import { view } from './view.ts'
+import type { PolenGlobalData } from '../constants.js'
+import { view } from './view.js'
 
 interface RenderHooks {
   transformHtml?: (html: string) => Promise<string> | string

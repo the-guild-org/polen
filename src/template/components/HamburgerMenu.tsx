@@ -2,7 +2,7 @@ import type { Content } from '#api/content/$'
 import { Cross2Icon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Box, Flex, IconButton, Text } from '@radix-ui/themes'
 import { useEffect } from 'react'
-import { Sidebar } from '../components/sidebar/Sidebar.tsx'
+import { Sidebar } from '../components/sidebar/Sidebar.js'
 
 export interface HamburgerMenuProps {
   isOpen: boolean

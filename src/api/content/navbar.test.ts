@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createNavbar } from './navbar.ts'
-import type { Page } from './page.ts'
+import { createNavbar } from './navbar.js'
+import type { Page } from './page.js'
 
 const createPage = (path: string[], fileName = 'index', hidden = false): Page => ({
   route: {

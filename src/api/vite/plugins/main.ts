@@ -5,10 +5,10 @@ import ViteReact from '@vitejs/plugin-react-oxc'
 // import { Arr, Path } from '@wollybeard/kit'
 // import Inspect from 'vite-plugin-inspect'
 // import Restart from 'vite-plugin-restart'
-import { Branding } from './branding/index.ts'
-import { Build } from './build.ts'
-import { Core } from './core.ts'
-import { Serve } from './serve.ts'
+import { Branding } from './branding/index.js'
+import { Build } from './build.js'
+import { Core } from './core.js'
+import { Serve } from './serve.js'
 
 export const Main = (
   config: Config.Config,

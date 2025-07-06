@@ -1,6 +1,6 @@
 import * as fc from 'fast-check'
 import { describe, expect, test, vi } from 'vitest'
-import { Task } from './$.ts'
+import { Task } from './$.js'
 
 describe('create', () => {
   test('executes async function and captures timing', async () => {

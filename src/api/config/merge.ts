@@ -1,5 +1,5 @@
 import { Vite } from '#dep/vite/index'
-import type { ConfigInput } from './configurator.ts'
+import type { ConfigInput } from './configurator.js'
 
 /**
  * Deep merge two Polen config inputs.

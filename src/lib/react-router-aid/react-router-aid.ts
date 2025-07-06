@@ -1,7 +1,7 @@
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Http } from '@wollybeard/kit'
 
-export * from './get-paths-patterns.ts'
+export * from './get-paths-patterns.js'
 
 export type RouteObject = RouteObjectIndex | RouteObjectNonIndex
 

@@ -1,1 +1,1 @@
-export * as ExampleController from './example-controller.ts'
+export * as ExampleController from './example-controller.js'

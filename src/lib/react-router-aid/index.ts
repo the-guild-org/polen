@@ -1,1 +1,1 @@
-export * as ReactRouterAid from './react-router-aid.ts'
+export * as ReactRouterAid from './react-router-aid.js'

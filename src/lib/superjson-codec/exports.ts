@@ -1,2 +1,2 @@
-export * from './codec.ts'
-export * from './codecs/graphql-schema.ts'
+export * from './codec.js'
+export * from './codecs/graphql-schema.js'

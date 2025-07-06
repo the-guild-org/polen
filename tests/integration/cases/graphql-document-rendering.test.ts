@@ -5,7 +5,7 @@
 import { Api } from '#api/index'
 import type { FsLayout } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
-import { test } from '../helpers/test.ts'
+import { test } from '../helpers/test.js'
 
 test('GraphQL documents render with syntax highlighting', async ({ page, vite, project }) => {
   const fixture: FsLayout.Tree = {

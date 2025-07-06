@@ -1,7 +1,7 @@
 import { FileRouter } from '#lib/file-router/index'
 import { Str } from '@wollybeard/kit'
-import type { Page } from './page.ts'
-import type { ScanResult } from './scan.ts'
+import type { Page } from './page.js'
+import type { ScanResult } from './scan.js'
 
 /**
  * Represents a complete sidebar structure with navigation items.

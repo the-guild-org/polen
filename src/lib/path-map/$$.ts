@@ -4,4 +4,4 @@
  * @module
  */
 
-export * from './path-map.ts'
+export * from './path-map.js'

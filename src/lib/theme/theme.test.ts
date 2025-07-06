@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { createThemeManager } from './theme.ts'
+import { createThemeManager } from './theme.js'
 
 // Mock document and window
 const mockDocument = {

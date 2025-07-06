@@ -1,1 +1,1 @@
-export * as Task from './$$.ts'
+export * as Task from './$$.js'

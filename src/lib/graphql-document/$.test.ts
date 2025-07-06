@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GraphQLDocument } from './$.ts'
+import { GraphQLDocument } from './$.js'
 
 describe('GraphQLDocument', () => {
   describe('analyze', () => {

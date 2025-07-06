@@ -2,7 +2,7 @@ import { Grafaid } from '#lib/grafaid/index'
 import { GraphqlChange } from '#lib/graphql-change/index'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { Arr } from '@wollybeard/kit'
-import type { Schema } from '../../schema.ts'
+import type { Schema } from '../../schema.js'
 
 export interface ConfigInput {
   versions:

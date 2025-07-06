@@ -1,7 +1,7 @@
 import React from 'react'
-import { GraphQLDocument } from '../../../lib/graphql-document/components/GraphQLDocument.tsx'
-import type { GraphQLDocumentProps } from '../../../lib/graphql-document/components/GraphQLDocument.tsx'
-import { highlightCode } from '../../../lib/shiki/shiki.ts'
+import { GraphQLDocument } from '../../../lib/graphql-document/components/GraphQLDocument.js'
+import type { GraphQLDocumentProps } from '../../../lib/graphql-document/components/GraphQLDocument.js'
+import { highlightCode } from '../../../lib/shiki/shiki.js'
 
 /**
  * Client-side wrapper that hydrates GraphQL documents with schema

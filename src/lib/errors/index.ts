@@ -1,1 +1,1 @@
-export * as Errors from './errors.ts'
+export * as Errors from './errors.js'

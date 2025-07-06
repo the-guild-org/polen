@@ -33,86 +33,66 @@
   },
   "imports": {
     "#*": {
-      "source": "./src/*.ts",
       "default": "./build/*.js"
     },
     "#lib/mask": {
-      "source": "./src/lib/mask/$.ts",
       "default": "./build/lib/mask/$.js"
     },
     "#lib/mask/mask": {
-      "source": "./src/lib/mask/$$.ts",
       "default": "./build/lib/mask/$$.js"
     },
     "#lib/task": {
-      "source": "./src/lib/task/$.ts",
       "default": "./build/lib/task/$.js"
     },
     "#lib/task/task": {
-      "source": "./src/lib/task/$$.ts",
       "default": "./build/lib/task/$$.js"
     },
     "#lib/graphql-document": {
-      "source": "./src/lib/graphql-document/$.ts",
       "default": "./build/lib/graphql-document/$.js"
     },
     "#lib/graphql-document/graphql-document": {
-      "source": "./src/lib/graphql-document/$$.ts",
       "default": "./build/lib/graphql-document/$$.js"
     },
     "#lib/graphql-document/components/index": {
-      "source": "./src/lib/graphql-document/components/index.ts",
       "default": "./build/lib/graphql-document/components/index.js"
     },
     "#lib/graphql-document/components/GraphQLDocumentWithSchema": {
-      "source": "./src/lib/graphql-document/components/GraphQLDocumentWithSchema.tsx",
       "default": "./build/lib/graphql-document/components/GraphQLDocumentWithSchema.js"
     },
     "#lib/graphql-document/components/GraphQLDocument": {
-      "source": "./src/lib/graphql-document/components/GraphQLDocument.tsx",
       "default": "./build/lib/graphql-document/components/GraphQLDocument.js"
     },
     "#lib/graphql-document/schema-context": {
-      "source": "./src/lib/graphql-document/schema-context.tsx",
       "default": "./build/lib/graphql-document/schema-context.js"
     },
     "#template/components/content/$$": {
-      "source": "./src/template/components/content/$$.ts",
       "default": "./build/template/components/content/$$.js"
     },
     "#lib/theme": {
-      "source": "./src/lib/theme/$.ts",
       "default": "./build/lib/theme/$.js"
     }
   },
   "exports": {
     ".": {
-      "source": "./src/exports/index.ts",
       "default": "./build/exports/index.js"
     },
     "./components": {
-      "source": "./src/exports/components.ts",
       "import": "./build/exports/components.js",
       "default": "./build/exports/components.js"
     },
     "./polen": {
-      "source": "./src/exports/polen.ts",
       "default": "./build/exports/polen.js"
     },
     "./react": {
-      "source": "./src/exports/react.ts",
       "default": "./build/exports/react.js"
     },
     "./react-dom/server": {
-      "source": "./src/exports/react-dom/server.ts",
       "default": "./build/exports/react-dom/server.js"
     },
     "./react/jsx-dev-runtime": {
-      "source": "./src/exports/react/jsx-dev-runtime.ts",
       "default": "./build/exports/react/jsx-dev-runtime.js"
     },
     "./react/jsx-runtime": {
-      "source": "./src/exports/react/jsx-runtime.ts",
       "default": "./build/exports/react/jsx-runtime.js"
     }
   },
@@ -238,7 +218,7 @@
     "sandbox:watch": "tsx --watch src/sandbox",
     "sb": "pnpm sandbox",
     "sb:w": "pnpm sandbox:watch",
-    "polen": "node --no-warnings --experimental-transform-types --conditions source ./src/cli/index.ts",
+    "polen": "tsx ./src/cli/index.ts",
     "test:examples": "playwright test --config 'tests/playwright.config.ts' --project=examples",
     "test:integration": "playwright test --config 'tests/playwright.config.ts' --project=integration",
     "test:unit": "vitest",

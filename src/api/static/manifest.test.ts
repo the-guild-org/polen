@@ -1,6 +1,6 @@
 import { Err, Fs, Path } from '@wollybeard/kit'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import { buildManifest, type PolenBuildManifest } from './manifest.ts'
+import { buildManifest, type PolenBuildManifest } from './manifest.js'
 
 describe('validate-build', () => {
   let testDir: string

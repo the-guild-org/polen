@@ -1,6 +1,6 @@
 import type { GraphQLObjectType, GraphQLSchema } from 'graphql'
-import { createFromObjectType, type RootDetails } from './RootDetails.ts'
-import { type StandardRootTypeName, StandardRootTypeNameEnum } from './StandardRootTypeName.ts'
+import { createFromObjectType, type RootDetails } from './RootDetails.js'
+import { type StandardRootTypeName, StandardRootTypeNameEnum } from './StandardRootTypeName.js'
 
 export interface RootTypeMap {
   list: RootDetails[]

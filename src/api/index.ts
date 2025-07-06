@@ -1,1 +1,1 @@
-export * as Api from './api.ts'
+export * as Api from './api.js'

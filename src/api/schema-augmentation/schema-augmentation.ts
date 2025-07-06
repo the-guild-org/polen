@@ -1,6 +1,6 @@
 import type { GrafaidOld } from '#lib/grafaid-old/index'
 import { neverCase } from '@wollybeard/kit/language'
-import * as AugmentationDescription from './augmentations/description.ts'
+import * as AugmentationDescription from './augmentations/description.js'
 
 export { AugmentationDescription }
 

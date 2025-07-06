@@ -1,1 +1,1 @@
-export * as Markdown from './markdown.ts'
+export * as Markdown from './markdown.js'

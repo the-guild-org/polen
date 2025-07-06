@@ -1,7 +1,7 @@
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { injectGlobalDataIntoHTML } from '#lib/html-utils/inject-global-data'
 import * as Theme from '#lib/theme/theme'
-import type { PolenGlobalData } from '../../constants.ts'
+import type { PolenGlobalData } from '../../constants.js'
 
 /**
  * HTML transformer that injects Polen global data based on request context

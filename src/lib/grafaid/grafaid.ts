@@ -1,4 +1,4 @@
-export * as Document from './document.ts'
-export * from './graphql.ts'
-export * as HTTP from './http/http.ts'
-export * as Schema from './schema/schema.ts'
+export * as Document from './document.js'
+export * from './graphql.js'
+export * as HTTP from './http/http.js'
+export * as Schema from './schema/schema.js'

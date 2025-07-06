@@ -24,10 +24,10 @@ import {
   type VariableNode,
 } from 'graphql'
 import type { HasRequiredKeys } from 'type-fest'
-import { Kind } from './document/kind.ts'
-import { OperationTypeNode } from './document/OperationTypeNode.ts'
-// import type { RequestDocumentNodeInput } from './request.ts'
-export { OperationType } from './schema/OperationType/__.ts'
+import { Kind } from './document/kind.js'
+import { OperationTypeNode } from './document/OperationTypeNode.js'
+// import type { RequestDocumentNodeInput } from './request.js'
+export { OperationType } from './schema/OperationType/__.js'
 
 export type {
   ArgumentNode,
@@ -55,9 +55,9 @@ export type {
   VariableNode,
 } from 'graphql'
 
-export { OperationTypeNode } from './document/OperationTypeNode.ts'
+export { OperationTypeNode } from './document/OperationTypeNode.js'
 
-export { Kind } from './document/kind.ts'
+export { Kind } from './document/kind.js'
 
 export type $Any =
   | DirectiveNode

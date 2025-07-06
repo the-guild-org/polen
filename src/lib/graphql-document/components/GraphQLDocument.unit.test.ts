@@ -6,9 +6,9 @@
 
 import { buildSchema } from 'graphql'
 import { describe, expect, it } from 'vitest'
-import { analyze } from '../analysis.ts'
-import { createSimplePositionCalculator } from '../positioning-simple.ts'
-import { analyzeWithSchema, createPolenSchemaResolver } from '../schema-integration.ts'
+import { analyze } from '../analysis.js'
+import { createSimplePositionCalculator } from '../positioning-simple.js'
+import { analyzeWithSchema, createPolenSchemaResolver } from '../schema-integration.js'
 
 describe('GraphQLDocument logic', () => {
   const testSchema = buildSchema(`

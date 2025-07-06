@@ -1,1 +1,1 @@
-export * as Builder from './builder.ts'
+export * as Builder from './builder.js'

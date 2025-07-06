@@ -4,7 +4,7 @@ import { ReactDomClient } from '#dep/react-dom-client/index'
 import { StrictMode } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { routes } from './routes.tsx'
+import { routes } from './routes.js'
 
 // SPA
 

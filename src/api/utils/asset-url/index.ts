@@ -1,1 +1,1 @@
-export * from './asset-url.ts'
+export * from './asset-url.js'

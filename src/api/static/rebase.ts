@@ -1,7 +1,7 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
 import { Fs, Path } from '@wollybeard/kit'
 import { Err } from '@wollybeard/kit'
-import { buildManifest, type PolenBuildManifest } from './manifest.ts'
+import { buildManifest, type PolenBuildManifest } from './manifest.js'
 
 export type RebasePlan = RebaseOverwritePlan | RebaseCopyPlan
 

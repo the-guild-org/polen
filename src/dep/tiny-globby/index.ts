@@ -1,1 +1,1 @@
-export * as TinyGlobby from './tiny-globby.ts'
+export * as TinyGlobby from './tiny-globby.js'

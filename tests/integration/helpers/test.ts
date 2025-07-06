@@ -1,7 +1,7 @@
 import { Path } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
 import { test as base } from 'playwright/test'
-import { ViteController } from './vite-controller/index.ts'
+import { ViteController } from './vite-controller/index.js'
 
 interface Fixtures {
   vite: ViteController.ViteController

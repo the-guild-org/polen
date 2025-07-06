@@ -5,7 +5,7 @@ import { debugPolen } from '#singletons/debug'
 import type { Prom } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
 import * as Module from 'node:module'
-import type { ConfigInput } from './configurator.ts'
+import type { ConfigInput } from './configurator.js'
 
 export const fileNameBases = [`polen.config`, `.polen.config`]
 export const fileNameExtensionsTypeScript = [`.ts`, `.js`, `.mjs`, `.mts`]
@@ -55,7 +55,6 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
     configInput = {}
   } else {
     // If the user's config is a TypeScript file, we will use TSX to import it.
-    // TODO: Use NodeJS's native ESM support for TypeScript files.
 
     let module: { default?: Prom.Maybe<ConfigInput>; config?: Prom.Maybe<ConfigInput> }
     if (fileNameExtensionsTypeScript.some(_ => filePath.endsWith(_))) {

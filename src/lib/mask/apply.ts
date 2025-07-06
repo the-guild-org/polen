@@ -1,7 +1,7 @@
 import { type ExtendsExact, objPolicyFilter } from '#lib/kit-temp'
 import { Obj } from '@wollybeard/kit'
 import { never } from '@wollybeard/kit/language'
-import type { GetDataType, Mask } from './mask.ts'
+import type { GetDataType, Mask } from './mask.js'
 
 /**
  * Type-level function that applies a mask to data.
