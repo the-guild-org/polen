@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import { parse } from './markdown.js'
 
-describe('markdown parser with syntax highlighting', () => {
-  test('parse highlights code blocks', { timeout: 10000 }, async () => {
+describe('markdown parser', () => {
+  test('parse converts code blocks', async () => {
     const markdown = `
 # Hello
 
@@ -15,13 +15,10 @@ console.log(x)
 
     expect(result).toContain('<h1>Hello</h1>')
     expect(result).toContain('<pre')
-    expect(result).toContain('shiki')
+    expect(result).toContain('<code class="language-javascript">')
     expect(result).toContain('console')
     expect(result).toContain('42')
   })
-
-  // Note: parseSync cannot be used with async rehype plugins like Shiki
-  // This is a known limitation - syntax highlighting requires async processing
 
   test('parse supports GraphQL syntax', async () => {
     const markdown = `
@@ -33,11 +30,10 @@ type Query {
 `
     const result = await parse(markdown)
 
-    expect(result).toContain('type')
-    expect(result).toContain('Query')
-    // Check that both ID and ! are present (they may be in separate spans)
-    expect(result).toContain('> ID<')
-    expect(result).toContain('>!</')
+    expect(result).toContain('<code class="language-graphql">')
+    expect(result).toContain('type Query')
+    expect(result).toContain('ID!')
+    expect(result).toContain('User')
   })
 
   test('parse handles inline code', async () => {
@@ -75,7 +71,7 @@ plain text without language
     expect(result).toContain('plain text without language')
   })
 
-  test('parse preserves theme CSS variables', async () => {
+  test('parse converts code blocks without syntax highlighting', async () => {
     const markdown = `
 \`\`\`javascript
 const theme = "light"
@@ -83,7 +79,8 @@ const theme = "light"
 `
     const result = await parse(markdown)
 
-    expect(result).toContain('--shiki-light')
-    expect(result).toContain('--shiki-dark')
+    expect(result).toContain('<pre>')
+    expect(result).toContain('<code class="language-javascript">')
+    expect(result).toContain('const theme = "light"')
   })
 })

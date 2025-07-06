@@ -92,16 +92,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             && (
               importer.startsWith(config.paths.framework.sourceDir)
               || polenVirtual.includes(importer)
-              /*
-                TODO: can we make index.html be in the source dir?
-                Example case:
-
-                POLEN   VITE_PLUGIN_INTERNAL_IMPORT_ALIAS   CHECK  {
-                  id: '#singletons/superjson',
-                  importer: '/Users/jasonkuhrt/projects/the-guild-org/polen/index.html',
-                  isPolenImporter: false
-                }
-              */
               || (importer.startsWith(config.paths.framework.rootDir) && importer.endsWith(`index.html`))
             ),
         )

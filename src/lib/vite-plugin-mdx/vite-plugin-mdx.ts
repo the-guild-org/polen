@@ -1,5 +1,3 @@
-// TODO: use this or similar once transform hook can change module type and have result re-processed
-// @see  https://github.com/rolldown/rolldown/issues/4004
 // Note: This is adapted from `@mdx-js/mdx`
 
 import type { CompileOptions } from '@mdx-js/mdx'
@@ -56,7 +54,6 @@ export const VitePluginMdx = (options?: Readonly<Options> | null): Plugin => {
 
   return {
     name: `mdx`,
-    // TODO: should not be needed?
     // enforce: `pre`, // Run before other transforms
     config(__config, env) {
       // Initialize processors with Vite environment info

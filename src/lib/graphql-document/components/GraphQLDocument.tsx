@@ -199,6 +199,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         className={`graphql-document ${className} ${debug ? `graphql-debug-mode` : ``} ${
           !isReady && !plain ? `graphql-loading` : ``
         }`}
+        data-testid='graphql-document'
       >
         {/* Base syntax highlighting */}
         {highlightedHtml ? <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} /> : (

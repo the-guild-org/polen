@@ -3,62 +3,43 @@ import { useEffect, useState } from 'react'
 import { useGraphQLSchema } from '../schema-context.js'
 import { GraphQLDocument, type GraphQLDocumentProps } from './GraphQLDocument.js'
 
-// Cache for highlighter
-let highlighterCache: any = null
-
 /**
- * GraphQL Document component that uses the schema context and handles syntax highlighting
+ * GraphQL Document component that uses the schema context
  */
 export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `schema` | `highlightedHtml`>> = (
   props,
 ) => {
   const schema = useGraphQLSchema()
   const [mounted, setMounted] = useState(false)
-  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
-
-    const loadHighlighter = async () => {
-      try {
-        // Load highlighter if not cached
-        if (!highlighterCache) {
-          const { highlightCode } = await import(`#lib/shiki/index`)
-          highlighterCache = highlightCode
-        }
-
-        // Generate highlighted HTML
-        const highlighted = await highlighterCache({
-          code: props.children,
-          lang: `graphql`,
-          theme: `light`,
-        })
-
-        setHighlightedHtml(highlighted)
-      } catch (error) {
-        console.error(`Failed to load GraphQL document highlighter:`, error)
-      }
-    }
-
-    loadHighlighter()
-  }, [props.children])
+  }, [])
 
   // Always render the same structure to avoid hydration issues
-  const isInteractive = mounted && schema && highlightedHtml
+  const isInteractive = mounted && schema
 
   if (!isInteractive) {
-    // Static fallback that looks like Shiki output
+    // Static fallback
     return (
       <div className='graphql-document graphql-document-static' data-testid='graphql-document'>
         <pre
-          className='shiki shiki-themes github-light tokyo-night'
-          style={{ backgroundColor: `var(--shiki-light-bg)`, color: `var(--shiki-light)` }}
+          style={{
+            backgroundColor: `var(--gray-a2)`,
+            color: `var(--gray-12)`,
+            padding: `var(--space-3)`,
+            borderRadius: `var(--radius-3)`,
+          }}
         >
           <code className="language-graphql">{props.children}</code>
         </pre>
       </div>
     )
   }
+
+  // Simple highlighted HTML without syntax highlighting
+  const highlightedHtml =
+    `<pre style="background-color: var(--gray-a2); color: var(--gray-12); padding: var(--space-3); border-radius: var(--radius-3);"><code class="language-graphql">${props.children}</code></pre>`
 
   return (
     <GraphQLDocument
