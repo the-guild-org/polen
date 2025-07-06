@@ -9,7 +9,6 @@ import { FileRouter } from '#lib/file-router/index'
 import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
-import rehypeShiki from '@shikijs/rehype'
 import { Arr, Cache, Path, Str } from '@wollybeard/kit'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -102,22 +101,7 @@ export const Pages = ({
           remarkFrontmatter,
           remarkGfm,
         ],
-        rehypePlugins: [
-          [
-            rehypeShiki,
-            {
-              themes: {
-                light: `github-light`,
-                dark: `tokyo-night`,
-              },
-              defaultColor: `light`,
-              cssVariablePrefix: `--shiki-`,
-              transformers: [
-                // Line numbers will be handled via CSS
-              ],
-            },
-          ],
-        ],
+        rehypePlugins: [],
       }),
     },
 

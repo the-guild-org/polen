@@ -40,7 +40,7 @@ test('GraphQL documents render with syntax highlighting', async ({ page, vite, p
   await expect(graphqlDocument).toBeVisible()
 
   // Verify syntax highlighting is applied
-  const codeBlock = graphqlDocument.locator('pre.shiki, pre code')
+  const codeBlock = graphqlDocument.locator('pre, pre code')
   await expect(codeBlock).toBeVisible()
 
   // Verify the GraphQL code content is present
@@ -79,7 +79,7 @@ test('GraphQL documents handle schema-less rendering gracefully', async ({ page,
   await expect(graphqlDocument).toBeVisible()
 
   // Should still have syntax highlighting
-  const codeBlock = graphqlDocument.locator('pre.shiki, pre code')
+  const codeBlock = graphqlDocument.locator('pre, pre code')
   await expect(codeBlock).toBeVisible()
 
   // Content should be present

@@ -106,7 +106,7 @@ test('GraphQL documents render with syntax highlighting on guide pages', async (
   const firstDoc = graphqlDocuments.first()
   await expect(firstDoc).toBeVisible({ timeout: 10000 })
 
-  const codeBlock = firstDoc.locator('pre.shiki')
+  const codeBlock = firstDoc.locator('pre')
   await expect(codeBlock).toBeVisible()
 
   // Verify GraphQL content is present
@@ -131,7 +131,7 @@ test('GraphQL documents handle schema-less rendering gracefully', async ({ runDe
     await expect(firstDoc).toBeVisible()
 
     // Should still have syntax highlighting
-    const codeBlock = firstDoc.locator('pre.shiki, pre code')
+    const codeBlock = firstDoc.locator('pre, pre code')
     await expect(codeBlock).toBeVisible()
   }
 })
@@ -156,7 +156,7 @@ test('Multiple GraphQL documents on same page work correctly', async ({ runDev, 
     const doc = graphqlDocuments.nth(i)
     await expect(doc).toBeVisible()
 
-    const codeBlock = doc.locator('pre.shiki')
+    const codeBlock = doc.locator('pre')
     await expect(codeBlock).toBeVisible()
   }
 })

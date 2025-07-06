@@ -1,7 +1,6 @@
 import React from 'react'
 import { GraphQLDocument } from '../../../lib/graphql-document/components/GraphQLDocument.js'
 import type { GraphQLDocumentProps } from '../../../lib/graphql-document/components/GraphQLDocument.js'
-import { highlightCode } from '../../../lib/shiki/shiki.js'
 
 /**
  * Client-side wrapper that hydrates GraphQL documents with schema
@@ -10,23 +9,9 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `sch
   try {
     const [schema, setSchema] = React.useState<any>(null)
     const [isClient, setIsClient] = React.useState(false)
-    const [highlightedHtml, setHighlightedHtml] = React.useState<string | null>(null)
 
     React.useEffect(() => {
       setIsClient(true)
-
-      // Highlight the code
-      if (typeof props.children === `string`) {
-        highlightCode({
-          code: props.children,
-          lang: `graphql`,
-          theme: `light`, // You can make this dynamic based on theme
-        }).then(html => {
-          setHighlightedHtml(html)
-        }).catch(() => {
-          // Silently fall back to unhighlighted code
-        })
-      }
 
       // Access virtual module only on client side
       if (typeof window !== `undefined`) {
@@ -40,13 +25,13 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `sch
           // Schema loading is optional - continue without it
         })
       }
-    }, [props.children])
+    }, [])
 
     // During SSR, render a simple code block
     if (!isClient) {
       return (
         <div data-testid='graphql-document' className='graphql-document graphql-document-static'>
-          <pre className='shiki shiki-themes github-light tokyo-night'>
+          <pre>
             <code className="language-graphql">{props.children}</code>
           </pre>
         </div>
@@ -66,7 +51,6 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `sch
         <GraphQLDocument
           {...props}
           schema={schema}
-          highlightedHtml={highlightedHtml || undefined}
           options={{
             debug: false, // Default to false for shipping
             ...props.options,
@@ -79,7 +63,7 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `sch
     // Fall back to plain code block on error
     return (
       <div data-testid='graphql-document' className='graphql-document graphql-document-static'>
-        <pre className='shiki'>
+        <pre>
           <code className="language-graphql">{props.children}</code>
         </pre>
       </div>
