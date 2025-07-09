@@ -25,7 +25,6 @@ export interface ProjectRoutesModule {
 }
 
 export const Core = (config: Config.Config): Vite.PluginOption[] => {
-  // Schema cache management
   let schemaCache: Awaited<ReturnType<typeof Schema.readOrThrow>> | null = null
 
   const readSchema = async () => {
@@ -123,7 +122,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
     {
       name: `polen:core`,
       config(_, { command }) {
-        // isServing = command === `serve`
         return {
           root: config.paths.framework.rootDir,
           define: {
@@ -132,7 +130,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             __COMMAND__: Json.encode(command),
             __BUILD_ARCHITECTURE__: Json.encode(config.build.architecture),
             __BUILD_ARCHITECTURE_SSG__: Json.encode(config.build.architecture === `ssg`),
+            'process.env.NODE_ENV': Json.encode(config.advanced.debug ? 'development' : 'production'),
           },
+
           customLogger: createLogger(config),
           esbuild: false,
           build: {
