@@ -1,10 +1,10 @@
 import type { Config } from '#api/config/index'
-import { NavbarData } from '#api/vite/data/navbar'
+import { Content } from '#api/content/$'
+import { createNavbar } from '#api/content/navbar'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
 import { VitePluginJson } from '#lib/vite-plugin-json/index'
-import { VitePluginReactiveData } from '#lib/vite-plugin-reactive-data/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
@@ -18,7 +18,7 @@ import { Pages } from './pages.js'
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
-const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
+export const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
 
 export interface ProjectRoutesModule {
   routes: ReactRouter.RouteObject[]
@@ -43,7 +43,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
   }
 
   const plugins: Vite.Plugin[] = []
-  const navbarData = NavbarData()
 
   // Note: The main use for this right now is to resolve the react imports
   // from the mdx vite plugin which have to go through the Polen exports since Polen keeps those deps bundled.
@@ -109,15 +108,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       },
     },
     jsonsuper,
-    VitePluginReactiveData.create({
-      moduleId: `virtual:polen/project/data/navbar.jsonsuper`,
-      codec: superjson,
-      data: navbarData.value,
-      name: `polen-navbar`,
-    }),
     ...Pages({
       config,
-      navbarData,
     }),
     {
       name: `polen:core`,
@@ -132,7 +124,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             __BUILD_ARCHITECTURE_SSG__: Json.encode(config.build.architecture === `ssg`),
             'process.env.NODE_ENV': Json.encode(config.advanced.debug ? 'development' : 'production'),
           },
-
           customLogger: createLogger(config),
           esbuild: false,
           build: {
@@ -176,21 +167,28 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const schema = await readSchema()
 
+            const navbar = []
+
             // ━ Schema presence causes adding some navbar items
             if (schema) {
-              const schemaNavbar = navbarData.get(`schema`)
-              schemaNavbar.length = 0 // Clear existing
-              debug(`update navbar`, { message: `for schema` })
-
               // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
               // Without the leading slash, React Router treats paths as relative, which causes
               // hydration mismatches between SSR (where base path is prepended) and client
               // (where basename is configured). This ensures consistent behavior.
-              schemaNavbar.push({ pathExp: `/reference`, title: `Reference` })
+              navbar.push({ pathExp: `/reference`, title: `Reference` })
               if (schema.versions.length > 1) {
-                schemaNavbar.push({ pathExp: `/changelog`, title: `Changelog` })
+                navbar.push({ pathExp: `/changelog`, title: `Changelog` })
               }
             }
+
+            //
+            // ━━ Scan pages and add to navbar
+            //
+
+            const pagesDir = config.paths.project.absolute.pages
+            const scanResult = await Content.scan({ dir: pagesDir })
+            const data = createNavbar(scanResult.list)
+            navbar.push(...data)
 
             //
             // ━━ Put It All together
@@ -200,6 +198,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               schema,
               basePath: config.build.base,
               paths: config.paths.project,
+              navbar, // Complete navbar with schema and pages
               server: {
                 static: {
                   // todo

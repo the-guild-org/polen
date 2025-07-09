@@ -1,7 +1,5 @@
 import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
-import { createNavbar } from '#api/content/navbar'
-import type { NavbarDataRegistry } from '#api/vite/data/navbar'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
 import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
@@ -12,6 +10,7 @@ import mdx from '@mdx-js/rollup'
 import { Arr, Cache, Path, Str } from '@wollybeard/kit'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
+import { viProjectData } from './core.js'
 
 const debug = debugPolen.sub(`vite-pages`)
 
@@ -22,7 +21,6 @@ export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-cat
 
 export interface Options {
   config: Config.Config
-  navbarData?: NavbarDataRegistry
 }
 
 export interface ProjectPagesCatalog {
@@ -35,7 +33,6 @@ export interface ProjectPagesCatalog {
  */
 export const Pages = ({
   config,
-  navbarData,
 }: Options): Vite.Plugin[] => {
   const scanPages = Cache.memoize(debug.trace(async function scanPages() {
     const result = await Content.scan({
@@ -56,6 +53,12 @@ export const Pages = ({
     if (catalogModule) {
       server.moduleGraph.invalidateModule(catalogModule)
       debug(`Invalidated pages catalog virtual module`)
+    }
+
+    const projectDataModule = server.moduleGraph.getModuleById(viProjectData.id)
+    if (projectDataModule) {
+      server.moduleGraph.invalidateModule(projectDataModule)
+      debug(`Invalidated project data virtual module`)
     }
   }
 
@@ -93,7 +96,7 @@ export const Pages = ({
   return [
     // Plugin 1: MDX Processing
     {
-      enforce: `pre` as const,
+      enforce: `pre`,
       ...mdx({
         jsxImportSource: `polen/react`,
         remarkPlugins: [
@@ -186,9 +189,6 @@ export const Pages = ({
         }
       },
       load: {
-        // filter: {
-        //   id: viProjectPagesData.resolved,
-        // },
         async handler(id) {
           if (id !== viProjectPagesCatalog.resolved) return
           debug(`hook load`)
@@ -197,22 +197,6 @@ export const Pages = ({
 
           reportDiagnostics(scanResult.diagnostics)
           debug(`found visible`, { count: scanResult.list.length })
-
-          //
-          // ━━ Build Navbar
-          //
-
-          if (navbarData) {
-            const navbarPages = navbarData.get(`pages`)
-
-            navbarPages.length = 0 // Clear existing
-
-            const data = createNavbar(scanResult.list)
-
-            debug(`update navbar`, data)
-
-            navbarPages.push(...data)
-          }
 
           //
           // ━━ Build Sidebar
@@ -243,9 +227,6 @@ export const Pages = ({
         }
       },
       load: {
-        // filter: {
-        //   id: viProjectPages.resolved,
-        // },
         handler: async (id) => {
           if (id !== viProjectRoutes.resolved) return
 

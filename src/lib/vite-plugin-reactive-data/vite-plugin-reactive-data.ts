@@ -45,7 +45,6 @@ export const create = (options: ReactiveDataOptions): Plugin => {
 
   const tryInvalidate = () => {
     $invalidationScheduled = false
-    // updateTimer = undefined
     if (!$server) throw new Error(`Server not available yet - this should be impossible`)
     const moduleNode = $server.moduleGraph.getModuleById(moduleId)
     if (moduleNode) {

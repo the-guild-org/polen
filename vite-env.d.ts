@@ -106,11 +106,6 @@ declare module 'virtual:polen/project/data.jsonsuper' {
   export { data as default }
 }
 
-declare module 'virtual:polen/project/data/navbar.jsonsuper' {
-  const data: import('#api/vite/data/navbar').NavbarData
-  export { data as default }
-}
-
 declare module 'virtual:polen/project/data/pages-catalog.jsonsuper' {
   const data: import('#api/vite/plugins/pages').ProjectPagesCatalog
   export { data as default }

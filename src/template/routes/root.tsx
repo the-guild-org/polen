@@ -10,12 +10,10 @@ import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import projectDataNavbar from 'virtual:polen/project/data/navbar.jsonsuper'
 import projectPagesCatalog from 'virtual:polen/project/data/pages-catalog.jsonsuper'
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { GraphQLSchemaProvider } from '../../lib/graphql-document/schema-context.js'
-import * as ThemeUtils from '../../lib/theme/theme.js'
 import { CodeBlockEnhancer } from '../components/CodeBlockEnhancer.js'
 import { HamburgerMenu } from '../components/HamburgerMenu.js'
 import { Link } from '../components/Link.js'
@@ -27,13 +25,6 @@ import { ThemeProvider, useTheme } from '../contexts/ThemeContext.js'
 import { changelog } from './changelog.js'
 import { index } from './index.js'
 import { reference } from './reference.js'
-
-// Create theme manager instance to read cookie
-const themeManager = ThemeUtils.createThemeManager({
-  cookieName: `polen-theme-preference`,
-})
-
-// RootDocument component removed - HTML structure handled server-side
 
 export const Component = () => {
   const schema = PROJECT_DATA.schema?.versions[0]?.after || null
@@ -146,7 +137,7 @@ const Layout = () => {
         </Box>
       </LinkReactRouter>
       <Flex direction='row' gap='4' style={{ flex: 1 }}>
-        {projectDataNavbar.map((item, key) => (
+        {PROJECT_DATA.navbar.map((item, key) => (
           <Link key={key} color='gray' to={item.pathExp}>
             {item.title}
           </Link>
