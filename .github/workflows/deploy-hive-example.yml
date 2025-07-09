@@ -43,6 +43,11 @@ jobs:
       - name: Build Polen
         run: pnpm build
 
+      - name: Install Hive example dependencies
+        run: |
+          cd examples/hive
+          pnpm install
+
       - name: Build Hive example
         run: |
           cd examples/hive
