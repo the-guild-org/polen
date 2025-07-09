@@ -58,7 +58,6 @@ const expressionPreviousSerializedPattern = /^(?<year>\d{4})-(?<month>\d{2})-(?<
 //   filePath: string
 // }
 
-// // eslint-disable-next-line
 // const parseExpressionLatestSerialized = (serializedExpression: string): null | {} => {
 //   if (serializedExpression === `latest`) return {}
 //   return null

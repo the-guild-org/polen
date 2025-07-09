@@ -1,4 +1,3 @@
-/* eslint-disable */
 // @ts-nocheck
 import { Api } from '#api/index'
 import { Vite } from '#dep/vite/index'

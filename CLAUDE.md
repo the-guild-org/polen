@@ -26,7 +26,6 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 - `pnpm check` - Run all checks (lint, types, format, package)
 - `pnpm fix` - Auto-fix lint and format issues
 - `pnpm check:types` - Run TypeScript type checking
-- `pnpm check:lint` - Run ESLint
 
 ### CLI Usage
 
@@ -68,7 +67,6 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 ### Code Style Requirements
 
 - Uses dprint for formatting (ASI, single quotes)
-- ESLint with TypeScript rules
 - Backticks for strings (except in test files due to Zed IDE limitation)
 - No runtime dependencies allowed (all dependencies must be bundled)
 

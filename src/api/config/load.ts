@@ -60,10 +60,8 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
     if (fileNameExtensionsTypeScript.some(_ => filePath.endsWith(_))) {
       // @see https://tsx.is/dev-api/ts-import#usage
       const { tsImport } = await import(`tsx/esm/api`)
-      // eslint-disable-next-line
       module = await tsImport(filePath, import.meta.url)
     } else {
-      // eslint-disable-next-line
       module = await import(filePath)
     }
     debug(`imported config module`)

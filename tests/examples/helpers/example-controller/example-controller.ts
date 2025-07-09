@@ -156,7 +156,6 @@ export const create = async (parameters: {
             }
           }
 
-          // eslint-disable-next-line
           readLines()
         })
 

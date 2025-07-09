@@ -36,7 +36,6 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
         if (isWrite) {
           for (const chunkOrAsset of Object.values(bundle)) {
             if (chunkOrAsset.type === `asset` && chunkOrAsset.names.includes(`entry.client.jsx`)) {
-              // eslint-disable-next-line
               delete bundle[chunkOrAsset.fileName]
             }
           }
@@ -105,7 +104,6 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
       //       console.log(chunkOrAsset)
       //       if (chunkOrAsset.type === `chunk`) {
       //         if (chunkOrAsset.facadeModuleId === viClientManifest.resolved) {
-      //           // eslint-disable-next-line
       //           delete bundle[chunkOrAsset.fileName]
       //         }
       //       }

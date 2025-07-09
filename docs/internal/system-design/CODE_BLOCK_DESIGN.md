@@ -199,7 +199,6 @@ const cache = new Map<string, string>()
 
 1. **VSCode Extension**: Use "MDX" extension for syntax highlighting
 2. **Type Checking**: Configure tsconfig.json to include markdown files
-3. **Prettier/ESLint**: Add MDX parser support
 
 ### Example VSCode Settings
 

@@ -7,7 +7,6 @@ import type { ConfigInput } from './configurator.js'
  */
 export const mergeInputs = (
   base: ConfigInput,
-  // eslint-disable-next-line
   overrides?: ConfigInput | undefined,
 ): ConfigInput => {
   if (!overrides) {

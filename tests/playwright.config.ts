@@ -37,7 +37,6 @@ export default defineConfig({
         ...devices[`Desktop Chrome`],
         // Type assertion needed due to fixture types
         // @ts-expect-error
-        // eslint-disable-next-line
         polenLink: polenLink as any,
       },
     },

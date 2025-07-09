@@ -8,7 +8,6 @@ export const until = (
   // @ts-expect-error
   return async (...args) => {
     for (const fn of fns) {
-      // eslint-disable-next-line
       const result: any = await fn(...args)
       if (predicate(result)) return result
     }

@@ -256,7 +256,6 @@ export const normalizeInput = async (
    * If this is omitted, then relative root paths will throw an error.
    */
   baseRootDirPath: string,
-  // eslint-disable-next-line
 ): Promise<Config> => {
   assertPathAbsolute(baseRootDirPath)
 

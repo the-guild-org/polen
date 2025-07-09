@@ -32,7 +32,7 @@
       "#lib/task/*": ["./src/lib/task/*.ts"]
     },
 
-    // DX covered by ESLint:
+    // todo
     "noUnusedLocals": false,
     "noUnusedParameters": false,
 
@@ -54,7 +54,6 @@
   ],
   "exclude": [
     "build",
-    "eslint.config.js",
     "examples/**/*"
   ]
 }

@@ -7,7 +7,6 @@ type Loader = Fn.AnyAny
 export const createLoader = <loader extends Loader>(loader: loader): loader => {
   // @ts-expect-error
   return async (...args: any[]) => {
-    // eslint-disable-next-line
     const data = await loader(...args)
     const serialized: Serialized = {
       superjsonData: superjson.stringify(data),
@@ -23,14 +22,12 @@ interface Serialized {
 export const useLoaderData = <loader extends Loader>(routeTarget?: string): Awaited<
   ReturnType<loader>
 > => {
-  // eslint-disable-next-line
   const loaderData = (
     routeTarget
       ? useRouteLoaderDataRR(routeTarget)
       : useLoaderDataRR()
   ) as Serialized
 
-  // eslint-disable-next-line
   if (loaderData === undefined) {
     throw new Error(`No loader data returned from route ${routeTarget ?? `<direct>`}`)
   }

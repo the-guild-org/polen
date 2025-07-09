@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/* eslint-disable */
 
 //
 //

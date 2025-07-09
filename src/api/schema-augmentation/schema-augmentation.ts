@@ -12,7 +12,6 @@ export const apply = (
 ): GrafaidOld.Schema.Schema => {
   for (const augmentation of augmentations) {
     switch (augmentation.type) {
-      // eslint-disable-next-line
       case `description`: {
         AugmentationDescription.apply(schema, augmentation)
         break

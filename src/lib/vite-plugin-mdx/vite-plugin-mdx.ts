@@ -26,7 +26,6 @@ interface ExtraOptions {
 
 export type Options = ApplicableOptions & ExtraOptions
 
-// eslint-disable-next-line
 export const createConfig = (options?: Readonly<Options> | null | undefined): Options => {
   const {
     exclude,
