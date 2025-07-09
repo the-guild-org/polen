@@ -1,3 +1,5 @@
+'use client'
+
 import { Box, Heading, Text } from '@radix-ui/themes'
 import { type GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'

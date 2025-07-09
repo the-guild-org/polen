@@ -1,3 +1,5 @@
+'use client'
+
 import type { Content } from '#api/content/$'
 import { Box } from '@radix-ui/themes'
 import type { BoxOwnProps, LayoutProps, MarginProps } from '@radix-ui/themes/props'

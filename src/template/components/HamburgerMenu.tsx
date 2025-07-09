@@ -1,3 +1,5 @@
+'use client'
+
 import type { Content } from '#api/content/$'
 import { Cross2Icon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Box, Flex, IconButton, Text } from '@radix-ui/themes'

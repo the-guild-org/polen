@@ -39,22 +39,6 @@ export const mergeInputs = (
       ...overrides.advanced,
     }
 
-    // Merge advanced.watch config
-    if (base.advanced?.watch || overrides.advanced?.watch) {
-      merged.advanced.watch = {
-        ...base.advanced?.watch,
-        ...overrides.advanced?.watch,
-      }
-
-      // Merge watch.also arrays
-      if (base.advanced?.watch?.also || overrides.advanced?.watch?.also) {
-        merged.advanced.watch.also = [
-          ...(base.advanced?.watch?.also ?? []),
-          ...(overrides.advanced?.watch?.also ?? []),
-        ]
-      }
-    }
-
     // Merge Vite configs if present
     if (base.advanced?.vite ?? overrides.advanced?.vite) {
       merged.advanced.vite = Vite.mergeConfig(

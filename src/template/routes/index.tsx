@@ -1,10 +1,5 @@
-import { createRouteIndex } from '#lib/react-router-aid/react-router-aid'
-import { Box } from '@radix-ui/themes'
+import { css } from '../styled-system/css/index.js'
 
-const Component = () => {
-  return <Box>home todo</Box>
+export function Component() {
+  return <div className={css({ p: 4, bg: 'gray.100' })}>home todo</div>
 }
-
-export const index = createRouteIndex({
-  Component,
-})

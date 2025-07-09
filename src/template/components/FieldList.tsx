@@ -1,4 +1,6 @@
 import { Grafaid } from '#lib/grafaid/index'
+'use client'
+
 import { Box } from '@radix-ui/themes'
 import type { FC } from 'react'
 import { Field } from './Field.js'

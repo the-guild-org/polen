@@ -1,26 +1,14 @@
-import { createRoute } from '#lib/react-router-aid/react-router-aid'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { Changelog } from '../components/Changelog.js'
+import { superjson } from '#singletons/superjson'
+import SCHEMA from 'virtual:polen/project/data/schema.jsonsuper'
+import { ComponentChangelogClient } from './changelog.client.js'
 
-const loader = createLoader(() => {
-  return {
-    schema: PROJECT_DATA.schema,
-  }
-})
+export async function Component() {
+  const schema = SCHEMA
 
-const Component = () => {
-  const data = useLoaderData<typeof loader>()
-
-  if (!data.schema) {
-    return <div>No data to show. There is no schema is.</div>
+  if (!schema) {
+    return <div>No data to show. There is no schema.</div>
   }
 
-  return <Changelog schema={data.schema} />
+  const serializedSchema = superjson.serialize(schema)
+  return <ComponentChangelogClient serializedSchema={serializedSchema} />
 }
-
-export const changelog = createRoute({
-  path: `changelog`,
-  loader,
-  Component,
-})

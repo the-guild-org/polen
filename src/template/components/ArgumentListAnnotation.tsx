@@ -1,4 +1,6 @@
 import { GrafaidOld } from '#lib/grafaid-old/index'
+'use client'
+
 import { Box, Text } from '@radix-ui/themes'
 import type { GraphQLField } from 'graphql'
 import type { FC } from 'react'

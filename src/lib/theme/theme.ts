@@ -13,6 +13,8 @@ export interface ThemeManager {
    */
   readCookie(cookieString?: string): Theme | null
 
+  getTheme(cookieString?: string | undefined | null): Theme
+
   /**
    * Write theme preference to cookie
    */
@@ -95,6 +97,10 @@ export const createThemeManager = (options: ThemeOptions = {}): ThemeManager => 
     const value = match?.[2]
 
     return value === `light` || value === `dark` || value === `system` ? value : null
+  }
+
+  const getTheme = (cookieString?: string | null | undefined): Theme => {
+    return readCookie(cookieString ?? '') ?? `system`
   }
 
   const writeCookie = (theme: Theme): string => {
@@ -192,13 +198,14 @@ html.${lightClass} {
 }
 
 html.${darkClass} {
-  /* Force dark theme */  
+  /* Force dark theme */
   color-scheme: dark;
 }
 `.trim()
   }
 
   return {
+    getTheme,
     readCookie,
     writeCookie,
     applyToDOM,

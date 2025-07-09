@@ -1,4 +1,6 @@
 import { Grafaid } from '#lib/grafaid/index'
+'use client'
+
 import { Code, Flex } from '@radix-ui/themes'
 import { Link } from '../Link.js'
 import { TypeKindIcon } from './graphql.js'

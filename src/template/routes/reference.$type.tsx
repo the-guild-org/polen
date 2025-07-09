@@ -1,27 +1,16 @@
-import { createRoute } from '#lib/react-router-aid/react-router-aid'
-import { useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import { useParams } from 'react-router'
+import { superjson } from '#singletons/superjson'
+import SCHEMA from 'virtual:polen/project/data/schema.jsonsuper'
 import { MissingSchema } from '../components/MissingSchema.js'
-import { NamedType } from '../components/NamedType.js'
-import type { reference } from './reference.js'
+import { ComponentReferenceTypeClient } from './reference.$type.client.js'
 
-const Component = () => {
-  const params = useParams() as { type: string }
+export async function Component({ params }: { params: { type: string } }) {
+  const typeParam = params.type
 
-  const data = useLoaderData<typeof reference.loader>(`reference`)
-  if (!data.schema) {
+  const latestSchemaVersion = SCHEMA?.versions[0].after ?? null
+  if (!latestSchemaVersion) {
     return <MissingSchema />
   }
 
-  const type = data.schema.getType(params.type)
-  if (!type) {
-    return `Could not find type ${params.type}`
-  }
-
-  return <NamedType data={type} />
+  const serializedSchema = superjson.serialize(latestSchemaVersion)
+  return <ComponentReferenceTypeClient serializedSchema={serializedSchema} typeParam={typeParam} />
 }
-
-export const reference$type = createRoute({
-  path: `:type`,
-  Component,
-})

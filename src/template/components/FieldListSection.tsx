@@ -1,4 +1,6 @@
 import { Grafaid } from '#lib/grafaid/index'
+'use client'
+
 import { Box, Heading } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'

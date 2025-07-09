@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { GraphQLDocument } from '../../../lib/graphql-document/components/GraphQLDocument.js'
 import type { GraphQLDocumentProps } from '../../../lib/graphql-document/components/GraphQLDocument.js'
@@ -15,8 +17,8 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `sch
 
       // Access virtual module only on client side
       if (typeof window !== `undefined`) {
-        import(`virtual:polen/project/data.jsonsuper`).then(PROJECT_DATA => {
-          const s = PROJECT_DATA.default?.schema?.versions?.[0]?.after
+        import(`virtual:polen/project/data/schema.jsonsuper`).then(SCHEMA => {
+          const s = SCHEMA.default?.versions?.[0]?.after
           // Schema loaded successfully
           if (s) {
             setSchema(s)

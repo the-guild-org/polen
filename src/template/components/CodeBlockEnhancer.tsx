@@ -1,6 +1,8 @@
+'use client'
+
 import { useEffect } from 'react'
 import { useLocation } from 'react-router'
-import { useTheme } from '../contexts/ThemeContext.js'
+import { useTheme } from '../contexts/ThemeContext.client.js'
 
 export const CodeBlockEnhancer = () => {
   const { appearance } = useTheme()
@@ -22,12 +24,12 @@ export const CodeBlockEnhancer = () => {
       pre.shiki {
         position: relative;
       }
-      
+
       pre.shiki[data-title] {
         margin-top: 0;
         border-radius: 0 0 8px 8px !important;
       }
-      
+
       pre.shiki[data-title]::before {
         content: attr(data-title);
         display: block;
@@ -45,7 +47,7 @@ export const CodeBlockEnhancer = () => {
         color: var(--gray-11);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       }
-      
+
       pre.shiki[data-title][data-language]::after {
         content: attr(data-language);
         position: absolute;
@@ -55,7 +57,7 @@ export const CodeBlockEnhancer = () => {
         color: var(--gray-9);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       }
-      
+
       .code-block-copy {
         position: absolute;
         top: 0.5rem;
@@ -71,19 +73,19 @@ export const CodeBlockEnhancer = () => {
         color: ${appearance === `dark` ? `#fff` : `#000`};
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       }
-      
+
       pre.shiki[data-title] .code-block-copy {
         top: -2rem;
         right: 6rem;
         background-color: transparent;
         color: var(--gray-11);
       }
-      
+
       .code-block-copy:hover {
         background-color: var(--accent-9) !important;
         color: white !important;
       }
-      
+
       .code-block-copy[data-copied="true"] {
         background-color: var(--green-9) !important;
         color: white !important;

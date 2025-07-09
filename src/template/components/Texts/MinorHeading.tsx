@@ -1,4 +1,6 @@
 import type { React } from '#dep/react/index'
+'use client'
+
 import { Text, type TextProps } from '@radix-ui/themes'
 
 export const MinorHeading: React.FC<TextProps> = (props) => {

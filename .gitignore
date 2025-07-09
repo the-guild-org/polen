@@ -10,6 +10,7 @@ tsconfig.build.tsbuildinfo
 
 # Examples
 examples/**/build
+examples/**/dist
 examples/*/pnpm-workspace.yaml
 examples/_tests/__results__
 
@@ -37,3 +38,4 @@ dist-demos
 .github/**/*.d.ts
 .github/**/*.d.ts.map
 examples/hive/*.log
+tmp-vite-plugins

@@ -1,3 +1,5 @@
+'use client'
+
 import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'

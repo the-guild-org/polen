@@ -27,13 +27,6 @@ export interface ConfigInput {
    * @default The directory where the config file is located.
    */
   root?: string
-  /**
-   * Enable a special module explorer for the source code that Polen assembles for your app.
-   *
-   * Powered by [Vite Inspect](https://github.com/antfu-collective/vite-plugin-inspect).
-   *
-   * @default true
-   */
   schema?: SchemaConfigInput
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
@@ -65,7 +58,6 @@ export interface ConfigInput {
     base?: string
   }
   advanced?: {
-    explorer?: boolean
     /**
      * Force the CLI to resolve Polen imports in your project to itself rather than
      * to what you have installed in your project.
@@ -82,22 +74,6 @@ export interface ConfigInput {
      * @default false
      */
     isSelfContainedMode?: boolean
-    /**
-     * Tweak the watch behavior.
-     */
-    watch?: {
-      /**
-       * Restart the development server when some arbitrary files change.
-       *
-       * Use this to restart when files that are not already watched by vite change.
-       *
-       * @see https://github.com/antfu/vite-plugin-restart
-       */
-      /**
-       * File paths to watch and restart the development server when they change.
-       */
-      also?: string[]
-    }
     /**
      * Whether to enable debug mode.
      *
@@ -126,7 +102,7 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
   if (!Path.isAbsolute(rootDir)) throw new Error(`Root dir path must be absolute: ${rootDir}`)
   const rootAbsolute = Path.ensureAbsoluteWith(rootDir)
 
-  const buildAbsolutePath = rootAbsolute(`build`)
+  const buildAbsolutePath = rootAbsolute(`dist`)
   const buildAbsolute = Path.ensureAbsoluteWith(buildAbsolutePath)
 
   const publicAbsolutePath = rootAbsolute(`public`)
@@ -136,7 +112,7 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
       rootDir,
       relative: {
         build: {
-          root: `build`,
+          root: `dist`,
           relative: {
             serverEntrypoint: `app.js`,
             assets: `assets`,
@@ -170,9 +146,6 @@ export interface Config {
   build: {
     architecture: BuildArchitecture
     base: string
-  }
-  watch: {
-    also: string[]
   }
   templateVariables: TemplateVariables
   schemaAugmentations: SchemaAugmentation.Augmentation[]
@@ -214,7 +187,6 @@ export interface Config {
   }
   advanced: {
     isSelfContainedMode: boolean
-    explorer: boolean
     debug: boolean
     vite?: Vite.UserConfig
   }
@@ -226,9 +198,6 @@ const configInputDefaults: Config = {
     title: `My Developer Portal`,
   },
   schemaAugmentations: [],
-  watch: {
-    also: [],
-  },
   build: {
     architecture: BuildArchitecture.enum.ssg,
     base: `/`,
@@ -241,7 +210,6 @@ const configInputDefaults: Config = {
   advanced: {
     isSelfContainedMode: false,
     debug: false,
-    explorer: false,
   },
 }
 
@@ -317,14 +285,6 @@ export const normalizeInput = async (
 
   if (configInput?.advanced?.isSelfContainedMode !== undefined) {
     config.advanced.isSelfContainedMode = configInput.advanced.isSelfContainedMode
-  }
-
-  if (configInput?.advanced?.explorer !== undefined) {
-    config.advanced.explorer = configInput.advanced.explorer
-  }
-
-  if (configInput?.advanced?.watch?.also) {
-    config.watch.also = configInput.advanced.watch.also
   }
 
   return config

@@ -20,6 +20,12 @@ export interface PackagePaths {
       client: {
         entrypoint: string
       }
+      rsc: {
+        entrypoint: string
+      }
+      ssr: {
+        entrypoint: string
+      }
     }
     relative: {
       rootDir: string
@@ -28,6 +34,12 @@ export interface PackagePaths {
         entrypoint: string
       }
       client: {
+        entrypoint: string
+      }
+      rsc: {
+        entrypoint: string
+      }
+      ssr: {
         entrypoint: string
       }
     }
@@ -68,7 +80,13 @@ export const packagePaths: PackagePaths = {
         entrypoint: Path.join(templateDir, `server/main${sourceKind}`),
       },
       client: {
-        entrypoint: Path.join(templateDir, `entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
+        entrypoint: Path.join(templateDir, `entry.client.tsx`),
+      },
+      rsc: {
+        entrypoint: Path.join(templateDir, `entry.rsc.tsx`),
+      },
+      ssr: {
+        entrypoint: Path.join(templateDir, `entry.ssr.tsx`),
       },
     },
     relative: {
@@ -78,7 +96,13 @@ export const packagePaths: PackagePaths = {
         entrypoint: `${templateDirRelative}/server/main${sourceKind}`,
       },
       client: {
-        entrypoint: `${templateDirRelative}/entry.client${isRunningFromSource ? `.tsx` : `.js`}`,
+        entrypoint: `${templateDirRelative}/entry.client.tsx`,
+      },
+      rsc: {
+        entrypoint: `${templateDirRelative}/entry.rsc.tsx`,
+      },
+      ssr: {
+        entrypoint: `${templateDirRelative}/entry.ssr.tsx`,
       },
     },
   },

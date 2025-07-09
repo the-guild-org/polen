@@ -11,6 +11,49 @@ export const toViteUserConfig = (
   const viteUserConfigFromPolen: Vite.UserConfig = {
     base: config.build.base,
     plugins: [Main(config)],
+    server: {
+      port: 3000,
+      fs: {
+        strict: false,
+        allow: [config.paths.project.rootDir],
+      },
+    },
+    environments: {
+      // RSC environment for React Server Components
+      rsc: {
+        build: {
+          outDir: `${config.paths.project.absolute.build.root}/rsc`,
+          rollupOptions: {
+            input: {
+              index: config.paths.framework.template.absolute.rsc.entrypoint,
+            },
+          },
+        },
+      },
+      // SSR environment for server-side rendering
+      ssr: {
+        build: {
+          outDir: `${config.paths.project.absolute.build.root}/ssr`,
+          rollupOptions: {
+            input: {
+              // Use the single entry point that loads RSC
+              index: config.paths.framework.template.absolute.ssr.entrypoint.replace('.tsx', '.single.tsx'),
+            },
+          },
+        },
+      },
+      // Client environment for browser
+      client: {
+        build: {
+          outDir: `${config.paths.project.absolute.build.root}/client`,
+          rollupOptions: {
+            input: {
+              index: config.paths.framework.template.absolute.client.entrypoint,
+            },
+          },
+        },
+      },
+    },
   }
 
   const viteUserConfigMerged = config.advanced.vite

@@ -1,19 +1,21 @@
 import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
 import { createNavbar } from '#api/content/navbar'
-import type { NavbarDataRegistry } from '#api/vite/data/navbar'
+import type { PolenState } from '#api/vite/state/index'
 import { polenVirtual } from '#api/vite/vi'
 import type { Vite } from '#dep/vite/index'
 import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { FileRouter } from '#lib/file-router/index'
 import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
-import mdx from '@mdx-js/rollup'
+// import mdx from '@mdx-js/rollup'
 import { Arr, Cache, Path, Str } from '@wollybeard/kit'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
+import { neverCase } from '@wollybeard/kit/language'
+// import remarkFrontmatter from 'remark-frontmatter'
+// import remarkGfm from 'remark-gfm'
 
 const debug = debugPolen.sub(`vite-pages`)
+const debugRoutes = debug.sub(`routes`)
 
 export const viProjectRoutes = polenVirtual([`project`, `routes.jsx`], { allowPluginProcessing: true })
 export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-catalog.jsonsuper`], {
@@ -22,7 +24,7 @@ export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-cat
 
 export interface Options {
   config: Config.Config
-  navbarData?: NavbarDataRegistry
+  state: PolenState
 }
 
 export interface ProjectPagesCatalog {
@@ -30,12 +32,9 @@ export interface ProjectPagesCatalog {
   pages: Content.Page[]
 }
 
-/**
- * Pages plugin with tree support
- */
 export const Pages = ({
   config,
-  navbarData,
+  state,
 }: Options): Vite.Plugin[] => {
   const scanPages = Cache.memoize(debug.trace(async function scanPages() {
     const result = await Content.scan({
@@ -45,44 +44,24 @@ export const Pages = ({
     return result
   }))
 
-  const invalidateVirtualModules = (server: Vite.ViteDevServer) => {
-    const routesModule = server.moduleGraph.getModuleById(viProjectRoutes.id)
-    if (routesModule) {
-      server.moduleGraph.invalidateModule(routesModule)
-      debug(`Invalidated routes virtual module`)
-    }
-
-    const catalogModule = server.moduleGraph.getModuleById(viProjectPagesCatalog.id)
-    if (catalogModule) {
-      server.moduleGraph.invalidateModule(catalogModule)
-      debug(`Invalidated pages catalog virtual module`)
-    }
-  }
-
   const generateRoutesModule = (pages: Content.Page[]): string => {
+    const s = Str.Builder()
+
     const $ = {
       routes: `routes`,
     }
 
-    const s = Str.Builder()
     s`export const ${$.routes} = []`
 
-    // Generate imports and route objects
-    for (const { route, metadata } of pages) {
-      const filePathExp = Path.format(route.file.path.absolute)
-      const pathExp = FileRouter.routeToPathExpression(route)
-      const $$ = {
-        ...$,
-        Component: Str.Case.camel(`page ` + Str.titlizeSlug(pathExp)),
-      }
+    // Generate route configuration entries for React Router
+    for (const page of pages) {
+      const pathExp = FileRouter.routeToPathExpression(page.route)
 
       s`
-        import ${$$.Component} from '${filePathExp}'
-
-        ${$$.routes}.push({
+        ${$.routes}.push({
+          id: '${page.route.id}',
           path: '${pathExp}',
-          Component: ${$$.Component},
-          metadata: ${JSON.stringify(metadata)}
+          file: 'routes/page.tsx',
         })
       `
     }
@@ -91,176 +70,193 @@ export const Pages = ({
   }
 
   return [
-    // Plugin 1: MDX Processing
-    {
-      enforce: `pre` as const,
-      ...mdx({
-        jsxImportSource: `polen/react`,
-        remarkPlugins: [
-          // Parse frontmatter blocks so they're removed from content
-          remarkFrontmatter,
-          remarkGfm,
-        ],
-        rehypePlugins: [],
-      }),
-    },
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • MDX Processing
+    //
+    //
 
-    // Plugin 2: Pages Management
+    // {
+    //   enforce: `pre` as const,
+    //   ...mdx({
+    //     jsxImportSource: `polen/react`,
+    //     remarkPlugins: [
+    //       // Parse frontmatter blocks so they're removed from content
+    //       remarkFrontmatter,
+    //       remarkGfm,
+    //     ],
+    //     rehypePlugins: [],
+    //   }),
+    // },
+
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Pages Management
+    //
+    //
+
     {
       name: `polen:pages`,
 
-      // Dev server configuration
-      configureServer(server) {
-        // Add pages directory to watcher
-        debug(`configureServer: watch pages directory`, config.paths.project.absolute.pages)
-        server.watcher.add(config.paths.project.absolute.pages)
-
-        // Handle file additions and deletions
-        const handleFileStructureChange = async (file: string, event: `add` | `unlink`) => {
-          if (!Content.isPageFile(file, config.paths.project.absolute.pages)) return
-
-          debug(`Page file ${event === `add` ? `added` : `deleted`}:`, file)
-
-          // Clear cache and rescan
-          scanPages.clear()
-          const newScanResult = await scanPages()
-
-          // Invalidate virtual modules
-          invalidateVirtualModules(server)
-
-          // Report any diagnostics
-          reportDiagnostics(newScanResult.diagnostics)
-
-          // Trigger full reload to ensure routes are updated
-          server.ws.send({ type: `full-reload` })
-        }
-
-        server.watcher.on(`add`, (file) => handleFileStructureChange(file, `add`))
-        server.watcher.on(`unlink`, (file) => handleFileStructureChange(file, `unlink`))
+      async buildStart() {
+        this.addWatchFile(config.paths.project.absolute.pages)
       },
 
-      // Hot update handling for existing files
-      async handleHotUpdate({ file, server, modules }) {
-        debug(`handleHotUpdate`, file)
+      // configureServer(server) {
+      //   debug(`configureServer: add watcher for pages directory`, config.paths.project.absolute.pages)
+      //   server.watcher.add(config.paths.project.absolute.pages)
+      // },
+
+      async hotUpdate({ file, type, modules }) {
         if (!Content.isPageFile(file, config.paths.project.absolute.pages)) return
 
-        debug(`Page file changed:`, file)
+        debug(`hotUpdate`, { file, type })
 
-        // Get current pages before clearing cache
-        const oldPages = await scanPages()
+        // Helper function to invalidate virtual modules and trigger reload
+        const invalidateAndFullReload = (newScanResult: Content.ScanResult) => {
+          const routesModule = this.environment.moduleGraph.getModuleById(viProjectRoutes.id)
+          if (routesModule) {
+            this.environment.moduleGraph.invalidateModule(routesModule)
+            debug(`Invalidated routes`)
+          }
 
-        // Clear cache and rescan
-        scanPages.clear()
-        const newScanResult = await scanPages()
+          const catalogModule = this.environment.moduleGraph.getModuleById(viProjectPagesCatalog.id)
+          if (catalogModule) {
+            this.environment.moduleGraph.invalidateModule(catalogModule)
+            debug(`Invalidated catalog`)
+          }
 
-        // Check if the visible pages list changed. This can happen when:
-        // - A page's frontmatter `hidden` field changes (true <-> false)
-        // - A page's frontmatter affects its route (though we don't support this yet)
-        // If only the content changed (not frontmatter), we can use fast HMR.
-        const pageStructureChanged = !oldPages || !Arr.equalShallowly(
-          oldPages.list.map(p => Path.format(p.route.file.path.absolute)),
-          newScanResult.list.map(p => Path.format(p.route.file.path.absolute)),
-        )
-
-        if (!pageStructureChanged) {
-          debug(`Page content changed, allowing HMR`)
-          // Let default HMR handle the MDX file change
-          return modules
+          reportDiagnostics(newScanResult.diagnostics)
+          this.environment.hot.send({ type: `full-reload` })
         }
 
-        //
-        // ━━ Manual Invalidation
-        //
+        switch (type) {
+          case 'create':
+          case 'delete': {
+            scanPages.clear()
+            const newScanResult = await scanPages()
+            invalidateAndFullReload(newScanResult)
+            return []
+          }
+          case 'update': {
+            // Get current pages before clearing cache
+            const oldPages = await scanPages()
 
-        debug(`Page structure changed, triggering full reload`)
+            // Clear cache and rescan
+            scanPages.clear()
+            const newScanResult = await scanPages()
 
-        // Invalidate virtual modules and trigger reload
-        invalidateVirtualModules(server)
-        reportDiagnostics(newScanResult.diagnostics)
-        server.ws.send({ type: `full-reload` })
-        return []
+            // Check if the visible pages list changed. This can happen when:
+            // - A page's frontmatter `hidden` field changes (true <-> false)
+            // - A page's frontmatter affects its route (though we don't support this yet)
+            // If only the content changed (not frontmatter), we can use fast HMR.
+            const pageStructureChanged = !oldPages || !Arr.equalShallowly(
+              oldPages.list.map(p => Path.format(p.route.file.path.absolute)),
+              newScanResult.list.map(p => Path.format(p.route.file.path.absolute)),
+            )
+
+            if (!pageStructureChanged) {
+              debug(`Page content changed, allowing HMR`)
+              // Let default HMR handle the MDX file change
+              return modules
+            }
+
+            debug(`Page structure changed during update, triggering full reload`)
+            invalidateAndFullReload(newScanResult)
+            return []
+          }
+          default: {
+            neverCase(type)
+          }
+        }
       },
       resolveId(id) {
         if (id === viProjectPagesCatalog.id) {
           return viProjectPagesCatalog.resolved
         }
       },
-      load: {
-        // filter: {
-        //   id: viProjectPagesData.resolved,
-        // },
-        async handler(id) {
-          if (id !== viProjectPagesCatalog.resolved) return
-          debug(`hook load`)
+      async load(id) {
+        if (id !== viProjectPagesCatalog.resolved) return
+        debug(`hook load`)
 
-          const scanResult = await scanPages()
+        const scanResult = await scanPages()
 
-          reportDiagnostics(scanResult.diagnostics)
-          debug(`found visible`, { count: scanResult.list.length })
+        reportDiagnostics(scanResult.diagnostics)
+        debug(`found visible`, { count: scanResult.list.length })
 
-          //
-          // ━━ Build Navbar
-          //
+        //
+        // ━━ Build Navbar
+        //
 
-          if (navbarData) {
-            const navbarPages = navbarData.get(`pages`)
+        if (state.navbar) {
+          const navbarPages = state.navbar.get(`pages`)
 
-            navbarPages.length = 0 // Clear existing
+          navbarPages.length = 0 // Clear existing
 
-            const data = createNavbar(scanResult.list)
+          const navbarData = createNavbar(scanResult.list)
 
-            debug(`update navbar`, data)
+          debug(`update navbar`, navbarData)
 
-            navbarPages.push(...data)
-          }
+          navbarPages.push(...navbarData)
+        }
 
-          //
-          // ━━ Build Sidebar
-          //
+        //
+        // ━━ Build Sidebar
+        //
 
-          const sidebarIndex = Content.buildSidebarIndex(scanResult)
+        const sidebarIndex = Content.buildSidebarIndex(scanResult)
 
-          //
-          // ━━ Put It All together
-          //
+        //
+        // ━━ Put It All together
+        //
 
-          const projectPagesCatalog: ProjectPagesCatalog = {
-            sidebarIndex,
-            pages: scanResult.list,
-          }
+        const projectPagesCatalog: ProjectPagesCatalog = {
+          sidebarIndex,
+          pages: scanResult.list,
+        }
 
-          // Return just the JSON string - let the JSON plugin handle the transformation
-          return superjson.stringify(projectPagesCatalog)
-        },
+        // Return just the JSON string - let the JSON plugin handle the transformation
+        return superjson.stringify(projectPagesCatalog)
       },
     },
-    // Plugin 3: Virtual Module for React Router Routes
+
+    //
+    //
+    //
+    //
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Virtual Module for React Router Routes
+    //
+    //
     {
-      name: `polen:routes`,
+      name: `polen:pages:routes`,
       resolveId(id) {
+        // console.log(`[Pages Plugin] resolveId in environment`, this.environment.name, id)
         if (id === viProjectRoutes.id) {
           return viProjectRoutes.resolved
         }
       },
-      load: {
-        // filter: {
-        //   id: viProjectPages.resolved,
-        // },
-        handler: async (id) => {
-          if (id !== viProjectRoutes.resolved) return
+      async load(id) {
+        if (id !== viProjectRoutes.resolved) return
 
-          debug(`Loading viProjectRoutes virtual module`)
+        debugRoutes(`load`, {
+          id,
+          environment: {
+            name: this.environment.name,
+          },
+        })
 
-          const scanResult = await scanPages()
-          reportDiagnostics(scanResult.diagnostics)
-          const code = generateRoutesModule(scanResult.list)
+        const scanResult = await scanPages()
+        reportDiagnostics(scanResult.diagnostics)
+        const code = generateRoutesModule(scanResult.list)
 
-          // Generate the module code
-          return {
-            code,
-            moduleType: `js`,
-          }
-        },
+        return {
+          code,
+          moduleType: `js`,
+        }
       },
     },
   ]

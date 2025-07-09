@@ -1,3 +1,5 @@
+'use client'
+
 import type { Content } from '#api/content/$'
 import type { React } from '#dep/react/index'
 import { Texts } from '#template/components/Texts/index'

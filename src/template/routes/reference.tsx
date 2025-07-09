@@ -1,35 +1,13 @@
-import { createRoute } from '#lib/react-router-aid/react-router-aid'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import { Box } from '@radix-ui/themes'
-import { Outlet } from 'react-router'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import SCHEMA from 'virtual:polen/project/data/schema.jsonsuper'
 import { MissingSchema } from '../components/MissingSchema.js'
-import { reference$type } from './reference.$type.js'
+import { ComponentReferenceClient } from './reference.client.js'
 
-const loader = createLoader(() => {
-  const latestSchemaVersion = PROJECT_DATA.schema?.versions[0].after ?? null
-  return {
-    schema: latestSchemaVersion,
-  }
-})
+export async function Component() {
+  const latestSchemaVersion = SCHEMA?.versions[0].after ?? null
 
-const Component = () => {
-  const data = useLoaderData<typeof loader>()
-
-  if (!data.schema) {
+  if (!latestSchemaVersion) {
     return <MissingSchema />
   }
 
-  return (
-    <Box className='prose'>
-      <Outlet />
-    </Box>
-  )
+  return <ComponentReferenceClient />
 }
-
-export const reference = createRoute({
-  path: `reference`,
-  loader,
-  Component,
-  children: [reference$type],
-})

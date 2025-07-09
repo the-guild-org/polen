@@ -35,6 +35,7 @@ const pluginDebug = debugPolen.sub(`vite-reactive-data`)
 export const create = (options: ReactiveDataOptions): Plugin => {
   const codec = options.codec ?? JSON
   const moduleId = options.moduleId
+  const resolvedModuleId = moduleId
   const name = options.name ?? `reactive-data`
 
   const debug = pluginDebug.sub(name)
@@ -42,21 +43,46 @@ export const create = (options: ReactiveDataOptions): Plugin => {
 
   let $server: ViteDevServer
   let $invalidationScheduled = false
+  // Store environment names rather than Environment references to ensure we always
+  // get the current environment instance via dynamic lookup. This avoids potential
+  // issues with stale references if environments are recreated during dev server
+  // lifecycle. See: vite-environment-stability-question.md
+  const envNamesLoaded = new Set<string>()
 
   const tryInvalidate = () => {
     $invalidationScheduled = false
-    // updateTimer = undefined
-    if (!$server) throw new Error(`Server not available yet - this should be impossible`)
-    const moduleNode = $server.moduleGraph.getModuleById(moduleId)
-    if (moduleNode) {
-      debug(`invalidate`, { id: moduleNode.id })
-      $server.moduleGraph.invalidateModule(moduleNode)
-    } else {
-      debug(`cannot invalidate`, {
-        reason: `notInModuleGraph`,
-        moduleId,
-        hint: `maybe it was not loaded yet`,
+
+    if (!$server || !$server.environments) {
+      debug(`no server or environments available for invalidation`)
+      return
+    }
+
+    // If no environments loaded the module yet, log diagnostic info
+    if (envNamesLoaded.size === 0) {
+      debug(`nothing to invalidate`, {
+        reason: `notLoadedInAnyEnvironment`,
+        moduleId: resolvedModuleId,
       })
+      return
+    }
+
+    for (const envName of envNamesLoaded) {
+      const env = $server.environments[envName]
+      if (env && env.moduleGraph) {
+        const moduleNode = env.moduleGraph.getModuleById(resolvedModuleId)
+        if (moduleNode) {
+          debug(`invalidate`, {
+            moduleNode: { id: moduleNode.id },
+            environment: { name: envName },
+          })
+          env.moduleGraph.invalidateModule(moduleNode)
+        } else {
+          debug(`invalidate failed`, {
+            reason: `moduleNotFound`,
+            environment: { name: envName },
+          })
+        }
+      }
     }
   }
 
@@ -104,17 +130,19 @@ export const create = (options: ReactiveDataOptions): Plugin => {
 
     resolveId(id) {
       if (id === moduleId) {
-        return moduleId
+        return resolvedModuleId
       }
     },
 
     // todo make use of Vite's builtin json plugin
     // for example, call it here somehow
     load(id) {
-      if (id !== moduleId) return
+      if (id !== resolvedModuleId) return
+
+      envNamesLoaded.add(this.environment.name)
 
       const data = getData()
-      debug(`hook load`, { data })
+      debug(`hook load`, { data, env: this.environment.name })
 
       return {
         code: codec.stringify(data),

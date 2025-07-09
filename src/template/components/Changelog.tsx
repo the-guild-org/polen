@@ -1,3 +1,5 @@
+'use client'
+
 import type { GrafaidOld } from '#lib/grafaid-old/index'
 import { Grafaid } from '#lib/grafaid/index'
 import type { GraphqlChange } from '#lib/graphql-change/index'

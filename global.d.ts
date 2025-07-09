@@ -1,3 +1,5 @@
+/// <reference types="@vitejs/plugin-rsc/types" />
+
 import type { GraphQLSchema } from 'graphql'
 import type { RouterState } from 'react-router'
 

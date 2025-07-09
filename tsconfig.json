@@ -55,6 +55,8 @@
   "exclude": [
     "build",
     "eslint.config.js",
-    "examples/**/*"
+    "examples/**/*",
+    "tmp-vite-plugins/**/*",
+    "src/template/styled-system/**/*.js"
   ]
 }

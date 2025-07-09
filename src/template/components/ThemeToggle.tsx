@@ -1,7 +1,9 @@
+'use client'
+
 import type { React } from '#dep/react/index'
 import { DesktopIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import { IconButton } from '@radix-ui/themes'
-import { useTheme } from '../contexts/ThemeContext.js'
+import { useTheme } from '../contexts/ThemeContext.client.js'
 
 export const ThemeToggle: React.FC = () => {
   const { appearance, toggleTheme, preference } = useTheme()

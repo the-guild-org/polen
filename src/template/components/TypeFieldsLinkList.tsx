@@ -1,3 +1,5 @@
+'use client'
+
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
 import type { FC } from 'react'

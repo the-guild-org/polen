@@ -31,20 +31,59 @@ export const build = async (buildConfigInput: BuildConfigInput) => {
     },
   })
 
-  const builder = await Vite.createBuilder(viteUserConfig)
+  const builder = await Vite.createBuilder({
+    ...viteUserConfig,
+    mode: 'production',
+    builder: {}, // Enable builder mode for RSC plugin
+  })
   await builder.buildApp()
 
   if (buildConfig.architecture === `ssg`) {
     consola.info(`Generating static site...`)
-    await import(viteUserConfig._polen.paths.project.absolute.build.serverEntrypoint)
-    // Clean up server file which should now be done being used for SSG geneation.
-    await Fs.remove(viteUserConfig._polen.paths.project.absolute.build.serverEntrypoint)
-    // todo: there is also some kind of prompt js asset that we probably need to clean up or review...
+    // SSG is now handled by the RSC SSG plugin during the build process
+    // The plugin generates HTML files directly to the dist directory
     consola.success(`Done`)
     consola.info(`try it: npx serve ${viteUserConfig._polen.paths.project.relative.build.root} -p 4000`)
   } else if (buildConfig.architecture === `ssr`) {
+    // For SSR, we need to create a server entry point that loads the SSR handler
+    const ssrServerCode = `
+import { createServer } from 'http'
+import handler from './ssr/index.js'
+
+const server = createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, \`http://\${req.headers.host}\`)
+    const request = new Request(url, {
+      method: req.method,
+      headers: req.headers,
+    })
+    
+    const response = await handler(request)
+    
+    res.statusCode = response.status
+    response.headers.forEach((value, key) => {
+      res.setHeader(key, value)
+    })
+    
+    const body = await response.text()
+    res.end(body)
+  } catch (error) {
+    console.error('Server error:', error)
+    res.statusCode = 500
+    res.end('Internal Server Error')
+  }
+})
+
+const port = process.env.PORT || 3001
+server.listen(port, () => {
+  console.log(\`Server running at http://localhost:\${port}\`)
+})
+`
+    await Fs.write({
+      path: viteUserConfig._polen.paths.project.absolute.build.serverEntrypoint,
+      content: ssrServerCode,
+    })
     consola.info(`try it: node ${viteUserConfig._polen.paths.project.relative.build.root}/app.js`)
-    // todo: no hardcoded port
     consola.info(`Then visit http://localhost:3001`)
   }
 }
