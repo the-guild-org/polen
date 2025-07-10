@@ -2,7 +2,11 @@
 
 ## First, What _is_ Polen?
 
-Polen is a JavaScript framework for building GraphQL developer portals. It can be used as a CLI or API. It generates interactive documentation from your GraphQL schema, including comprehensive API references, changelogs, and custom pages. Think of it as the documentation experience your GraphQL API deserves – purpose-built, developer-focused, and ready to evolve with your needs.
+Prounced "pollen" (see below), Polen is a JavaScript framework for building GraphQL developer portals. It can be used as a CLI or API. It generates interactive documentation from your GraphQL schema, including comprehensive API references, changelogs, and custom pages. Think of it as the documentation experience your GraphQL API deserves – purpose-built, developer-focused, and ready to evolve with your needs.
+
+##### You Made a Spelling Mistake!
+
+"Polen" is Polish/Spanish for "pollen" – a fitting metaphor for how documentation spreads knowledge throughout your developer ecosystem. We chose this spelling because "pollen" was already taken on the npm registry, but we've grown to love the international flavor it brings to the project too :).
 
 ## Why Now?
 
