@@ -116,14 +116,15 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       config(_, { command }) {
         return {
           root: config.paths.framework.rootDir,
-          future: {
-            removePluginHookHandleHotUpdate: 'warn',
-            removePluginHookSsrArgument: 'warn',
-            removeServerModuleGraph: 'warn',
-            removeServerHot: 'warn',
-            removeServerTransformRequest: 'warn',
-            removeSsrLoadModule: 'warn',
-          },
+          // todo
+          // future: {
+          //   removePluginHookHandleHotUpdate: 'warn',
+          //   removePluginHookSsrArgument: 'warn',
+          //   removeServerModuleGraph: 'warn',
+          //   removeServerHot: 'warn',
+          //   removeServerTransformRequest: 'warn',
+          //   removeSsrLoadModule: 'warn',
+          // },
           define: {
             __BUILDING__: Json.encode(command === `build`),
             __SERVING__: Json.encode(command === `serve`),
