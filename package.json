@@ -207,6 +207,7 @@
     "test:unit": "vitest",
     "dev": "pnpm build:watch:emit",
     "dev:hive": "pnpm polen dev --project examples/hive",
+    "dev:pokemon": "pnpm polen dev --project examples/pokemon",
     "build:clean": "pnpm tsc --build tsconfig.build.json --clean && rm -rf build",
     "build": "tsc --build tsconfig.build.json",
     "build:watch": "tsc --build tsconfig.build.json --watch",

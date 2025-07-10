@@ -1,0 +1,520 @@
+"""
+A Pokemon creature with enhanced battle capabilities and trainer relationships
+"""
+type Pokemon {
+  id: ID!
+  name: String!
+  types: [PokemonType!]!
+  """
+  Base stats that determine Pokemon's potential
+  """
+  stats: Stats!
+  evolution: Pokemon
+  abilities: [Ability!]!
+  moves: [Move!]!
+  trainer: Trainer
+  level: Int!
+  experience: Int!
+  """
+  Shiny Pokemon have alternate colorations
+  """
+  isShiny: Boolean!
+  """
+  Individual values that make each Pokemon unique
+  """
+  ivs: IVStats!
+  """
+  Nature affects stat growth
+  """
+  nature: Nature!
+  """
+  Held item
+  """
+  heldItem: Item
+}
+
+"""
+Base stats for Pokemon
+"""
+type Stats {
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  speed: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+}
+
+"""
+Pokemon natures that affect stat growth
+"""
+enum Nature {
+  HARDY
+  LONELY
+  BRAVE
+  ADAMANT
+  NAUGHTY
+  BOLD
+  DOCILE
+  RELAXED
+  IMPISH
+  LAX
+  TIMID
+  HASTY
+  SERIOUS
+  JOLLY
+  NAIVE
+  MODEST
+  MILD
+  QUIET
+  BASHFUL
+  RASH
+  CALM
+  GENTLE
+  SASSY
+  CAREFUL
+  QUIRKY
+}
+
+"""
+Individual Values for Pokemon stats
+"""
+type IVStats {
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  speed: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+}
+
+"""
+Pokemon trainers who catch and train Pokemon
+"""
+type Trainer {
+  id: ID!
+  name: String!
+  badges: [Badge!]!
+  pokemon: [Pokemon!]!
+  hometown: String!
+  """
+  Trainer's win/loss record
+  """
+  battleRecord: BattleRecord!
+  """
+  Items in trainer's bag
+  """
+  items: [Item!]!
+  """
+  Money earned from battles
+  """
+  money: Int!
+  """
+  @deprecated Use items field to check for specific key items
+  """
+  hasPokedex: Boolean!
+}
+
+"""
+Items that can be used or held by Pokemon
+"""
+interface Item {
+  id: ID!
+  name: String!
+  description: String!
+}
+
+"""
+Items that restore HP or cure status conditions
+"""
+type HealingItem implements Item {
+  id: ID!
+  name: String!
+  description: String!
+  hpRestore: Int
+  curesStatus: [StatusCondition!]
+}
+
+"""
+Pokeballs used to catch Pokemon
+"""
+type Pokeball implements Item {
+  id: ID!
+  name: String!
+  description: String!
+  catchRate: Float!
+}
+
+"""
+Berries that Pokemon can hold and consume
+"""
+type Berry implements Item {
+  id: ID!
+  name: String!
+  description: String!
+  effect: BerryEffect!
+  power: Int!
+}
+
+"""
+Different berry effects
+"""
+enum BerryEffect {
+  RESTORE_HP
+  CURE_PARALYSIS
+  CURE_BURN
+  CURE_FREEZE
+  CURE_POISON
+  CURE_SLEEP
+  BOOST_ATTACK
+  BOOST_DEFENSE
+  BOOST_SPEED
+}
+
+"""
+Status conditions that can affect Pokemon
+"""
+enum StatusCondition {
+  PARALYSIS
+  BURN
+  FREEZE
+  POISON
+  SLEEP
+  CONFUSION
+  FAINTED
+}
+
+"""
+Win/loss statistics for trainers
+"""
+type BattleRecord {
+  wins: Int!
+  losses: Int!
+  draws: Int!
+  """
+  Longest win streak
+  """
+  winStreak: Int!
+}
+
+"""
+Gym badges earned by defeating gym leaders
+"""
+type Badge {
+  id: ID!
+  name: String!
+  gymLeader: String!
+  city: String!
+  """
+  The primary type of the gym
+  """
+  gymType: PokemonType!
+  """
+  Date when the badge was earned
+  """
+  earnedDate: String!
+}
+
+"""
+Special abilities that Pokemon can have
+"""
+type Ability {
+  id: ID!
+  name: String!
+  description: String!
+  isHidden: Boolean!
+}
+
+"""
+Moves that Pokemon can learn and use in battle
+"""
+type Move {
+  id: ID!
+  name: String!
+  type: PokemonType!
+  power: Int
+  accuracy: Int!
+  pp: Int!
+  category: MoveCategory!
+  """
+  Some moves have secondary effects
+  """
+  effect: String
+  """
+  Priority determines move order
+  """
+  priority: Int!
+  """
+  Chance of causing a critical hit
+  """
+  criticalHitRatio: Float!
+}
+
+enum MoveCategory {
+  PHYSICAL
+  SPECIAL
+  STATUS
+}
+
+enum PokemonType {
+  NORMAL
+  FIRE
+  WATER
+  GRASS
+  ELECTRIC
+  PSYCHIC
+  DARK
+  FAIRY
+  FIGHTING
+  STEEL
+  DRAGON
+  GHOST
+  ICE
+  ROCK
+  GROUND
+  FLYING
+  POISON
+  BUG
+}
+
+"""
+Battle between two trainers
+"""
+type Battle {
+  id: ID!
+  trainer1: Trainer!
+  trainer2: Trainer!
+  winner: Trainer
+  startTime: String!
+  endTime: String
+  """
+  Battle format
+  """
+  format: BattleFormat!
+  """
+  Weather condition during battle
+  """
+  weather: Weather
+}
+
+"""
+Weather conditions that affect battles
+"""
+enum Weather {
+  CLEAR
+  SUNNY
+  RAIN
+  SANDSTORM
+  HAIL
+  FOG
+}
+
+"""
+Different battle formats
+"""
+enum BattleFormat {
+  SINGLE
+  DOUBLE
+  TRIPLE
+  ROTATION
+}
+
+"""
+Pokemon regions
+"""
+enum Region {
+  KANTO
+  JOHTO
+  HOENN
+  SINNOH
+  UNOVA
+  KALOS
+  ALOLA
+  GALAR
+}
+
+type Query {
+  pokemon(id: ID!): Pokemon
+  allPokemon(limit: Int = 100, offset: Int = 0): [Pokemon!]!
+  """
+  Search for Pokemon by type
+  """
+  pokemonByType(type: PokemonType!, region: Region): [Pokemon!]!
+  ability(id: ID!): Ability
+  move(id: ID!): Move
+  trainer(id: ID!): Trainer
+  """
+  Find Pokemon by trainer
+  """
+  pokemonByTrainer(trainerId: ID!): [Pokemon!]!
+  """
+  Get current ongoing battles
+  """
+  activeBattles: [Battle!]!
+  """
+  Search for shiny Pokemon
+  """
+  shinyPokemon: [Pokemon!]!
+  """
+  Get item by ID
+  """
+  item(id: ID!): Item
+  """
+  Search Pokemon by nature
+  """
+  pokemonByNature(nature: Nature!): [Pokemon!]!
+  """
+  Get all gym leaders
+  """
+  gymLeaders(region: Region): [Trainer!]!
+}
+
+type Mutation {
+  """
+  Catch a wild Pokemon
+  """
+  catchPokemon(pokemonId: ID!, trainerId: ID!, pokeball: ID!): CatchResult!
+  """
+  Teach a move to a Pokemon
+  """
+  teachMove(pokemonId: ID!, moveId: ID!, replaceMove: ID): TeachMoveResult!
+  """
+  Register a new trainer
+  """
+  registerTrainer(input: RegisterTrainerInput!): Trainer!
+  """
+  Start a battle between two trainers
+  """
+  startBattle(trainer1Id: ID!, trainer2Id: ID!, format: BattleFormat!): Battle!
+  """
+  End a battle and declare a winner
+  """
+  endBattle(battleId: ID!, winnerId: ID!): Battle!
+  """
+  Use an item on a Pokemon
+  """
+  useItem(itemId: ID!, pokemonId: ID!): UseItemResult!
+  """
+  Trade Pokemon between trainers
+  """
+  tradePokemon(pokemon1Id: ID!, pokemon2Id: ID!): TradeResult!
+  """
+  Evolve a Pokemon
+  """
+  evolvePokemon(pokemonId: ID!): EvolveResult!
+}
+
+"""
+Input for registering a new trainer
+"""
+input RegisterTrainerInput {
+  name: String!
+  hometown: String!
+  startingRegion: Region!
+}
+
+type CatchResult {
+  success: Boolean!
+  pokemon: Pokemon
+  message: String!
+}
+
+type TeachMoveResult {
+  success: Boolean!
+  pokemon: Pokemon
+  move: Move
+  replacedMove: Move
+}
+
+type UseItemResult {
+  success: Boolean!
+  message: String!
+  pokemon: Pokemon
+}
+
+type TradeResult {
+  success: Boolean!
+  pokemon1: Pokemon!
+  pokemon2: Pokemon!
+  message: String!
+}
+
+type EvolveResult {
+  success: Boolean!
+  evolvedPokemon: Pokemon
+  message: String!
+}
+
+"""
+Real-time battle updates
+"""
+type Subscription {
+  battleUpdates(battleId: ID!): BattleUpdate!
+  """
+  Subscribe to new Pokemon sightings
+  """
+  pokemonSighted(region: Region!): Pokemon!
+  """
+  Trade requests for a trainer
+  """
+  tradeRequests(trainerId: ID!): TradeRequest!
+}
+
+"""
+Updates during a battle
+"""
+type BattleUpdate {
+  battleId: ID!
+  message: String!
+  pokemon1Hp: Int!
+  pokemon2Hp: Int!
+  currentTurn: Int!
+}
+
+"""
+Trade request between trainers
+"""
+type TradeRequest {
+  id: ID!
+  fromTrainer: Trainer!
+  toTrainer: Trainer!
+  offeredPokemon: Pokemon!
+  requestedPokemon: Pokemon
+  status: TradeStatus!
+}
+
+"""
+Status of a trade request
+"""
+enum TradeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+"""
+Input for creating a new Pokemon
+"""
+input CreatePokemonInput {
+  name: String!
+  types: [PokemonType!]!
+  stats: StatsInput!
+  nature: Nature!
+}
+
+"""
+Input for Pokemon stats
+"""
+input StatsInput {
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  speed: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+}
+
+directive @auth(role: String!) on FIELD_DEFINITION
+directive @cache(ttl: Int!) on FIELD_DEFINITION
+directive @rateLimit(limit: Int!, duration: Int!) on FIELD_DEFINITION

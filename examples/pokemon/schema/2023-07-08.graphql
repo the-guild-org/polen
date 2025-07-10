@@ -1,0 +1,51 @@
+"""
+A Pokemon creature with enhanced battle capabilities
+"""
+type Pokemon {
+  id: ID!
+  name: String!
+  types: [PokemonType!]!
+  """
+  Health points - determines how much damage a Pokemon can take
+  """
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  """
+  Speed determines turn order in battles
+  """
+  speed: Int!
+  evolution: Pokemon
+}
+
+enum PokemonType {
+  FIRE
+  WATER
+  GRASS
+  ELECTRIC
+  PSYCHIC
+  DARK
+  FAIRY
+}
+
+type Query {
+  pokemon(id: ID!): Pokemon
+  allPokemon: [Pokemon!]!
+  """
+  Search for Pokemon by type
+  """
+  pokemonByType(type: PokemonType!): [Pokemon!]!
+}
+
+type Mutation {
+  """
+  Catch a wild Pokemon
+  """
+  catchPokemon(pokemonId: ID!): CatchResult!
+}
+
+type CatchResult {
+  success: Boolean!
+  pokemon: Pokemon
+  message: String!
+}

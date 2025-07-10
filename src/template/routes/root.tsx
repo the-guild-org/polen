@@ -1,25 +1,18 @@
-import type { Content } from '#api/content/$'
 import type { ReactRouter } from '#dep/react-router/index'
-import { GrafaidOld } from '#lib/grafaid-old/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
-import { Box, Grid } from '@radix-ui/themes'
+import { Box } from '@radix-ui/themes'
 import { Flex, Theme } from '@radix-ui/themes'
-import { Arr } from '@wollybeard/kit'
-import { useEffect, useState } from 'react'
 import { Link as LinkReactRouter } from 'react-router'
-import { Outlet, ScrollRestoration, useLocation } from 'react-router'
+import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import projectPagesCatalog from 'virtual:polen/project/data/pages-catalog.jsonsuper'
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { GraphQLSchemaProvider } from '../../lib/graphql-document/schema-context.js'
 import { CodeBlockEnhancer } from '../components/CodeBlockEnhancer.js'
-import { HamburgerMenu } from '../components/HamburgerMenu.js'
 import { Link } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
 import { NotFound } from '../components/NotFound.js'
-import { Sidebar } from '../components/sidebar/Sidebar.js'
 import { ThemeToggle } from '../components/ThemeToggle.js'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.js'
 import { changelog } from './changelog.js'
@@ -48,64 +41,10 @@ export const Component = () => {
 }
 
 const Layout = () => {
-  const location = useLocation()
   const { appearance } = useTheme()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [location.pathname])
-
-  // Determine if we should show sidebar based on current path
-  const getCurrentNavPathExp = (): string | null => {
-    // todo: general path manipulation lib because we are duplicating logic here found in FileRouter
-    // todo: kit: try a Str.split that returns [] | string[] so that our predicates can refine on it?
-    const segments = location.pathname.split(`/`).filter(Boolean)
-    if (Arr.isntEmpty(segments)) {
-      return `/${segments[0]}`
-    }
-    return null
-  }
-
-  const currentNavPathExp = getCurrentNavPathExp()
-  const isReferencePage = currentNavPathExp === `/reference`
-
-  const sidebar = (() => {
-    if (isReferencePage && PROJECT_DATA.schema) {
-      // Build reference sidebar from schema types
-      const schema = PROJECT_DATA.schema.versions[0].after
-      const kindMap = GrafaidOld.getKindMap(schema)
-
-      const sidebarItems: Content.Item[] = []
-      const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
-
-      for (const [title, types] of kindEntries) {
-        sidebarItems.push({
-          type: `ItemSection` as const,
-          title,
-          pathExp: `reference-${title.toLowerCase()}`,
-          isLinkToo: false,
-          links: types.map(type => ({
-            type: `ItemLink` as const,
-            title: type.name,
-            pathExp: `reference/${type.name}`,
-          })),
-        })
-      }
-
-      return { items: sidebarItems }
-    } else {
-      // Use regular page sidebar
-      return currentNavPathExp ? projectPagesCatalog.sidebarIndex[currentNavPathExp] || null : null
-    }
-  })()
-
-  const isShowSidebar = sidebar && sidebar.items.length > 0
 
   const header = (
     <Flex
-      gridArea={`header`}
       align='center'
       gap={{ initial: `4`, md: `8` }}
       pb='4'
@@ -114,20 +53,6 @@ const Layout = () => {
         borderBottom: `1px solid var(--gray-3)`,
       }}
     >
-      {/* Mobile menu - only show when sidebar exists */}
-      {isShowSidebar && (
-        <HamburgerMenu
-          isOpen={mobileMenuOpen}
-          onToggle={() => {
-            setMobileMenuOpen(!mobileMenuOpen)
-          }}
-          onClose={() => {
-            setMobileMenuOpen(false)
-          }}
-          sidebarData={sidebar.items}
-        />
-      )}
-
       <LinkReactRouter
         to='/'
         style={{ color: `inherit`, textDecoration: `none` }}
@@ -149,40 +74,17 @@ const Layout = () => {
 
   return (
     <Theme asChild appearance={appearance}>
-      <Grid
+      <Box
         width={{ initial: `100%`, sm: `100%`, md: `var(--container-4)` }}
         maxWidth='100vw'
-        areas={{
-          initial: `'header' 'content'`,
-          sm: `'header' 'content'`,
-          md:
-            `'header header header header header header header header' 'sidebar sidebar . content content content content content'`,
-        }}
-        rows='min-content auto'
-        columns={{ initial: `1fr`, sm: `1fr`, md: `repeat(8, 1fr)` }}
-        gapX={{ initial: `0`, sm: `0`, md: `2` }}
         my={{ initial: `0`, sm: `0`, md: `8` }}
         mx='auto'
         px={{ initial: `4`, sm: `4`, md: `0` }}
         py={{ initial: `4`, sm: `4`, md: `0` }}
       >
         {header}
-
-        {/* Desktop Sidebar */}
-        {isShowSidebar && (
-          <Box
-            display={{ initial: `none`, xs: `none`, sm: `none`, md: `block` }}
-            gridColumn='1 / 3'
-            gridRow='2 / auto'
-          >
-            <Sidebar data={sidebar.items} />
-          </Box>
-        )}
-
-        <Box gridArea='content / content / auto / 8' className='prose'>
-          <Outlet />
-        </Box>
-      </Grid>
+        <Outlet />
+      </Box>
     </Theme>
   )
 }

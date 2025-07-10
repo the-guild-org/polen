@@ -37,3 +37,4 @@ dist-demos
 .github/**/*.d.ts
 .github/**/*.d.ts.map
 examples/hive/*.log
+prompt.md

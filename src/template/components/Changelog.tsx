@@ -1,11 +1,15 @@
 import type { GrafaidOld } from '#lib/grafaid-old/index'
-import { Grafaid } from '#lib/grafaid/index'
-import type { GraphqlChange } from '#lib/graphql-change/index'
+import { CRITICALITY_LEVELS } from '#lib/graphql-change/criticality'
+import { GraphqlChange } from '#lib/graphql-change/index'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
-import { Box, Code } from '@radix-ui/themes'
+import type { CriticalityLevel } from '@graphql-inspector/core'
+import { Box } from '@radix-ui/themes'
+import { neverCase } from '@wollybeard/kit/language'
 import type React from 'react'
+import { useMemo } from 'react'
 import type { Schema as ChangelogData } from '../../api/schema/index.js'
-import { Graphql } from './graphql/index.js'
+import { CriticalitySection } from './Changelog/CriticalitySection.js'
+import * as Group from './Changelog/groups/index.js'
 
 export const renderDate = (date: Date) => {
   return date.toLocaleString(`default`, {
@@ -19,20 +23,50 @@ export const renderDate = (date: Date) => {
 export const Changelog: React.FC<{ schema: ChangelogData.Schema }> = ({ schema }) => {
   return (
     <Box>
-      {schema.versions.map(changeset => <Changeset key={changeset.date.getDate()} changeset={changeset} />)}
+      {schema.versions.map(changeset => <Changeset key={changeset.date.toISOString()} changeset={changeset} />)}
     </Box>
   )
 }
 
 const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ changeset }) => {
+  // Group changes by criticality level
+  const groupedChanges = useMemo(() => {
+    const groups = {} as Record<CriticalityLevel, GraphqlChange.Change[]>
+
+    // Initialize empty arrays for each level
+    CRITICALITY_LEVELS.forEach(level => {
+      groups[level] = []
+    })
+
+    // Group changes
+    changeset.changes.forEach(change => {
+      const level = change.criticality.level
+      if (groups[level]) {
+        groups[level].push(change)
+      }
+    })
+
+    // Return only non-empty groups in order
+    return CRITICALITY_LEVELS
+      .filter(level => groups[level].length > 0)
+      .map(level => ({
+        level,
+        changes: groups[level],
+      }))
+  }, [changeset.changes])
+
   return (
-    <Box>
-      <h1 title={changeset.date.toISOString()}>
+    <Box mb='6'>
+      <h1 title={changeset.date.toISOString()} id={changeset.date.toISOString()}>
         {renderDate(changeset.date)}
       </h1>
-      <ul>
-        {changeset.changes.map(change => <Change key={change.message} change={change} schema={changeset.after} />)}
-      </ul>
+      {groupedChanges.map(group => (
+        <CriticalitySection key={group.level} level={group.level} changes={group.changes}>
+          {group.changes.map(change => (
+            <Change key={`${change.type}-${change.path || change.message}`} change={change} schema={changeset.after} />
+          ))}
+        </CriticalitySection>
+      ))}
     </Box>
   )
 }
@@ -40,58 +74,57 @@ const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ change
 const Change: React.FC<{ change: GraphqlChange.Change; schema: GrafaidOld.Schema.Schema }> = (
   { change, schema },
 ) => {
-  const getTypeOrThrow = (name: string) => {
-    const type = schema.getType(name)
-    if (!type) throw new Error(`Type ${name} not found`)
-    return type
-  }
-
-  switch (change.type) {
-    case `TYPE_ADDED`: {
-      const type = getTypeOrThrow(change.meta.addedTypeName)
-      return (
-        <li>
-          Added type <Graphql.TypeLink type={type} />
-        </li>
-      )
-    }
-    case `FIELD_ADDED`: {
-      const rootTypeMap = Grafaid.Schema.getRootTypeMap(schema)
-      const rootDetails = rootTypeMap.list.find(_ => _.name.canonical === change.meta.typeName)
-      const type = getTypeOrThrow(change.meta.typeName)
-      if (rootDetails) {
-        return (
-          <li>
-            Added {rootDetails.operationType}
-            {` `}
-            <Code
-              color='jade'
-              variant='ghost'
-              style={{ borderBottom: `1px dotted var(--jade-6)`, borderRadius: `0` }}
-            >
-              {change.meta.addedFieldName}
-            </Code>
-          </li>
-        )
-      }
-
-      return (
-        <li>
-          Added field{` `}
-          <Code
-            color='gray'
-            variant='ghost'
-            style={{ borderBottom: `1px dotted var(--gray-6)`, borderRadius: `0` }}
-          >
-            {change.meta.addedFieldName}
-          </Code>
-          {` `}
-          to type{` `}
-          <Graphql.TypeLink type={type} />.
-        </li>
-      )
-    }
-    default:
-      return <li>TODO: {change.type}</li>
+  if (GraphqlChange.Group.isTypeOperation(change)) {
+    return <Group.TypeOperation change={change} />
+  } else if (GraphqlChange.Group.isTypeDescription(change)) {
+    return <Group.TypeDescription change={change} />
+  } else if (GraphqlChange.Group.isFieldOperation(change)) {
+    return <Group.FieldOperation change={change} />
+  } else if (GraphqlChange.Group.isFieldDescription(change)) {
+    return <Group.FieldDescription change={change} />
+  } else if (GraphqlChange.Group.isFieldDeprecation(change)) {
+    return <Group.FieldDeprecation change={change} />
+  } else if (GraphqlChange.Group.isFieldDeprecationReason(change)) {
+    return <Group.FieldDeprecationReason change={change} />
+  } else if (GraphqlChange.Group.isFieldArgumentOperation(change)) {
+    return <Group.FieldArgumentOperation change={change} />
+  } else if (GraphqlChange.Group.isFieldArgument(change)) {
+    return <Group.FieldArgument change={change} />
+  } else if (GraphqlChange.Group.isFieldArgumentDescription(change)) {
+    return <Group.FieldArgumentDescription change={change} />
+  } else if (GraphqlChange.Group.isEnumValueOperation(change)) {
+    return <Group.EnumValueOperation change={change} />
+  } else if (GraphqlChange.Group.isEnumValueDescription(change)) {
+    return <Group.EnumValueDescription change={change} />
+  } else if (GraphqlChange.Group.isEnumValueDeprecationReason(change)) {
+    return <Group.EnumValueDeprecationReason change={change} />
+  } else if (GraphqlChange.Group.isInputFieldOperation(change)) {
+    return <Group.InputFieldOperation change={change} />
+  } else if (GraphqlChange.Group.isInputFieldDescription(change)) {
+    return <Group.InputFieldDescription change={change} />
+  } else if (GraphqlChange.Group.isInputFieldDefaultValue(change)) {
+    return <Group.InputFieldDefaultValue change={change} />
+  } else if (GraphqlChange.Group.isUnionMemberOperation(change)) {
+    return <Group.UnionMemberOperation change={change} />
+  } else if (GraphqlChange.Group.isObjectTypeInterfaceOperation(change)) {
+    return <Group.ObjectTypeInterfaceOperation change={change} />
+  } else if (GraphqlChange.Group.isDirectiveOperation(change)) {
+    return <Group.DirectiveOperation change={change} />
+  } else if (GraphqlChange.Group.isDirectiveDescription(change)) {
+    return <Group.DirectiveDescription change={change} />
+  } else if (GraphqlChange.Group.isDirectiveLocationOperation(change)) {
+    return <Group.DirectiveLocationOperation change={change} />
+  } else if (GraphqlChange.Group.isDirectiveArgumentOperation(change)) {
+    return <Group.DirectiveArgumentOperation change={change} />
+  } else if (GraphqlChange.Group.isDirectiveArgument(change)) {
+    return <Group.DirectiveArgument change={change} />
+  } else if (GraphqlChange.Group.isDirectiveArgumentDescription(change)) {
+    return <Group.DirectiveArgumentDescription change={change} />
+  } else if (GraphqlChange.Group.isSchemaRootType(change)) {
+    return <Group.SchemaRootType change={change} />
+  } else if (GraphqlChange.Group.isDirectiveUsage(change)) {
+    return <Group.DirectiveUsage change={change} />
+  } else {
+    neverCase(change)
   }
 }

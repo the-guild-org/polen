@@ -283,6 +283,12 @@ importers:
         specifier: link:../..
         version: link:../..
 
+  examples/pokemon:
+    dependencies:
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
   website:
     devDependencies:
       vitepress:

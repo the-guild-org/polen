@@ -11,6 +11,15 @@ Experience Polen documenting The Guild's [GraphQL Hive](https://graphql-hive.com
 - Schema documentation with real-world complexity
 - Multi-page MDX content
 
+### [Pokemon](https://the-guild-org.github.io/polen/demos/pokemon/)
+
+Explore Polen's changelog feature with a fun Pokemon GraphQL API that evolves over time. This demo showcases:
+
+- Schema changelog with 10 versions spanning almost 2 years
+- Criticality grouping (breaking, dangerous, and safe changes)
+- All 50+ types of GraphQL schema changes
+- Interactive sidebar for navigating between releases
+
 ## Run Locally
 
 You can also run any demo locally to explore the source code, for example:
@@ -21,7 +30,12 @@ cd polen
 
 pnpm install
 
+# Run Hive demo
 cd examples/hive
+pnpm dev
+
+# Or run Pokemon demo
+cd examples/pokemon
 pnpm dev
 ```
 
@@ -29,7 +43,6 @@ pnpm dev
 
 We're interested in additional examples to showcase more of Polen:
 
-- Different kinds of Changelog
 - Different kinds of markdown content
 - Huge schemas (think GitHub API)
 - Serverful demos

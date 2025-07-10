@@ -78,65 +78,47 @@ export default Polen.defineConfig({
 
 ## Change Types
 
-Polen's changelog feature is currently in early development. Only the following changes are displayed:
+Polen displays all GraphQL schema changes detected by GraphQL Inspector, organized into logical groups:
 
-### Types
+### Type Changes
 
-- **Added** - A new type is added to the schema
+- **Operations** - Types added, removed, or changed in kind
+- **Descriptions** - Type description modifications
 
-### Fields
+### Field Changes
 
-- **Added** - A new field is added to a type
+- **Operations** - Fields added, removed, or type changed
+- **Descriptions** - Field description modifications
+- **Deprecation** - Field deprecation status changes
+- **Deprecation Reasons** - Field deprecation reason modifications
 
-### Coming Soon
+### Argument Changes
 
-There are many more changes detected by the underlying GraphQL Inspector library but not yet displayed by Polen. [Please upvote this issue to prioritize it.](https://github.com/the-guild-org/polen/issues/111)
+- **Operations** - Arguments added or removed
+- **Modifications** - Default value or type changes
+- **Descriptions** - Argument description changes
 
-::: details View
+### Enum Changes
 
-###### Types
+- **Value Operations** - Enum values added or removed
+- **Value Descriptions** - Enum value description changes
+- **Value Deprecation** - Enum value deprecation reason changes
 
-- **Removed** - A type is removed from the schema
-- **Kind changed** - A type changes kind (e.g., from object to interface)
-- **Description added/removed/changed** - Type description modifications
+### Input Type Changes
 
-###### Fields
+- **Field Operations** - Input fields added, removed, or type changed
+- **Field Descriptions** - Input field description changes
+- **Default Values** - Input field default value changes
 
-- **Removed** - A field is removed from a type
-- **Type changed** - A field's type is modified
-- **Deprecation added** - A field is marked as deprecated
-- **Deprecation removed** - A field's deprecation is removed
-- **Description added/removed/changed** - Field description modifications
+### Schema Composition Changes
 
-##### Arguments
-
-- **Added** - A new argument is added to a field
-- **Removed** - An argument is removed from a field
-- **Type changed** - An argument's type is modified
-- **Default value changed** - An argument's default value is modified
-- **Description changed** - Argument description modifications
-
-##### Directives
-
-- **Added/Removed** - Directives added or removed from the schema
-- **Location added/removed** - Valid locations for a directive change
-- **Argument added/removed** - Directive arguments change
-- **Usage changes** - Where directives are used in the schema
-
-##### Enum Values
-
-- **Added/Removed** - Enum values added or removed
-- **Deprecation changes** - Enum value deprecation status changes
-- **Description changes** - Enum value description modifications
-
-##### Other Changes
-
-- **Union member added/removed** - Types added/removed from unions
-- **Interface implementations** - Objects implementing/removing interfaces
-- **Input field changes** - Input object field modifications
-- **Schema root type changes** - Query/Mutation/Subscription type changes
-
-:::
+- **Union Members** - Types added/removed from unions
+- **Interface Implementations** - Objects implementing/removing interfaces
+- **Directive Operations** - Directives added or removed
+- **Directive Locations** - Valid directive locations modified
+- **Directive Arguments** - Directive argument changes
+- **Directive Usage** - Where directives are applied in the schema
+- **Schema Root Types** - Query/Mutation/Subscription type changes
 
 ## Notes
 
@@ -155,4 +137,3 @@ When multiple schema versions exist, the reference documentation always shows th
 - Does not support schemas provided via introspection or other non-SDL sources
 - Does not have a version selector for the reference documentation
 - Shows all changes in a single chronological view without filtering options
-- Limited change type display (see "Kinds of Changes Currently Displayed" above)

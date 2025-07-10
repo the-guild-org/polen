@@ -1,8 +1,11 @@
+import type { Content } from '#api/content/$'
+import { GrafaidOld } from '#lib/grafaid-old/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Box } from '@radix-ui/themes'
 import { Outlet } from 'react-router'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import { SidebarLayout } from '../components/layouts/index.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { reference$type } from './reference.$type.js'
 
@@ -20,10 +23,30 @@ const Component = () => {
     return <MissingSchema />
   }
 
+  // Build reference sidebar from schema types
+  const kindMap = GrafaidOld.getKindMap(data.schema)
+
+  const sidebarItems: Content.Item[] = []
+  const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
+
+  for (const [title, types] of kindEntries) {
+    sidebarItems.push({
+      type: `ItemSection` as const,
+      title,
+      pathExp: `reference-${title.toLowerCase()}`,
+      isLinkToo: false,
+      links: types.map(type => ({
+        type: `ItemLink` as const,
+        title: type.name,
+        pathExp: `reference/${type.name}`,
+      })),
+    })
+  }
+
   return (
-    <Box className='prose'>
+    <SidebarLayout sidebar={sidebarItems}>
       <Outlet />
-    </Box>
+    </SidebarLayout>
   )
 }
 

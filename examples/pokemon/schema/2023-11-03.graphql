@@ -1,0 +1,131 @@
+"""
+A Pokemon creature with enhanced battle capabilities and trainer relationships
+"""
+type Pokemon {
+  id: ID!
+  name: String!
+  types: [PokemonType!]!
+  """
+  Health points - determines how much damage a Pokemon can take
+  """
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  """
+  Speed determines turn order in battles
+  """
+  speed: Int!
+  evolution: Pokemon
+  abilities: [Ability!]!
+  moves: [Move!]!
+  trainer: Trainer
+  level: Int!
+  experience: Int!
+}
+
+"""
+Pokemon trainers who catch and train Pokemon
+"""
+type Trainer {
+  id: ID!
+  name: String!
+  badges: [Badge!]!
+  pokemon: [Pokemon!]!
+  hometown: String!
+}
+
+"""
+Gym badges earned by defeating gym leaders
+"""
+type Badge {
+  id: ID!
+  name: String!
+  gymLeader: String!
+  city: String!
+}
+
+"""
+Special abilities that Pokemon can have
+"""
+type Ability {
+  id: ID!
+  name: String!
+  description: String!
+  isHidden: Boolean!
+}
+
+"""
+Moves that Pokemon can learn and use in battle
+"""
+type Move {
+  id: ID!
+  name: String!
+  type: PokemonType!
+  power: Int
+  accuracy: Int!
+  pp: Int!
+  category: MoveCategory!
+}
+
+enum MoveCategory {
+  PHYSICAL
+  SPECIAL
+  STATUS
+}
+
+enum PokemonType {
+  FIRE
+  WATER
+  GRASS
+  ELECTRIC
+  PSYCHIC
+  DARK
+  FAIRY
+  FIGHTING
+  STEEL
+  DRAGON
+  GHOST
+}
+
+type Query {
+  pokemon(id: ID!): Pokemon
+  allPokemon: [Pokemon!]!
+  """
+  Search for Pokemon by type
+  """
+  pokemonByType(type: PokemonType!): [Pokemon!]!
+  ability(id: ID!): Ability
+  move(id: ID!): Move
+  trainer(id: ID!): Trainer
+  """
+  Find Pokemon by trainer
+  """
+  pokemonByTrainer(trainerId: ID!): [Pokemon!]!
+}
+
+type Mutation {
+  """
+  Catch a wild Pokemon
+  """
+  catchPokemon(pokemonId: ID!, trainerId: ID!): CatchResult!
+  """
+  Teach a move to a Pokemon
+  """
+  teachMove(pokemonId: ID!, moveId: ID!): TeachMoveResult!
+  """
+  Register a new trainer
+  """
+  registerTrainer(name: String!, hometown: String!): Trainer!
+}
+
+type CatchResult {
+  success: Boolean!
+  pokemon: Pokemon
+  message: String!
+}
+
+type TeachMoveResult {
+  success: Boolean!
+  pokemon: Pokemon
+  move: Move
+}

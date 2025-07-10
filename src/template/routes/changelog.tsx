@@ -2,6 +2,7 @@ import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { Changelog } from '../components/Changelog.js'
+import { ChangelogLayout } from '../components/ChangelogLayout.js'
 
 const loader = createLoader(() => {
   return {
@@ -16,7 +17,11 @@ const Component = () => {
     return <div>No data to show. There is no schema is.</div>
   }
 
-  return <Changelog schema={data.schema} />
+  return (
+    <ChangelogLayout versions={data.schema.versions}>
+      <Changelog schema={data.schema} />
+    </ChangelogLayout>
+  )
 }
 
 export const changelog = createRoute({

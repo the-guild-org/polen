@@ -1,11 +1,13 @@
 import { GraphqlInspector } from '#dep/graphql-inspector/index'
 import type { GrafaidOld } from '#lib/grafaid-old/index'
+import type { Change } from './change-types.js'
 
-export type Change = GraphqlInspector.Core.SerializableChange & {
-  message: string
-  path?: string
-  criticality: GraphqlInspector.Core.Criticality
-}
+export * from './change-types.js'
+
+export * from './criticality.js'
+
+import * as Group from './change-groups.js'
+export { Group }
 
 export const calcChangeset = async (parameters: {
   after: GrafaidOld.Schema.Schema

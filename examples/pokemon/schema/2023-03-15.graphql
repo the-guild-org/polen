@@ -1,0 +1,18 @@
+"""
+A Pokemon creature with basic stats
+"""
+type Pokemon {
+  id: ID!
+  name: String!
+  type: PokemonType!
+}
+
+enum PokemonType {
+  FIRE
+  WATER
+  GRASS
+}
+
+type Query {
+  pokemon(id: ID!): Pokemon
+}

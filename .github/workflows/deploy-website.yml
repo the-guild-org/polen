@@ -48,6 +48,15 @@ jobs:
 
   build-demos:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        demo:
+          - name: hive
+            path: examples/hive
+            base: /polen/demos/hive/
+          - name: pokemon
+            path: examples/pokemon
+            base: /polen/demos/pokemon/
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,21 +76,21 @@ jobs:
       - name: Build Polen
         run: pnpm build
 
-      - name: Install Hive example dependencies
+      - name: Install ${{ matrix.demo.name }} example dependencies
         run: |
-          cd examples/hive
+          cd ${{ matrix.demo.path }}
           pnpm install
 
-      - name: Build Hive example
+      - name: Build ${{ matrix.demo.name }} example
         run: |
-          cd examples/hive
-          pnpm build --base /polen/demos/hive/
+          cd ${{ matrix.demo.path }}
+          pnpm build --base ${{ matrix.demo.base }}
 
-      - name: Upload demos artifact
+      - name: Upload ${{ matrix.demo.name }} artifact
         uses: actions/upload-artifact@v4
         with:
-          name: demos-dist
-          path: examples/hive/build
+          name: ${{ matrix.demo.name }}-dist
+          path: ${{ matrix.demo.path }}/build
 
   combine-and-deploy:
     runs-on: ubuntu-latest
@@ -96,11 +105,17 @@ jobs:
           name: website-dist
           path: deploy-dist
 
-      - name: Download demos artifact
+      - name: Download Hive demo artifact
         uses: actions/download-artifact@v4
         with:
-          name: demos-dist
+          name: hive-dist
           path: deploy-dist/demos/hive
+
+      - name: Download Pokemon demo artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pokemon-dist
+          path: deploy-dist/demos/pokemon
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
