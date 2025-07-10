@@ -46,7 +46,7 @@ Example:
 
 | File                          | Route              | Sidebar Title     | Order |
 | ----------------------------- | ------------------ | ----------------- | ----- |
-| `pages/10_getting-started.md` | `/getting-started` | `Getting Started` | 1st   |
+| `pages/10_get-started.md` | `/get-started` | `Get Started` | 1st   |
 | `pages/20_configuration.md`   | `/configuration`   | `Configuration`   | 2nd   |
 | `pages/30_advanced.md`        | `/advanced`        | `Advanced`        | 3rd   |
 | `pages/api-reference.md`      | `/api-reference`   | `Api Reference`   | 4th   |

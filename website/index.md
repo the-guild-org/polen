@@ -10,8 +10,8 @@ hero:
     alt: Polen Logo
   actions:
     - theme: brand
-      text: Guides
-      link: /overview/getting-started
+      text: Get Started
+      link: /overview/get-started
     - theme: alt
       text: View on GitHub
       link: https://github.com/the-guild-org/polen

@@ -7,7 +7,7 @@
   
   **A framework for delightful GraphQL developer portals**
   
-  [Documentation](https://the-guild-org.github.io/polen/) · [Demo](https://the-guild-org.github.io/polen/demos/hive/) · [Getting Started](https://the-guild-org.github.io/polen/overview/getting-started)
+  [Website](https://the-guild-org.github.io/polen/) · [Demos](https://the-guild-org.github.io/polen/overview/demos) · [Get Started](https://the-guild-org.github.io/polen/overview/getting-started)
 </div>
 
 ---

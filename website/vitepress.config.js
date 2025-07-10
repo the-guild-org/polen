@@ -19,14 +19,14 @@ export default defineConfig({
     },
     nav: [
       { text: 'Why', link: '/overview/why' },
-      { text: 'Guides', link: '/overview/getting-started' },
+      { text: 'Guides', link: '/overview/get-started' },
       { text: 'Changelog', link: 'https://github.com/the-guild-org/polen/releases' },
     ],
     sidebar: [
       {
         text: 'Overview',
         items: [
-          { text: 'Getting Started', link: '/overview/getting-started' },
+          { text: 'Get Started', link: '/overview/get-started' },
           { text: 'Why', link: '/overview/why' },
           { text: 'Demos', link: '/overview/demos' },
           { text: 'Project', link: '/overview/project' },

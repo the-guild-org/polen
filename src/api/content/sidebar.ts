@@ -27,17 +27,17 @@ export type Item = ItemLink | ItemSection
  * ```ts
  * const link: ItemLink = {
  *   type: 'ItemLink',
- *   title: 'Getting Started',
- *   pathExp: 'guide/getting-started'
+ *   title: 'Get Started',
+ *   pathExp: 'guide/get-started'
  * }
  * ```
  */
 export interface ItemLink {
   /** Discriminator for TypeScript union types */
   type: `ItemLink`
-  /** Display title for the link (e.g., "Getting Started") */
+  /** Display title for the link (e.g., "Get Started") */
   title: string
-  /** Path expression relative to the base path, without leading slash (e.g., "guide/getting-started") */
+  /** Path expression relative to the base path, without leading slash (e.g., "guide/get-started") */
   pathExp: string
 }
 
