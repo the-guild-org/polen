@@ -149,6 +149,42 @@ pnpm test:examples --ui
   - Manual from own machine
   - `pnpm release`
 
+### Fixing Corrupted Release State
+
+If the CI fails with an npm publish error like "You cannot publish over the previously published versions", it means the npm registry has a version that doesn't have a corresponding git tag. This breaks dripip's ability to determine the next version.
+
+To fix this:
+
+1. **Identify the missing tag**
+   ```sh
+   # Check what's published on npm
+   npm view polen versions --json | tail -20
+
+   # Check what tags exist in git
+   git tag -l | grep "0.10.0" | sort -V
+   ```
+
+2. **Find the correct commit for the missing tag**
+   - The tag must be placed AFTER the previous version tag
+   - Look for commits around the npm publish time: `npm view polen@VERSION time.created`
+
+3. **Create and push the missing tag**
+   ```sh
+   # Create tag on the correct commit
+   git tag 0.10.0-next.14 COMMIT_HASH
+
+   # Push to GitHub
+   git push origin 0.10.0-next.14
+   ```
+
+4. **Force an empty commit to trigger a new release**
+   ```sh
+   git commit --allow-empty -m "fix: trigger release"
+   git push
+   ```
+
+This will allow dripip to see the existing version and increment properly for the next release.
+
 ## Architectural Pillars
 
 ### App

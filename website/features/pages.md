@@ -44,13 +44,13 @@ You can control the order of pages in the sidebar by prefixing file names with n
 
 Example:
 
-| File                          | Route              | Sidebar Title     | Order |
-| ----------------------------- | ------------------ | ----------------- | ----- |
-| `pages/10_get-started.md` | `/get-started` | `Get Started` | 1st   |
-| `pages/20_configuration.md`   | `/configuration`   | `Configuration`   | 2nd   |
-| `pages/30_advanced.md`        | `/advanced`        | `Advanced`        | 3rd   |
-| `pages/api-reference.md`      | `/api-reference`   | `Api Reference`   | 4th   |
-| `pages/troubleshooting.md`    | `/troubleshooting` | `Troubleshooting` | 5th   |
+| File                        | Route              | Sidebar Title     | Order |
+| --------------------------- | ------------------ | ----------------- | ----- |
+| `pages/10_get-started.md`   | `/get-started`     | `Get Started`     | 1st   |
+| `pages/20_configuration.md` | `/configuration`   | `Configuration`   | 2nd   |
+| `pages/30_advanced.md`      | `/advanced`        | `Advanced`        | 3rd   |
+| `pages/api-reference.md`    | `/api-reference`   | `Api Reference`   | 4th   |
+| `pages/troubleshooting.md`  | `/troubleshooting` | `Troubleshooting` | 5th   |
 
 ## Markdown
 
