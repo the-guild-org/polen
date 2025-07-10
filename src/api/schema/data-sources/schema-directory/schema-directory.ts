@@ -14,7 +14,36 @@ const defaultPaths = {
   schemaDirectory: `./schema`,
 }
 
+/**
+ * Configuration for loading multiple schema versions from a directory.
+ *
+ * Enables the schema changelog feature by loading SDL files with date prefixes.
+ */
 export interface ConfigInput {
+  /**
+   * Path to the directory containing dated SDL files.
+   *
+   * Files should be named with ISO date prefixes: `YYYY-MM-DD.graphql`
+   *
+   * @default './schema'
+   *
+   * @example
+   * ```ts
+   * // Default location
+   * path: './schema'
+   *
+   * // Custom location
+   * path: './graphql/versions'
+   * ```
+   *
+   * Directory structure example:
+   * ```
+   * schema/
+   *   2024-01-15.graphql
+   *   2024-03-20.graphql
+   *   2024-06-10.graphql
+   * ```
+   */
   path?: string
   projectRoot?: string
 }

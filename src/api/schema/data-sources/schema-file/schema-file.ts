@@ -8,7 +8,26 @@ const defaultPaths = {
   schemaFile: `./schema.graphql`,
 }
 
+/**
+ * Configuration for loading schema from a single SDL file.
+ */
 export interface ConfigInput {
+  /**
+   * Path to the GraphQL SDL file.
+   *
+   * Can be absolute or relative to the project root.
+   *
+   * @default './schema.graphql'
+   *
+   * @example
+   * ```ts
+   * // Default location
+   * path: './schema.graphql'
+   *
+   * // Custom location
+   * path: './src/graphql/schema.sdl'
+   * ```
+   */
   path?: string
   projectRoot?: string
 }

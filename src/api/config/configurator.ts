@@ -18,6 +18,11 @@ export type BuildArchitecture = typeof BuildArchitectureEnum[keyof typeof BuildA
 
 type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
 
+/**
+ * Polen configuration input.
+ *
+ * All options are optional. Polen provides sensible defaults for a great developer experience out of the box.
+ */
 export interface ConfigInput {
   /**
    * Path to the root directory of your project.
@@ -28,13 +33,52 @@ export interface ConfigInput {
    */
   root?: string
   /**
-   * Enable a special module explorer for the source code that Polen assembles for your app.
+   * Configuration for how Polen loads your GraphQL schema.
    *
-   * Powered by [Vite Inspect](https://github.com/antfu-collective/vite-plugin-inspect).
+   * Polen supports multiple schema sources:
+   * - `file` - Load from a single SDL file (default: schema.graphql)
+   * - `directory` - Load multiple SDL files with date prefixes (enables changelog)
+   * - `memory` - Define schemas programmatically in configuration
    *
-   * @default true
+   * @example
+   * ```ts
+   * // Single file
+   * schema: {
+   *   useDataSources: 'file',
+   *   dataSources: {
+   *     file: { path: './my-schema.graphql' }
+   *   }
+   * }
+   *
+   * // Multiple versions for changelog
+   * schema: {
+   *   useDataSources: 'directory',
+   *   dataSources: {
+   *     directory: { path: './schema' }
+   *   }
+   * }
+   * ```
    */
   schema?: SchemaConfigInput
+  /**
+   * Programmatically add descriptions and metadata to your GraphQL schema.
+   *
+   * Use this to enhance your schema documentation without modifying the SDL files.
+   *
+   * @example
+   * ```ts
+   * schemaAugmentations: [{
+   *   Query: {
+   *     description: 'The root query type',
+   *     fields: {
+   *       users: {
+   *         description: 'Get a list of all users'
+   *       }
+   *     }
+   *   }
+   * }]
+   * ```
+   */
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
   templateVariables?: {
     /**
@@ -46,17 +90,36 @@ export interface ConfigInput {
      */
     title?: string
   }
+  /**
+   * Build configuration for your developer portal.
+   */
   build?: {
+    /**
+     * The build architecture for your developer portal.
+     *
+     * - `ssg` - Static Site Generation: Pre-renders all pages at build time. Best for public docs.
+     * - `ssr` - Server-Side Rendering: Renders pages on each request. Enables dynamic features.
+     * - `spa` - Single Page Application: Client-side rendering only.
+     *
+     * @default 'ssg'
+     */
     architecture?: BuildArchitecture
     /**
      * Base public path for the deployed site.
      *
      * Use this when deploying to a subdirectory (e.g., GitHub Pages project sites).
      *
-     * Examples:
-     * - `/` (default) - Deploy to root
-     * - `/my-project/` - Deploy to subdirectory
-     * - `/pr-123/` - PR preview deployments
+     * @example
+     * ```ts
+     * // Deploy to root
+     * base: '/'
+     *
+     * // Deploy to subdirectory
+     * base: '/my-project/'
+     *
+     * // PR preview deployments
+     * base: '/pr-123/'
+     * ```
      *
      * Must start and end with `/`.
      *
@@ -64,7 +127,24 @@ export interface ConfigInput {
      */
     base?: string
   }
+  /**
+   * Advanced configuration options.
+   *
+   * These settings are for advanced use cases and debugging.
+   */
   advanced?: {
+    /**
+     * Enable a special module explorer for the source code that Polen assembles for your app.
+     *
+     * This opens an interactive UI to inspect the module graph and transformations.
+     * Useful for debugging build issues or understanding Polen's internals.
+     *
+     * Access the explorer at `/__inspect/` when running the dev server.
+     *
+     * Powered by [Vite Inspect](https://github.com/antfu-collective/vite-plugin-inspect).
+     *
+     * @default false
+     */
     explorer?: boolean
     /**
      * Force the CLI to resolve Polen imports in your project to itself rather than
