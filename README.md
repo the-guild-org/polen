@@ -1,5 +1,7 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/the-guild-org/polen/main/website/public/logo.svg" alt="Polen Logo" width="200" />
+  <a href="https://the-guild-org.github.io/polen/">
+    <img src="https://raw.githubusercontent.com/the-guild-org/polen/main/website/public/logo.svg" alt="Polen Logo" width="200" />
+  </a>
   
   # Polen
   
