@@ -1,4 +1,4 @@
-name: Deploy Hive Example to GitHub Pages
+name: Deploy Documentation and Demo to GitHub Pages
 
 on:
   push:
@@ -7,9 +7,10 @@ on:
     paths:
       - 'src/**'
       - 'examples/hive/**'
+      - 'website/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
-      - '.github/workflows/deploy-hive-example.yml'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 permissions:
@@ -43,6 +44,12 @@ jobs:
       - name: Build Polen
         run: pnpm build
 
+      - name: Build VitePress documentation
+        run: |
+          cd website
+          pnpm install
+          pnpm build
+
       - name: Install Hive example dependencies
         run: |
           cd examples/hive
@@ -51,12 +58,19 @@ jobs:
       - name: Build Hive example
         run: |
           cd examples/hive
-          pnpm build --base /polen/
+          pnpm build --base /polen/demos/hive/
+
+      - name: Prepare deployment directory
+        run: |
+          mkdir -p deploy-dist
+          cp -r website/docs/.vitepress/dist/* deploy-dist/
+          mkdir -p deploy-dist/demos/hive
+          cp -r examples/hive/build/* deploy-dist/demos/hive/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'examples/hive/build'
+          path: 'deploy-dist'
 
   deploy:
     environment:

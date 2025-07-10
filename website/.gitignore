@@ -1,0 +1,3 @@
+# Ignore all VitePress generated files except config
+.vitepress/*
+!.vitepress/config.js

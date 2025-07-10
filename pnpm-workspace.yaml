@@ -1,5 +1,6 @@
 packages:
   - examples/*
+  - website
 onlyBuiltDependencies:
   - dprint
   - "@playwright/browser-chromium"
