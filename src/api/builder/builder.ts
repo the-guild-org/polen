@@ -4,37 +4,25 @@ import { Vite } from '#dep/vite/index'
 import { Fs } from '@wollybeard/kit'
 import consola from 'consola'
 
-const buildDefaults = {
-  debug: false,
-  architecture: Config.BuildArchitecture.enum.ssg,
-}
-
 interface BuildConfigInput {
-  debug?: boolean
+  dir: string
   architecture?: Config.BuildArchitecture
   base?: string
+  advanced?: {
+    debug?: boolean
+  }
 }
 
-export const build = async (buildConfigInput: BuildConfigInput) => {
-  const buildConfig = { ...buildDefaults, ...buildConfigInput }
-
+export const build = async (input: BuildConfigInput) => {
   const viteUserConfig = await ConfigResolver.fromFile({
-    dir: process.cwd(),
-    overrides: {
-      build: {
-        architecture: buildConfig.architecture,
-        ...(buildConfig.base ? { base: buildConfig.base } : {}),
-      },
-      advanced: {
-        debug: buildConfig.debug,
-      },
-    },
+    dir: input.dir,
+    overrides: input,
   })
 
   const builder = await Vite.createBuilder(viteUserConfig)
   await builder.buildApp()
 
-  if (buildConfig.architecture === `ssg`) {
+  if (input.architecture === `ssg`) {
     consola.info(`Generating static site...`)
     await import(viteUserConfig._polen.paths.project.absolute.build.serverEntrypoint)
     // Clean up server file which should now be done being used for SSG geneation.
@@ -42,7 +30,7 @@ export const build = async (buildConfigInput: BuildConfigInput) => {
     // todo: there is also some kind of prompt js asset that we probably need to clean up or review...
     consola.success(`Done`)
     consola.info(`try it: npx serve ${viteUserConfig._polen.paths.project.relative.build.root} -p 4000`)
-  } else if (buildConfig.architecture === `ssr`) {
+  } else if (input.architecture === `ssr`) {
     consola.info(`try it: node ${viteUserConfig._polen.paths.project.relative.build.root}/app.js`)
     // todo: no hardcoded port
     consola.info(`Then visit http://localhost:3001`)

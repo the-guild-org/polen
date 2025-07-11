@@ -15,20 +15,43 @@
 //
 
 /**
- * Test if vite-plugin-ssr-css is working properly
+ * Debug Interactive GraphQL Features with CodeHike
  */
 
-// Test to see if the plugin is properly configured
-console.log(`Testing vite-plugin-ssr-css integration...`)
+import { buildSchema, printSchema } from 'graphql'
 
-// The plugin should inject a link to virtual:ssr-css.css in development
-// Let's verify our configuration is correct
+// Create a simple test schema
+const schema = buildSchema(`
+  type Query {
+    """The currently authenticated user"""
+    me: User
+    """Fetch a user by ID"""
+    user(id: ID!): User
+  }
 
-import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
+  """A user in the system"""
+  type User {
+    """Unique identifier"""
+    id: ID!
+    """Display name"""
+    name: String!
+    """Email address"""
+    email: String!
+  }
+`)
 
-const plugin = vitePluginSsrCss({
-  entries: [`/src/template/entry.client.tsx`],
-})
+console.log(`Test Schema:`)
+console.log(printSchema(schema))
 
-console.log(`Plugin name:`, plugin.name)
-console.log(`Plugin config:`, plugin)
+// Check if the schema is being properly passed to components
+console.log(`\nChecking window.__POLEN_GRAPHQL_SCHEMA__:`)
+console.log(`- Should be set in root.tsx when schema exists`)
+console.log(`- Used by CodeBlock.tsx and CodeHikePre.tsx for interactive blocks`)
+
+// The interactive feature flow:
+console.log(`\nInteractive GraphQL Flow:`)
+console.log(`1. MDX file contains: \`\`\`graphql interactive`)
+console.log(`2. CodeHike processes and passes to CodeBlock or Pre component`)
+console.log(`3. Component checks for lang='graphql' and meta includes 'interactive'`)
+console.log(`4. GraphQLDocument component wraps the code with interactive features`)
+console.log(`5. Schema from window.__POLEN_GRAPHQL_SCHEMA__ enables tooltips/links`)

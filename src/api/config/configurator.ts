@@ -25,14 +25,6 @@ type SchemaConfigInput = Omit<Schema.Config, `projectRoot`>
  */
 export interface ConfigInput {
   /**
-   * Path to the root directory of your project.
-   *
-   * Relative paths will be resolved relative to this config file.
-   *
-   * @default The directory where the config file is located.
-   */
-  root?: string
-  /**
    * Configuration for how Polen loads your GraphQL schema.
    *
    * Polen supports multiple schema sources:
@@ -377,17 +369,9 @@ export const normalizeInput = async (
     config.advanced.debug = configInput.advanced.debug
   }
 
-  if (configInput?.root !== undefined) {
-    if (!baseRootDirPath && !Path.isAbsolute(configInput.root)) {
-      throw new Error(
-        `Root path must be absolute or baseRootPath must be provided to resolve relative root paths. Provided: ${configInput.root}`,
-      )
-    }
-    const root = Path.ensureAbsolute(configInput.root, baseRootDirPath)
-    config.paths = buildPaths(root)
-  } else if (baseRootDirPath) {
-    config.paths = buildPaths(baseRootDirPath)
-  }
+  // Always use the baseRootDirPath as the project root
+  // This is either the --project directory or the config file directory
+  config.paths = buildPaths(baseRootDirPath)
 
   // Try to read package.json name as fallback for title
   if (!configInput?.templateVariables?.title) {

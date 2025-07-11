@@ -1,5 +1,22 @@
+import { Api } from '#api/index'
+import { projectParameter } from '#cli/_/parameters'
+import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
+import { Command } from '@molt/command'
 import { Fs, Path } from '@wollybeard/kit'
 import consola from 'consola'
+
+const args = Command.create()
+  .parameter(
+    `--project -p`,
+    projectParameter,
+  )
+  .parse()
+
+const dir = ensureOptionalAbsoluteWithCwd(args.project)
+
+if (!await Api.Project.validateProjectDirectory(dir)) {
+  process.exit(1)
+}
 
 const fileName = 'polen.config.ts'
 const fileContent = `import { Polen } from 'polen'
@@ -9,7 +26,7 @@ export default Polen.defineConfig({
 })
 `
 
-const filePath = Path.join(process.cwd(), fileName)
+const filePath = Path.join(dir, fileName)
 
 const exists = await Fs.exists(filePath)
 if (exists) {

@@ -1,9 +1,10 @@
 // @ts-nocheck
 import { Api } from '#api/index'
+import { projectParameter } from '#cli/_/parameters'
 import { Vite } from '#dep/vite/index'
-import { ensureOptionalAbsolute, ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
+import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command } from '@molt/command'
-import { Err, Path } from '@wollybeard/kit'
+import { Err } from '@wollybeard/kit'
 import { z } from 'zod'
 
 const args = Command.create()
@@ -11,7 +12,7 @@ const args = Command.create()
   .parameter(
     `--project -p`,
     // @ts-expect-error
-    z.string().optional().describe(`The path to the project directory. Default is CWD (current working directory).`),
+    projectParameter,
   )
   .parameter(
     `--base -b`,
@@ -30,12 +31,18 @@ const args = Command.create()
   })
   .parse()
 
-const dir = ensureOptionalAbsoluteWithCwd(args.project) as string
+const dir = ensureOptionalAbsoluteWithCwd(args.project)
+
+if (!await Api.Project.validateProjectDirectory(dir)) {
+  process.exit(1)
+}
 
 const viteUserConfig = await Api.ConfigResolver.fromFile({
   dir,
   overrides: {
-    ...(args.base ? { build: { base: args.base } } : {}),
+    build: {
+      base: args.base,
+    },
     advanced: {
       debug: args.debug,
     },

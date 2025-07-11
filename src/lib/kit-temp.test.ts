@@ -1,6 +1,6 @@
 import * as fc from 'fast-check'
 import { describe, expect, test } from 'vitest'
-import { objFilter, ObjOmit, ObjPick, objPolicyFilter } from './kit-temp.js'
+import { objFilter, ObjOmit, ObjPick, objPolicyFilter, spreadShallow } from './kit-temp.js'
 
 describe('objPolicyFilter', () => {
   const testObj = { a: 1, b: 2, c: 3, d: 4 }
@@ -132,6 +132,90 @@ describe('property-based tests', () => {
         (obj) => {
           expect(objPolicyFilter('allow', obj, [])).toEqual({})
           expect(objPolicyFilter('deny', obj, [])).toEqual(obj)
+        },
+      ),
+    )
+  })
+})
+
+describe('mergeShallow', () => {
+  test('merges objects while omitting undefined values', () => {
+    const base = { a: 1, b: 2, c: 3 }
+    const override = { b: undefined, c: 4, d: 5 }
+
+    expect(spreadShallow(base, override)).toEqual({ a: 1, b: 2, c: 4, d: 5 })
+  })
+
+  test('handles multiple objects', () => {
+    const obj1 = { a: 1, b: 2 }
+    const obj2 = { b: undefined, c: 3 }
+    const obj3 = { c: undefined, d: 4 }
+
+    expect(spreadShallow(obj1, obj2, obj3)).toEqual({ a: 1, b: 2, c: 3, d: 4 })
+  })
+
+  test('handles empty objects', () => {
+    expect(spreadShallow({}, {})).toEqual({})
+    expect(spreadShallow({ a: 1 }, {})).toEqual({ a: 1 })
+    expect(spreadShallow({}, { a: 1 })).toEqual({ a: 1 })
+  })
+
+  test('handles single object', () => {
+    const obj = { a: 1, b: undefined, c: 3 }
+    expect(spreadShallow(obj)).toEqual({ a: 1, c: 3 })
+  })
+
+  test('handles no objects', () => {
+    expect(spreadShallow()).toEqual({})
+  })
+
+  test('handles undefined objects', () => {
+    const obj = { a: 1, b: 2 }
+    expect(spreadShallow(undefined, obj, undefined)).toEqual({ a: 1, b: 2 })
+    expect(spreadShallow(obj, undefined)).toEqual({ a: 1, b: 2 })
+    expect(spreadShallow(undefined, undefined)).toEqual({})
+  })
+
+  test('preserves null values', () => {
+    const obj1 = { a: 1, b: null }
+    const obj2 = { b: 2, c: null }
+    expect(spreadShallow(obj1, obj2)).toEqual({ a: 1, b: 2, c: null })
+  })
+
+  test('preserves false and 0 values', () => {
+    const obj1 = { a: true, b: 1 }
+    const obj2 = { a: false, b: 0 }
+    expect(spreadShallow(obj1, obj2)).toEqual({ a: false, b: 0 })
+  })
+
+  test('property-based: never includes undefined values', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.object({ withUndefined: true })),
+        (objects) => {
+          const result = spreadShallow(...objects)
+          Object.values(result).forEach(value => {
+            expect(value).not.toBe(undefined)
+          })
+        },
+      ),
+    )
+  })
+
+  test('property-based: later objects override earlier ones', () => {
+    fc.assert(
+      fc.property(
+        fc.object(),
+        fc.object(),
+        fc.string(),
+        fc.anything({ withUndefined: false }),
+        (obj1, obj2, key, value) => {
+          // Set the same key in both objects
+          obj1[key] = 'first'
+          obj2[key] = value
+
+          const result = spreadShallow(obj1, obj2)
+          expect(result[key]).toBe(value)
         },
       ),
     )

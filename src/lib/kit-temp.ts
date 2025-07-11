@@ -592,3 +592,54 @@ export const brand = <$BaseType, $BrandName extends string>(
 ): Brand<$BaseType, $BrandName> => {
   return value as Brand<$BaseType, $BrandName>
 }
+
+/**
+ * Shallow merge objects while omitting undefined values.
+ *
+ * This utility simplifies the common pattern of conditionally spreading objects
+ * to avoid including undefined values that would override existing values.
+ *
+ * @param objects - Objects to merge (later objects override earlier ones). Undefined objects are ignored.
+ * @returns Merged object with undefined values omitted
+ *
+ * @example
+ * ```ts
+ * // Instead of:
+ * const overrides = {
+ *   ...(value1 ? { key1: value1 } : {}),
+ *   ...(value2 ? { key2: value2 } : {}),
+ * }
+ *
+ * // Use:
+ * const overrides = mergeShallow({
+ *   key1: value1,
+ *   key2: value2,
+ * })
+ *
+ * // Example with config merging:
+ * const config = mergeShallow(
+ *   defaultConfig,
+ *   userConfig,
+ *   { debug: args.debug, base: args.base }
+ * )
+ * // undefined values in the last object won't override earlier values
+ * ```
+ */
+export const spreadShallow = <T extends object>(...objects: (T | undefined)[]): T => {
+  const result = {} as T
+
+  for (const obj of objects) {
+    if (obj === undefined) continue
+
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key]
+        if (value !== undefined) {
+          result[key] = value
+        }
+      }
+    }
+  }
+
+  return result
+}

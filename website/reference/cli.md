@@ -2,6 +2,12 @@
 
 Polen provides several CLI commands to help you develop and deploy your GraphQL developer portal.
 
+## Common Options
+
+Most Polen commands that operate on projects accept these common options:
+
+- `--project <path>`, `-p` - Path to the project directory (default: current working directory)
+
 ## Commands
 
 ### `polen create`
@@ -52,6 +58,7 @@ npx polen build [options]
 
 Options:
 
+- `--project <path>`, `-p` - Path to the project directory (default: current working directory)
 - `--architecture <type>`, `-a` - Build architecture: `ssg` (default) or `ssr`
 - `--base <path>`, `-b` - Base path for deployment (e.g., `/my-project/`)
 - `--debug`, `-d` - Enable debug mode (default: false)
@@ -66,9 +73,9 @@ npx polen dev [options]
 
 Options:
 
+- `--project <path>`, `-p` - Path to the project directory (default: current working directory)
 - `--base <path>`, `-b` - Base path for development (e.g., `/my-project/`)
 - `--debug`, `-d` - Enable debug mode
-- `--project <path>`, `-p` - The path to the project directory (default: current working directory)
 
 ### `polen open`
 
@@ -113,12 +120,16 @@ npx polen open --sdl https://docs.github.com/public/fpt/schema.docs.graphql
 Create a Polen configuration file.
 
 ```sh
-npx polen config create
+npx polen config create [options]
 ```
+
+Options:
+
+- `--project <path>`, `-p` - Path to the project directory (default: current working directory)
 
 This command:
 
-- Creates a `polen.config.ts` file in the current directory
+- Creates a `polen.config.ts` file in the project directory
 - Does nothing if the file already exists
 - Scaffolds a basic TypeScript configuration with type-safe imports
 

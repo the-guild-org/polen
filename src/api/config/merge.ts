@@ -1,4 +1,5 @@
 import { Vite } from '#dep/vite/index'
+import { spreadShallow } from '#lib/kit-temp'
 import type { ConfigInput } from './configurator.js'
 
 /**
@@ -13,10 +14,7 @@ export const mergeInputs = (
     return base
   }
 
-  const merged: ConfigInput = {
-    ...base,
-    ...overrides,
-  }
+  const merged: ConfigInput = spreadShallow(base, overrides)
 
   // Merge schema if both have it
   if (base.schema || overrides.schema) {
@@ -25,25 +23,19 @@ export const mergeInputs = (
 
   // Merge build config
   if (base.build || overrides.build) {
-    merged.build = {
-      ...base.build,
-      ...overrides.build,
-    }
+    merged.build = spreadShallow(base.build, overrides.build)
   }
 
   // Merge advanced config
   if (base.advanced || overrides.advanced) {
-    merged.advanced = {
-      ...base.advanced,
-      ...overrides.advanced,
-    }
+    merged.advanced = spreadShallow(base.advanced, overrides.advanced)
 
     // Merge advanced.watch config
     if (base.advanced?.watch || overrides.advanced?.watch) {
-      merged.advanced.watch = {
-        ...base.advanced?.watch,
-        ...overrides.advanced?.watch,
-      }
+      merged.advanced.watch = spreadShallow(
+        base.advanced?.watch,
+        overrides.advanced?.watch,
+      )
 
       // Merge watch.also arrays
       if (base.advanced?.watch?.also || overrides.advanced?.watch?.also) {

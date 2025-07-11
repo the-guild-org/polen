@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { Api } from '#api/index'
 import { Command } from '@molt/command'
 import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
 import * as Ansis from 'ansis'
@@ -48,10 +49,9 @@ const args = Command
 
 const getProjectRoot = async (): Promise<string> => {
   if (args.path) {
-    const stat = await Fs.stat(args.path)
-    if (Fs.isNotFoundError(stat)) return args.path
-    if (stat.isDirectory() && await Fs.isEmptyDir(args.path)) return args.path
-    consola.error(`The given path ${args.path} already exists and is not an empty directory`)
+    if (await Api.Project.validateProjectDirectory(args.path, { mustExist: false, mustBeEmpty: true })) {
+      return args.path
+    }
     process.exit(1)
   }
 
