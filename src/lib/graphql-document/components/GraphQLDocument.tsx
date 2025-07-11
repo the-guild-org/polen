@@ -202,13 +202,15 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         data-testid='graphql-document'
       >
         {/* Base code block */}
-        {renderCode ? (
-          renderCode()
-        ) : (
-          <pre className='code-block'>
+        {renderCode
+          ? (
+            renderCode()
+          )
+          : (
+            <pre className='code-block'>
             <code>{children}</code>
-          </pre>
-        )}
+            </pre>
+          )}
 
         {/* Interactive overlay layer */}
         {!plain && isReady && (

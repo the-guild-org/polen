@@ -4,14 +4,14 @@ Explore Polen in action with our live demos. These examples showcase different u
 
 ## Live
 
-### [Hive](https://the-guild-org.github.io/polen/demos/hive/)
+### [Hive](https://polen.js.org/demos/hive/)
 
 Experience Polen documenting The Guild's [GraphQL Hive](https://graphql-hive.com) API. This demo showcases:
 
 - Schema documentation with real-world complexity
 - Multi-page MDX content
 
-### [Pokemon](https://the-guild-org.github.io/polen/demos/pokemon/)
+### [Pokemon](https://polen.js.org/demos/pokemon/)
 
 Explore Polen's changelog feature with a fun Pokemon GraphQL API that evolves over time. This demo showcases:
 

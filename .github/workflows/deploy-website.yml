@@ -53,10 +53,10 @@ jobs:
         demo:
           - name: hive
             path: examples/hive
-            base: /polen/demos/hive/
+            base: /demos/hive/
           - name: pokemon
             path: examples/pokemon
-            base: /polen/demos/pokemon/
+            base: /demos/pokemon/
     steps:
       - name: Checkout
         uses: actions/checkout@v4
