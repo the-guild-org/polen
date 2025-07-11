@@ -7,6 +7,7 @@ export default defineConfig({
   title: 'Polen',
   description: PolenManifest.description,
   base: isCi ? '/polen/' : undefined,
+  cleanUrls: true,
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
   ],
