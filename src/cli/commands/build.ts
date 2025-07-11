@@ -19,6 +19,10 @@ const args = Command.create()
     `--base -b`,
     z.string().optional().describe('Base public path for deployment (e.g., /my-project/)'),
   )
+  .parameter(
+    `--port`,
+    z.number().optional().describe('Default port for the SSR application'),
+  )
   .settings({
     parameters: {
       environment: {
@@ -42,6 +46,9 @@ await Api.Builder.build({
   dir,
   architecture: args.architecture,
   base: args.base,
+  server: {
+    port: args.port,
+  },
   advanced: {
     debug: args.debug,
   },

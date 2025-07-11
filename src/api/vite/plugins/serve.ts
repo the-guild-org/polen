@@ -99,7 +99,7 @@ export const Serve = (
     config() {
       return {
         server: {
-          port: 3000,
+          port: config.server.port,
           watch: {
             disableGlobbing: false,
           },

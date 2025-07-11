@@ -209,6 +209,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               paths: config.paths.project,
               navbar, // Complete navbar with schema and pages
               server: {
+                port: config.server.port,
                 static: {
                   // todo
                   // relative from CWD of process that boots n1ode server

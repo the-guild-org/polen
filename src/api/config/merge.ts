@@ -26,6 +26,11 @@ export const mergeInputs = (
     merged.build = spreadShallow(base.build, overrides.build)
   }
 
+  // Merge server config
+  if (base.server || overrides.server) {
+    merged.server = spreadShallow(base.server, overrides.server)
+  }
+
   // Merge advanced config
   if (base.advanced || overrides.advanced) {
     merged.advanced = spreadShallow(base.advanced, overrides.advanced)

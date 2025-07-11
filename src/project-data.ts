@@ -8,6 +8,7 @@ export interface ProjectData {
   paths: Config.Config[`paths`][`project`]
   navbar: NavbarItem[]
   server: {
+    port: number
     static: {
       directory: string
       route: string

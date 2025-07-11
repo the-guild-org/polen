@@ -1,5 +1,6 @@
 import { serve } from '@hono/node-server' // TODO: support non-node platforms.
 import { neverCase } from '@wollybeard/kit/language'
+import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { createApp } from './app.js'
 import { generate } from './ssg/generate.js'
 import { view } from './view.js'
@@ -10,7 +11,7 @@ if (__BUILDING__) {
       await generate(view)
       break
     case `ssr`:
-      const port = process.env[`PORT`] ? parseInt(process.env[`PORT`]) : 3001 // todo viteConfigResolved.server.port + 1
+      const port = process.env[`PORT`] ? parseInt(process.env[`PORT`]) : PROJECT_DATA.server.port
       const app = createApp()
       serve({ fetch: app.fetch, port })
       break

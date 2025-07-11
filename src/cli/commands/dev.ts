@@ -18,6 +18,10 @@ const args = Command.create()
     `--base -b`,
     z.string().optional().describe('Base public path for deployment (e.g., /my-project/)'),
   )
+  .parameter(
+    `--port`,
+    z.number().optional().describe('Port to run the development server on'),
+  )
   .settings({
     parameters: {
       environment: {
@@ -42,6 +46,9 @@ const viteUserConfig = await Api.ConfigResolver.fromFile({
   overrides: {
     build: {
       base: args.base,
+    },
+    server: {
+      port: args.port,
     },
     advanced: {
       debug: args.debug,

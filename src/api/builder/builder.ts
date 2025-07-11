@@ -8,6 +8,9 @@ interface BuildConfigInput {
   dir: string
   architecture?: Config.BuildArchitecture
   base?: string
+  server?: {
+    port?: number
+  }
   advanced?: {
     debug?: boolean
   }

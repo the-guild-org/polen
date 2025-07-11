@@ -132,6 +132,34 @@ export interface ConfigInput {
     base?: string
   }
   /**
+   * Server configuration for development and production.
+   */
+  server?: {
+    /**
+     * Port for the server to listen on.
+     *
+     * - In development: The port for the Vite dev server
+     * - In production SSR: The default port for the Node.js server
+     *
+     * For production SSR builds, this can be overridden at runtime
+     * using the PORT environment variable.
+     *
+     * @default 3000
+     * @example
+     * ```ts
+     * // Use a specific port
+     * server: {
+     *   port: 4000
+     * }
+     *
+     * // Or via CLI flags:
+     * // polen dev --port 4000
+     * // polen build --port 4000
+     * ```
+     */
+    port?: number
+  }
+  /**
    * Advanced configuration options.
    *
    * These settings are for advanced use cases and debugging.
@@ -255,6 +283,9 @@ export interface Config {
     architecture: BuildArchitecture
     base: string
   }
+  server: {
+    port: number
+  }
   watch: {
     also: string[]
   }
@@ -316,6 +347,9 @@ const configInputDefaults: Config = {
   build: {
     architecture: BuildArchitecture.enum.ssg,
     base: `/`,
+  },
+  server: {
+    port: 3000,
   },
   schema: null,
   ssr: {
@@ -411,6 +445,10 @@ export const normalizeInput = async (
 
   if (configInput?.advanced?.watch?.also) {
     config.watch.also = configInput.advanced.watch.also
+  }
+
+  if (configInput?.server?.port !== undefined) {
+    config.server.port = configInput.server.port
   }
 
   return config
