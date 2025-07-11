@@ -17,33 +17,33 @@ export const mergeInputs = (
   const merged: ConfigInput = spreadShallow(base, overrides)
 
   // Merge schema if both have it
-  if (base.schema || overrides.schema) {
+  if (base.schema ?? overrides.schema) {
     merged.schema = overrides.schema ?? base.schema
   }
 
   // Merge build config
-  if (base.build || overrides.build) {
+  if (base.build ?? overrides.build) {
     merged.build = spreadShallow(base.build, overrides.build)
   }
 
   // Merge server config
-  if (base.server || overrides.server) {
+  if (base.server ?? overrides.server) {
     merged.server = spreadShallow(base.server, overrides.server)
   }
 
   // Merge advanced config
-  if (base.advanced || overrides.advanced) {
+  if (base.advanced ?? overrides.advanced) {
     merged.advanced = spreadShallow(base.advanced, overrides.advanced)
 
     // Merge advanced.watch config
-    if (base.advanced?.watch || overrides.advanced?.watch) {
+    if (base.advanced?.watch ?? overrides.advanced?.watch) {
       merged.advanced.watch = spreadShallow(
         base.advanced?.watch,
         overrides.advanced?.watch,
       )
 
       // Merge watch.also arrays
-      if (base.advanced?.watch?.also || overrides.advanced?.watch?.also) {
+      if (base.advanced?.watch?.also ?? overrides.advanced?.watch?.also) {
         merged.advanced.watch.also = [
           ...(base.advanced?.watch?.also ?? []),
           ...(overrides.advanced?.watch?.also ?? []),

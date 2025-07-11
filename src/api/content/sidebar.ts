@@ -173,13 +173,13 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
   }
 
   // Process top-level pages (direct children of the directory)
-  const topLevelPages = pagesByParent.get(topLevelDir) || []
+  const topLevelPages = pagesByParent.get(topLevelDir) ?? []
 
   // Sort pages by their directory order (extracted from file path)
   const sortedTopLevelPages = [...topLevelPages].sort((a, b) => {
     // For sections, we need to look at the directory name in the file path
-    const dirA = a.route.file.path.relative.dir.split(`/`).pop() || ``
-    const dirB = b.route.file.path.relative.dir.split(`/`).pop() || ``
+    const dirA = a.route.file.path.relative.dir.split(`/`).pop() ?? ``
+    const dirB = b.route.file.path.relative.dir.split(`/`).pop() ?? ``
 
     // Extract order from directory names like "10_b", "20_c"
     const orderMatchA = /^(\d+)[_-]/.exec(dirA)
@@ -197,7 +197,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
   for (const page of sortedTopLevelPages) {
     const pageName = page.route.logical.path[page.route.logical.path.length - 1]!
     const childPath = page.route.logical.path.join(`/`)
-    const childPages = pagesByParent.get(childPath) || []
+    const childPages = pagesByParent.get(childPath) ?? []
 
     if (childPages.length > 0 || FileRouter.routeIsFromIndexFile(page.route)) {
       // This is a section (has children or is an index page for a subdirectory)

@@ -73,7 +73,7 @@ export const scan = async (options: {
     // Update pages to have virtual root as parent if they don't have one
     const pagesWithVirtualRoot = pagesWithIds.map(page => ({
       ...page,
-      parentId: page.parentId || `__virtual_root__`,
+      parentId: page.parentId ?? `__virtual_root__`,
     }))
 
     tree = Tree.fromList([virtualRoot, ...pagesWithVirtualRoot])

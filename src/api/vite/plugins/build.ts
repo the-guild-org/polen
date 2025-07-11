@@ -162,7 +162,7 @@ const BuildManifest = (config: Config.Config): Vite.Plugin => {
       const manifest: PolenBuildManifest = {
         type: config.build.architecture === `ssr` ? `ssr` : `ssg`,
         version: packageJson.version,
-        basePath: config.build.base || `/`,
+        basePath: config.build.base ?? `/`,
       }
 
       // Emit the manifest as an asset

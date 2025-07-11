@@ -41,7 +41,7 @@ export const _getPathsRecurse = (
     if (isIndexRoute(route)) {
       // Index route uses the parent's accumulated path.
       // If parentPath is empty (implying root), it should be ROOT_PATH
-      collectedPaths.add(parentPath || ROOT_PATH)
+      collectedPaths.add(parentPath ?? ROOT_PATH)
 
       continue
     }
