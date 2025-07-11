@@ -280,7 +280,7 @@ importers:
   examples/hive:
     dependencies:
       polen:
-        specifier: link:../..
+        specifier: workspace:*
         version: link:../..
 
   examples/pokemon:
