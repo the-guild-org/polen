@@ -1,7 +1,7 @@
 import type { Vite } from '#dep/vite/index'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { type PackagePaths, packagePaths } from '#package-paths'
-import { Path } from '@wollybeard/kit'
+import { Err, Manifest, Path, Str } from '@wollybeard/kit'
 import { z } from 'zod'
 import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
 import type { Schema } from '../schema/index.js'
@@ -86,7 +86,19 @@ export interface ConfigInput {
      *
      * Used in the navigation bar and in the title tag.
      *
-     * @default `My Developer Portal`
+     * If not provided, Polen will try to use your project's package.json name
+     * field, converting it to title case (e.g., "my-project" → "My Project").
+     *
+     * @default Your package.json name (title-cased) or "My Developer Portal"
+     * @example
+     * ```ts
+     * // Explicit title
+     * title: 'Acme GraphQL API'
+     *
+     * // Falls back to package.json name
+     * // If package.json has { "name": "acme-graphql" }
+     * // Title will be "Acme Graphql"
+     * ```
      */
     title?: string
   }
@@ -375,6 +387,17 @@ export const normalizeInput = async (
     config.paths = buildPaths(root)
   } else if (baseRootDirPath) {
     config.paths = buildPaths(baseRootDirPath)
+  }
+
+  // Try to read package.json name as fallback for title
+  if (!configInput?.templateVariables?.title) {
+    const packageJson = await Manifest.resource.read(config.paths.project.rootDir)
+
+    // todo: let the user know there was an error...
+    if (!Err.is(packageJson) && packageJson.name) {
+      // Package name will be used as default, but can still be overridden below
+      config.templateVariables.title = Str.Case.title(packageJson.name)
+    }
   }
 
   if (configInput?.advanced?.vite) {

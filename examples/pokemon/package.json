@@ -1,7 +1,6 @@
 {
   "name": "pokemon-api",
   "type": "module",
-  "private": true,
   "scripts": {
     "dev": "polen dev",
     "build": "polen build"

@@ -1,6 +1,5 @@
 {
-  "name": "hive",
-  "displayName": "Hive API",
+  "name": "hive-api",
   "description": "Browse the GraphQL Hive schema registry and observability platform API with comprehensive documentation.",
   "type": "module",
   "packageManager": "pnpm@10.11.0",
