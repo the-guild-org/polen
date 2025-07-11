@@ -8,6 +8,7 @@ import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import mdx from '@mdx-js/rollup'
 import { Arr, Cache, Path, Str } from '@wollybeard/kit'
+import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import { viProjectData } from './core.js'
@@ -93,16 +94,28 @@ export const Pages = ({
     return s.render()
   }
 
+  const chConfig = {
+    components: { code: 'CodeBlock' },
+    syntaxHighlighting: {
+      theme: `github-light`,
+    },
+  }
+
   return [
     // Plugin 1: MDX Processing
     {
       enforce: `pre`,
       ...mdx({
         jsxImportSource: `polen/react`,
+        providerImportSource: `polen/mdx`,
         remarkPlugins: [
           // Parse frontmatter blocks so they're removed from content
           remarkFrontmatter,
           remarkGfm,
+          [remarkCodeHike, chConfig],
+        ],
+        recmaPlugins: [
+          [recmaCodeHike, chConfig],
         ],
         rehypePlugins: [],
       }),

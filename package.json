@@ -76,15 +76,14 @@
     ".": {
       "default": "./build/exports/index.js"
     },
-    "./components": {
-      "import": "./build/exports/components.js",
-      "default": "./build/exports/components.js"
-    },
     "./polen": {
       "default": "./build/exports/polen.js"
     },
     "./react": {
       "default": "./build/exports/react.js"
+    },
+    "./mdx": {
+      "default": "./build/exports/mdx.js"
     },
     "./react-dom/server": {
       "default": "./build/exports/react-dom/server.js"
@@ -122,6 +121,7 @@
     "@wollybeard/projector": "^0.2.0",
     "ansis": "^4.1.0",
     "clean-stack": "^5.2.0",
+    "codehike": "^1.0.7",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "es-toolkit": "^1.39.6",
@@ -156,7 +156,8 @@
     "vite-plugin-inspect": "^11.3.0",
     "vite-plugin-restart": "^0.4.2",
     "youch-core": "^0.3.3",
-    "zx": "8.6.1"
+    "zx": "8.6.1",
+    "@mdx-js/react": "^3.1.0"
   },
   "devDependencies": {
     "@actions/core": "^1.11.1",

@@ -24,6 +24,8 @@ export interface GraphQLDocumentOptions {
   validate?: boolean
   /** Custom class name for the container */
   className?: string
+  /** Custom render function for the code block */
+  renderCode?: () => React.ReactNode
 }
 
 /**
@@ -55,6 +57,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     onNavigate,
     validate = true,
     className = ``,
+    renderCode,
   } = options
 
   const navigate = useNavigate()
@@ -199,9 +202,13 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         data-testid='graphql-document'
       >
         {/* Base code block */}
-        <pre className='code-block'>
-          <code>{children}</code>
-        </pre>
+        {renderCode ? (
+          renderCode()
+        ) : (
+          <pre className='code-block'>
+            <code>{children}</code>
+          </pre>
+        )}
 
         {/* Interactive overlay layer */}
         {!plain && isReady && (

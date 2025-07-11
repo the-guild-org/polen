@@ -2,8 +2,6 @@
 description: Learn how to manage access tokens via the Hive Console GraphQL API.
 ---
 
-import { GraphQLDocumentWithSchema } from 'polen/components'
-
 # Access Token Management via the GraphQL API
 
 Manage access tokens used for schema publishing, schema checks, app deployment publishes and other
@@ -14,8 +12,8 @@ actions available via the GraphQL API. For more information, please refer to our
 
 Use the `Organization.accessTokens` field for retrieving a paginated list of available access.
 
-<GraphQLDocumentWithSchema>
-{`query OrganizationAccessTokens($organizationSlug: String!, $after: String) {
+```graphql interactive
+query OrganizationAccessTokens($organizationSlug: String!, $after: String) {
   organization(reference: { bySelector: { organizationSlug: $organizationSlug } }) {
     accessTokens(first: 10, after: $after) {
       edges {
@@ -32,16 +30,16 @@ Use the `Organization.accessTokens` field for retrieving a paginated list of ava
       }
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Retrieve a Single Access Token
 
 Instead of fetching a paginated list, it is also possible to retrieve a single access token by its
 id via the `Organization.accessToken` field.
 
-<GraphQLDocumentWithSchema>
-{`query OrganizationAccessTokenById($organizationSlug: String!, $accessTokenId: ID!) {
+```graphql interactive
+query OrganizationAccessTokenById($organizationSlug: String!, $accessTokenId: ID!) {
   organization(reference: { bySelector: { organizationSlug: $organizationSlug } }) {
     accessToken(id: $accessTokenId) {
       id
@@ -50,8 +48,8 @@ id via the `Organization.accessToken` field.
       createdAt
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Retrieve a List of Permissions Assignable to Access Tokens
 
@@ -59,8 +57,8 @@ A list of permissions that are assignable to access tokens can be retrieved via 
 `Organization.availableOrganizationAccessTokenPermissionGroups` field. It returns a list of all
 permission groups and their permissions.
 
-<GraphQLDocumentWithSchema>
-{`query OrganizationPermissions($organizationSlug: String!) {
+```graphql interactive
+query OrganizationPermissions($organizationSlug: String!) {
   organization(reference: { bySelector: { organizationSlug: $organizationSlug } }) {
     id
     slug
@@ -73,8 +71,8 @@ permission groups and their permissions.
       }
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Create an Access Token
 
@@ -84,8 +82,8 @@ The `CreateOrganizationAccessTokenResultOk.privateAccessKey` field in the mutati
 the access key that can be used with the Hive CLI or the Hive GraphQL API as an authorization
 header.
 
-<GraphQLDocumentWithSchema>
-{`mutation CreateAccessTokenMutation($input: CreateOrganizationAccessTokenInput!) {
+```graphql interactive
+mutation CreateAccessTokenMutation($input: CreateOrganizationAccessTokenInput!) {
   createOrganizationAccessToken(input: $input) {
     ok {
       privateAccessKey
@@ -98,8 +96,8 @@ header.
       }
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ### Resource Assignment
 
@@ -157,8 +155,8 @@ target, service, app deployment).
 
 A access token can be deleted by using the `Mutation.deleteOrganizationAccessToken` field.
 
-<GraphQLDocumentWithSchema>
-{`mutation CreateAccessTokenMutation($input: CreateOrganizationAccessTokenInput!) {
+```graphql interactive
+mutation CreateAccessTokenMutation($input: CreateOrganizationAccessTokenInput!) {
   deleteOrganizationAccessToken(input: $input) {
     ok {
       deletedOrganizationAccessTokenId
@@ -167,5 +165,5 @@ A access token can be deleted by using the `Mutation.deleteOrganizationAccessTok
       message
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```

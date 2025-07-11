@@ -2,7 +2,6 @@
 description: Learn how to manage projects via the Hive Console GraphQL API.
 ---
 
-import { GraphQLDocumentWithSchema } from 'polen/components'
 
 # Project Management via the GraphQL API
 
@@ -13,24 +12,24 @@ Projects can be managed via the Hive Console GraphQL API. For more information, 
 
 Use the `Query.project` field to retrieve a project either by its `id` or `slug` selector.
 
-<GraphQLDocumentWithSchema>
-{`query ProjectBySlug($organizationSlug: String!, $projectSlug: String!) {
+```graphql interactive
+query ProjectBySlug($organizationSlug: String!, $projectSlug: String!) {
   project(
     reference: { bySelector: { organizationSlug: $organizationSlug, projectSlug: $projectSlug } }
   ) {
     id
     type
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Retrieve a list of Projects within an Organization
 
 Use the `Organization.projects` field for retriving a list of projects within the organziation.
 **Note:** This field will currently return all projects within the organization.
 
-<GraphQLDocumentWithSchema>
-{`query OrganizationProjects($organizationSlug: String!) {
+```graphql interactive
+query OrganizationProjects($organizationSlug: String!) {
   organization(reference: { bySelector: { organizationSlug: $organziationSlug } }) {
     id
     projects {
@@ -46,15 +45,15 @@ Use the `Organization.projects` field for retriving a list of projects within th
       }
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Create a Project
 
 Use the `Mutation.createProject` field for creating a new project.
 
-<GraphQLDocumentWithSchema>
-{`mutation CreateProject($input: CreateProjectInput!) {
+```graphql interactive
+mutation CreateProject($input: CreateProjectInput!) {
   createProject(input: $input) {
     ok {
       createdProject {
@@ -69,15 +68,15 @@ Use the `Mutation.createProject` field for creating a new project.
       }
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Delete a Project
 
 Use the `Mutation.deleteProject` field for creating a new project.
 
-<GraphQLDocumentWithSchema>
-{`mutation DeleteProject($input: DeleteProjectInput!) {
+```graphql interactive
+mutation DeleteProject($input: DeleteProjectInput!) {
   deleteProject(input: $input) {
     ok {
       deletedProjectId
@@ -86,15 +85,15 @@ Use the `Mutation.deleteProject` field for creating a new project.
       message
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Update the Project Slug
 
 Update the project slug using the `Mutation.updateProjectSlug` field.
 
-<GraphQLDocumentWithSchema>
-{`mutation UpdateProjectSlug($input: UpdateProjectSlugInput!) {
+```graphql interactive
+mutation UpdateProjectSlug($input: UpdateProjectSlugInput!) {
   updateProjectSlug(input: $input) {
     ok {
       updatedProject {
@@ -106,5 +105,5 @@ Update the project slug using the `Mutation.updateProjectSlug` field.
       message
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```

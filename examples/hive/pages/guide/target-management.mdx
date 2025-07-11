@@ -2,7 +2,6 @@
 description: Learn how to manage targets via the Hive Console GraphQL API.
 ---
 
-import { GraphQLDocumentWithSchema } from 'polen/components'
 
 # Target Management via the GraphQL API
 
@@ -13,22 +12,22 @@ Targets can be managed via the Hive Console GraphQL API. For more information, p
 
 Use the `Query.target` field to retrieve a target either by its `id` or `slug` selector.
 
-<GraphQLDocumentWithSchema>
-{`query TargetById($targetId: ID!) {
+```graphql interactive
+query TargetById($targetId: ID!) {
   target(reference: { byId: $targetId }) {
     id
     slug
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Retrieve a List of Targets within a Project
 
 Use the `Project.targets` field to retrieve a list of targets within the organization. **Note:**
 This field will currently return all targets within the project.
 
-<GraphQLDocumentWithSchema>
-{`query TargetById($projectId: ID!) {
+```graphql interactive
+query TargetById($projectId: ID!) {
   project(reference: { byId: $projectId }) {
     id
     targets {
@@ -44,15 +43,15 @@ This field will currently return all targets within the project.
       }
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Create a Target
 
 Use the `Mutation.createTarget` field for creating a new target within a project.
 
-<GraphQLDocumentWithSchema>
-{`mutation CreateTarget($input: CreateTargetInput!) {
+```graphql interactive
+mutation CreateTarget($input: CreateTargetInput!) {
   createTarget(input: $input) {
     ok {
       createdTarget {
@@ -64,16 +63,16 @@ Use the `Mutation.createTarget` field for creating a new target within a project
       message
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Update the Target GraphQL Endpoint URL
 
 Use the `Mutation.updateTargetGraphQLEndpointUrl` field for updating the GraphQL endpoint url that
 is used in the laboratory for querying the GraphQL server.
 
-<GraphQLDocumentWithSchema>
-{`mutation UpdateTargetGraphQLEndpointUrl($input: UpdateTargetGraphQLEndpointUrlInput!) {
+```graphql interactive
+mutation UpdateTargetGraphQLEndpointUrl($input: UpdateTargetGraphQLEndpointUrlInput!) {
   updateTargetGraphQLEndpointUrl(input: $input) {
     ok {
       target {
@@ -85,16 +84,16 @@ is used in the laboratory for querying the GraphQL server.
       message
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Update the Breaking Change Configuration
 
 Use the `Mutation.updateTargetConditionalBreakingChangeConfiguration` field for updating the
 conditional breaking change configuration.
 
-<GraphQLDocumentWithSchema>
-{`mutation UpdateTargetConditionalBreakingChangeConfiguration(
+```graphql interactive
+mutation UpdateTargetConditionalBreakingChangeConfiguration(
   $input: UpdateTargetConditionalBreakingChangeConfigurationInput!
 ) {
   updateTargetConditionalBreakingChangeConfiguration(input: $input) {
@@ -120,16 +119,16 @@ conditional breaking change configuration.
       message
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```
 
 ## Update Dangerous Change Classification
 
 Use the `Mutation.updateTargetDangerousChangeClassification` field to set whether dangerous schema
 changes should fail a schema check (if they are not safe based on usage).
 
-<GraphQLDocumentWithSchema>
-{`mutation UpdateTargetGraphQLEndpointUrl($input: UpdateTargetDangerousChangeClassificationInput!) {
+```graphql interactive
+mutation UpdateTargetGraphQLEndpointUrl($input: UpdateTargetDangerousChangeClassificationInput!) {
   updateTargetDangerousChangeClassification(input: $input) {
     ok {
       target {
@@ -141,5 +140,5 @@ changes should fail a schema check (if they are not safe based on usage).
       message
     }
   }
-}`}
-</GraphQLDocumentWithSchema>
+}
+```

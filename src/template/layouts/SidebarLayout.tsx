@@ -3,8 +3,8 @@ import { Box, Grid } from '@radix-ui/themes'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
-import { HamburgerMenu } from '../HamburgerMenu.js'
-import { Sidebar } from '../sidebar/Sidebar.js'
+import { HamburgerMenu } from '../components/HamburgerMenu.js'
+import { Sidebar } from '../components/sidebar/Sidebar.js'
 
 interface SidebarLayoutProps {
   children: React.ReactNode
@@ -60,7 +60,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children, sidebar 
         </Box>
       )}
 
-      <Box gridArea='content / content / auto / 8' className='prose'>
+      <Box gridArea='content / content / auto / 8'>
         {children}
       </Box>
     </Grid>

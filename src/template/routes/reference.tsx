@@ -2,11 +2,10 @@ import type { Content } from '#api/content/$'
 import { GrafaidOld } from '#lib/grafaid-old/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import { Box } from '@radix-ui/themes'
 import { Outlet } from 'react-router'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import { SidebarLayout } from '../components/layouts/index.js'
 import { MissingSchema } from '../components/MissingSchema.js'
+import { SidebarLayout } from '../layouts/index.js'
 import { reference$type } from './reference.$type.js'
 
 const loader = createLoader(() => {
