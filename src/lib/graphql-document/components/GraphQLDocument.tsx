@@ -36,8 +36,6 @@ export interface GraphQLDocumentProps {
   schema?: GraphQLSchema
   /** Component options */
   options?: GraphQLDocumentOptions
-  /** Pre-rendered Shiki HTML (from build time) */
-  highlightedHtml?: string
 }
 
 /**
@@ -50,7 +48,6 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   children,
   schema,
   options = {},
-  highlightedHtml,
 }) => {
   const {
     debug = false,
@@ -135,7 +132,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     }
 
     // Get the code element within the container
-    const codeElement = containerRef.current.querySelector(`pre.shiki code`)
+    const codeElement = containerRef.current.querySelector(`pre.code-block code`)
       || containerRef.current.querySelector(`pre code`)
       || containerRef.current.querySelector(`code`)
     if (!codeElement) {
@@ -158,7 +155,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         setIsReady(true)
       }
     })
-  }, [analysisResult, positionCalculator, plain, highlightedHtml])
+  }, [analysisResult, positionCalculator, plain])
 
   // Handle resize events with debouncing
   ReactHooks.useEffect(() => {
@@ -168,7 +165,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     const handleResize = () => {
       clearTimeout(resizeTimer)
       resizeTimer = setTimeout(() => {
-        const codeElement = containerRef.current?.querySelector(`pre.shiki code`)
+        const codeElement = containerRef.current?.querySelector(`pre.code-block code`)
           || containerRef.current?.querySelector(`pre code`)
           || containerRef.current?.querySelector(`code`)
         if (codeElement && containerRef.current) {
@@ -201,12 +198,10 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         }`}
         data-testid='graphql-document'
       >
-        {/* Base syntax highlighting */}
-        {highlightedHtml ? <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} /> : (
-          <pre className='shiki'>
-            <code>{children}</code>
-          </pre>
-        )}
+        {/* Base code block */}
+        <pre className='code-block'>
+          <code>{children}</code>
+        </pre>
 
         {/* Interactive overlay layer */}
         {!plain && isReady && (

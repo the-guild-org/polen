@@ -6,7 +6,7 @@ import { GraphQLDocument, type GraphQLDocumentProps } from './GraphQLDocument.js
 /**
  * GraphQL Document component that uses the schema context
  */
-export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `schema` | `highlightedHtml`>> = (
+export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `schema`>> = (
   props,
 ) => {
   const schema = useGraphQLSchema()
@@ -37,15 +37,10 @@ export const GraphQLDocumentWithSchema: React.FC<Omit<GraphQLDocumentProps, `sch
     )
   }
 
-  // Simple highlighted HTML without syntax highlighting
-  const highlightedHtml =
-    `<pre style="background-color: var(--gray-a2); color: var(--gray-12); padding: var(--space-3); border-radius: var(--radius-3);"><code class="language-graphql">${props.children}</code></pre>`
-
   return (
     <GraphQLDocument
       {...props}
       schema={schema}
-      highlightedHtml={highlightedHtml}
     />
   )
 }

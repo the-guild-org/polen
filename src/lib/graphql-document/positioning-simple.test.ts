@@ -32,7 +32,7 @@ describe('Simple Positioning Engine', () => {
     it('should wrap identifiers in spans', () => {
       const container = document.createElement('div')
       container.innerHTML = `
-        <pre class="shiki">
+        <pre class="code-block">
           <code>query GetUser {
   user {
     name
@@ -64,7 +64,7 @@ describe('Simple Positioning Engine', () => {
     it('should handle multiple identifiers in same line', () => {
       const container = document.createElement('div')
       container.innerHTML = `
-        <pre class="shiki">
+        <pre class="code-block">
           <code>query GetUserById($id: ID!) {</code>
         </pre>
       `
@@ -86,7 +86,7 @@ describe('Simple Positioning Engine', () => {
     it('should get positions of wrapped identifiers', () => {
       const container = document.createElement('div')
       container.innerHTML = `
-        <pre class="shiki">
+        <pre class="code-block">
           <code>
             <span class="line"><span data-graphql-id="0-user-Field" data-graphql-name="user" data-graphql-kind="Field" data-graphql-start="0" data-graphql-end="4" data-graphql-line="1" data-graphql-column="1" data-graphql-path="user">user</span> {</span>
           </code>
@@ -137,7 +137,7 @@ describe('Simple Positioning Engine', () => {
     it('should skip already wrapped identifiers', () => {
       const container = document.createElement('div')
       container.innerHTML = `
-        <pre class="shiki">
+        <pre class="code-block">
           <code><span data-graphql-id="existing">user</span> {</code>
         </pre>
       `
@@ -158,7 +158,7 @@ describe('Simple Positioning Engine', () => {
     it('should handle empty lines gracefully', () => {
       const container = document.createElement('div')
       container.innerHTML = `
-        <pre class="shiki">
+        <pre class="code-block">
           <code>query {
 
   user</code>

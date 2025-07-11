@@ -1,5 +1,4 @@
 import '@radix-ui/themes/styles.css'
-import './styles/code-block.css'
 import { ReactDomClient } from '#dep/react-dom-client/index'
 import { StrictMode } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router'

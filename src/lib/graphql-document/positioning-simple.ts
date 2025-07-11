@@ -32,7 +32,7 @@ export interface PositionResult {
 }
 
 /**
- * Simplified position calculator for Shiki-rendered code
+ * Simplified position calculator for syntax-highlighted code
  *
  * This version uses a more straightforward approach:
  * 1. Find the line element by line number

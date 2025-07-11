@@ -9,7 +9,6 @@ import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { GraphQLSchemaProvider } from '../../lib/graphql-document/schema-context.js'
-import { CodeBlockEnhancer } from '../components/CodeBlockEnhancer.js'
 import { Link } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
 import { NotFound } from '../components/NotFound.js'
@@ -32,7 +31,6 @@ export const Component = () => {
       <ThemeProvider>
         <GraphQLSchemaProvider schema={schema}>
           <Layout />
-          <CodeBlockEnhancer />
         </GraphQLSchemaProvider>
       </ThemeProvider>
       <ScrollRestoration />

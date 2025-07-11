@@ -133,7 +133,7 @@ The GraphQL Document component provides:
 - **Interactive Navigation**: Click on any type or field to navigate to its reference documentation
 - **Hover Tooltips**: See type information, descriptions, and deprecation warnings
 - **Schema Validation**: Invalid queries are highlighted with error messages
-- **Syntax Highlighting**: Beautiful syntax highlighting with Shiki
+- **Syntax Highlighting**: Beautiful syntax highlighting
 - **Smart Positioning**: Tooltips automatically position themselves to stay within the viewport
 - **Accessibility**: Full keyboard navigation and screen reader support
 
