@@ -16,7 +16,7 @@ This will:
 2. Install all dependencies
 3. Start the development server
 
-Your developer portal is now running at `http://localhost:5173`!
+Your developer portal is now running at `http://localhost:3000`!
 
 ## Manual Setup
 

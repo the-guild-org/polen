@@ -35,7 +35,6 @@ export const build = async (input: BuildConfigInput) => {
     consola.info(`try it: npx serve ${viteUserConfig._polen.paths.project.relative.build.root} -p 4000`)
   } else if (input.architecture === `ssr`) {
     consola.info(`try it: node ${viteUserConfig._polen.paths.project.relative.build.root}/app.js`)
-    // todo: no hardcoded port
-    consola.info(`Then visit http://localhost:3001`)
+    consola.info(`Then visit http://localhost:${viteUserConfig._polen.server.port}`)
   }
 }

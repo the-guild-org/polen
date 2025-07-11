@@ -61,6 +61,7 @@ Options:
 - `--project <path>`, `-p` - Path to the project directory (default: current working directory)
 - `--architecture <type>`, `-a` - Build architecture: `ssg` (default) or `ssr`
 - `--base <path>`, `-b` - Base path for deployment (e.g., `/my-project/`)
+- `--port <number>` - Default port for the SSR application (default: 3000)
 - `--debug`, `-d` - Enable debug mode (default: false)
 
 ### `polen dev`
@@ -75,6 +76,7 @@ Options:
 
 - `--project <path>`, `-p` - Path to the project directory (default: current working directory)
 - `--base <path>`, `-b` - Base path for development (e.g., `/my-project/`)
+- `--port <number>` - Port for the development server (default: 3000)
 - `--debug`, `-d` - Enable debug mode
 
 ### `polen open`
