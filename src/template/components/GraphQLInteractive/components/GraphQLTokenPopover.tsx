@@ -8,6 +8,7 @@
 import type { React } from '#dep/react/index'
 import { Cross1Icon } from '@radix-ui/react-icons'
 import { Button, Popover } from '@radix-ui/themes'
+import { polenUrlPath } from '../../../lib/polen-url.js'
 import type { GraphQLToken } from '../lib/parser.js'
 import {
   isArgument,
@@ -81,7 +82,7 @@ function getPopoverContent(
       title: `Field "${semantic.fieldName}" does not exist`,
       description: `Type ${semantic.parentType.name} does not have a field named "${semantic.fieldName}".`,
       typeName: semantic.parentType.name,
-      typeUrl: `/reference/${semantic.parentType.name}`,
+      typeUrl: polenUrlPath('reference', semantic.parentType.name),
       fieldName: semantic.fieldName,
       invalid: true,
       availableFields,
@@ -93,8 +94,11 @@ function getPopoverContent(
     return {
       title: semantic.fieldDef.name,
       path: [
-        { name: semantic.parentType.name, url: `/reference/${semantic.parentType.name}` },
-        { name: semantic.fieldDef.name, url: `/reference/${semantic.parentType.name}#${semantic.fieldDef.name}` },
+        { name: semantic.parentType.name, url: polenUrlPath('reference', semantic.parentType.name) },
+        {
+          name: semantic.fieldDef.name,
+          url: polenUrlPath('reference', `${semantic.parentType.name}#${semantic.fieldDef.name}`),
+        },
       ],
       description: semantic.fieldDef.description || undefined,
       type: `${fieldType}`,
@@ -106,8 +110,11 @@ function getPopoverContent(
     return {
       title: semantic.fieldDef.name,
       path: [
-        { name: semantic.parentType.name, url: `/reference/${semantic.parentType.name}` },
-        { name: semantic.fieldDef.name, url: `/reference/${semantic.parentType.name}#${semantic.fieldDef.name}` },
+        { name: semantic.parentType.name, url: polenUrlPath('reference', semantic.parentType.name) },
+        {
+          name: semantic.fieldDef.name,
+          url: polenUrlPath('reference', `${semantic.parentType.name}#${semantic.fieldDef.name}`),
+        },
       ],
       description: semantic.fieldDef.description || undefined,
       type: `${fieldType}`,
@@ -119,11 +126,17 @@ function getPopoverContent(
     return {
       title: semantic.argumentDef.name,
       path: [
-        { name: semantic.parentType.name, url: `/reference/${semantic.parentType.name}` },
-        { name: semantic.parentField.name, url: `/reference/${semantic.parentType.name}#${semantic.parentField.name}` },
+        { name: semantic.parentType.name, url: polenUrlPath('reference', semantic.parentType.name) },
+        {
+          name: semantic.parentField.name,
+          url: polenUrlPath('reference', `${semantic.parentType.name}#${semantic.parentField.name}`),
+        },
         {
           name: semantic.argumentDef.name,
-          url: `/reference/${semantic.parentType.name}#${semantic.parentField.name}__${semantic.argumentDef.name}`,
+          url: polenUrlPath(
+            'reference',
+            `${semantic.parentType.name}#${semantic.parentField.name}__${semantic.argumentDef.name}`,
+          ),
         },
       ],
       description: semantic.argumentDef.description || undefined,
@@ -159,7 +172,7 @@ function getPopoverContent(
     return {
       title: semantic.name,
       path: [
-        { name: semantic.name, url: `/reference/${semantic.name}` },
+        { name: semantic.name, url: polenUrlPath('reference', semantic.name) },
       ],
       description: ('description' in semantic && typeof semantic.description === 'string')
         ? semantic.description
@@ -418,7 +431,7 @@ export const GraphQLTokenPopover: React.FC<GraphQLTokenPopoverProps> = ({
                       )
                       : (
                         <a
-                          href={`/reference/${content.typeName}#${field}`}
+                          href={polenUrlPath('reference', `${content.typeName}#${field}`)}
                           style={{
                             color: '#6f42c1',
                             textDecoration: 'none',
