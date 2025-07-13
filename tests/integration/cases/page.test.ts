@@ -169,7 +169,7 @@ export const Demo = () => <span>MDX works</span>
 testCases.forEach(({ fixture, result, title, additionalChecks }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.layout.set(fixture)
-    const viteConfig = await Api.ConfigResolver.fromMemory({ root: project.layout.cwd })
+    const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
     await page.goto(viteDevServer.url('/').href)

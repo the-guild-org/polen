@@ -38,4 +38,4 @@ dist-demos
 .github/**/*.d.ts.map
 examples/hive/*.log
 prompt.md
-sandbox.ts
+temp

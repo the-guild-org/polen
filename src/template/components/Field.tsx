@@ -17,7 +17,7 @@ export const Field: FC<Props> = ({ data, ...boxProps }) => {
     : null
 
   return (
-    <Box {...boxProps}>
+    <Box {...boxProps} id={data.name}>
       <Description data={data} />
       <DeprecationReason data={data} />
       <Text weight='medium'>{data.name}</Text>

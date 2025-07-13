@@ -1,0 +1,127 @@
+# Pokemon Basics
+
+Learn how to query individual Pokemon and their core attributes. Hover over any field to see its type information!
+
+## Fetching a Single Pokemon
+
+```graphql interactive
+query GetPikachu {
+  pokemon(id: "025") {
+    id
+    name
+    types
+    level
+    experience
+    isShiny
+  }
+}
+```
+
+## Pokemon with Abilities
+
+Each Pokemon has unique abilities that affect battles:
+
+```graphql interactive
+query PokemonAbilities {
+  pokemon(id: "006") {  # Charizard
+    name
+    abilities {
+      name
+      description
+      isHidden
+      battleEffect
+    }
+  }
+}
+```
+
+## Base Stats
+
+Explore the six fundamental stats that determine a Pokemon's battle prowess:
+
+```graphql interactive
+query PokemonStats {
+  pokemon(id: "150") {  # Mewtwo
+    name
+    stats {
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+      total
+    }
+  }
+}
+```
+
+## Pokemon IVs and Nature
+
+Explore genetic potential and personality traits:
+
+```graphql interactive
+query GeneticPotential {
+  pokemon(id: "009") {  # Blastoise
+    name
+    types
+    nature
+    ivs {
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+      isPerfect
+    }
+  }
+}
+```
+
+## Pokemon Training Data
+
+Explore training-related attributes:
+
+```graphql interactive
+query DetailedPokemonInfo {
+  pokemon(id: "001") {
+    name
+    types
+    level
+    friendship
+    nature
+    evs {
+      hp
+      attack
+      defense
+      speed
+      specialAttack
+      specialDefense
+    }
+  }
+}
+```
+
+## Listing Multiple Pokemon
+
+Get a list of Pokemon with pagination:
+
+```graphql interactive
+query ListPokemons {
+  allPokemon(limit: 5, offset: 0) {
+    edges {
+      node {
+        id
+        name
+        types
+        level
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+```

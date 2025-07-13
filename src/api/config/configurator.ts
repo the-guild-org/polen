@@ -53,22 +53,34 @@ export interface ConfigInput {
    */
   schema?: SchemaConfigInput
   /**
-   * Programmatically add descriptions and metadata to your GraphQL schema.
+   * Programmatically enhance your GraphQL schema documentation without modifying the schema files.
    *
-   * Use this to enhance your schema documentation without modifying the SDL files.
+   * Perfect for adding implementation details, usage examples, deprecation notices,
+   * or any additional context that helps developers understand your API better.
    *
    * @example
    * ```ts
-   * schemaAugmentations: [{
-   *   Query: {
-   *     description: 'The root query type',
-   *     fields: {
-   *       users: {
-   *         description: 'Get a list of all users'
-   *       }
-   *     }
+   * schemaAugmentations: [
+   *   {
+   *     type: 'description',
+   *     on: {
+   *       type: 'TargetType',
+   *       name: 'User'
+   *     },
+   *     placement: 'after',
+   *     content: '\n\nSee the [User Guide](/guides/users) for detailed usage.'
+   *   },
+   *   {
+   *     type: 'description',
+   *     on: {
+   *       type: 'TargetField',
+   *       targetType: 'Query',
+   *       name: 'users'
+   *     },
+   *     placement: 'after',
+   *     content: '\n\n**Rate limit:** 100 requests per minute'
    *   }
-   * }]
+   * ]
    * ```
    */
   schemaAugmentations?: SchemaAugmentation.Augmentation[]
@@ -158,6 +170,40 @@ export interface ConfigInput {
      * ```
      */
     port?: number
+  }
+  /**
+   * Configuration for developer experience warnings.
+   *
+   * Polen can show helpful warnings for common issues or misconfigurations.
+   * Each warning type can be individually enabled or disabled.
+   *
+   * @example
+   * ```ts
+   * warnings: {
+   *   interactiveWithoutSchema: {
+   *     enabled: false // Disable warning when interactive code blocks are used without a schema
+   *   }
+   * }
+   * ```
+   */
+  warnings?: {
+    /**
+     * Warning shown when GraphQL code blocks have the `interactive` flag
+     * but no schema is configured.
+     *
+     * Interactive features require a schema to provide field validation,
+     * type information, and auto-completion.
+     *
+     * @default { enabled: true }
+     */
+    interactiveWithoutSchema?: {
+      /**
+       * Whether to show this warning.
+       *
+       * @default true
+       */
+      enabled?: boolean
+    }
   }
   /**
    * Advanced configuration options.
@@ -295,6 +341,11 @@ export interface Config {
   ssr: {
     enabled: boolean
   }
+  warnings: {
+    interactiveWithoutSchema: {
+      enabled: boolean
+    }
+  }
   paths: {
     project: {
       rootDir: string
@@ -354,6 +405,11 @@ const configInputDefaults: Config = {
   schema: null,
   ssr: {
     enabled: true,
+  },
+  warnings: {
+    interactiveWithoutSchema: {
+      enabled: true,
+    },
   },
   paths: buildPaths(process.cwd()),
   advanced: {
@@ -449,6 +505,11 @@ export const normalizeInput = async (
 
   if (configInput?.server?.port !== undefined) {
     config.server.port = configInput.server.port
+  }
+
+  // Process warnings configuration
+  if (configInput?.warnings?.interactiveWithoutSchema?.enabled !== undefined) {
+    config.warnings.interactiveWithoutSchema.enabled = configInput.warnings.interactiveWithoutSchema.enabled
   }
 
   return config

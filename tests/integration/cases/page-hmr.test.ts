@@ -6,7 +6,7 @@ test.describe('HMR', () => {
   test('auto-refresh on content change', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/test.md': '# Initial' })
     const server = await vite.startDevelopmentServer(
-      await Api.ConfigResolver.fromMemory({ root: project.layout.cwd, advanced: { isSelfContainedMode: true } }),
+      await Api.ConfigResolver.fromMemory({ advanced: { isSelfContainedMode: true } }, project.layout.cwd),
     )
 
     await page.goto(server.url('/test').href)
@@ -22,7 +22,7 @@ test.describe('HMR', () => {
   test('add new page', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/home.md': '# Home' })
     const server = await vite.startDevelopmentServer(
-      await Api.ConfigResolver.fromMemory({ root: project.layout.cwd, advanced: { isSelfContainedMode: true } }),
+      await Api.ConfigResolver.fromMemory({ advanced: { isSelfContainedMode: true } }, project.layout.cwd),
     )
 
     // Navigate to an existing page first

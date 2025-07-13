@@ -1,0 +1,145 @@
+# Trainer Journeys
+
+Follow the adventures of Pokemon trainers, their teams, and achievements!
+
+## Trainer Profile
+
+```graphql interactive
+query TrainerProfile {
+  trainer(id: "ash-ketchum") {
+    id
+    name
+    trainerId
+    hometown
+    badges {
+      name
+      city
+    }
+  }
+}
+```
+
+## Trainer's Pokemon Team
+
+See a trainer's current team composition:
+
+```graphql interactive
+query TrainerTeam {
+  trainer(id: "misty") {
+    name
+    pokemon {
+      name
+      types
+      level
+      nickname
+      friendship
+      heldItem {
+        name
+      }
+      moves {
+        name
+        type
+        power
+        accuracy
+      }
+    }
+  }
+}
+```
+
+## Trainer Battle Record
+
+Explore trainer battle statistics:
+
+```graphql interactive
+query TrainerBattles {
+  trainer(id: "gary-oak") {
+    name
+    hometown
+    battleRecord {
+      totalBattles
+      wins
+      losses
+      winRate
+      winStreak
+      bestWinStreak
+    }
+  }
+}
+```
+
+## Trainer's Inventory
+
+Explore trainer's items and resources:
+
+```graphql interactive
+query TrainerInventory {
+  trainer(id: "ash-ketchum") {
+    name
+    items {
+      item {
+        id
+        name
+        description
+      }
+      quantity
+    }
+    pokemon {
+      name
+      types
+      heldItem {
+        name
+        description
+      }
+    }
+  }
+}
+```
+
+## Gym Leaders
+
+Explore gym leaders and their specialties:
+
+```graphql interactive
+query GymLeaders {
+  gymLeaders(region: KANTO) {
+    id
+    name
+    hometown
+    badges {
+      name
+      city
+    }
+    pokemon {
+      name
+      types
+      level
+    }
+    battleRecord {
+      totalBattles
+      wins
+      winRate
+    }
+  }
+}
+```
+
+## Pokemon by Trainer
+
+Find all Pokemon owned by a specific trainer:
+
+```graphql interactive
+query PokemonByTrainer {
+  pokemonByTrainer(trainerId: "misty") {
+    id
+    name
+    types
+    level
+    nature
+    isShiny
+    trainer {
+      name
+    }
+  }
+}
+```

@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  web-tree-sitter@0.25.6:
+    hash: ed4def734eca47741efbb9f85e929b200c75698b41cb8e4a9d4085a4bafeb1da
+    path: patches/web-tree-sitter@0.25.6.patch
+
 importers:
 
   .:
@@ -152,6 +157,9 @@ importers:
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
+      tree-sitter-graphql-grammar-wasm:
+        specifier: ^1.0.0
+        version: 1.0.0
       tsx:
         specifier: ^4.20.3
         version: 4.20.3
@@ -173,6 +181,9 @@ importers:
       vite-plugin-restart:
         specifier: ^0.4.2
         version: 0.4.2(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))
+      web-tree-sitter:
+        specifier: ^0.25.6
+        version: 0.25.6(patch_hash=ed4def734eca47741efbb9f85e929b200c75698b41cb8e4a9d4085a4bafeb1da)
       youch-core:
         specifier: ^0.3.3
         version: 0.3.3
@@ -4542,6 +4553,9 @@ packages:
     resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
 
+  tree-sitter-graphql-grammar-wasm@1.0.0:
+    resolution: {integrity: sha512-QC2q5RKaESU4X6kQ3ZtrKdj+LZ6PLgnFi0qU5gaJIXnIDUYLvW/8zChBqvsM9QwxghXetyfHs35VsiZNh42r4g==}
+
   trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
 
@@ -4855,6 +4869,9 @@ packages:
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
     engines: {node: '>=18'}
+
+  web-tree-sitter@0.25.6:
+    resolution: {integrity: sha512-WG+/YGbxw8r+rLlzzhV+OvgiOJCWdIpOucG3qBf3RCBFMkGDb1CanUi2BxCxjnkpzU3/hLWPT8VO5EKsMk9Fxg==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -9825,6 +9842,8 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+  tree-sitter-graphql-grammar-wasm@1.0.0: {}
+
   trim-lines@3.0.1: {}
 
   trough@2.2.0: {}
@@ -10170,6 +10189,8 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+
+  web-tree-sitter@0.25.6(patch_hash=ed4def734eca47741efbb9f85e929b200c75698b41cb8e4a9d4085a4bafeb1da): {}
 
   webidl-conversions@3.0.1: {}
 

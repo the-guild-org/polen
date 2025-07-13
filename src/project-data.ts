@@ -14,4 +14,5 @@ export interface ProjectData {
       route: string
     }
   }
+  warnings: Config.Config[`warnings`]
 }

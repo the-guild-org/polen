@@ -220,6 +220,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                     + `/*`,
                 },
               },
+              warnings: config.warnings,
             }
 
             // Return just the JSON string - let the JSON plugin handle the transformation

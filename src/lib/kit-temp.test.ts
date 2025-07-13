@@ -141,17 +141,17 @@ describe('property-based tests', () => {
 describe('mergeShallow', () => {
   test('merges objects while omitting undefined values', () => {
     const base = { a: 1, b: 2, c: 3 }
-    const override = { b: undefined, c: 4, d: 5 }
+    const override = { a: 1, b: undefined, c: 4, d: 5 }
 
-    expect(spreadShallow(base, override)).toEqual({ a: 1, b: 2, c: 4, d: 5 })
+    expect(spreadShallow<any>(base, override)).toEqual({ a: 1, b: 2, c: 4, d: 5 })
   })
 
   test('handles multiple objects', () => {
     const obj1 = { a: 1, b: 2 }
-    const obj2 = { b: undefined, c: 3 }
-    const obj3 = { c: undefined, d: 4 }
+    const obj2 = { a: 1, b: undefined, c: 3 }
+    const obj3 = { a: 1, b: 2, c: undefined, d: 4 }
 
-    expect(spreadShallow(obj1, obj2, obj3)).toEqual({ a: 1, b: 2, c: 3, d: 4 })
+    expect(spreadShallow<any>(obj1, obj2, obj3)).toEqual({ a: 1, b: 2, c: 3, d: 4 })
   })
 
   test('handles empty objects', () => {
@@ -178,8 +178,8 @@ describe('mergeShallow', () => {
 
   test('preserves null values', () => {
     const obj1 = { a: 1, b: null }
-    const obj2 = { b: 2, c: null }
-    expect(spreadShallow(obj1, obj2)).toEqual({ a: 1, b: 2, c: null })
+    const obj2 = { a: 1, b: 2, c: null }
+    expect(spreadShallow<any>(obj1, obj2)).toEqual({ a: 1, b: 2, c: null })
   })
 
   test('preserves false and 0 values', () => {
@@ -191,7 +191,7 @@ describe('mergeShallow', () => {
   test('property-based: never includes undefined values', () => {
     fc.assert(
       fc.property(
-        fc.array(fc.object({ withUndefined: true })),
+        fc.array(fc.dictionary(fc.string(), fc.option(fc.anything()))),
         (objects) => {
           const result = spreadShallow(...objects)
           Object.values(result).forEach(value => {
@@ -208,7 +208,7 @@ describe('mergeShallow', () => {
         fc.object(),
         fc.object(),
         fc.string(),
-        fc.anything({ withUndefined: false }),
+        fc.anything().filter(v => v !== undefined),
         (obj1, obj2, key, value) => {
           // Set the same key in both objects
           obj1[key] = 'first'

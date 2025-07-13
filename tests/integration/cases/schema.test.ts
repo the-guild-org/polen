@@ -55,7 +55,7 @@ test('can loads schema from schema data source', async ({ page, vite, project })
   await project.layout.set({
     'schema.graphql': sdl,
   })
-  const viteUserConfig = await pc({ root: project.layout.cwd })
+  const viteUserConfig = await pc({}, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByText('reference').click()
@@ -66,7 +66,7 @@ test('can loads schema from directory data source', async ({ page, vite, project
   await project.layout.set({
     'schema/2020-01-01.graphql': sdl,
   })
-  const viteUserConfig = await pc({ root: project.layout.cwd })
+  const viteUserConfig = await pc({}, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByText('reference').click()

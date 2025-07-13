@@ -1,6 +1,7 @@
 import { type HighlightedCode, Pre } from 'codehike/code'
 import React from 'react'
-import { GraphQLDocument } from '../../lib/graphql-document/components/GraphQLDocument.js'
+import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import { GraphQLInteractive } from './GraphQLInteractive/index.js'
 
 interface CodeBlockProps {
   codeblock: HighlightedCode
@@ -18,15 +19,11 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ codeblock }) => {
       : null
 
     return (
-      <GraphQLDocument
+      <GraphQLInteractive
+        codeblock={codeblock}
         schema={schema}
-        options={{
-          className: 'ch-code-container',
-          renderCode: () => <Pre code={codeblock} />,
-        }}
-      >
-        {codeblock.value}
-      </GraphQLDocument>
+        showWarningIfNoSchema={PROJECT_DATA.warnings.interactiveWithoutSchema.enabled}
+      />
     )
   }
 

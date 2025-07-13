@@ -1,0 +1,193 @@
+# Evolution Chains
+
+Discover how Pokemon evolve and the various requirements for their transformations!
+
+## Basic Evolution Chain
+
+```graphql interactive
+query EvolutionChain {
+  pokemon(id: "001") {  # Bulbasaur
+    name
+    types
+    evolution {
+      to {
+        id
+        name
+        types
+      }
+      method
+      level
+      item
+    }
+  }
+}
+```
+
+## Pokemon with Special Abilities
+
+Explore Pokemon with unique abilities:
+
+```graphql interactive
+query SpecialAbilities {
+  pokemon(id: "133") {  # Eevee
+    name
+    types
+    abilities {
+      name
+      description
+      isHidden
+    }
+    evolution {
+      to {
+        name
+        types
+        abilities {
+          name
+        }
+      }
+      method
+      item
+    }
+  }
+}
+```
+
+## Powerful Pokemon Stats
+
+Compare stats of evolved Pokemon:
+
+```graphql interactive
+query PowerfulPokemon {
+  pokemon(id: "006") {  # Charizard
+    name
+    types
+    stats {
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+      total
+    }
+    abilities {
+      name
+      description
+    }
+    heldItem {
+      name
+      effect
+    }
+  }
+}
+```
+
+## Pokemon by Nature
+
+Find Pokemon with specific natures:
+
+```graphql interactive
+query BraveNaturePokemon {
+  pokemonByNature(nature: BRAVE) {
+    id
+    name
+    nature
+    types
+    stats {
+      attack  # Brave nature boosts Attack
+      speed   # But lowers Speed
+    }
+    trainer {
+      name
+    }
+  }
+}
+```
+
+## Stone Evolution Items
+
+Explore evolution stones and their effects:
+
+```graphql interactive
+query EvolutionStones {
+  item(id: "fire-stone") {
+    id
+    name
+    description
+    price
+    ... on EvolutionStone {
+      evolvesFrom
+      evolvesTo
+    }
+  }
+  
+  # Also get a Pokemon that uses this stone
+  pokemon(id: "037") {  # Vulpix
+    name
+    evolution {
+      to {
+        name
+      }
+      method
+      item
+    }
+  }
+}
+```
+
+## Evolution and Friendship
+
+Explore Pokemon that evolve through friendship:
+
+```graphql interactive
+query FriendshipEvolution {
+  pokemon(id: "025") {  # Pikachu
+    name
+    friendship
+    evolution {
+      to {
+        id
+        name
+        types
+      }
+      method
+      item  # Thunder Stone for Pikachu
+    }
+    trainer {
+      name
+      badges {
+        name
+        city
+      }
+    }
+  }
+}
+```
+
+## Starter Pokemon Evolution
+
+Explore the classic starter Pokemon:
+
+```graphql interactive
+query StarterEvolution {
+  pokemon(id: "009") {  # Blastoise
+    id
+    name
+    types
+    level
+    stats {
+      hp
+      attack
+      defense
+      specialAttack
+      total
+    }
+    moves {
+      name
+      type
+      power
+      category
+    }
+  }
+}
+```

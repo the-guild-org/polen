@@ -7,7 +7,7 @@ export const defaultViteConfig: Vite.UserConfig = {
   // customLogger: Vite.createLogger(`silent`, {}),
 }
 
-export const pc = (configInput?: Polen.ConfigInput) => {
+export const pc = (configInput?: Polen.ConfigInput, baseRootDirPath?: string) => {
   return Api.ConfigResolver.fromMemory({
     advanced: {
       vite: {
@@ -16,7 +16,7 @@ export const pc = (configInput?: Polen.ConfigInput) => {
       },
     },
     ...configInput,
-  })
+  }, baseRootDirPath)
 }
 
 export const configMemorySchema = (sdl: string): Polen.ConfigInput[`schema`] => {

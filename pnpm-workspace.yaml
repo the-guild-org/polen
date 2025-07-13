@@ -3,4 +3,6 @@ packages:
   - website
 onlyBuiltDependencies:
   - dprint
-  - "@playwright/browser-chromium"
+  - '@playwright/browser-chromium'
+patchedDependencies:
+  web-tree-sitter@0.25.6: patches/web-tree-sitter@0.25.6.patch

@@ -178,7 +178,7 @@ export default defineConfig({
 // GraphQL Document Tooltips Integration Tests
 test.skip('should show tooltip on hover after delay', async ({ page, vite, project }) => {
   await project.layout.set(createTestFixture())
-  const viteConfig = await Api.ConfigResolver.fromMemory({ root: project.layout.cwd })
+  const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
   await page.goto(viteDevServer.url('/test').href)
