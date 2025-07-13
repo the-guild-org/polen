@@ -44,12 +44,16 @@ if (!await Api.Project.validateProjectDirectory(dir)) {
 
 await Api.Builder.build({
   dir,
-  architecture: args.architecture,
-  base: args.base,
-  server: {
-    port: args.port,
-  },
-  advanced: {
-    debug: args.debug,
+  overrides: {
+    build: {
+      architecture: args.architecture,
+      base: args.base,
+    },
+    server: {
+      port: args.port,
+    },
+    advanced: {
+      debug: args.debug,
+    },
   },
 })

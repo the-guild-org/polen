@@ -31,6 +31,19 @@ export const mergeInputs = (
     merged.server = spreadShallow(base.server, overrides.server)
   }
 
+  // Merge warnings config
+  if (base.warnings ?? overrides.warnings) {
+    merged.warnings = spreadShallow(base.warnings, overrides.warnings)
+
+    // Merge interactiveWithoutSchema config
+    if (base.warnings?.interactiveWithoutSchema ?? overrides.warnings?.interactiveWithoutSchema) {
+      merged.warnings.interactiveWithoutSchema = spreadShallow(
+        base.warnings?.interactiveWithoutSchema,
+        overrides.warnings?.interactiveWithoutSchema,
+      )
+    }
+  }
+
   // Merge advanced config
   if (base.advanced ?? overrides.advanced) {
     merged.advanced = spreadShallow(base.advanced, overrides.advanced)
