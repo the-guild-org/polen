@@ -28,10 +28,10 @@ export const create = async (parameters: {
     debug,
     package: {
       install: true,
-      links: parameters.polenLink && [
+      links: [
         {
           dir: projectDir,
-          protocol: parameters.polenLink,
+          protocol: parameters.polenLink ?? 'file',
         },
       ],
     },

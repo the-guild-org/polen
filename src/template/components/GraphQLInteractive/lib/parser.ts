@@ -23,7 +23,7 @@ import {
 } from 'graphql'
 import graphqlWasmUrl from 'tree-sitter-graphql-grammar-wasm/grammar.wasm?url'
 import * as WebTreeSitter from 'web-tree-sitter'
-import treeSitterWasmUrl from 'web-tree-sitter/web-tree-sitter.wasm?url'
+import treeSitterWasmUrl from 'web-tree-sitter/tree-sitter.wasm?url'
 import {
   isKeywordNodeType,
   isLiteralNodeType,

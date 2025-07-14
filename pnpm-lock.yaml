@@ -68,8 +68,8 @@ importers:
         specifier: ^0.41.0
         version: 0.41.0
       '@wollybeard/projector':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.3.0
+        version: 0.3.0
       ansis:
         specifier: ^4.1.0
         version: 4.1.0
@@ -2555,8 +2555,8 @@ packages:
   '@wollybeard/kit@0.41.0':
     resolution: {integrity: sha512-uFKu8OCcbCHPV2pczjLkt3mIMdjULMDJI/tvZjqXJdzlN8XY+qTC+5Q21pbsuYY/cSNh7QyvqLVO8/uQXYtx/Q==}
 
-  '@wollybeard/projector@0.2.0':
-    resolution: {integrity: sha512-aUSALTR/mSh4fSJ4Gj5hhLrFzHUL9OfRNUyy9xzF9+f4U9Af2hgMpaFlYt/Qoz8ioL5MP/ao37zARENXjQp2+A==}
+  '@wollybeard/projector@0.3.0':
+    resolution: {integrity: sha512-4xt72EIgwdcxgz+toJqDyLJ7+LOrfOiad1xgum5/WCiuqb7NAUOLdZYeonIfjCqfimt5/wf6yOlDCwB8eUuyrQ==}
 
   '@xterm/xterm@5.5.0':
     resolution: {integrity: sha512-hqJHYaQb5OptNunnyAnkHyM8aCjZ1MEIDTQu1iIbbTD/xops91NB5yq1ZK/dC2JDbVWtF23zUtl9JE2NqwT87A==}
@@ -7422,7 +7422,7 @@ snapshots:
       type-fest: 4.41.0
       zod: 3.25.74
 
-  '@wollybeard/projector@0.2.0':
+  '@wollybeard/projector@0.3.0':
     dependencies:
       '@types/node': 22.16.0
       '@wollybeard/kit': 0.34.0
