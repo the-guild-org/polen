@@ -1,6 +1,6 @@
-import { VERSION_LATEST } from '#lib/schema-utils/constants'
 import { Select } from '@radix-ui/themes'
 import { useNavigate, useParams } from 'react-router'
+import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
 
 interface VersionSelectorProps {
   availableVersions: string[]
@@ -10,20 +10,20 @@ interface VersionSelectorProps {
 export const VersionSelector = ({ availableVersions, currentVersion }: VersionSelectorProps) => {
   const navigate = useNavigate()
   const params = useParams()
-  
+
   // Don't show selector if only one version
   if (availableVersions.length <= 1) {
     return null
   }
-  
+
   const handleVersionChange = (newVersion: string) => {
     // Build new path preserving the current type/field if any
     const currentType = params[`type`]
     const currentField = params[`field`]
-    
+
     let newPath = `/reference`
     if (newVersion !== VERSION_LATEST) {
-      newPath += `/${newVersion}`
+      newPath += `/version/${newVersion}`
     }
     if (currentType) {
       newPath += `/${currentType}`
@@ -31,10 +31,10 @@ export const VersionSelector = ({ availableVersions, currentVersion }: VersionSe
         newPath += `/${currentField}`
       }
     }
-    
+
     navigate(newPath)
   }
-  
+
   return (
     <Select.Root value={currentVersion} onValueChange={handleVersionChange}>
       <Select.Trigger />

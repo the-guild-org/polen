@@ -1,8 +1,8 @@
 import { Grafaid } from '#lib/grafaid/index'
 import { ReactRouterAid } from '#lib/react-router-aid/index'
-import { dateToVersionString, VERSION_LATEST } from '#lib/schema-utils/constants'
 import { visit } from 'graphql'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import { dateToVersionString, VERSION_LATEST } from '../../lib/schema-utils/constants.js'
 import { routes } from '../../routes.js'
 
 // todo: Frameworks tend to colocate ssg data loaders with routes to solve the following
@@ -10,7 +10,7 @@ import { routes } from '../../routes.js'
 // Maybe we can figure something out too.
 const knownParameterizedRouteExpressions = {
   reference_type: `/reference/:type`,
-  reference_versioned_type: `/reference/:version/:type`,
+  reference_versioned_type: `/reference/version/:version/:type`,
 }
 
 export const getRoutesPaths = (): string[] => {
@@ -51,10 +51,10 @@ export const getRoutesPaths = (): string[] => {
       }
     } else if (exp === knownParameterizedRouteExpressions.reference_versioned_type) {
       if (PROJECT_DATA.schema) {
-        // Add paths for all versions
+        // Add paths for all versions using new route structure
         for (const [index, version] of PROJECT_DATA.schema.versions.entries()) {
           const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
-          addTypePathsForSchema(version.after, `/reference/${versionName}`)
+          addTypePathsForSchema(version.after, `/reference/version/${versionName}`)
         }
       }
     } else if (ReactRouterAid.isParameterizedPath(exp)) {

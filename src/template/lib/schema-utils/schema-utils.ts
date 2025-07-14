@@ -16,27 +16,27 @@ export const astToSchema = (ast: DocumentNode): GraphQLSchema => {
  */
 export const createSchemaCache = () => {
   const cache = new Map<string, GraphQLSchema>()
-  
+
   return {
     get(version: string): GraphQLSchema | undefined {
       return cache.get(version)
     },
-    
+
     set(version: string, schema: GraphQLSchema): void {
       // Limit cache size to prevent memory issues
-      if (cache.size > 10) {
+      if (cache.size >= 10) {
         const firstKey = cache.keys().next().value
         if (firstKey) cache.delete(firstKey)
       }
       cache.set(version, schema)
     },
-    
+
     has(version: string): boolean {
       return cache.has(version)
     },
-    
+
     clear(): void {
       cache.clear()
-    }
+    },
   }
 }

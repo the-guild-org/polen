@@ -2,7 +2,7 @@ import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'
 import type { FC } from 'react'
-import { useParams } from 'react-router'
+import { useVersionPath } from '../hooks/useVersionPath.js'
 import { Link } from './Link.js'
 
 export interface Props {
@@ -13,8 +13,7 @@ export interface Props {
  * Renders a GraphQL type recursively, with links for named types
  */
 export const TypeAnnotation: FC<Props> = ({ type }) => {
-  const params = useParams()
-  const versionPath = params[`version`] ? `${params[`version`]}/` : ``
+  const versionPath = useVersionPath()
   // Handle NonNull type wrapper
   if (isNonNullType(type)) {
     return (

@@ -1,7 +1,7 @@
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
 import type { FC } from 'react'
-import { useParams } from 'react-router'
+import { useVersionPath } from '../hooks/useVersionPath.js'
 import { Link } from './Link.js'
 
 export interface Props {
@@ -9,9 +9,8 @@ export interface Props {
 }
 
 export const TypeFieldsLinkList: FC<Props> = ({ type }) => {
-  const params = useParams()
-  const versionPath = params[`version`] ? `${params[`version`]}/` : ``
-  
+  const versionPath = useVersionPath()
+
   return (
     (
       <Box>
