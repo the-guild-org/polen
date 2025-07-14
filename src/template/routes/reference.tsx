@@ -53,7 +53,7 @@ const loader = createLoader(async ({ params }) => {
   // Fetch schema from assets (client-side navigation)
   try {
     const assetPath = `${PROJECT_DATA.basePath}${PROJECT_DATA.paths.relative.build.relative.assets}`
-    const response = await fetch(`${assetPath}/schema-${version}.json`)
+    const response = await fetch(`${assetPath}/schemas/${version}.json`)
     if (!response.ok) {
       throw new Error(`Failed to fetch schema for version ${version}`)
     }

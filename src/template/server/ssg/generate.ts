@@ -14,7 +14,7 @@ import { getRoutesPaths } from './get-route-paths.js'
 export const generate = async (view: ReactRouter.StaticHandler) => {
   const debug = debugPolen.sub(`ssg`)
 
-  const routePaths = getRoutesPaths()
+  const routePaths = await getRoutesPaths()
   const totalPaths = routePaths.length
   debug(`start`, { totalPaths })
 

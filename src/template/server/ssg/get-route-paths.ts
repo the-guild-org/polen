@@ -1,7 +1,8 @@
 import { Api } from '#api/index'
-import { Grafaid } from '#lib/grafaid/index'
 import { ReactRouterAid } from '#lib/react-router-aid/index'
 import { visit } from 'graphql'
+import * as NodeFs from 'node:fs/promises'
+import * as NodePath from 'node:path'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { routes } from '../../routes.js'
 
@@ -13,50 +14,68 @@ const knownParameterizedRouteExpressions = {
   reference_versioned_type: `/reference/version/:version/:type`,
 }
 
-export const getRoutesPaths = (): string[] => {
+export const getRoutesPaths = async (): Promise<string[]> => {
   const paths = new Set<string>()
   const routeExpressions = ReactRouterAid.getRouteExpressions(routes)
 
-  // Helper function to add all type paths for a given schema
-  const addTypePathsForSchema = (schema: any, pathPrefix: string) => {
-    const ast = Grafaid.Schema.AST.parse(Grafaid.Schema.print(schema))
-    visit(ast, {
-      ObjectTypeDefinition(node) {
-        paths.add(`${pathPrefix}/${node.name.value}`)
-      },
-      InterfaceTypeDefinition(node) {
-        paths.add(`${pathPrefix}/${node.name.value}`)
-      },
-      EnumTypeDefinition(node) {
-        paths.add(`${pathPrefix}/${node.name.value}`)
-      },
-      InputObjectTypeDefinition(node) {
-        paths.add(`${pathPrefix}/${node.name.value}`)
-      },
-      UnionTypeDefinition(node) {
-        paths.add(`${pathPrefix}/${node.name.value}`)
-      },
-      ScalarTypeDefinition(node) {
-        paths.add(`${pathPrefix}/${node.name.value}`)
-      },
-    })
+  // Helper function to load schema from filesystem and add type paths
+  const addTypePathsForVersion = async (version: string, pathPrefix: string) => {
+    try {
+      const schemasDir = NodePath.join(
+        PROJECT_DATA.paths.absolute.build.root,
+        PROJECT_DATA.paths.relative.build.relative.assets,
+        'schemas',
+      )
+      const schemaFilePath = NodePath.join(schemasDir, `${version}.json`)
+      const schemaContent = await NodeFs.readFile(schemaFilePath, 'utf-8')
+      const schemaAst = JSON.parse(schemaContent)
+
+      visit(schemaAst, {
+        ObjectTypeDefinition(node) {
+          paths.add(`${pathPrefix}/${node.name.value}`)
+        },
+        InterfaceTypeDefinition(node) {
+          paths.add(`${pathPrefix}/${node.name.value}`)
+        },
+        EnumTypeDefinition(node) {
+          paths.add(`${pathPrefix}/${node.name.value}`)
+        },
+        InputObjectTypeDefinition(node) {
+          paths.add(`${pathPrefix}/${node.name.value}`)
+        },
+        UnionTypeDefinition(node) {
+          paths.add(`${pathPrefix}/${node.name.value}`)
+        },
+        ScalarTypeDefinition(node) {
+          paths.add(`${pathPrefix}/${node.name.value}`)
+        },
+      })
+    } catch (error) {
+      throw new Error(`SSG failed to load schema for version ${version}. Ensure schema assets are built. ${error}`)
+    }
   }
+
+  const schemaMetadataPath = NodePath.join(
+    PROJECT_DATA.paths.absolute.build.root,
+    PROJECT_DATA.paths.relative.build.relative.assets,
+    'schemas',
+    'metadata.json',
+  )
+
+  const schemaMetadata = await Api.Schema.getMetadata(schemaMetadataPath)
+  const { hasSchema, versions: availableVersions } = schemaMetadata
 
   for (const exp of routeExpressions) {
     if (exp === knownParameterizedRouteExpressions.reference_type) {
-      if (PROJECT_DATA.schema) {
+      if (hasSchema) {
         // Add paths for latest version (no version in URL)
-        const latestSchema = PROJECT_DATA.schema.versions[0].after
-        addTypePathsForSchema(latestSchema, `/reference`)
+        await addTypePathsForVersion(Api.Schema.VERSION_LATEST, `/reference`)
       }
     } else if (exp === knownParameterizedRouteExpressions.reference_versioned_type) {
-      if (PROJECT_DATA.schema) {
+      if (hasSchema) {
         // Add paths for all versions using new route structure
-        for (const [index, version] of PROJECT_DATA.schema.versions.entries()) {
-          const versionName = index === 0
-            ? Api.Schema.Schema.VERSION_LATEST
-            : Api.Schema.Schema.dateToVersionString(version.date)
-          addTypePathsForSchema(version.after, `/reference/version/${versionName}`)
+        for (const version of availableVersions) {
+          await addTypePathsForVersion(version, `/reference/version/${version}`)
         }
       }
     } else if (ReactRouterAid.isParameterizedPath(exp)) {

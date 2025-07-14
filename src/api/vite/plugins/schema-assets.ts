@@ -5,20 +5,10 @@ import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
-import { dateToVersionString, VERSION_LATEST } from '../../schema/schema.js'
+import { dateToVersionString, type SchemaMetadata, VERSION_LATEST } from '../../schema/schema.js'
 import { polenVirtual } from '../vi.js'
 
 export const viProjectSchemaMetadata = polenVirtual([`project`, `schema-metadata`])
-
-/**
- * Schema metadata information
- */
-export interface SchemaMetadata {
-  /** Whether a schema is present in the project */
-  hasSchema: boolean
-  /** Array of available version identifiers */
-  versions: string[]
-}
 
 /**
  * Vite plugin that generates JSON assets for GraphQL schemas at build time.
@@ -87,7 +77,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
 
         // Emit the asset
-        const assetFileName = `${config.paths.project.relative.build.relative.assets}/schema-${versionName}.json`
+        const assetFileName = `${config.paths.project.relative.build.relative.assets}/schemas/${versionName}.json`
         this.emitFile({
           type: `asset`,
           fileName: assetFileName,
@@ -100,7 +90,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       // Emit metadata file
       this.emitFile({
         type: `asset`,
-        fileName: `${config.paths.project.relative.build.relative.assets}/schema-metadata.json`,
+        fileName: `${config.paths.project.relative.build.relative.assets}/schemas/metadata.json`,
         source: JSON.stringify(metadata, null, 2),
       })
     },
