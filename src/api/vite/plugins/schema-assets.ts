@@ -13,7 +13,7 @@ export const viProjectSchemaMetadata = polenVirtual([`project`, `schema-metadata
 /**
  * Schema metadata information
  */
-interface SchemaMetadata {
+export interface SchemaMetadata {
   /** Whether a schema is present in the project */
   hasSchema: boolean
   /** Array of available version identifiers */

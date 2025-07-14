@@ -115,3 +115,8 @@ declare module 'virtual:polen/project/assets/logo.svg' {
   const src: string
   export default src
 }
+
+declare module 'virtual:polen/project/schema-metadata' {
+  const metadata: import('#api/vite/plugins/schema-assets').SchemaMetadata
+  export default metadata
+}
