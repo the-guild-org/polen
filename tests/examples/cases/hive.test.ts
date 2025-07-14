@@ -20,8 +20,9 @@ test('no hydration errors on navigation links', async ({ runDev, page }) => {
   const response = await page.goto(baseUrl, { waitUntil: 'networkidle' })
   expect(response?.ok()).toBe(true)
 
-  // Wait for hydration
-  await page.waitForTimeout(2000)
+  // Wait for hydration - wait for React to be ready
+  await page.waitForLoadState('networkidle')
+  await page.waitForFunction(() => window.document.readyState === 'complete')
 
   // Check for hydration errors
   const hydrationErrors = errors.filter(error =>
@@ -94,21 +95,32 @@ test('GraphQL documents render with syntax highlighting on guide pages', async (
   // Wait for the page to fully load
   await page.waitForLoadState('networkidle')
 
-  // Wait a bit for React to hydrate
-  await page.waitForTimeout(2000)
+  // Wait for React to hydrate and content to render
+  await page.waitForFunction(() => window.document.readyState === 'complete')
+  await page.waitForSelector('pre', { timeout: 5000 })
 
-  // Check for any code blocks - MDX might render them differently
+  // Check for GraphQL interactive components specifically
+  const graphqlInteractive = page.locator('.graphql-interactive')
+  const interactiveCount = await graphqlInteractive.count()
+
+  // Check for any code blocks (including both interactive and regular)
   const codeBlocks = await page.locator('pre').count()
   console.log('Total pre elements found:', codeBlocks)
+  console.log('GraphQL interactive components found:', interactiveCount)
 
   // Check page content includes GraphQL queries
   const pageText = await page.textContent('body')
   const hasGraphQLContent = pageText?.includes('query') || pageText?.includes('mutation')
   console.log('Page has GraphQL content:', hasGraphQLContent)
 
-  // For now, just verify the page has content and code blocks
+  // Verify the page has content and code blocks
   expect(codeBlocks).toBeGreaterThan(0)
   expect(hasGraphQLContent).toBe(true)
+
+  // If there are interactive GraphQL components, verify they rendered properly
+  if (interactiveCount > 0) {
+    await expect(graphqlInteractive.first()).toBeVisible()
+  }
 })
 
 test('GraphQL documents handle schema-less rendering gracefully', async ({ runDev, page }) => {
@@ -118,16 +130,16 @@ test('GraphQL documents handle schema-less rendering gracefully', async ({ runDe
   // Test a page that might not have schema context
   await page.goto(`${baseUrl}/guide/getting-started`)
 
-  // Check if any GraphQL documents exist on this page
-  const graphqlDocuments = page.locator('[data-testid="graphql-document"]')
-  const count = await graphqlDocuments.count()
+  // Check if any GraphQL interactive components exist on this page
+  const graphqlInteractive = page.locator('.graphql-interactive, .graphql-loading, .graphql-error, .graphql-fallback')
+  const count = await graphqlInteractive.count()
 
   if (count > 0) {
-    // Verify they render without errors even without hyperlinks
-    const firstDoc = graphqlDocuments.first()
+    // Verify they render without errors even without schema
+    const firstDoc = graphqlInteractive.first()
     await expect(firstDoc).toBeVisible()
 
-    // Should still have syntax highlighting
+    // Should still have syntax highlighting in pre/code elements
     const codeBlock = firstDoc.locator('pre, pre code')
     await expect(codeBlock).toBeVisible()
   }
@@ -140,21 +152,36 @@ test('Multiple GraphQL documents on same page work correctly', async ({ runDev, 
   // Navigate to a guide page with multiple GraphQL documents
   await page.goto(`${baseUrl}/guide/project-management`)
   await page.waitForLoadState('networkidle')
-  await page.waitForTimeout(2000)
 
-  // Count code blocks (pre elements) instead of specific data-testid
+  // Wait for content to render
+  await page.waitForFunction(() => window.document.readyState === 'complete')
+  await page.waitForSelector('pre', { timeout: 5000 })
+
+  // Check for both GraphQL interactive components and regular code blocks
+  const graphqlInteractive = page.locator('.graphql-interactive, .graphql-loading, .graphql-error, .graphql-fallback')
+  const interactiveCount = await graphqlInteractive.count()
+
   const codeBlocks = page.locator('pre')
-  const count = await codeBlocks.count()
+  const codeBlockCount = await codeBlocks.count()
 
-  console.log('Code blocks found on project management page:', count)
+  console.log('Code blocks found on project management page:', codeBlockCount)
+  console.log('GraphQL interactive components found:', interactiveCount)
 
   // The project management page should have multiple code blocks
-  expect(count).toBeGreaterThan(1)
+  expect(codeBlockCount).toBeGreaterThan(1)
 
   // Verify code blocks render correctly
-  for (let i = 0; i < Math.min(count, 3); i++) {
+  for (let i = 0; i < Math.min(codeBlockCount, 3); i++) {
     const codeBlock = codeBlocks.nth(i)
     await expect(codeBlock).toBeVisible()
+  }
+
+  // If there are interactive GraphQL components, verify they work
+  if (interactiveCount > 0) {
+    for (let i = 0; i < Math.min(interactiveCount, 2); i++) {
+      const interactive = graphqlInteractive.nth(i)
+      await expect(interactive).toBeVisible()
+    }
   }
 })
 

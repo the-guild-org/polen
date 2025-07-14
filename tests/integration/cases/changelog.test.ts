@@ -39,8 +39,8 @@ test('shows changelog in navigation bar when multiple schema versions are provid
   await page.getByRole('link', { name: 'Changelog' }).click()
 
   // Check for changelog content
-  // 1. Verify the date is visible
-  await expect(page.getByText(renderDate(newerSchema.date))).toBeVisible()
+  // 1. Verify the date is visible as a heading (not just in nav)
+  await expect(page.getByRole('heading', { name: renderDate(newerSchema.date) })).toBeVisible()
 
   // 2. Verify the change is described
   await expect(page.getByText(/added query newField/i)).toBeVisible()
