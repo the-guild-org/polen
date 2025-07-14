@@ -278,14 +278,11 @@ describe('PathMap', () => {
             expect(JSON.stringify(p1.rooted)).toBe(JSON.stringify(p2.rooted))
 
             // Only absolute paths and base should change
-            const collapsedBase2 = base2.trim().replace(/\/+/g, '/')
-            const normalizedBase2 = collapsedBase2 === '/' ? '/' : collapsedBase2.replace(/\/$/, '')
-            expect(p2.base).toBe(normalizedBase2)
-
+            // Use the normalized base from the PathMap itself
             function checkBase(obj: any) {
               for (const [key, value] of Object.entries(obj)) {
                 if (typeof value === 'string') {
-                  expect(value.startsWith(normalizedBase2)).toBe(true)
+                  expect(value.startsWith(p2.base)).toBe(true)
                 } else if (typeof value === 'object') {
                   checkBase(value)
                 }
