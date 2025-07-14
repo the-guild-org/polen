@@ -1,7 +1,7 @@
 import { Grafaid } from '#lib/grafaid/index'
-import { visit } from 'graphql'
-// Or your specific import path for this type
 import { ReactRouterAid } from '#lib/react-router-aid/index'
+import { dateToVersionString, VERSION_LATEST } from '#lib/schema-utils/constants'
+import { visit } from 'graphql'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { routes } from '../../routes.js'
 
@@ -53,7 +53,7 @@ export const getRoutesPaths = (): string[] => {
       if (PROJECT_DATA.schema) {
         // Add paths for all versions
         for (const [index, version] of PROJECT_DATA.schema.versions.entries()) {
-          const versionName = index === 0 ? `latest` : version.date.toISOString().split(`T`)[0]
+          const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
           addTypePathsForSchema(version.after, `/reference/${versionName}`)
         }
       }

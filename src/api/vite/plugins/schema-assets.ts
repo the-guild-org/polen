@@ -1,6 +1,7 @@
 import type { Config } from '#api/config/index'
 import type { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid/index'
+import { dateToVersionString, VERSION_LATEST } from '#lib/schema-utils/constants'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { Schema } from '../../schema/index.js'
@@ -23,7 +24,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     name: `polen:schema-assets`,
     
     async buildStart() {
-      debug(`buildStart`)
+      debug(`buildStart`, {})
       
       // Read schema files
       schemaData = await Schema.readOrThrow({
@@ -32,7 +33,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       })
       
       if (!schemaData) {
-        debug(`no schema found`)
+        debug(`noSchemaFound`, {})
         return
       }
       
@@ -44,8 +45,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       // Build metadata
       const versionStrings: string[] = []
       for (const [index, version] of schemaData.versions.entries()) {
-        const dateString = version.date.toISOString().split(`T`)[0]
-        const versionName = index === 0 ? `latest` : dateString ?? `unknown`
+        const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
         versionStrings.push(versionName)
       }
       
@@ -54,7 +54,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         versions: versionStrings,
       }
       
-      debug(`found ${schemaData.versions.length} schema versions`)
+      debug(`schemasFound`, { versionCount: schemaData.versions.length })
       
       // Emit JSON assets for each version
       for (const [index, version] of schemaData.versions.entries()) {
@@ -63,7 +63,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         const ast = Grafaid.Schema.AST.parse(schemaString)
         
         // Determine version name
-        const versionName = index === 0 ? `latest` : version.date.toISOString().split(`T`)[0]
+        const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
         
         // Emit the asset
         this.emitFile({
@@ -72,7 +72,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
           source: JSON.stringify(ast),
         })
         
-        debug(`emitted schema asset: schema-${versionName}.json`)
+        debug(`schemaAssetEmitted`, { fileName: `schema-${versionName}.json` })
       }
       
       // Emit metadata file
@@ -86,7 +86,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     ...ViteVirtual.IdentifiedLoader.toHooks({
       identifier: viProjectSchemaMetadata,
       loader() {
-        debug(`loading virtual module: ${viProjectSchemaMetadata.id}`)
+        debug(`virtualModuleLoad`, { id: viProjectSchemaMetadata.id })
         return `export default ${JSON.stringify(metadata)}`
       },
     }),

@@ -2,6 +2,7 @@ import type { Content } from '#api/content/$'
 import { GrafaidOld } from '#lib/grafaid-old/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
+import { dateToVersionString, VERSION_LATEST } from '#lib/schema-utils/constants'
 import { astToSchema, createSchemaCache } from '#lib/schema-utils/schema-utils'
 import { Box } from '@radix-ui/themes'
 import { Outlet, useParams } from 'react-router'
@@ -17,13 +18,13 @@ const schemaCache = createSchemaCache()
 
 const loader = createLoader(async ({ params }) => {
   // Get version from URL params
-  const version = params.version || `latest`
+  const version = params.version || VERSION_LATEST
   
   // During SSR/dev, use the virtual module data
   if (typeof window === `undefined` && PROJECT_DATA.schema) {
-    const schemaVersion = version === `latest` 
+    const schemaVersion = version === VERSION_LATEST 
       ? PROJECT_DATA.schema.versions[0] 
-      : PROJECT_DATA.schema.versions.find(v => v.date.toISOString().split(`T`)[0] === version)
+      : PROJECT_DATA.schema.versions.find(v => dateToVersionString(v.date) === version)
     
     if (schemaVersion) {
       return {
@@ -72,7 +73,7 @@ const loader = createLoader(async ({ params }) => {
     if (PROJECT_DATA.schema) {
       return {
         schema: PROJECT_DATA.schema.versions[0].after,
-        version: `latest`,
+        version: VERSION_LATEST,
         availableVersions: PROJECT_SCHEMA_METADATA.versions,
       }
     }

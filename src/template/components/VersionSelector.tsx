@@ -1,3 +1,4 @@
+import { VERSION_LATEST } from '#lib/schema-utils/constants'
 import { Select } from '@radix-ui/themes'
 import { useNavigate, useParams } from 'react-router'
 
@@ -21,7 +22,7 @@ export const VersionSelector = ({ availableVersions, currentVersion }: VersionSe
     const currentField = params[`field`]
     
     let newPath = `/reference`
-    if (newVersion !== `latest`) {
+    if (newVersion !== VERSION_LATEST) {
       newPath += `/${newVersion}`
     }
     if (currentType) {
@@ -40,7 +41,7 @@ export const VersionSelector = ({ availableVersions, currentVersion }: VersionSe
       <Select.Content>
         {availableVersions.map(version => (
           <Select.Item key={version} value={version}>
-            {version === `latest` ? `Latest` : version}
+            {version === VERSION_LATEST ? `Latest` : version}
           </Select.Item>
         ))}
       </Select.Content>
