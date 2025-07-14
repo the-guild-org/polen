@@ -81,7 +81,7 @@ describe('property-based tests', () => {
           const filteredReconstructed = Object.keys(reconstructed)
             .filter(key => Object.prototype.hasOwnProperty.call(obj, key))
             .reduce<any>((acc, key) => {
-              acc[key] = reconstructed[key]
+              acc[key] = (reconstructed as any)[key]
               return acc
             }, {})
 

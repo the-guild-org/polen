@@ -43,5 +43,6 @@ test('shows changelog in navigation bar when multiple schema versions are provid
   await expect(page.getByRole('heading', { name: renderDate(newerSchema.date) })).toBeVisible()
 
   // 2. Verify the change is described
-  await expect(page.getByText(/added query newField/i)).toBeVisible()
+  await expect(page.getByText(/added field/i)).toBeVisible()
+  await expect(page.locator('code', { hasText: 'newField' })).toBeVisible()
 })
