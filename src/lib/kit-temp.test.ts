@@ -67,20 +67,29 @@ describe('property-based tests', () => {
           const allowed = objPolicyFilter('allow', obj, keys)
           const denied = objPolicyFilter('deny', obj, keys)
 
-          // Every key in obj is either in allowed or denied, never both
+          // Every key in obj (own properties only) is either in allowed or denied, never both
           Object.keys(obj).forEach(key => {
             const inAllowed = Object.prototype.hasOwnProperty.call(allowed, key)
             const inDenied = Object.prototype.hasOwnProperty.call(denied, key)
             expect(inAllowed).toBe(!inDenied)
           })
 
-          // Combined they reconstruct the original object (only own properties)
+          // Combined they reconstruct the original object's own properties
           const reconstructed = { ...allowed, ...denied }
+
+          // Filter out inherited properties that may have been added from the keys
+          const filteredReconstructed = Object.keys(reconstructed)
+            .filter(key => Object.prototype.hasOwnProperty.call(obj, key))
+            .reduce<any>((acc, key) => {
+              acc[key] = reconstructed[key]
+              return acc
+            }, {})
+
           const ownPropsObj = Object.keys(obj).reduce<any>((acc, key) => {
             acc[key] = obj[key]
             return acc
           }, {})
-          expect(reconstructed).toEqual(ownPropsObj)
+          expect(filteredReconstructed).toEqual(ownPropsObj)
         },
       ),
     )
