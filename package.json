@@ -101,7 +101,7 @@
     "@vltpkg/semver": "0.0.0-16",
     "@vue/reactivity": "^3.5.17",
     "@wollybeard/kit": "^0.41.0",
-    "@wollybeard/projector": "^0.2.0",
+    "@wollybeard/projector": "^0.3.0",
     "ansis": "^4.1.0",
     "clean-stack": "^5.2.0",
     "codehike": "^1.0.7",
