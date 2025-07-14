@@ -3,89 +3,34 @@ import { GrafaidOld } from '#lib/grafaid-old/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Box } from '@radix-ui/themes'
-import { Outlet, useParams } from 'react-router'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import PROJECT_SCHEMA_METADATA from 'virtual:polen/project/schema-metadata'
+import { Outlet } from 'react-router'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { VersionSelector } from '../components/VersionSelector.js'
 import { useVersionPath } from '../hooks/useVersionPath.js'
 import { SidebarLayout } from '../layouts/index.js'
-import { dateToVersionString, VERSION_LATEST } from '../lib/schema-utils/constants.js'
-import { astToSchema, createSchemaCache } from '../lib/schema-utils/schema-utils.js'
+import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
+import * as SchemaSource from '../sources/schema-source.js'
 import { reference$type } from './reference.$type.js'
-
-// Cache for loaded schemas
-const schemaCache = createSchemaCache()
+import { referenceVersion$version$type } from './reference.version.$version.$type.js'
 
 const loader = createLoader(async ({ params }) => {
-  // Get version from URL params
-  const version = params.version || VERSION_LATEST
+  // Handle both versioned and unversioned routes:
+  // - Versioned: /reference/version/:version/:type → params.version exists
+  // - Unversioned: /reference/:type → params.version is undefined, defaults to latest
+  const currentVersion = params.version ?? VERSION_LATEST
 
-  // During SSR/dev, use the virtual module data
-  if (typeof window === `undefined` && PROJECT_DATA.schema) {
-    const schemaVersion = version === VERSION_LATEST
-      ? PROJECT_DATA.schema.versions[0]
-      : PROJECT_DATA.schema.versions.find(v => dateToVersionString(v.date) === version)
+  const schema = await SchemaSource.getSchema(currentVersion)
+  const availableVersions = SchemaSource.getAvailableVersions()
 
-    if (schemaVersion) {
-      return {
-        schema: schemaVersion.after,
-        version,
-        availableVersions: PROJECT_SCHEMA_METADATA.versions,
-      }
-    }
-  }
-
-  // Check if we have schema metadata
-  if (!PROJECT_SCHEMA_METADATA.hasSchema) {
-    return { schema: null, version: null, availableVersions: [] }
-  }
-
-  // Check cache first
-  if (schemaCache.has(version)) {
-    return {
-      schema: schemaCache.get(version),
-      version,
-      availableVersions: PROJECT_SCHEMA_METADATA.versions,
-    }
-  }
-
-  // Fetch schema from assets (client-side navigation)
-  try {
-    const assetPath = `${PROJECT_DATA.basePath}${PROJECT_DATA.paths.relative.build.relative.assets}`
-    const response = await fetch(`${assetPath}/schemas/${version}.json`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch schema for version ${version}`)
-    }
-
-    const schemaAst = await response.json()
-    const schema = astToSchema(schemaAst)
-
-    // Cache the converted schema
-    schemaCache.set(version, schema)
-
-    return {
-      schema,
-      version,
-      availableVersions: PROJECT_SCHEMA_METADATA.versions,
-    }
-  } catch (error) {
-    console.error(`Failed to load schema:`, error)
-    // Fallback to virtual module data if available
-    if (PROJECT_DATA.schema) {
-      return {
-        schema: PROJECT_DATA.schema.versions[0].after,
-        version: VERSION_LATEST,
-        availableVersions: PROJECT_SCHEMA_METADATA.versions,
-      }
-    }
-    return { schema: null, version: null, availableVersions: [] }
+  return {
+    schema,
+    currentVersion,
+    availableVersions,
   }
 })
 
 const Component = () => {
   const data = useLoaderData<typeof loader>()
-  const params = useParams()
 
   if (!data.schema) {
     return <MissingSchema />
@@ -119,7 +64,7 @@ const Component = () => {
       <Box mb={`4`}>
         <VersionSelector
           availableVersions={data.availableVersions}
-          currentVersion={data.version}
+          currentVersion={data.currentVersion}
         />
       </Box>
       <Outlet />
@@ -132,7 +77,7 @@ const referenceVersioned = createRoute({
   path: `version/:version`,
   loader,
   Component,
-  children: [reference$type],
+  children: [referenceVersion$version$type],
 })
 
 // Create the main reference route with explicit version path and fallback type path

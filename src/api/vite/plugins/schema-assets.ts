@@ -30,9 +30,14 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
   const debug = debugPolen.sub(`vite-plugin:schema-assets`)
   let schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>> | null = null
   let metadata: SchemaMetadata = { hasSchema: false, versions: [] }
+  let isServeMode = false
 
   return {
     name: `polen:schema-assets`,
+
+    configureServer() {
+      isServeMode = true
+    },
 
     async buildStart() {
       debug(`buildStart`, {})
@@ -67,32 +72,35 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
       debug(`schemasFound`, { versionCount: schemaData.versions.length })
 
-      // Emit JSON assets for each version
-      for (const [index, version] of schemaData.versions.entries()) {
-        // Convert GraphQL Schema to AST JSON
-        const schemaString = Grafaid.Schema.print(version.after)
-        const ast = Grafaid.Schema.AST.parse(schemaString)
+      // Only emit assets during build, not in serve mode
+      if (!isServeMode) {
+        // Emit JSON assets for each version
+        for (const [index, version] of schemaData.versions.entries()) {
+          // Convert GraphQL Schema to AST JSON
+          const schemaString = Grafaid.Schema.print(version.after)
+          const ast = Grafaid.Schema.AST.parse(schemaString)
 
-        // Determine version name
-        const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
+          // Determine version name
+          const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
 
-        // Emit the asset
-        const assetFileName = `${config.paths.project.relative.build.relative.assets}/schemas/${versionName}.json`
+          // Emit the asset
+          const assetFileName = `${config.paths.project.relative.build.relative.assets}/schemas/${versionName}.json`
+          this.emitFile({
+            type: `asset`,
+            fileName: assetFileName,
+            source: JSON.stringify(ast),
+          })
+
+          debug(`schemaAssetEmitted`, { fileName: assetFileName })
+        }
+
+        // Emit metadata file
         this.emitFile({
           type: `asset`,
-          fileName: assetFileName,
-          source: JSON.stringify(ast),
+          fileName: `${config.paths.project.relative.build.relative.assets}/schemas/metadata.json`,
+          source: JSON.stringify(metadata, null, 2),
         })
-
-        debug(`schemaAssetEmitted`, { fileName: assetFileName })
       }
-
-      // Emit metadata file
-      this.emitFile({
-        type: `asset`,
-        fileName: `${config.paths.project.relative.build.relative.assets}/schemas/metadata.json`,
-        source: JSON.stringify(metadata, null, 2),
-      })
     },
 
     ...ViteVirtual.IdentifiedLoader.toHooks({
