@@ -31,6 +31,6 @@ features:
     details: Future-ready architecture for user authentication, project switching, and personalized documentation experiences.
   - title: Proven Track Record
     details: Built by The Guild, creators of GraphQL tools used by thousands of developers worldwide.
-  - title: DX
-    details: Fast builds and hot reload powered by Vite. Beautiful themes and components powered by Radix.
+  - title: Interactive Document Blocks
+    details: GraphQL code blocks that come alive with hover overlays, error detection, inline hints, click-to-explore, and more.
 ---
