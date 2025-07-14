@@ -1,11 +1,11 @@
 import type { Config } from '#api/config/index'
-import { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
+import { dateToVersionString, VERSION_LATEST } from '../../schema/schema.js'
 import { polenVirtual } from '../vi.js'
 
 export const viProjectSchemaMetadata = polenVirtual([`project`, `schema-metadata`])
@@ -66,7 +66,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       // Build metadata
       const versionStrings: string[] = []
       for (const [index, version] of schemaData.versions.entries()) {
-        const versionName = index === 0 ? Api.Schema.VERSION_LATEST : Api.Schema.dateToVersionString(version.date)
+        const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
         versionStrings.push(versionName)
       }
 
@@ -84,7 +84,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         const ast = Grafaid.Schema.AST.parse(schemaString)
 
         // Determine version name
-        const versionName = index === 0 ? Api.Schema.VERSION_LATEST : Api.Schema.dateToVersionString(version.date)
+        const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
 
         // Emit the asset
         const assetFileName = `${config.paths.project.relative.build.relative.assets}/schema-${versionName}.json`
