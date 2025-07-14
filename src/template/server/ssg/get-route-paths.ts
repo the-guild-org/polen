@@ -22,8 +22,23 @@ export const getRoutesPaths = (): string[] => {
         const schema = PROJECT_DATA.schema.versions[0].after
         const ast = Grafaid.Schema.AST.parse(Grafaid.Schema.print(schema))
         visit(ast, {
-          NamedType(typeNode) {
-            paths.add(`/reference/${typeNode.name.value}`)
+          ObjectTypeDefinition(node) {
+            paths.add(`/reference/${node.name.value}`)
+          },
+          InterfaceTypeDefinition(node) {
+            paths.add(`/reference/${node.name.value}`)
+          },
+          EnumTypeDefinition(node) {
+            paths.add(`/reference/${node.name.value}`)
+          },
+          InputObjectTypeDefinition(node) {
+            paths.add(`/reference/${node.name.value}`)
+          },
+          UnionTypeDefinition(node) {
+            paths.add(`/reference/${node.name.value}`)
+          },
+          ScalarTypeDefinition(node) {
+            paths.add(`/reference/${node.name.value}`)
           },
         })
       }
