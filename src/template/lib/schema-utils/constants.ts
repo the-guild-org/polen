@@ -1,25 +1,4 @@
 /**
- * Constants for schema versioning
+ * Re-exports of schema constants for template usage
  */
-
-/**
- * The version identifier for the latest schema
- */
-export const VERSION_LATEST = `latest`
-
-/**
- * Separator used in ISO date strings
- */
-export const VERSION_DATE_SEPARATOR = `T`
-
-/**
- * Fallback version name when date parsing fails
- */
-export const VERSION_UNKNOWN_FALLBACK = `unknown`
-
-/**
- * Convert a date to a version string in YYYY-MM-DD format
- */
-export const dateToVersionString = (date: Date): string => {
-  return date.toLocaleDateString('en-CA')
-}
+export { dateToVersionString, VERSION_LATEST } from '#api/schema/index'
