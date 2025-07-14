@@ -204,7 +204,6 @@
     "check:types": "tsc --noEmit",
     "check:pedantic:package": "publint run --strict",
     "precheck:pedantic:package": "pnpm build",
-    "release:version": "changeset version && git commit -am \"chore: release\" && git push",
     "prepublishOnly": "pnpm build",
     "prepack": "pnpm build",
     "build:cli:chmodx": "chmod +x ./build/cli/index.js",
