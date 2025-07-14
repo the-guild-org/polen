@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import type { reference } from './reference.js'
+import { reference$type$field } from './reference.$type.$field.js'
 
 const Component = () => {
   const params = useParams() as { type: string }
@@ -24,4 +25,5 @@ const Component = () => {
 export const reference$type = createRoute({
   path: `:type`,
   Component,
+  children: [reference$type$field],
 })

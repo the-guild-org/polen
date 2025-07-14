@@ -15,6 +15,7 @@ import { Schema } from '../../schema/index.js'
 import { createLogger } from '../logger.js'
 import { polenVirtual } from '../vi.js'
 import { Pages } from './pages.js'
+import { SchemaAssets } from './schema-assets.js'
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
@@ -68,6 +69,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
   return [
     ...plugins,
+    SchemaAssets(config),
     /**
      * If a `polen*` import is encountered from the user's project, resolve it to the currently
      * running source code of Polen rather than the user's node_modules.

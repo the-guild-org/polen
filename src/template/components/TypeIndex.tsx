@@ -3,6 +3,7 @@ import { Box, Flex, Heading } from '@radix-ui/themes'
 import { Obj } from '@wollybeard/kit'
 import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
 import type { FC } from 'react'
+import { useParams } from 'react-router'
 import { Link } from './Link.js'
 
 export interface Props {
@@ -30,12 +31,15 @@ const TypeSection: FC<{ title: string; types: GraphQLNamedType[] }> = ({ title, 
 }
 
 const TypeList: FC<{ types: GraphQLNamedType[] }> = ({ types }) => {
+  const params = useParams()
+  const versionPath = params[`version`] ? `${params[`version`]}/` : ``
+  
   return (
     (
       <Box>
         {types.map(type => (
           <Box key={type.name}>
-            <Link to={`/reference/${type.name}`}>
+            <Link to={`/reference/${versionPath}${type.name}`}>
               {type.name}
             </Link>
           </Box>

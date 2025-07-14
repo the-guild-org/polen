@@ -1,6 +1,7 @@
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import type { GraphQLInterfaceType, GraphQLObjectType } from 'graphql'
 import type { FC } from 'react'
+import { useParams } from 'react-router'
 import { Link } from './Link.js'
 
 export interface Props {
@@ -8,6 +9,9 @@ export interface Props {
 }
 
 export const TypeFieldsLinkList: FC<Props> = ({ type }) => {
+  const params = useParams()
+  const versionPath = params[`version`] ? `${params[`version`]}/` : ``
+  
   return (
     (
       <Box>
@@ -18,7 +22,7 @@ export const TypeFieldsLinkList: FC<Props> = ({ type }) => {
               (
                 <Box key={field.name}>
                   <Link
-                    to={`/reference/${type.name}/${field.name}`}
+                    to={`/reference/${versionPath}${type.name}/${field.name}`}
                     // TODO: can we use styled from Radix?
                     // activeProps={{ style: { fontWeight: `bold` } }}
                   >

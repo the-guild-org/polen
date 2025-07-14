@@ -29,6 +29,6 @@ const Component = () => {
 }
 
 export const reference$type$field = ReactRouterAid.createRoute({
-  path: `:type/:field`,
+  path: `:field`,
   Component,
 })

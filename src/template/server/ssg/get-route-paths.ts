@@ -10,37 +10,52 @@ import { routes } from '../../routes.js'
 // Maybe we can figure something out too.
 const knownParameterizedRouteExpressions = {
   reference_type: `/reference/:type`,
+  reference_versioned_type: `/reference/:version/:type`,
 }
 
 export const getRoutesPaths = (): string[] => {
   const paths = new Set<string>()
   const routeExpressions = ReactRouterAid.getRouteExpressions(routes)
 
+  // Helper function to add all type paths for a given schema
+  const addTypePathsForSchema = (schema: any, pathPrefix: string) => {
+    const ast = Grafaid.Schema.AST.parse(Grafaid.Schema.print(schema))
+    visit(ast, {
+      ObjectTypeDefinition(node) {
+        paths.add(`${pathPrefix}/${node.name.value}`)
+      },
+      InterfaceTypeDefinition(node) {
+        paths.add(`${pathPrefix}/${node.name.value}`)
+      },
+      EnumTypeDefinition(node) {
+        paths.add(`${pathPrefix}/${node.name.value}`)
+      },
+      InputObjectTypeDefinition(node) {
+        paths.add(`${pathPrefix}/${node.name.value}`)
+      },
+      UnionTypeDefinition(node) {
+        paths.add(`${pathPrefix}/${node.name.value}`)
+      },
+      ScalarTypeDefinition(node) {
+        paths.add(`${pathPrefix}/${node.name.value}`)
+      },
+    })
+  }
+
   for (const exp of routeExpressions) {
     if (exp === knownParameterizedRouteExpressions.reference_type) {
       if (PROJECT_DATA.schema) {
-        const schema = PROJECT_DATA.schema.versions[0].after
-        const ast = Grafaid.Schema.AST.parse(Grafaid.Schema.print(schema))
-        visit(ast, {
-          ObjectTypeDefinition(node) {
-            paths.add(`/reference/${node.name.value}`)
-          },
-          InterfaceTypeDefinition(node) {
-            paths.add(`/reference/${node.name.value}`)
-          },
-          EnumTypeDefinition(node) {
-            paths.add(`/reference/${node.name.value}`)
-          },
-          InputObjectTypeDefinition(node) {
-            paths.add(`/reference/${node.name.value}`)
-          },
-          UnionTypeDefinition(node) {
-            paths.add(`/reference/${node.name.value}`)
-          },
-          ScalarTypeDefinition(node) {
-            paths.add(`/reference/${node.name.value}`)
-          },
-        })
+        // Add paths for latest version (no version in URL)
+        const latestSchema = PROJECT_DATA.schema.versions[0].after
+        addTypePathsForSchema(latestSchema, `/reference`)
+      }
+    } else if (exp === knownParameterizedRouteExpressions.reference_versioned_type) {
+      if (PROJECT_DATA.schema) {
+        // Add paths for all versions
+        for (const [index, version] of PROJECT_DATA.schema.versions.entries()) {
+          const versionName = index === 0 ? `latest` : version.date.toISOString().split(`T`)[0]
+          addTypePathsForSchema(version.after, `/reference/${versionName}`)
+        }
       }
     } else if (ReactRouterAid.isParameterizedPath(exp)) {
       throw new Error(`Unhandled parameterized path: ${exp}`)

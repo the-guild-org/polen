@@ -2,21 +2,87 @@ import type { Content } from '#api/content/$'
 import { GrafaidOld } from '#lib/grafaid-old/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import { Outlet } from 'react-router'
+import { astToSchema, createSchemaCache } from '#lib/schema-utils/schema-utils'
+import { Box } from '@radix-ui/themes'
+import { Outlet, useParams } from 'react-router'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import PROJECT_SCHEMA_METADATA from 'virtual:polen/project/schema-metadata'
 import { MissingSchema } from '../components/MissingSchema.js'
+import { VersionSelector } from '../components/VersionSelector.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { reference$type } from './reference.$type.js'
 
-const loader = createLoader(() => {
-  const latestSchemaVersion = PROJECT_DATA.schema?.versions[0].after ?? null
-  return {
-    schema: latestSchemaVersion,
+// Cache for loaded schemas
+const schemaCache = createSchemaCache()
+
+const loader = createLoader(async ({ params }) => {
+  // Get version from URL params
+  const version = params.version || `latest`
+  
+  // During SSR/dev, use the virtual module data
+  if (typeof window === `undefined` && PROJECT_DATA.schema) {
+    const schemaVersion = version === `latest` 
+      ? PROJECT_DATA.schema.versions[0] 
+      : PROJECT_DATA.schema.versions.find(v => v.date.toISOString().split(`T`)[0] === version)
+    
+    if (schemaVersion) {
+      return {
+        schema: schemaVersion.after,
+        version,
+        availableVersions: PROJECT_SCHEMA_METADATA.versions,
+      }
+    }
+  }
+  
+  // Check if we have schema metadata
+  if (!PROJECT_SCHEMA_METADATA.hasSchema) {
+    return { schema: null, version: null, availableVersions: [] }
+  }
+  
+  // Check cache first
+  if (schemaCache.has(version)) {
+    return { 
+      schema: schemaCache.get(version), 
+      version,
+      availableVersions: PROJECT_SCHEMA_METADATA.versions,
+    }
+  }
+  
+  // Fetch schema from assets (client-side navigation)
+  try {
+    const response = await fetch(`/assets/schema-${version}.json`)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch schema for version ${version}`)
+    }
+    
+    const schemaAst = await response.json()
+    const schema = astToSchema(schemaAst)
+    
+    // Cache the converted schema
+    schemaCache.set(version, schema)
+    
+    return { 
+      schema, 
+      version,
+      availableVersions: PROJECT_SCHEMA_METADATA.versions,
+    }
+  } catch (error) {
+    console.error(`Failed to load schema:`, error)
+    // Fallback to virtual module data if available
+    if (PROJECT_DATA.schema) {
+      return {
+        schema: PROJECT_DATA.schema.versions[0].after,
+        version: `latest`,
+        availableVersions: PROJECT_SCHEMA_METADATA.versions,
+      }
+    }
+    return { schema: null, version: null, availableVersions: [] }
   }
 })
 
 const Component = () => {
   const data = useLoaderData<typeof loader>()
+  const params = useParams()
 
   if (!data.schema) {
     return <MissingSchema />
@@ -28,6 +94,9 @@ const Component = () => {
   const sidebarItems: Content.Item[] = []
   const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
 
+  // Build path prefix based on current version
+  const versionPath = params[`version`] ? `${params[`version`]}/` : ``
+
   for (const [title, types] of kindEntries) {
     sidebarItems.push({
       type: `ItemSection` as const,
@@ -37,21 +106,36 @@ const Component = () => {
       links: types.map(type => ({
         type: `ItemLink` as const,
         title: type.name,
-        pathExp: `reference/${type.name}`,
+        pathExp: `reference/${versionPath}${type.name}`,
       })),
     })
   }
 
   return (
     <SidebarLayout sidebar={sidebarItems}>
+      <Box mb={`4`}>
+        <VersionSelector 
+          availableVersions={data.availableVersions} 
+          currentVersion={data.version}
+        />
+      </Box>
       <Outlet />
     </SidebarLayout>
   )
 }
 
+// Create the versioned reference route
+const referenceVersioned = createRoute({
+  path: `:version`,
+  loader,
+  Component,
+  children: [reference$type],
+})
+
+// Create the main reference route with optional version
 export const reference = createRoute({
   path: `reference`,
   loader,
   Component,
-  children: [reference$type],
+  children: [referenceVersioned, reference$type],
 })

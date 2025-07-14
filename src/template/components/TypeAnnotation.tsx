@@ -2,6 +2,7 @@ import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'
 import type { FC } from 'react'
+import { useParams } from 'react-router'
 import { Link } from './Link.js'
 
 export interface Props {
@@ -12,6 +13,8 @@ export interface Props {
  * Renders a GraphQL type recursively, with links for named types
  */
 export const TypeAnnotation: FC<Props> = ({ type }) => {
+  const params = useParams()
+  const versionPath = params[`version`] ? `${params[`version`]}/` : ``
   // Handle NonNull type wrapper
   if (isNonNullType(type)) {
     return (
@@ -41,7 +44,7 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     if (isInputObjectType(namedType)) {
       return (
         <Link
-          to={`/reference/${namedType.name}`}
+          to={`/reference/${versionPath}${namedType.name}`}
         >
           <Text color='green'>{namedType.name}</Text>
         </Link>
@@ -51,7 +54,7 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     // If it's an expandable type (object or interface), make it a link
     // if (Grafaid.isExpandableType(namedType)) {
     return (
-      <Link to={`/reference/${namedType.name}`}>
+      <Link to={`/reference/${versionPath}${namedType.name}`}>
         <Text color={isScalarType(namedType) ? `purple` : `blue`}>{namedType.name}</Text>
       </Link>
     )
