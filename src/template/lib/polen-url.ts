@@ -49,7 +49,7 @@ export const polenUrlPath = (...segments: string[]): string => {
  */
 export const polenUrlPathAssets = (...segments: string[]): string => {
   return polenUrlPath(
-    PROJECT_DATA.paths.relative.build.relative.assets.root,
+    'assets',
     ...segments,
   )
 }

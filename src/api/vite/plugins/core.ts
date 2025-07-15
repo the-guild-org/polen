@@ -159,32 +159,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
           },
         }
       },
-      configureServer(server) {
-        return () => {
-          // Create a mini Hono app for serving dev assets
-          const devAssetsApp = new Hono.Hono()
-
-          // Construct the asset URL pattern: {basePath}/{assetsPath}/
-          const assetUrlPattern = `${config.build.base}${config.paths.project.relative.build.relative.assets.root}/*`
-
-          // Use Hono's static middleware to serve dev assets
-          devAssetsApp.use(
-            assetUrlPattern,
-            serveStatic({
-              root: NodePath.join(config.paths.framework.rootDir, 'node_modules/.vite/polen-assets'),
-              rewriteRequestPath: (path) => {
-                // Remove the base path and assets prefix to get the relative file path
-                const assetUrlPrefix =
-                  `${config.build.base}${config.paths.project.relative.build.relative.assets.root}/`
-                return path.slice(assetUrlPrefix.length)
-              },
-            }),
-          )
-
-          // Convert Hono app to Connect/Express middleware
-          server.middlewares.use(HonoNodeServer.getRequestListener(request => devAssetsApp.fetch(request)))
-        }
-      },
       ...ViteVirtual.IdentifiedLoader.toHooks(
         {
           identifier: viProjectSchema,

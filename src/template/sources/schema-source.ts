@@ -1,4 +1,3 @@
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import PROJECT_SCHEMA_METADATA from 'virtual:polen/project/schema-metadata'
 import { createSchemaSource } from '../../api/schema-source/index.js'
 import { fetchText } from '../lib/fetch-text.js'
@@ -11,7 +10,7 @@ export const schemaSource = createSchemaSource({
     // No write function provided - will use defaultWriter that throws
   },
   versions: PROJECT_SCHEMA_METADATA.versions,
-  assetsPath: polenUrlPathAssets(PROJECT_DATA.paths.relative.build.relative.assets.root),
+  assetsPath: polenUrlPathAssets(),
 })
 
 // HMR cache invalidation for development

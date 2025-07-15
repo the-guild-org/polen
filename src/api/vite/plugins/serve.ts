@@ -5,16 +5,9 @@ import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { ResponseInternalServerError } from '#lib/kit-temp'
 import { debugPolen } from '#singletons/debug'
+import type { App, AppOptions } from '#template/server/app'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err } from '@wollybeard/kit'
-
-type App = Hono.Hono
-
-interface AppOptions {
-  hooks?: {
-    transformHtml?: ((html: string, ctx: Hono.Context) => Promise<string> | string)[]
-  }
-}
 
 interface AppServerModule {
   createApp: (options: AppOptions) => App
@@ -79,6 +72,13 @@ export const Serve = (
                 return await server.transformIndexHtml(ctx.req.url, html)
               }),
             ],
+          },
+          paths: {
+            base: config.build.base,
+            assets: {
+              directory: import.meta.resolve('node_modules/.vite/polen-assets'),
+              route: '/assets/',
+            },
           },
         })
       })
