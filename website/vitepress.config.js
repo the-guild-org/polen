@@ -10,6 +10,9 @@ export default defineConfig({
   themeConfig: {
     siteTitle: 'Polen',
     logo: '/logo.svg',
+    outline: {
+      level: [2, 3],
+    },
     docFooter: {
       next: false,
       prev: false,
@@ -36,10 +39,12 @@ export default defineConfig({
         text: 'Features',
         items: [
           { text: 'Pages', link: '/features/pages' },
+          { text: 'Schema Overview', link: '/features/schema-overview' },
+          { text: 'Schema Augmentations', link: '/features/schema-augmentations' },
           { text: 'Schema Reference', link: '/features/schema-reference' },
           { text: 'Schema Changelog', link: '/features/schema-changelog' },
           { text: 'Logo', link: '/features/logo' },
-          { text: 'Config', link: '/features/config' },
+          { text: 'Configuration', link: '/features/configuration' },
         ],
       },
       {

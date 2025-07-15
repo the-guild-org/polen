@@ -1,6 +1,6 @@
 import { Arr } from '@wollybeard/kit'
 import * as DataSources from './data-sources/data-sources.js'
-import type { Schema } from './schema.js'
+import type { NonEmptyChangeSets } from './schema.js'
 
 export type DataSourceType = `file` | `directory` | `memory` | `data`
 
@@ -55,14 +55,14 @@ export interface Config {
     /**
      * Pre-built schema object to use directly.
      */
-    data?: Schema
+    data?: NonEmptyChangeSets
   }
   projectRoot: string
 }
 
 export const readOrThrow = async (
   config: Config,
-): Promise<null | Schema> => {
+): Promise<null | NonEmptyChangeSets> => {
   if (config.enabled === false) {
     return null
   }

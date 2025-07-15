@@ -33,3 +33,23 @@ export const polenUrlPath = (...segments: string[]): string => {
 
   return basePath + path
 }
+
+/**
+ * Create a Polen URL path for assets.
+ *
+ * This is a convenience wrapper around `polenUrlPath` that automatically
+ * prepends the assets root path.
+ *
+ * @param segments - Path segments within the assets directory
+ * @returns Full URL path to the asset
+ *
+ * @example
+ * polenUrlPathAssets('schemas', 'latest.json') // '/demos/pokemon/assets/schemas/latest.json'
+ * polenUrlPathAssets('images/logo.png') // '/demos/pokemon/assets/images/logo.png'
+ */
+export const polenUrlPathAssets = (...segments: string[]): string => {
+  return polenUrlPath(
+    PROJECT_DATA.server.routes.assets,
+    ...segments,
+  )
+}

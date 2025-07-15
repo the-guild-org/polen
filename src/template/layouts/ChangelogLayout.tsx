@@ -8,7 +8,7 @@ import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { renderDate } from './Changelog.js'
+import { renderDate } from '../components/Changelog.js'
 
 interface ChangelogLayoutProps {
   children: React.ReactNode

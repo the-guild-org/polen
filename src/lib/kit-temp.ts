@@ -181,6 +181,19 @@ export const ensureEnd = (string: string, ending: string) => {
   return string + ending
 }
 
+/**
+ * Create a generic cache with clear interface
+ */
+export const createCache = <T>() => {
+  const cache = new Map<string, T>()
+  return {
+    has: (key: string) => cache.has(key),
+    get: (key: string) => cache.get(key),
+    set: (key: string, value: T) => cache.set(key, value),
+    clear: () => cache.clear(),
+  }
+}
+
 export const ResponseInternalServerError = () =>
   new Response(null, {
     status: Http.Status.InternalServerError.code,

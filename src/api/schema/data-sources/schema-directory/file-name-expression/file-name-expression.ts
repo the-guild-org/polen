@@ -1,6 +1,6 @@
 import { Path } from '@wollybeard/kit'
 
-export type Expression = ExpressionPrevious
+export type Expression = ExpressionVersioned | ExpressionSingle
 
 export const parseOrThrow = (fileNameOrSerializedExpression: string): Expression => {
   const result = parse(fileNameOrSerializedExpression)
@@ -18,38 +18,54 @@ export const parse = (fileName: string): null | Expression => {
   }
   const serializedExpression = path.name
 
-  const previous = parseExpressionPreviousSerialized(serializedExpression)
-  if (previous) return { ...previous, filePath: fileName, type: `FileNameExpressionPrevious` }
+  const versioned = parseExpressionVersionedSerialized(serializedExpression)
+  if (versioned) return { ...versioned, filePath: fileName, type: `FileNameExpressionVersioned` }
 
-  // const latest = parseExpressionLatestSerialized(serializedExpression)
-  // if (latest) return { ...latest, filePath: fileName, type: `FileNameExpressionLatest` }
+  const single = parseExpressionSingleSerialized(serializedExpression)
+  if (single) return { ...single, filePath: fileName, type: `FileNameExpressionSingle` }
 
   return null
 }
 
 // ----
 
-export interface ExpressionPrevious {
-  type: `FileNameExpressionPrevious`
+export interface ExpressionVersioned {
+  type: `FileNameExpressionVersioned`
   date: Date
   filePath: string
 }
 
-const parseExpressionPreviousSerialized = (
+const parseExpressionVersionedSerialized = (
   serializedExpression: string,
-): Pick<ExpressionPrevious, `date`> | null => {
-  const match = expressionPreviousSerializedPattern.exec(serializedExpression)
+): Pick<ExpressionVersioned, `date`> | null => {
+  const match = expressionVersionedSerializedPattern.exec(serializedExpression)
   if (!match) return null
   const { year, month, day } = match.groups as { year: string; month: string; day: string }
   const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
   return { date }
 }
 
-const expressionPreviousSerializedPattern = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/
+const expressionVersionedSerializedPattern = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/
 
-// export const isExpressionPrevious = (expression: Expression): expression is ExpressionPrevious => {
-//   return expression.type === `FileNameExpressionPrevious`
+// export const isExpressionVersioned = (expression: Expression): expression is ExpressionVersioned => {
+//   return expression.type === `FileNameExpressionVersioned`
 // }
+
+// ----
+
+export interface ExpressionSingle {
+  type: `FileNameExpressionSingle`
+  filePath: string
+}
+
+const parseExpressionSingleSerialized = (
+  serializedExpression: string,
+): {} | null => {
+  if (serializedExpression === `schema`) {
+    return {}
+  }
+  return null
+}
 
 // ----
 

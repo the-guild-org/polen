@@ -1,5 +1,7 @@
 # Pages
 
+## Introduction
+
 You can add pages to your developer portal by adding markdown (`.md`) or MDX (`.mdx`) files to a `pages` directory.
 
 ## Frontmatter

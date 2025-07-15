@@ -2,7 +2,7 @@ import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'
 import type { FC } from 'react'
-import { Link } from './Link.js'
+import { ReferenceLink } from './ReferenceLink.js'
 
 export interface Props {
   type: GraphQLType // Can be either GraphQLInputType or GraphQLOutputType
@@ -40,20 +40,18 @@ export const TypeAnnotation: FC<Props> = ({ type }) => {
     // Handle input object types
     if (isInputObjectType(namedType)) {
       return (
-        <Link
-          to={`/reference/${namedType.name}`}
-        >
+        <ReferenceLink type={namedType.name}>
           <Text color='green'>{namedType.name}</Text>
-        </Link>
+        </ReferenceLink>
       )
     }
 
     // If it's an expandable type (object or interface), make it a link
     // if (Grafaid.isExpandableType(namedType)) {
     return (
-      <Link to={`/reference/${namedType.name}`}>
+      <ReferenceLink type={namedType.name}>
         <Text color={isScalarType(namedType) ? `purple` : `blue`}>{namedType.name}</Text>
-      </Link>
+      </ReferenceLink>
     )
 
     // For scalar and other non-expandable types, just render the name

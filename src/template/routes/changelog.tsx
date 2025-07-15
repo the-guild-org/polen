@@ -1,25 +1,34 @@
+import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import { Changelog } from '../components/Changelog.js'
-import { ChangelogLayout } from '../components/ChangelogLayout.js'
+import { ChangelogLayout } from '../layouts/index.js'
+import { schemaSource } from '../sources/schema-source.js'
 
-const loader = createLoader(() => {
+const loader = createLoader(async () => {
+  // Check if schema exists first
+  if (schemaSource.isEmpty) {
+    return { changesets: [] }
+  }
+
+  // Fetch all changesets with before/after/changes data
+  const changesets = await schemaSource.getAllChangesets()
+
   return {
-    schema: PROJECT_DATA.schema,
+    changesets,
   }
 })
 
 const Component = () => {
   const data = useLoaderData<typeof loader>()
 
-  if (!data.schema) {
-    return <div>No data to show. There is no schema is.</div>
+  if (data.changesets.length === 0) {
+    return <div>No schema versions available for changelog.</div>
   }
 
   return (
-    <ChangelogLayout versions={data.schema.versions}>
-      <Changelog schema={data.schema} />
+    <ChangelogLayout versions={data.changesets}>
+      <Changelog changesets={data.changesets as [GraphqlChangeset.ChangeSet, ...GraphqlChangeset.ChangeSet[]]} />
     </ChangelogLayout>
   )
 }

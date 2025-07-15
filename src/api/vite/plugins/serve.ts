@@ -5,16 +5,10 @@ import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { ResponseInternalServerError } from '#lib/kit-temp'
 import { debugPolen } from '#singletons/debug'
+import type { App, AppOptions } from '#template/server/app'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err } from '@wollybeard/kit'
-
-type App = Hono.Hono
-
-interface AppOptions {
-  hooks?: {
-    transformHtml?: ((html: string, ctx: Hono.Context) => Promise<string> | string)[]
-  }
-}
+import * as NodePath from 'node:path'
 
 interface AppServerModule {
   createApp: (options: AppOptions) => App
@@ -79,6 +73,19 @@ export const Serve = (
                 return await server.transformIndexHtml(ctx.req.url, html)
               }),
             ],
+          },
+          paths: {
+            base: config.build.base,
+            assets: {
+              // Calculate relative path from CWD to Polen's assets
+              // CWD is user's project directory where they run 'pnpm dev'
+              // Assets are in Polen's dev assets directory
+              directory: NodePath.relative(
+                process.cwd(),
+                config.paths.framework.devAssets.absolute,
+              ),
+              route: config.server.routes.assets,
+            },
           },
         })
       })

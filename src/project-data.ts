@@ -1,18 +1,10 @@
 import type { Config } from '#api/config/index'
 import type { NavbarItem } from '#api/content/navbar'
-import type { Schema } from './api/schema/index.js'
 
 export interface ProjectData {
-  schema: null | Schema.Schema
   basePath: string
-  paths: Config.Config[`paths`][`project`]
+  paths: Config.Config['paths']
   navbar: NavbarItem[]
-  server: {
-    port: number
-    static: {
-      directory: string
-      route: string
-    }
-  }
-  warnings: Config.Config[`warnings`]
+  server: Config.Config['server']
+  warnings: Config.Config['warnings']
 }

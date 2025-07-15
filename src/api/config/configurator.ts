@@ -289,6 +289,13 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
 
   const publicAbsolutePath = rootAbsolute(`public`)
   const publicAbsolute = Path.ensureAbsoluteWith(publicAbsolutePath)
+
+  const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
+
+  // Dev assets paths
+  const devAssetsRelative = 'node_modules/.vite/polen-assets'
+  const devAssetsAbsolute = Path.join(packagePaths.rootDir, devAssetsRelative)
+
   return {
     project: {
       rootDir,
@@ -297,7 +304,12 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
           root: `build`,
           relative: {
             serverEntrypoint: `app.js`,
-            assets: `assets`,
+            assets: {
+              root: `assets`,
+              relative: {
+                schemas: `schemas`,
+              },
+            },
           },
         },
         pages: `pages`,
@@ -311,7 +323,10 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
         build: {
           root: buildAbsolute(`.`),
           serverEntrypoint: buildAbsolute(`app.js`),
-          assets: buildAbsolute(`assets`),
+          assets: {
+            root: buildAbsolute(`assets`),
+            schemas: assetsAbsolute(`schemas`),
+          },
         },
         public: {
           root: publicAbsolute(`.`),
@@ -319,7 +334,14 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
         },
       },
     },
-    framework: packagePaths,
+    framework: {
+      ...packagePaths,
+      devAssets: {
+        relative: devAssetsRelative,
+        absolute: devAssetsAbsolute,
+        schemas: Path.join(devAssetsAbsolute, 'schemas'),
+      },
+    },
   }
 }
 
@@ -331,6 +353,9 @@ export interface Config {
   }
   server: {
     port: number
+    routes: {
+      assets: string
+    }
   }
   watch: {
     also: string[]
@@ -353,7 +378,12 @@ export interface Config {
         build: {
           root: string
           relative: {
-            assets: string
+            assets: {
+              root: string
+              relative: {
+                schemas: string
+              }
+            }
             serverEntrypoint: string
           }
         }
@@ -366,7 +396,10 @@ export interface Config {
       absolute: {
         build: {
           root: string
-          assets: string
+          assets: {
+            root: string
+            schemas: string
+          }
           serverEntrypoint: string
         }
         pages: string
@@ -376,7 +409,13 @@ export interface Config {
         }
       }
     }
-    framework: PackagePaths
+    framework: PackagePaths & {
+      devAssets: {
+        relative: string
+        absolute: string
+        schemas: string
+      }
+    }
   }
   advanced: {
     isSelfContainedMode: boolean
@@ -401,6 +440,9 @@ const configInputDefaults: Config = {
   },
   server: {
     port: 3000,
+    routes: {
+      assets: '/assets',
+    },
   },
   schema: null,
   ssr: {
@@ -506,6 +548,9 @@ export const normalizeInput = async (
   if (configInput?.server?.port !== undefined) {
     config.server.port = configInput.server.port
   }
+
+  // Server routes are not configurable by users yet, use defaults
+  // config.server.routes is already set from defaultConfig
 
   // Process warnings configuration
   if (configInput?.warnings?.interactiveWithoutSchema?.enabled !== undefined) {

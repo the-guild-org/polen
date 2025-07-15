@@ -106,6 +106,11 @@ declare module 'virtual:polen/project/data.jsonsuper' {
   export { data as default }
 }
 
+declare module 'virtual:polen/project/schema.jsonsuper' {
+  const schema: import('#api/schema/index').Schema.Schema | null
+  export { schema as default }
+}
+
 declare module 'virtual:polen/project/data/pages-catalog.jsonsuper' {
   const data: import('#api/vite/plugins/pages').ProjectPagesCatalog
   export { data as default }
@@ -114,4 +119,9 @@ declare module 'virtual:polen/project/data/pages-catalog.jsonsuper' {
 declare module 'virtual:polen/project/assets/logo.svg' {
   const src: string
   export default src
+}
+
+declare module 'virtual:polen/project/schema-metadata' {
+  const metadata: import('#api/vite/plugins/schema-assets').SchemaMetadata
+  export default metadata
 }

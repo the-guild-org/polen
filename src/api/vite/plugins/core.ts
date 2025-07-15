@@ -2,23 +2,29 @@ import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
 import { createNavbar } from '#api/content/navbar'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
+import { Hono } from '#dep/hono/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
 import { VitePluginJson } from '#lib/vite-plugin-json/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
+import * as HonoNodeServer from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
 import { Json, Str } from '@wollybeard/kit'
+import * as NodePath from 'node:path'
 import type { ProjectData } from '../../../project-data.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
 import { createLogger } from '../logger.js'
 import { polenVirtual } from '../vi.js'
 import { Pages } from './pages.js'
+import { SchemaAssets } from './schema-assets.js'
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
 export const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
+export const viProjectSchema = polenVirtual([`project`, `schema.jsonsuper`], { allowPluginProcessing: true })
 
 export interface ProjectRoutesModule {
   routes: ReactRouter.RouteObject[]
@@ -34,7 +40,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         projectRoot: config.paths.project.rootDir,
       })
       // todo: augmentations scoped to a version
-      schema?.versions.forEach(version => {
+      schema?.forEach(version => {
         SchemaAugmentation.apply(version.after, config.schemaAugmentations)
       })
       schemaCache = schema
@@ -68,6 +74,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
   return [
     ...plugins,
+    SchemaAssets(config),
     /**
      * If a `polen*` import is encountered from the user's project, resolve it to the currently
      * running source code of Polen rather than the user's node_modules.
@@ -133,11 +140,11 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             __BUILD_ARCHITECTURE_SSG__: Json.encode(config.build.architecture === `ssg`),
             'process.env.NODE_ENV': Json.encode(config.advanced.debug ? 'development' : 'production'),
           },
-          customLogger: createLogger(config),
+          // customLogger: createLogger(config),
           esbuild: false,
           build: {
             target: `esnext`,
-            assetsDir: config.paths.project.relative.build.relative.assets,
+            assetsDir: config.paths.project.relative.build.relative.assets.root,
             rollupOptions: {
               treeshake: {
                 // Aggressive tree-shaking for smallest bundles
@@ -153,6 +160,16 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         }
       },
       ...ViteVirtual.IdentifiedLoader.toHooks(
+        {
+          identifier: viProjectSchema,
+          async loader() {
+            const debug = debugPolen.sub(`module-project-schema`)
+            debug(`load`, { id: viProjectSchema.id })
+
+            const schema = await readSchema()
+            return superjson.stringify(schema)
+          },
+        },
         {
           identifier: viTemplateVariables,
           loader() {
@@ -185,7 +202,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               // hydration mismatches between SSR (where base path is prepended) and client
               // (where basename is configured). This ensures consistent behavior.
               navbar.push({ pathExp: `/reference`, title: `Reference` })
-              if (schema.versions.length > 1) {
+              if (schema.length > 1) {
                 navbar.push({ pathExp: `/changelog`, title: `Changelog` })
               }
             }
@@ -204,22 +221,10 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             //
 
             const projectData: ProjectData = {
-              schema,
               basePath: config.build.base,
-              paths: config.paths.project,
+              paths: config.paths,
               navbar, // Complete navbar with schema and pages
-              server: {
-                port: config.server.port,
-                static: {
-                  // todo
-                  // relative from CWD of process that boots n1ode server
-                  // can easily break! Use path relative in server??
-                  directory: `./` + config.paths.project.relative.build.root,
-                  // Uses Hono route syntax - includes base path
-                  route: config.build.base.slice(0, -1) + `/` + config.paths.project.relative.build.relative.assets
-                    + `/*`,
-                },
-              },
+              server: config.server,
               warnings: config.warnings,
             }
 

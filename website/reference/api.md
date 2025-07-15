@@ -20,7 +20,7 @@ console.log(Polen.defineConfig === defineConfig) // true
 
 ### Value `Polen.defineConfig(config)`
 
-Define your Polen configuration with type safety. Learn more at [Config](/features/config)
+Define your Polen configuration with type safety. Learn more at [Configuration](/features/configuration)
 
 ### Value `Polen.VitePlugin`
 

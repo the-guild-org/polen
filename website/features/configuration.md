@@ -1,4 +1,6 @@
-# Config
+# Configuration
+
+## Introduction
 
 Polen aims to be convention over configuration. However, there are still knobs and levers for when you need it.
 

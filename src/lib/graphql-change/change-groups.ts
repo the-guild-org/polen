@@ -1,3 +1,4 @@
+import { neverCase } from '@wollybeard/kit/language'
 import type {
   Change,
   DirectiveAddedChange,
@@ -248,3 +249,59 @@ export type DirectiveUsage =
   | DirectiveUsageInputFieldDefinitionRemovedChange
 
 export const isDirectiveUsage = (change: Change): change is DirectiveUsage => change.type.startsWith(`DIRECTIVE_USAGE_`)
+
+export type Type =
+  | 'TypeOperation'
+  | 'TypeDescription'
+  | 'FieldOperation'
+  | 'FieldDescription'
+  | 'FieldDeprecation'
+  | 'FieldDeprecationReason'
+  | 'FieldArgumentOperation'
+  | 'FieldArgument'
+  | 'FieldArgumentDescription'
+  | 'EnumValueOperation'
+  | 'EnumValueDescription'
+  | 'EnumValueDeprecationReason'
+  | 'InputFieldOperation'
+  | 'InputFieldDescription'
+  | 'InputFieldDefaultValue'
+  | 'UnionMemberOperation'
+  | 'ObjectTypeInterfaceOperation'
+  | 'DirectiveOperation'
+  | 'DirectiveDescription'
+  | 'DirectiveLocationOperation'
+  | 'DirectiveArgumentOperation'
+  | 'DirectiveArgument'
+  | 'DirectiveArgumentDescription'
+  | 'SchemaRootType'
+  | 'DirectiveUsage'
+
+export const getType = (change: Change): Type => {
+  if (isTypeOperation(change)) return 'TypeOperation'
+  if (isTypeDescription(change)) return 'TypeDescription'
+  if (isFieldOperation(change)) return 'FieldOperation'
+  if (isFieldDescription(change)) return 'FieldDescription'
+  if (isFieldDeprecation(change)) return 'FieldDeprecation'
+  if (isFieldDeprecationReason(change)) return 'FieldDeprecationReason'
+  if (isFieldArgumentOperation(change)) return 'FieldArgumentOperation'
+  if (isFieldArgument(change)) return 'FieldArgument'
+  if (isFieldArgumentDescription(change)) return 'FieldArgumentDescription'
+  if (isEnumValueOperation(change)) return 'EnumValueOperation'
+  if (isEnumValueDescription(change)) return 'EnumValueDescription'
+  if (isEnumValueDeprecationReason(change)) return 'EnumValueDeprecationReason'
+  if (isInputFieldOperation(change)) return 'InputFieldOperation'
+  if (isInputFieldDescription(change)) return 'InputFieldDescription'
+  if (isInputFieldDefaultValue(change)) return 'InputFieldDefaultValue'
+  if (isUnionMemberOperation(change)) return 'UnionMemberOperation'
+  if (isObjectTypeInterfaceOperation(change)) return 'ObjectTypeInterfaceOperation'
+  if (isDirectiveOperation(change)) return 'DirectiveOperation'
+  if (isDirectiveDescription(change)) return 'DirectiveDescription'
+  if (isDirectiveLocationOperation(change)) return 'DirectiveLocationOperation'
+  if (isDirectiveArgumentOperation(change)) return 'DirectiveArgumentOperation'
+  if (isDirectiveArgument(change)) return 'DirectiveArgument'
+  if (isDirectiveArgumentDescription(change)) return 'DirectiveArgumentDescription'
+  if (isSchemaRootType(change)) return 'SchemaRootType'
+  if (isDirectiveUsage(change)) return 'DirectiveUsage'
+  neverCase(change)
+}
