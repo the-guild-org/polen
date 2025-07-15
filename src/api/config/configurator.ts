@@ -241,22 +241,6 @@ export interface ConfigInput {
      */
     isSelfContainedMode?: boolean
     /**
-     * Tweak the watch behavior.
-     */
-    watch?: {
-      /**
-       * Restart the development server when some arbitrary files change.
-       *
-       * Use this to restart when files that are not already watched by vite change.
-       *
-       * @see https://github.com/antfu/vite-plugin-restart
-       */
-      /**
-       * File paths to watch and restart the development server when they change.
-       */
-      also?: string[]
-    }
-    /**
      * Whether to enable debug mode.
      *
      * When enabled the following happens:
@@ -357,9 +341,6 @@ export interface Config {
       assets: string
     }
   }
-  watch: {
-    also: string[]
-  }
   templateVariables: TemplateVariables
   schemaAugmentations: SchemaAugmentation.Augmentation[]
   schema: null | SchemaConfigInput
@@ -431,9 +412,6 @@ const configInputDefaults: Config = {
     title: `My Developer Portal`,
   },
   schemaAugmentations: [],
-  watch: {
-    also: [],
-  },
   build: {
     architecture: BuildArchitecture.enum.ssg,
     base: `/`,
@@ -539,10 +517,6 @@ export const normalizeInput = async (
 
   if (configInput?.advanced?.explorer !== undefined) {
     config.advanced.explorer = configInput.advanced.explorer
-  }
-
-  if (configInput?.advanced?.watch?.also) {
-    config.watch.also = configInput.advanced.watch.also
   }
 
   if (configInput?.server?.port !== undefined) {

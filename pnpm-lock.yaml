@@ -178,9 +178,6 @@ importers:
       vite-plugin-inspect:
         specifier: ^11.3.0
         version: 11.3.0(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))
-      vite-plugin-restart:
-        specifier: ^0.4.2
-        version: 0.4.2(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))
       web-tree-sitter:
         specifier: ^0.25.6
         version: 0.25.6(patch_hash=ed4def734eca47741efbb9f85e929b200c75698b41cb8e4a9d4085a4bafeb1da)
@@ -4733,11 +4730,6 @@ packages:
     peerDependenciesMeta:
       '@nuxt/kit':
         optional: true
-
-  vite-plugin-restart@0.4.2:
-    resolution: {integrity: sha512-9aWN2ScJ8hbT7aC8SDeZnsbWapnslz1vhNq6Vgf2GU9WdN4NExlrWhtnu7pmtOUG3Guj8y6lPcUZ+ls7SVP33w==}
-    peerDependencies:
-      vite: ^2.9.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
 
   vite-tsconfig-paths@5.1.4:
     resolution: {integrity: sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==}
@@ -10039,11 +10031,6 @@ snapshots:
       vite-dev-rpc: 1.1.0(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))
     transitivePeerDependencies:
       - supports-color
-
-  vite-plugin-restart@0.4.2(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1)):
-    dependencies:
-      micromatch: 4.0.8
-      vite: rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1)
 
   vite-tsconfig-paths@5.1.4(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.7.1))(typescript@5.8.3):
     dependencies:

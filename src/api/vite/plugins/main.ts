@@ -2,9 +2,8 @@ import type { Config } from '#api/config/index'
 import type { Vite } from '#dep/vite/index'
 import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
 import ViteReact from '@vitejs/plugin-react-oxc'
-import { Arr, Path } from '@wollybeard/kit'
+import { Path } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
-import Restart from 'vite-plugin-restart'
 import { Branding } from './branding.js'
 import { Build } from './build.js'
 import { Core } from './core.js'
@@ -22,13 +21,6 @@ export const Main = (
     const plugin = Inspect({
       build: true,
       outputDir,
-    })
-    plugins.push(plugin)
-  }
-
-  if (Arr.isntEmpty(config.watch.also)) {
-    const plugin = Restart({
-      restart: config.watch.also,
     })
     plugins.push(plugin)
   }
