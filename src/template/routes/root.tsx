@@ -31,7 +31,6 @@ import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog
 import { routes } from 'virtual:polen/project/routes.jsx'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.jsonsuper'
 import { templateVariables } from 'virtual:polen/template/variables'
-import { GraphQLSchemaProvider } from '../../lib/graphql-document/schema-context.js'
 import { CodeBlock } from '../components/CodeBlock.js'
 import { Pre } from '../components/CodeHikePre.js'
 import { Link as PolenLink } from '../components/Link.js'
@@ -54,9 +53,7 @@ export const Component = () => {
   return (
     <>
       <ThemeProvider>
-        <GraphQLSchemaProvider schema={schema}>
-          <Layout />
-        </GraphQLSchemaProvider>
+        <Layout />
       </ThemeProvider>
       <ScrollRestoration />
     </>

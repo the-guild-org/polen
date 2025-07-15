@@ -54,7 +54,7 @@ export const get = async (version: string): Promise<GraphQLSchema | null> => {
     // Construct URL - works for both dev and prod due to dev asset middleware
     const schemaUrl = polenUrlPathAssets(
       PROJECT_DATA.paths.relative.build.relative.assets.relative.schemas,
-      `${version}.json`
+      `${version}.json`,
     )
 
     const response = await fetch(schemaUrl)
