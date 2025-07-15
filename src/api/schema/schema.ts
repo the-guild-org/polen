@@ -48,6 +48,6 @@ export const versionStringToDate = (version: string): Date => {
     return parsedDate
   }
 
-  // Fallback for invalid dates
-  return new Date()
+  // Throw error for invalid dates instead of silently defaulting
+  throw new Error(`Invalid version string: ${version}`)
 }

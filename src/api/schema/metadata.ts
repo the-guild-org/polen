@@ -1,23 +1,23 @@
-/**
- * Schema metadata information
- */
-export interface SchemaMetadata {
+import { Fs } from '@wollybeard/kit'
+import { z } from 'zod/v4'
+
+export const SchemaMetadataSchema = z.object({
   /** Whether a schema is present in the project */
-  hasSchema: boolean
+  hasSchema: z.boolean(),
   /** Array of available version identifiers */
-  versions: string[]
-}
+  versions: z.array(z.string()),
+})
+
+export type SchemaMetadata = z.infer<typeof SchemaMetadataSchema>
 
 export const getMetadata = async (path: string): Promise<SchemaMetadata> => {
-  try {
-    const metadata = await import(path, { with: { type: 'json' } })
-    return metadata.default
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      // No metadata file - no schemas available
-      return { hasSchema: false, versions: [] }
+  const result = await Fs.readJson(path)
+  if (!result) {
+    return {
+      hasSchema: false,
+      versions: [],
     }
-    // Re-throw any other errors
-    throw new Error(`SSG failed to read schema metadata ${path}: ${error.message}`)
   }
+
+  return SchemaMetadataSchema.parse(result)
 }

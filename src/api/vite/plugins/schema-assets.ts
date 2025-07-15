@@ -199,10 +199,26 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     },
 
     async handleHotUpdate({ file, server }) {
-      const isSchemaFile = config.schema && (
-        (config.schema.dataSources?.file?.path && file.includes(config.schema.dataSources.file.path))
-        || (config.schema.dataSources?.directory?.path && file.includes(config.schema.dataSources.directory.path))
-      )
+      const isSchemaFile = config.schema && (() => {
+        const absoluteFile = NodePath.resolve(file)
+
+        // Check if file path matches the configured schema file
+        if (config.schema.dataSources?.file?.path) {
+          const absoluteSchemaFile = NodePath.resolve(config.paths.project.rootDir, config.schema.dataSources.file.path)
+          if (absoluteFile === absoluteSchemaFile) return true
+        }
+
+        // Check if file path is within the configured schema directory
+        if (config.schema.dataSources?.directory?.path) {
+          const absoluteSchemaDir = NodePath.resolve(
+            config.paths.project.rootDir,
+            config.schema.dataSources.directory.path,
+          )
+          if (absoluteFile.startsWith(absoluteSchemaDir + NodePath.sep)) return true
+        }
+
+        return false
+      })()
       if (isSchemaFile) {
         debug(`schemaFileChanged`, { file })
 
