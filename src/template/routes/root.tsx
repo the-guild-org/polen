@@ -32,7 +32,6 @@ import { routes } from 'virtual:polen/project/routes.jsx'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.jsonsuper'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { CodeBlock } from '../components/CodeBlock.js'
-import { Pre } from '../components/CodeHikePre.js'
 import { Link as PolenLink } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
 import { NotFound } from '../components/NotFound.js'
@@ -119,7 +118,6 @@ const Layout = () => {
             blockquote: (props) => <Quote my='4' {...props} />,
             a: Link,
             hr: (props) => <Separator my='6' {...props} />,
-            pre: Pre,
             table: Table.Root,
             thead: Table.Header,
             tbody: Table.Body,
