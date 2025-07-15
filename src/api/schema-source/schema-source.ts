@@ -33,25 +33,16 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
   // Memoize only the base IO read operation
   const ioReadMemoized = Cache.memoize(config.io.read)
 
-  const get = async (version: string): Promise<GraphQLSchema | null> => {
-    try {
-      const content = await ioReadMemoized(getSchemaPath(version))
-      const schemaAst = JSON.parse(content)
-      const schema = astToSchema(schemaAst)
-      return schema
-    } catch (error) {
-      console.error(`Failed to load schema:`, error)
-      return null
-    }
+  const get = async (version: string): Promise<GraphQLSchema> => {
+    const content = await ioReadMemoized(getSchemaPath(version))
+    const schemaAst = JSON.parse(content)
+    const schema = astToSchema(schemaAst)
+    return schema
   }
 
-  const getChangelog = async (version: string): Promise<{ changes: GraphqlChange.Change[]; date: string } | null> => {
-    try {
-      const content = await ioReadMemoized(getChangelogPath(version))
-      return JSON.parse(content)
-    } catch {
-      return null
-    }
+  const getChangelog = async (version: string): Promise<{ changes: GraphqlChange.Change[]; date: string }> => {
+    const content = await ioReadMemoized(getChangelogPath(version))
+    return JSON.parse(content)
   }
 
   const getAllChangesets = async (): Promise<GraphqlChangeset.ChangeSet[]> => {
