@@ -1,4 +1,4 @@
-import { z } from 'zod/v4'
+import { z } from 'zod'
 
 /**
  * Schema for validating front matter content

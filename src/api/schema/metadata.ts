@@ -1,5 +1,5 @@
 import { Fs } from '@wollybeard/kit'
-import { z } from 'zod/v4'
+import { z } from 'zod'
 
 export const SchemaMetadataSchema = z.object({
   /** Whether a schema is present in the project */
