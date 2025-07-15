@@ -2,6 +2,7 @@ import type { Config } from '#api/config/index'
 import { SchemaAugmentation } from '#api/schema-augmentation/index'
 import { createSchemaSource } from '#api/schema-source/index'
 import { Schema } from '#api/schema/index'
+import type { NonEmptyChangeSets } from '../../schema/schema.js'
 import type { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
@@ -104,10 +105,10 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
   // Helper to write assets using schema-source API
   const writeDevAssets = async (
-    schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>,
+    schemaData: NonEmptyChangeSets,
     metadata: Schema.SchemaMetadata,
   ) => {
-    if (!schemaData) return
+    // schemaData is now guaranteed to be non-null NonEmptyChangeSets
 
     const devAssetsDir = config.paths.framework.devAssets.schemas
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
