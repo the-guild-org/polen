@@ -83,3 +83,12 @@ test('can loads schema from directory data source with single schema.graphql', a
   await page.getByText('reference').click()
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
+
+test('can build with multiple versioned schemas', async ({ vite, project }) => {
+  await project.layout.set({
+    'schema/2023-01-01.graphql': 'type Query { hello: String }',
+    'schema/2024-01-01.graphql': 'type Query { hello: String, world: String }',
+  })
+  const viteUserConfig = await pc({}, project.layout.cwd)
+  const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
+})
