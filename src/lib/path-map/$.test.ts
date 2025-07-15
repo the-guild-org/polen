@@ -197,6 +197,22 @@ describe('PathMap', () => {
   })
 
   describe('property tests', () => {
+    // Helper to normalize base paths the same way PathMap.create does
+    const normalizeBasePath = (base: string): string => {
+      const trimmedBase = base.trim()
+      const collapsedBase = trimmedBase.replace(/\/+/g, '/')
+      const cleanedBase = collapsedBase === '/.' ? '/' : collapsedBase
+      return cleanedBase === '/' ? '/' : cleanedBase.replace(/\/$/, '')
+    }
+
+    // Helper to build absolute paths with proper handling of root base
+    const buildAbsolutePath = (normalizedBase: string, segments: string[]): string => {
+      if (segments.length === 0) return normalizedBase
+      return normalizedBase === '/'
+        ? `/${segments.join('/')}`
+        : `${normalizedBase}/${segments.join('/')}`
+    }
+
     // Arbitrary for valid path segments
     const pathSegment = fc.stringMatching(/^[a-zA-Z0-9_-]+$/)
 
@@ -243,10 +259,7 @@ describe('PathMap', () => {
       fc.assert(
         fc.property(pathInput, fc.string({ minLength: 1 }).filter(s => s.startsWith('/')), (input, base) => {
           const paths = PathMap.create(input, base)
-
-          // Base is normalized (trimmed, multiple slashes collapsed, trailing removed)
-          const collapsedBase = base.trim().replace(/\/+/g, '/')
-          const normalizedBase = collapsedBase === '/' ? '/' : collapsedBase.replace(/\/$/, '')
+          const normalizedBase = normalizeBasePath(base)
 
           function checkAbsolute(obj: any) {
             for (const [key, value] of Object.entries(obj)) {
@@ -306,20 +319,13 @@ describe('PathMap', () => {
               if (currentPath.length === 0) {
                 expect(rel.$).toBe('.')
                 expect(rooted.$).toBe('.')
-                // Base is normalized in create() (trimmed, collapsed, trailing removed)
-                const collapsedBase = base.trim().replace(/\/+/g, '/')
-                const normalizedBase = collapsedBase === '/' ? '/' : collapsedBase.replace(/\/$/, '')
+                const normalizedBase = normalizeBasePath(base)
                 expect(abs.$).toBe(normalizedBase)
               } else {
                 expect(rel.$).toBe(currentPath[currentPath.length - 1])
                 expect(rooted.$).toBe(currentPath.join('/'))
-                // Handle base that might be '/' or have trailing slash
-                // Note: create() normalizes the base (trim + collapse + remove trailing)
-                const collapsedBase = base.trim().replace(/\/+/g, '/')
-                const normalizedBase = collapsedBase === '/' ? '/' : collapsedBase.replace(/\/$/, '')
-                const expectedAbs = normalizedBase === '/'
-                  ? `/${currentPath.join('/')}`
-                  : `${normalizedBase}/${currentPath.join('/')}`
+                const normalizedBase = normalizeBasePath(base)
+                const expectedAbs = buildAbsolutePath(normalizedBase, currentPath)
                 expect(abs.$).toBe(expectedAbs)
               }
             }
