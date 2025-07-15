@@ -1,5 +1,5 @@
 import { Codec, Resource } from '@wollybeard/kit'
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 export const PolenBuildManifestSchema = z.object({
   type: z.enum([`ssg`, `ssr`]),
