@@ -75,6 +75,9 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
           // @see https://github.com/vitejs/vite/issues/20098
           ssr: {
             noExternal: true,
+            // Exclude lightningcss from bundling due to native bindings
+            // @see https://github.com/parcel-bundler/lightningcss/issues/701
+            external: ['lightningcss'],
           },
           environments: {
             ssr: {
