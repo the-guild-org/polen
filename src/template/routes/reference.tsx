@@ -6,7 +6,6 @@ import { Box } from '@radix-ui/themes'
 import { Outlet } from 'react-router'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { VersionSelector } from '../components/VersionSelector.js'
-import { useVersionPath } from '../hooks/useVersionPath.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
 import { schemaSource } from '../sources/schema-source.js'
@@ -42,8 +41,11 @@ const Component = () => {
   const sidebarItems: Content.Item[] = []
   const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
 
-  // Build path prefix based on current version using new route structure
-  const versionPath = useVersionPath()
+  // Build path prefix based on current version from loader data
+  // This ensures sidebar links always match the current version being viewed
+  const versionPath = data.currentVersion === VERSION_LATEST
+    ? ``
+    : `version/${data.currentVersion}/`
 
   for (const [title, types] of kindEntries) {
     sidebarItems.push({
