@@ -4,7 +4,7 @@ import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { debugPolen } from '#singletons/debug'
 import { Arr, Path } from '@wollybeard/kit'
 import { glob } from 'tinyglobby'
-import type { Schema } from '../../schema.js'
+import type { NonEmptyChangeSets } from '../../schema.js'
 import { FileNameExpression } from './file-name-expression/index.js'
 
 // const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
@@ -61,7 +61,7 @@ export const normalizeConfig = (configInput: ConfigInput): Config => {
   return config
 }
 
-export const readOrThrow = async (configInput: ConfigInput): Promise<null | Schema> => {
+export const readOrThrow = async (configInput: ConfigInput): Promise<null | NonEmptyChangeSets> => {
   const config = normalizeConfig(configInput)
 
   debug(`will search`, config)
@@ -118,9 +118,7 @@ export const readOrThrow = async (configInput: ConfigInput): Promise<null | Sche
 
   changesets.reverse()
 
-  const schema: Schema = {
-    versions: changesets,
-  }
+  const schema: NonEmptyChangeSets = changesets
 
   debug(`computed schema`)
 

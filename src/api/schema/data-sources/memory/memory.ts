@@ -2,7 +2,7 @@ import { Grafaid } from '#lib/grafaid/index'
 import { GraphqlChange } from '#lib/graphql-change/index'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { Arr } from '@wollybeard/kit'
-import type { Schema } from '../../schema.js'
+import type { NonEmptyChangeSets } from '../../schema.js'
 
 /**
  * Configuration for defining schemas programmatically in memory.
@@ -68,7 +68,7 @@ export const normalize = (configInput: ConfigInput): Config => {
 
 export const read = async (
   configInput: ConfigInput,
-): Promise<null | Schema> => {
+): Promise<null | NonEmptyChangeSets> => {
   const config = normalize(configInput)
 
   if (!Arr.isntEmpty(config.versions)) {
@@ -109,9 +109,7 @@ export const read = async (
 
   changesets.reverse()
 
-  const schema: Schema = {
-    versions: changesets,
-  }
+  const schema: NonEmptyChangeSets = changesets
 
   return schema
 }

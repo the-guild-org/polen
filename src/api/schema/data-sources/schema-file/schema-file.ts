@@ -2,7 +2,7 @@ import { Grafaid } from '#lib/grafaid/index'
 import { GraphqlChange } from '#lib/graphql-change/index'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { Path } from '@wollybeard/kit'
-import type { Schema } from '../../schema.js'
+import type { NonEmptyChangeSets } from '../../schema.js'
 
 const defaultPaths = {
   schemaFile: `./schema.graphql`,
@@ -46,7 +46,7 @@ export const normalizeConfig = (configInput: ConfigInput): Config => {
 
 export const readOrThrow = async (
   configInput: ConfigInput,
-): Promise<null | Schema> => {
+): Promise<null | NonEmptyChangeSets> => {
   const config = normalizeConfig(configInput)
 
   const schemaFile = await Grafaid.Schema.read(config.path)
@@ -67,9 +67,7 @@ export const readOrThrow = async (
     changes,
   }
 
-  const schema: Schema = {
-    versions: [schemaVersion],
-  }
+  const schema: NonEmptyChangeSets = [schemaVersion]
 
   return schema
 }

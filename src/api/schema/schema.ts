@@ -6,9 +6,9 @@ export * from './read.js'
 
 export * from './metadata.js'
 
-export interface Schema {
-  versions: [GraphqlChangeset.ChangeSet, ...GraphqlChangeset.ChangeSet[]]
-}
+export type ChangeSets = GraphqlChangeset.ChangeSet[]
+
+export type NonEmptyChangeSets = [GraphqlChangeset.ChangeSet, ...GraphqlChangeset.ChangeSet[]]
 
 /**
  * Constants for schema versioning

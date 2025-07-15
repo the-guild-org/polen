@@ -48,13 +48,13 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     }
 
     // Apply augmentations
-    schemaData.versions.forEach(version => {
+    schemaData.forEach(version => {
       SchemaAugmentation.apply(version.after, config.schemaAugmentations)
     })
 
     // Build metadata
     const versionStrings: string[] = []
-    for (const [index, version] of schemaData.versions.entries()) {
+    for (const [index, version] of schemaData.entries()) {
       const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
       versionStrings.push(versionName)
     }
@@ -64,7 +64,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       versions: versionStrings,
     }
 
-    debug(`schemaDataLoaded`, { versionCount: schemaData.versions.length })
+    debug(`schemaDataLoaded`, { versionCount: schemaData.length })
 
     return {
       schemaData,
@@ -83,7 +83,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
 
     // Write schema JSON files and changelog files
-    for (const [index, version] of schemaData.versions.entries()) {
+    for (const [index, version] of schemaData.entries()) {
       const schemaString = Grafaid.Schema.print(version.after)
       const ast = Grafaid.Schema.AST.parse(schemaString)
       const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
@@ -94,7 +94,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       debug(`devAssetWritten`, { fileName: `${versionName}.json` })
 
       // Write changelog file (except for the oldest/last version)
-      if (index < schemaData.versions.length - 1) {
+      if (index < schemaData.length - 1) {
         const changelogData = {
           changes: version.changes,
           date: version.date.toISOString(),
@@ -151,7 +151,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       }
 
       // Build mode: Use Vite's emitFile
-      for (const [index, version] of schemaData.versions.entries()) {
+      for (const [index, version] of schemaData.entries()) {
         // Convert GraphQL Schema to AST JSON
         const schemaString = Grafaid.Schema.print(version.after)
         const ast = Grafaid.Schema.AST.parse(schemaString)
@@ -172,7 +172,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         debug(`schemaAssetEmitted`, { fileName: schemaAssetFileName })
 
         // Emit changelog file (except for the oldest/last version)
-        if (index < schemaData.versions.length - 1) {
+        if (index < schemaData.length - 1) {
           const changelogData = {
             changes: version.changes,
             date: version.date.toISOString(),
@@ -212,7 +212,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
           const { schemaData, metadata } = await loadAndProcessSchemaData()
 
           if (schemaData) {
-            debug(`hmr:schemaRegenerated`, { versionCount: schemaData.versions.length })
+            debug(`hmr:schemaRegenerated`, { versionCount: schemaData.length })
 
             // Write new assets to filesystem
             await writeDevAssets(schemaData, metadata)

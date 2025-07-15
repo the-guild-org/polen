@@ -40,7 +40,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         projectRoot: config.paths.project.rootDir,
       })
       // todo: augmentations scoped to a version
-      schema?.versions.forEach(version => {
+      schema?.forEach(version => {
         SchemaAugmentation.apply(version.after, config.schemaAugmentations)
       })
       schemaCache = schema
@@ -228,7 +228,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               // hydration mismatches between SSR (where base path is prepended) and client
               // (where basename is configured). This ensures consistent behavior.
               navbar.push({ pathExp: `/reference`, title: `Reference` })
-              if (schema.versions.length > 1) {
+              if (schema.length > 1) {
                 navbar.push({ pathExp: `/changelog`, title: `Changelog` })
               }
             }
