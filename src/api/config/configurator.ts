@@ -289,6 +289,9 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
 
   const publicAbsolutePath = rootAbsolute(`public`)
   const publicAbsolute = Path.ensureAbsoluteWith(publicAbsolutePath)
+
+  const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
+
   return {
     project: {
       rootDir,
@@ -297,7 +300,12 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
           root: `build`,
           relative: {
             serverEntrypoint: `app.js`,
-            assets: `assets`,
+            assets: {
+              root: `assets`,
+              relative: {
+                schemas: `schemas`,
+              },
+            },
           },
         },
         pages: `pages`,
@@ -311,7 +319,10 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
         build: {
           root: buildAbsolute(`.`),
           serverEntrypoint: buildAbsolute(`app.js`),
-          assets: buildAbsolute(`assets`),
+          assets: {
+            root: buildAbsolute(`assets`),
+            schemas: assetsAbsolute(`schemas`),
+          },
         },
         public: {
           root: publicAbsolute(`.`),
@@ -353,7 +364,12 @@ export interface Config {
         build: {
           root: string
           relative: {
-            assets: string
+            assets: {
+              root: string
+              relative: {
+                schemas: string
+              }
+            }
             serverEntrypoint: string
           }
         }
@@ -366,7 +382,10 @@ export interface Config {
       absolute: {
         build: {
           root: string
-          assets: string
+          assets: {
+            root: string
+            schemas: string
+          }
           serverEntrypoint: string
         }
         pages: string

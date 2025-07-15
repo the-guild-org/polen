@@ -19,7 +19,7 @@ const loader = createLoader(async ({ params }) => {
   // - Unversioned: /reference/:type → params.version is undefined, defaults to latest
   const currentVersion = params.version ?? VERSION_LATEST
 
-  const schema = await SchemaSource.getSchema(currentVersion)
+  const schema = await SchemaSource.get(currentVersion)
   const availableVersions = SchemaSource.getAvailableVersions()
 
   return {

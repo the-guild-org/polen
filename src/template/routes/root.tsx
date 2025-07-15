@@ -29,6 +29,7 @@ import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.jsonsuper'
 import { routes } from 'virtual:polen/project/routes.jsx'
+import PROJECT_SCHEMA from 'virtual:polen/project/schema.jsonsuper'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { GraphQLSchemaProvider } from '../../lib/graphql-document/schema-context.js'
 import { CodeBlock } from '../components/CodeBlock.js'
@@ -43,7 +44,7 @@ import { index } from './index.js'
 import { reference } from './reference.js'
 
 export const Component = () => {
-  const schema = PROJECT_DATA.schema?.versions[0]?.after || null
+  const schema = PROJECT_SCHEMA?.versions[0]?.after || null
 
   // Make schema available globally for MDX components
   if (typeof window !== `undefined` && schema) {
@@ -192,7 +193,7 @@ const children: ReactRouter.RouteObject[] = [
 //
 //
 
-if (PROJECT_DATA.schema) {
+if (PROJECT_SCHEMA) {
   children.push(changelog)
   children.push(reference)
 }

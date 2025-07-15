@@ -1,12 +1,12 @@
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import PROJECT_SCHEMA from 'virtual:polen/project/schema.jsonsuper'
 import { Changelog } from '../components/Changelog.js'
 import { ChangelogLayout } from '../components/ChangelogLayout.js'
 
 const loader = createLoader(() => {
   return {
-    schema: PROJECT_DATA.schema,
+    schema: PROJECT_SCHEMA,
   }
 })
 

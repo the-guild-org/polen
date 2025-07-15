@@ -1,21 +1,30 @@
 import type { GraphQLSchema } from 'graphql'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
 import PROJECT_SCHEMA_METADATA from 'virtual:polen/project/schema-metadata'
-import { dateToVersionString, VERSION_LATEST } from '../lib/schema-utils/constants.js'
+import { polenUrlPathAssets } from '../lib/polen-url.js'
 import { astToSchema, createSchemaCache } from '../lib/schema-utils/schema-utils.js'
 
 // Cache for loaded schemas
 const schemaCache = createSchemaCache()
 
+// HMR cache invalidation for development
+if (import.meta.hot) {
+  import.meta.hot.on('polen:schema-invalidate', () => {
+    console.log('[HMR] Schema cache invalidated')
+    schemaCache.clear()
+
+    // Brute force approach: reload the page to ensure fresh data
+    // This guarantees all components see the updated schema immediately
+    // TODO: When we have reactive data fetching, remove this reload
+    //       and let the reactive system handle updates gracefully
+    window.location.reload()
+  })
+}
+
 /**
  * Check if schema data is available
  */
 export const hasSchema = (): boolean => {
-  // In dev mode, check virtual module
-  if (PROJECT_DATA.schema) {
-    return true
-  }
-  // In prod mode, check metadata
   return PROJECT_SCHEMA_METADATA.hasSchema
 }
 
@@ -23,30 +32,14 @@ export const hasSchema = (): boolean => {
  * Get available schema versions
  */
 export const getAvailableVersions = (): string[] => {
-  // In dev mode, derive from virtual module
-  if (PROJECT_DATA.schema) {
-    return PROJECT_DATA.schema.versions.map((version, index) =>
-      index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
-    )
-  }
-  // In prod mode, use metadata
   return PROJECT_SCHEMA_METADATA.versions
 }
 
 /**
  * Get schema for a specific version
  */
-export const getSchema = async (version: string): Promise<GraphQLSchema | null> => {
-  // In dev mode, use virtual module data
-  if (PROJECT_DATA.schema) {
-    const schemaVersion = version === VERSION_LATEST
-      ? PROJECT_DATA.schema.versions[0]
-      : PROJECT_DATA.schema.versions.find(v => dateToVersionString(v.date) === version)
-
-    return schemaVersion?.after || null
-  }
-
-  // In prod mode, check if we have schema metadata
+export const get = async (version: string): Promise<GraphQLSchema | null> => {
+  // Check if we have schema metadata
   if (!PROJECT_SCHEMA_METADATA.hasSchema) {
     return null
   }
@@ -58,8 +51,13 @@ export const getSchema = async (version: string): Promise<GraphQLSchema | null> 
 
   // Fetch schema from assets
   try {
-    const assetPath = `${PROJECT_DATA.basePath}${PROJECT_DATA.paths.relative.build.relative.assets}`
-    const response = await fetch(`${assetPath}/schemas/${version}.json`)
+    // Construct URL - works for both dev and prod due to dev asset middleware
+    const schemaUrl = polenUrlPathAssets(
+      PROJECT_DATA.paths.relative.build.relative.assets.relative.schemas,
+      `${version}.json`
+    )
+
+    const response = await fetch(schemaUrl)
 
     if (!response.ok) {
       throw new Error(`Failed to fetch schema for version ${version}`)

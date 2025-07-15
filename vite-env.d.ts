@@ -106,6 +106,11 @@ declare module 'virtual:polen/project/data.jsonsuper' {
   export { data as default }
 }
 
+declare module 'virtual:polen/project/schema.jsonsuper' {
+  const schema: import('#api/schema/index').Schema.Schema | null
+  export { schema as default }
+}
+
 declare module 'virtual:polen/project/data/pages-catalog.jsonsuper' {
   const data: import('#api/vite/plugins/pages').ProjectPagesCatalog
   export { data as default }

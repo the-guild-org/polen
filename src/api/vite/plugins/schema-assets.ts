@@ -3,6 +3,9 @@ import type { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
+import { Cache } from '@wollybeard/kit'
+import * as NodeFs from 'node:fs/promises'
+import * as NodePath from 'node:path'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
 import { dateToVersionString, type SchemaMetadata, VERSION_LATEST } from '../../schema/schema.js'
@@ -28,90 +31,173 @@ export const viProjectSchemaMetadata = polenVirtual([`project`, `schema-metadata
  */
 export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
   const debug = debugPolen.sub(`vite-plugin:schema-assets`)
-  let schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>> | null = null
-  let metadata: SchemaMetadata = { hasSchema: false, versions: [] }
-  let isServeMode = false
+  let viteServer: Vite.ViteDevServer | null = null
+
+  // Helper to load and process schema data
+  const loadAndProcessSchemaData = Cache.memoize(async () => {
+    const schemaData = await Schema.readOrThrow({
+      ...config.schema,
+      projectRoot: config.paths.project.rootDir,
+    })
+
+    if (!schemaData) {
+      const metadata: SchemaMetadata = { hasSchema: false, versions: [] }
+      return {
+        schemaData: null,
+        metadata,
+      }
+    }
+
+    // Apply augmentations
+    schemaData.versions.forEach(version => {
+      SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+    })
+
+    // Build metadata
+    const versionStrings: string[] = []
+    for (const [index, version] of schemaData.versions.entries()) {
+      const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
+      versionStrings.push(versionName)
+    }
+
+    const metadata = {
+      hasSchema: true,
+      versions: versionStrings,
+    }
+
+    debug(`schemaDataLoaded`, { versionCount: schemaData.versions.length })
+
+    return {
+      schemaData,
+      metadata,
+    }
+  })
+
+  // Helper to write assets directly to filesystem in dev mode
+  const writeDevAssets = async (
+    schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>,
+    metadata: SchemaMetadata,
+  ) => {
+    if (!schemaData) return
+
+    const devAssetsDir = NodePath.join(config.paths.framework.rootDir, 'node_modules/.vite/polen-assets/schemas')
+    await NodeFs.mkdir(devAssetsDir, { recursive: true })
+
+    // Write schema JSON files
+    for (const [index, version] of schemaData.versions.entries()) {
+      const schemaString = Grafaid.Schema.print(version.after)
+      const ast = Grafaid.Schema.AST.parse(schemaString)
+      const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
+
+      const filePath = NodePath.join(devAssetsDir, `${versionName}.json`)
+      await NodeFs.writeFile(filePath, JSON.stringify(ast), 'utf-8')
+
+      debug(`devAssetWritten`, { fileName: `${versionName}.json` })
+    }
+
+    // Write metadata file
+    const metadataPath = NodePath.join(devAssetsDir, 'metadata.json')
+    await NodeFs.writeFile(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8')
+    debug(`devMetadataWritten`, {})
+  }
 
   return {
     name: `polen:schema-assets`,
 
-    configureServer() {
-      isServeMode = true
+    configureServer(server) {
+      viteServer = server
     },
 
     async buildStart() {
       debug(`buildStart`, {})
 
-      if (isServeMode) {
-        // Skip expensive schema processing in dev mode
-        // But still provide virtual module for import resolution
-        metadata = { hasSchema: false, versions: [] }
-        debug(`devMode:skippingSchemaProcessing`, {})
-        return
-      }
-
-      // Read schema files (build mode only)
-      schemaData = await Schema.readOrThrow({
-        ...config.schema,
-        projectRoot: config.paths.project.rootDir,
-      })
+      // Load and process schema data
+      const { schemaData, metadata } = await loadAndProcessSchemaData()
 
       if (!schemaData) {
         debug(`noSchemaFound`, {})
         return
       }
 
-      // Apply augmentations
-      schemaData.versions.forEach(version => {
-        SchemaAugmentation.apply(version.after, config.schemaAugmentations)
-      })
+      // Handle asset generation differently for dev vs build
+      if (viteServer) {
+        // Dev mode: Write assets directly to filesystem
+        await writeDevAssets(schemaData, metadata)
+      } else {
+        // Build mode: Use Vite's emitFile
+        for (const [index, version] of schemaData.versions.entries()) {
+          // Convert GraphQL Schema to AST JSON
+          const schemaString = Grafaid.Schema.print(version.after)
+          const ast = Grafaid.Schema.AST.parse(schemaString)
 
-      // Build metadata
-      const versionStrings: string[] = []
-      for (const [index, version] of schemaData.versions.entries()) {
-        const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
-        versionStrings.push(versionName)
-      }
+          // Determine version name
+          const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
+          const assetFileName =
+            `${config.paths.project.relative.build.relative.assets.root}/schemas/${versionName}.json`
 
-      metadata = {
-        hasSchema: true,
-        versions: versionStrings,
-      }
+          this.emitFile({
+            type: `asset`,
+            fileName: assetFileName,
+            source: JSON.stringify(ast),
+          })
 
-      debug(`schemasFound`, { versionCount: schemaData.versions.length })
+          debug(`schemaAssetEmitted`, { fileName: assetFileName })
+        }
 
-      // Emit JSON assets for each version (build mode only)
-      for (const [index, version] of schemaData.versions.entries()) {
-        // Convert GraphQL Schema to AST JSON
-        const schemaString = Grafaid.Schema.print(version.after)
-        const ast = Grafaid.Schema.AST.parse(schemaString)
-
-        // Determine version name
-        const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
-
-        // Emit the asset
-        const assetFileName = `${config.paths.project.relative.build.relative.assets}/schemas/${versionName}.json`
+        // Emit metadata file
         this.emitFile({
           type: `asset`,
-          fileName: assetFileName,
-          source: JSON.stringify(ast),
+          fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/metadata.json`,
+          source: JSON.stringify(metadata, null, 2),
         })
-
-        debug(`schemaAssetEmitted`, { fileName: assetFileName })
       }
 
-      // Emit metadata file
-      this.emitFile({
-        type: `asset`,
-        fileName: `${config.paths.project.relative.build.relative.assets}/schemas/metadata.json`,
-        source: JSON.stringify(metadata, null, 2),
-      })
+      // Set up file watching for schema changes in dev mode
+      if (viteServer) {
+        // TODO: Watch schema source files and trigger regeneration + HMR
+        debug(`devMode:schemaWatchingEnabled`, {})
+      }
+    },
+
+    async handleHotUpdate({ file, server }) {
+      const isSchemaFile = config.schema && (
+        (config.schema.dataSources?.file?.path && file.includes(config.schema.dataSources.file.path))
+        || (config.schema.dataSources?.directory?.path && file.includes(config.schema.dataSources.directory.path))
+      )
+      if (isSchemaFile) {
+        debug(`schemaFileChanged`, { file })
+
+        // Regenerate schema assets
+        try {
+          loadAndProcessSchemaData.clear()
+          const { schemaData, metadata } = await loadAndProcessSchemaData()
+
+          if (schemaData) {
+            debug(`hmr:schemaRegenerated`, { versionCount: schemaData.versions.length })
+
+            // Write new assets to filesystem
+            await writeDevAssets(schemaData, metadata)
+          }
+        } catch (error) {
+          debug(`hmr:schemaRegenerationFailed`, { error })
+        }
+
+        // Send HMR invalidation signal
+        server.ws.send({
+          type: 'custom',
+          event: 'polen:schema-invalidate',
+          data: { timestamp: Date.now() },
+        })
+
+        debug(`hmr:schemaInvalidationSent`, {})
+      }
     },
 
     ...ViteVirtual.IdentifiedLoader.toHooks({
       identifier: viProjectSchemaMetadata,
-      loader() {
+      async loader() {
         debug(`virtualModuleLoad`, { id: viProjectSchemaMetadata.id })
+        const { metadata } = await loadAndProcessSchemaData()
         return `export default ${JSON.stringify(metadata)}`
       },
     }),
