@@ -72,3 +72,14 @@ test('can loads schema from directory data source', async ({ page, vite, project
   await page.getByText('reference').click()
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
+
+test('can loads schema from directory data source with single schema.graphql', async ({ page, vite, project }) => {
+  await project.layout.set({
+    'schema/schema.graphql': sdl,
+  })
+  const viteUserConfig = await pc({}, project.layout.cwd)
+  const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
+  await page.goto(viteDevServer.url('/').href)
+  await page.getByText('reference').click()
+  await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
+})

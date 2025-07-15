@@ -22,7 +22,7 @@ node build/app.js
 
 #### `PORT`
 
-Optionally set the port the server listens on. Overrides port [build configuration](/features/config) if given. Example:
+Optionally set the port the server listens on. Overrides port [build configuration](/features/configuration) if given. Example:
 
 ```sh
 PORT=8080 node build/app.js

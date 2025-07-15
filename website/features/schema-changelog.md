@@ -1,63 +1,57 @@
 # Schema Changelog
 
-Polen can render a changelog for your GraphQL schema, showing how it has evolved over time.
+::: info
+This page assumes basic knowledge of schema configuration and versioning concepts. See [Schema Overview](/features/schema-overview) for foundational information.
+:::
 
-## Overview
+## Introduction
 
-This feature is automatically enabled when you provide multiple versions of your schema.
+Polen can render a changelog for your GraphQL schema [when it is versioned](/features/schema-overview#versioning), showing how it has evolved over time.
 
 When active, a "Changelog" link appears in the navigation bar.
 
-The overall process performed by Polen is something like this:
+The overall process performed by Polen goes something like this:
 
 1. Polen reads a set of schemas (see [Schema Overview](/features/schema-overview) for configuration details)
 2. Orders them by date
 3. Detects differences (changes) between each sequential pair (powered by GraphQL Inspector)
 4. Displays in chronological order (newest at page top) one section per schema, each section displaying how it changed
 
-## Configuration
-
-To enable the changelog feature, you need to configure multiple schema versions. See [Schema Overview](/features/schema-overview) for complete configuration details including:
-
-- Directory-based configuration with dated SDL files
-- Memory-based configuration with version arrays
-- Supported version formats and requirements
-
 ## Change Types
 
 Polen displays all GraphQL schema changes detected by GraphQL Inspector, organized into logical groups:
 
-### Type Changes
+#### Type Changes
 
 - **Operations** - Types added, removed, or changed in kind
 - **Descriptions** - Type description modifications
 
-### Field Changes
+#### Field Changes
 
 - **Operations** - Fields added, removed, or type changed
 - **Descriptions** - Field description modifications
 - **Deprecation** - Field deprecation status changes
 - **Deprecation Reasons** - Field deprecation reason modifications
 
-### Argument Changes
+#### Argument Changes
 
 - **Operations** - Arguments added or removed
 - **Modifications** - Default value or type changes
 - **Descriptions** - Argument description changes
 
-### Enum Changes
+#### Enum Changes
 
 - **Value Operations** - Enum values added or removed
 - **Value Descriptions** - Enum value description changes
 - **Value Deprecation** - Enum value deprecation reason changes
 
-### Input Type Changes
+#### Input Type Changes
 
 - **Field Operations** - Input fields added, removed, or type changed
 - **Field Descriptions** - Input field description changes
 - **Default Values** - Input field default value changes
 
-### Schema Composition Changes
+#### Schema Composition Changes
 
 - **Union Members** - Types added/removed from unions
 - **Interface Implementations** - Objects implementing/removing interfaces
@@ -97,10 +91,3 @@ If your changelog shows a version from "March 10, 2024", you can view that versi
 
 - The changelog page is accessible at `/changelog`
 - A "Changelog" link appears in the navigation bar when you have 2 or more schema versions
-
-### Current Limitations
-
-- Only works with SDL-based schemas (file, directory, or memory with SDL strings)
-- Does not support schemas provided via introspection or other non-SDL sources
-- Does not have a version selector for the reference documentation
-- Shows all changes in a single chronological view without filtering options

@@ -1,4 +1,6 @@
-## Logo
+# Logo
+
+## Introduction
 
 You can provide a custom logo for your developer portal by placing a `logo.svg` file in your project's `public` directory:
 
