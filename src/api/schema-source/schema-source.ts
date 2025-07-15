@@ -54,7 +54,11 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
       const schema = await get(version)
       if (!schema) continue
 
-      const changelogData = await getChangelog(version)
+      // Only try to read changelog for non-oldest versions (matching writeDevAssets logic)
+      let changelogData = null
+      if (i < config.versions.length - 1) {
+        changelogData = await getChangelog(version)
+      }
 
       if (changelogData) {
         const prevVersion = config.versions[i + 1]
