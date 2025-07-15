@@ -12,21 +12,10 @@ const io = import.meta.env.SSR
       const { readFile } = await import('node:fs/promises')
 
       // Extract the path after the assets route
-      // The incoming path includes the base path from the client
-      // e.g., "/assets/schemas/latest.json" -> "schemas/latest.json" (no base path)
-      // e.g., "/demos/pokemon/assets/schemas/latest.json" -> "schemas/latest.json" (with base path)
-      const basePath = PROJECT_DATA.basePath
+      // e.g., "/assets/schemas/latest.json" -> "schemas/latest.json"
+      // e.g., "/demos/pokemon/assets/schemas/latest.json" -> "schemas/latest.json"
       const assetsRoute = PROJECT_DATA.server.routes.assets
-
-      // Escape special regex characters in paths
-      const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-      // Build precise pattern that accounts for base path
-      const pattern = basePath === '/' || basePath === ''
-        ? `^${escapeRegex(assetsRoute)}/(.+)$`
-        : `^${escapeRegex(basePath)}${escapeRegex(assetsRoute)}/(.+)$`
-
-      const routePattern = new RegExp(pattern)
+      const routePattern = new RegExp(`${assetsRoute}/(.+)$`)
       const match = path.match(routePattern)
       const assetPath = match ? match[1] : path
 
