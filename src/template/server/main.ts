@@ -15,7 +15,7 @@ if (__BUILDING__) {
       const app = createApp({
         paths: {
           assets: {
-            directory: PROJECT_DATA.paths.absolute.build.assets.root,
+            directory: PROJECT_DATA.paths.relative.build.relative.assets.root,
             route: PROJECT_DATA.server.routes.assets,
           },
           base: PROJECT_DATA.basePath,

@@ -19,7 +19,20 @@ export interface AppOptions {
   paths: {
     base: string
     assets: {
+      /**
+       * Directory path for serving static assets.
+       * MUST be a relative path from process.cwd() due to @hono/node-server constraints.
+       * Absolute paths are NOT supported by the serveStatic middleware.
+       *
+       * @example './node_modules/.vite/polen-assets'
+       * @example '../../../polen/node_modules/.vite/polen-assets'
+       * @example './dist/assets'
+       */
       directory: string
+      /**
+       * URL route prefix for serving assets
+       * @example '/assets'
+       */
       route: string
     }
   }
@@ -27,6 +40,22 @@ export interface AppOptions {
 
 export const createApp = (options: AppOptions) => {
   const app = new Hono.Hono().basePath(options.paths.base)
+
+  // Static file serving
+  app.use(`*`, UnsupportedAssetsMiddleware())
+
+  const assetsRoutePattern = `${options.paths.assets.route}/*`
+
+  app.use(
+    assetsRoutePattern,
+    serveStatic({
+      root: options.paths.assets.directory,
+      rewriteRequestPath: (path) => path.replace(/^\/assets/, ''),
+      onNotFound(path) {
+        console.log('not found', path)
+      },
+    }),
+  )
 
   // Collect all HTML transformers
   const htmlTransformers: HtmlTransformer[] = [
@@ -36,13 +65,6 @@ export const createApp = (options: AppOptions) => {
     createThemeInitInjector(),
     ...(options.hooks?.transformHtml || []),
   ]
-
-  // Static file serving
-  app.use(`*`, UnsupportedAssetsMiddleware())
-  app.use(
-    `${options.paths.assets.route}/*`,
-    serveStatic({ root: options.paths.assets.directory }),
-  )
 
   if (__BUILDING__) {
     // Add manifest transformer
