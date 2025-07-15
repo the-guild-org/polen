@@ -342,6 +342,9 @@ export interface Config {
   }
   server: {
     port: number
+    routes: {
+      assets: string
+    }
   }
   watch: {
     also: string[]
@@ -420,6 +423,9 @@ const configInputDefaults: Config = {
   },
   server: {
     port: 3000,
+    routes: {
+      assets: '/assets',
+    },
   },
   schema: null,
   ssr: {
@@ -525,6 +531,9 @@ export const normalizeInput = async (
   if (configInput?.server?.port !== undefined) {
     config.server.port = configInput.server.port
   }
+
+  // Server routes are not configurable by users yet, use defaults
+  // config.server.routes is already set from defaultConfig
 
   // Process warnings configuration
   if (configInput?.warnings?.interactiveWithoutSchema?.enabled !== undefined) {

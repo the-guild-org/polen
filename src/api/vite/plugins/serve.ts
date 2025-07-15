@@ -8,6 +8,7 @@ import { debugPolen } from '#singletons/debug'
 import type { App, AppOptions } from '#template/server/app'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err } from '@wollybeard/kit'
+import * as NodePath from 'node:path'
 
 interface AppServerModule {
   createApp: (options: AppOptions) => App
@@ -76,8 +77,8 @@ export const Serve = (
           paths: {
             base: config.build.base,
             assets: {
-              directory: import.meta.resolve('node_modules/.vite/polen-assets'),
-              route: '/assets/',
+              directory: NodePath.join(config.paths.framework.rootDir, 'node_modules/.vite/polen-assets'),
+              route: config.server.routes.assets,
             },
           },
         })

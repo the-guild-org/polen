@@ -39,7 +39,10 @@ export const createApp = (options: AppOptions) => {
 
   // Static file serving
   app.use(`*`, UnsupportedAssetsMiddleware())
-  app.use(options.paths.assets.route, serveStatic({ root: options.paths.assets.directory }))
+  app.use(
+    `${options.paths.assets.route}/*`,
+    serveStatic({ root: options.paths.assets.directory }),
+  )
 
   if (__BUILDING__) {
     // Add manifest transformer

@@ -226,14 +226,14 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               navbar, // Complete navbar with schema and pages
               server: {
                 port: config.server.port,
+                routes: config.server.routes,
                 static: {
                   // todo
                   // relative from CWD of process that boots n1ode server
                   // can easily break! Use path relative in server??
                   directory: `./` + config.paths.project.relative.build.root,
-                  // Uses Hono route syntax - includes base path
-                  route: config.build.base.slice(0, -1) + `/` + config.paths.project.relative.build.relative.assets.root
-                    + `/*`,
+                  // Just the clean route path - app.ts will add Hono pattern
+                  route: config.server.routes.assets,
                 },
               },
               warnings: config.warnings,

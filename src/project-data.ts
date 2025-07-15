@@ -11,6 +11,9 @@ export interface ProjectData {
       directory: string
       route: string
     }
+    routes: {
+      assets: string
+    }
   }
   warnings: Config.Config[`warnings`]
 }

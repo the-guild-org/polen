@@ -16,9 +16,9 @@ if (__BUILDING__) {
         paths: {
           assets: {
             directory: PROJECT_DATA.paths.absolute.build.assets.root,
-            route: `/assets/`,
+            route: PROJECT_DATA.server.routes.assets,
           },
-          base: '/',
+          base: PROJECT_DATA.basePath,
         },
       })
       serve({ fetch: app.fetch, port })

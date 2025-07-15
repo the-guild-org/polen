@@ -49,7 +49,7 @@ export const polenUrlPath = (...segments: string[]): string => {
  */
 export const polenUrlPathAssets = (...segments: string[]): string => {
   return polenUrlPath(
-    'assets',
+    PROJECT_DATA.server.routes.assets,
     ...segments,
   )
 }
