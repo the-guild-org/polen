@@ -59,15 +59,78 @@ export default Polen.defineConfig({
 })
 ```
 
+### Introspection File Convention
+
+If you have a `schema.introspection.json` file in your project root, Polen will automatically use it as a schema source. This file should contain a standard GraphQL introspection query result.
+
+**This enables interoperability**: Any tool that produces a valid GraphQL introspection JSON file will work with Polen:
+
+- GraphQL Codegen
+- Apollo CLI
+- Custom scripts
+- CI/CD pipelines
+
+```
+schema.introspection.json  # Polen automatically detects this
+```
+
+#### Automatic Introspection
+
+Polen can also fetch and cache introspection results for you if you configure it. For example:
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  schema: {
+    dataSources: {
+      introspection: {
+        url: 'https://api.example.com/graphql',
+        headers: {
+          'Authorization': `Bearer ${process.env.API_TOKEN}`,
+        },
+      },
+    },
+  },
+})
+```
+
+##### Lifecycle Details
+
+- If there is a `schema.introspection.json` file then Polen will not run introspection.
+- If there is no file present then Polen will perform introspection and create `schema.introspection.json`
+- So, delete this file to have new introspection.
+- **Note**: Schema files are not watched for changes. Restart the dev server after deleting `schema.introspection.json` to fetch fresh data.
+
+##### Query details
+
+- Polen uses Graffle's introspection extension which performs the [standard GraphQL introspection query](https://spec.graphql.org/draft/#sec-Introspection)
+- Fetches complete schema information: all types, fields, descriptions, deprecations, directives, etc.
+- Currently no configuration options for customizing the introspection query
+- The `schema.introspection.json` file contains the raw introspection query result in standard GraphQL format
+- The file format is validated when read - invalid JSON or introspection data will produce clear error messages
+
 ### Precedence
 
 When multiple schema sources are available, Polen uses the following precedence order:
 
-1. **Configuration** - If you specify `schema` in your `polen.config.ts`, it takes precedence over any file-based detection
-2. **Directory Convention** - If no configuration is provided, Polen looks for a `schema/` directory first
-3. **File Convention** - If no directory is found, Polen falls back to looking for a single `schema.graphql` file
+1. **Data** - Pre-built schema objects (if configured)
+2. **Directory Convention** - `schema/` directory with versioned SDL files
+3. **File Convention** - Single `schema.graphql` file
+4. **Memory** - Inline schemas in configuration
+5. **Introspection** - GraphQL endpoint introspection
 
-This means configuration always overrides convention-based detection, allowing you to explicitly control which schema source to use regardless of what files exist in your project.
+You can override this default order using the `useDataSources` configuration:
+
+```ts
+schema: {
+  // Try introspection first, fall back to file
+  useDataSources: ['introspection', 'file'],
+  dataSources: {
+    introspection: { url: 'https://api.example.com/graphql' },
+    file: { path: './fallback-schema.graphql' }
+  }
+}
 
 ## Versioning
 
@@ -114,7 +177,7 @@ Polen provides the following schema-related features:
 
 ## Current Limitations
 
-- Only works with SDL-based schemas (file, directory, or memory with SDL strings)
-- Introspection is only available through `polen open` for instant exploration, not for building your own Polen site ([enhancement request](https://github.com/the-guild-org/polen/issues/124))
+- Introspection only supports single schemas (no versioning/changelog support)
 - Version navigation in the reference docs requires manual URL construction
 - Changelog doesn't include clickable links to versioned reference pages
+```

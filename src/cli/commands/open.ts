@@ -132,7 +132,7 @@ const wrapCache = <fn extends Fn.AnyAnyAsync>(fn: fn): fn => {
 
 // todo: use a proper validation, e.g. zod, better yet: allow to specify the validation in molt itself
 const parseHeaders = (headersJsonEncoded: string): Record<string, string> => {
-  const headersJson = Json.codec.deserialize(headersJsonEncoded)
+  const headersJson = Json.codec.decode(headersJsonEncoded)
   if (!Rec.is(headersJson)) {
     console.log(`--introspection-headers must be a JSON object.`)
     process.exit(1)

@@ -31,25 +31,56 @@ export interface ConfigInput {
    * - `file` - Load from a single SDL file (default: schema.graphql)
    * - `directory` - Load multiple SDL files with date prefixes (enables changelog)
    * - `memory` - Define schemas programmatically in configuration
+   * - `introspection` - Fetch schema from a GraphQL endpoint
+   * - `data` - Use pre-built schema objects
    *
    * @example
    * ```ts
-   * // Single file
+   * // Default: looks for schema.graphql
+   * schema: {}
+   *
+   * // Load via introspection
    * schema: {
-   *   useDataSources: 'file',
    *   dataSources: {
-   *     file: { path: './my-schema.graphql' }
+   *     introspection: {
+   *       url: 'https://api.example.com/graphql',
+   *       headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+   *     }
    *   }
    * }
    *
    * // Multiple versions for changelog
    * schema: {
-   *   useDataSources: 'directory',
    *   dataSources: {
    *     directory: { path: './schema' }
    *   }
    * }
+   *
+   * // Custom source order
+   * schema: {
+   *   useDataSources: ['introspection', 'file'],
+   *   dataSources: {
+   *     introspection: { url: 'https://api.example.com/graphql' },
+   *     file: { path: './fallback.graphql' }
+   *   }
+   * }
    * ```
+   *
+   * **Two introspection features**:
+   * 1. **File Convention**: Polen auto-detects `schema.introspection.json` files
+   * 2. **Config-driven**: Polen fetches and caches introspection for you
+   *
+   * **Interoperability**: The `schema.introspection.json` file uses the standard
+   * GraphQL introspection format, compatible with GraphQL Codegen, Apollo CLI, etc.
+   *
+   * **Lifecycle**:
+   * - First run: Fetches from endpoint, saves to `schema.introspection.json`
+   * - Subsequent runs: Loads from JSON file (no network request)
+   * - To refresh: Delete the JSON file
+   * - Runs during `polen dev` and `polen build`, never at runtime
+   *
+   * **Query details**: Uses the standard introspection query from the GraphQL spec
+   * @see https://spec.graphql.org/draft/#sec-Introspection
    */
   schema?: SchemaConfigInput
   /**

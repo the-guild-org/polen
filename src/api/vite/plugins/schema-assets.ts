@@ -35,27 +35,28 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
   // Helper to load and process schema data
   const loadAndProcessSchemaData = Cache.memoize(async () => {
-    const schemaData = await Schema.readOrThrow({
+    const schemaResult = await Schema.readOrThrow({
       ...config.schema,
       projectRoot: config.paths.project.rootDir,
     })
 
-    if (!schemaData) {
+    if (!schemaResult.data) {
       const metadata: Schema.SchemaMetadata = { hasSchema: false, versions: [] }
       return {
         schemaData: null,
         metadata,
+        source: schemaResult.source,
       }
     }
 
     // Apply augmentations
-    schemaData.forEach(version => {
+    schemaResult.data.forEach(version => {
       SchemaAugmentation.apply(version.after, config.schemaAugmentations)
     })
 
     // Build metadata
     const versionStrings: string[] = []
-    for (const [index, version] of schemaData.entries()) {
+    for (const [index, version] of schemaResult.data.entries()) {
       const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
       versionStrings.push(versionName)
     }
@@ -65,11 +66,12 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       versions: versionStrings,
     }
 
-    debug(`schemaDataLoaded`, { versionCount: schemaData.length })
+    debug(`schemaDataLoaded`, { versionCount: schemaResult.data.length })
 
     return {
-      schemaData,
+      schemaData: schemaResult.data,
       metadata,
+      source: schemaResult.source,
     }
   })
 
@@ -149,6 +151,13 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         debug(`watchingSchemaFile`, { path: config.schema.dataSources.file.path })
       }
 
+      if (config.schema?.dataSources?.introspection?.url) {
+        // Watch the introspection file if introspection is configured
+        const introspectionFilePath = NodePath.join(config.paths.project.rootDir, `schema.introspection.json`)
+        server.watcher.add(introspectionFilePath)
+        debug(`watchingIntrospectionFile`, { path: introspectionFilePath })
+      }
+
       // Handle file removal
       server.watcher.on('unlink', async (file) => {
         const isSchemaFile = config.schema && (() => {
@@ -172,6 +181,15 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
             if (absoluteFile.startsWith(absoluteSchemaDir + NodePath.sep)) return true
           }
 
+          // Check if file is the introspection file
+          if (config.schema.dataSources?.introspection?.url) {
+            const absoluteIntrospectionFile = NodePath.resolve(
+              config.paths.project.rootDir,
+              `schema.introspection.json`,
+            )
+            if (absoluteFile === absoluteIntrospectionFile) return true
+          }
+
           return false
         })()
 
@@ -181,14 +199,33 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
           try {
             // Clear cache and regenerate
             loadAndProcessSchemaData.clear()
-            const { schemaData, metadata } = await loadAndProcessSchemaData()
+            const { schemaData, metadata, source } = await loadAndProcessSchemaData()
 
-            if (schemaData) {
+            // If file was deleted but can be recreated, attempt recreation
+            if (!schemaData && source.reCreate) {
+              debug(`attemptingSchemaRecreation`, { sourceType: source.type })
+              try {
+                const recreatedData = await source.reCreate()
+                if (recreatedData) {
+                  // Clear cache again and reload after recreation
+                  loadAndProcessSchemaData.clear()
+                  const reloadResult = await loadAndProcessSchemaData()
+                  if (reloadResult.schemaData) {
+                    await writeDevAssets(reloadResult.schemaData, reloadResult.metadata)
+                    debug(`hmr:schemaRecreatedAndWritten`, { versionCount: reloadResult.schemaData.length })
+                  }
+                } else {
+                  debug(`hmr:schemaRecreationFailed`, { reason: 'reCreate returned null' })
+                }
+              } catch (recreationError) {
+                debug(`hmr:schemaRecreationFailed`, { error: recreationError })
+              }
+            } else if (schemaData) {
               // Write new assets without the removed file
               await writeDevAssets(schemaData, metadata)
               debug(`hmr:schemaAssetsUpdatedAfterRemoval`, { versionCount: schemaData.length })
             } else {
-              // No schema data - clear all assets
+              // No schema data and cannot recreate - clear all assets
               const schemaSource = createDevSchemaSource({ hasSchema: false, versions: [] })
               await schemaSource.clearAllAssets()
               debug(`hmr:allAssetsCleared`, {})
@@ -272,6 +309,15 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
             config.schema.dataSources.directory.path,
           )
           if (absoluteFile.startsWith(absoluteSchemaDir + NodePath.sep)) return true
+        }
+
+        // Check if file is the introspection file
+        if (config.schema.dataSources?.introspection?.url) {
+          const absoluteIntrospectionFile = NodePath.resolve(
+            config.paths.project.rootDir,
+            `schema.introspection.json`,
+          )
+          if (absoluteFile === absoluteIntrospectionFile) return true
         }
 
         return false
