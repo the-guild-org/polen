@@ -134,7 +134,7 @@ export const readOrThrow = async (
     const schemaData = await createSingleSchemaChangeset(schema)
     return {
       data: schemaData,
-      source: { type: 'introspectionFile' }
+      source: { type: 'introspectionFile' },
     }
   } else {
     // Fetch via introspection - can reCreate
@@ -164,8 +164,8 @@ export const readOrThrow = async (
           // Re-fetch using captured config - capture closure
           const result = await readOrThrow(configInput)
           return result.data
-        }
-      }
+        },
+      },
     }
   }
 }

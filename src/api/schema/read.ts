@@ -2,7 +2,14 @@ import { Arr, Fs, Path } from '@wollybeard/kit'
 import * as DataSources from './data-sources/data-sources.js'
 import type { NonEmptyChangeSets } from './schema.js'
 
-export type DataSourceType = `file` | `directory` | `memory` | `data` | `introspection` | `introspectionFile` | `introspectionAuto`
+export type DataSourceType =
+  | `file`
+  | `directory`
+  | `memory`
+  | `data`
+  | `introspection`
+  | `introspectionFile`
+  | `introspectionAuto`
 
 /**
  * Result of schema reading with provenance tracking for file watching and debugging.
@@ -13,10 +20,10 @@ export interface SchemaReadResult {
     type: DataSourceType
     /**
      * Recreate the schema data and file after it has been deleted.
-     * 
+     *
      * This function re-fetches data from the original source and recreates
      * the schema file on disk. Only called by file watchers after deletion.
-     * 
+     *
      * @returns Promise resolving to the recreated schema data, or null if recreation fails
      */
     reCreate?: () => Promise<NonEmptyChangeSets | null>
