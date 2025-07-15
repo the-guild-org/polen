@@ -113,7 +113,9 @@ export function create<T extends PathInput>(paths: T, base?: string): RelativePa
   const trimmedBase = base.trim()
   // Collapse multiple slashes to single, then remove trailing (unless it's just "/")
   const collapsedBase = trimmedBase.replace(/\/+/g, `/`)
-  const normalizedBase = collapsedBase === `/` ? `/` : collapsedBase.replace(/\/$/, ``)
+  // Handle edge case where base is "/." - this should become "/"
+  const cleanedBase = collapsedBase === `/.` ? `/` : collapsedBase
+  const normalizedBase = cleanedBase === `/` ? `/` : cleanedBase.replace(/\/$/, ``)
 
   const rooted = processRootedPaths(paths, [])
   const absolute = processAbsolutePaths(paths, normalizedBase, [])
