@@ -13,8 +13,10 @@ const io = import.meta.env.SSR
 
       // Extract the path after the assets route
       // e.g., "/assets/schemas/latest.json" -> "schemas/latest.json"
+      // e.g., "/demos/pokemon/assets/schemas/latest.json" -> "schemas/latest.json"
       const assetsRoute = PROJECT_DATA.server.routes.assets
-      const routePattern = new RegExp(`^${assetsRoute}/(.+)$`)
+      // Account for base path in the pattern
+      const routePattern = new RegExp(`${assetsRoute}/(.+)$`)
       const match = path.match(routePattern)
       const assetPath = match ? match[1] : path
 
