@@ -1,4 +1,6 @@
 import type { Config } from '#api/config/index'
+import { SchemaAugmentation } from '#api/schema-augmentation/index'
+import { Schema } from '#api/schema/index'
 import type { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
@@ -6,9 +8,6 @@ import { debugPolen } from '#singletons/debug'
 import { Cache } from '@wollybeard/kit'
 import * as NodeFs from 'node:fs/promises'
 import * as NodePath from 'node:path'
-import { SchemaAugmentation } from '../../schema-augmentation/index.js'
-import { Schema } from '../../schema/index.js'
-import { dateToVersionString, type SchemaMetadata, VERSION_LATEST } from '../../schema/schema.js'
 import { polenVirtual } from '../vi.js'
 
 export const viProjectSchemaMetadata = polenVirtual([`project`, `schema-metadata`])
@@ -41,7 +40,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     })
 
     if (!schemaData) {
-      const metadata: SchemaMetadata = { hasSchema: false, versions: [] }
+      const metadata: Schema.SchemaMetadata = { hasSchema: false, versions: [] }
       return {
         schemaData: null,
         metadata,
@@ -56,7 +55,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     // Build metadata
     const versionStrings: string[] = []
     for (const [index, version] of schemaData.versions.entries()) {
-      const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
+      const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
       versionStrings.push(versionName)
     }
 
@@ -76,23 +75,34 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
   // Helper to write assets directly to filesystem in dev mode
   const writeDevAssets = async (
     schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>,
-    metadata: SchemaMetadata,
+    metadata: Schema.SchemaMetadata,
   ) => {
     if (!schemaData) return
 
     const devAssetsDir = NodePath.join(config.paths.framework.rootDir, 'node_modules/.vite/polen-assets/schemas')
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
 
-    // Write schema JSON files
+    // Write schema JSON files and changelog files
     for (const [index, version] of schemaData.versions.entries()) {
       const schemaString = Grafaid.Schema.print(version.after)
       const ast = Grafaid.Schema.AST.parse(schemaString)
-      const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
+      const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
 
-      const filePath = NodePath.join(devAssetsDir, `${versionName}.json`)
-      await NodeFs.writeFile(filePath, JSON.stringify(ast), 'utf-8')
-
+      // Write schema AST file
+      const schemaFilePath = NodePath.join(devAssetsDir, `${versionName}.json`)
+      await NodeFs.writeFile(schemaFilePath, JSON.stringify(ast), 'utf-8')
       debug(`devAssetWritten`, { fileName: `${versionName}.json` })
+
+      // Write changelog file (except for the oldest/last version)
+      if (index < schemaData.versions.length - 1) {
+        const changelogData = {
+          changes: version.changes,
+          date: version.date.toISOString(),
+        }
+        const changelogFilePath = NodePath.join(devAssetsDir, `${versionName}.changelog.json`)
+        await NodeFs.writeFile(changelogFilePath, JSON.stringify(changelogData), 'utf-8')
+        debug(`devChangelogWritten`, { fileName: `${versionName}.changelog.json` })
+      }
     }
 
     // Write metadata file
@@ -106,6 +116,19 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
     configureServer(server) {
       viteServer = server
+
+      // Set up file watching for schema source files
+      if (config.schema?.dataSources?.directory?.path) {
+        // Watch the entire directory for directory mode
+        server.watcher.add(config.schema.dataSources.directory.path)
+        debug(`watchingSchemaDirectory`, { path: config.schema.dataSources.directory.path })
+      }
+
+      if (config.schema?.dataSources?.file?.path) {
+        // Watch the specific file for file mode
+        server.watcher.add(config.schema.dataSources.file.path)
+        debug(`watchingSchemaFile`, { path: config.schema.dataSources.file.path })
+      }
     },
 
     async buildStart() {
@@ -123,40 +146,56 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       if (viteServer) {
         // Dev mode: Write assets directly to filesystem
         await writeDevAssets(schemaData, metadata)
-      } else {
-        // Build mode: Use Vite's emitFile
-        for (const [index, version] of schemaData.versions.entries()) {
-          // Convert GraphQL Schema to AST JSON
-          const schemaString = Grafaid.Schema.print(version.after)
-          const ast = Grafaid.Schema.AST.parse(schemaString)
+        debug(`devMode:schemaAssetsWritten`, {})
+        return
+      }
 
-          // Determine version name
-          const versionName = index === 0 ? VERSION_LATEST : dateToVersionString(version.date)
-          const assetFileName =
-            `${config.paths.project.relative.build.relative.assets.root}/schemas/${versionName}.json`
+      // Build mode: Use Vite's emitFile
+      for (const [index, version] of schemaData.versions.entries()) {
+        // Convert GraphQL Schema to AST JSON
+        const schemaString = Grafaid.Schema.print(version.after)
+        const ast = Grafaid.Schema.AST.parse(schemaString)
+
+        // Determine version name
+        const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
+
+        // Emit schema AST file
+        const schemaAssetFileName =
+          `${config.paths.project.relative.build.relative.assets.root}/schemas/${versionName}.json`
+
+        this.emitFile({
+          type: `asset`,
+          fileName: schemaAssetFileName,
+          source: JSON.stringify(ast),
+        })
+
+        debug(`schemaAssetEmitted`, { fileName: schemaAssetFileName })
+
+        // Emit changelog file (except for the oldest/last version)
+        if (index < schemaData.versions.length - 1) {
+          const changelogData = {
+            changes: version.changes,
+            date: version.date.toISOString(),
+          }
+          const changelogAssetFileName =
+            `${config.paths.project.relative.build.relative.assets.root}/schemas/${versionName}.changelog.json`
 
           this.emitFile({
             type: `asset`,
-            fileName: assetFileName,
-            source: JSON.stringify(ast),
+            fileName: changelogAssetFileName,
+            source: JSON.stringify(changelogData),
           })
 
-          debug(`schemaAssetEmitted`, { fileName: assetFileName })
+          debug(`changelogAssetEmitted`, { fileName: changelogAssetFileName })
         }
-
-        // Emit metadata file
-        this.emitFile({
-          type: `asset`,
-          fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/metadata.json`,
-          source: JSON.stringify(metadata, null, 2),
-        })
       }
 
-      // Set up file watching for schema changes in dev mode
-      if (viteServer) {
-        // TODO: Watch schema source files and trigger regeneration + HMR
-        debug(`devMode:schemaWatchingEnabled`, {})
-      }
+      // Emit metadata file
+      this.emitFile({
+        type: `asset`,
+        fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/metadata.json`,
+        source: JSON.stringify(metadata, null, 2),
+      })
     },
 
     async handleHotUpdate({ file, server }) {

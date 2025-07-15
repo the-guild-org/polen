@@ -20,10 +20,10 @@ export const renderDate = (date: Date) => {
   })
 }
 
-export const Changelog: React.FC<{ schema: ChangelogData.Schema }> = ({ schema }) => {
+export const Changelog: React.FC<{ changesets: ChangelogData.Schema['versions'] }> = ({ changesets }) => {
   return (
     <Box>
-      {schema.versions.map(changeset => <Changeset key={changeset.date.toISOString()} changeset={changeset} />)}
+      {changesets.map(changeset => <Changeset key={changeset.date.toISOString()} changeset={changeset} />)}
     </Box>
   )
 }

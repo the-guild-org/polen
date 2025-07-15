@@ -1,10 +1,6 @@
 import type { ReactRouter } from '#dep/react-router/index'
 import { createRoute } from '#lib/react-router-aid/react-router-aid'
-import {
-  Box,
-  Flex,
-  Theme,
-} from '@radix-ui/themes'
+import { Box, Flex, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'

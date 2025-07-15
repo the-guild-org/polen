@@ -9,7 +9,7 @@ import { VersionSelector } from '../components/VersionSelector.js'
 import { useVersionPath } from '../hooks/useVersionPath.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
-import * as SchemaSource from '../sources/schema-source.js'
+import { schemaSource } from '../sources/schema-source.js'
 import { reference$type } from './reference.$type.js'
 import { referenceVersion$version$type } from './reference.version.$version.$type.js'
 
@@ -19,8 +19,8 @@ const loader = createLoader(async ({ params }) => {
   // - Unversioned: /reference/:type → params.version is undefined, defaults to latest
   const currentVersion = params.version ?? VERSION_LATEST
 
-  const schema = await SchemaSource.get(currentVersion)
-  const availableVersions = SchemaSource.getAvailableVersions()
+  const schema = await schemaSource.get(currentVersion)
+  const availableVersions = schemaSource.versions
 
   return {
     schema,

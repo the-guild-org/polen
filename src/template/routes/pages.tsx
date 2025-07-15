@@ -22,12 +22,17 @@ import {
   Tooltip,
 } from '@radix-ui/themes'
 import { Outlet, useLocation } from 'react-router'
-import { routes } from 'virtual:polen/project/routes.jsx'
 import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.jsonsuper'
+import { routes } from 'virtual:polen/project/routes.jsx'
 import { CodeBlock } from '../components/CodeBlock.js'
-import * as schemaSource from '../sources/schema-source.js'
+import { schemaSource } from '../sources/schema-source.js'
 
 const loader = createLoader(async () => {
+  // Check if schema exists first
+  if (schemaSource.isEmpty) {
+    return { schema: null }
+  }
+
   // Fetch the latest schema for MDX pages
   const schema = await schemaSource.get('latest')
   return { schema }
