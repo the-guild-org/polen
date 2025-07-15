@@ -10,71 +10,18 @@ When active, a "Changelog" link appears in the navigation bar.
 
 The overall process performed by Polen is something like this:
 
-1. Polen reads a set of schemas (see below)
+1. Polen reads a set of schemas (see [Schema Overview](/features/schema-overview) for configuration details)
 2. Orders them by date
 3. Detects differences (changes) between each sequential pair (powered by GraphQL Inspector)
 4. Displays in chronological order (newest at page top) one section per schema, each section displaying how it changed
 
-## Input
+## Configuration
 
-### Directory
+To enable the changelog feature, you need to configure multiple schema versions. See [Schema Overview](/features/schema-overview) for complete configuration details including:
 
-Place multiple SDL files in a `schema` directory, using the date prefix pattern `YYYY-MM-DD.graphql`:
-
-```
-schema/
-  2023-01-15.graphql
-  2023-06-20.graphql
-  2024-03-10.graphql
-```
-
-The dates in the filenames determine the chronological order of versions.
-
-### Memory
-
-Configure multiple schema versions in your `polen.config.ts`:
-
-```ts
-import { Polen } from 'polen'
-
-export default Polen.defineConfig({
-  schema: {
-    useDataSources: 'memory',
-    dataSources: {
-      memory: {
-        versions: [
-          {
-            date: new Date('2023-01-15'),
-            value: `
-              type Query {
-                users: [User]
-              }
-              type User {
-                id: ID!
-                name: String!
-              }
-            `,
-          },
-          {
-            date: new Date('2023-06-20'),
-            value: `
-              type Query {
-                users: [User]
-                user(id: ID!): User
-              }
-              type User {
-                id: ID!
-                name: String!
-                email: String!
-              }
-            `,
-          },
-        ],
-      },
-    },
-  },
-})
-```
+- Directory-based configuration with dated SDL files
+- Memory-based configuration with version arrays
+- Supported version formats and requirements
 
 ## Change Types
 
@@ -124,7 +71,27 @@ Polen displays all GraphQL schema changes detected by GraphQL Inspector, organiz
 
 ### Effect on Reference Documentation
 
-When multiple schema versions exist, the reference documentation always shows the **latest version**. There is currently no version selector to view older schema versions in the reference docs.
+When multiple schema versions exist, the reference documentation supports viewing any version through URL-based navigation:
+
+- **Default behavior**: The reference docs at `/reference` show the **latest version**
+- **Version-specific access**: You can view any historical version using the URL pattern `/reference/version/{version}/{type}`
+- **Version format**: Must use the exact `YYYY-MM-DD` format with zero-padding (e.g., `2024-03-10`, not `2024-3-10`)
+
+#### Examples
+
+If your changelog shows a version from "March 10, 2024", you can view that version's User type at:
+
+```
+/reference/version/2024-03-10/User
+```
+
+**Important**: The version string must match the exact format shown in the changelog. Pay attention to zero-padding for single-digit months and days.
+
+#### Current Limitations
+
+- Version navigation must be done manually via URL (no UI version selector yet)
+- Types mentioned in the changelog are not clickable links to their versioned reference pages (yet)
+- You need to manually construct URLs using the exact `YYYY-MM-DD` format from the changelog
 
 ### Navigation
 

@@ -36,6 +36,7 @@ export default defineConfig({
         text: 'Features',
         items: [
           { text: 'Pages', link: '/features/pages' },
+          { text: 'Schema Overview', link: '/features/schema-overview' },
           { text: 'Schema Reference', link: '/features/schema-reference' },
           { text: 'Schema Changelog', link: '/features/schema-changelog' },
           { text: 'Logo', link: '/features/logo' },

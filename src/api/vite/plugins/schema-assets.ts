@@ -1,5 +1,6 @@
 import type { Config } from '#api/config/index'
 import { SchemaAugmentation } from '#api/schema-augmentation/index'
+import { createSchemaSource } from '#api/schema-source/index'
 import { Schema } from '#api/schema/index'
 import type { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid/index'
@@ -72,7 +73,34 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     }
   })
 
-  // Helper to write assets directly to filesystem in dev mode
+  // Helper to create schema source with filesystem IO
+  const createDevSchemaSource = (metadata: Schema.SchemaMetadata) => {
+    return createSchemaSource({
+      io: {
+        read: async () => {
+          throw new Error('Read not supported in dev asset writer')
+        },
+        write: async (path: string, content: string) => {
+          await NodeFs.writeFile(path, content, 'utf-8')
+        },
+        clearDirectory: async (path: string) => {
+          try {
+            const files = await NodeFs.readdir(path)
+            await Promise.all(files.map(file => NodeFs.rm(NodePath.join(path, file), { force: true })))
+          } catch (error) {
+            // Directory might not exist, which is fine
+          }
+        },
+        removeFile: async (path: string) => {
+          await NodeFs.rm(path, { force: true })
+        },
+      },
+      versions: metadata.versions,
+      assetsPath: config.paths.framework.devAssets.absolute,
+    })
+  }
+
+  // Helper to write assets using schema-source API
   const writeDevAssets = async (
     schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>,
     metadata: Schema.SchemaMetadata,
@@ -82,33 +110,9 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     const devAssetsDir = config.paths.framework.devAssets.schemas
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
 
-    // Write schema JSON files and changelog files
-    for (const [index, version] of schemaData.entries()) {
-      const schemaString = Grafaid.Schema.print(version.after)
-      const ast = Grafaid.Schema.AST.parse(schemaString)
-      const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
-
-      // Write schema AST file
-      const schemaFilePath = NodePath.join(devAssetsDir, `${versionName}.json`)
-      await NodeFs.writeFile(schemaFilePath, JSON.stringify(ast), 'utf-8')
-      debug(`devAssetWritten`, { fileName: `${versionName}.json` })
-
-      // Write changelog file (except for the oldest/last version)
-      if (index < schemaData.length - 1) {
-        const changelogData = {
-          changes: version.changes,
-          date: version.date.toISOString(),
-        }
-        const changelogFilePath = NodePath.join(devAssetsDir, `${versionName}.changelog.json`)
-        await NodeFs.writeFile(changelogFilePath, JSON.stringify(changelogData), 'utf-8')
-        debug(`devChangelogWritten`, { fileName: `${versionName}.changelog.json` })
-      }
-    }
-
-    // Write metadata file
-    const metadataPath = NodePath.join(devAssetsDir, 'metadata.json')
-    await NodeFs.writeFile(metadataPath, JSON.stringify(metadata, null, 2), 'utf-8')
-    debug(`devMetadataWritten`, {})
+    const schemaSource = createDevSchemaSource(metadata)
+    await schemaSource.writeAllAssets(schemaData, metadata)
+    debug(`devAssetsWritten`, { versionCount: schemaData.length })
   }
 
   return {
@@ -116,6 +120,21 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
     configureServer(server) {
       viteServer = server
+
+      // Clear all assets when dev server starts
+      const clearAssets = async () => {
+        try {
+          // Create a basic schema source just for clearing
+          const schemaSource = createDevSchemaSource({ hasSchema: false, versions: [] })
+          await schemaSource.clearAllAssets()
+          debug(`devAssetsCleared`, {})
+        } catch (error) {
+          // Ignore errors during clearing
+        }
+      }
+
+      // Clear assets immediately
+      void clearAssets()
 
       // Set up file watching for schema source files
       if (config.schema?.dataSources?.directory?.path) {
@@ -129,6 +148,65 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         server.watcher.add(config.schema.dataSources.file.path)
         debug(`watchingSchemaFile`, { path: config.schema.dataSources.file.path })
       }
+
+      // Handle file removal
+      server.watcher.on('unlink', async (file) => {
+        const isSchemaFile = config.schema && (() => {
+          const absoluteFile = NodePath.resolve(file)
+
+          // Check if file path matches the configured schema file
+          if (config.schema.dataSources?.file?.path) {
+            const absoluteSchemaFile = NodePath.resolve(
+              config.paths.project.rootDir,
+              config.schema.dataSources.file.path,
+            )
+            if (absoluteFile === absoluteSchemaFile) return true
+          }
+
+          // Check if file path is within the configured schema directory
+          if (config.schema.dataSources?.directory?.path) {
+            const absoluteSchemaDir = NodePath.resolve(
+              config.paths.project.rootDir,
+              config.schema.dataSources.directory.path,
+            )
+            if (absoluteFile.startsWith(absoluteSchemaDir + NodePath.sep)) return true
+          }
+
+          return false
+        })()
+
+        if (isSchemaFile) {
+          debug(`schemaFileRemoved`, { file })
+
+          try {
+            // Clear cache and regenerate
+            loadAndProcessSchemaData.clear()
+            const { schemaData, metadata } = await loadAndProcessSchemaData()
+
+            if (schemaData) {
+              // Write new assets without the removed file
+              await writeDevAssets(schemaData, metadata)
+              debug(`hmr:schemaAssetsUpdatedAfterRemoval`, { versionCount: schemaData.length })
+            } else {
+              // No schema data - clear all assets
+              const schemaSource = createDevSchemaSource({ hasSchema: false, versions: [] })
+              await schemaSource.clearAllAssets()
+              debug(`hmr:allAssetsCleared`, {})
+            }
+          } catch (error) {
+            debug(`hmr:schemaRemovalFailed`, { error })
+          }
+
+          // Send HMR invalidation signal
+          server.ws.send({
+            type: 'custom',
+            event: 'polen:schema-invalidate',
+            data: { timestamp: Date.now() },
+          })
+
+          debug(`hmr:schemaInvalidationSent`, {})
+        }
+      })
     },
 
     async buildStart() {
@@ -150,52 +228,31 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         return
       }
 
-      // Build mode: Use Vite's emitFile
-      for (const [index, version] of schemaData.entries()) {
-        // Convert GraphQL Schema to AST JSON
-        const schemaString = Grafaid.Schema.print(version.after)
-        const ast = Grafaid.Schema.AST.parse(schemaString)
+      // Build mode: Create schema source for emitting files
+      const schemaSource = createSchemaSource({
+        io: {
+          read: async () => {
+            throw new Error('Read not supported in build asset emitter')
+          },
+          write: async (path: string, content: string) => {
+            // Convert absolute path to relative filename for Vite
+            const relativePath = NodePath.relative(config.paths.framework.devAssets.absolute, path)
+            const fileName = `${config.paths.project.relative.build.relative.assets.root}/${relativePath}`
 
-        // Determine version name
-        const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
-
-        // Emit schema AST file
-        const schemaAssetFileName =
-          `${config.paths.project.relative.build.relative.assets.root}/schemas/${versionName}.json`
-
-        this.emitFile({
-          type: `asset`,
-          fileName: schemaAssetFileName,
-          source: JSON.stringify(ast),
-        })
-
-        debug(`schemaAssetEmitted`, { fileName: schemaAssetFileName })
-
-        // Emit changelog file (except for the oldest/last version)
-        if (index < schemaData.length - 1) {
-          const changelogData = {
-            changes: version.changes,
-            date: version.date.toISOString(),
-          }
-          const changelogAssetFileName =
-            `${config.paths.project.relative.build.relative.assets.root}/schemas/${versionName}.changelog.json`
-
-          this.emitFile({
-            type: `asset`,
-            fileName: changelogAssetFileName,
-            source: JSON.stringify(changelogData),
-          })
-
-          debug(`changelogAssetEmitted`, { fileName: changelogAssetFileName })
-        }
-      }
-
-      // Emit metadata file
-      this.emitFile({
-        type: `asset`,
-        fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/metadata.json`,
-        source: JSON.stringify(metadata, null, 2),
+            this.emitFile({
+              type: `asset`,
+              fileName,
+              source: content,
+            })
+          },
+        },
+        versions: metadata.versions,
+        assetsPath: config.paths.framework.devAssets.absolute,
       })
+
+      // Emit all assets using the high-level API
+      await schemaSource.writeAllAssets(schemaData, metadata)
+      debug(`buildMode:allAssetsEmitted`, { versionCount: schemaData.length })
     },
 
     async handleHotUpdate({ file, server }) {

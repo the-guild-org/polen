@@ -2,61 +2,30 @@
 
 Polen can derive schema reference documentation from your GraphQL Schema.
 
-## Input
+## Configuration
 
-You can provide your GraphQL schema to Polen in various ways.
+For schema configuration options including single files, multiple versions, and memory-based schemas, see [Schema Overview](/features/schema-overview).
 
-### File
+## URL Structure
 
-Have a single `schema.graphql` SDL file in your project directory. Example:
+The reference documentation is accessible through these URL patterns:
+
+### Basic Structure
+
+- Type overview: `/reference/{type}`
+- Field details: `/reference/{type}/{field}`
+
+### Examples
 
 ```
-schema.graphql
-```
+# View the User type
+/reference/User
 
-### Directory
+# View the email field on the User type
+/reference/User/email
 
-Have a `schema` directory in your project directory with multiple versions of your schema as SDL files named using format: `YYYY-MM-DD.graphql`. Example:
-
-```
-schema/
-  2023-01-13.graphql
-  2020-09-26.graphql
-```
-
-This approach allows Polen to render a changelog for your schema.
-
-### Memory
-
-You can provide a schema to Polen in memory via configuration.
-
-You have control to provide one or multiple schemas, with or without dates.
-
-If no dates are given then the current time is assumed.
-
-If you provide multiple versions then Polen can render a changelog for you.
-
-Basic example:
-
-```ts
-// polen.config.ts
-import { Polen } from 'polen'
-
-export default Polen.defineConfig({
-  schema: {
-    useDataSources: `memory`,
-    dataSources: {
-      memory: {
-        versions: [
-          {
-            date: new Date('2023-01-13'),
-            value: `type Query { hello: String }`,
-          },
-        ],
-      },
-    },
-  },
-})
+# View the Query type
+/reference/Query
 ```
 
 ## Schema Augmentations
@@ -192,3 +161,44 @@ export default Polen.defineConfig({
 3. **Maintain consistency** - Use similar patterns across your augmentations
 4. **Version appropriately** - When schemas change, update augmentations accordingly
 5. **Link to detailed docs** - Use augmentations to point to comprehensive guides rather than duplicating content
+
+## Versioning
+
+When you have multiple schema versions configured, Polen enables version-specific reference documentation. This allows you to view your GraphQL schema as it existed at any point in time.
+
+For complete details on schema versioning including configuration and version formats, see [Schema Overview](/features/schema-overview).
+
+### Versioned URLs
+
+The [basic URL structure](#url-structure) shown earlier always displays the latest version. When you have multiple schema versions, you can access specific versions using an extended URL pattern:
+
+- Type overview: `/reference/version/{version}/{type}`
+- Field details: `/reference/version/{version}/{type}/{field}`
+
+Where `{version}` can be:
+
+- A specific date: `2024-01-15`
+- The `latest` tag: `latest`
+
+### Examples
+
+```
+# These are equivalent - both show the latest version
+/reference/User
+/reference/version/latest/User
+
+# View the User type as it existed on January 15, 2024
+/reference/version/2024-01-15/User
+
+# View a specific field from that version
+/reference/version/2024-01-15/User/email
+```
+
+### Use Cases
+
+The versioned reference feature is particularly useful for:
+
+- **API Evolution Analysis**: Compare how types have changed over time
+- **Client Compatibility**: Check what fields were available when clients were last updated
+- **Deprecation Documentation**: Reference the exact state of deprecated fields before removal
+- **Migration Planning**: Show exact differences between versions for planning migrations

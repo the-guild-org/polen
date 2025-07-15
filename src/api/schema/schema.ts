@@ -40,6 +40,14 @@ export const dateToVersionString = (date: Date): string => {
 }
 
 /**
+ * Determine if a version at the given index should have a changelog file.
+ * Only non-oldest versions get changelog files.
+ */
+export const shouldVersionHaveChangelog = (versionIndex: number, totalVersions: number): boolean => {
+  return versionIndex < totalVersions - 1
+}
+
+/**
  * Convert a version string back to a Date
  */
 export const versionStringToDate = (version: string): Date => {

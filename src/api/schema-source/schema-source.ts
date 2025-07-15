@@ -9,14 +9,28 @@ type WriteFile = (path: string, content: string) => Promise<void>
 
 type ReadFile = (locator: string) => Promise<string>
 
+type ClearDirectory = (path: string) => Promise<void>
+
+type RemoveFile = (path: string) => Promise<void>
+
 const NoImplementationWriteFile: WriteFile = async (path: string, content: string) => {
   throw new Error('Write operations not supported in this environment')
+}
+
+const NoImplementationClearDirectory: ClearDirectory = async (path: string) => {
+  throw new Error('Directory operations not supported in this environment')
+}
+
+const NoImplementationRemoveFile: RemoveFile = async (path: string) => {
+  throw new Error('File removal operations not supported in this environment')
 }
 
 interface SchemaSourceConfig {
   io: {
     read: ReadFile
     write?: WriteFile
+    clearDirectory?: ClearDirectory
+    removeFile?: RemoveFile
   }
   versions: string[]
   assetsPath: string
@@ -27,7 +41,13 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
   const getChangelogPath = (version: string) => `${config.assetsPath}/schemas/${version}.changelog.json`
 
+  const getSchemasDirectory = () => `${config.assetsPath}/schemas`
+
+  const getMetadataPath = () => `${config.assetsPath}/schemas/metadata.json`
+
   const ioWrite = config.io.write || NoImplementationWriteFile
+  const ioClearDirectory = config.io.clearDirectory || NoImplementationClearDirectory
+  const ioRemoveFile = config.io.removeFile || NoImplementationRemoveFile
 
   // Memoize only the base IO read operation
   const ioReadMemoized = Cache.memoize(config.io.read)
@@ -111,6 +131,59 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
     writeChangelog: async (version: string, changelog: Schema.ChangelogData) => {
       await ioWrite(getChangelogPath(version), JSON.stringify(changelog))
+    },
+
+    // Directory operations
+    clearAllAssets: async () => {
+      await ioClearDirectory(getSchemasDirectory())
+    },
+
+    removeAsset: async (version: string) => {
+      try {
+        await ioRemoveFile(getSchemaPath(version))
+      } catch (error) {
+        // Swallow errors for file removal as requested
+      }
+
+      try {
+        await ioRemoveFile(getChangelogPath(version))
+      } catch (error) {
+        // Swallow errors for file removal as requested
+      }
+    },
+
+    writeMetadata: async (metadata: Schema.SchemaMetadata) => {
+      await ioWrite(getMetadataPath(), JSON.stringify(metadata, null, 2))
+    },
+
+    writeAllAssets: async (
+      schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>,
+      metadata: Schema.SchemaMetadata,
+    ) => {
+      if (!schemaData) return
+
+      // Write schema and changelog files
+      for (const [index, version] of schemaData.entries()) {
+        const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
+
+        // Write schema file
+        await ioWrite(
+          getSchemaPath(versionName),
+          JSON.stringify(Grafaid.Schema.AST.parse(Grafaid.Schema.print(version.after))),
+        )
+
+        // Write changelog file (except for the oldest/last version)
+        if (Schema.shouldVersionHaveChangelog(index, schemaData.length)) {
+          const changelogData = {
+            changes: version.changes,
+            date: version.date.toISOString(),
+          }
+          await ioWrite(getChangelogPath(versionName), JSON.stringify(changelogData))
+        }
+      }
+
+      // Write metadata file
+      await ioWrite(getMetadataPath(), JSON.stringify(metadata, null, 2))
     },
   }
 }
