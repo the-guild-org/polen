@@ -11,6 +11,14 @@ export type ChangeSets = GraphqlChangeset.ChangeSet[]
 export type NonEmptyChangeSets = [GraphqlChangeset.ChangeSet, ...GraphqlChangeset.ChangeSet[]]
 
 /**
+ * Changelog data structure for JSON serialization
+ */
+export interface ChangelogData {
+  changes: GraphqlChangeset.ChangeSet['changes']
+  date: string
+}
+
+/**
  * Constants for schema versioning
  */
 

@@ -40,7 +40,7 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     return schema
   }
 
-  const getChangelog = async (version: string): Promise<{ changes: GraphqlChange.Change[]; date: string }> => {
+  const getChangelog = async (version: string): Promise<Schema.ChangelogData> => {
     const content = await ioReadMemoized(getChangelogPath(version))
     return JSON.parse(content)
   }
@@ -106,7 +106,7 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
       await ioWrite(getSchemaPath(version), JSON.stringify(ast))
     },
 
-    writeChangelog: async (version: string, changelog: { changes: GraphqlChange.Change[]; date: string }) => {
+    writeChangelog: async (version: string, changelog: Schema.ChangelogData) => {
       await ioWrite(getChangelogPath(version), JSON.stringify(changelog))
     },
   }
