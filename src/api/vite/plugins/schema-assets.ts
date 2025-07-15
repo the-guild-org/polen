@@ -79,7 +79,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
   ) => {
     if (!schemaData) return
 
-    const devAssetsDir = NodePath.join(config.paths.framework.rootDir, 'node_modules/.vite/polen-assets/schemas')
+    const devAssetsDir = config.paths.framework.devAssets.schemas
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
 
     // Write schema JSON files and changelog files

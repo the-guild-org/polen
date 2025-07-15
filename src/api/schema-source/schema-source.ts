@@ -1,6 +1,5 @@
 import { Schema } from '#api/schema/index'
 import { Grafaid } from '#lib/grafaid/index'
-import type { GraphqlChange } from '#lib/graphql-change/index'
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
 import { astToSchema } from '#template/lib/schema-utils/schema-utils'
 import { Cache } from '@wollybeard/kit'
@@ -8,7 +7,7 @@ import type { GraphQLSchema } from 'graphql'
 
 type WriteFile = (path: string, content: string) => Promise<void>
 
-type ReadFile = (path: string) => Promise<string>
+type ReadFile = (locator: string) => Promise<string>
 
 const NoImplementationWriteFile: WriteFile = async (path: string, content: string) => {
   throw new Error('Write operations not supported in this environment')

@@ -79,10 +79,10 @@ export const Serve = (
             assets: {
               // Calculate relative path from CWD to Polen's assets
               // CWD is user's project directory where they run 'pnpm dev'
-              // Assets are in Polen's node_modules/.vite/polen-assets
+              // Assets are in Polen's dev assets directory
               directory: NodePath.relative(
                 process.cwd(),
-                NodePath.join(config.paths.framework.rootDir, 'node_modules/.vite/polen-assets'),
+                config.paths.framework.devAssets.absolute,
               ),
               route: config.server.routes.assets,
             },

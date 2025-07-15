@@ -76,7 +76,7 @@ export const generate = async (view: ReactRouter.StaticHandler) => {
 
       const ssgResult = await Hono.SSG.toSSG(batchApp, NodeFs, {
         concurrency: 5, // Reduced concurrency for memory efficiency
-        dir: PROJECT_DATA.paths.relative.build.root,
+        dir: PROJECT_DATA.paths.project.relative.build.root,
       })
 
       if (!ssgResult.success) {

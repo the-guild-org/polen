@@ -292,6 +292,10 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
 
   const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
 
+  // Dev assets paths
+  const devAssetsRelative = 'node_modules/.vite/polen-assets'
+  const devAssetsAbsolute = Path.join(packagePaths.rootDir, devAssetsRelative)
+
   return {
     project: {
       rootDir,
@@ -330,7 +334,14 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
         },
       },
     },
-    framework: packagePaths,
+    framework: {
+      ...packagePaths,
+      devAssets: {
+        relative: devAssetsRelative,
+        absolute: devAssetsAbsolute,
+        schemas: Path.join(devAssetsAbsolute, 'schemas'),
+      },
+    },
   }
 }
 
@@ -398,7 +409,13 @@ export interface Config {
         }
       }
     }
-    framework: PackagePaths
+    framework: PackagePaths & {
+      devAssets: {
+        relative: string
+        absolute: string
+        schemas: string
+      }
+    }
   }
   advanced: {
     isSelfContainedMode: boolean

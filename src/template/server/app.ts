@@ -50,7 +50,13 @@ export const createApp = (options: AppOptions) => {
     assetsRoutePattern,
     serveStatic({
       root: options.paths.assets.directory,
-      rewriteRequestPath: (path) => path.replace(/^\/assets/, ''),
+      rewriteRequestPath: (path) => {
+        // When basePath is set, the full path including base is passed here
+        // We need to strip both the base path and the assets route
+        const basePath = options.paths.base === '/' ? '' : options.paths.base
+        const fullPrefix = `${basePath}${options.paths.assets.route}`
+        return path.replace(new RegExp(`^${fullPrefix}`), '')
+      },
       onNotFound(path) {
         console.log('not found', path)
       },

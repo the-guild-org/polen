@@ -140,7 +140,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             __BUILD_ARCHITECTURE_SSG__: Json.encode(config.build.architecture === `ssg`),
             'process.env.NODE_ENV': Json.encode(config.advanced.debug ? 'development' : 'production'),
           },
-          customLogger: createLogger(config),
+          // customLogger: createLogger(config),
           esbuild: false,
           build: {
             target: `esnext`,
@@ -222,20 +222,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const projectData: ProjectData = {
               basePath: config.build.base,
-              paths: config.paths.project,
+              paths: config.paths,
               navbar, // Complete navbar with schema and pages
-              server: {
-                port: config.server.port,
-                routes: config.server.routes,
-                static: {
-                  // todo
-                  // relative from CWD of process that boots n1ode server
-                  // can easily break! Use path relative in server??
-                  directory: `./` + config.paths.project.relative.build.root,
-                  // Just the clean route path - app.ts will add Hono pattern
-                  route: config.server.routes.assets,
-                },
-              },
+              server: config.server,
               warnings: config.warnings,
             }
 

@@ -3,17 +3,8 @@ import type { NavbarItem } from '#api/content/navbar'
 
 export interface ProjectData {
   basePath: string
-  paths: Config.Config[`paths`][`project`]
+  paths: Config.Config['paths']
   navbar: NavbarItem[]
-  server: {
-    port: number
-    static: {
-      directory: string
-      route: string
-    }
-    routes: {
-      assets: string
-    }
-  }
-  warnings: Config.Config[`warnings`]
+  server: Config.Config['server']
+  warnings: Config.Config['warnings']
 }

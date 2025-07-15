@@ -21,7 +21,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
   // Helper function to load schema from filesystem and add type paths
   const addTypePathsForVersion = async (version: string, pathPrefix: string) => {
     try {
-      const schemaFilePath = NodePath.join(PROJECT_DATA.paths.absolute.build.assets.schemas, `${version}.json`)
+      const schemaFilePath = NodePath.join(PROJECT_DATA.paths.project.absolute.build.assets.schemas, `${version}.json`)
       const schemaContent = await NodeFs.readFile(schemaFilePath, 'utf-8')
       const schemaAst = JSON.parse(schemaContent)
 
@@ -50,7 +50,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
     }
   }
 
-  const schemaMetadataPath = NodePath.join(PROJECT_DATA.paths.absolute.build.assets.schemas, 'metadata.json')
+  const schemaMetadataPath = NodePath.join(PROJECT_DATA.paths.project.absolute.build.assets.schemas, 'metadata.json')
 
   const schemaMetadata = await Api.Schema.getMetadata(schemaMetadataPath)
   const { hasSchema, versions: availableVersions } = schemaMetadata
