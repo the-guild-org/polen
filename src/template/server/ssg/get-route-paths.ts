@@ -11,7 +11,10 @@ import { routes } from '../../routes.js'
 // Maybe we can figure something out too.
 const knownParameterizedRouteExpressions = {
   reference_type: `/reference/:type`,
+  reference_type_field: `/reference/:type/:field`,
+  reference_version: `/reference/version/:version`,
   reference_versioned_type: `/reference/version/:version/:type`,
+  reference_versioned_type_field: `/reference/version/:version/:type/:field`,
 }
 
 export const getRoutesPaths = async (): Promise<string[]> => {
@@ -19,7 +22,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
   const routeExpressions = ReactRouterAid.getRouteExpressions(routes)
 
   // Helper function to load schema from filesystem and add type paths
-  const addTypePathsForVersion = async (version: string, pathPrefix: string) => {
+  const addTypePathsForVersion = async (version: string, pathPrefix: string, includeFields = false) => {
     try {
       const schemaFilePath = NodePath.join(PROJECT_DATA.paths.project.absolute.build.assets.schemas, `${version}.json`)
       const schemaContent = await NodeFs.readFile(schemaFilePath, 'utf-8')
@@ -27,10 +30,26 @@ export const getRoutesPaths = async (): Promise<string[]> => {
 
       visit(schemaAst, {
         ObjectTypeDefinition(node) {
-          paths.add(`${pathPrefix}/${node.name.value}`)
+          const typePath = `${pathPrefix}/${node.name.value}`
+          paths.add(typePath)
+
+          // Add field paths if requested
+          if (includeFields && node.fields) {
+            for (const field of node.fields) {
+              paths.add(`${typePath}/${field.name.value}`)
+            }
+          }
         },
         InterfaceTypeDefinition(node) {
-          paths.add(`${pathPrefix}/${node.name.value}`)
+          const typePath = `${pathPrefix}/${node.name.value}`
+          paths.add(typePath)
+
+          // Add field paths if requested
+          if (includeFields && node.fields) {
+            for (const field of node.fields) {
+              paths.add(`${typePath}/${field.name.value}`)
+            }
+          }
         },
         EnumTypeDefinition(node) {
           paths.add(`${pathPrefix}/${node.name.value}`)
@@ -61,11 +80,30 @@ export const getRoutesPaths = async (): Promise<string[]> => {
         // Add paths for latest version (no version in URL)
         await addTypePathsForVersion(Api.Schema.VERSION_LATEST, `/reference`)
       }
+    } else if (exp === knownParameterizedRouteExpressions.reference_version) {
+      if (hasSchema) {
+        // Add paths for version pages themselves (without type)
+        for (const version of availableVersions) {
+          paths.add(`/reference/version/${version}`)
+        }
+      }
+    } else if (exp === knownParameterizedRouteExpressions.reference_type_field) {
+      if (hasSchema) {
+        // Add paths for latest version fields
+        await addTypePathsForVersion(Api.Schema.VERSION_LATEST, `/reference`, true)
+      }
     } else if (exp === knownParameterizedRouteExpressions.reference_versioned_type) {
       if (hasSchema) {
         // Add paths for all versions using new route structure
         for (const version of availableVersions) {
           await addTypePathsForVersion(version, `/reference/version/${version}`)
+        }
+      }
+    } else if (exp === knownParameterizedRouteExpressions.reference_versioned_type_field) {
+      if (hasSchema) {
+        // Add paths for all versions with fields
+        for (const version of availableVersions) {
+          await addTypePathsForVersion(version, `/reference/version/${version}`, true)
         }
       }
     } else if (ReactRouterAid.isParameterizedPath(exp)) {
