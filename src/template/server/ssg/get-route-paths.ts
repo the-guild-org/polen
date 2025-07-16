@@ -32,7 +32,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
         ObjectTypeDefinition(node) {
           const typePath = Api.Schema.Routing.createReferencePath({
             version: version === Api.Schema.VERSION_LATEST ? undefined : version,
-            type: node.name.value
+            type: node.name.value,
           })
           paths.add(typePath)
 
@@ -42,7 +42,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
               const fieldPath = Api.Schema.Routing.createReferencePath({
                 version: version === Api.Schema.VERSION_LATEST ? undefined : version,
                 type: node.name.value,
-                field: field.name.value
+                field: field.name.value,
               })
               paths.add(fieldPath)
             }
@@ -51,7 +51,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
         InterfaceTypeDefinition(node) {
           const typePath = Api.Schema.Routing.createReferencePath({
             version: version === Api.Schema.VERSION_LATEST ? undefined : version,
-            type: node.name.value
+            type: node.name.value,
           })
           paths.add(typePath)
 
@@ -61,7 +61,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
               const fieldPath = Api.Schema.Routing.createReferencePath({
                 version: version === Api.Schema.VERSION_LATEST ? undefined : version,
                 type: node.name.value,
-                field: field.name.value
+                field: field.name.value,
               })
               paths.add(fieldPath)
             }
@@ -70,28 +70,28 @@ export const getRoutesPaths = async (): Promise<string[]> => {
         EnumTypeDefinition(node) {
           const typePath = Api.Schema.Routing.createReferencePath({
             version: version === Api.Schema.VERSION_LATEST ? undefined : version,
-            type: node.name.value
+            type: node.name.value,
           })
           paths.add(typePath)
         },
         InputObjectTypeDefinition(node) {
           const typePath = Api.Schema.Routing.createReferencePath({
             version: version === Api.Schema.VERSION_LATEST ? undefined : version,
-            type: node.name.value
+            type: node.name.value,
           })
           paths.add(typePath)
         },
         UnionTypeDefinition(node) {
           const typePath = Api.Schema.Routing.createReferencePath({
             version: version === Api.Schema.VERSION_LATEST ? undefined : version,
-            type: node.name.value
+            type: node.name.value,
           })
           paths.add(typePath)
         },
         ScalarTypeDefinition(node) {
           const typePath = Api.Schema.Routing.createReferencePath({
             version: version === Api.Schema.VERSION_LATEST ? undefined : version,
-            type: node.name.value
+            type: node.name.value,
           })
           paths.add(typePath)
         },
