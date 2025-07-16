@@ -4,7 +4,7 @@ import { Grafaid } from '#lib/grafaid/index'
 import { route, routeIndex } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Box } from '@radix-ui/themes'
-import { Outlet, useParams, useRouteLoaderData } from 'react-router'
+import { Outlet, useParams } from 'react-router'
 import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
@@ -77,7 +77,7 @@ const RouteReferenceComponent = () => {
 
 // Shared hooks for schema data validation and retrieval
 const useReferenceSchema = () => {
-  const data = useRouteLoaderData('reference') as Awaited<ReturnType<typeof loader>>
+  const data = useLoaderData<typeof loader>('reference')
   if (!data?.schema) {
     throw new Error('Schema not found')
   }
