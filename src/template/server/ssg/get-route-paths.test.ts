@@ -50,6 +50,19 @@ vi.mock('#api/index', () => ({
     Schema: {
       getMetadata: vi.fn(),
       VERSION_LATEST: 'latest',
+      Routing: {
+        createReferencePath: vi.fn((parts) => {
+          const version = parts.version || 'latest'
+          const basePath = version === 'latest' ? '/reference' : `/reference/version/${version}`
+          if (parts.type) {
+            return parts.field ? `${basePath}/${parts.type}/${parts.field}` : `${basePath}/${parts.type}`
+          }
+          return basePath
+        }),
+        createReferenceBasePath: vi.fn((version) => {
+          return version === 'latest' ? '/reference' : `/reference/version/${version}`
+        }),
+      },
     },
   },
 }))

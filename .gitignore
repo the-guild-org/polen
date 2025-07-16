@@ -39,3 +39,7 @@ dist-demos
 examples/hive/*.log
 prompt.md
 temp
+
+# flo context files
+CLAUDE.local.md
+.flo/

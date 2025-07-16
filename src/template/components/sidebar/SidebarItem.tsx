@@ -2,8 +2,10 @@ import type { Content } from '#api/content/$'
 import type { React } from '#dep/react/index'
 import { Texts } from '#template/components/Texts/index'
 import { Box, Flex } from '@radix-ui/themes'
+import { useContext } from 'react'
 import { useLocation } from 'react-router'
 import { getPathActiveReport, Link } from '../Link.js'
+import { SidebarContext } from './SidebarContext.js'
 
 export const Items: React.FC<{ items: Content.Item[] }> = ({ items }) => {
   return (
@@ -50,15 +52,17 @@ const SBLink: React.FC<{
   link: Content.ItemLink | Content.ItemSection
 }> = ({ link }) => {
   const location = useLocation()
+  const { basePath } = useContext(SidebarContext)
   const currentPathExp = location.pathname
-  const active = getPathActiveReport(link.pathExp, currentPathExp)
+  const href = basePath ? `${basePath}/${link.pathExp}` : `/${link.pathExp}`
+  const active = getPathActiveReport(href, currentPathExp)
 
   return (
     <Link
       role='Sidebar Link'
       color={active.is ? `iris` : `gray`}
       data-testid={`sidebar-link-${link.pathExp}`}
-      to={`/${link.pathExp}`}
+      to={href}
       style={{
         display: `block`,
         textDecoration: `none`,
@@ -135,12 +139,14 @@ const LinkedSection: React.FC<{
 
 const SectionLink: React.FC<{ link: Content.ItemLink }> = ({ link }) => {
   const location = useLocation()
-  const active = getPathActiveReport(link.pathExp, location.pathname)
+  const { basePath } = useContext(SidebarContext)
+  const href = basePath ? `${basePath}/${link.pathExp}` : `/${link.pathExp}`
+  const active = getPathActiveReport(href, location.pathname)
 
   return (
     <Link
       role='Sidebar Link'
-      to={`/` + link.pathExp}
+      to={href}
       color={active.is ? `iris` : `gray`}
       style={{
         textDecoration: `none`,

@@ -35,6 +35,9 @@
     "#*": {
       "default": "./build/*.js"
     },
+    "#api/iso": {
+      "default": "./build/api/iso/$.js"
+    },
     "#lib/mask": {
       "default": "./build/lib/mask/$.js"
     },

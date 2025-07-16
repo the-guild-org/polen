@@ -1,4 +1,5 @@
 import type { Content } from '#api/content/$'
+import { Api } from '#api/iso'
 import { GrafaidOld } from '#lib/grafaid-old/index'
 import { Grafaid } from '#lib/grafaid/index'
 import { route, routeIndex } from '#lib/react-router-aid/react-router-aid'
@@ -10,14 +11,13 @@ import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import { VersionSelector } from '../components/VersionSelector.js'
 import { SidebarLayout } from '../layouts/index.js'
-import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
 import { schemaSource } from '../sources/schema-source.js'
 
 export const loader = createLoader(async ({ params }) => {
   // Handle both versioned and unversioned routes:
   // - Versioned: /reference/version/:version/:type → params.version exists
   // - Unversioned: /reference/:type → params.version is undefined, defaults to latest
-  const currentVersion = params.version ?? VERSION_LATEST
+  const currentVersion = params.version ?? Api.Schema.VERSION_LATEST
 
   const schema = await schemaSource.get(currentVersion)
   const availableVersions = schemaSource.versions
@@ -42,12 +42,6 @@ const RouteReferenceComponent = () => {
   const sidebarItems: Content.Item[] = []
   const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
 
-  // Build path prefix based on current version from loader data
-  // This ensures sidebar links always match the current version being viewed
-  const versionPath = data.currentVersion === VERSION_LATEST
-    ? ``
-    : `version/${data.currentVersion}/`
-
   for (const [title, types] of kindEntries) {
     sidebarItems.push({
       type: `ItemSection` as const,
@@ -57,13 +51,16 @@ const RouteReferenceComponent = () => {
       links: types.map(type => ({
         type: `ItemLink` as const,
         title: type.name,
-        pathExp: `reference/${versionPath}${type.name}`,
+        pathExp: type.name, // Just the type name, basePath will be prepended
       })),
     })
   }
 
+  // Calculate basePath based on current version
+  const basePath = Api.Schema.Routing.createReferenceBasePath(data.currentVersion)
+
   return (
-    <SidebarLayout sidebar={sidebarItems}>
+    <SidebarLayout sidebar={sidebarItems} basePath={basePath}>
       <Box mb={`4`}>
         <VersionSelector
           availableVersions={data.availableVersions}

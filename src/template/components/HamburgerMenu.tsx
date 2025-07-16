@@ -9,6 +9,7 @@ export interface HamburgerMenuProps {
   onToggle: () => void
   onClose: () => void
   sidebarData: Content.Item[]
+  basePath?: string
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
@@ -16,6 +17,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onToggle,
   onClose,
   sidebarData,
+  basePath,
 }) => {
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -87,7 +89,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 <Cross2Icon width='18' height='18' />
               </IconButton>
             </Flex>
-            <Sidebar data={sidebarData} />
+            <Sidebar data={sidebarData} basePath={basePath} />
           </Box>
         </>
       )}

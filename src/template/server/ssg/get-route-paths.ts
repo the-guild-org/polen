@@ -22,7 +22,7 @@ export const getRoutesPaths = async (): Promise<string[]> => {
   const routeExpressions = ReactRouterAid.getRouteExpressions(routes)
 
   // Helper function to load schema from filesystem and add type paths
-  const addTypePathsForVersion = async (version: string, pathPrefix: string, includeFields = false) => {
+  const addTypePathsForVersion = async (version: string, includeFields = false) => {
     try {
       const schemaFilePath = NodePath.join(PROJECT_DATA.paths.project.absolute.build.assets.schemas, `${version}.json`)
       const schemaContent = await NodeFs.readFile(schemaFilePath, 'utf-8')
@@ -30,38 +30,70 @@ export const getRoutesPaths = async (): Promise<string[]> => {
 
       visit(schemaAst, {
         ObjectTypeDefinition(node) {
-          const typePath = `${pathPrefix}/${node.name.value}`
+          const typePath = Api.Schema.Routing.createReferencePath({
+            version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+            type: node.name.value
+          })
           paths.add(typePath)
 
           // Add field paths if requested
           if (includeFields && node.fields) {
             for (const field of node.fields) {
-              paths.add(`${typePath}/${field.name.value}`)
+              const fieldPath = Api.Schema.Routing.createReferencePath({
+                version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+                type: node.name.value,
+                field: field.name.value
+              })
+              paths.add(fieldPath)
             }
           }
         },
         InterfaceTypeDefinition(node) {
-          const typePath = `${pathPrefix}/${node.name.value}`
+          const typePath = Api.Schema.Routing.createReferencePath({
+            version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+            type: node.name.value
+          })
           paths.add(typePath)
 
           // Add field paths if requested
           if (includeFields && node.fields) {
             for (const field of node.fields) {
-              paths.add(`${typePath}/${field.name.value}`)
+              const fieldPath = Api.Schema.Routing.createReferencePath({
+                version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+                type: node.name.value,
+                field: field.name.value
+              })
+              paths.add(fieldPath)
             }
           }
         },
         EnumTypeDefinition(node) {
-          paths.add(`${pathPrefix}/${node.name.value}`)
+          const typePath = Api.Schema.Routing.createReferencePath({
+            version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+            type: node.name.value
+          })
+          paths.add(typePath)
         },
         InputObjectTypeDefinition(node) {
-          paths.add(`${pathPrefix}/${node.name.value}`)
+          const typePath = Api.Schema.Routing.createReferencePath({
+            version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+            type: node.name.value
+          })
+          paths.add(typePath)
         },
         UnionTypeDefinition(node) {
-          paths.add(`${pathPrefix}/${node.name.value}`)
+          const typePath = Api.Schema.Routing.createReferencePath({
+            version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+            type: node.name.value
+          })
+          paths.add(typePath)
         },
         ScalarTypeDefinition(node) {
-          paths.add(`${pathPrefix}/${node.name.value}`)
+          const typePath = Api.Schema.Routing.createReferencePath({
+            version: version === Api.Schema.VERSION_LATEST ? undefined : version,
+            type: node.name.value
+          })
+          paths.add(typePath)
         },
       })
     } catch (error) {
@@ -78,32 +110,33 @@ export const getRoutesPaths = async (): Promise<string[]> => {
     if (exp === knownParameterizedRouteExpressions.reference_type) {
       if (hasSchema) {
         // Add paths for latest version (no version in URL)
-        await addTypePathsForVersion(Api.Schema.VERSION_LATEST, `/reference`)
+        await addTypePathsForVersion(Api.Schema.VERSION_LATEST)
       }
     } else if (exp === knownParameterizedRouteExpressions.reference_version) {
       if (hasSchema) {
         // Add paths for version pages themselves (without type)
         for (const version of availableVersions) {
-          paths.add(`/reference/version/${version}`)
+          const versionPath = Api.Schema.Routing.createReferenceBasePath(version)
+          paths.add(versionPath)
         }
       }
     } else if (exp === knownParameterizedRouteExpressions.reference_type_field) {
       if (hasSchema) {
         // Add paths for latest version fields
-        await addTypePathsForVersion(Api.Schema.VERSION_LATEST, `/reference`, true)
+        await addTypePathsForVersion(Api.Schema.VERSION_LATEST, true)
       }
     } else if (exp === knownParameterizedRouteExpressions.reference_versioned_type) {
       if (hasSchema) {
         // Add paths for all versions using new route structure
         for (const version of availableVersions) {
-          await addTypePathsForVersion(version, `/reference/version/${version}`)
+          await addTypePathsForVersion(version)
         }
       }
     } else if (exp === knownParameterizedRouteExpressions.reference_versioned_type_field) {
       if (hasSchema) {
         // Add paths for all versions with fields
         for (const version of availableVersions) {
-          await addTypePathsForVersion(version, `/reference/version/${version}`, true)
+          await addTypePathsForVersion(version, true)
         }
       }
     } else if (ReactRouterAid.isParameterizedPath(exp)) {
