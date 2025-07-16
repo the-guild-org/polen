@@ -16,6 +16,7 @@ examples/_tests/__results__
 # Tests
 test-results
 __results__
+blob-report/
 
 # AI
 CLAUDE_SESSION.md
