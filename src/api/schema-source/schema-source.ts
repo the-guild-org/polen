@@ -157,13 +157,13 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     },
 
     writeAllAssets: async (
-      schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>,
+      schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>['data'],
       metadata: Schema.SchemaMetadata,
     ) => {
       if (!schemaData) return
 
       // Write schema and changelog files
-      for (const [index, version] of schemaData.entries()) {
+      for (const [index, version] of schemaData!.entries()) {
         const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
 
         // Write schema file
@@ -173,7 +173,7 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
         )
 
         // Write changelog file (except for the oldest/last version)
-        if (Schema.shouldVersionHaveChangelog(index, schemaData.length)) {
+        if (Schema.shouldVersionHaveChangelog(index, schemaData!.length)) {
           const changelogData = {
             changes: version.changes,
             date: version.date.toISOString(),

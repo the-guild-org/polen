@@ -35,15 +35,15 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
   const readSchema = async () => {
     if (schemaCache === null) {
-      const schema = await Schema.readOrThrow({
+      const schemaResult = await Schema.readOrThrow({
         ...config.schema,
         projectRoot: config.paths.project.rootDir,
       })
       // todo: augmentations scoped to a version
-      schema?.forEach(version => {
+      schemaResult.data?.forEach(version => {
         SchemaAugmentation.apply(version.after, config.schemaAugmentations)
       })
-      schemaCache = schema
+      schemaCache = schemaResult
     }
     return schemaCache
   }
@@ -166,8 +166,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             const debug = debugPolen.sub(`module-project-schema`)
             debug(`load`, { id: viProjectSchema.id })
 
-            const schema = await readSchema()
-            return superjson.stringify(schema)
+            const schemaResult = await readSchema()
+            return superjson.stringify(schemaResult.data)
           },
         },
         {
@@ -191,18 +191,18 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             debug(`load`, { id: viProjectData.id })
 
-            const schema = await readSchema()
+            const schemaResult = await readSchema()
 
             const navbar = []
 
             // ━ Schema presence causes adding some navbar items
-            if (schema) {
+            if (schemaResult.data) {
               // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
               // Without the leading slash, React Router treats paths as relative, which causes
               // hydration mismatches between SSR (where base path is prepended) and client
               // (where basename is configured). This ensures consistent behavior.
               navbar.push({ pathExp: `/reference`, title: `Reference` })
-              if (schema.length > 1) {
+              if (schemaResult.data.length > 1) {
                 navbar.push({ pathExp: `/changelog`, title: `Changelog` })
               }
             }

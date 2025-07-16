@@ -4,6 +4,7 @@ export {
   buildASTSchema as fromAST,
   buildClientSchema as fromIntrospectionQuery,
   GraphQLSchema as Schema,
+  introspectionFromSchema as toIntrospectionQuery,
   printSchema as print,
 } from 'graphql'
 

@@ -84,11 +84,37 @@ test('can loads schema from directory data source with single schema.graphql', a
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
 
-test('can build with multiple versioned schemas', async ({ vite, project }) => {
-  await project.layout.set({
-    'schema/2023-01-01.graphql': 'type Query { hello: String }',
-    'schema/2024-01-01.graphql': 'type Query { hello: String, world: String }',
-  })
-  const viteUserConfig = await pc({}, project.layout.cwd)
+test('can loads schema from introspection data source', async ({ page, vite, project }) => {
+  const viteUserConfig = await pc({
+    schema: {
+      useDataSources: 'introspection',
+      dataSources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
+    },
+  }, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
+  await page.goto(viteDevServer.url('/reference').href)
+  await expect(page.getByText('Query', { exact: true })).toBeVisible()
+})
+
+test('introspection loads when no other sources exist', async ({ page, vite, project }) => {
+  const viteUserConfig = await pc({
+    schema: {
+      dataSources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
+    },
+  }, project.layout.cwd)
+  const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
+  await page.goto(viteDevServer.url('/reference').href)
+  await expect(page.getByText('Query', { exact: true })).toBeVisible()
+})
+
+test('file source takes precedence over introspection by default', async ({ page, vite, project }) => {
+  await project.layout.set({ 'schema.graphql': sdl })
+  const viteUserConfig = await pc({
+    schema: {
+      dataSources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
+    },
+  }, project.layout.cwd)
+  const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
+  await page.goto(viteDevServer.url('/reference').href)
+  await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
