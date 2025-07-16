@@ -16,6 +16,7 @@ examples/_tests/__results__
 # Tests
 test-results
 __results__
+blob-report/
 
 # AI
 CLAUDE_SESSION.md
@@ -39,3 +40,7 @@ dist-demos
 examples/hive/*.log
 prompt.md
 temp
+
+# flo context files
+CLAUDE.local.md
+.flo/

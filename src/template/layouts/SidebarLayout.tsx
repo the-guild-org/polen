@@ -6,12 +6,13 @@ import { useLocation } from 'react-router'
 import { HamburgerMenu } from '../components/HamburgerMenu.js'
 import { Sidebar } from '../components/sidebar/Sidebar.js'
 
-interface SidebarLayoutProps {
+interface Props {
   children: React.ReactNode
   sidebar: Content.Item[]
+  basePath?: string
 }
 
-export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children, sidebar }) => {
+export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath }) => {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -45,6 +46,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children, sidebar 
               setMobileMenuOpen(false)
             }}
             sidebarData={sidebar}
+            basePath={basePath}
           />
         </Box>
       )}
@@ -56,7 +58,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children, sidebar 
           gridColumn='1 / 3'
           gridRow='1 / auto'
         >
-          <Sidebar data={sidebar} />
+          <Sidebar data={sidebar} basePath={basePath} />
         </Box>
       )}
 

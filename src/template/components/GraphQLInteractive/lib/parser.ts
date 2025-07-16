@@ -5,6 +5,7 @@
  * analysis to create unified tokens for interactive code blocks.
  */
 
+import { Api } from '#api/iso'
 import type { CodeAnnotation } from 'codehike/code'
 import {
   getNamedType,
@@ -14,7 +15,6 @@ import {
   GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLObjectType,
-  type GraphQLOutputType,
   GraphQLScalarType,
   type GraphQLSchema,
   GraphQLUnionType,
@@ -24,12 +24,7 @@ import {
 import graphqlWasmUrl from 'tree-sitter-graphql-grammar-wasm/grammar.wasm?url'
 import * as WebTreeSitter from 'web-tree-sitter'
 import treeSitterWasmUrl from 'web-tree-sitter/tree-sitter.wasm?url'
-import {
-  isKeywordNodeType,
-  isLiteralNodeType,
-  isPunctuationNodeType,
-  type TreeSitterGraphQLNodeType,
-} from './graphql-node-types.js'
+import { isKeywordNodeType, isPunctuationNodeType, type TreeSitterGraphQLNodeType } from './graphql-node-types.js'
 import type { SemanticNode } from './semantic-nodes.js'
 import {
   isArgument,
@@ -263,42 +258,63 @@ class UnifiedToken implements GraphQLToken {
 
     // Arguments - use #<field>__<argument> pattern
     if (isArgument(this.semantic)) {
-      return `/reference/${this.semantic.parentType.name}#${this.semantic.parentField.name}__${this.semantic.argumentDef.name}`
+      const basePath = Api.Schema.Routing.createReferencePath({
+        type: this.semantic.parentType.name,
+      })
+      return `${basePath}#${this.semantic.parentField.name}__${this.semantic.argumentDef.name}`
     }
 
     // Output fields - use hash links since field routes aren't connected yet
     if (isOutputField(this.semantic)) {
-      return `/reference/${this.semantic.parentType.name}#${this.semantic.fieldDef.name}`
+      const basePath = Api.Schema.Routing.createReferencePath({
+        type: this.semantic.parentType.name,
+      })
+      return `${basePath}#${this.semantic.fieldDef.name}`
     }
 
     // Input fields - use hash links since field routes aren't connected yet
     if (isInputField(this.semantic)) {
-      return `/reference/${this.semantic.parentType.name}#${this.semantic.fieldDef.name}`
+      const basePath = Api.Schema.Routing.createReferencePath({
+        type: this.semantic.parentType.name,
+      })
+      return `${basePath}#${this.semantic.fieldDef.name}`
     }
 
     // Type references - use :type pattern
     if (this.semantic instanceof GraphQLObjectType) {
-      return `/reference/${this.semantic.name}`
+      return Api.Schema.Routing.createReferencePath({
+        type: this.semantic.name,
+      })
     }
 
     if (this.semantic instanceof GraphQLScalarType) {
-      return `/reference/${this.semantic.name}`
+      return Api.Schema.Routing.createReferencePath({
+        type: this.semantic.name,
+      })
     }
 
     if (this.semantic instanceof GraphQLInterfaceType) {
-      return `/reference/${this.semantic.name}`
+      return Api.Schema.Routing.createReferencePath({
+        type: this.semantic.name,
+      })
     }
 
     if (this.semantic instanceof GraphQLUnionType) {
-      return `/reference/${this.semantic.name}`
+      return Api.Schema.Routing.createReferencePath({
+        type: this.semantic.name,
+      })
     }
 
     if (this.semantic instanceof GraphQLEnumType) {
-      return `/reference/${this.semantic.name}`
+      return Api.Schema.Routing.createReferencePath({
+        type: this.semantic.name,
+      })
     }
 
     if (this.semantic instanceof GraphQLInputObjectType) {
-      return `/reference/${this.semantic.name}`
+      return Api.Schema.Routing.createReferencePath({
+        type: this.semantic.name,
+      })
     }
 
     return null

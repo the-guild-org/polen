@@ -1,3 +1,4 @@
+import { Api } from '#api/iso'
 import type { ReactNode } from 'react'
 import { useVersionPath } from '../hooks/useVersionPath.js'
 import { Link } from './Link.js'
@@ -21,10 +22,12 @@ interface Props {
 export const ReferenceLink = ({ type, field, children }: Props) => {
   const versionPath = useVersionPath()
 
-  let path = `/reference/${versionPath}${type}`
-  if (field) {
-    path += `/${field}`
-  }
+  const path = Api.Schema.Routing.joinSegmentsAndPaths(
+    Api.Schema.Routing.segmentLiterals.reference,
+    versionPath,
+    type,
+    field,
+  )
 
   return (
     <Link to={path}>

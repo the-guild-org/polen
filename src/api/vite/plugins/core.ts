@@ -1,22 +1,18 @@
 import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
 import { createNavbar } from '#api/content/navbar'
+import { Api } from '#api/index'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
-import { Hono } from '#dep/hono/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
 import { VitePluginJson } from '#lib/vite-plugin-json/index'
 import { ViteVirtual } from '#lib/vite-virtual/index'
 import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
-import * as HonoNodeServer from '@hono/node-server'
-import { serveStatic } from '@hono/node-server/serve-static'
 import { Json, Str } from '@wollybeard/kit'
-import * as NodePath from 'node:path'
 import type { ProjectData } from '../../../project-data.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
-import { createLogger } from '../logger.js'
 import { polenVirtual } from '../vi.js'
 import { Pages } from './pages.js'
 import { SchemaAssets } from './schema-assets.js'
@@ -201,7 +197,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               // Without the leading slash, React Router treats paths as relative, which causes
               // hydration mismatches between SSR (where base path is prepended) and client
               // (where basename is configured). This ensures consistent behavior.
-              navbar.push({ pathExp: `/reference`, title: `Reference` })
+              const referencePath = Api.Schema.Routing.createReferenceBasePath()
+              navbar.push({ pathExp: referencePath, title: `Reference` })
               if (schemaResult.data.length > 1) {
                 navbar.push({ pathExp: `/changelog`, title: `Changelog` })
               }

@@ -1,13 +1,14 @@
+import { Api } from '#api/iso'
+import type { React } from '#dep/react/index'
 import { Select } from '@radix-ui/themes'
 import { useNavigate, useParams } from 'react-router'
-import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
 
-interface VersionSelectorProps {
+interface Props {
   availableVersions: string[]
   currentVersion: string
 }
 
-export const VersionSelector = ({ availableVersions, currentVersion }: VersionSelectorProps) => {
+export const VersionSelector: React.FC<Props> = ({ availableVersions, currentVersion }) => {
   const navigate = useNavigate()
   const params = useParams()
 
@@ -17,20 +18,11 @@ export const VersionSelector = ({ availableVersions, currentVersion }: VersionSe
   }
 
   const handleVersionChange = (newVersion: string) => {
-    // Build new path preserving the current type/field if any
-    const currentType = params[`type`]
-    const currentField = params[`field`]
-
-    let newPath = `/reference`
-    if (newVersion !== VERSION_LATEST) {
-      newPath += `/version/${newVersion}`
-    }
-    if (currentType) {
-      newPath += `/${currentType}`
-      if (currentField) {
-        newPath += `/${currentField}`
-      }
-    }
+    const newPath = Api.Schema.Routing.createReferencePath({
+      version: newVersion,
+      type: params[`type`],
+      field: params[`field`],
+    })
 
     navigate(newPath)
   }
@@ -41,7 +33,7 @@ export const VersionSelector = ({ availableVersions, currentVersion }: VersionSe
       <Select.Content>
         {availableVersions.map(version => (
           <Select.Item key={version} value={version}>
-            {version === VERSION_LATEST ? `Latest` : version}
+            {version === Api.Schema.VERSION_LATEST ? `Latest` : version}
           </Select.Item>
         ))}
       </Select.Content>
