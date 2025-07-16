@@ -113,9 +113,9 @@ describe('property-based tests', () => {
           // Result contains only keys that were in both mask and object
           expect(resultKeys.every(key => keys.includes(key))).toBe(true)
 
-          // All requested keys that exist in obj are in result
+          // All requested keys that are own properties of obj are in result
           keys.forEach(key => {
-            if (key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
               expect(result).toHaveProperty(key, (obj as any)[key])
             }
           })
@@ -169,7 +169,7 @@ describe('property-based tests', () => {
           const result = Mask.apply(obj as any, Mask.create(keys))
 
           keys.forEach(key => {
-            if (key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
               expect(result).toHaveProperty(key)
               expect((result as any)[key]).toBe((obj as any)[key])
             }
