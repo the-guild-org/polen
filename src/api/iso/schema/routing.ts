@@ -40,12 +40,13 @@ export const joinSegmentsAndPaths = (
 ): string => {
   const path = '/' + segmentsOrPaths
     .flat()
-    .filter((_): _ is string => _ !== undefined && _ !== null && _ !== '')
+    .filter((_): _ is string => _ !== undefined && _ !== null)
     .map(chunkUnformatted =>
       chunkUnformatted
         .replace(/^\//, '')
         .replace(/\/$/, '')
     )
+    .filter(Boolean)
     .join('/')
 
   return path

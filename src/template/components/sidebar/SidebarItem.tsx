@@ -1,4 +1,5 @@
 import type { Content } from '#api/content/$'
+import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { Texts } from '#template/components/Texts/index'
 import { Box, Flex } from '@radix-ui/themes'
@@ -54,7 +55,7 @@ const SBLink: React.FC<{
   const location = useLocation()
   const { basePath } = useContext(SidebarContext)
   const currentPathExp = location.pathname
-  const href = basePath ? `${basePath}/${link.pathExp}` : `/${link.pathExp}`
+  const href = Api.Schema.Routing.joinSegmentsAndPaths(basePath, link.pathExp)
   const active = getPathActiveReport(href, currentPathExp)
 
   return (
@@ -140,7 +141,7 @@ const LinkedSection: React.FC<{
 const SectionLink: React.FC<{ link: Content.ItemLink }> = ({ link }) => {
   const location = useLocation()
   const { basePath } = useContext(SidebarContext)
-  const href = basePath ? `${basePath}/${link.pathExp}` : `/${link.pathExp}`
+  const href = Api.Schema.Routing.joinSegmentsAndPaths(basePath, link.pathExp)
   const active = getPathActiveReport(href, location.pathname)
 
   return (
