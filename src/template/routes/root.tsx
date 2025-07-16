@@ -1,5 +1,5 @@
 import type { ReactRouter } from '#dep/react-router/index'
-import { createRoute } from '#lib/react-router-aid/react-router-aid'
+import { route } from '#lib/react-router-aid/react-router-aid'
 import { Box, Flex, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
@@ -105,7 +105,7 @@ if (PROJECT_SCHEMA) {
 //
 //
 
-const notFoundRoute = createRoute({
+const notFoundRoute = route({
   id: `*_not_found`,
   path: `*`,
   Component: NotFound,
@@ -122,7 +122,7 @@ children.push(notFoundRoute)
 //
 //
 
-export const root = createRoute({
+export const root = route({
   path: `/`,
   Component,
   children,

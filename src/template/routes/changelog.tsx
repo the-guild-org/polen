@@ -1,5 +1,5 @@
 import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
-import { createRoute } from '#lib/react-router-aid/react-router-aid'
+import { route } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Changelog } from '../components/Changelog.js'
 import { ChangelogLayout } from '../layouts/index.js'
@@ -33,7 +33,7 @@ const Component = () => {
   )
 }
 
-export const changelog = createRoute({
+export const changelog = route({
   path: `changelog`,
   loader,
   Component,
