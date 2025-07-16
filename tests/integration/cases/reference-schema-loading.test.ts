@@ -1,9 +1,8 @@
 import { expect } from 'playwright/test'
-import { polen } from '../helpers/polen-builder.js'
 import { test } from '../helpers/test.js'
 
-test('reference pages should load schema content correctly', async ({ page, vite }) => {
-  const builder = polen(page, vite).withPokemonSchema()
+test('reference pages should load schema content correctly', async ({ page, polen }) => {
+  const builder = polen.withPokemonSchema()
 
   const p = await builder.goto('/reference/Pokemon')
 
@@ -27,8 +26,8 @@ test('reference pages should load schema content correctly', async ({ page, vite
   await expect(page.getByText('name:', { exact: false })).toBeVisible()
 })
 
-test('reference index page should work', async ({ page, vite }) => {
-  const builder = polen(page, vite).withPokemonSchema()
+test('reference index page should work', async ({ page, polen }) => {
+  const builder = polen.withPokemonSchema()
 
   const p = await builder.goto('/reference')
 
