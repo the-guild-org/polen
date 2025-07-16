@@ -4,7 +4,7 @@ test('basic schema navigation works', async ({ page, polen }) => {
   const p = await polen
     .withSchema('type Query { hello: String }')
     .goto('/reference')
-  
+
   await p.expect.visible('Query')
 })
 
@@ -15,7 +15,7 @@ test('version picker updates correctly', async ({ page, polen }) => {
       '2023-02-01T00:00:00.000Z: type Query { newField: String }',
     ])
     .goto('/reference')
-  
+
   await p.selectVersion('2022-12-31') // Timezone offset makes 2023-01-01 UTC become 2022-12-31
   await p.expect.url('/reference/version/2022-12-31')
 })
@@ -25,7 +25,7 @@ test('base path asset loading works', async ({ page, polen }) => {
     .withSchema('type Query { hello: String }')
     .withBasePath('/demos/test/')
     .goto('/reference')
-  
+
   await p.expect.noErrors()
 })
 
@@ -36,14 +36,14 @@ test('sidebar links preserve version context', async ({ page, polen }) => {
       '2023-02-01T00:00:00.000Z: type Query { world: String }',
     ])
     .goto('/reference/version/2022-12-31') // Timezone offset makes 2023-01-01 UTC become 2022-12-31
-  
+
   await p.expect.sidebarLinks('version/2022-12-31')
 })
 
 test('BUGFIX: version picker does not duplicate after navigation', async ({ page, polen }) => {
   const builder = polen.withPokemonSchema()
   const p = await builder.goto('/reference')
-  
+
   // Check there's exactly one version picker initially
   await p.expect.versionPickerCount(1)
 

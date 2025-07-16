@@ -25,7 +25,7 @@ test('reference pages should load schema content correctly', async ({ page, pole
   const idField = page.locator('#id')
   await expect(idField.getByText('id:', { exact: false })).toBeVisible()
   await expect(idField.getByText('ID!')).toBeVisible()
-  
+
   const nameField = page.locator('#name')
   await expect(nameField.getByText('name:', { exact: false })).toBeVisible()
   await expect(nameField.getByText('String!')).toBeVisible()
