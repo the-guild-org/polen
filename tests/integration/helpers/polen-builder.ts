@@ -46,9 +46,12 @@ export class PolenBuilder {
 
   withVersions(versions: string[]): PolenBuilder {
     const parsedVersions = versions.map(v => {
-      const colonIndex = v.indexOf(': ')
-      const dateStr = v.substring(0, colonIndex)
-      const sdl = v.substring(colonIndex + 2).trim()
+      const separatorIndex = v.indexOf(': ')
+      if (separatorIndex === -1) {
+        throw new Error(`Invalid version string format in test setup. Expected "date: sdl", but got: "${v}"`)
+      }
+      const dateStr = v.substring(0, separatorIndex)
+      const sdl = v.substring(separatorIndex + 2).trim()
       return {
         date: new Date(dateStr),
         sdl,

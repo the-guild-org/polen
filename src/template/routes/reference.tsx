@@ -13,7 +13,7 @@ import { SidebarLayout } from '../layouts/index.js'
 import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
 import { schemaSource } from '../sources/schema-source.js'
 
-export const routeReferenceLoader = createLoader(async ({ params }) => {
+export const loader = createLoader(async ({ params }) => {
   // Handle both versioned and unversioned routes:
   // - Versioned: /reference/version/:version/:type → params.version exists
   // - Unversioned: /reference/:type → params.version is undefined, defaults to latest
@@ -30,7 +30,7 @@ export const routeReferenceLoader = createLoader(async ({ params }) => {
 })
 
 const RouteReferenceComponent = () => {
-  const data = useLoaderData<typeof routeReferenceLoader>()
+  const data = useLoaderData<typeof loader>()
 
   if (!data.schema) {
     return <MissingSchema />
@@ -77,7 +77,7 @@ const RouteReferenceComponent = () => {
 
 // Shared hooks for schema data validation and retrieval
 const useReferenceSchema = () => {
-  const data = useLoaderData<typeof routeReferenceLoader>()
+  const data = useLoaderData<typeof loader>()
   if (!data.schema) {
     throw new Error('Schema not found')
   }
@@ -133,40 +133,32 @@ const RouteComponentTypeField = () => {
   }
 }
 
+const typeAndFieldRoutes = [
+  routeIndex(RouteComponentIndex),
+  route({
+    path: `:type`,
+    Component: RouteComponentType,
+    children: [
+      route({
+        path: `:field`,
+        Component: RouteComponentTypeField,
+      }),
+    ],
+  }),
+]
+
 /**
  * Reference documentation with proper nested structure - all routes in one file
  */
 export const reference = route({
   path: `reference`,
-  loader: routeReferenceLoader,
+  loader,
   Component: RouteReferenceComponent,
   children: [
-    routeIndex(RouteComponentIndex),
-    route({
-      path: `:type`,
-      Component: RouteComponentType,
-      children: [
-        route({
-          path: `:field`,
-          Component: RouteComponentTypeField,
-        }),
-      ],
-    }),
+    ...typeAndFieldRoutes,
     route({
       path: `version/:version`,
-      children: [
-        routeIndex(RouteComponentIndex),
-        route({
-          path: `:type`,
-          Component: RouteComponentType,
-          children: [
-            route({
-              path: `:field`,
-              Component: RouteComponentTypeField,
-            }),
-          ],
-        }),
-      ],
+      children: typeAndFieldRoutes,
     }),
   ],
 })
