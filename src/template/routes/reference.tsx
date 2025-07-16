@@ -113,24 +113,14 @@ const RouteComponentIndex = () => {
 
 const RouteComponentType = () => {
   const params = useParams() as { type: string }
-
-  try {
-    const type = useSchemaType(params.type)
-    return <NamedType data={type} />
-  } catch {
-    return <MissingSchema />
-  }
+  const type = useSchemaType(params.type)
+  return <NamedType data={type} />
 }
 
 const RouteComponentTypeField = () => {
   const params = useParams() as { type: string; field: string }
-
-  try {
-    const field = useSchemaField(params.type, params.field)
-    return <Field data={field} />
-  } catch {
-    return <MissingSchema />
-  }
+  const field = useSchemaField(params.type, params.field)
+  return <Field data={field} />
 }
 
 const typeAndFieldRoutes = [
@@ -138,10 +128,12 @@ const typeAndFieldRoutes = [
   route({
     path: `:type`,
     Component: RouteComponentType,
+    errorElement: <MissingSchema />,
     children: [
       route({
         path: `:field`,
         Component: RouteComponentTypeField,
+        errorElement: <MissingSchema />,
       }),
     ],
   }),
