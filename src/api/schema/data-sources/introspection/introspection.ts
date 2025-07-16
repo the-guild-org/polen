@@ -124,13 +124,12 @@ export const readOrThrow = async (
         throw new Error('Introspection data must be a valid JSON object')
       }
 
-      if (!('data' in introspectionData) || !introspectionData['data']) {
-        throw new Error('Introspection data missing required "data" property')
-      }
-
-      const data = introspectionData['data']
-      if (!data || typeof data !== 'object' || !('__schema' in data) || !data['__schema']) {
-        throw new Error('Introspection data missing required "__schema" property in data')
+      // Allow fromIntrospectionQuery to handle validation of the introspection format
+      // It will provide more specific GraphQL-related error messages
+      if (!('data' in introspectionData)) {
+        throw new Error(
+          'Introspection data missing required "data" property (expected GraphQL introspection result format)',
+        )
       }
 
       schema = Grafaid.Schema.fromIntrospectionQuery(introspectionData as any)
@@ -162,7 +161,10 @@ export const readOrThrow = async (
     schema = introspectionResult
 
     // Get the raw introspection result for saving
-    const introspectionData = Grafaid.Schema.toIntrospectionQuery(schema)
+    const __schema = Grafaid.Schema.toIntrospectionQuery(schema)
+
+    // Wrap in GraphQL response format for consistency with API responses
+    const introspectionData = { data: { __schema } }
 
     // Write to file
     await Fs.write({
