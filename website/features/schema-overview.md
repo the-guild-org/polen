@@ -100,7 +100,7 @@ export default Polen.defineConfig({
 - If there is a `schema.introspection.json` file then Polen will not run introspection.
 - If there is no file present then Polen will perform introspection and create `schema.introspection.json`
 - So, delete this file to have new introspection.
-- **Note**: Schema files are not watched for changes. Restart the dev server after deleting `schema.introspection.json` to fetch fresh data.
+- **Note**: When running the dev server, Polen watches for changes to `schema.introspection.json`. If you delete the file, Polen will automatically fetch a fresh schema from your endpoint.
 
 ##### Query details
 

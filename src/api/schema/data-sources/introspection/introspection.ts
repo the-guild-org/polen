@@ -118,6 +118,20 @@ export const readOrThrow = async (
     // Load from existing file - no reCreate capability
     try {
       const introspectionData = Json.codec.decode(introspectionFileContent)
+      
+      // Validate introspection data structure before passing to fromIntrospectionQuery
+      if (!introspectionData || typeof introspectionData !== 'object') {
+        throw new Error('Introspection data must be a valid JSON object')
+      }
+      
+      if (!('data' in introspectionData) || !introspectionData.data) {
+        throw new Error('Introspection data missing required "data" property')
+      }
+      
+      if (!('__schema' in introspectionData.data) || !introspectionData.data.__schema) {
+        throw new Error('Introspection data missing required "__schema" property in data')
+      }
+      
       schema = Grafaid.Schema.fromIntrospectionQuery(introspectionData as any)
     } catch (error) {
       if (error instanceof SyntaxError) {
