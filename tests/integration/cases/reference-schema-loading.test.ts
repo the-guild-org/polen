@@ -21,9 +21,14 @@ test('reference pages should load schema content correctly', async ({ page, pole
   await expect(page.locator('#id')).toBeVisible()
   await expect(page.locator('#name')).toBeVisible()
 
-  // Verify field names are displayed with their types
-  await expect(page.getByText('id:', { exact: false })).toBeVisible()
-  await expect(page.getByText('name:', { exact: false })).toBeVisible()
+  // Verify field details are shown within their containers (more robust than global text search)
+  const idField = page.locator('#id')
+  await expect(idField.getByText('id:', { exact: false })).toBeVisible()
+  await expect(idField.getByText('ID!')).toBeVisible()
+  
+  const nameField = page.locator('#name')
+  await expect(nameField.getByText('name:', { exact: false })).toBeVisible()
+  await expect(nameField.getByText('String!')).toBeVisible()
 })
 
 test('reference index page should work', async ({ page, polen }) => {
