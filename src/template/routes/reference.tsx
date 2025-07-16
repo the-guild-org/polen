@@ -1,18 +1,19 @@
 import type { Content } from '#api/content/$'
 import { GrafaidOld } from '#lib/grafaid-old/index'
-import { createRoute } from '#lib/react-router-aid/react-router-aid'
+import { Grafaid } from '#lib/grafaid/index'
+import { route, routeIndex } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Box } from '@radix-ui/themes'
-import { Outlet } from 'react-router'
+import { Outlet, useParams } from 'react-router'
+import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
+import { NamedType } from '../components/NamedType.js'
 import { VersionSelector } from '../components/VersionSelector.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { VERSION_LATEST } from '../lib/schema-utils/constants.js'
 import { schemaSource } from '../sources/schema-source.js'
-import { reference$type } from './reference.$type.js'
-import { referenceVersion$version$type } from './reference.version.$version.$type.js'
 
-const loader = createLoader(async ({ params }) => {
+export const routeReferenceLoader = createLoader(async ({ params }) => {
   // Handle both versioned and unversioned routes:
   // - Versioned: /reference/version/:version/:type → params.version exists
   // - Unversioned: /reference/:type → params.version is undefined, defaults to latest
@@ -28,8 +29,8 @@ const loader = createLoader(async ({ params }) => {
   }
 })
 
-const Component = () => {
-  const data = useLoaderData<typeof loader>()
+const RouteReferenceComponent = () => {
+  const data = useLoaderData<typeof routeReferenceLoader>()
 
   if (!data.schema) {
     return <MissingSchema />
@@ -74,18 +75,98 @@ const Component = () => {
   )
 }
 
-// Create the versioned reference route with explicit version prefix
-const referenceVersioned = createRoute({
-  path: `version/:version`,
-  loader,
-  Component,
-  children: [referenceVersion$version$type],
-})
+// Shared hooks for schema data validation and retrieval
+const useReferenceSchema = () => {
+  const data = useLoaderData<typeof routeReferenceLoader>()
+  if (!data.schema) {
+    throw new Error('Schema not found')
+  }
+  return data
+}
 
-// Create the main reference route with explicit version path and fallback type path
-export const reference = createRoute({
+const useSchemaType = (typeName: string) => {
+  const { schema } = useReferenceSchema()
+  const type = schema.getType(typeName)
+  if (!type) {
+    throw new Error(`Could not find type ${typeName}`)
+  }
+  return type
+}
+
+const useSchemaField = (typeName: string, fieldName: string) => {
+  const type = useSchemaType(typeName)
+  if (!Grafaid.Schema.TypesLike.isFielded(type)) {
+    throw new Error(`Type ${typeName} does not have fields`)
+  }
+
+  const fields = type.getFields()
+  const field = fields[fieldName]
+  if (!field) {
+    throw new Error(`Could not find field ${fieldName} on type ${typeName}`)
+  }
+  return field
+}
+
+const RouteComponentIndex = () => {
+  return <div>Select a type from the sidebar to view its documentation.</div>
+}
+
+const RouteComponentType = () => {
+  const params = useParams() as { type: string }
+
+  try {
+    const type = useSchemaType(params.type)
+    return <NamedType data={type} />
+  } catch {
+    return <MissingSchema />
+  }
+}
+
+const RouteComponentTypeField = () => {
+  const params = useParams() as { type: string; field: string }
+
+  try {
+    const field = useSchemaField(params.type, params.field)
+    return <Field data={field} />
+  } catch {
+    return <MissingSchema />
+  }
+}
+
+/**
+ * Reference documentation with proper nested structure - all routes in one file
+ */
+export const reference = route({
   path: `reference`,
-  loader,
-  Component,
-  children: [referenceVersioned, reference$type],
+  loader: routeReferenceLoader,
+  Component: RouteReferenceComponent,
+  children: [
+    routeIndex(RouteComponentIndex),
+    route({
+      path: `:type`,
+      Component: RouteComponentType,
+      children: [
+        route({
+          path: `:field`,
+          Component: RouteComponentTypeField,
+        }),
+      ],
+    }),
+    route({
+      path: `version/:version`,
+      children: [
+        routeIndex(RouteComponentIndex),
+        route({
+          path: `:type`,
+          Component: RouteComponentType,
+          children: [
+            route({
+              path: `:field`,
+              Component: RouteComponentTypeField,
+            }),
+          ],
+        }),
+      ],
+    }),
+  ],
 })

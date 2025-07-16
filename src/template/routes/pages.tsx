@@ -1,4 +1,4 @@
-import { createRoute } from '#lib/react-router-aid/react-router-aid'
+import { route } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { SidebarLayout } from '#template/layouts/index'
 import { MDXProvider } from '@mdx-js/react'
@@ -101,7 +101,7 @@ const Component = () => {
   )
 }
 
-export const pages = createRoute({
+export const pages = route({
   // Pathless layout route - doesn't affect URL paths
   loader,
   Component,
