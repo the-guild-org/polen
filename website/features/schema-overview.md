@@ -131,6 +131,7 @@ schema: {
     file: { path: './fallback-schema.graphql' }
   }
 }
+```
 
 ## Versioning
 
@@ -180,4 +181,6 @@ Polen provides the following schema-related features:
 - Introspection only supports single schemas (no versioning/changelog support)
 - Version navigation in the reference docs requires manual URL construction
 - Changelog doesn't include clickable links to versioned reference pages
+
+```
 ```
