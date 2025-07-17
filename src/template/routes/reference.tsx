@@ -9,7 +9,7 @@ import { Outlet, useParams } from 'react-router'
 import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
-import { VersionSelector } from '../components/VersionSelector.js'
+import { VersionPicker } from '../components/VersionPicker.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { schemaSource } from '../sources/schema-source.js'
 
@@ -62,9 +62,9 @@ const RouteReferenceComponent = () => {
   return (
     <SidebarLayout sidebar={sidebarItems} basePath={basePath}>
       <Box mb={`4`}>
-        <VersionSelector
-          availableVersions={data.availableVersions}
-          currentVersion={data.currentVersion}
+        <VersionPicker
+          all={data.availableVersions}
+          current={data.currentVersion}
         />
       </Box>
       <Outlet />
