@@ -68,7 +68,7 @@ Polen is a framework for building delightful GraphQL developer portals. It gener
 
 - Uses dprint for formatting (ASI, single quotes)
 - Backticks for strings (except in test files due to Zed IDE limitation)
-- No runtime dependencies allowed (all dependencies must be bundled)
+- Polen's generated output must be self-contained (users' projects don't need to install Polen as a dependency)
 
 ## Development Rules
 

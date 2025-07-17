@@ -1,11 +1,12 @@
 import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
+import type { React } from '#dep/react/index'
 import { GrafaidOld } from '#lib/grafaid-old/index'
-import { Grafaid } from '#lib/grafaid/index'
 import { route, routeIndex } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Box } from '@radix-ui/themes'
-import { Outlet, useParams } from 'react-router'
+import { neverCase } from '@wollybeard/kit/language'
+import { useParams } from 'react-router'
 import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
@@ -29,7 +30,9 @@ export const loader = createLoader(async ({ params }) => {
   }
 })
 
-const RouteReferenceComponent = () => {
+// Single component that handles all reference route variations
+const ReferenceView = () => {
+  const params = useParams() as { version?: string; type?: string; field?: string }
   const data = useLoaderData<typeof loader>()
 
   if (!data.schema) {
@@ -59,91 +62,74 @@ const RouteReferenceComponent = () => {
   // Calculate basePath based on current version
   const basePath = Api.Schema.Routing.createReferenceBasePath(data.currentVersion)
 
+  // Determine view type and render appropriate content
+  const viewType = Api.Schema.Routing.getReferenceViewType({
+    schema: data.schema,
+    type: params.type,
+    field: params.field,
+  })
+
+  const content: React.ReactNode = (() => {
+    if (viewType === 'index') {
+      return <div>Select a type from the sidebar to view its documentation.</div>
+    } else if (viewType === 'type-missing' || viewType === 'field-missing') {
+      return <MissingSchema />
+    } else if (viewType === 'type') {
+      const type = data.schema.getType(params.type!)!
+      return <NamedType data={type} />
+    } else if (viewType === 'field') {
+      const type = data.schema.getType(params.type!)!
+      const fields = (type as any).getFields()
+      const field = fields[params.field!]
+      return <Field data={field} />
+    } else {
+      neverCase(viewType)
+    }
+  })()
+
   return (
     <SidebarLayout sidebar={sidebarItems} basePath={basePath}>
       <Box mb={`4`}>
         <VersionPicker
-          all={data.availableVersions}
+          all={[...data.availableVersions]} // Convert readonly to mutable
           current={data.currentVersion}
         />
       </Box>
-      <Outlet />
+      {content}
     </SidebarLayout>
   )
 }
 
-// Shared hooks for schema data validation and retrieval
-const useReferenceSchema = () => {
-  const data = useLoaderData<typeof loader>('reference')
-  if (!data?.schema) {
-    throw new Error('Schema not found')
-  }
-  return data
-}
-
-const useSchemaType = (typeName: string) => {
-  const { schema } = useReferenceSchema()
-  const type = schema.getType(typeName)
-  if (!type) {
-    throw new Error(`Could not find type ${typeName}`)
-  }
-  return type
-}
-
-const useSchemaField = (typeName: string, fieldName: string) => {
-  const type = useSchemaType(typeName)
-  if (!Grafaid.Schema.TypesLike.isFielded(type)) {
-    throw new Error(`Type ${typeName} does not have fields`)
-  }
-
-  const fields = type.getFields()
-  const field = fields[fieldName]
-  if (!field) {
-    throw new Error(`Could not find field ${fieldName} on type ${typeName}`)
-  }
-  return field
-}
-
-const RouteComponentIndex = () => {
-  return <div>Select a type from the sidebar to view its documentation.</div>
-}
-
-const RouteComponentType = () => {
-  const params = useParams() as { type: string }
-  const type = useSchemaType(params.type)
-  return <NamedType data={type} />
-}
-
-const RouteComponentTypeField = () => {
-  const params = useParams() as { type: string; field: string }
-  const field = useSchemaField(params.type, params.field)
-  return <Field data={field} />
-}
-
+// Define routes that handle type and field params
 const typeAndFieldRoutes = [
-  routeIndex(RouteComponentIndex),
+  routeIndex({
+    Component: ReferenceView,
+    loader,
+  }),
   route({
     path: `:type`,
-    Component: RouteComponentType,
+    Component: ReferenceView,
     errorElement: <MissingSchema />,
+    loader,
     children: [
       route({
         path: `:field`,
-        Component: RouteComponentTypeField,
+        Component: ReferenceView,
         errorElement: <MissingSchema />,
+        loader,
       }),
     ],
   }),
 ]
 
 /**
- * Reference documentation with proper nested structure - all routes in one file
+ * Reference documentation routes using proper React Router patterns
+ * - Parent routes have no components (automatically render Outlet)
+ * - Leaf routes have components and loaders that always run fresh
+ * - Single ReferenceView component handles all variations
  */
 export const reference = route({
-  id: 'reference',
   path: `reference`,
-  loader,
-  Component: RouteReferenceComponent,
   children: [
     ...typeAndFieldRoutes,
     route({

@@ -1,14 +1,10 @@
+import type { React } from '#dep/react/index'
 import { Grafaid } from '#lib/grafaid/index'
 import { Box, Heading } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
-import type { FC } from 'react'
 import { FieldList } from './FieldList.js'
 
-export interface Props {
-  data: GraphQLNamedType
-}
-
-export const FieldListSection: FC<Props> = ({ data }) => {
+export const FieldListSection: React.FC<{ data: GraphQLNamedType }> = ({ data }) => {
   if (!Grafaid.Schema.TypesLike.isFielded(data)) return null
 
   const fields = Grafaid.Schema.NodesLike.getFields(data)

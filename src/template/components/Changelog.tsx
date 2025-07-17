@@ -61,11 +61,11 @@ const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ change
       </h1>
       {groupedChanges.map(group => (
         <CriticalitySection key={group.level} level={group.level} changes={group.changes}>
-          {group.changes.map(change => {
+          {group.changes.map((change, index) => {
             const type = GraphqlChange.Group.getType(change)
             return (
               <ComponentDispatch
-                key={`${change.type}-${change.path || change.message}`}
+                key={`${change.type}-${change.path || change.message}-${index}`}
                 components={Group}
                 name={type}
                 props={{ change }}

@@ -1,17 +1,13 @@
+import type { React } from '#dep/react/index'
 import { GrafaidOld } from '#lib/grafaid-old/index'
 import type { BoxProps } from '@radix-ui/themes'
 import { Box, Text } from '@radix-ui/themes'
-import type { FC } from 'react'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.js'
 import { DeprecationReason } from './DeprecationReason.js'
 import { Description } from './Description.js'
 import { TypeAnnotation } from './TypeAnnotation.js'
 
-export type Props = BoxProps & {
-  data: GrafaidOld.GraphQLField
-}
-
-export const Field: FC<Props> = ({ data, ...boxProps }) => {
+export const Field: React.FC<BoxProps & { data: GrafaidOld.GraphQLField }> = ({ data, ...boxProps }) => {
   const argumentList = GrafaidOld.isOutputField(data)
     ? <ArgumentListAnnotation field={data} />
     : null

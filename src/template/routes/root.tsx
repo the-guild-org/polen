@@ -1,5 +1,7 @@
 import type { ReactRouter } from '#dep/react-router/index'
 import { route } from '#lib/react-router-aid/react-router-aid'
+import { createLoader } from '#lib/react-router-loader/react-router-loader'
+import type { Stores } from '#template/stores/$'
 import { Box, Flex, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
@@ -11,6 +13,7 @@ import { Link as PolenLink } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
 import { NotFound } from '../components/NotFound.js'
 import { ThemeToggle } from '../components/ThemeToggle.js'
+import { ToastContainer } from '../components/ToastContainer.js'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.js'
 import { changelog } from './changelog.js'
 import { index } from './index.js'
@@ -46,7 +49,12 @@ const Layout = () => {
         style={{ color: `inherit`, textDecoration: `none` }}
       >
         <Box display={{ initial: `block`, md: `block` }}>
-          <Logo src={logoSrc} title={templateVariables.title} height={30} showTitle={true} />
+          <Logo
+            src={logoSrc}
+            title={templateVariables.title}
+            height={30}
+            showTitle={true}
+          />
         </Box>
       </LinkReactRouter>
       <Flex direction='row' gap='4' style={{ flex: 1 }}>
@@ -61,7 +69,7 @@ const Layout = () => {
   )
 
   return (
-    <Theme asChild appearance={appearance}>
+    <Theme asChild appearance={appearance} radius='none'>
       <Box
         width={{ initial: `100%`, sm: `100%`, md: `var(--container-4)` }}
         maxWidth='100vw'
@@ -72,15 +80,13 @@ const Layout = () => {
       >
         {header}
         <Outlet />
+        <ToastContainer />
       </Box>
     </Theme>
   )
 }
 
-const children: ReactRouter.RouteObject[] = [
-  index,
-  pages,
-]
+const children: ReactRouter.RouteObject[] = [index, pages]
 
 //
 //
@@ -122,8 +128,25 @@ children.push(notFoundRoute)
 //
 //
 
+const storeModules = import.meta.glob('../stores/!($.*)*.ts', { eager: true }) as Record<
+  string,
+  Stores.StoreModule
+>
+
 export const root = route({
   path: `/`,
   Component,
+  loader: createLoader(async () => {
+    // Reset all stores on SSR to prevent cross-request pollution
+    if (import.meta.env.SSR) {
+      for (const module of Object.values(storeModules)) {
+        if (module.store?.reset) {
+          module.store.reset()
+        }
+      }
+    }
+
+    return {}
+  }),
   children,
 })

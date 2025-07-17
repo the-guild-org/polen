@@ -1,13 +1,9 @@
+import type { React } from '#dep/react/index'
 import { Box, Flex, Heading, Text } from '@radix-ui/themes'
 import type { GraphQLArgument } from 'graphql'
-import type { FC } from 'react'
 import { TypeAnnotation } from './TypeAnnotation.js'
 
-export interface Props {
-  args: readonly GraphQLArgument[]
-}
-
-export const ArgumentsList: FC<Props> = ({ args }) => {
+export const ArgumentsList: React.FC<{ args: readonly GraphQLArgument[] }> = ({ args }) => {
   if (args.length === 0) return null
 
   return (

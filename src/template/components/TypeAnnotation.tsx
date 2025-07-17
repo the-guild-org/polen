@@ -1,17 +1,13 @@
+import type { React } from '#dep/react/index'
 import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isInputObjectType, isListType, isNamedType, isNonNullType, isScalarType } from 'graphql'
-import type { FC } from 'react'
 import { ReferenceLink } from './ReferenceLink.js'
-
-export interface Props {
-  type: GraphQLType // Can be either GraphQLInputType or GraphQLOutputType
-}
 
 /**
  * Renders a GraphQL type recursively, with links for named types
  */
-export const TypeAnnotation: FC<Props> = ({ type }) => {
+export const TypeAnnotation: React.FC<{ type: GraphQLType }> = ({ type }) => {
   // Handle NonNull type wrapper
   if (isNonNullType(type)) {
     return (

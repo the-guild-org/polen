@@ -138,6 +138,7 @@
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "unified": "^11.0.5",
+    "valtio": "^2.1.5",
     "vfile": "^6.0.3",
     "vite": "npm:rolldown-vite@^7.0.9",
     "vite-plugin-inspect": "^11.3.0",
