@@ -1,4 +1,4 @@
-import { FileRouter } from '#lib/file-router/index'
+import { FileRouter } from '#lib/file-router'
 import { Str } from '@wollybeard/kit'
 import type { Page } from './page.js'
 import type { ScanResult } from './scan.js'

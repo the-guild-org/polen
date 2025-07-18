@@ -1,6 +1,7 @@
 import { Schema } from '#api/schema/index'
-import { Grafaid } from '#lib/grafaid/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChangeset } from '#lib/graphql-changeset'
+import { SchemaLifecycle } from '#lib/schema-lifecycle'
 import { astToSchema } from '#template/lib/schema-utils/schema-utils'
 import { Cache } from '@wollybeard/kit'
 import type { GraphQLSchema } from 'graphql'
@@ -34,16 +35,19 @@ interface SchemaSourceConfig {
   }
   versions: string[]
   assetsPath: string
+  debug?: boolean
 }
 
 export const createSchemaSource = (config: SchemaSourceConfig) => {
   const getSchemaPath = (version: string) => `${config.assetsPath}/schemas/${version}.json`
 
-  const getChangelogPath = (version: string) => `${config.assetsPath}/schemas/${version}.changelog.json`
+  const getChangelogPath = (version: string) => `${config.assetsPath}/schemas/${version}.release.changelog.json`
 
   const getSchemasDirectory = () => `${config.assetsPath}/schemas`
 
   const getMetadataPath = () => `${config.assetsPath}/schemas/metadata.json`
+
+  const getLifecyclePath = () => `${config.assetsPath}/schemas/lifecycle.json`
 
   const ioWrite = config.io.write || NoImplementationWriteFile
   const ioClearDirectory = config.io.clearDirectory || NoImplementationClearDirectory
@@ -59,12 +63,12 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     return schema
   }
 
-  const getChangelog = async (version: string): Promise<Schema.ChangelogData> => {
+  const getChangelog = async (version: string): Promise<GraphqlChangeset.ChangeSet> => {
     const content = await ioReadMemoized(getChangelogPath(version))
-    return JSON.parse(content)
+    return GraphqlChangeset.fromJson(content)
   }
 
-  const getAllChangesets = async (): Promise<GraphqlChangeset.ChangeSet[]> => {
+  const getAllChangesets = async (): Promise<GraphqlChangeset.Changelog> => {
     const changesets: GraphqlChangeset.ChangeSet[] = []
 
     for (let i = 0; i < config.versions.length; i++) {
@@ -82,28 +86,33 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
       if (changelogData) {
         const prevVersion = config.versions[i + 1]
-        const prevSchema = prevVersion ? await get(prevVersion) : null
 
-        if (prevSchema) {
+        if (prevVersion) {
+          const prevSchema = await get(prevVersion)
           changesets.push({
-            after: schema,
-            before: prevSchema,
-            changes: changelogData.changes,
+            type: 'IntermediateChangeSet',
+            after: { data: schema, version },
+            before: { data: prevSchema, version: prevVersion },
+            changes: GraphqlChangeset.isIntermediateChangeSet(changelogData) ? changelogData.changes : [],
             date: new Date(changelogData.date),
           })
         }
       } else {
         // Oldest version - no changelog, use existing utility
         changesets.push({
-          after: schema,
-          before: Grafaid.Schema.empty,
-          changes: [],
+          type: 'InitialChangeSet',
           date: Schema.versionStringToDate(version),
+          after: { data: schema, version },
         })
       }
     }
 
-    return changesets
+    return changesets as GraphqlChangeset.Changelog
+  }
+
+  const getLifecycle = async (): Promise<SchemaLifecycle.SchemaLifecycle> => {
+    const content = await ioReadMemoized(getLifecyclePath())
+    return SchemaLifecycle.fromJson(content)
   }
 
   return {
@@ -119,6 +128,7 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     get,
     getChangelog,
     getAllChangesets,
+    getLifecycle,
 
     // Expose the memoized reader's clear method
     clearCache: ioReadMemoized.clear,
@@ -129,8 +139,15 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
       await ioWrite(getSchemaPath(version), JSON.stringify(ast))
     },
 
-    writeChangelog: async (version: string, changelog: Schema.ChangelogData) => {
-      await ioWrite(getChangelogPath(version), JSON.stringify(changelog))
+    writeChangelog: async (version: string, changelog: GraphqlChangeset.ChangeSet) => {
+      await ioWrite(
+        getChangelogPath(version),
+        GraphqlChangeset.toJson(changelog),
+      )
+    },
+
+    writeLifecycle: async (lifecycle: SchemaLifecycle.SchemaLifecycle) => {
+      await ioWrite(getLifecyclePath(), SchemaLifecycle.toJson(lifecycle))
     },
 
     // Directory operations
@@ -157,33 +174,43 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     },
 
     writeAllAssets: async (
-      schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>['data'],
+      changelog: GraphqlChangeset.Changelog,
       metadata: Schema.SchemaMetadata,
+      lifecycle?: SchemaLifecycle.SchemaLifecycle,
     ) => {
-      if (!schemaData) return
+      if (!changelog) return
 
       // Write schema and changelog files
-      for (const [index, version] of schemaData!.entries()) {
-        const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
+      for (const [index, changeset] of changelog.entries()) {
+        const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(changeset.date)
 
         // Write schema file
-        await ioWrite(
-          getSchemaPath(versionName),
-          JSON.stringify(Grafaid.Schema.AST.parse(Grafaid.Schema.print(version.after))),
-        )
+        if (changeset.after?.data) {
+          await ioWrite(
+            getSchemaPath(versionName),
+            JSON.stringify(Grafaid.Schema.AST.parse(Grafaid.Schema.print(changeset.after.data))),
+          )
+        }
 
-        // Write changelog file (except for the oldest/last version)
-        if (Schema.shouldVersionHaveChangelog(index, schemaData!.length)) {
-          const changelogData = {
-            changes: version.changes,
-            date: version.date.toISOString(),
-          }
-          await ioWrite(getChangelogPath(versionName), JSON.stringify(changelogData))
+        // Write changelog file only for intermediate changesets
+        if (GraphqlChangeset.isIntermediateChangeSet(changeset)) {
+          await ioWrite(
+            getChangelogPath(versionName),
+            GraphqlChangeset.toJson(changeset),
+          )
         }
       }
 
       // Write metadata file
       await ioWrite(getMetadataPath(), JSON.stringify(metadata, null, 2))
+
+      // Write lifecycle file if provided
+      if (lifecycle) {
+        await ioWrite(
+          getLifecyclePath(),
+          SchemaLifecycle.toJson(lifecycle),
+        )
+      }
     },
   }
 }

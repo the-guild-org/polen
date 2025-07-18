@@ -1,6 +1,6 @@
 import type { Hono } from '#dep/hono/index'
-import { AppleTouchIcon } from '#lib/apple-touch-icon/index'
-import { Favicon } from '#lib/favicon/index'
+import { AppleTouchIcon } from '#lib/apple-touch-icon'
+import { Favicon } from '#lib/favicon'
 import { Http } from '@wollybeard/kit'
 
 /**

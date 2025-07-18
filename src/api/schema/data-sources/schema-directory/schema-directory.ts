@@ -1,10 +1,9 @@
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChange } from '#lib/graphql-change'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { debugPolen } from '#singletons/debug'
 import { Arr, Path } from '@wollybeard/kit'
 import { glob } from 'tinyglobby'
-import type { NonEmptyChangeSets } from '../../schema.js'
 import { readSingleSchemaFile } from '../schema-file/schema-file.js'
 import { FileNameExpression } from './file-name-expression/index.js'
 
@@ -71,7 +70,7 @@ export const normalizeConfig = (configInput: ConfigInput): Config => {
   return config
 }
 
-export const readOrThrow = async (configInput: ConfigInput): Promise<null | NonEmptyChangeSets> => {
+export const readOrThrow = async (configInput: ConfigInput): Promise<null | GraphqlChangeset.ChangelogLinked> => {
   const config = normalizeConfig(configInput)
 
   debug(`will search`, config)
@@ -124,7 +123,7 @@ export const readOrThrow = async (configInput: ConfigInput): Promise<null | NonE
  */
 const readVersionedSchemas = async (
   versionedExpressions: FileNameExpression.ExpressionVersioned[],
-): Promise<NonEmptyChangeSets> => {
+): Promise<GraphqlChangeset.ChangelogLinked> => {
   const versions = await Promise.all(Arr.map(versionedExpressions, async fileNameExpression => {
     const schemaFile = await Grafaid.Schema.read(fileNameExpression.filePath)
     // Should never happen since these paths come from the glob.
@@ -140,23 +139,34 @@ const readVersionedSchemas = async (
   versions.sort((a, b) => a.date.getTime() - b.date.getTime())
 
   const changesets = await Promise.all(
-    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSet> => {
+    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSetLinked> => {
       const current = version
       const previous = versions[index - 1]
 
       const before = previous?.schema ?? Grafaid.Schema.empty
       const after = current.schema
 
-      const changes = await GraphqlChange.calcChangeset({
-        before,
-        after,
-      })
+      if (!previous) {
+        // First version - create InitialChangeSet
+        return {
+          type: 'InitialChangeSet',
+          date: current.date,
+          after: { version: null, data: after },
+        }
+      } else {
+        // Subsequent versions - create IntermediateChangeSet
+        const changes = await GraphqlChange.calcChangeset({
+          before,
+          after,
+        })
 
-      return {
-        date: current.date,
-        before,
-        after,
-        changes,
+        return {
+          type: 'IntermediateChangeSet',
+          date: current.date,
+          before: { version: null, data: before },
+          after: { version: null, data: after },
+          changes,
+        }
       }
     }),
   )
@@ -164,5 +174,5 @@ const readVersionedSchemas = async (
   changesets.reverse()
 
   debug(`computed versioned schema`)
-  return changesets as NonEmptyChangeSets
+  return changesets as GraphqlChangeset.ChangelogLinked
 }

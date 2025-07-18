@@ -1,4 +1,4 @@
-import { Grafaid } from '#lib/grafaid/index'
+import { Grafaid } from '#lib/grafaid'
 
 export type Target = TargetType | TargetField
 

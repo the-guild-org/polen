@@ -3,13 +3,13 @@ import { SchemaAugmentation } from '#api/schema-augmentation/index'
 import { createSchemaSource } from '#api/schema-source/index'
 import { Schema } from '#api/schema/index'
 import type { Vite } from '#dep/vite/index'
-import { Grafaid } from '#lib/grafaid/index'
-import { ViteVirtual } from '#lib/vite-virtual/index'
+import { GraphqlChangeset } from '#lib/graphql-changeset'
+import { SchemaLifecycle } from '#lib/schema-lifecycle'
+import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { Cache } from '@wollybeard/kit'
 import * as NodeFs from 'node:fs/promises'
 import * as NodePath from 'node:path'
-import type { NonEmptyChangeSets } from '../../schema/schema.js'
 import { polenVirtual } from '../vi.js'
 
 export const viProjectSchemaMetadata = polenVirtual([`project`, `schema-metadata`])
@@ -52,7 +52,9 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
     // Apply augmentations
     schemaResult.data.forEach(version => {
-      SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+      if (version.after) {
+        SchemaAugmentation.apply(version.after.data, config.schemaAugmentations)
+      }
     })
 
     // Build metadata
@@ -103,9 +105,17 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     })
   }
 
+  // Helper to create lifecycle data from schema data
+  const createLifecycleData = (
+    schemaData: GraphqlChangeset.ChangelogLinked,
+    metadata: Schema.SchemaMetadata,
+  ): SchemaLifecycle.SchemaLifecycle => {
+    return SchemaLifecycle.create(schemaData)
+  }
+
   // Helper to write assets using schema-source API
   const writeDevAssets = async (
-    schemaData: NonEmptyChangeSets,
+    schemaData: GraphqlChangeset.ChangelogLinked,
     metadata: Schema.SchemaMetadata,
   ) => {
     // schemaData is now guaranteed to be non-null NonEmptyChangeSets
@@ -113,8 +123,10 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     const devAssetsDir = config.paths.framework.devAssets.schemas
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
 
+    const lifecycle = createLifecycleData(schemaData, metadata)
+
     const schemaSource = createDevSchemaSource(metadata)
-    await schemaSource.writeAllAssets(schemaData, metadata)
+    await schemaSource.writeAllAssets(schemaData, metadata, lifecycle)
     debug(`devAssetsWritten`, { versionCount: schemaData.length })
   }
 
@@ -288,8 +300,10 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         assetsPath: config.paths.framework.devAssets.absolute,
       })
 
+      const lifecycle = createLifecycleData(schemaData, metadata)
+
       // Emit all assets using the high-level API
-      await schemaSource.writeAllAssets(schemaData, metadata)
+      await schemaSource.writeAllAssets(schemaData, metadata, lifecycle)
       debug(`buildMode:allAssetsEmitted`, { versionCount: schemaData.length })
     },
 

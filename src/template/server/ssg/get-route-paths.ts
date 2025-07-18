@@ -1,5 +1,5 @@
 import { Api } from '#api/index'
-import { ReactRouterAid } from '#lib/react-router-aid/index'
+import { ReactRouterAid } from '#lib/react-router-aid'
 import { visit } from 'graphql'
 import * as NodeFs from 'node:fs/promises'
 import * as NodePath from 'node:path'

@@ -1,4 +1,4 @@
-import { Grafaid } from '#lib/grafaid/index'
+import { Grafaid } from '#lib/grafaid'
 import { VERSION_LATEST } from './constants.js'
 
 export interface ReferencePathParts {

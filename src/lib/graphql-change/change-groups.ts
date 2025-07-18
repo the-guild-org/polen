@@ -277,31 +277,61 @@ export type Type =
   | 'SchemaRootType'
   | 'DirectiveUsage'
 
-export const getType = (change: Change): Type => {
-  if (isTypeOperation(change)) return 'TypeOperation'
-  if (isTypeDescription(change)) return 'TypeDescription'
-  if (isFieldOperation(change)) return 'FieldOperation'
-  if (isFieldDescription(change)) return 'FieldDescription'
-  if (isFieldDeprecation(change)) return 'FieldDeprecation'
-  if (isFieldDeprecationReason(change)) return 'FieldDeprecationReason'
-  if (isFieldArgumentOperation(change)) return 'FieldArgumentOperation'
-  if (isFieldArgument(change)) return 'FieldArgument'
-  if (isFieldArgumentDescription(change)) return 'FieldArgumentDescription'
-  if (isEnumValueOperation(change)) return 'EnumValueOperation'
-  if (isEnumValueDescription(change)) return 'EnumValueDescription'
-  if (isEnumValueDeprecationReason(change)) return 'EnumValueDeprecationReason'
-  if (isInputFieldOperation(change)) return 'InputFieldOperation'
-  if (isInputFieldDescription(change)) return 'InputFieldDescription'
-  if (isInputFieldDefaultValue(change)) return 'InputFieldDefaultValue'
-  if (isUnionMemberOperation(change)) return 'UnionMemberOperation'
-  if (isObjectTypeInterfaceOperation(change)) return 'ObjectTypeInterfaceOperation'
-  if (isDirectiveOperation(change)) return 'DirectiveOperation'
-  if (isDirectiveDescription(change)) return 'DirectiveDescription'
-  if (isDirectiveLocationOperation(change)) return 'DirectiveLocationOperation'
-  if (isDirectiveArgumentOperation(change)) return 'DirectiveArgumentOperation'
-  if (isDirectiveArgument(change)) return 'DirectiveArgument'
-  if (isDirectiveArgumentDescription(change)) return 'DirectiveArgumentDescription'
-  if (isSchemaRootType(change)) return 'SchemaRootType'
-  if (isDirectiveUsage(change)) return 'DirectiveUsage'
+/**
+ * Conditional type that maps each change type to its corresponding group type
+ */
+export type getType<$Change extends Change> = $Change extends TypeOperation ? 'TypeOperation'
+  : $Change extends TypeDescription ? 'TypeDescription'
+  : $Change extends FieldOperation ? 'FieldOperation'
+  : $Change extends FieldDescription ? 'FieldDescription'
+  : $Change extends FieldDeprecation ? 'FieldDeprecation'
+  : $Change extends FieldDeprecationReason ? 'FieldDeprecationReason'
+  : $Change extends FieldArgumentOperation ? 'FieldArgumentOperation'
+  : $Change extends FieldArgument ? 'FieldArgument'
+  : $Change extends FieldArgumentDescription ? 'FieldArgumentDescription'
+  : $Change extends EnumValueOperation ? 'EnumValueOperation'
+  : $Change extends EnumValueDescription ? 'EnumValueDescription'
+  : $Change extends EnumValueDeprecationReason ? 'EnumValueDeprecationReason'
+  : $Change extends InputFieldOperation ? 'InputFieldOperation'
+  : $Change extends InputFieldDescription ? 'InputFieldDescription'
+  : $Change extends InputFieldDefaultValue ? 'InputFieldDefaultValue'
+  : $Change extends UnionMemberOperation ? 'UnionMemberOperation'
+  : $Change extends ObjectTypeInterfaceOperation ? 'ObjectTypeInterfaceOperation'
+  : $Change extends DirectiveOperation ? 'DirectiveOperation'
+  : $Change extends DirectiveDescription ? 'DirectiveDescription'
+  : $Change extends DirectiveLocationOperation ? 'DirectiveLocationOperation'
+  : $Change extends DirectiveArgumentOperation ? 'DirectiveArgumentOperation'
+  : $Change extends DirectiveArgument ? 'DirectiveArgument'
+  : $Change extends DirectiveArgumentDescription ? 'DirectiveArgumentDescription'
+  : $Change extends SchemaRootType ? 'SchemaRootType'
+  : $Change extends DirectiveUsage ? 'DirectiveUsage'
+  : never
+
+export const getType = <change extends Change>(change: change): getType<change> => {
+  if (isTypeOperation(change)) return 'TypeOperation' as getType<change>
+  if (isTypeDescription(change)) return 'TypeDescription' as getType<change>
+  if (isFieldOperation(change)) return 'FieldOperation' as getType<change>
+  if (isFieldDescription(change)) return 'FieldDescription' as getType<change>
+  if (isFieldDeprecation(change)) return 'FieldDeprecation' as getType<change>
+  if (isFieldDeprecationReason(change)) return 'FieldDeprecationReason' as getType<change>
+  if (isFieldArgumentOperation(change)) return 'FieldArgumentOperation' as getType<change>
+  if (isFieldArgument(change)) return 'FieldArgument' as getType<change>
+  if (isFieldArgumentDescription(change)) return 'FieldArgumentDescription' as getType<change>
+  if (isEnumValueOperation(change)) return 'EnumValueOperation' as getType<change>
+  if (isEnumValueDescription(change)) return 'EnumValueDescription' as getType<change>
+  if (isEnumValueDeprecationReason(change)) return 'EnumValueDeprecationReason' as getType<change>
+  if (isInputFieldOperation(change)) return 'InputFieldOperation' as getType<change>
+  if (isInputFieldDescription(change)) return 'InputFieldDescription' as getType<change>
+  if (isInputFieldDefaultValue(change)) return 'InputFieldDefaultValue' as getType<change>
+  if (isUnionMemberOperation(change)) return 'UnionMemberOperation' as getType<change>
+  if (isObjectTypeInterfaceOperation(change)) return 'ObjectTypeInterfaceOperation' as getType<change>
+  if (isDirectiveOperation(change)) return 'DirectiveOperation' as getType<change>
+  if (isDirectiveDescription(change)) return 'DirectiveDescription' as getType<change>
+  if (isDirectiveLocationOperation(change)) return 'DirectiveLocationOperation' as getType<change>
+  if (isDirectiveArgumentOperation(change)) return 'DirectiveArgumentOperation' as getType<change>
+  if (isDirectiveArgument(change)) return 'DirectiveArgument' as getType<change>
+  if (isDirectiveArgumentDescription(change)) return 'DirectiveArgumentDescription' as getType<change>
+  if (isSchemaRootType(change)) return 'SchemaRootType' as getType<change>
+  if (isDirectiveUsage(change)) return 'DirectiveUsage' as getType<change>
   neverCase(change)
 }

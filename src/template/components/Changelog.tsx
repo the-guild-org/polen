@@ -1,7 +1,6 @@
-import type { Api } from '#api/index'
+import { GraphqlChange } from '#lib/graphql-change'
 import { CRITICALITY_LEVELS } from '#lib/graphql-change/criticality'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { GraphqlChangeset } from '#lib/graphql-changeset'
 import type { CriticalityLevel } from '@graphql-inspector/core'
 import { Box } from '@radix-ui/themes'
 import React from 'react'
@@ -19,7 +18,7 @@ export const renderDate = (date: Date) => {
   })
 }
 
-export const Changelog: React.FC<{ changesets: Api.Schema.NonEmptyChangeSets }> = ({ changesets }) => {
+export const Changelog: React.FC<{ changesets: GraphqlChangeset.Changelog }> = ({ changesets }) => {
   return (
     <Box>
       {changesets.map(changeset => <Changeset key={changeset.date.toISOString()} changeset={changeset} />)}
@@ -38,12 +37,14 @@ const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ change
     })
 
     // Group changes
-    changeset.changes.forEach(change => {
-      const level = change.criticality.level
-      if (groups[level]) {
-        groups[level].push(change)
-      }
-    })
+    if (GraphqlChangeset.isIntermediateChangeSet(changeset)) {
+      changeset.changes.forEach(change => {
+        const level = change.criticality.level
+        if (groups[level]) {
+          groups[level].push(change)
+        }
+      })
+    }
 
     // Return only non-empty groups in order
     return CRITICALITY_LEVELS
@@ -52,7 +53,7 @@ const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ change
         level,
         changes: groups[level],
       }))
-  }, [changeset.changes])
+  }, [changeset])
 
   return (
     <Box mb='6'>

@@ -1,7 +1,7 @@
 import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
-import { GrafaidOld } from '#lib/grafaid-old/index'
+import { GrafaidOld } from '#lib/grafaid-old'
 import { route, routeIndex } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Box } from '@radix-ui/themes'
@@ -11,6 +11,7 @@ import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import { VersionPicker } from '../components/VersionPicker.js'
+import { SchemaLifecycleProvider } from '../contexts/SchemaLifecycleContext.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { schemaSource } from '../sources/schema-source.js'
 
@@ -22,15 +23,9 @@ export const loader = createLoader(async ({ params }) => {
 
   const schema = await schemaSource.get(currentVersion)
   const availableVersions = schemaSource.versions
-  
+
   // Load lifecycle data if available
-  let lifecycle = null
-  try {
-    lifecycle = await schemaSource.getLifecycle()
-  } catch (error) {
-    // Lifecycle data might not exist for all projects
-    console.debug('Schema lifecycle data not available', error)
-  }
+  const lifecycle = await schemaSource.getLifecycle()
 
   return {
     schema,
@@ -86,30 +81,37 @@ const ReferenceView = () => {
       return <MissingSchema />
     } else if (viewType === 'type') {
       const type = data.schema.getType(params.type!)!
-      return <NamedType data={type} lifecycle={data.lifecycle} currentVersion={data.currentVersion} />
+      return <NamedType data={type} />
     } else if (viewType === 'field') {
       const type = data.schema.getType(params.type!)!
       const fields = (type as any).getFields()
       const field = fields[params.field!]
-      return <Field data={field} lifecycle={data.lifecycle} currentVersion={data.currentVersion} parentTypeName={params.type!} />
+      return (
+        <Field
+          data={field}
+          parentTypeName={params.type!}
+        />
+      )
     } else {
       neverCase(viewType)
     }
   })()
 
   return (
-    <SidebarLayout 
-      sidebar={sidebarItems} 
-      basePath={basePath}
-      topContent={
-        <VersionPicker
-          all={[...data.availableVersions]} // Convert readonly to mutable
-          current={data.currentVersion}
-        />
-      }
-    >
-      {content}
-    </SidebarLayout>
+    <SchemaLifecycleProvider lifecycle={data.lifecycle} currentVersion={data.currentVersion}>
+      <SidebarLayout
+        sidebar={sidebarItems}
+        basePath={basePath}
+        topContent={
+          <VersionPicker
+            all={[...data.availableVersions]} // Convert readonly to mutable
+            current={data.currentVersion}
+          />
+        }
+      >
+        {content}
+      </SidebarLayout>
+    </SchemaLifecycleProvider>
   )
 }
 

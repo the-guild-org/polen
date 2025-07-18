@@ -1,8 +1,7 @@
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChange } from '#lib/graphql-change'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { Arr } from '@wollybeard/kit'
-import type { NonEmptyChangeSets } from '../../schema.js'
 
 /**
  * Configuration for defining schemas programmatically in memory.
@@ -68,7 +67,7 @@ export const normalize = (configInput: ConfigInput): Config => {
 
 export const read = async (
   configInput: ConfigInput,
-): Promise<null | NonEmptyChangeSets> => {
+): Promise<null | GraphqlChangeset.ChangelogLinked> => {
   const config = normalize(configInput)
 
   if (!Arr.isntEmpty(config.versions)) {
@@ -86,30 +85,41 @@ export const read = async (
 
   // todo: make DRY, this is same as for schema-directory
   const changesets = await Promise.all(
-    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSet> => {
+    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSetLinked> => {
       const current = version
       const previous = versions[index - 1]
 
       const before = previous?.schema ?? Grafaid.Schema.empty
       const after = current.schema
 
-      const changes = await GraphqlChange.calcChangeset({
-        before,
-        after,
-      })
+      if (!previous) {
+        // First version - create InitialChangeSet
+        return {
+          type: 'InitialChangeSet',
+          date: current.date,
+          after: { version: null, data: after },
+        }
+      } else {
+        // Subsequent versions - create IntermediateChangeSet
+        const changes = await GraphqlChange.calcChangeset({
+          before,
+          after,
+        })
 
-      return {
-        date: current.date,
-        before,
-        after,
-        changes,
+        return {
+          type: 'IntermediateChangeSet',
+          date: current.date,
+          before: { version: null, data: before },
+          after: { version: null, data: after },
+          changes,
+        }
       }
     }),
   )
 
   changesets.reverse()
 
-  const schema: NonEmptyChangeSets = changesets
+  const schema: GraphqlChangeset.ChangelogLinked = changesets
 
   return schema
 }

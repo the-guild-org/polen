@@ -656,3 +656,6 @@ export const spreadShallow = <T extends object>(...objects: (T | undefined)[]): 
 
   return result
 }
+
+// Utility type for non-empty arrays
+export type NonEmptyArray<T> = [T, ...T[]]

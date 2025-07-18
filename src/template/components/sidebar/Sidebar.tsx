@@ -27,7 +27,7 @@ export const Sidebar = ({ data, basePath, topContent, ...props }: Props) => {
           `}
         </style>
         {topContent && (
-          <Box mb="4">
+          <Box mb='4'>
             {topContent}
           </Box>
         )}

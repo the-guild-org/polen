@@ -9,8 +9,8 @@
 
 import { Api } from '#api/index'
 import { Vite } from '#dep/vite/index'
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'
 import { Command } from '@molt/command'
 import type { Fn } from '@wollybeard/kit'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'

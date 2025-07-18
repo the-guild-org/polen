@@ -1,5 +1,5 @@
+import type { GraphqlChange } from '#lib/graphql-change'
 import { CRITICALITY_CONFIG, type CriticalityLevel } from '#lib/graphql-change/criticality'
-import type { GraphqlChange } from '#lib/graphql-change/index'
 import { Heading } from '@radix-ui/themes'
 import type React from 'react'
 

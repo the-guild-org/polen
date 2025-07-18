@@ -1,9 +1,9 @@
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
-import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChange } from '#lib/graphql-change'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
+import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'
 import { Fs, Json, Path } from '@wollybeard/kit'
-import type { NonEmptyChangeSets, SchemaReadResult } from '../../schema.js'
+import type { SchemaReadResult } from '../../schema.js'
 
 /**
  * Configuration for loading schema via GraphQL introspection.
@@ -191,7 +191,9 @@ export const readOrThrow = async (
  * Create a single changeset from a schema object.
  * This is the core logic for handling single (unversioned) schemas from introspection.
  */
-export const createSingleSchemaChangeset = async (schema: Grafaid.Schema.Schema): Promise<NonEmptyChangeSets> => {
+export const createSingleSchemaChangeset = async (
+  schema: Grafaid.Schema.Schema,
+): Promise<GraphqlChangeset.ChangelogLinked> => {
   const date = new Date() // Generate date here for unversioned schema
   const after = schema
   const before = Grafaid.Schema.empty
@@ -200,14 +202,15 @@ export const createSingleSchemaChangeset = async (schema: Grafaid.Schema.Schema)
     after,
   })
 
-  const changeset: GraphqlChangeset.ChangeSet = {
+  const changeset: GraphqlChangeset.IntermediateChangeSetLinked = {
+    type: 'IntermediateChangeSet',
     date,
-    after,
-    before,
+    after: { version: null, data: after },
+    before: { version: null, data: before },
     changes,
   }
 
-  const result: NonEmptyChangeSets = [changeset]
+  const result: GraphqlChangeset.ChangelogLinked = [changeset]
 
   return result
 }

@@ -3,6 +3,7 @@ import {
   type GraphQLInputObjectType,
   type GraphQLInterfaceType,
   type GraphQLList,
+  type GraphQLNamedType,
   type GraphQLNonNull,
   type GraphQLObjectType,
   type GraphQLScalarType,

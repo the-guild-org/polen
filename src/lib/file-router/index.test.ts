@@ -1,7 +1,7 @@
 import { Fn } from '@wollybeard/kit'
 import { describe, expect } from 'vitest'
 import { test } from '../../../tests/unit/helpers/test.js'
-import { FileRouter } from './index.js'
+import { FileRouter } from './$.js'
 
 /* Note
 

@@ -1,8 +1,7 @@
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChange } from '#lib/graphql-change'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { Path } from '@wollybeard/kit'
-import type { NonEmptyChangeSets } from '../../schema.js'
 
 const defaultPaths = {
   schemaFile: `./schema.graphql`,
@@ -46,7 +45,7 @@ export const normalizeConfig = (configInput: ConfigInput): Config => {
 
 export const readOrThrow = async (
   configInput: ConfigInput,
-): Promise<null | NonEmptyChangeSets> => {
+): Promise<null | GraphqlChangeset.ChangelogLinked> => {
   const config = normalizeConfig(configInput)
 
   const schemaFile = await Grafaid.Schema.read(config.path)
@@ -59,7 +58,7 @@ export const readOrThrow = async (
  * Create a single changeset from a schema file path.
  * This is the core logic for handling single (unversioned) schemas.
  */
-export const readSingleSchemaFile = async (filePath: string): Promise<NonEmptyChangeSets> => {
+export const readSingleSchemaFile = async (filePath: string): Promise<GraphqlChangeset.ChangelogLinked> => {
   const schemaFile = await Grafaid.Schema.read(filePath)
   if (!schemaFile) throw new Error(`Failed to read schema file: ${filePath}`)
 
@@ -71,14 +70,15 @@ export const readSingleSchemaFile = async (filePath: string): Promise<NonEmptyCh
     after,
   })
 
-  const changeset: GraphqlChangeset.ChangeSet = {
+  const changeset: GraphqlChangeset.IntermediateChangeSetLinked = {
+    type: 'IntermediateChangeSet',
     date,
-    after,
-    before,
+    after: { version: null, data: after },
+    before: { version: null, data: before },
     changes,
   }
 
-  const schema: NonEmptyChangeSets = [changeset]
+  const schema: GraphqlChangeset.ChangelogLinked = [changeset]
 
   return schema
 }

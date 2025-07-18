@@ -1,4 +1,4 @@
-import { Grafaid } from '#lib/grafaid/index'
+import { Grafaid } from '#lib/grafaid'
 import type { GraphQLFieldMap, GraphQLSchema } from 'graphql'
 
 export interface PathValidation {
