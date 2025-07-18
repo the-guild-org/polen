@@ -3,10 +3,111 @@ import type { GraphqlChange } from '#lib/graphql-change'
 import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { GraphQLPath } from '#lib/graphql-path/$'
 import type { NonEmptyArray } from '#lib/kit-temp'
-import { isNamedType } from 'graphql'
-import type { AddedEvent, RemovedEvent } from './LifecycleEvent.js'
+import { type GraphQLNamedType, isInputObjectType, isInterfaceType, isNamedType, isObjectType } from 'graphql'
+import type { AddedEvent, LifecycleEventBase, RemovedEvent } from './LifecycleEvent.js'
 import type { NamedTypeLifecycle } from './NamedTypeLifecycle.js'
 import { createNamedTypeLifecycle } from './NamedTypeLifecycle.js'
+
+/**
+ * Populate fields for a type that has fields (Object, Interface, or InputObject types)
+ */
+const populateTypeFields = (
+  typeLifecycle: NamedTypeLifecycle,
+  graphqlType: GraphQLNamedType,
+  date: Date,
+  changeSet: GraphqlChangeset.ChangeSet | null,
+  schema: GraphqlChangeset.VersionableSchema,
+) => {
+  if (isObjectType(graphqlType) || isInterfaceType(graphqlType) || isInputObjectType(graphqlType)) {
+    const fields = graphqlType.getFields()
+    const typeWithFields = typeLifecycle as any
+
+    if (typeWithFields.fields) {
+      for (const [fieldName] of Object.entries(fields)) {
+        const fieldAddedEvent: AddedEvent = {
+          type: 'added',
+          date,
+          changeSet,
+          schema,
+        }
+
+        typeWithFields.fields[fieldName] = {
+          name: fieldName,
+          events: [fieldAddedEvent] as NonEmptyArray<LifecycleEventBase>,
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Handle field changes (add/remove) for both regular fields and input fields
+ */
+const handleFieldChange = (
+  data: Record<string, NamedTypeLifecycle>,
+  change: GraphqlChange.Group.FieldOperation | GraphqlChange.Group.InputFieldOperation,
+  changeSet: GraphqlChangeset.IntermediateChangeSetLinked,
+  isInputField: boolean,
+) => {
+  const addType = isInputField ? 'INPUT_FIELD_ADDED' : 'FIELD_ADDED'
+  const removeType = isInputField ? 'INPUT_FIELD_REMOVED' : 'FIELD_REMOVED'
+
+  if (change.type === addType) {
+    const { typeName, fieldName } = GraphQLPath.Definition.parseFieldPath(change.path)
+    if (!typeName || !fieldName) return
+
+    const addedEvent: AddedEvent = {
+      type: 'added',
+      date: changeSet.date,
+      changeSet: changeSet,
+      schema: changeSet.after,
+    }
+
+    // Ensure type exists
+    if (!data[typeName]) {
+      const graphqlType = changeSet.after.data.getType(typeName)
+      if (!graphqlType || !isNamedType(graphqlType)) {
+        throw new Error(`Type ${typeName} not found in schema`)
+      }
+
+      const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
+      const typeEvent: AddedEvent = {
+        type: 'added',
+        date: new Date('1970-01-01'), // Unknown when type was added
+        changeSet: null,
+        schema: { version: null, data: null },
+      }
+      data[typeName] = createNamedTypeLifecycle(typeName, kind, typeEvent)
+    }
+
+    const typeLifecycle = data[typeName]
+    if ('fields' in typeLifecycle) {
+      typeLifecycle.fields[fieldName] = {
+        name: fieldName,
+        events: [addedEvent],
+      }
+    }
+  } else if (change.type === removeType) {
+    const { typeName, fieldName } = GraphQLPath.Definition.parseFieldPath(change.path)
+    if (!typeName || !fieldName) return
+
+    const removedEvent: RemovedEvent = {
+      type: 'removed',
+      date: changeSet.date,
+      changeSet: changeSet,
+      schema: changeSet.after,
+    }
+
+    const typeLifecycle = data[typeName]
+    if (typeLifecycle && 'fields' in typeLifecycle && typeLifecycle.fields[fieldName]) {
+      typeLifecycle.fields[fieldName].events = [
+        removedEvent,
+        ...typeLifecycle.fields[fieldName].events,
+      ] as NonEmptyArray<any>
+    }
+  }
+  // TODO: Handle FIELD_TYPE_CHANGED / INPUT_FIELD_TYPE_CHANGED
+}
 
 /**
  * Create lifecycle entries for all types in an initial schema (treat as "create events")
@@ -16,23 +117,26 @@ export const createInitialTypeLifecycles = (
   changeSet: GraphqlChangeset.InitialChangeSetLinked,
 ) => {
   const typeMap = changeSet.after.data.getTypeMap()
-  
+
   for (const [typeName, graphqlType] of Object.entries(typeMap)) {
     // Skip built-in types that start with __
     if (typeName.startsWith('__')) continue
-    
+
     if (!isNamedType(graphqlType)) continue
-    
+
     const addedEvent: AddedEvent = {
       type: 'added',
       date: changeSet.date,
       changeSet: changeSet,
       schema: changeSet.after,
     }
-    
+
     const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
     const typeLifecycle = createNamedTypeLifecycle(typeName, kind, addedEvent)
     data[typeName] = typeLifecycle
+
+    // Populate fields for types that have them
+    populateTypeFields(typeLifecycle, graphqlType, changeSet.date, changeSet, changeSet.after)
   }
 }
 
@@ -64,6 +168,9 @@ export const TypeOperation = (
     const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
     const typeLifecycle = createNamedTypeLifecycle(typeName, kind, addedEvent)
     data[typeName] = typeLifecycle
+
+    // Populate fields for types that have them
+    populateTypeFields(typeLifecycle, graphqlType, changeSet.date, changeSet, changeSet.after)
   } else if (change.type === 'TYPE_REMOVED') {
     const typeName = change.path || change.message || 'Unknown'
     if (!typeName) return
@@ -93,68 +200,7 @@ export const FieldOperation = (
   change: GraphqlChange.Group.FieldOperation,
   changeSet: GraphqlChangeset.IntermediateChangeSetLinked,
 ) => {
-  if (change.type === 'FIELD_ADDED') {
-    const { typeName, fieldName } = GraphQLPath.Definition.parseFieldPath(change.path)
-    if (!typeName || !fieldName) return
-
-    const addedEvent: AddedEvent = {
-      type: 'added',
-      date: changeSet.date,
-      changeSet: changeSet,
-      schema: changeSet.after,
-    }
-
-    // Ensure type exists - use schema to get real type
-    if (!data[typeName]) {
-      const graphqlType = changeSet.after.data.getType(typeName)
-      if (!graphqlType || !isNamedType(graphqlType)) {
-        throw new Error(`Type ${typeName} not found in schema`)
-      }
-
-      const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-      const typeEvent: AddedEvent = {
-        type: 'added',
-        date: new Date('1970-01-01'), // Unknown when type was added
-        changeSet: null,
-        schema: {
-          version: null,
-          data: null,
-        },
-      }
-      data[typeName] = createNamedTypeLifecycle(typeName, kind, typeEvent)
-    }
-
-    const typeLifecycle = data[typeName]
-
-    // Add field to type if it supports fields
-    if ('fields' in typeLifecycle) {
-      typeLifecycle.fields[fieldName] = {
-        name: fieldName,
-        events: [addedEvent],
-      }
-    }
-  } else if (change.type === 'FIELD_REMOVED') {
-    const { typeName, fieldName } = GraphQLPath.Definition.parseFieldPath(change.path)
-    if (!typeName || !fieldName) return
-
-    const removedEvent: RemovedEvent = {
-      type: 'removed',
-      date: changeSet.date,
-      changeSet: changeSet,
-      schema: changeSet.after,
-    }
-
-    const typeLifecycle = data[typeName]
-    if (typeLifecycle && 'fields' in typeLifecycle && typeLifecycle.fields[fieldName]) {
-      typeLifecycle.fields[fieldName].events = [
-        removedEvent,
-        ...typeLifecycle.fields[fieldName].events,
-      ] as NonEmptyArray<any>
-    }
-  } else if (change.type === 'FIELD_TYPE_CHANGED') {
-    // TODO: Handle field type changes
-    // This would add a type change event to the field's lifecycle
-  }
+  handleFieldChange(data, change, changeSet, false)
 }
 
 /**
@@ -165,65 +211,5 @@ export const InputFieldOperation = (
   change: GraphqlChange.Group.InputFieldOperation,
   changeSet: GraphqlChangeset.IntermediateChangeSetLinked,
 ) => {
-  if (change.type === 'INPUT_FIELD_ADDED') {
-    const { typeName, fieldName } = GraphQLPath.Definition.parseFieldPath(change.path)
-    if (!typeName || !fieldName) return
-
-    const addedEvent: AddedEvent = {
-      type: 'added',
-      date: changeSet.date,
-      changeSet: changeSet,
-      schema: changeSet.after,
-    }
-
-    // Ensure type exists - use schema to get real type
-    if (!data[typeName]) {
-      const graphqlType = changeSet.after.data.getType(typeName)
-      if (!graphqlType || !isNamedType(graphqlType)) {
-        throw new Error(`Type ${typeName} not found in schema`)
-      }
-
-      const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-      const typeEvent: AddedEvent = {
-        type: 'added',
-        date: new Date('1970-01-01'), // Unknown when type was added
-        changeSet: null,
-        schema: {
-          version: null,
-          data: null,
-        },
-      }
-      data[typeName] = createNamedTypeLifecycle(typeName, kind, typeEvent)
-    }
-
-    const typeLifecycle = data[typeName]
-
-    // Add field to type if it supports fields
-    if ('fields' in typeLifecycle) {
-      typeLifecycle.fields[fieldName] = {
-        name: fieldName,
-        events: [addedEvent],
-      }
-    }
-  } else if (change.type === 'INPUT_FIELD_REMOVED') {
-    const { typeName, fieldName } = GraphQLPath.Definition.parseFieldPath(change.path)
-    if (!typeName || !fieldName) return
-
-    const removedEvent: RemovedEvent = {
-      type: 'removed',
-      date: changeSet.date,
-      changeSet: changeSet,
-      schema: changeSet.after,
-    }
-
-    const typeLifecycle = data[typeName]
-    if (typeLifecycle && 'fields' in typeLifecycle && typeLifecycle.fields[fieldName]) {
-      typeLifecycle.fields[fieldName].events = [
-        removedEvent,
-        ...typeLifecycle.fields[fieldName].events,
-      ] as NonEmptyArray<any>
-    }
-  } else if (change.type === 'INPUT_FIELD_TYPE_CHANGED') {
-    // TODO: Handle input field type changes
-  }
+  handleFieldChange(data, change, changeSet, true)
 }

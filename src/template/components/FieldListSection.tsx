@@ -13,7 +13,7 @@ export const FieldListSection: React.FC<{ data: GraphQLNamedType }> = ({ data })
   return (
     <Box>
       <Heading>Fields</Heading>
-      <FieldList data={data} />
+      <FieldList data={data} parentTypeName={data.name} />
     </Box>
   )
 }

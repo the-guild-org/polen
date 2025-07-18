@@ -1,6 +1,16 @@
 import type { GrafaidOld } from '#lib/grafaid-old'
 import type { GraphqlChange } from '#lib/graphql-change'
+import type { GraphQLSchema } from 'graphql'
+import { SuperJSON } from 'superjson'
 import type { VersionableSchema, VersionableSchemaLinked } from './versioned-schema.js'
+
+const superjson = new SuperJSON()
+
+superjson.registerCustom({
+  isApplicable: (v): v is GraphQLSchema => v?.constructor?.name === 'GraphQLSchema',
+  serialize: () => null,
+  deserialize: () => null,
+}, 'GraphQLSchema')
 
 // ChangeSet
 
@@ -34,6 +44,16 @@ export interface InitialChangeSetLinked extends InitialChangeSet {
 }
 
 // Predicate Functions
+
+/**
+ * Type guard to check if a value is any type of ChangeSet
+ */
+export const isChangeSet = (value: unknown): value is ChangeSet => {
+  return value !== null
+    && typeof value === 'object'
+    && 'type' in value
+    && ((value as any).type === 'InitialChangeSet' || (value as any).type === 'IntermediateChangeSet')
+}
 
 /**
  * Type guard to check if a changeset is an InitialChangeSet
@@ -123,44 +143,48 @@ export const link = (
 /**
  * Convert a linked changeset to unlinked by removing schema references
  */
-export const unlink = (changeset: ChangeSetLinked): ChangeSet => {
-  if (isInitialChangeSetLinked(changeset)) {
-    return {
-      type: 'InitialChangeSet',
-      date: changeset.date,
-      after: {
-        version: changeset.after.version,
-        data: null,
-      },
-    }
-  } else {
-    return {
-      type: 'IntermediateChangeSet',
-      changes: changeset.changes,
-      date: changeset.date,
-      after: {
-        version: changeset.after.version,
-        data: null,
-      },
-      before: {
-        version: changeset.before.version,
-        data: null,
-      },
-    }
-  }
-}
+// export const unlink = (changeset: ChangeSetLinked): ChangeSet => {
+//   if (isInitialChangeSetLinked(changeset)) {
+//     return {
+//       type: 'InitialChangeSet',
+//       date: changeset.date,
+//       after: {
+//         version: changeset.after.version,
+//         data: null,
+//       },
+//     }
+//   } else {
+//     return {
+//       type: 'IntermediateChangeSet',
+//       changes: changeset.changes,
+//       date: changeset.date,
+//       after: {
+//         version: changeset.after.version,
+//         data: null,
+//       },
+//       before: {
+//         version: changeset.before.version,
+//         data: null,
+//       },
+//     }
+//   }
+// }
 
 /**
  * Convert a changeset to JSON string (handles both linked and unlinked)
  */
-export const toJson = (changeset: ChangeSet | ChangeSetLinked): string => {
-  const unlinkedChangeset = isLinked(changeset) ? unlink(changeset) : changeset
-  return JSON.stringify(unlinkedChangeset)
+export const toJson = (changeset: ChangeSet, options?: { pretty?: boolean }): string => {
+  const isPretty = options?.pretty ?? true
+  if (isPretty) {
+    const serialized = superjson.serialize(changeset)
+    return JSON.stringify(serialized, null, 2)
+  }
+  return superjson.stringify(changeset)
 }
 
 /**
  * Parse changeset from JSON string
  */
 export const fromJson = (json: string): ChangeSet => {
-  return JSON.parse(json)
+  return superjson.parse(json)
 }

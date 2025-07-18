@@ -1,6 +1,6 @@
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { Arr } from '@wollybeard/kit'
 import * as DataSources from './data-sources/data-sources.js'
-import type { GraphqlChangeset } from '#lib/graphql-changeset'
 
 export type DataSourceType =
   | `file`

@@ -11,6 +11,7 @@ import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import { VersionPicker } from '../components/VersionPicker.js'
+import { SchemaLifecycleProvider } from '../contexts/SchemaLifecycleContext.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { schemaSource } from '../sources/schema-source.js'
 
@@ -24,13 +25,7 @@ export const loader = createLoader(async ({ params }) => {
   const availableVersions = schemaSource.versions
 
   // Load lifecycle data if available
-  let lifecycle = null
-  try {
-    lifecycle = await schemaSource.getLifecycle()
-  } catch (error) {
-    // Lifecycle data might not exist for all projects
-    console.debug('Schema lifecycle data not available', error)
-  }
+  const lifecycle = await schemaSource.getLifecycle()
 
   return {
     schema,
@@ -86,7 +81,7 @@ const ReferenceView = () => {
       return <MissingSchema />
     } else if (viewType === 'type') {
       const type = data.schema.getType(params.type!)!
-      return <NamedType data={type} lifecycle={data.lifecycle} currentVersion={data.currentVersion} />
+      return <NamedType data={type} />
     } else if (viewType === 'field') {
       const type = data.schema.getType(params.type!)!
       const fields = (type as any).getFields()
@@ -94,8 +89,6 @@ const ReferenceView = () => {
       return (
         <Field
           data={field}
-          lifecycle={data.lifecycle}
-          currentVersion={data.currentVersion}
           parentTypeName={params.type!}
         />
       )
@@ -105,18 +98,20 @@ const ReferenceView = () => {
   })()
 
   return (
-    <SidebarLayout
-      sidebar={sidebarItems}
-      basePath={basePath}
-      topContent={
-        <VersionPicker
-          all={[...data.availableVersions]} // Convert readonly to mutable
-          current={data.currentVersion}
-        />
-      }
-    >
-      {content}
-    </SidebarLayout>
+    <SchemaLifecycleProvider lifecycle={data.lifecycle} currentVersion={data.currentVersion}>
+      <SidebarLayout
+        sidebar={sidebarItems}
+        basePath={basePath}
+        topContent={
+          <VersionPicker
+            all={[...data.availableVersions]} // Convert readonly to mutable
+            current={data.currentVersion}
+          />
+        }
+      >
+        {content}
+      </SidebarLayout>
+    </SchemaLifecycleProvider>
   )
 }
 

@@ -35,12 +35,13 @@ interface SchemaSourceConfig {
   }
   versions: string[]
   assetsPath: string
+  debug?: boolean
 }
 
 export const createSchemaSource = (config: SchemaSourceConfig) => {
   const getSchemaPath = (version: string) => `${config.assetsPath}/schemas/${version}.json`
 
-  const getChangelogPath = (version: string) => `${config.assetsPath}/schemas/${version}.changelog.json`
+  const getChangelogPath = (version: string) => `${config.assetsPath}/schemas/${version}.release.changelog.json`
 
   const getSchemasDirectory = () => `${config.assetsPath}/schemas`
 
@@ -111,7 +112,7 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
   const getLifecycle = async (): Promise<SchemaLifecycle.SchemaLifecycle> => {
     const content = await ioReadMemoized(getLifecyclePath())
-    return JSON.parse(content)
+    return SchemaLifecycle.fromJson(content)
   }
 
   return {
@@ -139,11 +140,14 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     },
 
     writeChangelog: async (version: string, changelog: GraphqlChangeset.ChangeSet) => {
-      await ioWrite(getChangelogPath(version), JSON.stringify(changelog))
+      await ioWrite(
+        getChangelogPath(version),
+        GraphqlChangeset.toJson(changelog),
+      )
     },
 
     writeLifecycle: async (lifecycle: SchemaLifecycle.SchemaLifecycle) => {
-      await ioWrite(getLifecyclePath(), JSON.stringify(lifecycle))
+      await ioWrite(getLifecyclePath(), SchemaLifecycle.toJson(lifecycle))
     },
 
     // Directory operations
@@ -190,7 +194,10 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
         // Write changelog file only for intermediate changesets
         if (GraphqlChangeset.isIntermediateChangeSet(changeset)) {
-          await ioWrite(getChangelogPath(versionName), GraphqlChangeset.toJson(changeset))
+          await ioWrite(
+            getChangelogPath(versionName),
+            GraphqlChangeset.toJson(changeset),
+          )
         }
       }
 
@@ -199,7 +206,10 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
       // Write lifecycle file if provided
       if (lifecycle) {
-        await ioWrite(getLifecyclePath(), JSON.stringify(lifecycle))
+        await ioWrite(
+          getLifecyclePath(),
+          SchemaLifecycle.toJson(lifecycle),
+        )
       }
     },
   }

@@ -1,5 +1,4 @@
 import type { GraphqlChangeset } from '#lib/graphql-changeset'
-import type { VersionableSchema } from '#lib/graphql-changeset/graphql-changeset'
 
 /**
  * Base lifecycle event
@@ -10,7 +9,7 @@ export interface LifecycleEventBase {
    * null if unlinked. Soemthing external should use `date` to link changeSet.
    */
   changeSet: GraphqlChangeset.ChangeSet | null
-  schema: VersionableSchema
+  schema: GraphqlChangeset.VersionableSchema
 }
 
 /**

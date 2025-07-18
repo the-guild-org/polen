@@ -3,6 +3,7 @@ export * from './iso/$$.js'
 
 // Server-only exports
 export * from './builder/index.js'
+export * from './cache/$.js'
 export * from './config-resolver/index.js'
 export * from './config/index.js'
 export * as Project from './project/index.js'

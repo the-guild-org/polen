@@ -76,7 +76,7 @@ export const createNamedTypeLifecycle = (
   addedEvent: AddedEvent,
 ): NamedTypeLifecycle => {
   const base = { name: typeName, events: [addedEvent] as NonEmptyArray<LifecycleEventBase> }
-  
+
   switch (kind) {
     case Grafaid.Schema.TypeKindNameEnum.Object:
       return { ...base, kind, fields: {} } as ObjectTypeLifecycle

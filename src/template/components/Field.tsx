@@ -5,6 +5,7 @@ import { GraphQLPath } from '#lib/graphql-path'
 import { SchemaLifecycle } from '#lib/schema-lifecycle'
 import type { BoxProps } from '@radix-ui/themes'
 import { Badge, Box, Text } from '@radix-ui/themes'
+import { useSchemaLifecycle } from '../contexts/SchemaLifecycleContext.js'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.js'
 import { DeprecationReason } from './DeprecationReason.js'
 import { Description } from './Description.js'
@@ -13,11 +14,11 @@ import { TypeAnnotation } from './TypeAnnotation.js'
 export const Field: React.FC<
   BoxProps & {
     data: GrafaidOld.GraphQLField
-    lifecycle?: SchemaLifecycle.SchemaLifecycle | null
-    currentVersion?: string
     parentTypeName?: string
   }
-> = ({ data, lifecycle, currentVersion, parentTypeName, ...boxProps }) => {
+> = ({ data, parentTypeName, ...boxProps }) => {
+  const { lifecycle, currentVersion } = useSchemaLifecycle()
+
   const argumentList = GrafaidOld.isOutputField(data)
     ? <ArgumentListAnnotation field={data} />
     : null

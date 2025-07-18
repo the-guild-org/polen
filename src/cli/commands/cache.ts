@@ -2,8 +2,8 @@
 
 import { Cli, Path } from '@wollybeard/kit'
 
-// Remove the "static" argument before dispatching to subcommands
+// Remove the "cache" argument before dispatching to subcommands
 process.argv = process.argv.slice(0, 2).concat(process.argv.slice(3))
 
-const commandsDir = Path.join(import.meta.dirname, `static`)
+const commandsDir = Path.join(import.meta.dirname, `cache`)
 await Cli.dispatch(commandsDir)

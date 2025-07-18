@@ -3,16 +3,17 @@ import { SchemaLifecycle } from '#lib/schema-lifecycle'
 import { Badge, Box, Heading, Text } from '@radix-ui/themes'
 import { type GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'
+import { useSchemaLifecycle } from '../contexts/SchemaLifecycleContext.js'
 import { FieldListSection } from './FieldListSection.js'
 import { Markdown } from './Markdown.js'
 
 export interface Props {
   data: GraphQLNamedType
-  lifecycle: SchemaLifecycle.SchemaLifecycle | null
-  currentVersion: string
 }
 
-export const NamedType: FC<Props> = ({ data, lifecycle, currentVersion }) => {
+export const NamedType: FC<Props> = ({ data }) => {
+  const { lifecycle, currentVersion } = useSchemaLifecycle()
+
   const description = data.description
     ? (
       <Text as='div' color='gray'>
