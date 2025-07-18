@@ -99,6 +99,48 @@ describe('create', () => {
     expect(lifecycle.data.Query.fields.world).toMatchObject({ name: 'world', events: [{ type: 'added', date: date2 }] })
     expect(lifecycle.data.User.fields.email).toMatchObject({ name: 'email', events: [{ type: 'added', date: date2 }] })
   })
+
+  it('handles field additions to existing type without explicit FIELD_ADDED events', () => {
+    // Simulate a scenario where fields are added but no explicit FIELD_ADDED events exist
+    const trainerV1 = buildSchema(`
+      type Query { hello: String }
+      type Trainer { 
+        id: ID!
+        name: String!
+      }
+    `)
+    const trainerV2 = buildSchema(`
+      type Query { hello: String }
+      type Trainer { 
+        id: ID!
+        name: String!
+        battleRecord: String!
+        money: Int!
+      }
+    `)
+
+    const changelog = [
+      { type: 'InitialChangeSet', date: date1, after: { version: 'v1', data: trainerV1 } },
+      {
+        type: 'IntermediateChangeSet',
+        date: date2,
+        before: { version: 'v1', data: trainerV1 },
+        after: { version: 'v2', data: trainerV2 },
+        changes: [
+          // No explicit FIELD_ADDED events - simulating the missing lifecycle scenario
+        ],
+      },
+    ]
+    const lifecycle = SchemaLifecycle.create(changelog as any) as any
+
+    // Original fields should have lifecycle info
+    expect(lifecycle.data.Trainer.fields.id).toMatchObject({ name: 'id', events: [{ type: 'added', date: date1 }] })
+    expect(lifecycle.data.Trainer.fields.name).toMatchObject({ name: 'name', events: [{ type: 'added', date: date1 }] })
+    
+    // New fields without FIELD_ADDED events should NOT have lifecycle info
+    expect(lifecycle.data.Trainer.fields.battleRecord).toBeUndefined()
+    expect(lifecycle.data.Trainer.fields.money).toBeUndefined()
+  })
 })
 
 describe('serialization', () => {

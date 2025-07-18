@@ -1,5 +1,6 @@
 import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
+import { Path } from '@wollybeard/kit'
 import { PathMap } from './$.js'
 
 describe('PathMap', () => {
@@ -208,9 +209,9 @@ describe('PathMap', () => {
     // Helper to build absolute paths with proper handling of root base
     const buildAbsolutePath = (normalizedBase: string, segments: string[]): string => {
       if (segments.length === 0) return normalizedBase
-      return normalizedBase === '/'
-        ? `/${segments.join('/')}`
-        : `${normalizedBase}/${segments.join('/')}`
+      
+      // Use the same Path.join logic as the actual implementation
+      return Path.join(normalizedBase, ...segments)
     }
 
     // Arbitrary for valid path segments
