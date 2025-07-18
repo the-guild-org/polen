@@ -113,6 +113,9 @@
     "#lib/react-router-loader": {
       "default": "./build/lib/react-router-loader/$.js"
     },
+    "#lib/react-router-loader/react-router-loader": {
+      "default": "./build/lib/react-router-loader/$$.js"
+    },
     "#lib/schema-lifecycle": {
       "default": "./build/lib/schema-lifecycle/$.js"
     },
