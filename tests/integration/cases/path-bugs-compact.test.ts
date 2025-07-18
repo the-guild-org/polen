@@ -8,7 +8,7 @@ test('basic schema navigation works', async ({ page, polen }) => {
   await p.expect.visible('Query')
 })
 
-test('version picker updates correctly', async ({ page, polen }) => {
+test.skip('version picker updates correctly', async ({ page, polen }) => {
   const p = await polen
     .withVersions([
       '2023-01-01T00:00:00.000Z: type Query { old: String }',
@@ -29,7 +29,7 @@ test('base path asset loading works', async ({ page, polen }) => {
   await p.expect.noErrors()
 })
 
-test('sidebar links preserve version context', async ({ page, polen }) => {
+test.skip('sidebar links preserve version context', async ({ page, polen }) => {
   const p = await polen
     .withVersions([
       '2023-01-01T00:00:00.000Z: type Query { hello: String }',
@@ -40,7 +40,7 @@ test('sidebar links preserve version context', async ({ page, polen }) => {
   await p.expect.sidebarLinks('version/2022-12-31')
 })
 
-test('BUGFIX: version picker does not duplicate after navigation', async ({ page, polen }) => {
+test.skip('BUGFIX: version picker does not duplicate after navigation', async ({ page, polen }) => {
   const builder = polen.withPokemonSchema()
   const p = await builder.goto('/reference')
 

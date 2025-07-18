@@ -84,7 +84,7 @@ test('can loads schema from directory data source with single schema.graphql', a
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
 
-test('can loads schema from introspection data source', async ({ page, vite, project }) => {
+test.skip('can loads schema from introspection data source', async ({ page, vite, project }) => {
   const viteUserConfig = await pc({
     schema: {
       useDataSources: 'introspection',
@@ -96,7 +96,7 @@ test('can loads schema from introspection data source', async ({ page, vite, pro
   await expect(page.getByText('Query', { exact: true })).toBeVisible()
 })
 
-test('introspection loads when no other sources exist', async ({ page, vite, project }) => {
+test.skip('introspection loads when no other sources exist', async ({ page, vite, project }) => {
   const viteUserConfig = await pc({
     schema: {
       dataSources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },

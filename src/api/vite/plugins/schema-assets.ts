@@ -3,7 +3,6 @@ import { SchemaAugmentation } from '#api/schema-augmentation/index'
 import { createSchemaSource } from '#api/schema-source/index'
 import { Schema } from '#api/schema/index'
 import type { Vite } from '#dep/vite/index'
-import { Grafaid } from '#lib/grafaid'
 import { SchemaLifecycle } from '#lib/schema-lifecycle'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
@@ -106,6 +105,21 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     })
   }
 
+  // Helper to create lifecycle data from schema data
+  const createLifecycleData = (
+    schemaData: NonEmptyChangeSets,
+    metadata: Schema.SchemaMetadata,
+  ): SchemaLifecycle.SchemaLifecycle => {
+    const changeSetData = schemaData.map(changeset => ({
+      changes: changeset.changes,
+      date: changeset.date,
+    }))
+    
+    const schemas = schemaData.map(changeset => changeset.after!)
+    
+    return SchemaLifecycle.create(changeSetData, metadata.versions, schemas)
+  }
+
   // Helper to write assets using schema-source API
   const writeDevAssets = async (
     schemaData: NonEmptyChangeSets,
@@ -116,12 +130,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     const devAssetsDir = config.paths.framework.devAssets.schemas
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
 
-    // Generate lifecycle data
-    const changeSetData = schemaData.map(changeset => ({
-      changes: changeset.changes,
-      date: changeset.date,
-    }))
-    const lifecycle = SchemaLifecycle.create(changeSetData, metadata.versions)
+    const lifecycle = createLifecycleData(schemaData, metadata)
 
     const schemaSource = createDevSchemaSource(metadata)
     await schemaSource.writeAllAssets(schemaData, metadata, lifecycle)
@@ -298,12 +307,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         assetsPath: config.paths.framework.devAssets.absolute,
       })
 
-      // Generate lifecycle data
-      const changeSetData = schemaData.map(changeset => ({
-        changes: changeset.changes,
-        date: changeset.date,
-      }))
-      const lifecycle = SchemaLifecycle.create(changeSetData, metadata.versions)
+      const lifecycle = createLifecycleData(schemaData, metadata)
 
       // Emit all assets using the high-level API
       await schemaSource.writeAllAssets(schemaData, metadata, lifecycle)

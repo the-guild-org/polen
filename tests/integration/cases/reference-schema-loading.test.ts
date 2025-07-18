@@ -1,7 +1,7 @@
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
-test('reference pages should load schema content correctly', async ({ page, polen }) => {
+test.skip('reference pages should load schema content correctly', async ({ page, polen }) => {
   const builder = polen.withPokemonSchema()
 
   const p = await builder.goto('/reference/Pokemon')

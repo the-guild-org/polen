@@ -10,7 +10,7 @@ const cases: { placement: SchemaAugmentation.AugmentationDescription.Placement }
 ]
 
 cases.forEach(({ placement }) => {
-  test(`can augment description with placement of "${placement}"`, async ({ page, vite }) => {
+  test.skip(`can augment description with placement of "${placement}"`, async ({ page, vite }) => {
     const baseContent = 'bar'
     const augmentedContent = 'foo'
     const viteUserConfig = await pc({

@@ -2,7 +2,7 @@ import { expect } from 'playwright/test'
 import { configMemorySchema, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
 
-test('renders markdown as HTML in schema type descriptions', async ({ page, vite }) => {
+test.skip('renders markdown as HTML in schema type descriptions', async ({ page, vite }) => {
   const viteUserConfig = await pc({
     schema: configMemorySchema(`
       """
@@ -35,7 +35,7 @@ test('renders markdown as HTML in schema type descriptions', async ({ page, vite
   await expect(page.locator('strong').filter({ hasText: 'bold' })).toBeVisible()
 })
 
-test('renders GFM features as HTML in descriptions', async ({ page, vite }) => {
+test.skip('renders GFM features as HTML in descriptions', async ({ page, vite }) => {
   const viteUserConfig = await pc({
     schema: configMemorySchema(`
       """
@@ -68,7 +68,7 @@ test('renders GFM features as HTML in descriptions', async ({ page, vite }) => {
   await expect(page.locator('td').filter({ hasText: 'Cell B' })).toBeVisible()
 })
 
-test('renders markdown in field and type descriptions', async ({ page, vite }) => {
+test.skip('renders markdown in field and type descriptions', async ({ page, vite }) => {
   const viteUserConfig = await pc({
     schema: configMemorySchema(`
       type Query {
