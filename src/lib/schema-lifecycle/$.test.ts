@@ -1,4 +1,3 @@
-import { GraphqlChangeset } from '#lib/graphql-changeset'
 import { buildSchema } from 'graphql'
 import { describe, expect, it } from 'vitest'
 import { SchemaLifecycle } from './$.js'
@@ -17,7 +16,7 @@ const schemas = {
 }
 
 // Helper to create initial changelog
-const createChangelog = (schema = schemas.simple, date = date1): GraphqlChangeset.Changelog => [{
+const createChangelog = (schema = schemas.simple, date = date1): any => [{
   type: 'InitialChangeSet',
   date,
   after: { version: 'v1', data: schema },
@@ -45,7 +44,7 @@ describe('create', () => {
   })
 
   it('handles TYPE_ADDED with fields populated', () => {
-    const changelog: GraphqlChangeset.Changelog = [
+    const changelog = [
       ...createChangelog(),
       {
         type: 'IntermediateChangeSet',
@@ -55,7 +54,7 @@ describe('create', () => {
         changes: [{
           type: 'TYPE_ADDED',
           path: 'IVStats',
-          criticality: { level: 'NON_BREAKING' },
+          criticality: { level: 'NON_BREAKING' } as any,
           message: 'Type IVStats was added',
           meta: { addedTypeName: 'IVStats' },
         }],
@@ -70,7 +69,7 @@ describe('create', () => {
   })
 
   it('handles field additions', () => {
-    const changelog: GraphqlChangeset.Changelog = [
+    const changelog = [
       ...createChangelog(),
       {
         type: 'IntermediateChangeSet',
@@ -81,14 +80,14 @@ describe('create', () => {
           {
             type: 'FIELD_ADDED',
             path: 'Query.world',
-            criticality: { level: 'NON_BREAKING' },
+            criticality: { level: 'NON_BREAKING' } as any,
             message: '',
             meta: { typeName: 'Query', addedFieldName: 'world', typeType: 'object type' },
           },
           {
             type: 'FIELD_ADDED',
             path: 'User.email',
-            criticality: { level: 'NON_BREAKING' },
+            criticality: { level: 'NON_BREAKING' } as any,
             message: '',
             meta: { typeName: 'User', addedFieldName: 'email', typeType: 'object type' },
           },
@@ -113,7 +112,7 @@ describe('serialization', () => {
       }
     `)
 
-    const changelog: GraphqlChangeset.Changelog = [{
+    const changelog = [{
       type: 'InitialChangeSet',
       date: date1,
       after: { version: 'v1', data: schema },
@@ -122,16 +121,18 @@ describe('serialization', () => {
     const lifecycle = SchemaLifecycle.create(changelog as any)
 
     // Check fields exist before serialization
-    expect(lifecycle.data.IVStats?.fields).toBeDefined()
-    expect(Object.keys(lifecycle.data.IVStats?.fields || {})).toEqual(['hp', 'attack', 'defense'])
+    const ivStatsBefore = lifecycle.data['IVStats'] as any
+    expect(ivStatsBefore?.fields).toBeDefined()
+    expect(Object.keys(ivStatsBefore?.fields || {})).toEqual(['hp', 'attack', 'defense'])
 
     // Serialize and deserialize
     const json = SchemaLifecycle.toJson(lifecycle)
     const parsed = SchemaLifecycle.fromJson(json)
 
     // Check fields exist after deserialization
-    expect(parsed.data.IVStats?.fields).toBeDefined()
-    expect(Object.keys(parsed.data.IVStats?.fields || {})).toEqual(['hp', 'attack', 'defense'])
+    const ivStatsAfter = parsed.data['IVStats'] as any
+    expect(ivStatsAfter?.fields).toBeDefined()
+    expect(Object.keys(ivStatsAfter?.fields || {})).toEqual(['hp', 'attack', 'defense'])
   })
 
   it('toJson/fromJson preserves dates and nullifies schemas', () => {
@@ -151,7 +152,7 @@ describe('serialization', () => {
 
 describe('getters', () => {
   const schemaWithoutUser = buildSchema(`type Query { hello: String }`)
-  const changelog: GraphqlChangeset.Changelog = [
+  const changelog = [
     ...createChangelog(),
     {
       type: 'IntermediateChangeSet',
@@ -161,7 +162,7 @@ describe('getters', () => {
       changes: [{
         type: 'TYPE_REMOVED',
         path: 'User',
-        criticality: { level: 'BREAKING' },
+        criticality: { level: 'BREAKING' } as any,
         message: '',
         meta: { removedTypeName: 'User' },
       }],
