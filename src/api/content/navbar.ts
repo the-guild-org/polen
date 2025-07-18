@@ -4,6 +4,7 @@ import type { Page } from './page.js'
 export interface NavbarItem {
   pathExp: string
   title: string
+  position?: 'left' | 'right'
 }
 
 /**
@@ -50,6 +51,7 @@ export const createNavbar = (pages: Page[]): NavbarItem[] => {
       navbarItems.push({
         pathExp,
         title,
+        position: 'left',
       })
     }
   })

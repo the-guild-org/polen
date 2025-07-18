@@ -58,11 +58,22 @@ const Layout = () => {
         </Box>
       </LinkReactRouter>
       <Flex direction='row' gap='4' style={{ flex: 1 }}>
-        {PROJECT_DATA.navbar.map((item, key) => (
-          <PolenLink key={key} color='gray' to={item.pathExp}>
-            {item.title}
-          </PolenLink>
-        ))}
+        {PROJECT_DATA.navbar
+          .filter(item => item.position !== 'right')
+          .map((item, key) => (
+            <PolenLink key={key} color='gray' to={item.pathExp}>
+              {item.title}
+            </PolenLink>
+          ))}
+      </Flex>
+      <Flex direction='row' gap='4'>
+        {PROJECT_DATA.navbar
+          .filter(item => item.position === 'right')
+          .map((item, key) => (
+            <PolenLink key={key} color='gray' to={item.pathExp}>
+              {item.title}
+            </PolenLink>
+          ))}
       </Flex>
       <ThemeToggle />
     </Flex>

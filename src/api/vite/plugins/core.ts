@@ -1,6 +1,6 @@
 import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
-import { createNavbar } from '#api/content/navbar'
+import { createNavbar, type NavbarItem } from '#api/content/navbar'
 import { Api } from '#api/index'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
@@ -189,7 +189,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             const schemaResult = await readSchema()
 
-            const navbar = []
+            const navbar: NavbarItem[] = []
 
             // ━ Schema presence causes adding some navbar items
             if (schemaResult.data) {
@@ -198,9 +198,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               // hydration mismatches between SSR (where base path is prepended) and client
               // (where basename is configured). This ensures consistent behavior.
               const referencePath = Api.Schema.Routing.createReferenceBasePath()
-              navbar.push({ pathExp: referencePath, title: `Reference` })
+              navbar.push({ pathExp: referencePath, title: `Reference`, position: 'left' })
               if (schemaResult.data.length > 1) {
-                navbar.push({ pathExp: `/changelog`, title: `Changelog` })
+                navbar.push({ pathExp: `/changelog`, title: `Changelog`, position: 'right' })
               }
             }
 
