@@ -1,4 +1,4 @@
-import { FileRouter } from '#lib/file-router/index'
+import { FileRouter } from '#lib/file-router'
 import { Fs, Path, Tree } from '@wollybeard/kit'
 import matter from 'gray-matter'
 import { MetadataSchema } from './metadata.js'

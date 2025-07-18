@@ -1,4 +1,4 @@
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { route } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Changelog } from '../components/Changelog.js'
@@ -28,7 +28,9 @@ const Component = () => {
 
   return (
     <ChangelogLayout versions={data.changesets}>
-      <Changelog changesets={data.changesets as [GraphqlChangeset.ChangeSet, ...GraphqlChangeset.ChangeSet[]]} />
+      <Changelog
+        changesets={data.changesets as [GraphqlChangeset.ChangeSetRuntime, ...GraphqlChangeset.ChangeSetRuntime[]]}
+      />
     </ChangelogLayout>
   )
 }

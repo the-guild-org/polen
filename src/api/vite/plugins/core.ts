@@ -5,11 +5,12 @@ import { Api } from '#api/index'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
-import { VitePluginJson } from '#lib/vite-plugin-json/index'
-import { ViteVirtual } from '#lib/vite-virtual/index'
+import { VitePluginJson } from '#lib/vite-plugin-json'
+import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { superjson } from '#singletons/superjson'
 import { Json, Str } from '@wollybeard/kit'
+import { fileURLToPath } from 'node:url'
 import type { ProjectData } from '../../../project-data.js'
 import { SchemaAugmentation } from '../../schema-augmentation/index.js'
 import { Schema } from '../../schema/index.js'
@@ -37,7 +38,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       })
       // todo: augmentations scoped to a version
       schemaResult.data?.forEach(version => {
-        SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+        if (version.after) {
+          SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+        }
       })
       schemaCache = schemaResult
     }
@@ -60,7 +63,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
   const jsonsuper = VitePluginJson.create({
     codec: {
       validate: superjson,
-      importPath: import.meta.resolve(`#singletons/superjson`),
+      importPath: `#singletons/superjson`,
       importExport: `superjson`,
     },
     filter: {
@@ -104,10 +107,16 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         const match = Str.match(id, find)
         if (!match) return null
 
-        const to = `${config.paths.framework.sourceDir}/${match.groups.path}${config.paths.framework.sourceExtension}`
-        // debug(`did resolve`, { from: id, to })
-
-        return to
+        // Use Node's resolver to handle package.json imports correctly
+        try {
+          const resolved = import.meta.resolve(id)
+          const to = fileURLToPath(resolved)
+          // debug(`did resolve`, { from: id, to })
+          return to
+        } catch {
+          // If resolution fails, return null to let other resolvers handle it
+          return null
+        }
       },
     },
     jsonsuper,

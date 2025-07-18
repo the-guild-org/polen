@@ -38,11 +38,95 @@
     "#api/iso": {
       "default": "./build/api/iso/$.js"
     },
+    "#lib/apple-touch-icon": {
+      "default": "./build/lib/apple-touch-icon/$.js"
+    },
+    "#lib/errors": {
+      "default": "./build/lib/errors/$.js"
+    },
+    "#lib/errors/errors": {
+      "default": "./build/lib/errors/$$.js"
+    },
+    "#lib/extensible-data": {
+      "default": "./build/lib/extensible-data/$.js"
+    },
+    "#lib/favicon": {
+      "default": "./build/lib/favicon/$.js"
+    },
+    "#lib/file-router": {
+      "default": "./build/lib/file-router/$.js"
+    },
+    "#lib/file-router/file-router": {
+      "default": "./build/lib/file-router/$$.js"
+    },
+    "#lib/grafaid": {
+      "default": "./build/lib/grafaid/$.js"
+    },
+    "#lib/grafaid/grafaid": {
+      "default": "./build/lib/grafaid/$$.js"
+    },
+    "#lib/grafaid-old": {
+      "default": "./build/lib/grafaid-old/$.js"
+    },
+    "#lib/graphql-change": {
+      "default": "./build/lib/graphql-change/$.js"
+    },
+    "#lib/graphql-change/graphql-change": {
+      "default": "./build/lib/graphql-change/$$.js"
+    },
+    "#lib/graphql-changeset": {
+      "default": "./build/lib/graphql-changeset/$.js"
+    },
+    "#lib/graphql-path": {
+      "default": "./build/lib/graphql-path/$.js"
+    },
+    "#lib/graphql-path/graphql-path": {
+      "default": "./build/lib/graphql-path/$$.js"
+    },
+    "#lib/graphql-schema-loader": {
+      "default": "./build/lib/graphql-schema-loader/$.js"
+    },
+    "#lib/hono-aid": {
+      "default": "./build/lib/hono-aid/$.js"
+    },
+    "#lib/html-utils": {
+      "default": "./build/lib/html-utils/$.js"
+    },
     "#lib/mask": {
       "default": "./build/lib/mask/$.js"
     },
     "#lib/mask/mask": {
       "default": "./build/lib/mask/$$.js"
+    },
+    "#lib/path-map": {
+      "default": "./build/lib/path-map/$.js"
+    },
+    "#lib/path-map/path-map": {
+      "default": "./build/lib/path-map/$$.js"
+    },
+    "#lib/react-router-aid": {
+      "default": "./build/lib/react-router-aid/$.js"
+    },
+    "#lib/react-router-aid/react-router-aid": {
+      "default": "./build/lib/react-router-aid/$$.js"
+    },
+    "#lib/react-router-loader": {
+      "default": "./build/lib/react-router-loader/$.js"
+    },
+    "#lib/schema-lifecycle": {
+      "default": "./build/lib/schema-lifecycle/$.js"
+    },
+    "#lib/schema-lifecycle/schema-lifecycle": {
+      "default": "./build/lib/schema-lifecycle/$$.js"
+    },
+    "#lib/stack-processor": {
+      "default": "./build/lib/stack-processor/$.js"
+    },
+    "#lib/superjson-codec": {
+      "default": "./build/lib/superjson-codec/$.js"
+    },
+    "#lib/superjson-codec/superjson-codec": {
+      "default": "./build/lib/superjson-codec/$$.js"
     },
     "#lib/task": {
       "default": "./build/lib/task/$.js"
@@ -50,11 +134,38 @@
     "#lib/task/task": {
       "default": "./build/lib/task/$$.js"
     },
-    "#template/components/content/$$": {
-      "default": "./build/template/components/content/$$.js"
-    },
     "#lib/theme": {
       "default": "./build/lib/theme/$.js"
+    },
+    "#lib/theme/theme": {
+      "default": "./build/lib/theme/$$.js"
+    },
+    "#lib/vite-plugin-config": {
+      "default": "./build/lib/vite-plugin-config/$.js"
+    },
+    "#lib/vite-plugin-json": {
+      "default": "./build/lib/vite-plugin-json/$.js"
+    },
+    "#lib/vite-plugin-mdx": {
+      "default": "./build/lib/vite-plugin-mdx/$.js"
+    },
+    "#lib/vite-plugin-reactive-data": {
+      "default": "./build/lib/vite-plugin-reactive-data/$.js"
+    },
+    "#lib/vite-plugins": {
+      "default": "./build/lib/vite-plugins/$.js"
+    },
+    "#lib/vite-plugins/vite-plugins": {
+      "default": "./build/lib/vite-plugins/$$.js"
+    },
+    "#lib/vite-virtual": {
+      "default": "./build/lib/vite-virtual/$.js"
+    },
+    "#lib/vite-virtual/vite-virtual": {
+      "default": "./build/lib/vite-virtual/$$.js"
+    },
+    "#template/components/content/$$": {
+      "default": "./build/template/components/content/$$.js"
     }
   },
   "exports": {

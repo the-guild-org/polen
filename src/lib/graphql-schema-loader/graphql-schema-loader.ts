@@ -1,4 +1,4 @@
-import { Grafaid } from '#lib/grafaid/index'
+import { Grafaid } from '#lib/grafaid'
 import { Fs } from '@wollybeard/kit'
 import { neverCase } from '@wollybeard/kit/language'
 import { Graffle } from 'graffle'

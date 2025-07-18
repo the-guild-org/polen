@@ -1,7 +1,7 @@
 import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
-import { GrafaidOld } from '#lib/grafaid-old/index'
+import { GrafaidOld } from '#lib/grafaid-old'
 import { route, routeIndex } from '#lib/react-router-aid/react-router-aid'
 import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
 import { Box } from '@radix-ui/themes'
@@ -22,7 +22,7 @@ export const loader = createLoader(async ({ params }) => {
 
   const schema = await schemaSource.get(currentVersion)
   const availableVersions = schemaSource.versions
-  
+
   // Load lifecycle data if available
   let lifecycle = null
   try {
@@ -91,15 +91,22 @@ const ReferenceView = () => {
       const type = data.schema.getType(params.type!)!
       const fields = (type as any).getFields()
       const field = fields[params.field!]
-      return <Field data={field} lifecycle={data.lifecycle} currentVersion={data.currentVersion} parentTypeName={params.type!} />
+      return (
+        <Field
+          data={field}
+          lifecycle={data.lifecycle}
+          currentVersion={data.currentVersion}
+          parentTypeName={params.type!}
+        />
+      )
     } else {
       neverCase(viewType)
     }
   })()
 
   return (
-    <SidebarLayout 
-      sidebar={sidebarItems} 
+    <SidebarLayout
+      sidebar={sidebarItems}
       basePath={basePath}
       topContent={
         <VersionPicker

@@ -1,5 +1,5 @@
 import { GraphqlInspector } from '#dep/graphql-inspector/index'
-import type { GrafaidOld } from '#lib/grafaid-old/index'
+import type { GrafaidOld } from '#lib/grafaid-old'
 import type { Change } from './change-types.js'
 
 export * from './change-types.js'

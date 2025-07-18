@@ -1,6 +1,6 @@
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChange } from '#lib/graphql-change'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { debugPolen } from '#singletons/debug'
 import { Arr, Path } from '@wollybeard/kit'
 import { glob } from 'tinyglobby'
@@ -140,7 +140,7 @@ const readVersionedSchemas = async (
   versions.sort((a, b) => a.date.getTime() - b.date.getTime())
 
   const changesets = await Promise.all(
-    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSet> => {
+    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSetRuntime> => {
       const current = version
       const previous = versions[index - 1]
 

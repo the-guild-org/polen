@@ -1,6 +1,6 @@
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChange } from '#lib/graphql-change'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import { Arr } from '@wollybeard/kit'
 import type { NonEmptyChangeSets } from '../../schema.js'
 
@@ -86,7 +86,7 @@ export const read = async (
 
   // todo: make DRY, this is same as for schema-directory
   const changesets = await Promise.all(
-    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSet> => {
+    Arr.map(versions, async (version, index): Promise<GraphqlChangeset.ChangeSetRuntime> => {
       const current = version
       const previous = versions[index - 1]
 

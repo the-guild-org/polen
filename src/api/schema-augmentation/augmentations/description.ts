@@ -1,4 +1,4 @@
-import type { GrafaidOld } from '#lib/grafaid-old/index'
+import type { GrafaidOld } from '#lib/grafaid-old'
 import { neverCase } from '@wollybeard/kit/language'
 import type { Target } from '../target.js'
 import { locateTargetField, locateTargetType } from '../target.js'

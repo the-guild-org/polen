@@ -1,4 +1,4 @@
-import { Grafaid } from '#lib/grafaid/index'
+import { Grafaid } from '#lib/grafaid'
 import { Code, Flex } from '@radix-ui/themes'
 import { ReferenceLink } from '../ReferenceLink.js'
 import { TypeKindIcon } from './graphql.js'

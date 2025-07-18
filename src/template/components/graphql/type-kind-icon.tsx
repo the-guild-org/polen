@@ -1,5 +1,5 @@
 import type { React } from '#dep/react/index'
-import type { Grafaid } from '#lib/grafaid/index'
+import type { Grafaid } from '#lib/grafaid'
 import { Code } from '@radix-ui/themes'
 import { typeKindTokensIndex, unknownTypeKindToken } from './type-kind-tokens.js'
 

@@ -3,8 +3,9 @@ import { SchemaAugmentation } from '#api/schema-augmentation/index'
 import { createSchemaSource } from '#api/schema-source/index'
 import { Schema } from '#api/schema/index'
 import type { Vite } from '#dep/vite/index'
-import { Grafaid } from '#lib/grafaid/index'
-import { ViteVirtual } from '#lib/vite-virtual/index'
+import { Grafaid } from '#lib/grafaid'
+import { SchemaLifecycle } from '#lib/schema-lifecycle'
+import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { Cache } from '@wollybeard/kit'
 import * as NodeFs from 'node:fs/promises'
@@ -52,7 +53,9 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
     // Apply augmentations
     schemaResult.data.forEach(version => {
-      SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+      if (version.after) {
+        SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+      }
     })
 
     // Build metadata
@@ -113,8 +116,15 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     const devAssetsDir = config.paths.framework.devAssets.schemas
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
 
+    // Generate lifecycle data
+    const changeSetData = schemaData.map(changeset => ({
+      changes: changeset.changes,
+      date: changeset.date,
+    }))
+    const lifecycle = SchemaLifecycle.create(changeSetData, metadata.versions)
+
     const schemaSource = createDevSchemaSource(metadata)
-    await schemaSource.writeAllAssets(schemaData, metadata)
+    await schemaSource.writeAllAssets(schemaData, metadata, lifecycle)
     debug(`devAssetsWritten`, { versionCount: schemaData.length })
   }
 
@@ -288,8 +298,15 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         assetsPath: config.paths.framework.devAssets.absolute,
       })
 
+      // Generate lifecycle data
+      const changeSetData = schemaData.map(changeset => ({
+        changes: changeset.changes,
+        date: changeset.date,
+      }))
+      const lifecycle = SchemaLifecycle.create(changeSetData, metadata.versions)
+
       // Emit all assets using the high-level API
-      await schemaSource.writeAllAssets(schemaData, metadata)
+      await schemaSource.writeAllAssets(schemaData, metadata, lifecycle)
       debug(`buildMode:allAssetsEmitted`, { versionCount: schemaData.length })
     },
 

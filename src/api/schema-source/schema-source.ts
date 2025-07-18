@@ -1,6 +1,7 @@
 import { Schema } from '#api/schema/index'
-import { Grafaid } from '#lib/grafaid/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import { Grafaid } from '#lib/grafaid'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
+import { SchemaLifecycle } from '#lib/schema-lifecycle'
 import { astToSchema } from '#template/lib/schema-utils/schema-utils'
 import { Cache } from '@wollybeard/kit'
 import type { GraphQLSchema } from 'graphql'
@@ -45,6 +46,8 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
   const getMetadataPath = () => `${config.assetsPath}/schemas/metadata.json`
 
+  const getLifecyclePath = () => `${config.assetsPath}/schemas/lifecycle.json`
+
   const ioWrite = config.io.write || NoImplementationWriteFile
   const ioClearDirectory = config.io.clearDirectory || NoImplementationClearDirectory
   const ioRemoveFile = config.io.removeFile || NoImplementationRemoveFile
@@ -64,8 +67,8 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     return JSON.parse(content)
   }
 
-  const getAllChangesets = async (): Promise<GraphqlChangeset.ChangeSet[]> => {
-    const changesets: GraphqlChangeset.ChangeSet[] = []
+  const getAllChangesets = async (): Promise<GraphqlChangeset.ChangeSetRuntime[]> => {
+    const changesets: GraphqlChangeset.ChangeSetRuntime[] = []
 
     for (let i = 0; i < config.versions.length; i++) {
       const version = config.versions[i]
@@ -106,6 +109,11 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     return changesets
   }
 
+  const getLifecycle = async (): Promise<SchemaLifecycle.SchemaLifecycle> => {
+    const content = await ioReadMemoized(getLifecyclePath())
+    return JSON.parse(content)
+  }
+
   return {
     //
     // Properties
@@ -119,6 +127,7 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     get,
     getChangelog,
     getAllChangesets,
+    getLifecycle,
 
     // Expose the memoized reader's clear method
     clearCache: ioReadMemoized.clear,
@@ -131,6 +140,10 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
     writeChangelog: async (version: string, changelog: Schema.ChangelogData) => {
       await ioWrite(getChangelogPath(version), JSON.stringify(changelog))
+    },
+
+    writeLifecycle: async (lifecycle: SchemaLifecycle.SchemaLifecycle) => {
+      await ioWrite(getLifecyclePath(), JSON.stringify(lifecycle))
     },
 
     // Directory operations
@@ -159,6 +172,7 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
     writeAllAssets: async (
       schemaData: Awaited<ReturnType<typeof Schema.readOrThrow>>['data'],
       metadata: Schema.SchemaMetadata,
+      lifecycle?: SchemaLifecycle.SchemaLifecycle,
     ) => {
       if (!schemaData) return
 
@@ -167,10 +181,12 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
         const versionName = index === 0 ? Schema.VERSION_LATEST : Schema.dateToVersionString(version.date)
 
         // Write schema file
-        await ioWrite(
-          getSchemaPath(versionName),
-          JSON.stringify(Grafaid.Schema.AST.parse(Grafaid.Schema.print(version.after))),
-        )
+        if (version.after) {
+          await ioWrite(
+            getSchemaPath(versionName),
+            JSON.stringify(Grafaid.Schema.AST.parse(Grafaid.Schema.print(version.after))),
+          )
+        }
 
         // Write changelog file (except for the oldest/last version)
         if (Schema.shouldVersionHaveChangelog(index, schemaData!.length)) {
@@ -184,6 +200,11 @@ export const createSchemaSource = (config: SchemaSourceConfig) => {
 
       // Write metadata file
       await ioWrite(getMetadataPath(), JSON.stringify(metadata, null, 2))
+
+      // Write lifecycle file if provided
+      if (lifecycle) {
+        await ioWrite(getLifecyclePath(), JSON.stringify(lifecycle))
+      }
     },
   }
 }

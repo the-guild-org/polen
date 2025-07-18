@@ -1,4 +1,4 @@
-import type { FileRouter } from '#lib/file-router/index'
+import type { FileRouter } from '#lib/file-router'
 import type { Metadata } from './metadata.js'
 
 export type { Metadata }

@@ -1,4 +1,4 @@
-import type { VitePluginJson } from '#lib/vite-plugin-json/index'
+import type { VitePluginJson } from '#lib/vite-plugin-json'
 import { debugPolen } from '#singletons/debug'
 import { type ComputedRef, effect, isRef } from '@vue/reactivity'
 import type { Plugin, ViteDevServer } from 'vite'

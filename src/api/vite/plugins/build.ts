@@ -1,7 +1,7 @@
 import type { Config } from '#api/config/index'
 import type { PolenBuildManifest } from '#api/static/manifest'
 import { Vite } from '#dep/vite/index'
-import { ViteVirtual } from '#lib/vite-virtual/index'
+import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { Fs, Path } from '@wollybeard/kit'
 import packageJson from '../../../../package.json' with { type: 'json' }

@@ -1,5 +1,5 @@
 import type { React } from '#dep/react/index'
-import { Grafaid } from '#lib/grafaid/index'
+import { Grafaid } from '#lib/grafaid'
 import { Box, Heading } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
 import { FieldList } from './FieldList.js'

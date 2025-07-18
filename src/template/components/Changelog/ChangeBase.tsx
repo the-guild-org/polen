@@ -1,4 +1,4 @@
-import type { GraphqlChange } from '#lib/graphql-change/index'
+import type { GraphqlChange } from '#lib/graphql-change'
 import type React from 'react'
 
 interface ChangeBaseProps {

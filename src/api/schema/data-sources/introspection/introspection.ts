@@ -1,7 +1,7 @@
-import { Grafaid } from '#lib/grafaid/index'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
-import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader/index'
+import { Grafaid } from '#lib/grafaid'
+import { GraphqlChange } from '#lib/graphql-change'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
+import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'
 import { Fs, Json, Path } from '@wollybeard/kit'
 import type { NonEmptyChangeSets, SchemaReadResult } from '../../schema.js'
 
@@ -200,7 +200,7 @@ export const createSingleSchemaChangeset = async (schema: Grafaid.Schema.Schema)
     after,
   })
 
-  const changeset: GraphqlChangeset.ChangeSet = {
+  const changeset: GraphqlChangeset.ChangeSetRuntime = {
     date,
     after,
     before,

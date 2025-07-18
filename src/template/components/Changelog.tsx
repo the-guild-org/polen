@@ -1,7 +1,7 @@
 import type { Api } from '#api/index'
+import { GraphqlChange } from '#lib/graphql-change'
 import { CRITICALITY_LEVELS } from '#lib/graphql-change/criticality'
-import { GraphqlChange } from '#lib/graphql-change/index'
-import type { GraphqlChangeset } from '#lib/graphql-changeset/index'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 import type { CriticalityLevel } from '@graphql-inspector/core'
 import { Box } from '@radix-ui/themes'
 import React from 'react'
@@ -27,7 +27,7 @@ export const Changelog: React.FC<{ changesets: Api.Schema.NonEmptyChangeSets }> 
   )
 }
 
-const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSet }> = ({ changeset }) => {
+const Changeset: React.FC<{ changeset: GraphqlChangeset.ChangeSetRuntime }> = ({ changeset }) => {
   // Group changes by criticality level
   const groupedChanges = useMemo(() => {
     const groups = {} as Record<CriticalityLevel, GraphqlChange.Change[]>

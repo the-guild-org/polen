@@ -1,5 +1,5 @@
 import type { React } from '#dep/react/index'
-import type { GrafaidOld } from '#lib/grafaid-old/index'
+import type { GrafaidOld } from '#lib/grafaid-old'
 import { Text } from '@radix-ui/themes'
 import { Markdown } from './Markdown.js'
 

@@ -1,2 +1,2 @@
 // Namespace export
-export * as Theme from './theme.js'
+export * as Theme from './$$.js'
