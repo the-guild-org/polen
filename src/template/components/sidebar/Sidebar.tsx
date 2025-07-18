@@ -8,9 +8,10 @@ interface Props extends LayoutProps, MarginProps, BoxOwnProps {
   data: Content.Item[]
   basePath?: string
   style?: React.CSSProperties
+  topContent?: React.ReactNode
 }
 
-export const Sidebar = ({ data, basePath, ...props }: Props) => {
+export const Sidebar = ({ data, basePath, topContent, ...props }: Props) => {
   return (
     <SidebarContext.Provider value={{ basePath }}>
       <Box
@@ -25,6 +26,11 @@ export const Sidebar = ({ data, basePath, ...props }: Props) => {
             }
           `}
         </style>
+        {topContent && (
+          <Box mb="4">
+            {topContent}
+          </Box>
+        )}
         <Items items={data} />
       </Box>
     </SidebarContext.Provider>

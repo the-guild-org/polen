@@ -10,9 +10,10 @@ interface Props {
   children: React.ReactNode
   sidebar: Content.Item[]
   basePath?: string
+  topContent?: React.ReactNode
 }
 
-export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath }) => {
+export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, topContent }) => {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -47,6 +48,7 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath }) 
             }}
             sidebarData={sidebar}
             basePath={basePath}
+            topContent={topContent}
           />
         </Box>
       )}
@@ -58,7 +60,7 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath }) 
           gridColumn='1 / 3'
           gridRow='1 / auto'
         >
-          <Sidebar data={sidebar} basePath={basePath} />
+          <Sidebar data={sidebar} basePath={basePath} topContent={topContent} />
         </Box>
       )}
 

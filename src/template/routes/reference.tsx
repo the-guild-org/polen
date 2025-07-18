@@ -22,11 +22,21 @@ export const loader = createLoader(async ({ params }) => {
 
   const schema = await schemaSource.get(currentVersion)
   const availableVersions = schemaSource.versions
+  
+  // Load lifecycle data if available
+  let lifecycle = null
+  try {
+    lifecycle = await schemaSource.getLifecycle()
+  } catch (error) {
+    // Lifecycle data might not exist for all projects
+    console.debug('Schema lifecycle data not available', error)
+  }
 
   return {
     schema,
     currentVersion,
     availableVersions,
+    lifecycle,
   }
 })
 
@@ -76,25 +86,28 @@ const ReferenceView = () => {
       return <MissingSchema />
     } else if (viewType === 'type') {
       const type = data.schema.getType(params.type!)!
-      return <NamedType data={type} />
+      return <NamedType data={type} lifecycle={data.lifecycle} currentVersion={data.currentVersion} />
     } else if (viewType === 'field') {
       const type = data.schema.getType(params.type!)!
       const fields = (type as any).getFields()
       const field = fields[params.field!]
-      return <Field data={field} />
+      return <Field data={field} lifecycle={data.lifecycle} currentVersion={data.currentVersion} parentTypeName={params.type!} />
     } else {
       neverCase(viewType)
     }
   })()
 
   return (
-    <SidebarLayout sidebar={sidebarItems} basePath={basePath}>
-      <Box mb={`4`}>
+    <SidebarLayout 
+      sidebar={sidebarItems} 
+      basePath={basePath}
+      topContent={
         <VersionPicker
           all={[...data.availableVersions]} // Convert readonly to mutable
           current={data.currentVersion}
         />
-      </Box>
+      }
+    >
       {content}
     </SidebarLayout>
   )
