@@ -39,7 +39,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
       // todo: augmentations scoped to a version
       schemaResult.data?.forEach(version => {
         if (version.after) {
-          SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+          SchemaAugmentation.apply(version.after.data, config.schemaAugmentations)
         }
       })
       schemaCache = schemaResult

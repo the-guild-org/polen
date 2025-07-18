@@ -38,37 +38,5 @@
  * ```
  */
 
-// Re-export types
-export type {
-  ArgumentDefinitionPath,
-  ArgumentSegment,
-  DefinitionPath,
-  FieldDefinitionPath,
-  FieldSegment,
-  QueryPath,
-  QuerySegment,
-  Segment,
-  TypeDefinitionPath,
-  TypeSegment,
-} from './types.js'
-
-// Re-export constructors and guards
-export {
-  createArgumentDefinitionPath,
-  createArgumentSegment,
-  createFieldDefinitionPath,
-  createFieldSegment,
-  createTypeDefinitionPath,
-  createTypeSegment,
-  isArgumentDefinitionPath,
-  isArgumentSegment,
-  isFieldDefinitionPath,
-  isFieldSegment,
-  isQuerySegment,
-  isTypeDefinitionPath,
-  isTypeSegment,
-} from './constructors.js'
-
-// Namespace exports for organized API
 export * as Definition from './definition.js'
 export * as Query from './query.js'

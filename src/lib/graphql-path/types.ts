@@ -38,33 +38,6 @@ export type Segment = TypeSegment | FieldSegment | ArgumentSegment
 export type QuerySegment = TypeSegment | FieldSegment
 
 /**
- * Definition paths - direct paths to schema definition elements
- * These represent the "address" of a specific schema element
- */
-export type DefinitionPath =
-  | TypeDefinitionPath
-  | FieldDefinitionPath
-  | ArgumentDefinitionPath
-
-/**
- * Path to a type definition
- * @example [{ kind: 'type', type: 'User' }]
- */
-export type TypeDefinitionPath = [TypeSegment]
-
-/**
- * Path to a field definition (type + field)
- * @example [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'name' }]
- */
-export type FieldDefinitionPath = [TypeSegment, FieldSegment]
-
-/**
- * Path to an argument definition (type + field + argument)
- * @example [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'posts' }, { kind: 'argument', argument: 'limit' }]
- */
-export type ArgumentDefinitionPath = [TypeSegment, FieldSegment, ArgumentSegment]
-
-/**
  * Query/Data paths - potentially deep paths that span multiple types through fields
  * These represent traversal paths through the schema graph
  *

@@ -4,7 +4,7 @@ import {
   isCriticalityDangerous,
   isCriticalitySafe,
 } from '#lib/graphql-change/criticality'
-import type { GraphqlChangeset } from '#lib/graphql-changeset'
+import { GraphqlChangeset } from '#lib/graphql-changeset'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import type React from 'react'
 import { useEffect, useState } from 'react'
@@ -12,7 +12,7 @@ import { renderDate } from '../components/Changelog.js'
 
 interface ChangelogLayoutProps {
   children: React.ReactNode
-  versions: GraphqlChangeset.ChangeSetRuntime[]
+  versions: GraphqlChangeset.ChangeSet[]
 }
 
 interface VersionCounts {
@@ -21,16 +21,23 @@ interface VersionCounts {
   safe: number
 }
 
-const calculateCounts = (version: GraphqlChangeset.ChangeSetRuntime): VersionCounts => {
+const calculateCounts = (version: GraphqlChangeset.ChangeSet): VersionCounts => {
+  if (GraphqlChangeset.isIntermediateChangeSet(version)) {
+    return {
+      breaking: version.changes.filter(isCriticalityBreaking).length,
+      dangerous: version.changes.filter(isCriticalityDangerous).length,
+      safe: version.changes.filter(isCriticalitySafe).length,
+    }
+  }
   return {
-    breaking: version.changes.filter(isCriticalityBreaking).length,
-    dangerous: version.changes.filter(isCriticalityDangerous).length,
-    safe: version.changes.filter(isCriticalitySafe).length,
+    breaking: 0,
+    dangerous: 0,
+    safe: 0,
   }
 }
 
 const SidebarEntry: React.FC<{
-  version: GraphqlChangeset.ChangeSetRuntime
+  version: GraphqlChangeset.ChangeSet
   counts: VersionCounts
   isActive: boolean
 }> = ({ version, counts, isActive }) => {

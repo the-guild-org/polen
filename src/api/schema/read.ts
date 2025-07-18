@@ -1,6 +1,6 @@
-import { Arr, Fs, Path } from '@wollybeard/kit'
+import { Arr } from '@wollybeard/kit'
 import * as DataSources from './data-sources/data-sources.js'
-import type { NonEmptyChangeSets } from './schema.js'
+import type { GraphqlChangeset } from '#lib/graphql-changeset'
 
 export type DataSourceType =
   | `file`
@@ -15,7 +15,7 @@ export type DataSourceType =
  * Result of schema reading with provenance tracking for file watching and debugging.
  */
 export interface SchemaReadResult {
-  data: NonEmptyChangeSets | null
+  data: GraphqlChangeset.ChangelogLinked | null
   source: {
     type: DataSourceType
     /**
@@ -26,7 +26,7 @@ export interface SchemaReadResult {
      *
      * @returns Promise resolving to the recreated schema data, or null if recreation fails
      */
-    reCreate?: () => Promise<NonEmptyChangeSets | null>
+    reCreate?: () => Promise<GraphqlChangeset.ChangelogLinked | null>
   }
 }
 
@@ -121,7 +121,7 @@ export interface Config {
     /**
      * Pre-built schema object to use directly.
      */
-    data?: NonEmptyChangeSets
+    data?: GraphqlChangeset.ChangelogLinked
     /**
      * Configuration for loading schema via GraphQL introspection.
      *

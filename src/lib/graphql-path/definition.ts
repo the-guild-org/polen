@@ -2,15 +2,9 @@
  * Definition path operations
  */
 
-import {
-  createArgumentDefinitionPath,
-  createFieldDefinitionPath,
-  createTypeDefinitionPath,
-  isArgumentDefinitionPath,
-  isFieldDefinitionPath,
-  isTypeDefinitionPath,
-} from './constructors.js'
-import type { ArgumentDefinitionPath, DefinitionPath, FieldDefinitionPath, TypeDefinitionPath } from './types.js'
+import { createArgumentSegment, createFieldSegment, createTypeSegment } from './constructors.js'
+
+import type { ArgumentSegment, FieldSegment, TypeSegment } from '#lib/graphql-path/types'
 
 /**
  * Encode a definition path to a human-readable expression string
@@ -69,36 +63,6 @@ export const decode = (expression: string): DefinitionPath | null => {
 }
 
 /**
- * Create a type definition path
- *
- * @param type - The type name
- * @returns A type definition path
- * @example type('User') // [{ kind: 'type', type: 'User' }]
- */
-export const type = createTypeDefinitionPath
-
-/**
- * Create a field definition path
- *
- * @param type - The type name
- * @param field - The field name
- * @returns A field definition path
- * @example field('User', 'name') // [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'name' }]
- */
-export const field = createFieldDefinitionPath
-
-/**
- * Create an argument definition path
- *
- * @param type - The type name
- * @param field - The field name
- * @param argument - The argument name
- * @returns An argument definition path
- * @example argument('User', 'posts', 'limit') // [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'posts' }, { kind: 'argument', argument: 'limit' }]
- */
-export const argument = createArgumentDefinitionPath
-
-/**
  * Extract the type name from any definition path
  *
  * @param path - The definition path
@@ -130,3 +94,147 @@ export const getField = (path: FieldDefinitionPath | ArgumentDefinitionPath): st
 export const getArgument = (path: ArgumentDefinitionPath): string => {
   return path[2].argument
 }
+
+/**
+ * Parse field path like "User.email" into type and field names
+ */
+export const parseFieldPath = (path?: string): { typeName: string | null; fieldName: string | null } => {
+  if (!path) return { typeName: null, fieldName: null }
+
+  const parts = path.split('.')
+  if (parts.length >= 2) {
+    return {
+      typeName: parts[0] || null,
+      fieldName: parts[1] || null,
+    }
+  }
+
+  return { typeName: null, fieldName: null }
+}
+
+/**
+ * Definition paths - direct paths to schema definition elements
+ * These represent the "address" of a specific schema element
+ */
+export type DefinitionPath =
+  | TypeDefinitionPath
+  | FieldDefinitionPath
+  | ArgumentDefinitionPath
+
+/**
+ * Path to a type definition
+ * @example [{ kind: 'type', type: 'User' }]
+ */
+export type TypeDefinitionPath = [TypeSegment]
+
+/**
+ * Path to a field definition (type + field)
+ * @example [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'name' }]
+ */
+export type FieldDefinitionPath = [TypeSegment, FieldSegment]
+
+/**
+ * Path to an argument definition (type + field + argument)
+ * @example [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'posts' }, { kind: 'argument', argument: 'limit' }]
+ */
+export type ArgumentDefinitionPath = [TypeSegment, FieldSegment, ArgumentSegment]
+
+/**
+ * Type guard to check if a path is a type definition path
+ *
+ * @param path - The path to check
+ * @returns True if the path is a type definition path
+ */
+export const isTypeDefinitionPath = (path: DefinitionPath): path is TypeDefinitionPath => {
+  return path.length === 1 && path[0].kind === 'type'
+}
+
+/**
+ * Type guard to check if a path is a field definition path
+ *
+ * @param path - The path to check
+ * @returns True if the path is a field definition path
+ */
+export const isFieldDefinitionPath = (path: DefinitionPath): path is FieldDefinitionPath => {
+  return path.length === 2 && path[0].kind === 'type' && path[1].kind === 'field'
+}
+
+/**
+ * Type guard to check if a path is an argument definition path
+ *
+ * @param path - The path to check
+ * @returns True if the path is an argument definition path
+ */
+export const isArgumentDefinitionPath = (path: DefinitionPath): path is ArgumentDefinitionPath => {
+  return path.length === 3 && path[0].kind === 'type' && path[1].kind === 'field' && path[2].kind === 'argument'
+}
+
+/**
+ * Create a path to a type definition
+ *
+ * @param type - The type name
+ * @returns A type definition path
+ * @example createTypeDefinitionPath('User') // [{ kind: 'type', type: 'User' }]
+ */
+export const createTypeDefinitionPath = (type: string): TypeDefinitionPath => {
+  return [createTypeSegment(type)]
+}
+
+/**
+ * Create a path to a field definition
+ *
+ * @param type - The type name
+ * @param field - The field name
+ * @returns A field definition path
+ * @example createFieldDefinitionPath('User', 'name') // [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'name' }]
+ */
+export const createFieldDefinitionPath = (type: string, field: string): FieldDefinitionPath => {
+  return [createTypeSegment(type), createFieldSegment(field)]
+}
+
+/**
+ * Create a path to an argument definition
+ *
+ * @param type - The type name
+ * @param field - The field name
+ * @param argument - The argument name
+ * @returns An argument definition path
+ * @example createArgumentDefinitionPath('User', 'posts', 'limit') // [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'posts' }, { kind: 'argument', argument: 'limit' }]
+ */
+export const createArgumentDefinitionPath = (
+  type: string,
+  field: string,
+  argument: string,
+): ArgumentDefinitionPath => {
+  return [createTypeSegment(type), createFieldSegment(field), createArgumentSegment(argument)]
+}
+
+/**
+ * Create a type definition path
+ *
+ * @param type - The type name
+ * @returns A type definition path
+ * @example type('User') // [{ kind: 'type', type: 'User' }]
+ */
+export const type = createTypeDefinitionPath
+
+/**
+ * Create a field definition path
+ *
+ * @param type - The type name
+ * @param field - The field name
+ * @returns A field definition path
+ * @example field('User', 'name') // [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'name' }]
+ */
+export const field = createFieldDefinitionPath
+
+/**
+ * Create an argument definition path
+ *
+ * @param type - The type name
+ * @param field - The field name
+ * @param argument - The argument name
+ * @returns An argument definition path
+ * @example argument('User', 'posts', 'limit') // [{ kind: 'type', type: 'User' }, { kind: 'field', field: 'posts' }, { kind: 'argument', argument: 'limit' }]
+ */
+export const argument = createArgumentDefinitionPath

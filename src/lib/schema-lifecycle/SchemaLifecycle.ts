@@ -1,6 +1,5 @@
-import type { GraphQLSchema } from 'graphql'
 import { GraphqlChange } from '#lib/graphql-change'
-import type { GraphqlChangeset } from '#lib/graphql-changeset'
+import { GraphqlChangeset } from '#lib/graphql-changeset'
 import * as Handlers from './handlers.js'
 import type { NamedTypeLifecycle } from './NamedTypeLifecycle.js'
 
@@ -20,34 +19,18 @@ export type SupportedChange =
  * Build schema lifecycle data from changesets
  */
 export const create = (
-  changesets: GraphqlChangeset.ChangeSetData[], 
-  versions: string[],
-  schemas: GraphQLSchema[],
+  changelog: GraphqlChangeset.ChangelogLinked,
 ): SchemaLifecycle => {
-  const data: Record<string, NamedTypeLifecycle> = {}
+  const data: SchemaLifecycle['data'] = {}
 
   // Process changesets in chronological order (oldest to newest)
-  for (let index = 0; index < changesets.length; index++) {
-    const changeset = changesets[index]!
-    const schemaVersion = versions[index] ?? null
-    const schema = schemas[index]
-
-    if (!schema) {
-      throw new Error(`Schema not provided for changeset ${index}`)
+  for (const changeSet of changelog) {
+    if (GraphqlChangeset.isInitialChangeSetLinked(changeSet)) {
+      Handlers.createInitialTypeLifecycles(data, changeSet)
+      continue
     }
 
-    // Create context once per changeset
-    const context: Handlers.HandlerContext = {
-      schema,
-      date: changeset.date,
-      changeSet: {
-        changes: changeset.changes,
-        date: changeset.date,
-      },
-      schemaVersion,
-    }
-
-    for (const change of changeset.changes) {
+    for (const change of changeSet.changes) {
       if (
         GraphqlChange.Group.isTypeOperation(change)
         || GraphqlChange.Group.isFieldOperation(change)
@@ -55,7 +38,7 @@ export const create = (
       ) {
         const changeGroupType = GraphqlChange.Group.getType(change)
         const handler = Handlers[changeGroupType]
-        handler(data, change as any, context)
+        handler(data, change as any, changeSet)
       }
     }
   }

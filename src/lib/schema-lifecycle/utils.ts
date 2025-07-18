@@ -19,7 +19,7 @@ export const getTypeLifecycle = (
  */
 export const getFieldLifecycle = (
   lifecycle: SchemaLifecycle,
-  path: GraphQLPath.FieldDefinitionPath,
+  path: GraphQLPath.Definition.FieldDefinitionPath,
 ): FieldLifecycle | InputFieldLifecycle | null => {
   const typeName = GraphQLPath.Definition.getType(path)
   const fieldName = GraphQLPath.Definition.getField(path)
@@ -53,7 +53,7 @@ export const isTypeCurrentlyAvailable = (
  */
 export const isFieldCurrentlyAvailable = (
   lifecycle: SchemaLifecycle,
-  path: GraphQLPath.FieldDefinitionPath,
+  path: GraphQLPath.Definition.FieldDefinitionPath,
 ): boolean => {
   const fieldLifecycle = getFieldLifecycle(lifecycle, path)
   if (!fieldLifecycle) return false
@@ -106,7 +106,7 @@ export const getTypeRemovedDate = (
  */
 export const getFieldAddedDate = (
   lifecycle: SchemaLifecycle,
-  path: GraphQLPath.FieldDefinitionPath,
+  path: GraphQLPath.Definition.FieldDefinitionPath,
 ): Date | null => {
   const fieldLifecycle = getFieldLifecycle(lifecycle, path)
   if (!fieldLifecycle) return null
@@ -127,7 +127,7 @@ export const getFieldAddedDate = (
  */
 export const getFieldRemovedDate = (
   lifecycle: SchemaLifecycle,
-  path: GraphQLPath.FieldDefinitionPath,
+  path: GraphQLPath.Definition.FieldDefinitionPath,
 ): Date | null => {
   const fieldLifecycle = getFieldLifecycle(lifecycle, path)
   if (!fieldLifecycle) return null
@@ -212,7 +212,7 @@ export const getTypeLifecycleDescription = (
  */
 export const getFieldLifecycleDescription = (
   lifecycle: SchemaLifecycle,
-  path: GraphQLPath.FieldDefinitionPath,
+  path: GraphQLPath.Definition.FieldDefinitionPath,
 ): string => {
   const typeName = GraphQLPath.Definition.getType(path)
   const fieldName = GraphQLPath.Definition.getField(path)

@@ -9,7 +9,7 @@ import { debugPolen } from '#singletons/debug'
 import { Cache } from '@wollybeard/kit'
 import * as NodeFs from 'node:fs/promises'
 import * as NodePath from 'node:path'
-import type { NonEmptyChangeSets } from '../../schema/schema.js'
+import { GraphqlChangeset } from '#lib/graphql-changeset'
 import { polenVirtual } from '../vi.js'
 
 export const viProjectSchemaMetadata = polenVirtual([`project`, `schema-metadata`])
@@ -53,7 +53,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     // Apply augmentations
     schemaResult.data.forEach(version => {
       if (version.after) {
-        SchemaAugmentation.apply(version.after, config.schemaAugmentations)
+        SchemaAugmentation.apply(version.after.data, config.schemaAugmentations)
       }
     })
 
@@ -107,22 +107,15 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
 
   // Helper to create lifecycle data from schema data
   const createLifecycleData = (
-    schemaData: NonEmptyChangeSets,
+    schemaData: GraphqlChangeset.ChangelogLinked,
     metadata: Schema.SchemaMetadata,
   ): SchemaLifecycle.SchemaLifecycle => {
-    const changeSetData = schemaData.map(changeset => ({
-      changes: changeset.changes,
-      date: changeset.date,
-    }))
-    
-    const schemas = schemaData.map(changeset => changeset.after!)
-    
-    return SchemaLifecycle.create(changeSetData, metadata.versions, schemas)
+    return SchemaLifecycle.create(schemaData)
   }
 
   // Helper to write assets using schema-source API
   const writeDevAssets = async (
-    schemaData: NonEmptyChangeSets,
+    schemaData: GraphqlChangeset.ChangelogLinked,
     metadata: Schema.SchemaMetadata,
   ) => {
     // schemaData is now guaranteed to be non-null NonEmptyChangeSets

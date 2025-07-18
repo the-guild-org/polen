@@ -29,7 +29,7 @@ const Component = () => {
   return (
     <ChangelogLayout versions={data.changesets}>
       <Changelog
-        changesets={data.changesets as [GraphqlChangeset.ChangeSetRuntime, ...GraphqlChangeset.ChangeSetRuntime[]]}
+        changesets={data.changesets as [GraphqlChangeset.ChangeSet, ...GraphqlChangeset.ChangeSet[]]}
       />
     </ChangelogLayout>
   )
