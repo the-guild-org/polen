@@ -192,11 +192,11 @@ Learn more about [configuring Polen](/guides/reference/api#warnings).
 
 ### Live Examples
 
-Explore working examples in the [Pokemon example](https://polen.js.org/examples/pokemon/examples):
+Explore working examples in the [Pokemon example](https://polen.js.org/examples-live/pokemon/examples):
 
-- [Pokemon Basics](https://polen.js.org/examples/pokemon/examples/pokemon-basics) - Simple queries
-- [Advanced Queries](https://polen.js.org/examples/pokemon/examples/advanced-queries) - Complex patterns
-- [Error Handling](https://polen.js.org/examples/pokemon/examples) - Invalid field detection
+- [Pokemon Basics](https://polen.js.org/examples-live/pokemon/examples/pokemon-basics) - Simple queries
+- [Advanced Queries](https://polen.js.org/examples-live/pokemon/examples/advanced-queries) - Complex patterns
+- [Error Handling](https://polen.js.org/examples-live/pokemon/examples) - Invalid field detection
 
 ## MDX
 

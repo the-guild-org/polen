@@ -2,7 +2,7 @@
 
 Experience Polen documenting The Guild's [GraphQL Hive](https://graphql-hive.com) API.
 
-[**View Live Example →**](https://polen.js.org/examples/hive/)
+[**View Live Example →**](https://polen.js.org/examples-live/hive/)
 
 ## Features Showcased
 

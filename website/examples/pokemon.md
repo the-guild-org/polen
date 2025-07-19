@@ -2,7 +2,7 @@
 
 Explore Polen's powerful changelog feature with a fun Pokemon GraphQL API that evolves over time.
 
-[**View Live Example →**](https://polen.js.org/examples/pokemon/)
+[**View Live Example →**](https://polen.js.org/examples-live/pokemon/)
 
 ## Features Showcased
 
