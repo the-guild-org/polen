@@ -20,7 +20,7 @@ console.log(Polen.defineConfig === defineConfig) // true
 
 ### Value `Polen.defineConfig(config)`
 
-Define your Polen configuration with type safety. Learn more at [Configuration](/features/configuration)
+Define your Polen configuration with type safety. Learn more at [Configuration](/guides/features/configuration)
 
 ### Value `Polen.VitePlugin`
 
@@ -49,4 +49,4 @@ Bare exports within the Polen namespace [see /](#/‌).
 
 ## /components
 
-Polen provides React components for use in MDX pages. Learn more at [Pages](/features/pages).
+Polen provides React components for use in MDX pages. Learn more at [Pages](/guides/features/pages).

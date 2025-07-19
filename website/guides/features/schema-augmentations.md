@@ -1,7 +1,7 @@
 # Schema Augmentations
 
 ::: info
-This page assumes basic knowledge of schema configuration concepts. See [Schema Overview](/features/schema-overview) for foundational information.
+This page assumes basic knowledge of schema configuration concepts. See [Schema Overview](/guides/features/schema-overview) for foundational information.
 :::
 
 ## Introduction

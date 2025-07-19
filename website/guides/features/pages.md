@@ -113,7 +113,7 @@ Code blocks support syntax highlighting via [Code Hike](https://codehike.org/) u
 
 ## Document Blocks
 
-Polen automatically enhances GraphQL document code blocks with rich interactive features when you add `interactive` to the code block's metadata (and have a [GraphQL schema configured](/features/schema-reference#configuration)).
+Polen automatically enhances GraphQL document code blocks with rich interactive features when you add `interactive` to the code block's metadata (and have a [GraphQL schema configured](/guides/features/schema-reference#configuration)).
 
 ### Usage
 
@@ -174,7 +174,7 @@ When enabled, GraphQL code blocks provide:
 
 ### Configuration
 
-Control how Polen handles interactive blocks when no [GraphQL schema is configured](/features/schema-reference#configuration). By default, Polen shows a warning indicator to help developers understand why interactive features aren't working.
+Control how Polen handles interactive blocks when no [GraphQL schema is configured](/guides/features/schema-reference#configuration). By default, Polen shows a warning indicator to help developers understand why interactive features aren't working.
 
 ```ts
 export default defineConfig({
@@ -188,15 +188,15 @@ export default defineConfig({
 
 When `enabled` is `true` (default), blocks without schema show: "⚠️ No schema configured"
 
-Learn more about [configuring Polen](/reference/api#warnings).
+Learn more about [configuring Polen](/guides/reference/api#warnings).
 
 ### Live Examples
 
-Explore working examples in the [Pokemon demo](https://polen.js.org/demos/pokemon/examples):
+Explore working examples in the [Pokemon example](https://polen.js.org/examples/pokemon/examples):
 
-- [Pokemon Basics](https://polen.js.org/demos/pokemon/examples/pokemon-basics) - Simple queries
-- [Advanced Queries](https://polen.js.org/demos/pokemon/examples/advanced-queries) - Complex patterns
-- [Error Handling](https://polen.js.org/demos/pokemon/examples) - Invalid field detection
+- [Pokemon Basics](https://polen.js.org/examples/pokemon/examples/pokemon-basics) - Simple queries
+- [Advanced Queries](https://polen.js.org/examples/pokemon/examples/advanced-queries) - Complex patterns
+- [Error Handling](https://polen.js.org/examples/pokemon/examples) - Invalid field detection
 
 ## MDX
 

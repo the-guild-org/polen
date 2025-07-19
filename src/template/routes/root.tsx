@@ -1,3 +1,4 @@
+import type { NavbarProps } from '#api/hooks/types'
 import type { ReactRouter } from '#dep/react-router/index'
 import { route } from '#lib/react-router-aid/react-router-aid'
 import { createLoader } from '#lib/react-router-loader/react-router-loader'
@@ -7,10 +8,13 @@ import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import * as projectHooks from 'virtual:polen/project/hooks'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.jsonsuper'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link as PolenLink } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
+import { DefaultNavbar } from '../components/navbar/DefaultNavbar.js'
+import { Item } from '../components/navbar/Item.js'
 import { NotFound } from '../components/NotFound.js'
 import { ThemeToggle } from '../components/ThemeToggle.js'
 import { ToastContainer } from '../components/ToastContainer.js'
@@ -34,16 +38,10 @@ export const Component = () => {
 const Layout = () => {
   const { appearance } = useTheme()
 
-  const header = (
-    <Flex
-      align='center'
-      gap={{ initial: `4`, md: `8` }}
-      pb='4'
-      mb={{ initial: `4`, md: `8` }}
-      style={{
-        borderBottom: `1px solid var(--gray-3)`,
-      }}
-    >
+  const navbarProps: NavbarProps = {
+    items: PROJECT_DATA.navbar,
+    Item,
+    Logo: () => (
       <LinkReactRouter
         to='/'
         style={{ color: `inherit`, textDecoration: `none` }}
@@ -57,25 +55,23 @@ const Layout = () => {
           />
         </Box>
       </LinkReactRouter>
-      <Flex direction='row' gap='4' style={{ flex: 1 }}>
-        {PROJECT_DATA.navbar
-          .filter(item => item.position !== 'right')
-          .map((item, key) => (
-            <PolenLink key={key} color='gray' to={item.pathExp}>
-              {item.title}
-            </PolenLink>
-          ))}
-      </Flex>
-      <Flex direction='row' gap='4'>
-        {PROJECT_DATA.navbar
-          .filter(item => item.position === 'right')
-          .map((item, key) => (
-            <PolenLink key={key} color='gray' to={item.pathExp}>
-              {item.title}
-            </PolenLink>
-          ))}
-      </Flex>
-      <ThemeToggle />
+    ),
+    ThemeToggle,
+  }
+
+  const NavbarComponent = projectHooks.navbar || DefaultNavbar
+
+  const header = (
+    <Flex
+      align='center'
+      gap={{ initial: `4`, md: `8` }}
+      pb='4'
+      mb={{ initial: `4`, md: `8` }}
+      style={{
+        borderBottom: `1px solid var(--gray-3)`,
+      }}
+    >
+      <NavbarComponent {...navbarProps} />
     </Flex>
   )
 

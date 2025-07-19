@@ -22,7 +22,7 @@ node build/app.js
 
 #### `PORT`
 
-Optionally set the port the server listens on. Overrides port [build configuration](/features/configuration) if given. Example:
+Optionally set the port the server listens on. Overrides port [build configuration](/guides/features/configuration) if given. Example:
 
 ```sh
 PORT=8080 node build/app.js
@@ -38,4 +38,4 @@ The generated app is a standard Node.js app. One easy way to deploy is with dock
 
 ## Future Features
 
-Polen will eventually have serverful features like user context integration. Currently there are no particular advantages over static generation, so we generally recommend using the [SSG build](/deployment-ssg/overview) which gives you more deployment options and better runtime performance.
+Polen will eventually have serverful features like user context integration. Currently there are no particular advantages over static generation, so we generally recommend using the [SSG build](/guides/deployment-ssg/overview) which gives you more deployment options and better runtime performance.

@@ -4,7 +4,7 @@
 
 Polen provides comprehensive schema documentation features. You can work with a single schema or a set of them to capture different versions of your schema across time.
 
-Features that Polen offers based on the schemas you give include automatic [reference docs](/features/schema-reference) and [changelogs](/features/schema-changelog).
+Features that Polen offers based on the schemas you give include automatic [reference docs](/guides/features/schema-reference) and [changelogs](/guides/features/schema-changelog).
 
 ## Supplying Your Schema
 
@@ -29,7 +29,7 @@ schema/
 
 ### Configuration
 
-You can use [configuration](/features/configuration) if you wish, supplying a schema inline even. Refer to extensive JSDoc on configuration properties for details.
+You can use [configuration](/guides/features/configuration) if you wish, supplying a schema inline even. Refer to extensive JSDoc on configuration properties for details.
 
 ```ts
 import { Polen } from 'polen'
@@ -171,10 +171,10 @@ Here's how supplying multiple schemas maps to the different sources:
 
 Polen provides the following schema-related features:
 
-| Feature                                     | Single Schema                      | Multiple Schemas                                           |
-| ------------------------------------------- | ---------------------------------- | ---------------------------------------------------------- |
-| **[Reference](/features/schema-reference)** | Basic type and field documentation | Versioned URLs for historical schema access                |
-| **[Changelog](/features/schema-changelog)** | N/A                                | Automatically generated changelog showing schema evolution |
+| Feature                                            | Single Schema                      | Multiple Schemas                                           |
+| -------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| **[Reference](/guides/features/schema-reference)** | Basic type and field documentation | Versioned URLs for historical schema access                |
+| **[Changelog](/guides/features/schema-changelog)** | N/A                                | Automatically generated changelog showing schema evolution |
 
 ## Current Limitations
 

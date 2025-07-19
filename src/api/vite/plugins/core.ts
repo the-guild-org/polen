@@ -22,6 +22,7 @@ const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
 export const viProjectData = polenVirtual([`project`, `data.jsonsuper`], { allowPluginProcessing: true })
 export const viProjectSchema = polenVirtual([`project`, `schema.jsonsuper`], { allowPluginProcessing: true })
+export const viProjectHooks = polenVirtual([`project`, `hooks`], { allowPluginProcessing: true })
 
 export interface ProjectRoutesModule {
   routes: ReactRouter.RouteObject[]
@@ -236,6 +237,35 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             // Return just the JSON string - let the JSON plugin handle the transformation
             return superjson.stringify(projectData)
+          },
+        },
+        {
+          identifier: viProjectHooks,
+          async loader() {
+            const fs = await import('node:fs/promises')
+            const path = await import('node:path')
+
+            const hooksPathTs = path.join(config.paths.project.rootDir, 'hooks.ts')
+            const hooksPathTsx = path.join(config.paths.project.rootDir, 'hooks.tsx')
+
+            let hooksPath = null
+            try {
+              await fs.access(hooksPathTsx)
+              hooksPath = hooksPathTsx
+            } catch {
+              try {
+                await fs.access(hooksPathTs)
+                hooksPath = hooksPathTs
+              } catch {
+                // No hooks file found
+              }
+            }
+
+            if (!hooksPath) {
+              return `export const navbar = null`
+            }
+
+            return `export * from '${hooksPath}'`
           },
         },
       ),

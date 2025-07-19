@@ -1,7 +1,7 @@
 # Schema Reference
 
 ::: info
-This page assumes basic knowledge of schema configuration and versioning concepts. See [Schema Overview](/features/schema-overview) for foundational information.
+This page assumes basic knowledge of schema configuration and versioning concepts. See [Schema Overview](/guides/features/schema-overview) for foundational information.
 :::
 
 ## Introduction
@@ -34,13 +34,13 @@ The reference documentation is always available through a "Reference" link in th
 
 You can enhance your schema documentation without modifying the schema itself using schema augmentations. This allows you to add implementation details, usage examples, deprecation notices, and other context to your reference documentation.
 
-Learn more: [Schema Augmentations](/features/schema-augmentations)
+Learn more: [Schema Augmentations](/guides/features/schema-augmentations)
 
 ## Versioning
 
 When you have multiple schema versions configured, Polen enables version-specific reference documentation. This allows you to view your GraphQL schema as it existed at any point in time.
 
-For complete details on schema versioning including configuration and version formats, see [Schema Overview](/features/schema-overview).
+For complete details on schema versioning including configuration and version formats, see [Schema Overview](/guides/features/schema-overview).
 
 ### Navigation
 

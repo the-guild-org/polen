@@ -136,7 +136,7 @@ describe('create', () => {
     // Original fields should have lifecycle info
     expect(lifecycle.data.Trainer.fields.id).toMatchObject({ name: 'id', events: [{ type: 'added', date: date1 }] })
     expect(lifecycle.data.Trainer.fields.name).toMatchObject({ name: 'name', events: [{ type: 'added', date: date1 }] })
-    
+
     // New fields without FIELD_ADDED events should NOT have lifecycle info
     expect(lifecycle.data.Trainer.fields.battleRecord).toBeUndefined()
     expect(lifecycle.data.Trainer.fields.money).toBeUndefined()

@@ -192,6 +192,12 @@
     },
     "./react/jsx-runtime": {
       "default": "./build/exports/react/jsx-runtime.js"
+    },
+    "./radix-ui/themes": {
+      "default": "./build/exports/radix-ui/themes.js"
+    },
+    "./radix-ui/react-icons": {
+      "default": "./build/exports/radix-ui/react-icons.js"
     }
   },
   "files": [

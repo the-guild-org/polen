@@ -7,7 +7,7 @@
 
 **A framework for delightful GraphQL developer portals**
 
-[Website](https://polen.js.org/) · [Demos](https://polen.js.org/overview/demos) · [Get Started](https://polen.js.org/overview/getting-started)
+[Website](https://polen.js.org/) · [Examples](https://polen.js.org/examples/overview) · [Get Started](https://polen.js.org/guides/get-started)
 
 </div>
 

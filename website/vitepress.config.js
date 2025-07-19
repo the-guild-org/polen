@@ -18,58 +18,72 @@ export default defineConfig({
       prev: false,
     },
     nav: [
-      { text: 'Why', link: '/overview/why' },
-      { text: 'Guides', link: '/overview/get-started' },
+      { text: 'Why', link: '/guides/why' },
+      { text: 'Guides', link: '/guides/get-started' },
+      { text: 'Examples', link: '/examples/overview' },
       {
         text: 'Changelog',
         link: 'https://github.com/the-guild-org/polen/releases',
       },
     ],
-    sidebar: [
-      {
-        text: 'Overview',
-        items: [
-          { text: 'Get Started', link: '/overview/get-started' },
-          { text: 'Why', link: '/overview/why' },
-          { text: 'Demos', link: '/overview/demos' },
-          { text: 'Project', link: '/overview/project' },
-        ],
-      },
-      {
-        text: 'Features',
-        items: [
-          { text: 'Pages', link: '/features/pages' },
-          { text: 'Schema Overview', link: '/features/schema-overview' },
-          { text: 'Schema Augmentations', link: '/features/schema-augmentations' },
-          { text: 'Schema Reference', link: '/features/schema-reference' },
-          { text: 'Schema Changelog', link: '/features/schema-changelog' },
-          { text: 'Logo', link: '/features/logo' },
-          { text: 'Configuration', link: '/features/configuration' },
-        ],
-      },
-      {
-        text: 'Deployment (SSG)',
-        items: [
-          { text: 'Overview', link: '/deployment-ssg/overview' },
-          { text: 'Rebasing', link: '/deployment-ssg/rebasing' },
-          {
-            text: 'Service GitHub Pages',
-            link: '/deployment-ssg/service-github-pages',
-          },
-        ],
-      },
-      {
-        text: 'Deployment (SSR)',
-        items: [{ text: 'Overview', link: '/deployment-ssr/overview' }],
-      },
-      {
-        text: 'Reference',
-        items: [
-          { text: 'CLI', link: '/reference/cli' },
-          { text: 'API', link: '/reference/api' },
-        ],
-      },
-    ],
+    sidebar: {
+      '/guides/': [
+        {
+          text: 'Overview',
+          items: [
+            { text: 'Get Started', link: '/guides/get-started' },
+            { text: 'Why', link: '/guides/why' },
+            { text: 'Project', link: '/guides/project' },
+            { text: 'Package', link: '/guides/package' },
+          ],
+        },
+        {
+          text: 'Features',
+          items: [
+            { text: 'Pages', link: '/guides/features/pages' },
+            { text: 'Schema Overview', link: '/guides/features/schema-overview' },
+            { text: 'Schema Augmentations', link: '/guides/features/schema-augmentations' },
+            { text: 'Schema Reference', link: '/guides/features/schema-reference' },
+            { text: 'Schema Changelog', link: '/guides/features/schema-changelog' },
+            { text: 'Navbar', link: '/guides/features/navbar' },
+            { text: 'Logo', link: '/guides/features/logo' },
+            { text: 'Configuration', link: '/guides/features/configuration' },
+          ],
+        },
+        {
+          text: 'Deployment (SSG)',
+          items: [
+            { text: 'Overview', link: '/guides/deployment-ssg/overview' },
+            { text: 'Rebasing', link: '/guides/deployment-ssg/rebasing' },
+            {
+              text: 'Service GitHub Pages',
+              link: '/guides/deployment-ssg/service-github-pages',
+            },
+          ],
+        },
+        {
+          text: 'Deployment (SSR)',
+          items: [{ text: 'Overview', link: '/guides/deployment-ssr/overview' }],
+        },
+        {
+          text: 'Reference',
+          items: [
+            { text: 'CLI', link: '/guides/reference/cli' },
+            { text: 'API', link: '/guides/reference/api' },
+          ],
+        },
+      ],
+      '/examples/': [
+        {
+          text: 'Examples',
+          items: [
+            { text: 'Overview', link: '/examples/overview' },
+            { text: 'Hive', link: '/examples/hive' },
+            { text: 'Pokemon', link: '/examples/pokemon' },
+          ],
+        },
+      ],
+    },
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/the-guild-org/polen' },

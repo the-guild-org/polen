@@ -1,18 +1,18 @@
 # Schema Changelog
 
 ::: info
-This page assumes basic knowledge of schema configuration and versioning concepts. See [Schema Overview](/features/schema-overview) for foundational information.
+This page assumes basic knowledge of schema configuration and versioning concepts. See [Schema Overview](/guides/features/schema-overview) for foundational information.
 :::
 
 ## Introduction
 
-Polen can render a changelog for your GraphQL schema [when it is versioned](/features/schema-overview#versioning), showing how it has evolved over time.
+Polen can render a changelog for your GraphQL schema [when it is versioned](/guides/features/schema-overview#versioning), showing how it has evolved over time.
 
 When active, a "Changelog" link appears in the navigation bar.
 
 The overall process performed by Polen goes something like this:
 
-1. Polen reads a set of schemas (see [Schema Overview](/features/schema-overview) for configuration details)
+1. Polen reads a set of schemas (see [Schema Overview](/guides/features/schema-overview) for configuration details)
 2. Orders them by date
 3. Detects differences (changes) between each sequential pair (powered by GraphQL Inspector)
 4. Displays in chronological order (newest at page top) one section per schema, each section displaying how it changed
