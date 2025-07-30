@@ -1,10 +1,12 @@
-import type { UHL } from '#lib/hydra/uhl/$'
-import type { ExtractDehydrated } from '#lib/hydra/value/dehydrate'
-import type { ExtractHydrated } from '#lib/hydra/value/hydrate'
+import type { Uhl } from '#lib/hydra/uhl/$'
+import { S } from '#lib/kit-temp/effect'
 import { EffectKit } from '#lib/kit-temp/effect'
+import { Hydratable } from '../hydratable/$.js'
 
-export * from './hydrate.js'
-export * from './dehydrate.js'
+/**
+ * Property name used to mark a value as dehydrated
+ */
+export const DEHYDRATED_PROPERTY_NAME = '_dehydrated' as const
 
 /**
  * A hydratable candidate is a union of hydrated and dehydrated variants.
@@ -14,15 +16,8 @@ export * from './dehydrate.js'
  */
 export type Hydratable<
   $Hydrated = any,
-  $Dehydrated extends { _dehydrated: true } = { _dehydrated: true },
+  $Dehydrated extends { [DEHYDRATED_PROPERTY_NAME]: true } = { [DEHYDRATED_PROPERTY_NAME]: true },
 > = $Hydrated | $Dehydrated
-
-/**
- * Checks if a type is a hydratable union (has both hydrated and dehydrated variants)
- */
-export type IsHydratable<$Value> = Exclude<$Value, { _dehydrated: true }> extends never ? false
-  : Extract<$Value, { _dehydrated: true }> extends never ? false
-  : true
 
 export type Value<$Tag extends string = string> = {
   _tag: $Tag
@@ -34,62 +29,106 @@ export type GetPickableUniqueKeys<$Value extends Value> = Exclude<keyof $Value, 
  * The dehydrated variant of a hydratable type
  */
 export type Dehydrated = {
-  _dehydrated: true
-}
-
-// ============================================================================
-// Runtime Functions
-// ============================================================================
-
-/**
- * Type for shallow hydration check functions
- */
-export type FnIsHydratedShallow = <value_>(value: value_) => value is ExtractHydrated<value_>
-
-/**
- * Type for shallow dehydration check functions
- */
-export type FnIsDehydratedShallow = <value_>(value: value_) => value is ExtractDehydrated<value_>
-
-/**
- * Checks if a value is hydrated at the shallow level (not dehydrated)
- * @param value The value to check
- */
-// @ts-expect-error
-export const isHydratedShallow: FnIsHydratedShallow = (value) => {
-  if (typeof value !== 'object' || value === null) return false
-  return !('_dehydrated' in value && value._dehydrated === true)
+  [DEHYDRATED_PROPERTY_NAME]: true
 }
 
 /**
- * Checks if a value is dehydrated at the shallow level
- * @param value The value to check
+ * Check if a value is dehydrated
  */
-// @ts-expect-error
-export const isDehydratedShallow: FnIsDehydratedShallow = (value) => {
-  if (typeof value !== 'object' || value === null) return false
-  return '_dehydrated' in value && value._dehydrated === true
+export const isDehydrated = (value: unknown): value is Dehydrated => {
+  return typeof value === 'object' && value !== null && DEHYDRATED_PROPERTY_NAME in value
+    && value[DEHYDRATED_PROPERTY_NAME] === true
 }
 
 /**
- * Type for makeDehydrated functions
- * @template $Value The dehydrated type (only contains the dehydrated fields)
- * @template $Result The result type (dehydrated with tag)
+ * Check if a value is hydrated (i.e., tagged but not dehydrated)
  */
-export type FnMakeDehydrated<$Value, $Result> = (fields: Omit<$Value, '_tag'>) => $Result
-
-/**
- * Creates a factory function for making dehydrated values
- */
-export const deriveMakeDehydrated =
-  () => <T extends Record<PropertyKey, any>>(fields: T): T & { _dehydrated: true } => {
-    return {
-      ...fields,
-      _dehydrated: true,
-    } as any
-  }
+export const isHydrated = (value: unknown): value is Value => {
+  return EffectKit.Struct.isTagged(value) && !isDehydrated(value)
+}
 
 export interface Located {
   value: Hydratable
-  uhl: UHL.UHL
+  uhl: Uhl.Uhl
+}
+
+/**
+ * Extracts the dehydrated variant from a hydratable union.
+ * Given a union like `User | UserDehydrated`, returns only `UserDehydrated`.
+ */
+export type ExtractDehydrated<$Value> = Extract<$Value, Dehydrated>
+
+export type Dehydrate<
+  $Value extends Value,
+  $UniqueKeys extends GetPickableUniqueKeys<$Value>,
+> = Pick<$Value, $UniqueKeys | EffectKit.Struct.TagPropertyName> & { [DEHYDRATED_PROPERTY_NAME]: true }
+
+/**
+ * Dehydrate a value based on a schema.
+ * Finds all direct hydratables and dehydrates them.
+ * Non-hydratable values are preserved with their hydratable children dehydrated.
+ */
+export const dehydrate = <schema extends S.Schema.Any>(schema: schema) => {
+  const context = Hydratable.createContext(schema)
+
+  return <value extends S.Schema.Type<schema>>(value: value): unknown => {
+    const visited = new WeakSet<object>()
+    return dehydrate_(value, context, visited)
+  }
+}
+
+const dehydrate_ = (
+  value: unknown,
+  context: Hydratable.Context,
+  visited: WeakSet<object>,
+): unknown => {
+  // Handle null/undefined
+  if (value == null) return value
+
+  // Handle objects
+  if (typeof value === 'object') {
+    // Check for circular references
+    if (visited.has(value)) {
+      // Return the object as-is to break the cycle
+      return value
+    }
+    visited.add(value)
+
+    // Check if this value itself is hydratable
+    if (EffectKit.Struct.isTagged(value)) {
+      const tag = value._tag
+      const ast = context.index.get(tag)
+      const encoder = context.encoders.get(tag)
+
+      if (ast && encoder && !isDehydrated(value)) {
+        // This is a hydratable that needs dehydration
+        const keys = Hydratable.getHydrationKeys(ast, tag)
+        if (keys.length > 0) {
+          // First encode the value to get keys in encoded form
+          const encoded = encoder(value) as Record<string, unknown>
+          const result: any = { [EffectKit.Struct.tagPropertyName]: tag, [DEHYDRATED_PROPERTY_NAME]: true }
+          for (const key of keys) {
+            if (key in encoded) {
+              result[key] = encoded[key]
+            }
+          }
+          return result
+        }
+      }
+    }
+
+    // Traverse object/array to find child hydratables
+    if (Array.isArray(value)) {
+      return value.map(item => dehydrate_(item, context, visited))
+    } else {
+      const result: any = {}
+      for (const [key, childValue] of Object.entries(value)) {
+        result[key] = dehydrate_(childValue, context, visited)
+      }
+      return result
+    }
+  }
+
+  // Primitives pass through
+  return value
 }

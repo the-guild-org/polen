@@ -1,7 +1,8 @@
 import type { NavbarProps } from '#api/hooks/types'
 import type { ReactRouter } from '#dep/react-router/index'
 import { route } from '#lib/react-router-aid/react-router-aid'
-import { createLoader } from '#lib/react-router-loader/react-router-loader'
+import { schemaRoute } from '#lib/react-router-effect/react-router-effect'
+import { RootLoaderData } from '#lib/route-schemas/route-schemas'
 import type { Stores } from '#template/stores/$'
 import { Box, Flex, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
@@ -142,10 +143,11 @@ const storeModules = import.meta.glob('../stores/!($.*)*.ts', { eager: true }) a
   Stores.StoreModule
 >
 
-export const root = route({
+export const root = schemaRoute({
   path: `/`,
   Component,
-  loader: createLoader(async () => {
+  schema: RootLoaderData,
+  loader: async () => {
     // Reset all stores on SSR to prevent cross-request pollution
     if (import.meta.env.SSR) {
       for (const module of Object.values(storeModules)) {
@@ -156,6 +158,6 @@ export const root = route({
     }
 
     return {}
-  }),
+  },
   children,
 })

@@ -1,64 +1,60 @@
-import { route } from '#lib/react-router-aid/react-router-aid'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
+import { Catalog } from '#lib/catalog/$'
+import { schemaRoute, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Revision } from '#lib/revision/$'
+import { ChangelogLoaderData } from '#lib/route-schemas/route-schemas'
+import { Effect, Match } from 'effect'
+import React from 'react'
+import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { Changelog } from '../components/Changelog.js'
 import { ChangelogLayout } from '../layouts/index.js'
-import { schemaSource, type VersionedSchemaSource } from '../sources/schema-source.js'
 
-const loader = createLoader(async () => {
-  // Check if schema exists first
-  if (schemaSource.type === 'none') {
-    return {
-      type: 'none' as const,
-      revisions: [],
-    }
+const changelogLoader = async () => {
+  // Check if catalog exists first
+  if (!hasCatalog()) {
+    return null
   }
 
-  if (schemaSource.type === 'unversioned') {
-    // For unversioned schemas, show revisions directly
-    const revisions = schemaSource.getRevisions()
-    return {
-      type: 'unversioned' as const,
-      revisions,
-    }
-  } else {
-    // For versioned schemas, group revisions by version
-    const versionedSource = schemaSource as VersionedSchemaSource
-    const versions = versionedSource.getVersions()
-    const versionedRevisions = versions.map(version => ({
-      version,
-      revisions: versionedSource.getVersionRevisions(version),
-    }))
+  // For now, we need to get the full catalog using view() until peek selections are implemented
+  // view() returns the fully hydrated catalog
+  const catalog = await Effect.runPromise(catalogBridge.view())
 
-    return {
-      type: 'versioned' as const,
-      versionedRevisions,
-      // Also provide flat list for compatibility
-      revisions: schemaSource.getRevisions(),
-    }
-  }
-})
+  // Return decoded data - encoding is handled automatically by schemaRoute
+  return catalog
+}
 
 const Component = () => {
-  const data = useLoaderData<typeof loader>()
+  // Data is automatically decoded using the schema
+  const catalog = useLoaderData(ChangelogLoaderData)
 
-  if (data.revisions.length === 0) {
+  if (!catalog) {
+    return <div>No schema changes available for changelog.</div>
+  }
+
+  // Extract revisions based on catalog type
+  const revisions = Match.value(catalog).pipe(
+    Match.tag('CatalogUnversioned', (c) => c.revisions),
+    Match.tag('CatalogVersioned', (c) => c.entries.flatMap(e => e.revisions)),
+    Match.exhaustive,
+  )
+
+  if (revisions.length === 0) {
     return <div>No schema changes available for changelog.</div>
   }
 
   // For now, always show revisions in a flat list
   // TODO: In the future, enhance to show grouped by version for versioned schemas
   return (
-    <ChangelogLayout revisions={data.revisions}>
+    <ChangelogLayout revisions={revisions as Revision.Revision[]}>
       <Changelog
-        revisions={data.revisions as [Revision.Revision, ...Revision.Revision[]]}
+        revisions={revisions as [Revision.Revision, ...Revision.Revision[]]}
       />
     </ChangelogLayout>
   )
 }
 
-export const changelog = route({
+export const changelog = schemaRoute({
   path: `changelog`,
-  loader,
+  schema: ChangelogLoaderData,
+  loader: changelogLoader,
   Component,
 })

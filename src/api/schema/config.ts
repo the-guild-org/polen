@@ -25,7 +25,7 @@ export type InputSourceName =
  *
  * // Load via introspection
  * schema: {
- *   dataSources: {
+ *   sources: {
  *     introspection: {
  *       url: 'https://api.example.com/graphql',
  *       headers: { 'Authorization': 'Bearer token' }
@@ -35,8 +35,8 @@ export type InputSourceName =
  *
  * // Try multiple sources in order
  * schema: {
- *   useDataSources: ['introspection', 'file'],
- *   dataSources: {
+ *   useSources: ['introspection', 'file'],
+ *   sources: {
  *     introspection: { url: 'https://api.example.com/graphql' },
  *     file: { path: './fallback-schema.graphql' }
  *   }
@@ -99,20 +99,21 @@ export interface Config {
    * - `versionedDirectory` - Load versioned schemas from subdirectories (default: `./schema/`)
    * - `memory` - Use schemas defined in configuration
    * - `introspection` - Load schema via GraphQL introspection
+   * - `introspectionFile` - Load schema from an introspection JSON file
    *
    * If not specified, Polen tries all sources in this order:
-   * 1. `versionedDirectory` 2. `directory` 3. `file` 4. `memory` 5. `introspection`
+   * 1. `versionedDirectory` 2. `directory` 3. `file` 4. `memory` 5. `introspection` 6. `introspectionFile`
    *
    * @example
    * ```ts
    * // Use only file source
-   * useDataSources: 'file'
+   * useSources: 'file'
    *
    * // Try multiple sources in custom order
-   * useDataSources: ['introspection', 'file']
+   * useSources: ['introspection', 'file']
    *
    * // Default behavior (try all sources)
-   * // useDataSources: undefined
+   * // useSources: undefined
    * ```
    */
   useSources?: Arr.Maybe<InputSourceName>

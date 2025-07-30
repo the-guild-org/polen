@@ -1,16 +1,16 @@
 import { S } from '#lib/kit-temp/effect'
 import { Context, Effect } from 'effect'
-import { Schema } from '../schema/$.js'
-import { buildHydratableRegistry, type HydratableRegistry } from '../schema/hydratable-registry.js'
-import { buildPathRegistry, type HydratablePathRegistry } from '../schema/hydratables-path-tracking.js'
-import { UHL } from '../uhl/$.js'
-import { dehydrate } from '../value/dehydrate.js'
-import { type BridgeErrors } from './errors.js'
-import * as Index from './index.js'
-import { IO } from './io/$.js'
-import { addHydratablesToIndex } from './operations/add-hydratables-to-index.js'
-import { locateHydratedHydratables } from './operations/locate-hydratables.js'
-import { Selection } from './selection/$.js'
+import { Hydratable } from '../hydratable/$.js'
+import { Index } from '../index/$.js'
+import { Io } from '../io/$.js'
+import { Selection } from '../selection/$.js'
+import { Uhl } from '../uhl/$.js'
+import { Value } from '../value/$.js'
+
+/**
+ * Special filename used to store the root value in bridge persistence
+ */
+const ROOT_FILENAME = '__root__.json' as const
 
 export interface Options {
   readonly dir?: string
@@ -18,14 +18,12 @@ export interface Options {
 
 export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
   readonly index: Index.Index
-  readonly tree: Schema.HydratablesPathsTree
-  readonly registry: HydratableRegistry
-  readonly pathRegistry: HydratablePathRegistry
+  readonly schemaIndex: Hydratable.ASTIndex
 
   /**
    * Export all hydratables from index to disk
    */
-  readonly export: () => Effect.Effect<void, BridgeErrors>
+  readonly export: () => Effect.Effect<void, Error, Io.IOService>
 
   /**
    * Export all hydratables from index to memory as [UHL Expression Exported, JSON] pairs
@@ -35,7 +33,7 @@ export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
   /**
    * Import hydratables from disk into index
    */
-  readonly import: () => Effect.Effect<void, BridgeErrors>
+  readonly import: () => Effect.Effect<void, Error, Io.IOService>
 
   /**
    * Import hydratables from memory into index
@@ -45,7 +43,7 @@ export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
   /**
    * Clear all assets from disk and reset the in-memory index
    */
-  readonly clear: () => Effect.Effect<void, BridgeErrors>
+  readonly clear: () => Effect.Effect<void, Error, Io.IOService>
 
   /**
    * Load assets without hydration - returns possibly dehydrated data
@@ -55,12 +53,12 @@ export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
       Selection.Infer.InferBridgeSelectionFromSchema<$Schema>,
   >(
     selection?: selection,
-  ) => Effect.Effect<Selection.Infer.InferDehydratedDataFromSelection<$Schema, selection>, BridgeErrors>
+  ) => Effect.Effect<Selection.Infer.InferDehydratedDataFromSelection<$Schema, selection>, Error, Io.IOService>
 
   /**
    * Load and hydrate all assets, returning the root data type fully hydrated.
    */
-  readonly view: () => Effect.Effect<S.Schema.Type<$Schema>, BridgeErrors>
+  readonly view: () => Effect.Effect<S.Schema.Type<$Schema>, Error, Io.IOService>
 
   /**
    * Dehydrate a value using the bridge's schema.
@@ -80,38 +78,53 @@ export const ContextBridge = Context.GenericTag<Bridge>('@hydra/bridge/Bridge')
  */
 export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options: Options) => Bridge<schema> => {
   return (options) => {
-    const index = Index.make()
-    const tree = Schema.buildHydratablesPathsTree(schema.ast)
-    const registry = buildHydratableRegistry(schema)
-    const pathRegistry = buildPathRegistry(tree)
-    const dir = options.dir || './'
+    const index = Index.create()
+    const hydrationContext = Hydratable.createContext(schema)
+    const dir = options.dir || '.'
 
     const importFromMemory: Bridge<schema>['importFromMemory'] = (data) => {
-      const locatedHydratables = locateHydratedHydratables(data, tree)
-      addHydratablesToIndex(locatedHydratables, index)
+      // Store the root value
+      index.root = data
+
+      // Continue to locate and store nested hydratables
+      const locatedHydratables = Value.locateHydratedHydratables(data, hydrationContext)
+      Index.addHydratablesToIndex(locatedHydratables, index)
     }
 
     const import_: Bridge<schema>['import'] = () =>
-      Effect.provide(
-        Effect.gen(function*() {
-          const io = yield* IO.IO
-          const entries = yield* io.list('.')
-          const jsonFiles = entries.filter(file => file.endsWith('.json'))
-          for (const filename of jsonFiles) {
-            const uhl = Index.parseFileName(filename)
+      Effect.gen(function*() {
+        const io = yield* Io.IO
+        const entries = yield* io.list('.')
+        const jsonFiles = entries.filter(file => file.endsWith('.json'))
+
+        for (const filename of jsonFiles) {
+          if (filename === ROOT_FILENAME) {
+            // Special handling for root value
             const content = yield* io.read(filename)
             const value = JSON.parse(content)
-            Index.add(index, uhl, value)
+            index.root = value
+          } else {
+            // Regular hydratable handling
+            const uhl = Uhl.fromFileName(filename)
+            const content = yield* io.read(filename)
+            const value = JSON.parse(content)
+            index.fragments.set(Uhl.toString(uhl), value)
           }
-        }),
-        IO.File(options.dir || '.'),
-      )
+        }
+      })
 
     const exportToMemory: Bridge<schema>['exportToMemory'] = () => {
       const result: Array<[string, string]> = []
-      const dehydrateWithSchema = dehydrate(schema)
+      const dehydrateWithSchema = Value.dehydrate(schema)
 
-      for (const [uhlExpression, value] of index.data.entries()) {
+      // Export root value if it exists
+      if (index.root !== null) {
+        const dehydrated = dehydrateWithSchema(index.root as any)
+        const json = JSON.stringify(dehydrated, null, 2)
+        result.push(['__root__.json', json])
+      }
+
+      for (const [uhlExpression, value] of index.fragments.entries()) {
         const dehydrated = dehydrateWithSchema(value as any)
         const json = JSON.stringify(dehydrated, null, 2)
         const uhlExpressionExported = uhlExpression + '.json'
@@ -121,164 +134,109 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options:
       return result
     }
 
-    const export_: Bridge<schema>['export'] = () =>
-      Effect.provide(
-        Effect.gen(function*() {
-          const io = yield* IO.IO
-          const dehydrateWithSchema = dehydrate(schema)
-
-          // Export all entries from the index to disk
-          for (const [key, value] of index.data.entries()) {
-            // Use the new dehydrate function
-            const dehydrated = dehydrateWithSchema(value as any)
-
-            // Serialize to JSON
-            const json = JSON.stringify(dehydrated, null, 2)
-
-            // Write to disk with .json extension
-            const filename = Index.indexKeyToFileName(key)
-            yield* io.write(filename, json)
-          }
-        }),
-        IO.File(options.dir || '.'),
-      )
+    const exportToDisk: Bridge<schema>['export'] = () =>
+      Effect.gen(function*() {
+        const io = yield* Io.IO
+        const files = exportToMemory()
+        yield* Effect.all(
+          files.map(([filename, json]) => io.write(filename, json)),
+          { concurrency: 'unbounded' },
+        )
+      })
 
     const peek: Bridge['peek'] = (selection) =>
-      Effect.provide(
-        Effect.gen(function*() {
-          const io = yield* IO.IO
+      Effect.gen(function*() {
+        const io = yield* Io.IO
 
-          // If no selection provided, return empty result (no hydratables selected)
-          if (!selection || Object.keys(selection).length === 0) {
-            return {} as any
+        // If no selection provided, return empty result (no hydratables selected)
+        if (!selection || Object.keys(selection).length === 0) {
+          return {} as any
+        }
+
+        // Build result object based on selection structure
+        type ResultObject = Record<string, any>
+        const result: ResultObject = {}
+
+        // Process each top-level key in the selection
+        for (const [tag, selectionValue] of Object.entries(selection)) {
+          let uhls: Uhl.Uhl[]
+          try {
+            uhls = Selection.toUHL({ [tag]: selectionValue })
+          } catch (error) {
+            // Re-throw the error with Effect.die to preserve the error message
+            return Effect.die(error)
           }
 
-          // Build result object based on selection structure
-          const result: Record<string, any> = {}
+          // For each UHL generated from this selection
+          for (const uhl of uhls) {
+            const indexKey = Uhl.toString(uhl)
 
-          // Process each top-level key in the selection
-          for (const [tag, selectionValue] of Object.entries(selection)) {
-            let uhls: UHL.UHL[]
-            try {
-              uhls = Selection.toUHL({ [tag]: selectionValue }, pathRegistry)
-            } catch (error) {
-              // Re-throw the error with Effect.die to preserve the error message
-              return Effect.die(error)
+            // Check index first
+            let value = index.fragments.get(indexKey)
+
+            if (value === undefined) {
+              // Not in index, load from disk
+              const fileName = Uhl.toFileName(uhl)
+              const filePath = fileName
+
+              const content = yield* io.read(filePath)
+              value = JSON.parse(content)
+
+              // Add to index for future access
+              index.fragments.set(Uhl.toString(uhl), value)
             }
 
-            // For each UHL generated from this selection
-            for (const uhl of uhls) {
-              const indexKey = Index.uhlToIndexKey(uhl)
-
-              // Check index first
-              let value = index.data.get(indexKey)
-
-              if (value === undefined) {
-                // Not in index, load from disk
-                const fileName = Index.indexKeyToFileName(indexKey)
-                const filePath = fileName
-
-                const content = yield* io.read(filePath)
-                value = JSON.parse(content)
-
-                // Add to index for future access
-                Index.add(index, uhl, value)
-              }
-
-              // Store in result using the tag as key
-              result[tag] = value
-            }
+            // Store in result using the tag as key
+            result[tag] = value
           }
+        }
 
-          return result as any
-        }),
-        IO.File(options.dir || '.'),
-      )
+        return result as any
+      })
 
     const view: Bridge<schema>['view'] = () =>
-      Effect.provide(
-        Effect.gen(function*() {
-          const io = yield* IO.IO
+      Effect.gen(function*() {
+        // Load all hydratables from disk and index
+        yield* import_()
 
-          // Load all hydratables from disk and index
-          yield* import_()
-
-          // Handle different root schema types
-
-          // Case 1: Root is a hydratable (has hydratableSegmentTemplate)
-          if (tree.hydratableSegmentTemplate) {
-            const rootTag = tree.hydratableSegmentTemplate.tag
-
-            // Try to find a matching entry in the index
-            for (const [key, value] of index.data.entries()) {
-              if (value && typeof value === 'object' && '_tag' in value) {
-                const valueTag = (value as any)._tag
-
-                // For ADT members, check if tag matches the pattern
-                if (tree.hydratableSegmentTemplate.adt) {
-                  if (valueTag.startsWith(tree.hydratableSegmentTemplate.adt)) {
-                    return value as S.Schema.Type<schema>
-                  }
-                } else if (valueTag === rootTag) {
-                  return value as S.Schema.Type<schema>
-                }
-              }
-            }
-
-            throw new Error(`No root hydratable found with tag ${rootTag}`)
-          }
-
-          // Case 2: Root is a union (like Catalog)
-          // Check if any entries in the index match the union schema
-          // This handles cases where the root itself is a union of hydratables
-          try {
-            // Look for the first valid union member in the index
-            for (const [key, value] of index.data.entries()) {
-              if (value && typeof value === 'object' && '_tag' in value) {
-                try {
-                  // Attempt to decode with the schema
-                  const decoded = S.decodeSync(schema as any)(value)
-                  return decoded as S.Schema.Type<schema>
-                } catch {
-                  // Not a valid member, continue searching
-                }
-              }
-            }
-          } catch {
-            // Fall through to error
-          }
-
-          // No valid data found
+        // Check if root value exists now
+        if (index.root === null) {
           throw new Error(
-            'View operation could not find valid data. '
-              + 'Ensure the schema is hydratable or a union of hydratables. '
-              + 'Consider making your root schema hydratable or use peek() with specific selections.',
+            'View operation could not find root value. '
+              + 'Ensure importFromMemory() has been called with valid data.',
           )
-        }),
-        IO.File(options.dir || '.'),
-      )
+        }
+
+        try {
+          // Decode and return the root value
+          const decoded = S.decodeSync(schema as any)(index.root)
+          return decoded as S.Schema.Type<schema>
+        } catch (error) {
+          throw new Error(
+            `Root value exists but failed to decode: ${error instanceof Error ? error.message : String(error)}`,
+          )
+        }
+      })
 
     const clear: Bridge<schema>['clear'] = () =>
-      Effect.provide(
-        Effect.gen(function*() {
-          const io = yield* IO.IO
-          // List all JSON files in the directory
-          const entries = yield* io.list('.')
-          const jsonFiles = entries.filter(file => file.endsWith('.json'))
+      Effect.gen(function*() {
+        const io = yield* Io.IO
+        // List all JSON files in the directory
+        const entries = yield* io.list('.')
+        const jsonFiles = entries.filter(file => file.endsWith('.json'))
 
-          // Remove each JSON file
-          for (const filename of jsonFiles) {
-            yield* io.remove(filename)
-          }
+        // Remove each JSON file (including __root__.json)
+        for (const filename of jsonFiles) {
+          yield* io.remove(filename)
+        }
 
-          // Clear the in-memory index
-          index.data.clear()
-        }),
-        IO.File(options.dir || '.'),
-      )
+        // Clear the in-memory index
+        index.fragments.clear()
+        index.root = null
+      })
 
     // Create dehydrator once for this schema
-    const dehydrateWithSchema = dehydrate(schema)
+    const dehydrateWithSchema = Value.dehydrate(schema)
 
     const dehydrate_: Bridge<schema>['dehydrate'] = (value) => {
       return dehydrateWithSchema(value)
@@ -286,12 +244,10 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options:
 
     return {
       index,
-      tree,
-      registry,
-      pathRegistry,
+      schemaIndex: hydrationContext.index,
       import: import_,
       importFromMemory,
-      export: export_,
+      export: exportToDisk,
       exportToMemory,
       clear,
       peek,

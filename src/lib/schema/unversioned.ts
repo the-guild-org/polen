@@ -8,7 +8,7 @@ import { SchemaDefinition } from '../schema-definition/$.js'
 // Schema
 // ============================================================================
 
-export const Unversioned = Hydra.Schema.Hydratable(
+export const Unversioned = Hydra.Hydratable(
   S.TaggedStruct('SchemaUnversioned', {
     revisions: S.Array(Revision.Revision),
     definition: SchemaDefinition.SchemaDefinition,
@@ -27,20 +27,6 @@ export type Unversioned = S.Schema.Type<typeof Unversioned>
 // ============================================================================
 
 export const make = Unversioned.make
-
-/**
- * Create a dehydrated SchemaUnversioned with no unique keys.
- * @returns Dehydrated schema with _tag and _dehydrated marker
- */
-export const makeDehydrated = Unversioned.makeDehydrated
-
-/**
- * Dehydrate a SchemaUnversioned instance.
- * Since this schema has no unique keys, only _tag and _dehydrated marker are preserved.
- * @param value - A hydrated SchemaUnversioned instance
- * @returns Dehydrated schema with _tag and _dehydrated marker
- */
-export const dehydrate = Unversioned.dehydrate
 
 // ============================================================================
 // Type Guard

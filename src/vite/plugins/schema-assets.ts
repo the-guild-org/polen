@@ -2,6 +2,7 @@ import type { Config } from '#api/config/index'
 import { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
+import { Hydra } from '#lib/hydra/$'
 import { debugPolen } from '#singletons/debug'
 import { Cache } from '@wollybeard/kit'
 import { Effect } from 'effect'
@@ -93,13 +94,16 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     // Clear any existing assets and export to filesystem
     // Note: We need to run these Effects
     await Effect.runPromise(
-      Effect.gen(function*() {
-        yield* catalogBridge.clear()
+      Effect.provide(
+        Effect.gen(function*() {
+          yield* catalogBridge.clear()
 
-        // Import catalog and export to filesystem
-        catalogBridge.importFromMemory(catalog)
-        yield* catalogBridge.export()
-      }),
+          // Import catalog and export to filesystem
+          catalogBridge.importFromMemory(catalog)
+          yield* catalogBridge.export()
+        }),
+        Hydra.Io.File(config.paths.framework.devAssets.schemas),
+      ),
     )
 
     debug(`devAssetsWritten`)

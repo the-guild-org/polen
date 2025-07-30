@@ -27,7 +27,7 @@ const ThemeCSS: React.FC = () => {
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [appearance, setAppearance] = useState<ThemeAppearance>(() => {
     // Initial appearance from server or browser
-    const serverTheme = globalThis.__POLEN__.serverContext.theme
+    const serverTheme = (globalThis as any).__POLEN__.serverContext.theme
     if (serverTheme === 'system') {
       // During SSR, default to light for system preference
       // Client will detect actual preference on mount
@@ -40,7 +40,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [preference, setPreference] = useState<ThemePreference>(() => {
     // Initial preference from server-rendered theme
-    const serverTheme = globalThis.__POLEN__.serverContext.theme
+    const serverTheme = (globalThis as any).__POLEN__.serverContext.theme
     // If server sent a specific theme (from cookie), use that as preference
     // Otherwise it's system preference
     return serverTheme

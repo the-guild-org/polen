@@ -8,7 +8,7 @@ import { Order } from 'effect'
 // Schema
 // ============================================================================
 
-export const Revision = Hydra.Schema.Hydratable(
+export const Revision = Hydra.Hydratable(
   S.TaggedStruct('Revision', {
     date: DateOnly.DateOnly,
     changes: S.Array(Change.Change),
@@ -30,20 +30,6 @@ export type Revision = S.Schema.Type<typeof Revision>
  * Create a Revision instance with validation
  */
 export const make = Revision.make
-
-/**
- * Create a dehydrated Revision with only unique keys.
- * @param input - Object containing the date field in encoded form (string)
- * @returns Dehydrated revision with _tag, date, and _dehydrated marker
- */
-export const makeDehydrated = Revision.makeDehydrated
-
-/**
- * Dehydrate a Revision instance, keeping only unique keys in encoded form.
- * @param value - A hydrated Revision instance
- * @returns Dehydrated revision with _tag, date (encoded), and _dehydrated marker
- */
-export const dehydrate = Revision.dehydrate
 
 // ============================================================================
 // Type Guard

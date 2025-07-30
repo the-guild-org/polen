@@ -1,61 +1,94 @@
 import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
-import type { React } from '#dep/react/index'
+import { Catalog } from '#lib/catalog/$'
 import { GrafaidOld } from '#lib/grafaid-old'
-import { route, routeIndex } from '#lib/react-router-aid/react-router-aid'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import { Box } from '@radix-ui/themes'
+import { Lifecycles } from '#lib/lifecycles/$'
+import { route } from '#lib/react-router-aid/react-router-aid'
+import { schemaRoute, useLoaderData } from '#lib/react-router-effect/react-router-effect'
+import { ReferenceLoaderData } from '#lib/route-schemas/route-schemas'
+import { Version } from '#lib/version/$'
 import { neverCase } from '@wollybeard/kit/language'
+import { Effect, Match } from 'effect'
+import React from 'react'
 import { useParams } from 'react-router'
+import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
+import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import { VersionPicker } from '../components/VersionPicker.js'
 import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
 import { SidebarLayout } from '../layouts/index.js'
-import { schemaSource } from '../sources/schema-source.js'
 
-export const loader = createLoader(async ({ params }) => {
-  // Type guard
-  if (schemaSource.type === 'none') {
+const referenceLoader = async ({ params }: any) => {
+  if (!hasCatalog()) {
     throw new Error('No schema available')
   }
 
-  if (schemaSource.type === 'unversioned') {
-    const schemaObj = schemaSource.getSchema()
-    const lifecycle = await schemaSource.getLifecycle()
+  // For now, we need to get the full catalog using view() until peek selections are implemented
+  // view() returns the fully hydrated catalog
+  const catalog = await Effect.runPromise(catalogBridge.view())
 
-    return {
-      schema: schemaObj.definition,
-      lifecycle,
-      availableVersions: [], // Empty for UI compatibility
-      currentVersion: '', // Empty for UI compatibility
-    }
-  }
+  console.log('Catalog from bridge:', catalog)
+  console.log('Catalog type:', typeof catalog)
+  console.log('Catalog _tag:', catalog?._tag)
 
-  // schemaSource.type === 'versioned'
-  const currentVersion = params.version ?? Api.Schema.VERSION_LATEST
-  const schemaObj = await schemaSource.inner.get(currentVersion)
-
+  // Return decoded data - encoding is handled automatically by schemaRoute
   return {
-    schema: schemaObj?.definition,
-    lifecycle: await schemaSource.getLifecycle(),
-    availableVersions: schemaSource.inner.manifest.versions,
-    currentVersion,
+    catalog,
+    requestedVersion: params.version ?? Api.Schema.VERSION_LATEST,
   }
-})
+}
 
 // Single component that handles all reference route variations
 const ReferenceView = () => {
   const params = useParams() as { version?: string; type?: string; field?: string }
-  const data = useLoaderData<typeof loader>()
+  // Data is automatically decoded using the schema
+  const loaderData = useLoaderData(ReferenceLoaderData)
+  console.log('Loader data:', loaderData)
+  const { catalog, requestedVersion } = loaderData
 
-  if (!data.schema) {
+  console.log('Catalog in component:', catalog)
+  console.log('Catalog type:', typeof catalog)
+  console.log('Catalog _tag:', catalog._tag)
+
+  // Create lifecycles from catalog
+  const lifecycle = React.useMemo(() => Lifecycles.create(catalog), [catalog])
+
+  // Extract schema and version info based on catalog type
+  const { schema, availableVersions, currentVersion } = React.useMemo(() => {
+    return Match.value(catalog).pipe(
+      Match.tag('CatalogUnversioned', (c) => ({
+        schema: c.schema.definition,
+        availableVersions: [],
+        currentVersion: '',
+      })),
+      Match.tag('CatalogVersioned', (c) => {
+        // Find the matching version
+        let schemaObj
+        if (requestedVersion === Api.Schema.VERSION_LATEST) {
+          const latestEntry = c.entries[c.entries.length - 1]
+          schemaObj = latestEntry?.schema
+        } else {
+          const entry = c.entries.find(e => Version.toString(e.schema.version) === requestedVersion)
+          schemaObj = entry?.schema
+        }
+        return {
+          schema: schemaObj?.definition,
+          availableVersions: c.entries.map(e => Version.toString(e.schema.version)),
+          currentVersion: requestedVersion,
+        }
+      }),
+      Match.exhaustive,
+    )
+  }, [catalog, requestedVersion])
+
+  if (!schema) {
     return <MissingSchema />
   }
 
   // Build reference sidebar from schema types
-  const kindMap = GrafaidOld.getKindMap(data.schema)
+  const kindMap = GrafaidOld.getKindMap(schema)
 
   const sidebarItems: Content.Item[] = []
   const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
@@ -75,11 +108,11 @@ const ReferenceView = () => {
   }
 
   // Calculate basePath based on current version
-  const basePath = Api.Schema.Routing.createReferenceBasePath(data.currentVersion)
+  const basePath = Api.Schema.Routing.createReferenceBasePath(currentVersion)
 
   // Determine view type and render appropriate content
   const viewType = Api.Schema.Routing.getReferenceViewType({
-    schema: data.schema,
+    schema: schema,
     type: params.type || '',
     field: params.field || '',
   })
@@ -90,10 +123,10 @@ const ReferenceView = () => {
     } else if (viewType === 'type-missing' || viewType === 'field-missing') {
       return <MissingSchema />
     } else if (viewType === 'type') {
-      const type = data.schema.getType(params.type!)!
+      const type = schema.getType(params.type!)!
       return <NamedType data={type} />
     } else if (viewType === 'field') {
-      const type = data.schema.getType(params.type!)!
+      const type = schema.getType(params.type!)!
       const fields = (type as any).getFields()
       const field = fields[params.field!]
       return (
@@ -108,15 +141,15 @@ const ReferenceView = () => {
   })()
 
   return (
-    <GraphqlLifecycleProvider lifecycle={data.lifecycle} currentVersion={data.currentVersion}>
+    <GraphqlLifecycleProvider lifecycle={lifecycle} currentVersion={currentVersion}>
       <SidebarLayout
         sidebar={sidebarItems}
         basePath={basePath}
-        topContent={schemaSource.type === 'versioned'
+        topContent={availableVersions.length > 0
           ? (
             <VersionPicker
-              all={[...data.availableVersions]} // Convert readonly to mutable
-              current={data.currentVersion}
+              all={[...availableVersions]} // Convert readonly to mutable
+              current={currentVersion}
             />
           )
           : null}
@@ -129,21 +162,25 @@ const ReferenceView = () => {
 
 // Define routes that handle type and field params
 const typeAndFieldRoutes = [
-  routeIndex({
+  schemaRoute({
+    index: true,
     Component: ReferenceView,
-    loader,
-  }),
-  route({
+    schema: ReferenceLoaderData,
+    loader: referenceLoader,
+  } as any),
+  schemaRoute({
     path: `:type`,
     Component: ReferenceView,
     errorElement: <MissingSchema />,
-    loader,
+    schema: ReferenceLoaderData,
+    loader: referenceLoader,
     children: [
-      route({
+      schemaRoute({
         path: `:field`,
         Component: ReferenceView,
         errorElement: <MissingSchema />,
-        loader,
+        schema: ReferenceLoaderData,
+        loader: referenceLoader,
       }),
     ],
   }),
@@ -155,14 +192,18 @@ const typeAndFieldRoutes = [
  * - Leaf routes have components and loaders that always run fresh
  * - Single ReferenceView component handles all variations
  */
-export const reference = schemaSource.type === 'none'
+// We need to determine if we have versioned catalog statically
+// This is okay because PROJECT_SCHEMA is available at build time
+const hasVersionedCatalog = PROJECT_SCHEMA && PROJECT_SCHEMA._tag === 'CatalogVersioned'
+
+export const reference = !hasCatalog()
   ? null
   : route({
     path: `reference`,
     children: [
       ...typeAndFieldRoutes,
       // Only add version routes if versioned
-      ...(schemaSource.type === 'versioned'
+      ...(hasVersionedCatalog
         ? [route({
           path: `version/:version`,
           children: typeAndFieldRoutes,

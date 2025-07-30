@@ -36,5 +36,4 @@ export const is = S.is(Added)
 // ============================================================================
 
 export const decode = S.decode(Added)
-export const decodeSync = S.decodeSync(Added)
 export const encode = S.encode(Added)

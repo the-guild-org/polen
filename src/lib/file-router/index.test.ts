@@ -1,6 +1,6 @@
 import { Fn } from '@wollybeard/kit'
 import { describe, expect } from 'vitest'
-import { test } from '../../../tests/unit/helpers/test.js'
+import { test } from '../../../tests/unit/helpers/test-with-fixtures.js'
 import { FileRouter } from './$.js'
 
 /* Note

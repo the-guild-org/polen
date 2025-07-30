@@ -87,12 +87,7 @@ export const readOrThrow = async (
   debug(`will search for version directories in`, config.path)
 
   let entries: string[]
-  try {
-    entries = await readdir(config.path, { withFileTypes: false })
-  } catch (error) {
-    debug(`directory not found or not accessible`, config.path)
-    return null
-  }
+  entries = await readdir(config.path, { withFileTypes: false })
 
   // Find all directories that contain a schema.graphql file
   const versionInfos: VersionInfo[] = []
@@ -157,12 +152,13 @@ export const readOrThrow = async (
       const previous = versions[index - 1]
 
       // Calculate changes from previous version
-      const changes = previous
-        ? await Change.calcChangeset({
+      let changes: Change.Change[] = []
+      if (previous) {
+        changes = await Change.calcChangeset({
           before: previous.schema,
           after: current.schema,
         })
-        : []
+      }
 
       // Create revision for this version
       const revision = Revision.make({
@@ -213,31 +209,40 @@ export const loader = InputSource.create({
   name: 'versionedDirectory',
   readIfApplicableOrThrow: async (configInput: ConfigInput, context) => {
     const config = normalizeConfig(configInput, context.paths.project.rootDir)
+    debug('readIfApplicableOrThrow checking path:', config.path)
 
-    // Check if the directory exists and has version subdirectories
-    try {
-      const entries = await readdir(config.path, { withFileTypes: false })
+    const entries = await readdir(config.path, { withFileTypes: false })
+    debug('found entries:', entries)
 
-      // Look for at least one valid version directory with schema.graphql
-      for (const entry of entries) {
-        const schemaPath = join(config.path, entry, 'schema.graphql')
-        try {
-          const version = Version.fromString(entry)
-          // Try to read the schema file to confirm it exists
-          const schema = await Grafaid.Schema.read(schemaPath)
-          if (schema) {
-            // Found at least one valid version directory, proceed with full read
-            const catalog = await readOrThrow(configInput, context.paths.project.rootDir)
-            return catalog
-          }
-        } catch {
-          // Invalid version format, skip
-        }
+    // Look for at least one valid version directory with schema.graphql
+    for (const entry of entries) {
+      const schemaPath = join(config.path, entry, 'schema.graphql')
+      debug(`checking entry ${entry} for schema at ${schemaPath}`)
+      try {
+        const version = Version.fromString(entry)
+        debug(`parsed version: ${entry} -> ${JSON.stringify(version)}`)
+      } catch (error) {
+        debug(`failed to parse version ${entry}:`, error)
+        continue // Skip invalid version format
       }
 
-      return null
-    } catch {
-      return null
+      // Try to read the schema file to confirm it exists
+      try {
+        const schema = await Grafaid.Schema.read(schemaPath)
+        if (schema) {
+          debug('found valid schema, proceeding with full read')
+          // Found at least one valid version directory, proceed with full read
+          const catalog = await readOrThrow(configInput, context.paths.project.rootDir)
+          debug('catalog result:', catalog)
+          return catalog
+        }
+      } catch (error) {
+        debug(`failed to read schema for ${entry}:`, error)
+        // Continue to next entry
+      }
     }
+
+    debug('no valid version directories found')
+    return null
   },
 })

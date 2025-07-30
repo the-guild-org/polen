@@ -225,8 +225,8 @@ export const Pages = ({
             pages: scanResult.list,
           }
 
-          // Return just the JSON string - let the JSON plugin handle the transformation
-          return JSON.stringify(projectPagesCatalog)
+          // Return a JavaScript module that exports the data
+          return `export default ${JSON.stringify(projectPagesCatalog)}`
         },
       },
     },

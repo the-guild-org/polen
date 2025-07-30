@@ -1,162 +1,80 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, test } from 'vitest'
+import { Test } from '../../../tests/unit/helpers/test.js'
 import * as FilePathSegment from './$$.js'
 
 describe('FilePathSegment', () => {
   describe('SEPARATOR', () => {
-    it('should be forward slash', () => {
+    test('should be forward slash', () => {
       expect(FilePathSegment.SEPARATOR).toBe('/')
     })
   })
-  describe('join', () => {
-    it('should join path segments', () => {
-      const path = FilePathSegment.join(
-        FilePathSegment.make('foo'),
-        FilePathSegment.make('bar'),
-        FilePathSegment.make('baz.txt'),
-      )
-      expect(path).toBe('foo/bar/baz.txt')
-    })
-
-    it('should handle leading slashes', () => {
-      const path = FilePathSegment.join(
-        FilePathSegment.make('/foo'),
-        FilePathSegment.make('/bar'),
-        FilePathSegment.make('/baz.txt'),
-      )
-      expect(path).toBe('/foo/bar/baz.txt')
-    })
-
-    it('should handle trailing slashes', () => {
-      const path = FilePathSegment.join(
-        FilePathSegment.make('foo/'),
-        FilePathSegment.make('bar/'),
-        FilePathSegment.make('baz.txt'),
-      )
-      expect(path).toBe('foo/bar/baz.txt')
-    })
-
-    it('should handle empty segments', () => {
-      const path = FilePathSegment.join(
-        FilePathSegment.make('foo'),
-        FilePathSegment.make(''),
-        FilePathSegment.make('bar'),
-        FilePathSegment.make(''),
-        FilePathSegment.make('baz.txt'),
-      )
-      expect(path).toBe('foo/bar/baz.txt')
-    })
-
-    it('should return empty for no segments', () => {
-      const path = FilePathSegment.join()
-      expect(path).toBe('')
-    })
+  // dprint-ignore
+  Test.suite<{ segments: string[]; expected: string }>('join', [
+    { name: 'joins path segments',                                                                       segments: ['foo', 'bar', 'baz.txt'],                                                               expected: 'foo/bar/baz.txt' },
+    { name: 'handles leading slashes',                                                                   segments: ['/foo', '/bar', '/baz.txt'],                                                            expected: '/foo/bar/baz.txt' },
+    { name: 'handles trailing slashes',                                                                  segments: ['foo/', 'bar/', 'baz.txt'],                                                             expected: 'foo/bar/baz.txt' },
+    { name: 'handles empty segments',                                                                    segments: ['foo', '', 'bar', '', 'baz.txt'],                                                       expected: 'foo/bar/baz.txt' },
+    { name: 'returns empty for no segments',                                                             segments: [],                                                                                      expected: '' },
+  ], ({ segments, expected }) => {
+    const path = FilePathSegment.join(...segments.map(FilePathSegment.make))
+    expect(path).toBe(expected)
   })
 
-  describe('upsertExtension', () => {
-    it('should add extension when missing', () => {
-      const path = FilePathSegment.make('file')
-      const result = FilePathSegment.upsertExtension(path, 'json')
-      expect(result).toBe('file.json')
-    })
-
-    it('should replace existing extension', () => {
-      const path = FilePathSegment.make('file.txt')
-      const result = FilePathSegment.upsertExtension(path, 'json')
-      expect(result).toBe('file.json')
-    })
-
-    it('should handle extension with dot', () => {
-      const path = FilePathSegment.make('file')
-      const result = FilePathSegment.upsertExtension(path, '.json')
-      expect(result).toBe('file.json')
-    })
-
-    it('should handle multiple dots in filename', () => {
-      const path = FilePathSegment.make('file.test.txt')
-      const result = FilePathSegment.upsertExtension(path, 'json')
-      expect(result).toBe('file.test.json')
-    })
-
-    it('should handle paths with directories', () => {
-      const path = FilePathSegment.make('/path/to/file.txt')
-      const result = FilePathSegment.upsertExtension(path, 'json')
-      expect(result).toBe('/path/to/file.json')
-    })
+  // dprint-ignore
+  Test.suite<{ path: string; extension: string; expected: string }>('upsertExtension', [
+    { name: 'adds extension when missing',                                                               path: 'file',                                                                                      extension: 'json',  expected: 'file.json' },
+    { name: 'replaces existing extension',                                                               path: 'file.txt',                                                                                  extension: 'json',  expected: 'file.json' },
+    { name: 'handles extension with dot',                                                                path: 'file',                                                                                      extension: '.json', expected: 'file.json' },
+    { name: 'handles multiple dots in filename',                                                         path: 'file.test.txt',                                                                             extension: 'json',  expected: 'file.test.json' },
+    { name: 'handles paths with directories',                                                            path: '/path/to/file.txt',                                                                         extension: 'json',  expected: '/path/to/file.json' },
+  ], ({ path, extension, expected }) => {
+    const result = FilePathSegment.upsertExtension(FilePathSegment.make(path), extension)
+    expect(result).toBe(expected)
   })
 
-  describe('withExtension', () => {
-    it('should add extension without dot', () => {
-      const path = FilePathSegment.make('file')
-      const result = FilePathSegment.ensureExtension(path, 'json')
-      expect(result).toBe('file.json')
-    })
-
-    it('should add extension with dot', () => {
-      const path = FilePathSegment.make('file')
-      const result = FilePathSegment.ensureExtension(path, '.json')
-      expect(result).toBe('file.json')
-    })
+  // dprint-ignore
+  Test.suite<{ path: string; extension: string; expected: string }>('withExtension', [
+    { name: 'adds extension without dot',                                                                path: 'file',                                                                                      extension: 'json',  expected: 'file.json' },
+    { name: 'adds extension with dot',                                                                  path: 'file',                                                                                      extension: '.json', expected: 'file.json' },
+  ], ({ path, extension, expected }) => {
+    const result = FilePathSegment.ensureExtension(FilePathSegment.make(path), extension)
+    expect(result).toBe(expected)
   })
 
-  describe('withoutExtension', () => {
-    it('should remove extension', () => {
-      const path = FilePathSegment.make('file.json')
-      const result = FilePathSegment.withoutExtension(path)
-      expect(result).toBe('file')
-    })
-
-    it('should handle no extension', () => {
-      const path = FilePathSegment.make('file')
-      const result = FilePathSegment.withoutExtension(path)
-      expect(result).toBe('file')
-    })
+  // dprint-ignore
+  Test.suite<{ path: string; expected: string }>('withoutExtension', [
+    { name: 'removes extension',                                                                         path: 'file.json',                                                                                 expected: 'file' },
+    { name: 'handles no extension',                                                                      path: 'file',                                                                                      expected: 'file' },
+  ], ({ path, expected }) => {
+    const result = FilePathSegment.withoutExtension(FilePathSegment.make(path))
+    expect(result).toBe(expected)
   })
 
-  describe('getExtension', () => {
-    it('should get extension', () => {
-      const path = FilePathSegment.make('file.json')
-      const result = FilePathSegment.getExtension(path)
-      expect(result).toBe('json')
-    })
-
-    it('should return undefined for no extension', () => {
-      const path = FilePathSegment.make('file')
-      const result = FilePathSegment.getExtension(path)
-      expect(result).toBeUndefined()
-    })
+  // dprint-ignore
+  Test.suite<{ path: string; expected: string | undefined }>('getExtension', [
+    { name: 'gets extension',                                                                            path: 'file.json',                                                                                 expected: 'json' },
+    { name: 'returns undefined for no extension',                                                        path: 'file',                                                                                      expected: undefined },
+  ], ({ path, expected }) => {
+    const result = FilePathSegment.getExtension(FilePathSegment.make(path))
+    expect(result).toBe(expected)
   })
 
-  describe('getFileName', () => {
-    it('should get filename from path', () => {
-      const path = FilePathSegment.make('/path/to/file.json')
-      const result = FilePathSegment.getFileName(path)
-      expect(result).toBe('file.json')
-    })
-
-    it('should handle Windows paths', () => {
-      const path = FilePathSegment.make('C:/path/to/file.json')
-      const result = FilePathSegment.getFileName(path)
-      expect(result).toBe('file.json')
-    })
-
-    it('should return full path if no directory', () => {
-      const path = FilePathSegment.make('file.json')
-      const result = FilePathSegment.getFileName(path)
-      expect(result).toBe('file.json')
-    })
+  // dprint-ignore
+  Test.suite<{ path: string; expected: string }>('getFileName', [
+    { name: 'gets filename from path',                                                                   path: '/path/to/file.json',                                                                        expected: 'file.json' },
+    { name: 'handles Windows paths',                                                                     path: 'C:/path/to/file.json',                                                                      expected: 'file.json' },
+    { name: 'returns full path if no directory',                                                         path: 'file.json',                                                                                 expected: 'file.json' },
+  ], ({ path, expected }) => {
+    const result = FilePathSegment.getFileName(FilePathSegment.make(path))
+    expect(result).toBe(expected)
   })
 
-  describe('getDirectory', () => {
-    it('should get directory from path', () => {
-      const path = FilePathSegment.make('/path/to/file.json')
-      const result = FilePathSegment.getDirectory(path)
-      expect(result).toBe('/path/to')
-    })
-
-    it('should return dot for no directory', () => {
-      const path = FilePathSegment.make('file.json')
-      const result = FilePathSegment.getDirectory(path)
-      expect(result).toBe('.')
-    })
+  // dprint-ignore
+  Test.suite<{ path: string; expected: string }>('getDirectory', [
+    { name: 'gets directory from path',                                                                  path: '/path/to/file.json',                                                                        expected: '/path/to' },
+    { name: 'returns dot for no directory',                                                              path: 'file.json',                                                                                 expected: '.' },
+  ], ({ path, expected }) => {
+    const result = FilePathSegment.getDirectory(FilePathSegment.make(path))
+    expect(result).toBe(expected)
   })
 })

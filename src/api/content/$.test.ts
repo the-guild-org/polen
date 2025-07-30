@@ -2,6 +2,7 @@ import { S } from '#lib/kit-temp/effect'
 import { Fs, Path } from '@wollybeard/kit'
 import { Either } from 'effect'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { Test } from '../../../tests/unit/helpers/test.js'
 import { Content } from './$.js'
 
 describe('content', () => {
@@ -17,38 +18,22 @@ describe('content', () => {
     }
   })
 
-  describe('MetadataSchema', () => {
-    test('validates metadata correctly', () => {
-      const valid = S.decodeUnknownEither(Content.MetadataSchema)({
-        description: 'Test page description',
-        hidden: true,
-      })
-      expect(Either.isRight(valid)).toBe(true)
-      if (Either.isRight(valid)) {
-        expect(valid.right).toEqual({
-          description: 'Test page description',
-          hidden: true,
-        })
-      }
-    })
-
-    test('applies default values', () => {
-      const result = S.decodeUnknownEither(Content.MetadataSchema)({
-        description: 'Just a description',
-      })
+  // dprint-ignore
+  Test.suite<{ input: unknown; isValid: boolean; expected?: { description?: string; hidden?: boolean } }>('MetadataSchema', [
+    { name: 'validates metadata correctly',                                                              input: { description: 'Test page description', hidden: true },                                     isValid: true,  expected: { description: 'Test page description', hidden: true } },
+    { name: 'applies default values',                                                                    input: { description: 'Just a description' },                                                      isValid: true,  expected: { description: 'Just a description', hidden: false } },
+    { name: 'rejects invalid values',                                                                    input: { hidden: 'not a boolean', invalid_field: 123 },                                           isValid: false },
+  ], ({ input, isValid, expected }) => {
+    const result = S.decodeUnknownEither(Content.MetadataSchema)(input)
+    
+    if (isValid) {
       expect(Either.isRight(result)).toBe(true)
-      if (Either.isRight(result)) {
-        expect(result.right.hidden).toBe(false)
+      if (Either.isRight(result) && expected) {
+        expect(result.right).toEqual(expected)
       }
-    })
-
-    test('rejects invalid values', () => {
-      const result = S.decodeUnknownEither(Content.MetadataSchema)({
-        hidden: 'not a boolean',
-        invalid_field: 123,
-      })
+    } else {
       expect(Either.isLeft(result)).toBe(true)
-    })
+    }
   })
 
   describe('scan', () => {

@@ -319,8 +319,6 @@ importers:
         specifier: workspace:*
         version: link:../..
 
-  test-lightningcss: {}
-
   website:
     devDependencies:
       vitepress:

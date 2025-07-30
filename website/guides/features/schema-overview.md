@@ -36,8 +36,8 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
-    useDataSources: 'memory',
-    dataSources: {
+    useSources: 'memory',
+    sources: {
       memory: {
         versions: [
           {
@@ -74,6 +74,22 @@ If you have a `schema.introspection.json` file in your project root, Polen will 
 schema.introspection.json  # Polen automatically detects this
 ```
 
+You can also configure this explicitly:
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  schema: {
+    sources: {
+      introspectionFile: {
+        path: './custom-introspection.json' // Custom path if needed
+      },
+    },
+  },
+})
+```
+
 #### Automatic Introspection
 
 Polen can also fetch and cache introspection results for you if you configure it. For example:
@@ -83,7 +99,7 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
-    dataSources: {
+    sources: {
       introspection: {
         url: 'https://api.example.com/graphql',
         headers: {
@@ -114,19 +130,20 @@ export default Polen.defineConfig({
 
 When multiple schema sources are available, Polen uses the following precedence order:
 
-1. **Data** - Pre-built schema objects (if configured)
-2. **Directory Convention** - `schema/` directory with versioned SDL files
-3. **File Convention** - Single `schema.graphql` file
-4. **Memory** - Inline schemas in configuration
-5. **Introspection** - GraphQL endpoint introspection
+1. **versionedDirectory** - Versioned schemas from subdirectories (default: `./schema/`)
+2. **directory** - Multiple SDL files from a directory (default: `./schema/`)
+3. **file** - Single SDL file (default: `./schema.graphql`)
+4. **memory** - Schemas defined in configuration
+5. **introspection** - GraphQL endpoint introspection
+6. **introspectionFile** - Pre-existing introspection JSON file
 
-You can override this default order using the `useDataSources` configuration:
+You can override this default order using the `useSources` configuration:
 
 ```ts
 schema: {
   // Try introspection first, fall back to file
-  useDataSources: ['introspection', 'file'],
-  dataSources: {
+  useSources: ['introspection', 'file'],
+  sources: {
     introspection: { url: 'https://api.example.com/graphql' },
     file: { path: './fallback-schema.graphql' }
   }
@@ -165,7 +182,9 @@ Here's how supplying multiple schemas maps to the different sources:
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
 | **[File](#file-convention)**           | N/A (single schema only)                                                                               | N/A                                                                    |
 | **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [version](#specifier-kinds) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre> |
-| **[Configuration](#configuration)**    | Define multiple versions in `dataSources.memory.versions` array                                        | [See example above](#configuration)                                    |
+| **[Configuration](#configuration)**    | Define multiple versions in `sources.memory.versions` array                                            | [See example above](#configuration)                                    |
+| **Introspection File**                 | N/A (single schema only)                                                                               | N/A                                                                    |
+| **Automatic Introspection**           | N/A (single schema only)                                                                               | N/A                                                                    |
 
 ## Features Enabled
 

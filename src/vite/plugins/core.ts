@@ -157,7 +157,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             // Dehydrate the catalog (finds and dehydrates any hydratable children)
             const dehydrated = schemaResult.data ? dehydrateCatalog(schemaResult.data) : null
-            return JSON.stringify(dehydrated)
+            return `export default ${JSON.stringify(dehydrated)}`
           },
         },
         {
@@ -233,8 +233,8 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               warnings: config.warnings,
             }
 
-            // Return just the JSON string - let the JSON plugin handle the transformation
-            return JSON.stringify(projectData)
+            // Return a JavaScript module that exports the data
+            return `export default ${JSON.stringify(projectData)}`
           },
         },
         {

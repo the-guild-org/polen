@@ -293,11 +293,13 @@ test('optional fields are excluded from valid keys', () => {
   const UserWithOptional = S.TaggedStruct('UserWithOptional', {
     id: S.String,
     name: S.String,
-    bio: S.optional(S.String),  // optional - excluded
-    age: S.optional(S.Number)   // optional - excluded
+    bio: S.optional(S.String), // optional - excluded
+    age: S.optional(S.Number), // optional - excluded
   })
-  
-  Ts.assertExact<{ keys?: readonly ('id' | 'name')[] }>()(_ as Options.InferInput<typeof UserWithOptional>)
+
+  Ts.assertExact<{ keys?: readonly ('id' | 'name')[] }>()(
+    _ as Options.InferInput<typeof UserWithOptional>,
+  )
 })
 ```
 

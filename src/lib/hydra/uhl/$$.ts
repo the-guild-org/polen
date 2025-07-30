@@ -2,4 +2,5 @@
 // UHL Module Exports
 // ============================================================================
 
+export * as Segment from './segment.js'
 export * from './uhl.js'

@@ -1,5 +1,5 @@
 import { S } from '#lib/kit-temp/effect'
-import * as Revision from '../revision/revision.js'
+import { Revision } from '../revision/$.js'
 import { Schema } from '../schema/$.js'
 
 // ============================================================================

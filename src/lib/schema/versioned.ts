@@ -26,13 +26,11 @@ export interface VersionedEncoded extends
   }>
 {}
 
-export const Versioned = Hydra.Schema.Hydratable(
+export const Versioned = Hydra.Hydratable(
   S.TaggedStruct('SchemaVersioned', {
     version: Version.Version,
     parent: S.NullOr(
-      S.suspend((): Hydra.Schema.Hydratable<S.Schema<Versioned, VersionedEncoded>, { keys: ['version'] }> =>
-        Versioned as any
-      ),
+      S.suspend((): Hydra.Hydratable<S.Schema<Versioned, VersionedEncoded>, { keys: ['version'] }> => Versioned as any),
     ),
     revisions: S.Array(Revision.Revision),
     definition: SchemaDefinition.SchemaDefinition,
@@ -45,20 +43,6 @@ export const Versioned = Hydra.Schema.Hydratable(
 // ============================================================================
 
 export const make = Versioned.make
-
-/**
- * Create a dehydrated SchemaVersioned with only unique keys.
- * @param input - Object containing the version field in encoded form (string)
- * @returns Dehydrated schema with _tag, version, and _dehydrated marker
- */
-export const makeDehydrated = Versioned.makeDehydrated
-
-/**
- * Dehydrate a SchemaVersioned instance, keeping only unique keys in encoded form.
- * @param value - A hydrated SchemaVersioned instance
- * @returns Dehydrated schema with _tag, version (encoded), and _dehydrated marker
- */
-export const dehydrate = Versioned.dehydrate
 
 // ============================================================================
 // Type Guard

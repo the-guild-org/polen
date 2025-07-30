@@ -115,7 +115,7 @@ const mapChange = (change: GraphqlInspector.Core.Change): Change.Change | null =
         ...base,
         typeName,
         fieldName,
-        isDeprecated: change.meta.isFieldDeprecated,
+        isDeprecated: change.meta.isFieldDeprecated ?? false,
         isSafe: true, // GraphQL Inspector doesn't provide isSafeToAdd, default to true
       })
     }

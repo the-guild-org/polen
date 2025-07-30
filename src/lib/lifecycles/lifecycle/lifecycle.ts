@@ -2,7 +2,6 @@ import { Grafaid } from '#lib/grafaid'
 import { TypeKindNameEnum } from '#lib/grafaid/schema/type-kind-name'
 import { EffectKit } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
-import type { ObjReplace } from '#lib/kit-temp/other'
 import * as EnumType from './enum-type.js'
 import * as InputObjectType from './input-object-type.js'
 import * as InterfaceType from './interface-type.js'
@@ -86,12 +85,12 @@ export type GraphQLKindToLifecycleTag<$K extends TypeKindName> = $K extends 'Obj
   : never
 
 export const GraphQLKindToLifecycleTag = {
-  [TypeKindNameEnum.Object]: EffectKit.Schema.TaggedStruct.getTag(ObjectType.ObjectTypeSchema),
-  [TypeKindNameEnum.Interface]: EffectKit.Schema.TaggedStruct.getTag(InterfaceType.InterfaceTypeSchema),
-  [TypeKindNameEnum.InputObject]: EffectKit.Schema.TaggedStruct.getTag(InputObjectType.InputObjectTypeSchema),
-  [TypeKindNameEnum.Union]: EffectKit.Schema.TaggedStruct.getTag(UnionType.UnionTypeSchema),
-  [TypeKindNameEnum.Enum]: EffectKit.Schema.TaggedStruct.getTag(EnumType.EnumTypeSchema),
-  [TypeKindNameEnum.Scalar]: EffectKit.Schema.TaggedStruct.getTag(ScalarType.ScalarTypeSchema),
+  [TypeKindNameEnum.Object]: EffectKit.Schema.TaggedStruct.getTagOrThrow(ObjectType.ObjectTypeSchema),
+  [TypeKindNameEnum.Interface]: EffectKit.Schema.TaggedStruct.getTagOrThrow(InterfaceType.InterfaceTypeSchema),
+  [TypeKindNameEnum.InputObject]: EffectKit.Schema.TaggedStruct.getTagOrThrow(InputObjectType.InputObjectTypeSchema),
+  [TypeKindNameEnum.Union]: EffectKit.Schema.TaggedStruct.getTagOrThrow(UnionType.UnionTypeSchema),
+  [TypeKindNameEnum.Enum]: EffectKit.Schema.TaggedStruct.getTagOrThrow(EnumType.EnumTypeSchema),
+  [TypeKindNameEnum.Scalar]: EffectKit.Schema.TaggedStruct.getTagOrThrow(ScalarType.ScalarTypeSchema),
 } as const satisfies Record<
   Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>,
   EffectKit.Schema.UnionAdt.GetTags<typeof LifecycleSchema>

@@ -1,7 +1,7 @@
 import { Hydra } from '#lib/hydra/$'
 import { S } from '#lib/kit-temp/effect'
-import * as $Unversioned from './unversioned.js'
-import * as $Versioned from './versioned.js'
+import * as Unversioned from './unversioned.js'
+import * as Versioned from './versioned.js'
 
 export * as Unversioned from './unversioned.js'
 export * as Versioned from './versioned.js'
@@ -10,7 +10,7 @@ export * as Versioned from './versioned.js'
 // Schema
 // ============================================================================
 
-export const Catalog = S.Union($Versioned.Versioned, $Unversioned.Unversioned).annotations({
+export const Catalog = S.Union(Versioned.Versioned, Unversioned.Unversioned).annotations({
   identifier: 'Catalog',
   title: 'Schema Catalog',
   description: 'A catalog of GraphQL schemas and their revision history',
@@ -29,8 +29,8 @@ export const is = S.is(Catalog)
 // ============================================================================
 
 export const fold = <$A>(
-  onVersioned: (catalog: $Versioned.Versioned) => $A,
-  onUnversioned: (catalog: $Unversioned.Unversioned) => $A,
+  onVersioned: (catalog: Versioned.Versioned) => $A,
+  onUnversioned: (catalog: Unversioned.Unversioned) => $A,
 ) =>
 (catalog: Catalog): $A => catalog._tag === 'CatalogVersioned' ? onVersioned(catalog) : onUnversioned(catalog)
 
@@ -39,7 +39,6 @@ export const fold = <$A>(
 // ============================================================================
 
 export const decode = S.decode(Catalog)
-export const decodeSync = S.decodeSync(Catalog)
 export const encode = S.encode(Catalog)
 
 // ============================================================================
@@ -68,7 +67,7 @@ export const getVersionCount = (catalog: Catalog): number =>
  * For versioned catalogs, collects revisions from all entries.
  * For unversioned catalogs, returns the revisions directly.
  */
-export const getRevisions = (catalog: Catalog): ReadonlyArray<$Versioned.Entry['revisions'][number]> =>
+export const getRevisions = (catalog: Catalog): ReadonlyArray<Versioned.Entry['revisions'][number]> =>
   fold(
     (versioned) => versioned.entries.flatMap(entry => entry.revisions),
     (unversioned) => unversioned.revisions,

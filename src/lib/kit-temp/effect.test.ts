@@ -2,49 +2,55 @@ import type { Case } from '#lib/kit-temp'
 import { EffectKit } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import { Ts } from '@wollybeard/kit'
-import { describe, expect, it } from 'vitest'
+import { expect } from 'vitest'
+import { Test } from '../../../tests/unit/helpers/test.js'
 
-describe('EffectKit.Schema.UnionAdt.makeMake', () => {
-  // Define test schemas
-  const Added = S.TaggedStruct('LifecycleEventAdded', {
-    schema: S.Unknown,
-    revision: S.Unknown,
-  })
+// Define test schemas
+const Added = S.TaggedStruct('LifecycleEventAdded', {
+  schema: S.Unknown,
+  revision: S.Unknown,
+})
 
-  const Removed = S.TaggedStruct('LifecycleEventRemoved', {
-    schema: S.Unknown,
-    revision: S.Unknown,
-  })
+const Removed = S.TaggedStruct('LifecycleEventRemoved', {
+  schema: S.Unknown,
+  revision: S.Unknown,
+})
 
-  const LifecycleEvent = S.Union(Added, Removed)
+const LifecycleEvent = S.Union(Added, Removed)
 
-  // Create the factory
-  const make = EffectKit.Schema.UnionAdt.makeMake(LifecycleEvent)
+// Create the factory
+const make = EffectKit.Schema.UnionAdt.makeMake(LifecycleEvent)
 
-  it('creates union members with correct tag', () => {
-    const testData = { schema: 'test-schema', revision: 'test-revision' }
+interface MakeMakeTestCase {
+  testType: 'basic' | 'invalidTag' | 'complex'
+  tag?: string
+  data?: any
+  shouldThrow?: boolean
+  expectedTag?: string
+  expectedFields?: Record<string, any>
+}
 
-    // Test Added variant
-    const added = make('LifecycleEventAdded', testData)
-    expect(added._tag).toBe('LifecycleEventAdded')
-    expect(added.schema).toBe('test-schema')
-    expect(added.revision).toBe('test-revision')
-
-    // Test Removed variant
-    const removed = make('LifecycleEventRemoved', testData)
-    expect(removed._tag).toBe('LifecycleEventRemoved')
-    expect(removed.schema).toBe('test-schema')
-    expect(removed.revision).toBe('test-revision')
-  })
-
-  it('throws error for unknown tag', () => {
+// dprint-ignore
+Test.suite<MakeMakeTestCase>('EffectKit.Schema.UnionAdt.makeMake', [
+  { name: 'creates Added variant with correct tag',       testType: 'basic',      tag: 'LifecycleEventAdded',    data: { schema: 'test-schema', revision: 'test-revision' }, expectedTag: 'LifecycleEventAdded', expectedFields: { schema: 'test-schema', revision: 'test-revision' } },
+  { name: 'creates Removed variant with correct tag',     testType: 'basic',      tag: 'LifecycleEventRemoved',  data: { schema: 'test-schema', revision: 'test-revision' }, expectedTag: 'LifecycleEventRemoved', expectedFields: { schema: 'test-schema', revision: 'test-revision' } },
+  { name: 'throws error for unknown tag',                 testType: 'invalidTag', tag: 'UnknownTag',             data: { schema: 'test', revision: 'test' },                 shouldThrow: true },
+  { name: 'works with complex field types - Added',       testType: 'complex',    tag: 'ComplexAdded',           data: { name: 'test', count: 42, nested: { value: 'nested-value' } }, expectedTag: 'ComplexAdded', expectedFields: { name: 'test', count: 42, nested: { value: 'nested-value' } } },
+  { name: 'works with complex field types - Removed',     testType: 'complex',    tag: 'ComplexRemoved',         data: { reason: 'test reason', timestamp: 123456 },         expectedTag: 'ComplexRemoved', expectedFields: { reason: 'test reason', timestamp: 123456 } },
+], ({ testType, tag, data, shouldThrow, expectedTag, expectedFields }) => {
+  if (testType === 'basic') {
+    const result = make(tag as any, data)
+    expect(result._tag).toBe(expectedTag)
+    if (expectedFields) {
+      Object.entries(expectedFields).forEach(([key, value]) => {
+        expect((result as any)[key]).toEqual(value)
+      })
+    }
+  } else if (testType === 'invalidTag') {
     expect(() => {
-      // @ts-expect-error - Testing invalid tag
-      make('UnknownTag', { schema: 'test', revision: 'test' })
+      make(tag as any, data)
     }).toThrow('Unknown tag: UnknownTag')
-  })
-
-  it('works with complex field types', () => {
+  } else if (testType === 'complex') {
     const ComplexAdded = S.TaggedStruct('ComplexAdded', {
       name: S.String,
       count: S.Number,
@@ -60,27 +66,15 @@ describe('EffectKit.Schema.UnionAdt.makeMake', () => {
 
     const ComplexUnion = S.Union(ComplexAdded, ComplexRemoved)
     const complexMake = EffectKit.Schema.UnionAdt.makeMake(ComplexUnion)
-
-    const added = complexMake('ComplexAdded', {
-      name: 'test',
-      count: 42,
-      nested: { value: 'nested-value' },
-    })
-
-    expect(added._tag).toBe('ComplexAdded')
-    expect((added as any).name).toBe('test')
-    expect((added as any).count).toBe(42)
-    expect((added as any).nested).toEqual({ value: 'nested-value' })
-
-    const removed = complexMake('ComplexRemoved', {
-      reason: 'test reason',
-      timestamp: 123456,
-    })
-
-    expect(removed._tag).toBe('ComplexRemoved')
-    expect((removed as any).reason).toBe('test reason')
-    expect((removed as any).timestamp).toBe(123456)
-  })
+    
+    const result = complexMake(tag as any, data)
+    expect(result._tag).toBe(expectedTag)
+    if (expectedFields) {
+      Object.entries(expectedFields).forEach(([key, value]) => {
+        expect((result as any)[key]).toEqual(value)
+      })
+    }
+  }
 })
 
 // Re-declare for type tests

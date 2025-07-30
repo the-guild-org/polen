@@ -1,5 +1,6 @@
-import { route } from '#lib/react-router-aid/react-router-aid'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
+import { Catalog } from '#lib/catalog/$'
+import { schemaRoute, useLoaderData } from '#lib/react-router-effect/react-router-effect'
+import { PagesLoaderData } from '#lib/route-schemas/route-schemas'
 import { SidebarLayout } from '#template/layouts/index'
 import { MDXProvider } from '@mdx-js/react'
 import {
@@ -21,34 +22,42 @@ import {
   Text,
   Tooltip,
 } from '@radix-ui/themes'
-import type { GraphQLSchema } from 'graphql'
+import { Effect, Match } from 'effect'
 import { Outlet, useLocation } from 'react-router'
 import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.json'
 import { routes } from 'virtual:polen/project/routes.jsx'
+import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { CodeBlock } from '../components/CodeBlock.js'
-import { schemaSource } from '../sources/schema-source.js'
 
-const loader = createLoader(async () => {
-  // Check if schema exists first
-  if (schemaSource.type === 'none') {
-    return { schema: null }
+const pagesLoader = async () => {
+  // Check if catalog exists first
+  if (!hasCatalog()) {
+    return { hasSchema: false }
   }
+
+  // For now, we need to get the full catalog using view() until peek selections are implemented
+  // view() returns the fully hydrated catalog
+  const catalogData = await Effect.runPromise(catalogBridge.view())
 
   // Fetch the schema for MDX pages
-  let schema: GraphQLSchema | undefined
-  if (schemaSource.type === 'unversioned') {
-    const schemaObj = schemaSource.getSchema()
-    schema = schemaObj.definition
-  } else {
-    // versioned - get latest
-    const schemaObj = await schemaSource.inner.get('latest')
-    schema = schemaObj?.definition
-  }
-  return { schema }
-})
+  const schema = Match.value(catalogData).pipe(
+    Match.tag('CatalogUnversioned', (catalog) => catalog.schema.definition),
+    Match.tag('CatalogVersioned', (catalog) => {
+      // Get latest version
+      const latestEntry = catalog.entries[catalog.entries.length - 1]
+      return latestEntry?.schema.definition
+    }),
+    Match.exhaustive,
+  )
+
+  // GraphQL schema objects can't be serialized directly over the wire
+  // For now, we return a flag indicating if schema exists
+  return { hasSchema: !!schema }
+}
 
 const Component = () => {
-  const { schema } = useLoaderData<typeof loader>()
+  // Data is automatically decoded using the schema
+  const { hasSchema } = useLoaderData(PagesLoaderData)
   const location = useLocation()
 
   // Build sidebar from pages catalog
@@ -99,8 +108,8 @@ const Component = () => {
         Tabs,
         Tooltip,
 
-        // Code Hike component with schema injected
-        CodeBlock: (props: any) => <CodeBlock {...props} schema={schema} />,
+        // Code Hike component - schema will be loaded client-side if needed
+        CodeBlock: (props: any) => <CodeBlock {...props} schema={null} />,
       }}
     >
       <SidebarLayout sidebar={sidebar}>
@@ -110,9 +119,10 @@ const Component = () => {
   )
 }
 
-export const pages = route({
+export const pages = schemaRoute({
   // Pathless layout route - doesn't affect URL paths
-  loader,
+  schema: PagesLoaderData,
+  loader: pagesLoader,
   Component,
   children: [...routes], // All MDX page routes go here
 })

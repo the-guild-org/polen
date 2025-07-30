@@ -8,40 +8,7 @@
  */
 
 import { S } from '#lib/kit-temp/effect'
-import { Brand, Equal } from 'effect'
-
-// ============================================================================
-// Branded Types
-// ============================================================================
-
-/**
- * Tag name identifying a hydratable type (e.g., "SchemaVersioned", "Revision")
- */
-export type Tag = string & Brand.Brand<'UHL.Tag'>
-export const Tag = S.String.pipe(
-  S.brand('UHL.Tag'),
-  S.annotations({
-    identifier: 'UHL.Tag',
-    description: 'A tag identifying a hydratable type',
-  }),
-)
-
-// ============================================================================
-// Schema and Type
-// ============================================================================
-
-/**
- * A segment in the UHL path, representing one hydratable in the location hierarchy
- */
-export const Segment = S.Struct({
-  tag: Tag,
-  adt: S.optional(S.String),
-  uniqueKeys: S.Record({ key: S.String, value: S.Union(S.String, S.Number) }),
-}).annotations({
-  identifier: 'UHL.Segment',
-  description: 'A segment in the UHL path',
-})
-export type Segment = S.Schema.Type<typeof Segment>
+import * as Segment from './segment.js'
 
 /**
  * UniversalHydratableLocator - an array of segments forming a path to a hydratable
@@ -61,147 +28,38 @@ export type Segment = S.Schema.Type<typeof Segment>
  *   { tag: "RevisionInitial", adt: "Revision", uniqueKeys: { date: "2024-01-15" } }
  * ]
  */
-export const UHL = S.Array(Segment).annotations({
+export const Uhl = S.Array(Segment.Segment).annotations({
   identifier: 'UHL',
   description: 'UniversalHydratableLocator - a path to a hydratable',
 })
-export type UHL = S.Schema.Type<typeof UHL>
+export type Uhl = S.Schema.Type<typeof Uhl>
 
 // ============================================================================
 // String Format Constants
 // ============================================================================
 
 export const SEGMENT_SEPARATOR = '___' as const
-export const ADT_SEPARATOR = '@' as const
-export const PROPERTY_SEPARATOR = '!' as const
-export const KEY_VALUE_SEPARATOR = '@' as const
 
-// All reserved characters that cannot appear in values
-export const RESERVED_CHARS = [SEGMENT_SEPARATOR, ADT_SEPARATOR, PROPERTY_SEPARATOR] as const
-
-// ============================================================================
-// Segment Template
-// ============================================================================
-
-/**
- * Template for creating UHL segments - contains structure but no runtime values
- * Used in tree structures to define what segments should look like
- */
-export interface SegmentTemplate {
-  tag: string
-  adt?: string
-  uniqueKeys: string[]
-}
-
-/**
- * Creates a segment template
- */
-export const makeSegmentTemplate = (
-  tag: string,
-  uniqueKeys: string[],
-  adt?: string,
-): SegmentTemplate => {
-  const template: SegmentTemplate = { tag, uniqueKeys }
-  if (adt) template.adt = adt
-  return template
-}
-
-// ============================================================================
-// Validation
-// ============================================================================
-
-/**
- * Check if a value contains any reserved characters
- */
-const containsReservedChars = (value: string): boolean => {
-  return RESERVED_CHARS.some(char => value.includes(char))
-}
-
-/**
- * Validate that a value doesn't contain reserved characters
- */
-const validateValue = (value: string, context: string): void => {
-  if (containsReservedChars(value)) {
-    throw new Error(
-      `Reserved characters found in ${context}: "${value}". Reserved characters are: ${RESERVED_CHARS.join(', ')}`,
-    )
-  }
-}
+// Import segment-specific constants
+export { ADT_SEPARATOR, KEY_VALUE_SEPARATOR, PROPERTY_SEPARATOR } from './segment.js'
 
 // ============================================================================
 // Constructors
 // ============================================================================
 
-export const decode = S.decode(UHL)
-export const decodeSync = S.decodeSync(UHL)
-export const encode = S.encode(UHL)
+export const decode = S.decode(Uhl)
+export const encode = S.encode(Uhl)
 
-/**
- * Create a single segment
- */
-export const makeSegment = (
-  tag: string,
-  uniqueKeys: Readonly<Record<string, string | number>> = {},
-  adt?: string,
-): Segment => {
-  // Validate tag
-  validateValue(tag, 'tag')
-
-  // Validate adt if present
-  if (adt) {
-    validateValue(adt, 'adt')
-  }
-
-  // Validate all unique key names and values
-  for (const [key, value] of Object.entries(uniqueKeys)) {
-    validateValue(key, `unique key name`)
-    validateValue(String(value), `unique key value for "${key}"`)
-  }
-
-  return {
-    tag: tag as Tag,
-    ...(adt && { adt }),
-    uniqueKeys,
-  }
-}
+// Segment constructor is available via the Segment namespace in $$.ts
 
 /**
  * Create a UHL from segments
  */
-export const make = (...segments: Segment[]): UHL => segments
+export const make = (...segments: Segment.Segment[]): Uhl => segments
 
 // ============================================================================
 // Parsing and Serialization
 // ============================================================================
-
-/**
- * Convert a single segment to its string representation
- *
- * @example
- * segmentToString({ tag: "Foo", keys: {} }) // "Foo"
- * segmentToString({ tag: "SchemaVersioned", adt: "Schema", keys: { version: "1.0.0" } })
- * // "Schema@SchemaVersioned!version@1.0.0"
- */
-const segmentToString = (segment: Segment): string => {
-  let result = segment.tag as string
-
-  // Handle ADT member format
-  if (segment.adt) {
-    result = `${segment.adt}${ADT_SEPARATOR}${result}`
-  }
-
-  // Add uniqueKeys
-  const keyNames = Object.keys(segment.uniqueKeys)
-  if (keyNames.length > 0) {
-    const kvPairs = keyNames
-      .sort() // Ensure consistent ordering
-      .map(key => `${key}${KEY_VALUE_SEPARATOR}${segment.uniqueKeys[key]}`)
-      .join(PROPERTY_SEPARATOR)
-    result += PROPERTY_SEPARATOR + kvPairs
-  }
-
-  return result
-}
 
 /**
  * Convert UHL to string format (for index keys and file names)
@@ -213,60 +71,30 @@ const segmentToString = (segment: Segment): string => {
  *   { tag: "RevisionInitial", adt: "Revision", properties: [{ key: "date", value: "2024-01-15" }] }
  * ]) // "Schema@SchemaVersioned!version@1.0.0___Revision@RevisionInitial!date@2024-01-15"
  */
-export const toString = (uhl: UHL): string => {
-  return uhl.map(segmentToString).join(SEGMENT_SEPARATOR)
+export const toString = (uhl: Uhl): string => {
+  return uhl.map(Segment.toString).join(SEGMENT_SEPARATOR)
 }
 
 /**
- * Convert UHL to file path
+ * Convert UHL to a JSON filename (alias for toFilePath)
+ * @example
+ * // [{ tag: 'Schema', adt: 'SchemaVersioned', uniqueKeys: { version: '1.0.0' } }]
+ * // -> "Schema@SchemaVersioned_version@1.0.0.json"
  */
-export const toFilePath = (uhl: UHL): string => {
+export const toFileName = (uhl: Uhl): string => {
   return `${toString(uhl)}.json`
 }
 
 /**
- * Parse a segment string back to a Segment
+ * Parse a filename (with .json extension) back to UHL
+ * @example
+ * // "Schema@SchemaVersioned_version@1.0.0.json"
+ * // -> [{ tag: 'Schema', adt: 'SchemaVersioned', uniqueKeys: { version: '1.0.0' } }]
  */
-const parseSegment = (str: string): Segment => {
-  const parts = str.split(PROPERTY_SEPARATOR)
-  const [identifier, ...propertyParts] = parts
-
-  if (!identifier) {
-    throw new Error(`Invalid segment: ${str}`)
-  }
-
-  // Parse identifier (could be "Type" or "ADT@Type")
-  const [first, second] = identifier.split(ADT_SEPARATOR)
-  const isADT = second !== undefined
-  const tag = (isADT ? second : first) as Tag
-  const adt = isADT ? first : undefined
-
-  // Parse uniqueKeys
-  const uniqueKeys: Record<string, string | number> = {}
-
-  for (const part of propertyParts) {
-    const sepIndex = part.indexOf(KEY_VALUE_SEPARATOR)
-    if (sepIndex === -1) {
-      throw new Error(`Invalid property: ${part}`)
-    }
-
-    const key = part.slice(0, sepIndex)
-    const value = part.slice(sepIndex + 1)
-
-    if (!key || !value) {
-      throw new Error(`Invalid property: ${part}`)
-    }
-
-    // Try to parse as number
-    const numValue = Number(value)
-    uniqueKeys[key] = !isNaN(numValue) && value === String(numValue) ? numValue : value
-  }
-
-  return {
-    tag,
-    ...(adt && { adt }),
-    uniqueKeys,
-  }
+export const fromFileName = (fileName: string): Uhl => {
+  // Remove .json extension if present
+  const withoutExt = fileName.endsWith('.json') ? fileName.slice(0, -5) : fileName
+  return fromString(withoutExt)
 }
 
 /**
@@ -277,46 +105,20 @@ const parseSegment = (str: string): Segment => {
  * fromString("Schema@SchemaVersioned!version@1.0.0___Revision@RevisionInitial!date@2024-01-15")
  * // Returns the parsed UHL structure
  */
-export const fromString = (str: string): UHL => {
+export const fromString = (str: string): Uhl => {
   if (!str) return []
 
   const segments = str.split(SEGMENT_SEPARATOR)
-  return segments.map(parseSegment)
+  return segments.map(Segment.fromString)
 }
 
 // ============================================================================
 // Equivalence
 // ============================================================================
 
-/**
- * Check if two UHL segments are equivalent
- */
-export const segmentEquivalent = (a: Segment, b: Segment): boolean => {
-  if (a.tag !== b.tag) return false
-  if (a.adt !== b.adt) return false
-
-  const aKeyNames = Object.keys(a.uniqueKeys)
-  const bKeyNames = Object.keys(b.uniqueKeys)
-
-  if (aKeyNames.length !== bKeyNames.length) return false
-
-  // Check all uniqueKeys match
-  for (const key of aKeyNames) {
-    if (!Equal.equals(a.uniqueKeys[key], b.uniqueKeys[key])) return false
-  }
-
-  return true
-}
+// Segment equivalence is available via the Segment namespace in $$.ts
 
 /**
  * Check if two UHLs are equivalent
  */
-export const equivalent = (a: UHL, b: UHL): boolean => {
-  if (a.length !== b.length) return false
-
-  for (let i = 0; i < a.length; i++) {
-    if (!segmentEquivalent(a[i]!, b[i]!)) return false
-  }
-
-  return true
-}
+export const equivalent = S.equivalence(Uhl)

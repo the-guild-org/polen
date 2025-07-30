@@ -1,28 +1,13 @@
+import { S } from '#lib/kit-temp/effect'
 import type * as E from 'effect'
-import type * as EffectSchemaAst from 'effect/SchemaAST'
-import { isLiteral, isTypeLiteral } from 'effect/SchemaAST'
+import type * as EAST from 'effect/SchemaAST'
+import { isLiteral, isSuspend, isTransformation, isTypeLiteral } from 'effect/SchemaAST'
 
-// export * as E from 'effect'
+export type StringOrNever<$Type> = $Type extends string ? $Type : never
+
 export { Schema as S } from 'effect'
 
 export namespace EffectKit {
-  /**
-   * Extract field keys from a struct schema where the encoded type is primitive.
-   * This is useful for hydration systems that need to know which fields can be
-   * safely serialized as primitives.
-   */
-  // export type EncodedPrimitiveFieldKeys<$Fields extends E.Schema.Struct.Fields> = {
-  //   [K in keyof $Fields]: E.Schema.Schema.Encoded<$Fields[K]> extends
-  //     | string
-  //     | number
-  //     | boolean
-  //     | bigint
-  //     | null
-  //     | undefined ? K
-  //     : E.Schema.Schema.Encoded<$Fields[K]> extends Date ? K
-  //     : never
-  // }[keyof $Fields]
-
   export namespace Struct {
     export type StructTag = string
 
@@ -37,6 +22,18 @@ export namespace EffectKit {
     ): value is TaggedStruct => {
       return typeof value === 'object' && value !== null && tagPropertyName in value
     }
+
+    /**
+     * Delete all properties from an object except the tag property
+     * Mutates the object in place
+     */
+    export const clearExceptTag = (obj: TaggedStruct): void => {
+      for (const prop in obj) {
+        if (prop !== tagPropertyName) {
+          delete (obj as any)[prop]
+        }
+      }
+    }
   }
   export namespace Tag {
     export type PropertyName = '_tag'
@@ -50,33 +47,33 @@ export namespace EffectKit {
   }
 
   export namespace Schema {
-    // todo: any real usecase for this? should we be just using E.Schema.All?
-    export type $any = E.Schema.Schema<any, any, any>
+    // todo: any real usecase for this? should we be just using S.All?
+    export type $any = S.Schema<any, any, any>
 
-    export type ArgDecoded<$Schema extends $any> = E.Schema.Schema.Type<$Schema>
-    export type ArgEncoded<$Schema extends $any> = E.Schema.Schema.Encoded<$Schema>
+    export type ArgDecoded<$Schema extends $any> = S.Schema.Type<$Schema>
+    export type ArgEncoded<$Schema extends $any> = S.Schema.Encoded<$Schema>
 
     export namespace Tag {
-      export type GetValue<$Tag extends E.Schema.tag<any>> = $Tag extends E.Schema.tag<infer __value__> ? __value__
+      export type GetValue<$Tag extends S.tag<any>> = $Tag extends S.tag<infer __value__> ? __value__
         : never
     }
 
     export namespace Struct {
-      export type $any = E.Schema.Struct<any>
+      export type $any = S.Struct<any>
 
       export type ExtractFields<
-        $Struct extends E.Schema.Struct<any>,
-      > = $Struct extends E.Schema.Struct<infer __fields__> ? __fields__ : never
+        $Struct extends S.Struct<any>,
+      > = $Struct extends S.Struct<infer __fields__> ? __fields__ : never
 
       /**
        * Extract specific fields from a struct schema
        * Type-safe at input/output but implementation can cheat
        */
       export const extractFields = <
-        $Fields extends E.Schema.Struct.Fields,
+        $Fields extends S.Struct.Fields,
         $Keys extends ReadonlyArray<keyof $Fields>,
       >(
-        schema: E.Schema.Struct<$Fields> | E.Schema.TaggedStruct<any, $Fields>,
+        schema: S.Struct<$Fields> | S.TaggedStruct<any, $Fields>,
         keys: $Keys,
       ): Pick<$Fields, $Keys[number]> => {
         const result = Object.fromEntries(
@@ -88,33 +85,42 @@ export namespace EffectKit {
     }
 
     export namespace TaggedStruct {
-      export type $any = E.Schema.TaggedStruct<E.SchemaAST.LiteralValue, any>
+      export type Tag = string
+
+      export type $any = S.TaggedStruct<E.SchemaAST.LiteralValue, any>
+      export type Any = S.TaggedStruct<any, any>
 
       export type Filter<
         $TaggedStruct extends $any,
         $PickedKeys extends keyof Struct.ExtractFields<$TaggedStruct>,
-      > = $TaggedStruct extends E.Schema.TaggedStruct<infer __tag__, infer __structFields__>
-        ? E.Schema.TaggedStruct<__tag__, Pick<__structFields__, $PickedKeys>>
+      > = $TaggedStruct extends S.TaggedStruct<infer __tag__, infer __structFields__>
+        ? S.TaggedStruct<__tag__, Pick<__structFields__, $PickedKeys>>
         : never
 
-      export type Any = E.Schema.TaggedStruct<any, any>
-
-      export type ArgTag<$Schema extends Any> = $Schema extends E.Schema.TaggedStruct<infer __tag__, any> ? __tag__
+      export type ArgTag<$Schema extends Schema.$any> = $Schema extends
+        S.TaggedStruct<infer __tag__ extends EAST.LiteralValue, any> ? __tag__
         : never
 
-      export type ArgFields<$Schema extends Any> = $Schema extends E.Schema.TaggedStruct<any, infer __fields__>
-        ? __fields__
+      export type ArgTagString<$Schema extends Schema.$any> = StringOrNever<ArgTag<$Schema>>
+
+      export type ArgFields<$Schema extends Any> = $Schema extends S.TaggedStruct<any, infer __fields__> ? __fields__
         : never
 
-      export const getTag = <$Tag extends EffectSchemaAst.LiteralValue>(
-        schema: E.Schema.TaggedStruct<$Tag, any>,
-      ): $Tag => {
-        if (!isTypeLiteral(schema.ast)) {
-          throw new Error('Expected TypeLiteral AST for TaggedStruct')
+      export const getTagOrThrow = <schema extends Schema.$any>(
+        schema: schema,
+      ): ArgTagString<schema> => {
+        // Resolve non-structural wrappers
+        const resolved = AST.resolve(schema.ast)
+
+        // Check if we reached a TypeLiteral (struct)
+        if (!isTypeLiteral(resolved)) {
+          throw new Error(
+            `Expected to reach a TypeLiteral (struct) after traversing non-structural schemas, but got: ${resolved._tag}`,
+          )
         }
 
         // Direct access: _tag is always first in TaggedStruct
-        const tagProperty = schema.ast.propertySignatures[0]
+        const tagProperty = resolved.propertySignatures[0]
 
         if (!tagProperty || tagProperty.name !== '_tag') {
           throw new Error('Expected _tag as first property in TaggedStruct')
@@ -127,12 +133,17 @@ export namespace EffectKit {
           throw new Error('Expected Literal type for _tag property')
         }
 
-        return tagType.literal as $Tag
+        // Ensure the literal is a string
+        if (typeof tagType.literal !== 'string') {
+          throw new Error(`Expected tag to be a string literal, but got ${typeof tagType.literal}: ${tagType.literal}`)
+        }
+
+        return tagType.literal as any
       }
     }
 
     export namespace UnionAdt {
-      export type $any = E.Schema.Union<TaggedStruct.$any[]>
+      export type $any = S.Union<TaggedStruct.$any[]>
 
       // ============================================================================
       // ADT Detection Types
@@ -147,28 +158,31 @@ export namespace EffectKit {
         tag: string
         memberName: string
       }
+
       /**
        * Extract all tag values from a union of tagged structs
        */
-      export type GetTags<$Union extends $any> = Tag.GetValue<
-        $Union['members'][number]['fields']['_tag']
+      export type GetTags<$Union extends $any> = StringOrNever<
+        Tag.GetValue<
+          $Union['members'][number]['fields']['_tag']
+        >
       >
 
       /**
        * Extract a specific member by its tag
        */
       export type ExtractMemberByTag<
-        $Union extends E.Schema.Union<any>,
+        $Union extends S.Union<any>,
         $Tag extends GetTags<$Union>,
       > = Union.Arg.MembersAsUnion<$Union> extends infer __member__
-        ? __member__ extends E.Schema.TaggedStruct<$Tag, any> ? E.Schema.Schema.Type<__member__>
+        ? __member__ extends S.TaggedStruct<$Tag, any> ? S.Schema.Type<__member__>
         : never
         : never
 
       /**
        * Factory function type for creating union members
        */
-      export type FnMake<$Union extends E.Schema.Union<any>> = <$Tag extends GetTags<$Union>>(
+      export type FnMake<$Union extends S.Union<any>> = <$Tag extends GetTags<$Union>>(
         tag: $Tag,
         fields: EffectKit.TaggedStruct.OmitTag<ExtractMemberByTag<$Union, $Tag>>,
       ) => ExtractMemberByTag<$Union, $Tag>
@@ -185,7 +199,7 @@ export namespace EffectKit {
         const membersByTag = new Map<E.SchemaAST.LiteralValue, TaggedStruct.$any>()
 
         for (const member of union.members) {
-          const tag = TaggedStruct.getTag(member)
+          const tag = TaggedStruct.getTagOrThrow(member)
           membersByTag.set(tag, member)
         }
 
@@ -209,7 +223,7 @@ export namespace EffectKit {
        * const b = make('TypeB', { count: 42 })      // TypeB
        * ```
        */
-      export const makeMake = <union extends E.Schema.Union<any>>(
+      export const makeMake = <union extends S.Union<any>>(
         union: union,
       ): FnMake<union> => {
         const membersByTag = collectMembersByTag(union)
@@ -230,47 +244,69 @@ export namespace EffectKit {
       // ============================================================================
 
       /**
-       * Parse all tags to detect ADTs.
-       * Returns a map of ADT names to their member information.
+       * Parse tags to detect ADTs.
+       * Returns a Map of ADT names to ADT info.
+       *
+       * @deprecated Use parseADT instead which returns single ADT or null
        *
        * @example
-       * parseADTs(['CatalogVersioned', 'CatalogUnversioned', 'User'])
+       * parseADTs(['CatalogVersioned', 'CatalogUnversioned'])
        * // Map { 'Catalog' => { name: 'Catalog', members: [...] } }
        */
       export const parseADTs = (tags: string[]): Map<string, ADTInfo> => {
-        const adts = new Map<string, ADTInfo>()
-
-        // Group tags by potential ADT prefix
-        const groups = new Map<string, string[]>()
-
-        for (const tag of tags) {
-          const parsed = parseTag(tag)
-          if (parsed) {
-            const existing = groups.get(parsed.adtName) ?? []
-            existing.push(tag)
-            groups.set(parsed.adtName, existing)
-          }
+        const result = new Map<string, ADTInfo>()
+        const adt = parse(tags)
+        if (adt) {
+          result.set(adt.name, adt)
         }
+        return result
+      }
 
-        // Only keep groups with 2+ members (actual ADTs)
-        for (const [adtName, memberTags] of groups) {
-          if (memberTags.length >= 2) {
-            const members = memberTags.map(tag => {
-              const parsed = parseTag(tag)!
-              return {
-                tag,
-                memberName: parsed.memberName,
-              }
-            })
+      /**
+       * Parse tags to detect if they form a single ADT.
+       * Returns the ADT info if all tags follow one ADT pattern, null otherwise.
+       *
+       * @example
+       * parseADT(['CatalogVersioned', 'CatalogUnversioned'])
+       * // { name: 'Catalog', members: [...] }
+       *
+       * parseADT(['CatalogVersioned', 'User'])
+       * // null (not an ADT - mixed patterns)
+       */
+      export const parse = (tags: string[]): ADTInfo | null => {
+        if (tags.length < 2) return null // Need at least 2 members for an ADT
 
-            adts.set(adtName, {
-              name: adtName,
-              members,
-            })
-          }
+        // Parse all tags
+        const parsedTags = tags.map(tag => ({
+          tag,
+          parsed: parseTag(tag),
+        })).filter(item => item.parsed !== null) as Array<{
+          tag: string
+          parsed: NonNullable<ReturnType<typeof parseTag>>
+        }>
+
+        // If not all tags could be parsed, it's not an ADT
+        if (parsedTags.length !== tags.length) return null
+
+        // Check if all tags have the same ADT name
+        const firstParsed = parsedTags[0]
+        if (!firstParsed) return null
+
+        const firstAdtName = firstParsed.parsed.adtName
+        const allSameAdt = parsedTags.every(item => item.parsed.adtName === firstAdtName)
+
+        if (!allSameAdt) return null
+
+        // Build the ADT info
+        const members = parsedTags.map(item => ({
+          tag: item.tag,
+          memberName: item.parsed.memberName,
+        }))
+
+        return {
+          name: firstAdtName,
+          members,
         }
-
-        return adts
       }
 
       /**
@@ -281,15 +317,11 @@ export namespace EffectKit {
        * // true
        */
       export const isADTMember = (tag: string, allTags: string[]): boolean => {
-        const adts = parseADTs(allTags)
+        const adt = parse(allTags)
 
-        for (const adt of adts.values()) {
-          if (adt.members.some((m: ADTMember) => m.tag === tag)) {
-            return true
-          }
-        }
+        if (!adt) return false
 
-        return false
+        return adt.members.some((m: ADTMember) => m.tag === tag)
       }
 
       /**
@@ -297,15 +329,15 @@ export namespace EffectKit {
        * Returns null if the tag is not an ADT member.
        */
       export const getADTInfo = (tag: string, allTags: string[]): { adtName: string; memberName: string } | null => {
-        const adts = parseADTs(allTags)
+        const adt = parse(allTags)
 
-        for (const adt of adts.values()) {
-          const member = adt.members.find((m: ADTMember) => m.tag === tag)
-          if (member) {
-            return {
-              adtName: adt.name,
-              memberName: member.memberName,
-            }
+        if (!adt) return null
+
+        const member = adt.members.find((m: ADTMember) => m.tag === tag)
+        if (member) {
+          return {
+            adtName: adt.name,
+            memberName: member.memberName,
           }
         }
 
@@ -411,8 +443,7 @@ export namespace EffectKit {
       /**
        * Check if a tag is an ADT member within a schema.
        */
-      export type IsHasMemberTag<$Tag extends string, $S extends Schema.$any> = $S extends
-        E.Schema.Schema<infer __union__>
+      export type IsHasMemberTag<$Tag extends string, $S extends Schema.$any> = $S extends S.Schema<infer __union__>
         ? ParseTag<$Tag> extends { adtName: infer __adt__ extends string }
           ? CountADTMembers<__adt__, __union__> extends 0 ? false
           : CountADTMembers<__adt__, __union__> extends 1 ? false
@@ -423,8 +454,7 @@ export namespace EffectKit {
       /**
        * Get ADT info from a tag within a schema.
        */
-      export type GetMemberInfo<$Tag extends string, $S extends Schema.$any> = $S extends
-        E.Schema.Schema<infer __union__>
+      export type GetMemberInfo<$Tag extends string, $S extends Schema.$any> = $S extends S.Schema<infer __union__>
         ? ParseTag<$Tag> extends { adtName: infer __adt__ extends string; memberName: infer __member__ extends string }
           ? CountADTMembers<__adt__, __union__> extends 0 ? never
           : CountADTMembers<__adt__, __union__> extends 1 ? never
@@ -434,13 +464,12 @@ export namespace EffectKit {
     }
 
     export namespace Union {
-      export type $any = E.Schema.Union<$any[]>
-      export type $anyOfStructs = E.Schema.Union<Struct.$any[]>
+      export type $any = S.Union<$any[]>
+      export type $anyOfStructs = S.Union<Struct.$any[]>
       export namespace Arg {
-        export type Members<$Union extends E.Schema.Union<any>> = $Union extends E.Schema.Union<infer __members__>
-          ? __members__
+        export type Members<$Union extends S.Union<any>> = $Union extends S.Union<infer __members__> ? __members__
           : never
-        export type MembersAsUnion<$Union extends E.Schema.Union<any>> = Members<$Union>[number]
+        export type MembersAsUnion<$Union extends S.Union<any>> = Members<$Union>[number]
       }
     }
 
@@ -448,7 +477,7 @@ export namespace EffectKit {
       /**
        * Extract the tag value from a TypeLiteral AST with _tag field
        */
-      export const extractTag = (ast: EffectSchemaAst.TypeLiteral): string | null => {
+      export const extractTag = (ast: EAST.TypeLiteral): string | null => {
         const tagProp = ast.propertySignatures.find(
           (p: any) => p.name === '_tag' && isLiteral(p.type),
         )
@@ -464,8 +493,8 @@ export namespace EffectKit {
       /**
        * Collect all tagged members from a union AST into a map keyed by tag
        */
-      export const collectTaggedMembers = (ast: EffectSchemaAst.Union): Map<string, EffectSchemaAst.TypeLiteral> => {
-        const membersByTag = new Map<string, EffectSchemaAst.TypeLiteral>()
+      export const collectTaggedMembers = (ast: EAST.Union): Map<string, EAST.TypeLiteral> => {
+        const membersByTag = new Map<string, EAST.TypeLiteral>()
 
         for (const member of ast.types) {
           if (isTypeLiteral(member)) {
@@ -478,90 +507,144 @@ export namespace EffectKit {
 
         return membersByTag
       }
+
+      // ============================================================================
+      // Core Resolution
+      // ============================================================================
+
+      /**
+       * Resolves an AST node to its underlying type, handling transformations and suspensions
+       *
+       * @param ast - The AST node to resolve
+       * @returns The resolved AST node
+       */
+      export const resolve = (ast: EAST.AST): EAST.AST => {
+        if (isTransformation(ast)) {
+          return resolve(ast.from)
+        }
+        if (isSuspend(ast)) {
+          return resolve(ast.f())
+        }
+        return ast
+      }
+
+      // ============================================================================
+      // Struct/TypeLiteral Operations
+      // ============================================================================
+
+      /**
+       * Extracts the schema for a specific field from a struct schema.
+       *
+       * Handles:
+       * - TypeLiteral (standard structs)
+       * - Transformation (which might wrap a struct)
+       * - Suspend types (lazy schema references)
+       *
+       * @param schema - The struct schema to extract from
+       * @param fieldName - The name of the field to extract
+       * @returns The field's schema, or undefined if not found
+       */
+      export const getFieldSchema = (
+        schema: S.Schema<any, any, any>,
+        fieldName: string,
+      ): S.Schema<any, any, never> | undefined => {
+        const ast = schema.ast
+
+        // Handle TypeLiteral (structs)
+        if (isTypeLiteral(ast)) {
+          const prop = ast.propertySignatures.find((p: any) => p.name === fieldName)
+          if (prop) {
+            const fieldAst = resolve(prop.type)
+            return S.make(fieldAst)
+          }
+        }
+
+        // Handle Transformation (might wrap a struct)
+        if (isTransformation(ast)) {
+          return getFieldSchema(S.make(ast.from), fieldName)
+        }
+
+        return undefined
+      }
+
+      /**
+       * Extracts all property keys from a TypeLiteral (struct).
+       *
+       * @param ast - The TypeLiteral AST node
+       * @returns Array of property names as strings
+       */
+      export const extractPropertyKeys = (ast: EAST.TypeLiteral): string[] => {
+        return ast.propertySignatures
+          .map(p => p.name as string)
+          .filter(name => typeof name === 'string')
+      }
+
+      /**
+       * Gets a property signature from a TypeLiteral by name.
+       *
+       * @param ast - The TypeLiteral AST node
+       * @param propertyName - The name of the property to find
+       * @returns The property signature, or undefined if not found
+       */
+      export const getPropertySignature = (
+        ast: EAST.TypeLiteral,
+        propertyName: string | symbol,
+      ): EAST.PropertySignature | undefined => {
+        return ast.propertySignatures.find(p => p.name === propertyName)
+      }
+
+      /**
+       * Checks if a property exists in a TypeLiteral.
+       *
+       * @param ast - The TypeLiteral AST node
+       * @param propertyName - The name of the property to check
+       * @returns True if the property exists, false otherwise
+       */
+      export const hasProperty = (
+        ast: EAST.TypeLiteral,
+        propertyName: string | symbol,
+      ): boolean => {
+        return getPropertySignature(ast, propertyName) !== undefined
+      }
+
+      /**
+       * Extracts the type AST of a specific property from a TypeLiteral.
+       * Automatically resolves Suspend types.
+       *
+       * @param ast - The TypeLiteral AST node
+       * @param propertyName - The name of the property
+       * @returns The property's type AST, or undefined if not found
+       */
+      export const getResolvedPropertyType = (
+        ast: EAST.TypeLiteral,
+        propertyName: string | symbol,
+      ): EAST.AST | undefined => {
+        const prop = getPropertySignature(ast, propertyName)
+        if (!prop) return undefined
+        return resolve(prop.type)
+      }
+
+      // ============================================================================
+      // Union Operations
+      // ============================================================================
+
+      /**
+       * Extracts all tags from a union
+       */
+      export const extractTagsFromUnion = (ast: EAST.Union): string[] => {
+        const tags: string[] = []
+
+        for (const member of ast.types) {
+          if (isTypeLiteral(member)) {
+            const tag = extractTag(member)
+            if (tag) {
+              tags.push(tag)
+            }
+          }
+        }
+
+        return tags
+      }
     }
   }
-
-  // export namespace Vitest {
-  //   export interface MethodsNonLiveEnhanced<$R = never, $ExcludeTestServices extends boolean = false>
-  //     extends EffectVitest.Vitest.MethodsNonLive<$R, $ExcludeTestServices>
-  //   {
-  //     //
-  //     // Enhancements
-  //     //
-  //     effect$: <A, E>(
-  //       name: string,
-  //       effect: ReturnType<Parameters<this['effect']>[1]>,
-  //       timeout?: number | V.TestOptions,
-  //     ) => void
-  //     //
-  //     // Enhancements Recursion
-  //     // Note only change below from core is to be using 'MethodsNonLiveEnhanced'
-  //     //
-  //     readonly layer: <R2, E>(layer: Layer.Layer<R2, E, R>, options?: {
-  //       readonly timeout?: E.Duration.DurationInput
-  //     }) => MakeLayerTestSuiteOverloaded<$R | R2, $ExcludeTestServices>
-  //   }
-
-  //   export type MakeLayerTestSuiteOverloaded<$R = never, $ExcludeTestServices extends boolean = false> = {
-  //     (f: CallbackMethodsNonLiveEnhanced<$R, $ExcludeTestServices>): void
-  //     (name: string, f: CallbackMethodsNonLiveEnhanced<$R, $ExcludeTestServices>): void
-  //   }
-  //   export type MakeLayerTestSuite<$R = never, $ExcludeTestServices extends boolean = false> = (
-  //     ...args: [CallbackMethodsNonLiveEnhanced] | [string, CallbackMethodsNonLiveEnhanced]
-  //   ) => void
-
-  //   export type CallbackMethodsNonLiveEnhanced<$R = never, $ExcludeTestServices extends boolean = false> = (
-  //     it: MethodsNonLiveEnhanced<$R, $ExcludeTestServices>,
-  //   ) => void
-
-  //   /**
-  //    * Enhanced layer function that adds inline generator methods to the test API.
-  //    *
-  //    * Instead of:
-  //    * ```ts
-  //    * it.effect('test', () => Effect.gen(function*() { ... }))
-  //    * ```
-  //    *
-  //    * You can write:
-  //    * ```ts
-  //    * it.effectInline('test', function*() { ... })
-  //    * ```
-  //    */
-  //   export const layerEnhanced: MethodsNonLiveEnhanced['layer'] = (...layerEnhancedArgs) => {
-  //     const [baseLayer, parentOptions] = layerEnhancedArgs
-
-  //     const enhanceIt = (it: EffectVitest.Vitest.MethodsNonLive): MethodsNonLiveEnhanced => {
-  //       const effect$: MethodsNonLiveEnhanced['effect$'] = (name, gen, timeout) =>
-  //         it.effect(name, () => Effect.gen(gen as any), timeout)
-
-  //       // Create a bound layer function that preserves parent options
-  //       const enhancedLayer: MethodsNonLiveEnhanced['layer'] = (nestedLayer, nestedOptions) => {
-  //         // We need to pass parent options to maintain memoMap and excludeTestServices
-  //         // even though the type only shows timeout option
-  //         const mergedOptions = {
-  //           ...parentOptions,
-  //           ...nestedOptions,
-  //         } as any
-  //         return layerEnhanced(nestedLayer, mergedOptions)
-  //       }
-
-  //       const methodsNonLiveEnhanced = {
-  //         ...it,
-  //         effect$,
-  //         layer: enhancedLayer,
-  //       } as any as MethodsNonLiveEnhanced
-  //       return methodsNonLiveEnhanced as any
-  //     }
-
-  //     const makeLayerTestSuiteWrapper: MakeLayerTestSuite = (...args) => {
-  //       if (args.length === 1) {
-  //         return it.layer(...layerEnhancedArgs)((it) => args[0](enhanceIt(it)))
-  //       } else {
-  //         return it.layer(...layerEnhancedArgs)(args[0], (it) => args[1](enhanceIt(it)))
-  //       }
-  //     }
-
-  //     return makeLayerTestSuiteWrapper as any
-  //   }
-  // }
 }

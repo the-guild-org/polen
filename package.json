@@ -154,11 +154,17 @@
     "#lib/react-router-aid/react-router-aid": {
       "default": "./build/lib/react-router-aid/$$.js"
     },
-    "#lib/react-router-loader": {
-      "default": "./build/lib/react-router-loader/$.js"
+    "#lib/react-router-effect": {
+      "default": "./build/lib/react-router-effect/$.js"
     },
-    "#lib/react-router-loader/react-router-loader": {
-      "default": "./build/lib/react-router-loader/$$.js"
+    "#lib/react-router-effect/react-router-effect": {
+      "default": "./build/lib/react-router-effect/$$.js"
+    },
+    "#lib/route-schemas": {
+      "default": "./build/lib/route-schemas/$.js"
+    },
+    "#lib/route-schemas/route-schemas": {
+      "default": "./build/lib/route-schemas/$$.js"
     },
     "#lib/kit-temp": {
       "default": "./build/lib/kit-temp/$.js"

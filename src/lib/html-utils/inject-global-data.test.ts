@@ -1,67 +1,69 @@
-import { describe, expect, it } from 'vitest'
+import { expect } from 'vitest'
+import { Test } from '../../../tests/unit/helpers/test.js'
 import {
   createGlobalDataScript,
   createGlobalDataScriptWithInit,
   injectGlobalDataIntoHTML,
 } from './inject-global-data.js'
 
-describe('createGlobalDataScript', () => {
-  it('creates a script tag with JSON data', () => {
-    const result = createGlobalDataScript('__TEST__', { foo: 'bar', num: 42 })
-    expect(result).toBe('<script>globalThis.__TEST__ = {"foo":"bar","num":42};</script>')
-  })
-
-  it('handles nested data structures', () => {
-    const data = {
-      user: { id: 1, name: 'John' },
-      settings: { theme: 'dark', notifications: true },
+// dprint-ignore
+Test.suite<{ globalName: string; data: any; shouldThrow?: boolean; expectedContains?: string[]; expectedNotContains?: string[] }>('createGlobalDataScript', [
+  { name: 'creates a script tag with JSON data',         globalName: '__TEST__',    data: { foo: 'bar', num: 42 },                                          expectedContains: ['<script>globalThis.__TEST__ = {"foo":"bar","num":42};</script>'] },
+  { name: 'handles nested data structures',              globalName: '__APP__',     data: { user: { id: 1, name: 'John' }, settings: { theme: 'dark', notifications: true } }, expectedContains: ['globalThis.__APP__ =', JSON.stringify({ user: { id: 1, name: 'John' }, settings: { theme: 'dark', notifications: true } })] },
+  { name: 'escapes special characters in data',          globalName: '__SAFE__',    data: { html: '</script><script>alert("xss")</script>' },                expectedNotContains: ['</script><script>'], expectedContains: ['<\\/script>'] },
+  { name: 'throws on invalid global name (starts with number)', globalName: '123invalid',  data: {},                                                                shouldThrow: true },
+  { name: 'throws on invalid global name (with dash)',   globalName: 'invalid-name', data: {},                                                               shouldThrow: true },
+  { name: 'throws on invalid global name (with dot)',    globalName: 'invalid.name', data: {},                                                               shouldThrow: true },
+  { name: 'accepts valid global name (underscore)',      globalName: '_valid',      data: {},                                                                shouldThrow: false },
+  { name: 'accepts valid global name (dollar)',          globalName: '$valid',      data: {},                                                                shouldThrow: false },
+  { name: 'accepts valid global name (alphanumeric)',    globalName: 'VALID_123',   data: {},                                                                shouldThrow: false },
+], ({ globalName, data, shouldThrow, expectedContains, expectedNotContains }) => {
+  if (shouldThrow) {
+    expect(() => createGlobalDataScript(globalName, data)).toThrow('Invalid global variable name')
+  } else {
+    const result = createGlobalDataScript(globalName, data)
+    
+    if (expectedContains) {
+      expectedContains.forEach(expected => {
+        if (expected === result) {
+          expect(result).toBe(expected)
+        } else {
+          expect(result).toContain(expected)
+        }
+      })
     }
-    const result = createGlobalDataScript('__APP__', data)
-    expect(result).toContain('globalThis.__APP__ =')
-    expect(result).toContain(JSON.stringify(data))
-  })
-
-  it('escapes special characters in data', () => {
-    const data = { html: '</script><script>alert("xss")</script>' }
-    const result = createGlobalDataScript('__SAFE__', data)
-    // JSON.stringify escapes the forward slashes
-    expect(result).not.toContain('</script><script>')
-    expect(result).toContain('<\\/script>')
-  })
-
-  it('throws on invalid global names', () => {
-    expect(() => createGlobalDataScript('123invalid', {})).toThrow('Invalid global variable name')
-    expect(() => createGlobalDataScript('invalid-name', {})).toThrow('Invalid global variable name')
-    expect(() => createGlobalDataScript('invalid.name', {})).toThrow('Invalid global variable name')
-  })
-
-  it('accepts valid global names', () => {
-    expect(() => createGlobalDataScript('_valid', {})).not.toThrow()
-    expect(() => createGlobalDataScript('$valid', {})).not.toThrow()
-    expect(() => createGlobalDataScript('VALID_123', {})).not.toThrow()
-  })
+    
+    if (expectedNotContains) {
+      expectedNotContains.forEach(notExpected => {
+        expect(result).not.toContain(notExpected)
+      })
+    }
+    
+    if (!shouldThrow && !expectedContains && !expectedNotContains) {
+      // For valid name tests, just ensure it doesn't throw
+      expect(result).toBeDefined()
+    }
+  }
 })
 
-describe('createGlobalDataScriptWithInit', () => {
-  it('creates script with data and init code', () => {
-    const result = createGlobalDataScriptWithInit(
-      '__THEME__',
-      { theme: 'dark' },
-      'document.body.className = globalThis.__THEME__.theme;',
-    )
-    expect(result).toContain('globalThis.__THEME__ = {"theme":"dark"};')
-    expect(result).toContain('document.body.className = globalThis.__THEME__.theme;')
+// dprint-ignore
+Test.suite<{ globalName: string; data: any; initCode?: string; expectedContains?: string[]; exactMatch?: string }>('createGlobalDataScriptWithInit', [
+  { name: 'creates script with data and init code',       globalName: '__THEME__', data: { theme: 'dark' }, initCode: 'document.body.className = globalThis.__THEME__.theme;', expectedContains: ['globalThis.__THEME__ = {"theme":"dark"};', 'document.body.className = globalThis.__THEME__.theme;'] },
+  { name: 'returns just data script when no init code',   globalName: '__TEST__',  data: { foo: 'bar' },                                                                                        exactMatch: '<script>globalThis.__TEST__ = {"foo":"bar"};</script>' },
+], ({ globalName, data, initCode, expectedContains, exactMatch }) => {
+  const result = createGlobalDataScriptWithInit(globalName, data, initCode)
+  
+  if (exactMatch) {
+    expect(result).toBe(exactMatch)
+  } else if (expectedContains) {
+    expectedContains.forEach(expected => {
+      expect(result).toContain(expected)
+    })
     expect(result).toMatch(/<script>.*<\/script>/s)
-  })
-
-  it('returns just data script when no init code provided', () => {
-    const result = createGlobalDataScriptWithInit('__TEST__', { foo: 'bar' })
-    expect(result).toBe('<script>globalThis.__TEST__ = {"foo":"bar"};</script>')
-  })
+  }
 })
 
-describe('injectGlobalDataIntoHTML', () => {
-  const sampleHTML = `
+const sampleHTML = `
 <html>
   <head>
     <title>Test</title>
@@ -71,19 +73,14 @@ describe('injectGlobalDataIntoHTML', () => {
   </body>
 </html>`
 
-  it('injects script into head', () => {
-    const result = injectGlobalDataIntoHTML(sampleHTML, '__APP__', { version: '1.0' })
-    expect(result).toContain('<head>\n<script>globalThis.__APP__ = {"version":"1.0"};</script>')
-  })
-
-  it('injects script with init code', () => {
-    const result = injectGlobalDataIntoHTML(
-      sampleHTML,
-      '__CONFIG__',
-      { apiUrl: '/api' },
-      'console.log("Config loaded:", globalThis.__CONFIG__);',
-    )
-    expect(result).toContain('globalThis.__CONFIG__ = {"apiUrl":"/api"};')
-    expect(result).toContain('console.log("Config loaded:", globalThis.__CONFIG__);')
+// dprint-ignore
+Test.suite<{ globalName: string; data: any; initCode?: string; expectedContains: string[] }>('injectGlobalDataIntoHTML', [
+  { name: 'injects script into head',                     globalName: '__APP__',    data: { version: '1.0' },                                               expectedContains: ['<head>\n<script>globalThis.__APP__ = {"version":"1.0"};</script>'] },
+  { name: 'injects script with init code',                globalName: '__CONFIG__', data: { apiUrl: '/api' }, initCode: 'console.log("Config loaded:", globalThis.__CONFIG__);', expectedContains: ['globalThis.__CONFIG__ = {"apiUrl":"/api"};', 'console.log("Config loaded:", globalThis.__CONFIG__);'] },
+], ({ globalName, data, initCode, expectedContains }) => {
+  const result = injectGlobalDataIntoHTML(sampleHTML, globalName, data, initCode)
+  
+  expectedContains.forEach(expected => {
+    expect(result).toContain(expected)
   })
 })

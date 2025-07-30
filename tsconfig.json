@@ -128,7 +128,6 @@
     "lib": ["DOM", "es2023", "DOM.Iterable"]
   },
   "include": [
-    "vite-env.d.ts",
     "src/types/**/*.d.ts",
     "**/*.ts",
     "**/*.tsx",
