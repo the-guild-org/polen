@@ -1,4 +1,5 @@
-import { Err, Fs, Path } from '@wollybeard/kit'
+import { Fs, Path } from '@wollybeard/kit'
+import { Exit } from 'effect'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { buildManifest, type PolenBuildManifest } from './manifest.js'
 
@@ -30,8 +31,10 @@ describe('validate-build', () => {
       })
 
       const result = await buildManifest.read(testDir)
-      expect(Err.is(result)).toBe(false)
-      expect(result).toEqual(manifest)
+      expect(Exit.isSuccess(result)).toBe(true)
+      if (Exit.isSuccess(result)) {
+        expect(result.value).toEqual(manifest)
+      }
     })
 
     test('returns error when manifest does not exist', async () => {
@@ -40,7 +43,7 @@ describe('validate-build', () => {
       expect(manifestExists).toBe(false)
 
       const result = await buildManifest.read(testDir)
-      expect(Err.is(result)).toBe(true)
+      expect(Exit.isFailure(result)).toBe(true)
     })
 
     test('returns error for invalid manifest structure', async () => {
@@ -49,7 +52,7 @@ describe('validate-build', () => {
         content: JSON.stringify({ invalid: 'data' }, null, 2),
       })
       const result = await buildManifest.read(testDir)
-      expect(Err.is(result)).toBe(true)
+      expect(Exit.isFailure(result)).toBe(true)
     })
 
     test('returns error for invalid build type', async () => {
@@ -66,7 +69,7 @@ describe('validate-build', () => {
         ),
       })
       const result = await buildManifest.read(testDir)
-      expect(Err.is(result)).toBe(true)
+      expect(Exit.isFailure(result)).toBe(true)
     })
 
     test('returns error when version is not a string', async () => {
@@ -83,7 +86,7 @@ describe('validate-build', () => {
         ),
       })
       const result = await buildManifest.read(testDir)
-      expect(Err.is(result)).toBe(true)
+      expect(Exit.isFailure(result)).toBe(true)
     })
 
     test('returns error when basePath is not a string', async () => {
@@ -100,7 +103,7 @@ describe('validate-build', () => {
         ),
       })
       const result = await buildManifest.read(testDir)
-      expect(Err.is(result)).toBe(true)
+      expect(Exit.isFailure(result)).toBe(true)
     })
   })
 })

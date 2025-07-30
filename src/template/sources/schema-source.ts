@@ -1,69 +1,145 @@
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
-import PROJECT_SCHEMA_METADATA from 'virtual:polen/project/schema-metadata'
-import { createSchemaSource } from '../../api/schema-source/index.js'
-import { polenUrlPathAssets } from '../lib/polen-url.js'
+import { Catalog } from '#lib/catalog/$'
+import { Lifecycles } from '#lib/lifecycles/$'
+import { Revision } from '#lib/revision/$'
+import { Schema } from '#lib/schema/$'
+import { Version } from '#lib/version/$'
+import { Effect } from 'effect'
+import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 
-// Environment-specific IO implementation
-const io = import.meta.env.SSR
-  ? {
-    // Server-side: Read from filesystem
-    read: async (path: string) => {
-      // Dynamic import to keep fs out of client bundle
-      const { readFile } = await import('node:fs/promises')
+// ============================================================================
+// Types
+// ============================================================================
 
-      // Extract the path after the assets route
-      // e.g., "/assets/schemas/latest.json" -> "schemas/latest.json"
-      // e.g., "/demos/pokemon/assets/schemas/latest.json" -> "schemas/latest.json"
-      const assetsRoute = PROJECT_DATA.server.routes.assets
-      const routePattern = new RegExp(`${assetsRoute}/(.+)$`)
-      const match = path.match(routePattern)
-      const assetPath = match ? match[1] : path
+export type SchemaSource =
+  | { type: 'none' }
+  | VersionedSchemaSource
+  | UnversionedSchemaSource
 
-      // In SSR, we need to read from the correct location
-      // During dev, assets are served from Polen's node_modules
-      // In production, they're in the build output directory
-      let fullPath: string
-      if (import.meta.env.DEV) {
-        // Development: Read from Polen's Vite cache
-        fullPath = `${PROJECT_DATA.paths.framework.devAssets.absolute}/${assetPath}`
-      } else {
-        // Production: Read from build output
-        // The server runs from the project root, and assets are in build/assets/
-        fullPath =
-          `${PROJECT_DATA.paths.project.relative.build.root}/${PROJECT_DATA.paths.project.relative.build.relative.assets.root}/${assetPath}`
-      }
-
-      return readFile(fullPath, 'utf-8')
-    },
+export interface VersionedSchemaSource {
+  type: 'versioned'
+  catalog: Catalog.Versioned.Versioned
+  getVersions: () => Version.Version[]
+  getRevisions: () => Revision.Revision[]
+  getVersionRevisions: (version: Version.Version) => Revision.Revision[]
+  getSchema: (version: Version.Version) => Schema.Versioned.Versioned | undefined
+  getLifecycle: () => Promise<Lifecycles.Lifecycles>
+  inner: {
+    get: (version: string) => Promise<Schema.Versioned.Versioned | undefined>
+    getLifecycle: () => Promise<Lifecycles.Lifecycles>
+    manifest: {
+      type: 'versioned'
+      versions: readonly string[]
+    }
   }
-  : {
-    // Client-side: Fetch from HTTP
-    read: async (path: string) => {
-      const response = await fetch(path)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch: ${path} (${response.status} ${response.statusText})`)
-      }
-      return response.text()
-    },
-  }
-
-// Create and export the source object directly
-export const schemaSource = createSchemaSource({
-  io,
-  versions: PROJECT_SCHEMA_METADATA.versions,
-  assetsPath: polenUrlPathAssets(),
-})
-
-// HMR cache invalidation for development
-if (import.meta.hot) {
-  import.meta.hot.on('polen:schema-invalidate', () => {
-    console.log('[HMR] Schema cache invalidated')
-    schemaSource.clearCache()
-
-    // Brute force approach: reload the page to ensure fresh data
-    // This guarantees all components see the updated schema immediately
-    // TODO: When we have reactive data fetching, remove this reload
-    //       and let the reactive system handle updates gracefully
-    window.location.reload()
-  })
 }
+
+export interface UnversionedSchemaSource {
+  type: 'unversioned'
+  catalog: Catalog.Unversioned.Unversioned
+  getRevisions: () => Revision.Revision[]
+  getSchema: () => Schema.Unversioned.Unversioned
+  getLifecycle: () => Promise<Lifecycles.Lifecycles>
+  inner: {
+    getLifecycle: () => Promise<Lifecycles.Lifecycles>
+  }
+}
+
+// ============================================================================
+// Implementation
+// ============================================================================
+
+function createVersionedSource(catalog: Catalog.Versioned.Versioned): VersionedSchemaSource {
+  const getLifecycle = async () => {
+    // Create lifecycles from the catalog data
+    return Lifecycles.create(catalog)
+  }
+
+  const getSchema: VersionedSchemaSource['getSchema'] = (version) => {
+    const entry = catalog.entries.find(e => Version.equivalence(e.schema.version, version))
+    return entry?.schema
+  }
+
+  return {
+    type: 'versioned',
+    catalog,
+    getVersions: () => catalog.entries.map(entry => entry.schema.version),
+    getRevisions: () => catalog.entries.flatMap(entry => [...entry.revisions]),
+    getVersionRevisions: (version: Version.Version) => {
+      const entry = catalog.entries.find(e => Version.equivalence(e.schema.version, version))
+      return entry ? [...entry.revisions] : []
+    },
+    getSchema,
+    getLifecycle,
+    inner: {
+      get: async (versionStr: string) => {
+        // Parse version string and find matching schema
+        const versions = catalog.entries.map(e => e.schema.version)
+        const version = versions.find(v =>
+          Version.toString(v) === versionStr
+          || (versionStr === 'latest' && catalog.entries[catalog.entries.length - 1]?.schema.version === v)
+        )
+        return version ? getSchema(version) : undefined
+      },
+      getLifecycle,
+      manifest: {
+        type: 'versioned' as const,
+        versions: catalog.entries.map(e => Version.toString(e.schema.version)),
+      },
+    },
+  }
+}
+
+function createUnversionedSource(catalog: Catalog.Unversioned.Unversioned): UnversionedSchemaSource {
+  const getLifecycle = async () => {
+    // Create lifecycles from the catalog data
+    return Lifecycles.create(catalog)
+  }
+
+  return {
+    type: 'unversioned',
+    catalog,
+    getRevisions: () => [...catalog.revisions],
+    getSchema: () => catalog.schema,
+    getLifecycle,
+    inner: {
+      getLifecycle,
+    },
+  }
+}
+
+function createSchemaSource(): SchemaSource {
+  if (!PROJECT_SCHEMA) {
+    return { type: 'none' }
+  }
+
+  // Create Bridge for incremental loading
+  // In production, assets are served from the build output
+  const catalogBridge = Catalog.Bridge({
+    // Assets are loaded from the virtual module path
+    // The actual loading is handled by the Bridge's IO layer
+  })
+
+  // Use Bridge.view() to get the catalog
+  // This will load only what's needed from the persisted assets
+  try {
+    const catalog = Effect.runSync(catalogBridge.view())
+
+    switch (catalog._tag) {
+      case 'CatalogVersioned':
+        return createVersionedSource(catalog)
+      case 'CatalogUnversioned':
+        return createUnversionedSource(catalog)
+      default:
+        return { type: 'none' }
+    }
+  } catch (error) {
+    console.error('Failed to load schema catalog:', error)
+    return { type: 'none' }
+  }
+}
+
+// ============================================================================
+// Export
+// ============================================================================
+
+export const schemaSource = createSchemaSource()

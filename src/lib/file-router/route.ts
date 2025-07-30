@@ -42,7 +42,7 @@ export interface Route {
 
 export interface RouteLogical {
   path: Path
-  order?: number
+  order?: number | undefined
 }
 
 export interface RouteFile {

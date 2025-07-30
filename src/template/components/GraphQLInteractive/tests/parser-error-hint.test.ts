@@ -9,7 +9,7 @@ describe('parseGraphQLWithTreeSitter - error hints', () => {
       type Query {
         pokemon(id: ID!): Pokemon
       }
-      
+
       type Pokemon {
         id: ID!
         name: String!
@@ -48,7 +48,7 @@ describe('parseGraphQLWithTreeSitter - error hints', () => {
       type Query {
         pokemon(id: ID!): Pokemon
       }
-      
+
       type Pokemon {
         id: ID!
         name: String!
@@ -78,7 +78,7 @@ describe('parseGraphQLWithTreeSitter - error hints', () => {
       type Query {
         pokemon(id: ID!): Pokemon
       }
-      
+
       type Pokemon {
         id: ID!
         name: String!

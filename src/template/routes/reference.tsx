@@ -11,27 +11,37 @@ import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import { VersionPicker } from '../components/VersionPicker.js'
-import { SchemaLifecycleProvider } from '../contexts/SchemaLifecycleContext.js'
+import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { schemaSource } from '../sources/schema-source.js'
 
 export const loader = createLoader(async ({ params }) => {
-  // Handle both versioned and unversioned routes:
-  // - Versioned: /reference/version/:version/:type → params.version exists
-  // - Unversioned: /reference/:type → params.version is undefined, defaults to latest
+  // Type guard
+  if (schemaSource.type === 'none') {
+    throw new Error('No schema available')
+  }
+
+  if (schemaSource.type === 'unversioned') {
+    const schemaObj = schemaSource.getSchema()
+    const lifecycle = await schemaSource.getLifecycle()
+
+    return {
+      schema: schemaObj.definition,
+      lifecycle,
+      availableVersions: [], // Empty for UI compatibility
+      currentVersion: '', // Empty for UI compatibility
+    }
+  }
+
+  // schemaSource.type === 'versioned'
   const currentVersion = params.version ?? Api.Schema.VERSION_LATEST
-
-  const schema = await schemaSource.get(currentVersion)
-  const availableVersions = schemaSource.versions
-
-  // Load lifecycle data if available
-  const lifecycle = await schemaSource.getLifecycle()
+  const schemaObj = await schemaSource.inner.get(currentVersion)
 
   return {
-    schema,
+    schema: schemaObj?.definition,
+    lifecycle: await schemaSource.getLifecycle(),
+    availableVersions: schemaSource.inner.manifest.versions,
     currentVersion,
-    availableVersions,
-    lifecycle,
   }
 })
 
@@ -70,8 +80,8 @@ const ReferenceView = () => {
   // Determine view type and render appropriate content
   const viewType = Api.Schema.Routing.getReferenceViewType({
     schema: data.schema,
-    type: params.type,
-    field: params.field,
+    type: params.type || '',
+    field: params.field || '',
   })
 
   const content: React.ReactNode = (() => {
@@ -98,20 +108,22 @@ const ReferenceView = () => {
   })()
 
   return (
-    <SchemaLifecycleProvider lifecycle={data.lifecycle} currentVersion={data.currentVersion}>
+    <GraphqlLifecycleProvider lifecycle={data.lifecycle} currentVersion={data.currentVersion}>
       <SidebarLayout
         sidebar={sidebarItems}
         basePath={basePath}
-        topContent={
-          <VersionPicker
-            all={[...data.availableVersions]} // Convert readonly to mutable
-            current={data.currentVersion}
-          />
-        }
+        topContent={schemaSource.type === 'versioned'
+          ? (
+            <VersionPicker
+              all={[...data.availableVersions]} // Convert readonly to mutable
+              current={data.currentVersion}
+            />
+          )
+          : null}
       >
         {content}
       </SidebarLayout>
-    </SchemaLifecycleProvider>
+    </GraphqlLifecycleProvider>
   )
 }
 
@@ -143,13 +155,18 @@ const typeAndFieldRoutes = [
  * - Leaf routes have components and loaders that always run fresh
  * - Single ReferenceView component handles all variations
  */
-export const reference = route({
-  path: `reference`,
-  children: [
-    ...typeAndFieldRoutes,
-    route({
-      path: `version/:version`,
-      children: typeAndFieldRoutes,
-    }),
-  ],
-})
+export const reference = schemaSource.type === 'none'
+  ? null
+  : route({
+    path: `reference`,
+    children: [
+      ...typeAndFieldRoutes,
+      // Only add version routes if versioned
+      ...(schemaSource.type === 'versioned'
+        ? [route({
+          path: `version/:version`,
+          children: typeAndFieldRoutes,
+        })]
+        : []),
+    ],
+  })

@@ -2,24 +2,25 @@
 
 Follow the adventures of Pokemon trainers, their teams, and achievements!
 
-## Trainer Profile
+> **Note:** Trainers were introduced in v2.0.0 of the Pokemon API
+
+## Trainer Profile (v2.0.0+)
+
+Basic trainer information:
 
 ```graphql interactive
 query TrainerProfile {
   trainer(id: "ash-ketchum") {
     id
     name
-    trainerId
     hometown
-    badges {
-      name
-      city
-    }
+    badges
+    startDate
   }
 }
 ```
 
-## Trainer's Pokemon Team
+## Trainer's Pokemon Team (v2.0.0+)
 
 See a trainer's current team composition:
 
@@ -31,11 +32,7 @@ query TrainerTeam {
       name
       types
       level
-      nickname
-      friendship
-      heldItem {
-        name
-      }
+      isShiny
       moves {
         name
         type
@@ -47,98 +44,96 @@ query TrainerTeam {
 }
 ```
 
-## Trainer Battle Record
+## Advanced Trainer Data (v3.0.0+)
 
-Explore trainer battle statistics:
+v3.0.0 adds trainer classes, inventory, and battle statistics:
 
 ```graphql interactive
-query TrainerBattles {
-  trainer(id: "gary-oak") {
+query AdvancedTrainerProfile {
+  trainer(id: "brock") {
     name
-    hometown
-    battleRecord {
-      totalBattles
+    class
+    money
+    pokedexCompletion
+    
+    # Battle record
+    battleStats {
       wins
       losses
+      draws
       winRate
-      winStreak
-      bestWinStreak
     }
-  }
-}
-```
-
-## Trainer's Inventory
-
-Explore trainer's items and resources:
-
-```graphql interactive
-query TrainerInventory {
-  trainer(id: "ash-ketchum") {
-    name
+    
+    # Inventory
     items {
       item {
-        id
         name
+        category
         description
       }
       quantity
     }
-    pokemon {
-      name
-      types
-      heldItem {
-        name
-        description
-      }
-    }
   }
 }
 ```
 
-## Gym Leaders
+## Catching Pokemon (v2.0.0+)
 
-Explore gym leaders and their specialties:
-
-```graphql interactive
-query GymLeaders {
-  gymLeaders(region: KANTO) {
-    id
-    name
-    hometown
-    badges {
-      name
-      city
-    }
-    pokemon {
-      name
-      types
-      level
-    }
-    battleRecord {
-      totalBattles
-      wins
-      winRate
-    }
-  }
-}
-```
-
-## Pokemon by Trainer
-
-Find all Pokemon owned by a specific trainer:
+Use mutations to catch Pokemon:
 
 ```graphql interactive
-query PokemonByTrainer {
-  pokemonByTrainer(trainerId: "misty") {
+mutation CatchPokemon {
+  catchPokemon(
+    pokemonId: "025"
+    trainerId: "ash-ketchum"
+  ) {
     id
     name
-    types
-    level
-    nature
-    isShiny
     trainer {
       name
+    }
+  }
+}
+```
+
+## Trading Pokemon (v3.0.0+)
+
+v3.0.0 introduces Pokemon trading:
+
+```graphql interactive
+mutation TradePokemon {
+  tradePokemon(
+    pokemonId: "025"
+    fromTrainerId: "ash-ketchum"
+    toTrainerId: "misty"
+  ) {
+    pokemon {
+      name
+    }
+    fromTrainer {
+      name
+    }
+    toTrainer {
+      name
+    }
+    triggeredEvolution
+  }
+}
+```
+
+## Real-time Updates (v3.0.0+)
+
+Subscribe to trainer events:
+
+```graphql interactive
+subscription WatchTrainerProgress {
+  pokemonLevelUp(trainerId: "ash-ketchum") {
+    name
+    level
+    evolution {
+      evolvesTo {
+        name
+      }
     }
   }
 }

@@ -19,16 +19,16 @@ import type { GetDataType, Mask } from './mask.js'
  * - Non-objects throw an error at runtime
  */
 // dprint-ignore
-export type Apply<Data, M extends Mask> =
-    M extends { type: `binary`, show: boolean }
-      ? M[`show`] extends true
-        ? Data
+export type Apply<$Data, $M extends Mask> =
+    $M extends { type: `binary`, show: boolean }
+      ? $M[`show`] extends true
+        ? $Data
         : undefined
-      : M extends { type: `properties`, mode: string, properties: any[] }
-        ? Data extends object
-          ? M[`mode`] extends `allow`
-            ? Pick<Data, Extract<M[`properties`][number], keyof Data>>
-            : Omit<Data, Extract<M[`properties`][number], keyof Data>>
+      : $M extends { type: `properties`, mode: string, properties: any[] }
+        ? $Data extends object
+          ? $M[`mode`] extends `allow`
+            ? Pick<$Data, Extract<$M[`properties`][number], keyof $Data>>
+            : Omit<$Data, Extract<$M[`properties`][number], keyof $Data>>
           : never  // Non-objects not allowed with property masks
         : never
 

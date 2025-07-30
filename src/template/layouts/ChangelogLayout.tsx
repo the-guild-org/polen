@@ -1,10 +1,5 @@
-import {
-  CRITICALITY_CONFIG,
-  isCriticalityBreaking,
-  isCriticalityDangerous,
-  isCriticalitySafe,
-} from '#lib/graphql-change/criticality'
-import { GraphqlChangeset } from '#lib/graphql-changeset'
+import { Change } from '#lib/change/$'
+import { Revision } from '#lib/revision/$'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import type React from 'react'
 import { useEffect, useState } from 'react'
@@ -12,7 +7,7 @@ import { renderDate } from '../components/Changelog.js'
 
 interface ChangelogLayoutProps {
   children: React.ReactNode
-  versions: GraphqlChangeset.ChangeSet[]
+  revisions: Revision.Revision[]
 }
 
 interface VersionCounts {
@@ -21,27 +16,20 @@ interface VersionCounts {
   safe: number
 }
 
-const calculateCounts = (version: GraphqlChangeset.ChangeSet): VersionCounts => {
-  if (GraphqlChangeset.isIntermediateChangeSet(version)) {
-    return {
-      breaking: version.changes.filter(isCriticalityBreaking).length,
-      dangerous: version.changes.filter(isCriticalityDangerous).length,
-      safe: version.changes.filter(isCriticalitySafe).length,
-    }
-  }
+const calculateCounts = (revision: Revision.Revision): VersionCounts => {
   return {
-    breaking: 0,
-    dangerous: 0,
-    safe: 0,
+    breaking: revision.changes.filter(Change.isBreaking).length,
+    dangerous: revision.changes.filter(Change.isDangerous).length,
+    safe: revision.changes.filter(Change.isSafe).length,
   }
 }
 
 const SidebarEntry: React.FC<{
-  version: GraphqlChangeset.ChangeSet
+  revision: Revision.Revision
   counts: VersionCounts
   isActive: boolean
-}> = ({ version, counts, isActive }) => {
-  const dateId = version.date.toISOString()
+}> = ({ revision, counts, isActive }) => {
+  const dateId = revision.date
 
   return (
     <Box mb='2'>
@@ -64,21 +52,21 @@ const SidebarEntry: React.FC<{
         }}
       >
         <Text size='2' weight={isActive ? 'medium' : 'regular'}>
-          {renderDate(version.date)}
+          {renderDate(revision.date)}
         </Text>
         <Flex gap='2' align='center'>
           {counts.breaking > 0 && (
-            <Text size='1' weight='medium' style={{ color: CRITICALITY_CONFIG.BREAKING.color }}>
+            <Text size='1' weight='medium' style={{ color: '#ef4444' }}>
               {counts.breaking}
             </Text>
           )}
           {counts.dangerous > 0 && (
-            <Text size='1' weight='medium' style={{ color: CRITICALITY_CONFIG.DANGEROUS.color }}>
+            <Text size='1' weight='medium' style={{ color: '#f59e0b' }}>
               {counts.dangerous}
             </Text>
           )}
           {counts.safe > 0 && (
-            <Text size='1' weight='medium' style={{ color: CRITICALITY_CONFIG.NON_BREAKING.color }}>
+            <Text size='1' weight='medium' style={{ color: '#10b981' }}>
               {counts.safe}
             </Text>
           )}
@@ -88,13 +76,13 @@ const SidebarEntry: React.FC<{
   )
 }
 
-export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, versions }) => {
-  const [activeVersion, setActiveVersion] = useState<string | null>(null)
+export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, revisions }) => {
+  const [activeRevision, setActiveRevision] = useState<string | null>(null)
 
-  // Calculate counts for all versions (SSR-safe)
-  const versionsWithCounts = versions.map(version => ({
-    version,
-    counts: calculateCounts(version),
+  // Calculate counts for all revisions (SSR-safe)
+  const revisionsWithCounts = revisions.map(revision => ({
+    revision,
+    counts: calculateCounts(revision),
   }))
 
   // Set up scroll spy after hydration
@@ -102,20 +90,20 @@ export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, vers
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 100 // Offset for header
 
-      // Find the current version based on scroll position
-      let currentVersion: string | null = null
+      // Find the current revision based on scroll position
+      let currentRevision: string | null = null
 
-      for (const { version } of versionsWithCounts) {
-        const element = document.getElementById(version.date.toISOString())
+      for (const { revision } of revisionsWithCounts) {
+        const element = document.getElementById(revision.date)
         if (element) {
           const { top } = element.getBoundingClientRect()
           if (top <= 100) {
-            currentVersion = version.date.toISOString()
+            currentRevision = revision.date
           }
         }
       }
 
-      setActiveVersion(currentVersion)
+      setActiveRevision(currentRevision)
     }
 
     // Initial check
@@ -127,7 +115,7 @@ export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, vers
     return () => {
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [versionsWithCounts])
+  }, [revisionsWithCounts])
 
   return (
     <Flex gap='6' style={{ position: 'relative' }}>
@@ -145,12 +133,12 @@ export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, vers
         <Text size='2' weight='medium' mb='3' style={{ display: 'block' }}>
           Releases
         </Text>
-        {versionsWithCounts.map(({ version, counts }) => (
+        {revisionsWithCounts.map(({ revision, counts }) => (
           <SidebarEntry
-            key={version.date.toISOString()}
-            version={version}
+            key={revision.date}
+            revision={revision}
             counts={counts}
-            isActive={activeVersion === version.date.toISOString()}
+            isActive={activeRevision === revision.date}
           />
         ))}
       </Box>

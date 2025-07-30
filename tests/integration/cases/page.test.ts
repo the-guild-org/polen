@@ -1,4 +1,5 @@
 import { Api } from '#api/index'
+import { toViteUserConfig } from '#vite/config'
 import type { FsLayout } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
@@ -169,7 +170,8 @@ export const Demo = () => <span>MDX works</span>
 testCases.forEach(({ fixture, result, title, additionalChecks }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.layout.set(fixture)
-    const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+    const polenConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+    const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
     await page.goto(viteDevServer.url('/').href)

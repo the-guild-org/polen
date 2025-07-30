@@ -7,7 +7,7 @@ import type { InferOptions, Mask as MaskType, PropertiesMask } from './mask.js'
   type Options = InferOptions<unknown>
 
   // This is a type-level assertion - we need to use a different pattern
-  type _Test = Ts.AssertEqual<Options, boolean | string[] | Record<string, boolean>>
+  type _Test = Ts.AssertExact<Options, boolean | string[] | Record<string, boolean>>
 
   // All of these should be valid options
   const option1: Options = true

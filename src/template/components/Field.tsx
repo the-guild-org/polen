@@ -2,10 +2,10 @@ import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { GrafaidOld } from '#lib/grafaid-old'
 import { GraphQLPath } from '#lib/graphql-path'
-import { SchemaLifecycle } from '#lib/schema-lifecycle'
+import { Lifecycles } from '#lib/lifecycles/$'
 import type { BoxProps } from '@radix-ui/themes'
 import { Badge, Box, Text } from '@radix-ui/themes'
-import { useSchemaLifecycle } from '../contexts/SchemaLifecycleContext.js'
+import { useGraphqlLifecycle } from '../contexts/GraphqlLifecycleContext.js'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.js'
 import { DeprecationReason } from './DeprecationReason.js'
 import { Description } from './Description.js'
@@ -17,7 +17,7 @@ export const Field: React.FC<
     parentTypeName?: string
   }
 > = ({ data, parentTypeName, ...boxProps }) => {
-  const { lifecycle, currentVersion } = useSchemaLifecycle()
+  const { lifecycle, currentVersion } = useGraphqlLifecycle()
 
   const argumentList = GrafaidOld.isOutputField(data)
     ? <ArgumentListAnnotation field={data} />
@@ -30,12 +30,11 @@ export const Field: React.FC<
   let isAvailable = true
 
   if (lifecycle && parentTypeName) {
-    const fieldPath = GraphQLPath.Definition.field(parentTypeName, data.name)
-    fieldLifecycle = SchemaLifecycle.getFieldLifecycle(lifecycle, fieldPath)
+    fieldLifecycle = Lifecycles.getFieldLifecycle(lifecycle, parentTypeName, data.name)
     if (fieldLifecycle) {
-      addedDate = SchemaLifecycle.getFieldAddedDate(lifecycle, fieldPath)
-      removedDate = SchemaLifecycle.getFieldRemovedDate(lifecycle, fieldPath)
-      isAvailable = SchemaLifecycle.isFieldCurrentlyAvailable(lifecycle, fieldPath)
+      addedDate = Lifecycles.getFieldAddedDate(lifecycle, parentTypeName, data.name)
+      removedDate = Lifecycles.getFieldRemovedDate(lifecycle, parentTypeName, data.name)
+      isAvailable = Lifecycles.isFieldCurrentlyAvailable(lifecycle, parentTypeName, data.name)
     }
   }
 

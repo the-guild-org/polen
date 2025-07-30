@@ -87,8 +87,8 @@ test('can loads schema from directory data source with single schema.graphql', a
 test.skip('can loads schema from introspection data source', async ({ page, vite, project }) => {
   const viteUserConfig = await pc({
     schema: {
-      useDataSources: 'introspection',
-      dataSources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
+      useSources: 'introspection',
+      sources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
     },
   }, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
@@ -99,7 +99,7 @@ test.skip('can loads schema from introspection data source', async ({ page, vite
 test.skip('introspection loads when no other sources exist', async ({ page, vite, project }) => {
   const viteUserConfig = await pc({
     schema: {
-      dataSources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
+      sources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
     },
   }, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
@@ -111,7 +111,7 @@ test('file source takes precedence over introspection by default', async ({ page
   await project.layout.set({ 'schema.graphql': sdl })
   const viteUserConfig = await pc({
     schema: {
-      dataSources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
+      sources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
     },
   }, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)

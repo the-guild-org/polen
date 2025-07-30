@@ -7,9 +7,9 @@ import { Box, Flex, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import PROJECT_DATA from 'virtual:polen/project/data.json'
 import * as projectHooks from 'virtual:polen/project/hooks'
-import PROJECT_SCHEMA from 'virtual:polen/project/schema.jsonsuper'
+import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { templateVariables } from 'virtual:polen/template/variables'
 import { Link as PolenLink } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
@@ -106,7 +106,9 @@ const children: ReactRouter.RouteObject[] = [index, pages]
 
 if (PROJECT_SCHEMA) {
   children.push(changelog)
-  children.push(reference)
+  if (reference) {
+    children.push(reference)
+  }
 }
 
 //

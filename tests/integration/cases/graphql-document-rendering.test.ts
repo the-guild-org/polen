@@ -3,6 +3,7 @@
  */
 
 import { Api } from '#api/index'
+import { toViteUserConfig } from '#vite/config'
 import type { FsLayout } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
@@ -28,7 +29,8 @@ test.skip('GraphQL documents render with syntax highlighting', async ({ page, vi
   }
 
   await project.layout.set(fixture)
-  const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+  const polenConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+  const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
   await page.goto(viteDevServer.url('/test').href)
@@ -74,7 +76,8 @@ test.skip('GraphQL documents handle schema-less rendering gracefully', async ({ 
   }
 
   await project.layout.set(fixture)
-  const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+  const polenConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+  const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
   await page.goto(viteDevServer.url('/test').href)
@@ -125,7 +128,8 @@ test.skip('Multiple GraphQL documents on same page work correctly', async ({ pag
   }
 
   await project.layout.set(fixture)
-  const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+  const polenConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+  const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
   await page.goto(viteDevServer.url('/test').href)

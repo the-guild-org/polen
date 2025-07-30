@@ -6,7 +6,7 @@ import { test } from '../helpers/test.js'
 test('shows changelog in navigation bar when multiple schema versions are provided', async ({ page, vite }) => {
   // Set up schema versions with different content
   const olderSchema = {
-    date: new Date('2023-01-01T00:00:00.000Z'),
+    date: new Date('2023-01-01'),
     sdl: `
       type Query {
         hello: String
@@ -15,7 +15,7 @@ test('shows changelog in navigation bar when multiple schema versions are provid
   }
 
   const newerSchema = {
-    date: new Date('2023-02-01T00:00:00.000Z'),
+    date: new Date('2023-02-01'),
     sdl: `
       type Query {
         hello: String
@@ -40,7 +40,7 @@ test('shows changelog in navigation bar when multiple schema versions are provid
 
   // Check for changelog content
   // 1. Verify the date is visible as a heading (not just in nav)
-  await expect(page.getByRole('heading', { name: renderDate(newerSchema.date) })).toBeVisible()
+  await expect(page.getByRole('heading', { name: renderDate('2023-02-01') })).toBeVisible()
 
   // 2. Verify the change is described
   await expect(page.getByText(/added field/i)).toBeVisible()

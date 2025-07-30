@@ -7,7 +7,7 @@ import { Introspection } from 'graffle/extensions/introspection'
 export type SchemaPointer = {
   type: `introspect`
   url: string
-  headers?: Record<string, string>
+  headers?: Record<string, string> | undefined
 } | {
   type: `sdl`
   pathOrUrl: string
@@ -24,7 +24,7 @@ export const load = async (source: SchemaPointer): Promise<Grafaid.Schema.Schema
         .use(Introspection())
         .transport({
           url: source.url,
-          headers: source.headers,
+          headers: source.headers || {},
         })
 
       const introspectionResult = await graffle.introspect()

@@ -1,5 +1,7 @@
 import { FileRouter } from '#lib/file-router'
+import { S } from '#lib/kit-temp/effect'
 import { Fs, Path, Tree } from '@wollybeard/kit'
+import { Either } from 'effect'
 import matter from 'gray-matter'
 import { MetadataSchema } from './metadata.js'
 import type { Page } from './page.js'
@@ -105,13 +107,13 @@ const readRoute = async (route: FileRouter.Route): Promise<Page> => {
   const { data } = matter(fileContent)
 
   // Validate and parse the data
-  const parsed = MetadataSchema.safeParse(data)
+  const parsed = S.decodeUnknownEither(MetadataSchema)(data)
 
-  if (!parsed.success) {
+  if (Either.isLeft(parsed)) {
     // Log warning but continue with defaults
-    console.warn(`Invalid front matter in ${filePath}:`, parsed.error.issues)
+    console.warn(`Invalid front matter in ${filePath}:`, parsed.left)
   }
 
-  const metadata = parsed.success ? parsed.data : { hidden: false }
+  const metadata = Either.isRight(parsed) ? parsed.right : { hidden: false }
   return { route, metadata }
 }

@@ -1,11 +1,11 @@
-import { z } from 'zod'
+import { S } from '#lib/kit-temp/effect'
 
 /**
  * Schema for validating front matter content
  */
-export const MetadataSchema = z.object({
-  description: z.string().optional(),
-  hidden: z.boolean().default(false),
+export const MetadataSchema = S.Struct({
+  description: S.optional(S.String),
+  hidden: S.optionalWith(S.Boolean, { default: () => false }),
 })
 
-export type Metadata = z.infer<typeof MetadataSchema>
+export type Metadata = S.Schema.Type<typeof MetadataSchema>

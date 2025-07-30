@@ -17,8 +17,8 @@ export type ExampleController = Awaited<ReturnType<typeof create>>
  */
 export const create = async (parameters: {
   exampleName: ExampleName
-  debugMode?: boolean
-  polenLink?: PackageManager.LinkProtocol
+  debugMode?: boolean | undefined
+  polenLink?: PackageManager.LinkProtocol | undefined
   portProductionServer?: number
 }) => {
   const debug = Debug.create(parameters.exampleName)

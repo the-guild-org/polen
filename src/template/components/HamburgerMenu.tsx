@@ -91,7 +91,11 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 <Cross2Icon width='18' height='18' />
               </IconButton>
             </Flex>
-            <Sidebar data={sidebarData} basePath={basePath} topContent={topContent} />
+            <Sidebar
+              data={sidebarData}
+              {...(basePath !== undefined && { basePath })}
+              {...(topContent !== undefined && { topContent })}
+            />
           </Box>
         </>
       )}

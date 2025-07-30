@@ -1,0 +1,208 @@
+# Syntax
+
+- A description block: `**<text>**`
+- A test block: `@<text>`
+- A test block todo: `?<text>`
+
+# Definitions
+
+- **Dehydrated Value**
+  - A value that consists of:
+    - its tagged struct schema's tag
+    - instances's unique keys if any
+    - `_dehydrated: true`
+- **Shallowly Hydrated Value**
+  - A dehydratable value is hydrated except for its hydratable properties
+- **Partially Hydrated Value**
+  - A dehydratable value is hydrated except for 0+ (but not all) of its direct or indirect hydratable properties
+  - Encompasses case of shallowly hydrated
+- **Hydratable Value/Schema**
+  - A tagged struct value/schema that may appear in a minimal form that maintains at least (and usually only) its identity and location
+- **Hydratable Context Value/Schema**
+  - A tagged struct/union of tagged structs value/schema that cannot itself be hydratable but contains directly or indirectly hydratables
+- **UHL**
+  - Abbreviation for Universal Hydratable Location
+  - Scope of uniqueness is the Bridge's root schema
+  - Structured
+- **UHL Expression**
+  - A stringified UHL
+  - Reserved characters are `@`, `!`, `___`
+  - Format:
+    - Singleton: `<Tag>`
+    - With keys: `<Tag>!<key1>@<value1>!<key2>@<value2>` (keys sorted alphabetically)
+    - With context: `<ContextTag>!<key>@<value>___<Tag>!<key>@<value>` (context first, separated by `___`)
+- **UHL Expression Exported**
+  - A UHL expression with an extension
+- **Index**
+  - is an index
+  - keys are UHL Expressions
+  - values are hydratables
+- **Bridge**
+  - A value manager for a Hydrated Context Schema
+  - Manages the partition of values to some storage and reassembly of values from that storage
+  - Manages the above in an progressive incremental way
+  - Maintains an internal index structure to act as a cache for values and holding place for incremtal data
+- **Selection**
+  - A structured query against a bridge instance
+  - The query targets hydrtables that the bridge manages
+  - Targetted hydratables are deeply hydrated and then return in their definitely hydrated form
+  - At its root has 0+ keys where each key is a hydratable struct tag (exact casing, no transformation)
+  - Empty selection `{}` selects nothing
+  - **Path disambiguation**:
+    - Root-level selection is only supported for hydratables whose path from root consists of 0+ tagged structs only
+    - No arrays, anonymous structs, or property traversals allowed in path for root selectability
+    - If a hydratable appears in one path of 0+ singletons only: `$$` is absent
+    - Otherwise (multiple paths or path contains non-singletons): `$$` is required
+    - `$$` structure: nested object where each level has:
+      - The parent hydratable's unique keys
+      - Exactly one `$<Tag>` field pointing to the next parent up
+      - Chain continues until root is reached
+  - **Shallow Selection**
+    - Singleton hydratables: `{ <Tag>: true }` or `{ <Tag>: {} }`
+    - Instanced hydratables with single unique key: `{ <Tag>: <value> }` (shorthand) or `{ <Tag>: { <uniqueKey>: <value> } }`
+    - Instanced hydratables with multiple unique keys: `{ <Tag>: { <key1>: <value1>, <key2>: <value2>, ... } }`
+    - No `$<name>` properties allowed
+  - **Deep Selection**
+    - Any selection that includes `$<Tag>` properties where `<Tag>` is the tag of a child hydratable
+    - Incompatible with single-key shorthand syntax (must use object form)
+    - Can include intermediate non-hydratable struct property names (without `$`) to specify paths
+    - Intermediate struct properties are optional, unique keys are required
+
+# Spec
+
+- **Value**
+  - **Hydra.Value.dehydrate()**
+    - @accepts a schema
+    - @returns a function that accepts a value and returns a dehydrated value
+    - @never mutates input
+    - @finds all direct child hydratables and dehydrates them
+    - @non-hydratable values pass through with their hydratable children dehydrated
+    - @hydratable values contain: tag, _dehydrated: true, and unique keys
+    - @unique keys are always taken in their encoded form
+    - @already dehydrated values (_dehydrated: true) pass through unchanged
+- **Schema**
+  - **Hydra.Schema.Hydratable()**
+    - @accepts two parameters:
+      - any tagged struct schema or union of tagged struct schemas
+      - optionally options
+    - **options**
+      - @if no options given then defaults to no unique keys
+      - **if schema is a tagged struct**: @accepts unique keys which are names of properties on the given schema whose encoded type is string or number
+      - **if schema is a union of tagged structs**: @the unique keys are specified in a record where each key corresponds to a tagged struct in the union and its value corresponds to the unique keys of that tagged struct to use
+      - @any unique keys specified are attached as annotatioins on the given schema
+    - **returns**:
+      - @the schema wrapped in a hydratable schema type that encodes the hydratable options
+      - @it inherits the interface of the wrapped schema
+    - **hydratableSchema.makeDehydrated()**
+      - **if has 1+ unique keys**:
+        - @accepts an object corresponding to the unique keys specified in constructor options
+        - @static typing ensures only specified unique keys are accepted
+      - **if has 0 unique keys**: @accepts nothing
+      - @returns a dehydrated value statically typed to the schema in dehydrated form
+    - **.dehydrate()**
+      - @accepts a hydrated value of the schema's type
+      - @returns a dehydrated copy of the value
+      - @dispatches to variant of `Hydra.Value.dehydrate()`
+- **UHL**
+  - **Hydra.Uhl.make()**
+    - @Reserved characters found in any segment value raise an error
+  - **Hydra.Uhl.Selection.from**
+    - ?cases for deriving from Selection
+  - **Hydra.Uhl.Expression.to**
+    - ?cases for deriving an expression
+  - **Hydra.Uhl.Expression.from**
+    - @can parse all cases back into UHLs
+- **IO Service**
+  - @accepts absolute base path from Bridge
+  - @works with relative names within that base path
+  - @always reads/writes JSON files (pretty-printed)
+  - @`.json` extension handled by Bridge, not IO
+  - @JSON parsing/stringifying handled by Bridge, not IO
+  - @IO only handles string read/write operations
+- **Index**
+  - **Index.make()**
+    - @accepts nothing
+    - @returns an index instance
+  - **Concurrent operations**
+    - @all bridge operations share the same index
+    - @no special synchronization or locking
+    - @concurrent reads/writes may see intermediate states
+  - **index.clear()**
+    - @accepts nothing
+    - @returns an index instance
+  - **index.add()**
+    - @accepts
+      - a value to add whose type is statically enforced to be one of the hydratables within the root schema
+      - a UHL for this value
+  - **internal algorithm for setting UHL value**:
+    - @if current value is none, is set
+    - @if current value hydrated, is no-op
+    - **if current value is dehydrated**:
+      - @if input value is dehydrated, is no-op
+      - @if input value is hydrated, is set
+- **Selection**
+  - **Hydra.Selection.FromSchema<>**:
+    - @accepts any schema
+    - ?
+- **Bridge**
+  - **Hydra.Bridge.make**
+    - @accepts two parameters
+      - a Hydratable Context Schema
+      - an optional config, can specify an absolute path for the base path, defaults to null
+    - @returns an instance of bridge that has its own index
+    - **config**
+      - **if base path is null**
+        - @File IO uses CWD for base path
+        - @Browser IO uses '/' for base path
+      - **if base path is given**
+        - @All IO uses the given base path
+    - **bridge.view()**
+      - @accepts nothing
+      - @returns an effect that resolves to a deeply hydrated context value of type of root schema
+    - **bridge.peek()**
+      - @accepts Selection statically typed for accepting only queries valid for the root schema
+      - @returns an effect that resolves to the selected hydratbales, all hydrated to the extent of their selection
+      - @if selected value not found in index or store, raises error
+      - **@if selected dehydrated**
+        - @static type for value is Partially Hydrated
+        - @if value found in index and is dehydrated or hydrated, returned
+        - @if value not found in index, loads from store, adds to index, returned
+      - **@if selected hydrated**
+        - @static type for value is Hydrated
+        - @if value found in index and is hydrated, returned
+        - @if value not found in index or is but is dehydrated, loads from store, adds to index, returned
+      - **@if have reference to value that is dehydrated**:
+        - @if select value hydrated, the refernce is mutated to be hydrated
+  - **bridge.dehydrate**
+    - @accepts a value typed to a hydratable schema in root schema or the root schema itself
+    - @returns dehydrated copy using Hydra.dehydrate with bridge's schema
+  - **bridge.clear()**
+    - @accepts nothing
+    - @returns effect resolving to void
+    - @the disk is cleared of json files at base dir
+    - @the Index is cleared
+  - **bridge.exportToMemory()**
+    - @accepts nothing
+    - @returns a list of pairs [UHL Expression Exported, Dehydrated Value serialized as JSON]
+    - @iterates over all entries in the index, dehydrating them (copy, not mutate), serializing them to JSON, and returning as pairs
+    - @does not mutate the index
+    - @ignores the base dir
+  - **bridge.export()**
+    - @accepts nothing
+    - @returns effect resolving to void
+    - @the disk is populated at base dir
+      - one file for each hydratable that was in index
+      - each file name is the index key plus '.json' extension
+    - @does not mutate the index
+  - **bridge.importFromMemory()**
+    - @accepts a deeply hydrated value of type of root schema
+    - @returns nothing
+    - @the index is populated with an entry for each hydratable found in the value
+  - **bridge.import()**
+    - @accepts nothing
+    - @returns effect requiring IO service
+    - @the index is populated with an entry for each hydratable found on disk
+
+# Not Specified
+
+- Nothing currently

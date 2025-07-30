@@ -21,20 +21,29 @@ import {
   Text,
   Tooltip,
 } from '@radix-ui/themes'
+import type { GraphQLSchema } from 'graphql'
 import { Outlet, useLocation } from 'react-router'
-import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.jsonsuper'
+import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.json'
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { CodeBlock } from '../components/CodeBlock.js'
 import { schemaSource } from '../sources/schema-source.js'
 
 const loader = createLoader(async () => {
   // Check if schema exists first
-  if (schemaSource.isEmpty) {
+  if (schemaSource.type === 'none') {
     return { schema: null }
   }
 
-  // Fetch the latest schema for MDX pages
-  const schema = await schemaSource.get('latest')
+  // Fetch the schema for MDX pages
+  let schema: GraphQLSchema | undefined
+  if (schemaSource.type === 'unversioned') {
+    const schemaObj = schemaSource.getSchema()
+    schema = schemaObj.definition
+  } else {
+    // versioned - get latest
+    const schemaObj = await schemaSource.inner.get('latest')
+    schema = schemaObj?.definition
+  }
   return { schema }
 })
 

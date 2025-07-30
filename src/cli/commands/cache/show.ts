@@ -1,4 +1,5 @@
 import { Api } from '#api/index'
+import { allowGlobalParameter } from '#cli/_/parameters'
 import { Command } from '@molt/command'
 import { z } from 'zod'
 
@@ -7,6 +8,7 @@ const args = Command.create()
     `--depth -d`,
     z.number().min(0).max(5).default(2).describe(`Maximum depth for directory tree display`),
   )
+  .parameter(`--allow-global`, allowGlobalParameter)
   .settings({
     parameters: {
       environment: {

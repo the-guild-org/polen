@@ -1,5 +1,22 @@
 /// <reference types="vite/client" />
 
+import type { GraphQLSchema } from 'graphql'
+import type { RouterState } from 'react-router'
+import type { PolenGlobalData } from './src/template/constants'
+
+declare global {
+  var __POLEN__: PolenGlobalData
+
+  interface Window {
+    __polenCacheSchema?: GraphQLSchema | undefined
+    __staticRouterHydrationData?:
+      | Partial<
+        Pick<RouterState, `loaderData` | `actionData` | `errors`>
+      >
+      | undefined
+  }
+}
+
 //
 //
 // Type declarations for Vite's special import.meta features
@@ -98,20 +115,20 @@ declare module 'virtual:polen/project/routes.jsx' {
 }
 
 declare module 'virtual:polen/template/schema-augmentations' {
-  export const schemaAugmentations: import('#api/schema-augmentation/schema-augmentation').Augmentation[]
+  export const schemaAugmentations: import('#api/schema/augmentations/schema-augmentation').Augmentation[]
 }
 
-declare module 'virtual:polen/project/data.jsonsuper' {
+declare module 'virtual:polen/project/data.json' {
   const data: import('#project-data').ProjectData
   export { data as default }
 }
 
-declare module 'virtual:polen/project/schema.jsonsuper' {
+declare module 'virtual:polen/project/schema.json' {
   const schema: import('#api/schema/index').Schema.Schema | null
   export { schema as default }
 }
 
-declare module 'virtual:polen/project/data/pages-catalog.jsonsuper' {
+declare module 'virtual:polen/project/data/pages-catalog.json' {
   const data: import('#api/vite/plugins/pages').ProjectPagesCatalog
   export { data as default }
 }
@@ -121,7 +138,16 @@ declare module 'virtual:polen/project/assets/logo.svg' {
   export default src
 }
 
-declare module 'virtual:polen/project/schema-metadata' {
-  const metadata: import('#api/vite/plugins/schema-assets').SchemaMetadata
-  export default metadata
+declare module 'virtual:polen/project/hooks' {
+  export const navbar: ((props: import('#api/hooks/types').NavbarProps) => React.ReactNode) | null
+}
+
+declare module 'tree-sitter-graphql-grammar-wasm/grammar.wasm?url' {
+  const url: string
+  export default url
+}
+
+declare module 'web-tree-sitter/tree-sitter.wasm?url' {
+  const url: string
+  export default url
 }

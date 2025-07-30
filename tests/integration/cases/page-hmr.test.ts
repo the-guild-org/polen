@@ -1,13 +1,16 @@
 import { Api } from '#api/index'
+import { toViteUserConfig } from '#vite/config'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
 test.describe('HMR', () => {
   test('auto-refresh on content change', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/test.md': '# Initial' })
-    const server = await vite.startDevelopmentServer(
-      await Api.ConfigResolver.fromMemory({ advanced: { isSelfContainedMode: true } }, project.layout.cwd),
+    const polenConfig = await Api.ConfigResolver.fromMemory(
+      { advanced: { isSelfContainedMode: true } },
+      project.layout.cwd,
     )
+    const server = await vite.startDevelopmentServer(toViteUserConfig(polenConfig))
 
     await page.goto(server.url('/test').href)
     await expect(page.getByRole('heading', { name: 'Initial' })).toBeVisible()
@@ -21,9 +24,11 @@ test.describe('HMR', () => {
 
   test('add new page', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/home.md': '# Home' })
-    const server = await vite.startDevelopmentServer(
-      await Api.ConfigResolver.fromMemory({ advanced: { isSelfContainedMode: true } }, project.layout.cwd),
+    const polenConfig = await Api.ConfigResolver.fromMemory(
+      { advanced: { isSelfContainedMode: true } },
+      project.layout.cwd,
     )
+    const server = await vite.startDevelopmentServer(toViteUserConfig(polenConfig))
 
     // Navigate to an existing page first
     await page.goto(server.url('/home').href)

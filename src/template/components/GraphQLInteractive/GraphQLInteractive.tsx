@@ -241,7 +241,7 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
                 token={token}
                 tokenId={tokenId}
                 popoverState={popoverState}
-                schema={schema}
+                {...(schema !== undefined && { schema })}
               />
             )
           })}

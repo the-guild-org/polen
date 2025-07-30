@@ -1,25 +1,24 @@
-import type { GraphqlChange } from '#lib/graphql-change'
+import { Change as GraphqlChange } from '#lib/change/$'
 import { Code } from '@radix-ui/themes'
 import type React from 'react'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const FieldArgumentOperation: React.FC<{ change: GraphqlChange.Group.FieldArgumentOperation }> = (
+export const FieldArgumentOperation: React.FC<{ change: any }> = (
   { change },
 ) => {
-  switch (change.type) {
+  switch (change._tag) {
     case `FIELD_ARGUMENT_ADDED`:
       return (
         <ChangeBase change={change}>
-          Added argument <Code>{change.meta.addedArgumentName}</Code> to field <Code>{change.meta.fieldName}</Code> on
-          {' '}
-          <Code>{change.meta.typeName}</Code>
+          Added argument <Code>{change.argumentName}</Code> to field <Code>{change.fieldName}</Code> on{' '}
+          <Code>{change.typeName}</Code>
         </ChangeBase>
       )
     case `FIELD_ARGUMENT_REMOVED`:
       return (
         <ChangeBase change={change}>
-          Removed argument <Code>{change.meta.removedFieldArgumentName}</Code> from field{' '}
-          <Code>{change.meta.fieldName}</Code> on <Code>{change.meta.typeName}</Code>
+          Removed argument <Code>{change.argumentName}</Code> from field <Code>{change.fieldName}</Code> on{' '}
+          <Code>{change.typeName}</Code>
         </ChangeBase>
       )
   }

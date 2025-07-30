@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Api } from '#api/index'
+import { allowGlobalParameter } from '#cli/_/parameters'
 import { Task } from '#lib/task'
 import { Command } from '@molt/command'
 import { Err, Path } from '@wollybeard/kit'
@@ -18,6 +19,7 @@ const args = Command.create()
     `--target -t`,
     z.string().optional().describe('Target directory for copy mode (if not provided, mutate in place)'),
   )
+  .parameter(`--allow-global`, allowGlobalParameter)
   .parse()
 
 const plan: Api.Static.RebasePlan = args.target

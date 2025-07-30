@@ -1,4 +1,4 @@
-import { Path } from '@wollybeard/kit'
+import { Path, Ts } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
 import { test as base } from 'playwright/test'
 import { polen as createPolenBuilder } from './polen-builder.js'

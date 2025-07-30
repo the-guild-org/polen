@@ -16,7 +16,7 @@ You can provide schema augmentations to Polen in various ways.
 
 ### Configuration
 
-Define augmentations in your `polen.config.ts` file using the `schemaAugmentations` array. Each augmentation specifies:
+Define augmentations in your `polen.config.ts` file using the `schema.augmentations` array. Each augmentation specifies:
 
 - **`type`** - What to augment (e.g., `'description'`)
 - **`on`** - Where to target it (type name, field name, etc.)
@@ -34,18 +34,20 @@ The JSDoc documentation provides extensive details on all available options.
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
-  schemaAugmentations: [
-    {
-      type: 'description',
-      on: {
-        type: 'TargetType',
-        name: 'User',
+  schema: {
+    augmentations: [
+      {
+        type: 'description',
+        on: {
+          type: 'TargetType',
+          name: 'User',
+        },
+        placement: 'after',
+        content: 'Additional context about the User type.',
       },
-      placement: 'after',
-      content: 'Additional context about the User type.',
-    },
-    // ... more augmentations
-  ],
+      // ... more augmentations
+    ],
+  },
 })
 ```
 

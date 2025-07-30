@@ -1,14 +1,14 @@
 import { debugPolen } from '#singletons/debug'
+import type { Config } from '../config/configurator.js'
 import { type ConfigInput, normalizeInput } from '../config/configurator.js'
 import { load, type LoadOptions } from '../config/load.js'
 import { mergeInputs } from '../config/merge.js'
-import { toViteUserConfig, type ViteUserConfigWithPolen } from './vite.js'
 
 interface ResolveFromFileOptions extends LoadOptions {
-  overrides?: ConfigInput
+  overrides?: ConfigInput | undefined
 }
 
-export const fromFile = async (options: ResolveFromFileOptions): Promise<ViteUserConfigWithPolen> => {
+export const fromFile = async (options: ResolveFromFileOptions): Promise<Config> => {
   const configInput = await load(options)
   const configInputMerged = mergeInputs(configInput, options.overrides)
   const config = await fromMemory(configInputMerged, options.dir)
@@ -24,8 +24,7 @@ export const fromMemory = async (
    * @default `process.cwd()`
    */
   baseRootDirPath?: string,
-) => {
+): Promise<Config> => {
   const configNormalized = await normalizeInput(input, baseRootDirPath ?? process.cwd())
-  const viteUserConfig = toViteUserConfig(configNormalized)
-  return viteUserConfig
+  return configNormalized
 }

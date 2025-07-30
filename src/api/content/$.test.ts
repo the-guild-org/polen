@@ -1,4 +1,6 @@
+import { S } from '#lib/kit-temp/effect'
 import { Fs, Path } from '@wollybeard/kit'
+import { Either } from 'effect'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { Content } from './$.js'
 
@@ -17,31 +19,35 @@ describe('content', () => {
 
   describe('MetadataSchema', () => {
     test('validates metadata correctly', () => {
-      const valid = Content.MetadataSchema.safeParse({
+      const valid = S.decodeUnknownEither(Content.MetadataSchema)({
         description: 'Test page description',
         hidden: true,
       })
-      expect(valid.success).toBe(true)
-      expect(valid.data).toEqual({
-        description: 'Test page description',
-        hidden: true,
-      })
+      expect(Either.isRight(valid)).toBe(true)
+      if (Either.isRight(valid)) {
+        expect(valid.right).toEqual({
+          description: 'Test page description',
+          hidden: true,
+        })
+      }
     })
 
     test('applies default values', () => {
-      const result = Content.MetadataSchema.safeParse({
+      const result = S.decodeUnknownEither(Content.MetadataSchema)({
         description: 'Just a description',
       })
-      expect(result.success).toBe(true)
-      expect(result.data?.hidden).toBe(false)
+      expect(Either.isRight(result)).toBe(true)
+      if (Either.isRight(result)) {
+        expect(result.right.hidden).toBe(false)
+      }
     })
 
     test('rejects invalid values', () => {
-      const result = Content.MetadataSchema.safeParse({
+      const result = S.decodeUnknownEither(Content.MetadataSchema)({
         hidden: 'not a boolean',
         invalid_field: 123,
       })
-      expect(result.success).toBe(false)
+      expect(Either.isLeft(result)).toBe(true)
     })
   })
 

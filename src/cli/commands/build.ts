@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Api } from '#api/index'
-import { projectParameter } from '#cli/_/parameters'
+import { allowGlobalParameter, projectParameter } from '#cli/_/parameters'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command } from '@molt/command'
 import { z } from 'zod'
@@ -23,6 +23,7 @@ const args = Command.create()
     `--port`,
     z.number().optional().describe('Default port for the SSR application'),
   )
+  .parameter(`--allow-global`, allowGlobalParameter)
   .settings({
     parameters: {
       environment: {

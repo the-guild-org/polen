@@ -3,8 +3,7 @@ import { assertPathAbsolute } from '#lib/kit-temp'
 import { type PackagePaths, packagePaths } from '#package-paths'
 import { Err, Manifest, Path, Str } from '@wollybeard/kit'
 import { z } from 'zod'
-import type { SchemaAugmentation } from '../../api/schema-augmentation/index.js'
-import type { Schema } from '../schema/index.js'
+import type { Schema } from '../schema/$.js'
 
 export const BuildArchitectureEnum = {
   ssg: `ssg`,
@@ -82,39 +81,7 @@ export interface ConfigInput {
    * **Query details**: Uses the standard introspection query from the GraphQL spec
    * @see https://spec.graphql.org/draft/#sec-Introspection
    */
-  schema?: SchemaConfigInput
-  /**
-   * Programmatically enhance your GraphQL schema documentation without modifying the schema files.
-   *
-   * Perfect for adding implementation details, usage examples, deprecation notices,
-   * or any additional context that helps developers understand your API better.
-   *
-   * @example
-   * ```ts
-   * schemaAugmentations: [
-   *   {
-   *     type: 'description',
-   *     on: {
-   *       type: 'TargetType',
-   *       name: 'User'
-   *     },
-   *     placement: 'after',
-   *     content: '\n\nSee the [User Guide](/guides/users) for detailed usage.'
-   *   },
-   *   {
-   *     type: 'description',
-   *     on: {
-   *       type: 'TargetField',
-   *       targetType: 'Query',
-   *       name: 'users'
-   *     },
-   *     placement: 'after',
-   *     content: '\n\n**Rate limit:** 100 requests per minute'
-   *   }
-   * ]
-   * ```
-   */
-  schemaAugmentations?: SchemaAugmentation.Augmentation[]
+  schema?: SchemaConfigInput | undefined
   templateVariables?: {
     /**
      * Title of the app.
@@ -135,8 +102,8 @@ export interface ConfigInput {
      * // Title will be "Acme Graphql"
      * ```
      */
-    title?: string
-  }
+    title?: string | undefined
+  } | undefined
   /**
    * Build configuration for your developer portal.
    */
@@ -150,7 +117,7 @@ export interface ConfigInput {
      *
      * @default 'ssg'
      */
-    architecture?: BuildArchitecture
+    architecture?: BuildArchitecture | undefined
     /**
      * Base public path for the deployed site.
      *
@@ -172,8 +139,8 @@ export interface ConfigInput {
      *
      * @default `/`
      */
-    base?: string
-  }
+    base?: string | undefined
+  } | undefined
   /**
    * Server configuration for development and production.
    */
@@ -200,8 +167,8 @@ export interface ConfigInput {
      * // polen build --port 4000
      * ```
      */
-    port?: number
-  }
+    port?: number | undefined
+  } | undefined
   /**
    * Configuration for developer experience warnings.
    *
@@ -233,9 +200,9 @@ export interface ConfigInput {
        *
        * @default true
        */
-      enabled?: boolean
-    }
-  }
+      enabled?: boolean | undefined
+    } | undefined
+  } | undefined
   /**
    * Advanced configuration options.
    *
@@ -254,7 +221,7 @@ export interface ConfigInput {
      *
      * @default false
      */
-    explorer?: boolean
+    explorer?: boolean | undefined
     /**
      * Force the CLI to resolve Polen imports in your project to itself rather than
      * to what you have installed in your project.
@@ -270,7 +237,7 @@ export interface ConfigInput {
      *
      * @default false
      */
-    isSelfContainedMode?: boolean
+    isSelfContainedMode?: boolean | undefined
     /**
      * Whether to enable debug mode.
      *
@@ -280,15 +247,15 @@ export interface ConfigInput {
      *
      * @default false
      */
-    debug?: boolean
+    debug?: boolean | undefined
     /**
      * Additional {@link vite.UserConfig} that is merged with the one created by Polen using {@link Vite.mergeConfig}.
      *
      * @see https://vite.dev/config/
      * @see https://vite.dev/guide/api-javascript.html#mergeconfig
      */
-    vite?: Vite.UserConfig
-  }
+    vite?: Vite.UserConfig | undefined
+  } | undefined
 }
 
 export interface TemplateVariables {
@@ -373,7 +340,6 @@ export interface Config {
     }
   }
   templateVariables: TemplateVariables
-  schemaAugmentations: SchemaAugmentation.Augmentation[]
   schema: null | SchemaConfigInput
   ssr: {
     enabled: boolean
@@ -433,7 +399,7 @@ export interface Config {
     isSelfContainedMode: boolean
     explorer: boolean
     debug: boolean
-    vite?: Vite.UserConfig
+    vite?: Vite.UserConfig | undefined
   }
 }
 
@@ -442,7 +408,6 @@ const configInputDefaults: Config = {
   templateVariables: {
     title: `My Developer Portal`,
   },
-  schemaAugmentations: [],
   build: {
     architecture: BuildArchitecture.enum.ssg,
     base: `/`,
@@ -529,13 +494,8 @@ export const normalizeInput = async (
     config.advanced.vite = configInput.advanced.vite
   }
 
-  if (configInput?.schemaAugmentations) {
-    config.schemaAugmentations = configInput.schemaAugmentations
-  }
-
-  config.templateVariables = {
-    ...config.templateVariables,
-    ...configInput?.templateVariables,
+  if (configInput?.templateVariables?.title !== undefined) {
+    config.templateVariables.title = configInput.templateVariables.title
   }
 
   if (configInput?.schema) {

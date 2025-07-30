@@ -60,16 +60,18 @@ export default Polen.defineConfig({
     architecture: 'ssg',
     basePath: '/api-docs/',
   },
-  schemaAugmentations: [
-    {
-      type: 'description',
-      on: {
-        type: 'TargetType',
-        name: 'Query',
+  schema: {
+    augmentations: [
+      {
+        type: 'description',
+        on: {
+          type: 'TargetType',
+          name: 'Query',
+        },
+        placement: 'over',
+        content: 'Root query operations',
       },
-      placement: 'over',
-      content: 'Root query operations',
-    },
-  ],
+    ],
+  },
 })
 ```

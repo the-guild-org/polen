@@ -186,7 +186,7 @@ function isVariable(node: SemanticNode | undefined): node is VariableNode {
 interface UnifiedToken {
   // Core references
   treeSitterNode: WebTreeSitter.Node
-  semantic?: SemanticNode
+  semantic?: SemanticNode | undefined
 
   // "Plugin" computed properties
   polen: {

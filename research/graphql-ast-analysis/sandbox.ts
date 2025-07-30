@@ -259,7 +259,7 @@ function analyzeTreeSitterAST(code: string, tree: WebTreeSitter.Tree) {
       type: string
       start: number
       end: number
-      parent?: string
+      parent?: string | undefined
     }> = []
 
     function collectNodes() {

@@ -1,8 +1,9 @@
 // @ts-nocheck
 import { Api } from '#api/index'
-import { projectParameter } from '#cli/_/parameters'
+import { allowGlobalParameter, projectParameter } from '#cli/_/parameters'
 import { Vite } from '#dep/vite/index'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
+import { toViteUserConfig } from '#vite/config'
 import { Command } from '@molt/command'
 import { Err } from '@wollybeard/kit'
 import { z } from 'zod'
@@ -22,6 +23,7 @@ const args = Command.create()
     `--port`,
     z.number().optional().describe('Port to run the development server on'),
   )
+  .parameter(`--allow-global`, allowGlobalParameter)
   .settings({
     parameters: {
       environment: {
@@ -41,7 +43,7 @@ if (!await Api.Project.validateProjectDirectory(dir)) {
   process.exit(1)
 }
 
-const viteUserConfig = await Api.ConfigResolver.fromFile({
+const polenConfig = await Api.ConfigResolver.fromFile({
   dir,
   overrides: {
     build: {
@@ -56,6 +58,7 @@ const viteUserConfig = await Api.ConfigResolver.fromFile({
   },
 })
 
+const viteUserConfig = toViteUserConfig(polenConfig)
 const viteDevServer = await Err.tryCatch(() => Vite.createServer(viteUserConfig))
 
 if (Err.is(viteDevServer)) {

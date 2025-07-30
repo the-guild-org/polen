@@ -24,7 +24,8 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
   const handleVersionChange = async (newVersion: string) => {
     const error = await tryWithToast(async () => {
       // Check if current path exists in target version
-      const targetSchema = await schemaSource.get(newVersion)
+      // We know this is versioned because VersionPicker is only rendered for versioned schemas
+      const targetSchema = await (schemaSource as any).inner.get(newVersion)
       // Find fallback path if needed
       const fallbackPath = Api.Schema.Validation.findFallbackPath(targetSchema, currentPath)
       // Get redirect description if path changed
@@ -37,8 +38,8 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
       // Create the new path
       const newPath = Api.Schema.Routing.createReferencePath({
         version: newVersion,
-        type: fallbackPath.type,
-        field: fallbackPath.field,
+        type: fallbackPath.type || '',
+        field: fallbackPath.field || '',
       })
       // Show toast notification if schema location redirect will occur
       if (redirectDescription) {
@@ -70,8 +71,8 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
       // Fallback to simple navigation if schema loading fails
       const newPath = Api.Schema.Routing.createReferencePath({
         version: newVersion,
-        type: currentPath.type,
-        field: currentPath.field,
+        type: currentPath.type || '',
+        field: currentPath.field || '',
       })
       navigate(newPath)
     }

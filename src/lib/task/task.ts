@@ -4,7 +4,7 @@ import { exitWithReport } from './report.js'
 
 export interface Definition<$Input = any, $Output = any> {
   name: string
-  mask?: MaskOptions<$Input, $Output>
+  mask?: MaskOptions<$Input, $Output> | undefined
 }
 
 export interface Task<$Input, $Output> {
@@ -29,11 +29,11 @@ export const create = <$Input, $Output>(
     /**
      * @default the fn name
      */
-    name?: string
+    name?: string | undefined
     /**
      * An optional default mask to use for successfully returned values.
      */
-    mask?: MaskOptions<$Input, $Output>
+    mask?: MaskOptions<$Input, $Output> | undefined
   },
 ): Task<$Input, $Output> => {
   const definition: Definition<$Input, $Output> = {
@@ -95,9 +95,9 @@ export const runAndExit = async <$Input, $Output>(
   fn: (input: $Input) => Promise<$Output>,
   input: $Input,
   options?: {
-    name?: string
-    mask?: MaskOptions<$Input, $Output>
-    debug?: boolean
+    name?: string | undefined
+    mask?: MaskOptions<$Input, $Output> | undefined
+    debug?: boolean | undefined
   },
 ): Promise<never> => {
   const task = create(fn, {

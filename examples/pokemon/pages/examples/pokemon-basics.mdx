@@ -4,20 +4,70 @@ Learn how to query individual Pokemon and their core attributes. Hover over any 
 
 ## Fetching a Single Pokemon
 
+The most basic query - get a Pokemon by ID:
+
 ```graphql interactive
 query GetPikachu {
   pokemon(id: "025") {
     id
     name
-    types
-    level
-    experience
-    isShiny
+    type    # In v1.0.0
   }
 }
 ```
 
-## Pokemon with Abilities
+## Querying Multiple Types (v2.0.0+)
+
+Starting in v2.0.0, Pokemon can have multiple types:
+
+```graphql interactive  
+query GetCharizard {
+  pokemon(id: "006") {
+    id
+    name
+    types   # Array of types in v2.0.0+
+  }
+}
+```
+
+## Pokemon Stats
+
+### Basic Stats (v1.0.0)
+
+In v1.0.0, Pokemon have simple combat stats:
+
+```graphql interactive
+query BasicStats {
+  pokemon(id: "150") {  # Mewtwo
+    name
+    hp
+    attack
+    defense
+  }
+}
+```
+
+### Advanced Stats (v2.0.0+)
+
+From v2.0.0 onwards, stats are grouped in a Stats object:
+
+```graphql interactive
+query AdvancedStats {
+  pokemon(id: "150") {  # Mewtwo
+    name
+    stats {
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+    }
+  }
+}
+```
+
+## Pokemon with Abilities (v2.0.0+)
 
 Each Pokemon has unique abilities that affect battles:
 
@@ -29,59 +79,14 @@ query PokemonAbilities {
       name
       description
       isHidden
-      battleEffect
     }
   }
 }
 ```
 
-## Base Stats
+## Advanced Pokemon Data (v3.0.0+)
 
-Explore the six fundamental stats that determine a Pokemon's battle prowess:
-
-```graphql interactive
-query PokemonStats {
-  pokemon(id: "150") {  # Mewtwo
-    name
-    stats {
-      hp
-      attack
-      defense
-      specialAttack
-      specialDefense
-      speed
-      total
-    }
-  }
-}
-```
-
-## Pokemon IVs and Nature
-
-Explore genetic potential and personality traits:
-
-```graphql interactive
-query GeneticPotential {
-  pokemon(id: "009") {  # Blastoise
-    name
-    types
-    nature
-    ivs {
-      hp
-      attack
-      defense
-      specialAttack
-      specialDefense
-      speed
-      isPerfect
-    }
-  }
-}
-```
-
-## Pokemon Training Data
-
-Explore training-related attributes:
+v3.0.0 adds genetic values, training data, and more:
 
 ```graphql interactive
 query DetailedPokemonInfo {
@@ -91,25 +96,51 @@ query DetailedPokemonInfo {
     level
     friendship
     nature
+    
+    # Genetic potential
+    ivs {
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+    }
+    
+    # Training results
     evs {
       hp
       attack
       defense
-      speed
       specialAttack
       specialDefense
+      speed
     }
   }
 }
 ```
 
-## Listing Multiple Pokemon
+## Listing Pokemon
 
-Get a list of Pokemon with pagination:
+### Basic List (v1.0.0)
 
 ```graphql interactive
 query ListPokemons {
-  allPokemon(limit: 5, offset: 0) {
+  pokemons(type: FIRE) {
+    id
+    name
+    type
+  }
+}
+```
+
+### Paginated List (v3.0.0+)
+
+v3.0.0 introduces proper pagination:
+
+```graphql interactive
+query PaginatedPokemons {
+  pokemons(limit: 5, offset: 0) {
     edges {
       node {
         id
@@ -120,7 +151,7 @@ query ListPokemons {
     }
     pageInfo {
       hasNextPage
-      hasPreviousPage
+      totalCount
     }
   }
 }
