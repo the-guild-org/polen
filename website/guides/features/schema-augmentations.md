@@ -98,32 +98,34 @@ export default Polen.defineConfig({
 
 ```ts [Field]
 export default Polen.defineConfig({
-  schemaAugmentations: [
-    // Add usage example after a field's description
-    {
-      type: `description`,
-      on: {
-        type: `TargetField`,
-        targetType: `Query`,
-        name: `users`,
+  schema: {
+    augmentations: [
+      // Add usage example after a field's description
+      {
+        type: `description`,
+        on: {
+          type: `TargetField`,
+          targetType: `Query`,
+          name: `users`,
+        },
+        placement: `after`,
+        content:
+          `\n\n**Example:**\n\`\`\`graphql\nquery GetActiveUsers {\n  users(filter: { status: ACTIVE }) {\n    id\n    name\n    email\n  }\n}\n\`\`\``,
       },
-      placement: `after`,
-      content:
-        `\n\n**Example:**\n\`\`\`graphql\nquery GetActiveUsers {\n  users(filter: { status: ACTIVE }) {\n    id\n    name\n    email\n  }\n}\n\`\`\``,
-    },
-    // Add implementation note to a mutation field
-    {
-      type: `description`,
-      on: {
-        type: `TargetField`,
-        targetType: `Mutation`,
-        name: `createUser`,
+      // Add implementation note to a mutation field
+      {
+        type: `description`,
+        on: {
+          type: `TargetField`,
+          targetType: `Mutation`,
+          name: `createUser`,
+        },
+        placement: `after`,
+        content:
+          `\n\n**Note:** This mutation requires authentication. Include your API key in the \`Authorization\` header.`,
       },
-      placement: `after`,
-      content:
-        `\n\n**Note:** This mutation requires authentication. Include your API key in the \`Authorization\` header.`,
-    },
-  ],
+    ],
+  },
 })
 ```
 

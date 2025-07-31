@@ -80,7 +80,9 @@ npx polen build --architecture ssg --base /your-repo-name/
 
 ```typescript
 // polen.config.ts
-export default defineConfig({
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
   build: {
     base: '/your-repo-name/',
   },

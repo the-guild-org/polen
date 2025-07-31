@@ -9,6 +9,7 @@ import { type Options, type OptionsWithDefualts } from './options.js'
 type AnyAdt = EffectKit.Schema.UnionAdt.$any
 type AnyStruct = EffectKit.Schema.TaggedStruct.$any
 type AnySchema = S.Schema<any, any, any>
+type SingletonSchema = S.Schema<any, any, any> // Transformation schemas that encode to scalars
 
 // ============================================================================
 // Hydration Config
@@ -239,7 +240,7 @@ export const generateSingletonHash = (value: unknown, schema: S.Schema.Any): str
 
   // For transformations, encode to the scalar form first
   if (ast._tag === 'Transformation') {
-    const encoded = ParseResult.encodeSync(schema)(value)
+    const encoded = ParseResult.encodeSync(schema as any)(value)
     return Hash.string(String(encoded)).toString()
   }
 
@@ -386,7 +387,7 @@ export const buildSchemaIndex = buildASTIndex
  * )
  */
 export function Hydratable<
-  schema extends AnyStruct | AnyAdt,
+  schema extends AnyStruct | AnyAdt | SingletonSchema,
   const $Options extends Options = OptionsWithDefualts,
 >(
   schema: schema,

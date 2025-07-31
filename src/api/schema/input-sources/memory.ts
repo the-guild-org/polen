@@ -9,6 +9,14 @@ import { Arr } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 
+// Create an empty schema using the same GraphQL instance to avoid realm issues
+const createEmptySchema = (): Effect.Effect<GraphQLSchema, Error> =>
+  Effect.gen(function*() {
+    const emptySDL = 'type Query { _empty: String }'
+    const ast = yield* Grafaid.Schema.AST.parse(emptySDL)
+    return yield* Grafaid.Schema.fromAST(ast)
+  })
+
 /**
  * Configuration for defining schemas programmatically in memory.
  *
@@ -141,7 +149,10 @@ const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema
 
 export const read = (
   options: Options,
-): Effect.Effect<null | { schema: Schema.Unversioned.Unversioned; revisions: Revision.Revision[] }, InputSourceError> =>
+): Effect.Effect<
+  null | { schema: Schema.Unversioned.Unversioned; revisions: Revision.Revision[] },
+  InputSource.InputSourceError
+> =>
   Effect.gen(function*() {
     const config = normalize(options)
 
@@ -187,14 +198,21 @@ export const read = (
           const current = version
           const previous = versions[index - 1]
 
-          const before = previous?.schema ?? Grafaid.Schema.empty
-          const after = current.schema
+          // Skip changeset calculation for the first version to avoid GraphQL realm issues
+          let changes: Change.Change[]
+          if (!previous) {
+            // For the first version, we don't have changes - just an empty array
+            changes = []
+          } else {
+            const before = previous.schema
+            const after = current.schema
 
-          const changes = yield* Change.calcChangeset({ before, after }).pipe(
-            Effect.mapError((error) =>
-              InputSource.InputSourceError('memory', `Failed to calculate changeset: ${error}`, error)
-            ),
-          )
+            changes = yield* Change.calcChangeset({ before, after }).pipe(
+              Effect.mapError((error) =>
+                InputSource.InputSourceError('memory', `Failed to calculate changeset: ${error}`, error)
+              ),
+            )
+          }
 
           return Revision.make({
             date: DateOnly.make(current.date.toISOString().split('T')[0]!),
@@ -222,8 +240,9 @@ export const read = (
 
 export const loader = InputSource.createEffect({
   name: 'memory',
-  isApplicable: (options: Options) => Effect.succeed(options.versions !== undefined && options.versions !== null),
-  readIfApplicableOrThrow: (options: Options) =>
+  isApplicable: (options: Options, _context) =>
+    Effect.succeed(options.versions !== undefined && options.versions !== null),
+  readIfApplicableOrThrow: (options: Options, _context) =>
     Effect.gen(function*() {
       const config = normalize(options)
 

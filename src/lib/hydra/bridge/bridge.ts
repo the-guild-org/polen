@@ -43,7 +43,7 @@ const createDehydratedVariant = (hydratableSchema: Hydratable.Hydratable): S.Sch
   // Handle singleton hydratables specially
   if (config._tag === 'HydratableConfigSingleton') {
     // For singletons, add a hash field as a string
-    fields.hash = S.String
+    fields['hash'] = S.String
   } else {
     // Extract the actual encoded types for unique keys
     if (AST.isTypeLiteral(encodedAst)) {
@@ -225,10 +225,8 @@ const transformSchemaWithHydratables = (
         // Transform the declaration to see if it resolves to a hydratable
         const transformedDeclaration = new AST.Declaration(
           typeParameters,
-          (...args) => transform(node.decodeUnknown(...args)),
-          node.decodeUnknown,
-          node.encodeUnknown,
-          node.annotations,
+          (...args: any) => node.decodeUnknown(...args),
+          (...args: any) => node.encodeUnknown(...args),
         )
 
         // Also check if the declaration itself is a hydratable reference
@@ -502,9 +500,9 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
 
               // Process child selections recursively
               for (const childSelection of childSelections) {
-                const childResult = yield* peek(childSelection)
+                const childResult = yield* peek(childSelection as any)
                 // Merge child results into the main result
-                Object.assign(result, childResult)
+                Object.assign(result as any, childResult as any)
               }
 
               // Store the hydrated parent value

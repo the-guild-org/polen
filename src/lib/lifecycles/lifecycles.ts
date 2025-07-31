@@ -382,12 +382,12 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
 
   // Handle versioned vs unversioned catalogs
   const processUnversionedCatalog = (cat: Catalog.Unversioned.Unversioned) => {
-    const revisions = [...cat.revisions].reverse() // Process chronologically
+    const revisions = [...cat.schema.revisions].reverse() // Process chronologically
 
     // Create the hydrated schema for unversioned catalog
     const schemaHydratable: SchemaType = {
       _tag: 'SchemaUnversioned',
-      revisions: cat.revisions.map(r => ({
+      revisions: cat.schema.revisions.map((r: any) => ({
         _tag: 'Revision' as const,
         date: r.date,
         changes: r.changes,

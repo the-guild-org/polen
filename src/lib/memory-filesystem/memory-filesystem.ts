@@ -1,6 +1,33 @@
+import { SystemError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Context, Effect, Layer } from 'effect'
-import * as path from 'node:path'
+import { Effect, Layer } from 'effect'
+
+// ============================================================================
+// Error Factories
+// ============================================================================
+
+const createUnsupportedError = (method: string, operation: string) =>
+  new SystemError({
+    reason: 'PermissionDenied',
+    module: 'FileSystem',
+    method,
+    description: `${operation} not supported in memory filesystem`,
+  })
+
+const createNotFoundError = (method: string, path: string, operation: string) =>
+  new SystemError({
+    reason: 'NotFound',
+    module: 'FileSystem',
+    method,
+    pathOrDescriptor: path,
+    description: `ENOENT: no such file or directory, ${operation} '${path}'`,
+  })
+
+// Convenience factories for common patterns
+const failUnsupported = (method: string, operation: string) => Effect.fail(createUnsupportedError(method, operation))
+
+const failNotFound = (method: string, path: string, operation: string) =>
+  Effect.fail(createNotFoundError(method, path, operation))
 
 // ============================================================================
 // Memory Filesystem Types
@@ -13,23 +40,6 @@ import * as path from 'node:path'
 export interface DiskLayout {
   readonly [path: string]: string
 }
-
-// ============================================================================
-// Hydra IO Service Interface (for compatibility)
-// ============================================================================
-
-/**
- * IO operations service interface compatible with Hydra Bridge
- * Provides basic file operations for string data
- */
-export interface IOService {
-  readonly read: (relativePath: string) => Effect.Effect<string, Error>
-  readonly write: (relativePath: string, data: string) => Effect.Effect<void, Error>
-  readonly list: (relativePath: string) => Effect.Effect<ReadonlyArray<string>, Error>
-  readonly remove: (relativePath: string) => Effect.Effect<void, Error>
-}
-
-export const IO = Context.GenericTag<IOService>('@memory-filesystem/IO')
 
 // ============================================================================
 // Memory Filesystem Layer Factory
@@ -45,7 +55,7 @@ export const IO = Context.GenericTag<IOService>('@memory-filesystem/IO')
 export const layer = (diskLayout: DiskLayout) =>
   Layer.succeed(
     FileSystem,
-    FileSystem.make({
+    {
       // File existence check
       exists: (path: string) => Effect.succeed(path in diskLayout),
 
@@ -54,7 +64,7 @@ export const layer = (diskLayout: DiskLayout) =>
         const content = diskLayout[path]
         return content !== undefined
           ? Effect.succeed(content)
-          : Effect.fail(new Error(`ENOENT: no such file or directory, open '${path}'`))
+          : failNotFound('readFileString', path, 'open')
       },
 
       // Read directory contents
@@ -67,7 +77,7 @@ export const layer = (diskLayout: DiskLayout) =>
 
         return entries.length > 0
           ? Effect.succeed(entries)
-          : Effect.fail(new Error(`ENOENT: no such file or directory, scandir '${path}'`))
+          : failNotFound('readDirectory', path, 'scandir')
       },
 
       // File stats (simplified - just checks existence)
@@ -96,111 +106,51 @@ export const layer = (diskLayout: DiskLayout) =>
           } as any)
         }
 
-        return Effect.fail(new Error(`ENOENT: no such file or directory, stat '${path}'`))
+        return failNotFound('stat', path, 'stat')
       },
 
       // Stub implementations for write operations (not needed for read-only testing)
-      writeFileString: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      writeFile: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      truncate: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      remove: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      makeDirectory: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      makeTempDirectory: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      makeTempDirectoryScoped: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      makeTempFile: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      makeTempFileScoped: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      open: () => Effect.fail(new Error('File operations not supported in memory filesystem')),
-      copy: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      copyFile: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      chmod: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      chown: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
+      writeFileString: () => failUnsupported('writeFileString', 'Write operations'),
+      writeFile: () => failUnsupported('writeFile', 'Write operations'),
+      truncate: () => failUnsupported('truncate', 'Write operations'),
+      remove: () => failUnsupported('remove', 'Write operations'),
+      makeDirectory: () => failUnsupported('makeDirectory', 'Write operations'),
+      makeTempDirectory: () => failUnsupported('makeTempDirectory', 'Write operations'),
+      makeTempDirectoryScoped: () => failUnsupported('makeTempDirectoryScoped', 'Write operations'),
+      makeTempFile: () => failUnsupported('makeTempFile', 'Write operations'),
+      makeTempFileScoped: () => failUnsupported('makeTempFileScoped', 'Write operations'),
+      open: () => failUnsupported('open', 'File operations'),
+      copy: () => failUnsupported('copy', 'Write operations'),
+      copyFile: () => failUnsupported('copyFile', 'Write operations'),
+      chmod: () => failUnsupported('chmod', 'Write operations'),
+      chown: () => failUnsupported('chown', 'Write operations'),
       access: (path: string) =>
         path in diskLayout
           ? Effect.void
-          : Effect.fail(new Error(`ENOENT: no such file or directory, access '${path}'`)),
-      link: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
+          : failNotFound('access', path, 'access'),
+      link: () => failUnsupported('link', 'Write operations'),
       realPath: (path: string) => Effect.succeed(path),
       readFile: (path: string) => {
         const content = diskLayout[path]
         return content !== undefined
           ? Effect.succeed(new TextEncoder().encode(content))
-          : Effect.fail(new Error(`ENOENT: no such file or directory, open '${path}'`))
+          : failNotFound('readFile', path, 'open')
       },
-      readLink: () => Effect.fail(new Error('Symlink operations not supported in memory filesystem')),
-      symlink: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      utimes: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      watch: () => Effect.fail(new Error('Watch operations not supported in memory filesystem')),
-    }),
-  )
+      readLink: () => failUnsupported('readLink', 'Symlink operations'),
+      symlink: () => failUnsupported('symlink', 'Write operations'),
+      utimes: () => failUnsupported('utimes', 'Write operations'),
+      watch: () => failUnsupported('watch', 'Watch operations'),
 
-// ============================================================================
-// Hydra IO Service Layer Factory
-// ============================================================================
+      // Rename/move files (not implemented for memory filesystem)
+      rename: () => failUnsupported('rename', 'Write operations'),
 
-/**
- * Creates a Hydra IO service layer from a disk layout specification.
- * This provides the simpler IO interface compatible with Hydra Bridge.
- *
- * @param options - Configuration options
- * @param options.basePath - Optional base path to simulate directory structure
- * @param options.initialFiles - Initial files as a Map or Record
- * @returns Layer that provides a Hydra IO service backed by memory
- */
-export const ioLayer = (options?: {
-  basePath?: string
-  initialFiles?: Map<string, string> | Record<string, string>
-}) => {
-  const basePath = options?.basePath || '.'
-  const initialFilesInput = options?.initialFiles instanceof Map
-    ? options.initialFiles
-    : new Map(Object.entries(options?.initialFiles || {}))
+      // Create writable sink (not implemented for memory filesystem)
+      sink: () => failUnsupported('sink', 'Stream operations'),
 
-  // Convert initial files to use full paths
-  const files = new Map<string, string>()
-  for (const [filename, content] of initialFilesInput) {
-    const fullPath = path.join(basePath, filename)
-    files.set(fullPath, content)
-  }
-
-  return Layer.succeed(
-    IO,
-    {
-      read: (relativePath: string) =>
-        Effect.gen(function*() {
-          const fullPath = path.join(basePath, relativePath)
-          const content = files.get(fullPath)
-          if (content === undefined) {
-            return yield* Effect.fail(new Error(`File not found: ${relativePath}`))
-          }
-          return content
-        }),
-
-      write: (relativePath: string, data: string) =>
-        Effect.sync(() => {
-          const fullPath = path.join(basePath, relativePath)
-          files.set(fullPath, data)
-        }),
-
-      list: (relativePath: string) =>
-        Effect.sync(() => {
-          const searchPath = path.join(basePath, relativePath)
-          // Return only filenames in the given directory
-          return Array.from(files.keys())
-            .filter(filePath => {
-              const dir = path.dirname(filePath)
-              return dir === searchPath || (searchPath === basePath && dir === searchPath)
-            })
-            .map(filePath => path.basename(filePath))
-        }),
-
-      remove: (relativePath: string) =>
-        Effect.sync(() => {
-          const fullPath = path.join(basePath, relativePath)
-          files.delete(fullPath)
-        }),
+      // Create readable stream (not implemented for memory filesystem)
+      stream: () => failUnsupported('stream', 'Stream operations'),
     },
   )
-}
 
 /**
  * Convenience function for creating memory filesystem layers from disk layout.

@@ -150,7 +150,7 @@ export const loader = InputSource.createEffect({
       // Try to read from cache
       const cacheEntry = yield* Effect.tryPromise({
         try: () => readCache(cachePath),
-        catch: (error) => InputSourceError('introspection', `Failed to read cache: ${error}`, error),
+        catch: (error) => InputSource.InputSourceError('introspection', `Failed to read cache: ${error}`, error),
       })
 
       let schema: Grafaid.Schema.Schema
@@ -162,7 +162,7 @@ export const loader = InputSource.createEffect({
         // Fetch fresh introspection
         schema = yield* fetchIntrospection(options).pipe(
           Effect.mapError((error) =>
-            InputSourceError('introspection', `Failed to fetch introspection: ${error}`, error)
+            InputSource.InputSourceError('introspection', `Failed to fetch introspection: ${error}`, error)
           ),
         )
 
@@ -176,12 +176,14 @@ export const loader = InputSource.createEffect({
 
         yield* Effect.tryPromise({
           try: () => writeCache(cachePath, newCacheEntry),
-          catch: (error) => InputSourceError('introspection', `Failed to write cache: ${error}`, error),
+          catch: (error) => InputSource.InputSourceError('introspection', `Failed to write cache: ${error}`, error),
         })
       }
 
       return yield* createCatalogFromSchema(schema).pipe(
-        Effect.mapError((error) => InputSourceError('introspection', `Failed to create catalog: ${error}`, error)),
+        Effect.mapError((error) =>
+          InputSource.InputSourceError('introspection', `Failed to create catalog: ${error}`, error)
+        ),
       )
     }),
 
@@ -193,7 +195,9 @@ export const loader = InputSource.createEffect({
 
       // Force fresh introspection
       const schema = yield* fetchIntrospection(options).pipe(
-        Effect.mapError((error) => InputSourceError('introspection', `Failed to fetch introspection: ${error}`, error)),
+        Effect.mapError((error) =>
+          InputSource.InputSourceError('introspection', `Failed to fetch introspection: ${error}`, error)
+        ),
       )
 
       // Update cache
@@ -206,11 +210,13 @@ export const loader = InputSource.createEffect({
 
       yield* Effect.tryPromise({
         try: () => writeCache(cachePath, newCacheEntry),
-        catch: (error) => InputSourceError('introspection', `Failed to write cache: ${error}`, error),
+        catch: (error) => InputSource.InputSourceError('introspection', `Failed to write cache: ${error}`, error),
       })
 
       return yield* createCatalogFromSchema(schema).pipe(
-        Effect.mapError((error) => InputSourceError('introspection', `Failed to create catalog: ${error}`, error)),
+        Effect.mapError((error) =>
+          InputSource.InputSourceError('introspection', `Failed to create catalog: ${error}`, error)
+        ),
       )
     }),
 })

@@ -83,7 +83,7 @@ interface VersionInfo {
 export const readOrThrow = (
   configInput: ConfigInput,
   projectRoot: string,
-): Effect.Effect<null | Catalog.Versioned.Versioned, InputSourceError, FileSystem> =>
+): Effect.Effect<null | Catalog.Versioned.Versioned, InputSource.InputSourceError | PlatformError, FileSystem> =>
   Effect.gen(function*() {
     const config = normalizeConfig(configInput, projectRoot)
 
@@ -102,8 +102,8 @@ export const readOrThrow = (
     const versionInfos: VersionInfo[] = []
 
     for (const entry of entries) {
-      const versionPath = join(config.path, entry)
-      const schemaPath = join(versionPath, 'schema.graphql')
+      const versionPath = Path.join(config.path, entry)
+      const schemaPath = Path.join(versionPath, 'schema.graphql')
 
       // Check if this is a directory with a schema.graphql file
       const fileExistsResult = yield* Effect.either(fs.stat(schemaPath))
@@ -148,7 +148,7 @@ export const readOrThrow = (
           const content = yield* fs.readFileString(versionInfo.schemaPath)
           const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
             Effect.mapError((error) =>
-              InputSourceError(
+              InputSource.InputSourceError(
                 'versionedDirectory',
                 `Failed to parse schema from ${versionInfo.schemaPath}: ${error}`,
                 error,
@@ -157,7 +157,7 @@ export const readOrThrow = (
           )
           const schema = yield* Grafaid.Schema.fromAST(ast).pipe(
             Effect.mapError((error) =>
-              InputSourceError(
+              InputSource.InputSourceError(
                 'versionedDirectory',
                 `Failed to build schema from ${versionInfo.schemaPath}: ${error}`,
                 error,
@@ -319,7 +319,10 @@ export const loader = InputSource.createEffect({
           debug('catalog result:', catalog)
           return catalog
         } else {
-          debug(`failed to read schema for ${entry}:`, schemaExistsResult.left)
+          debug(
+            `failed to read schema for ${entry}:`,
+            schemaExistsResult._tag === 'Left' ? schemaExistsResult.left : 'Not a file',
+          )
         }
       }
 

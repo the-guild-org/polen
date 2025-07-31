@@ -34,7 +34,7 @@ const referenceLoader = async ({ params }: any) => {
 
   // Debug: Check the structure of the first entry
   if (catalog._tag === 'CatalogVersioned' && catalog.entries.length > 0) {
-    const firstEntry = catalog.entries[0]
+    const firstEntry = catalog.entries[0]!
     console.log('First entry schema:', firstEntry.schema)
     console.log('First entry schema definition:', firstEntry.schema?.definition)
     console.log('First entry schema definition type:', typeof firstEntry.schema?.definition)

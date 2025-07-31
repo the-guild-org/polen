@@ -87,3 +87,36 @@ Where `{version}` can be:
 # View a specific field from that version
 /reference/version/2024-01-15/User/email
 ```
+
+## Troubleshooting
+
+### Version Navigation Issues
+
+#### Version Picker Not Appearing
+
+- **Cause**: The version picker only appears when you have 2 or more schema versions configured
+- **Solution**: Ensure your configuration includes multiple schema versions using any of the supported [input sources](/guides/features/schema-overview#supplying-your-schema)
+
+#### "Version not found" Errors
+
+- **Cause**: The version string doesn't match any configured schema versions
+- **Solution**: Check your schema configuration and ensure version strings match exactly (case-sensitive)
+
+#### Types Missing in Specific Versions
+
+When switching versions, you might encounter toast notifications about missing types or fields:
+
+- **Expected Behavior**: Polen automatically finds the closest equivalent page when schema elements don't exist in the target version
+- **Toast Actions**: Use the provided "Go back" or "View changelog" buttons to understand what changed
+- **Manual Navigation**: Construct URLs using the exact version format from your schema configuration
+
+#### Performance Issues with Large Schemas
+
+- **Cause**: Very large schemas may take time to process during version switching
+- **Solution**: Polen's Hydra architecture handles this efficiently, but initial loading of massive schemas may require patience
+
+#### Browser History Issues
+
+- **Cause**: Rapid version switching might cause browser history navigation problems
+- **Solution**: Use the version picker dropdown instead of browser back/forward buttons when switching between versions
+- **Alternative**: Navigate directly via URLs if the UI becomes unresponsive

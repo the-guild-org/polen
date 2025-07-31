@@ -28,6 +28,17 @@ const HyTransformedKey = Hy(
   { keys: ['version'] },
 )
 
+// Singleton hydratable for testing
+const SingletonDataSchema = Tst('Singleton', { data: Str })
+const HySingleton = Hy(S.transformOrFail(
+  Str,
+  SingletonDataSchema,
+  {
+    decode: (s) => Effect.succeed(SingletonDataSchema.make({ data: s })),
+    encode: (o) => Effect.succeed(o.data),
+  },
+))
+
 describe('Hydra.Hydratable()', () => {
   test('returns sub type of what is given', () => {
     Ts.assertSub<S.Struct<any>>()(Hy(A, { keys: ['n'] }))
@@ -126,13 +137,12 @@ Test.suite<{
       testData:          HyTransformedKey.make({ id: 'test', version: { v: '1.0.0' } }),
       expected:          {size:1, keys: ['WithTransform!version@1.0.0']},
     },
-    // TODO: Add proper singleton hydratable test with transformation
-    // {
-    //   name:              'singleton hydratable (no unique keys)',
-    //   rootSchema:        St({ singleton: HySingleton }),
-    //   testData:          St({ singleton: HySingleton }).make({ singleton: HySingleton.make({ data: 'test data' }) }),
-    //   expected:          {size:1, keys: ['Singleton']},
-    // },
+    {
+      name:              'singleton hydratable (no unique keys)',
+      rootSchema:        St({ singleton: HySingleton }),
+      testData:          St({ singleton: HySingleton }).make({ singleton: SingletonDataSchema.make({ data: 'test data' }) }),
+      expected:          {size:1, keys: ['Singleton!hash@-344783773']},
+    },
   ], async ({ name, rootSchema, testData, expected }) => {
   const bridge = H.Bridge.makeMake(rootSchema)({})
   bridge.importFromMemory(testData)
@@ -185,11 +195,11 @@ Test.suite<{
   // Start with files on disk
   const files = H.Bridge.dataToFiles(rootData, rootSchema)
   const memoryIO = H.Io.Memory({ initialFiles: new Map(files) })
-  
+
   // Create bridge and import from disk
   const bridge = H.Bridge.makeMake(rootSchema)({})
   await Effect.runPromise(Effect.provide(bridge.import(), memoryIO))
-  
+
   // Verify hasImported is set after import
   expect(bridge.index.hasImported).toBe(true)
   expect(bridge.index.root).not.toBe(null)
@@ -268,7 +278,7 @@ test('schema transformation handles property references to hydratables', async (
 
   // Peek at C - this should return the fragment with dehydrated D
   const peeked = await Effect.runPromise(
-    Effect.provide(freshBridge.peek({ C: { id: 'c1' } }), memoryIO),
+    Effect.provide(freshBridge.peek({ C: { id: 'c1' } } as any), memoryIO),
   )
 
   // This should succeed without errors
@@ -282,16 +292,19 @@ test('schema transformation handles property references to hydratables', async (
 })
 
 test('singleton hydratables are properly exported with hash key', () => {
+  const StringDataSchema = Tst('StringData', { data: Str })
   const StringToData = S.transformOrFail(
     Str,
-    Tst('StringData', { data: Str }),
+    StringDataSchema,
     {
-      decode: (s) => Effect.succeed({ _tag: 'StringData' as const, data: s }),
+      decode: (s) => Effect.succeed(StringDataSchema.make({ data: s })),
       encode: (o) => Effect.succeed(o.data),
     },
   )
   const RootWithSingleton = St({ singleton: Hy(StringToData) })
-  const data = { singleton: { _tag: 'StringData', data: 'test data' } }
+  const data = RootWithSingleton.make({
+    singleton: StringDataSchema.make({ data: 'test data' }),
+  })
 
   const files = H.Bridge.dataToFiles(data, RootWithSingleton)
 
@@ -405,7 +418,7 @@ Test.suite<{
       if (context) {
         segments.unshift(H.Uhl.Segment.make({ tag: context.tag, uniqueKeys: context.keys }))
       }
-      H.Uhl.make(segments)
+      H.Uhl.make(...segments)
     }).toThrow(error)
   } else {
     const segments = [H.Uhl.Segment.make({ tag, uniqueKeys: keys })]
@@ -414,7 +427,7 @@ Test.suite<{
     }
     const uhl = H.Uhl.make(...segments)
     expect(uhl).toBeDefined()
-    
+
     // Verify toString produces correct expression
     const expression = H.Uhl.toString(uhl)
     if (Object.keys(keys).length === 0) {
@@ -538,7 +551,7 @@ Test.suite<{
     const C = Tst('C', { id: Str, d: HyD })
     const HyC = Hy(C, { keys: ['id'] })
     const rootSchema = St({ c: HyC })
-    
+
     return {
       name: 'nested hydratables with partial hydration',
       rootSchema,
@@ -549,32 +562,23 @@ Test.suite<{
         }),
       }),
       selection: { C: { id: 'c1' } },
-      expected: { 
-        C: { 
-          _tag: 'C', 
-          id: 'c1', 
-          d: { _tag: 'D', _dehydrated: true, id: 'd1' } 
-        } 
+      expected: {
+        C: {
+          _tag: 'C',
+          id: 'c1',
+          d: { _tag: 'D', _dehydrated: true, id: 'd1' }
+        }
       }
     }
   })(),
 ], async ({ rootSchema, rootData, selection, expected, error }) => {
   // Convert data directly to files
   const files = H.Bridge.dataToFiles(rootData, rootSchema)
-  
-  // Debug: log files for nested hydratables test
-  if (expected?.C?.d?._dehydrated) {
-    console.log('Files for nested hydratables test:')
-    for (const [filename, content] of files) {
-      console.log(`  ${filename}: ${content}`)
-    }
-  }
-  
   const memoryIO = H.Io.Memory({ initialFiles: new Map(files) })
-  
+
   // Create a fresh bridge starting from disk
   const bridge = H.Bridge.makeMake(rootSchema)({})
-  
+
   if (error) {
     await expect(
       Effect.runPromise(Effect.provide(bridge.peek(selection), memoryIO))

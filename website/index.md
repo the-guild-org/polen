@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /guides/overview/get-started
+      link: /guides/get-started
     - theme: alt
       text: View on GitHub
       link: https://github.com/the-guild-org/polen

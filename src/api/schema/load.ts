@@ -36,7 +36,7 @@ const findApplicableSource = (
       InputSources.Memory.loader,
       InputSources.Introspection.loader,
       InputSources.IntrospectionFile.loader,
-    ]
+    ] as AnyInputSource[]
 
     const useFirst = config.schema?.useSources
       ? Arr.sure(config.schema.useSources)
@@ -133,7 +133,7 @@ export const loadOrNull = (
 
     const loadedSchema: InputSourceLoader.LoadedCatalog = {
       data: catalog,
-      source: applicable.source,
+      source: applicable.source as InputSource,
     }
 
     // Apply augmentations if configured and catalog was loaded
@@ -143,11 +143,11 @@ export const loadOrNull = (
       Catalog.fold(
         (versioned) => {
           for (const entry of versioned.entries) {
-            applyAugmentations(entry.schema.definition, augmentations)
+            Augmentations.apply(entry.schema.definition, augmentations)
           }
         },
         (unversioned) => {
-          applyAugmentations(unversioned.schema.definition, augmentations)
+          Augmentations.apply(unversioned.schema.definition, augmentations)
         },
       )(catalog)
     }
@@ -184,8 +184,3 @@ export const loadOrThrow = (
 
     return result
   })
-
-const applyAugmentations = (schema: any, augmentations: Config['schema']['augmentations']): void => {
-  // @ts-expect-error - TODO fix augmentations type
-  Augmentations.apply(schema, augmentations)
-}

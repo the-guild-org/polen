@@ -32,17 +32,17 @@ schema/
 You can use [configuration](/guides/features/configuration) if you wish, supplying a schema inline even. Refer to extensive JSDoc on configuration properties for details.
 
 ```ts
+import { buildSchema } from 'graphql'
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
-    useSources: 'memory',
+    useSources: ['memory'],
     sources: {
       memory: {
         versions: [
           {
-            date: new Date('2023-01-15'),
-            value: `
+            schema: buildSchema(`
               type Query {
                 users: [User]
               }
@@ -50,7 +50,8 @@ export default Polen.defineConfig({
                 id: ID!
                 name: String!
               }
-            `,
+            `),
+            date: '2023-01-15',
           },
         ],
       },
@@ -81,6 +82,7 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
+    useSources: ['introspectionFile'],
     sources: {
       introspectionFile: {
         path: './custom-introspection.json', // Custom path if needed
@@ -99,6 +101,7 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
+    useSources: ['introspection'],
     sources: {
       introspection: {
         url: 'https://api.example.com/graphql',
@@ -131,10 +134,11 @@ export default Polen.defineConfig({
 The versioned directory source organizes schemas into separate subdirectories for clear version boundaries. This is ideal for APIs with distinct major versions rather than just evolutionary revisions.
 
 ```ts
-import { polen } from 'polen'
+import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
+    useSources: ['versionedDirectory'],
     sources: {
       versionedDirectory: {
         path: './schema', // Directory containing version subdirectories
@@ -278,7 +282,6 @@ Polen provides the following schema-related features:
 ## Current Limitations
 
 - Introspection only supports single schemas (no versioning/changelog support)
-- Version navigation in the reference docs requires manual URL construction
 - Changelog doesn't include clickable links to versioned reference pages
 
 ```

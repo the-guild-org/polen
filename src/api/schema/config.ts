@@ -12,6 +12,8 @@ export type InputSourceName =
   | `introspection`
   | `introspectionFile`
 
+export type ConfigAugmentations = Augmentations.Augmentation[]
+
 /**
  * Schema configuration for Polen.
  *

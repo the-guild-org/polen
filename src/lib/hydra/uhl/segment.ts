@@ -62,7 +62,9 @@ export const validateAgainstConfig = (
     // Struct config
     if (segment.adt !== undefined) return false
     const segmentKeys = Object.keys(segment.uniqueKeys)
-    return config.uniqueKeys.every(key => segmentKeys.includes(key))
+    return config._tag === 'HydratableConfigStruct'
+      ? config.uniqueKeys.every((key: string) => segmentKeys.includes(key))
+      : false
   }
 }
 

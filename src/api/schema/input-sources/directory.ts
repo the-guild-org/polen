@@ -111,6 +111,9 @@ export const loader = InputSource.createEffect({
 
       debug(`will search`, config)
 
+      // Get FileSystem service
+      const fs = yield* FileSystem
+
       // Get all files in directory
       const filesResult = yield* Effect.either(fs.readDirectory(config.path))
       if (filesResult._tag === 'Left') {
@@ -156,7 +159,7 @@ export const loader = InputSource.createEffect({
 
 const read = (
   revisionInputs: { date: string; filePath: string }[],
-): Effect.Effect<Schema.Unversioned.Unversioned, InputSource.InputSourceError, FileSystem> =>
+): Effect.Effect<Schema.Unversioned.Unversioned, InputSource.InputSourceError | PlatformError, FileSystem> =>
   Effect.gen(function*() {
     const revisionInputsLoaded = yield* Effect.all(
       Arr.map(revisionInputs, (revisionInput) =>

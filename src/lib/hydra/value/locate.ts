@@ -45,7 +45,7 @@ const locateHydratables_ = (
         // For singleton hydratables, generate hash key
         const schema = S.make(hydratableAST)
         const hash = Hydratable.generateSingletonHash(value, schema)
-        keyValues.hash = hash
+        keyValues['hash'] = hash
       } else {
         // Extract unique key values in encoded form
         const encoder = context.encoders.get(value._tag)

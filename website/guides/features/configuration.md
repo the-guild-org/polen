@@ -45,7 +45,7 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
-    useSources: 'directory',
+    useSources: ['directory'],
     sources: {
       directory: {
         path: './schema',

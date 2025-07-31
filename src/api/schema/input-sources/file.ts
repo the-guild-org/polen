@@ -75,16 +75,20 @@ export const loader = InputSource.createEffect({
       const content = yield* fs.readFileString(config.path)
 
       const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
-        Effect.mapError((error) => InputSourceError('file', `Failed to parse schema file: ${error}`, error)),
+        Effect.mapError((error) =>
+          InputSource.InputSourceError('file', `Failed to parse schema file: ${error}`, error)
+        ),
       )
       const after = yield* Grafaid.Schema.fromAST(ast).pipe(
-        Effect.mapError((error) => InputSourceError('file', `Failed to build schema: ${error}`, error)),
+        Effect.mapError((error) => InputSource.InputSourceError('file', `Failed to build schema: ${error}`, error)),
       )
 
       const date = new Date()
       const before = Grafaid.Schema.empty
       const changes = yield* Change.calcChangeset({ before, after }).pipe(
-        Effect.mapError((error) => InputSourceError('file', `Failed to calculate changeset: ${error}`, error)),
+        Effect.mapError((error) =>
+          InputSource.InputSourceError('file', `Failed to calculate changeset: ${error}`, error)
+        ),
       )
 
       // Create the date string for revision

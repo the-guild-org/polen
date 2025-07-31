@@ -1,19 +1,7 @@
-import { Context, Effect } from 'effect'
+// Re-export CrudService as IO for backward compatibility with Hydra Bridge
+export { CrudService as IO, CrudService as IOService } from '#lib/services-crud/service'
 
-// ============================================================================
-// Service Definition
-// ============================================================================
-
-/**
- * IO operations service interface
- * Provides basic file operations for string data
- * JSON parsing/stringifying is handled by Bridge, not IO
- */
-export interface IOService {
-  readonly read: (relativePath: string) => Effect.Effect<string, Error>
-  readonly write: (relativePath: string, data: string) => Effect.Effect<void, Error>
-  readonly list: (relativePath: string) => Effect.Effect<ReadonlyArray<string>, Error>
-  readonly remove: (relativePath: string) => Effect.Effect<void, Error>
-}
-
-export const IO = Context.GenericTag<IOService>('@hydra/bridge/IO')
+// Re-export services-crud functions for backward compatibility
+export { fromFileSystem as File } from '#lib/services-crud/filesystem'
+export { memory as Memory } from '#lib/services-crud/memory'
+export type { MemoryOptions } from '#lib/services-crud/memory'

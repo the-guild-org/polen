@@ -113,7 +113,7 @@ Code blocks support syntax highlighting via [Code Hike](https://codehike.org/) u
 
 ## Document Blocks
 
-Polen automatically enhances GraphQL document code blocks with rich interactive features when you add `interactive` to the code block's metadata (and have a [GraphQL schema configured](/guides/features/schema-reference#configuration)).
+Polen automatically enhances GraphQL document code blocks with rich interactive features when you add `interactive` to the code block's metadata (and have a [GraphQL schema configured](/guides/features/schema-overview#configuration)).
 
 ### Usage
 
@@ -174,10 +174,12 @@ When enabled, GraphQL code blocks provide:
 
 ### Configuration
 
-Control how Polen handles interactive blocks when no [GraphQL schema is configured](/guides/features/schema-reference#configuration). By default, Polen shows a warning indicator to help developers understand why interactive features aren't working.
+Control how Polen handles interactive blocks when no [GraphQL schema is configured](/guides/features/schema-overview#configuration). By default, Polen shows a warning indicator to help developers understand why interactive features aren't working.
 
 ```ts
-export default defineConfig({
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
   warnings: {
     interactiveWithoutSchema: {
       enabled: false, // Disable the "No schema configured" warning
@@ -188,7 +190,7 @@ export default defineConfig({
 
 When `enabled` is `true` (default), blocks without schema show: "⚠️ No schema configured"
 
-Learn more about [configuring Polen](/guides/reference/api#warnings).
+Learn more about [configuring Polen](/guides/features/configuration).
 
 ### Live Examples
 

@@ -67,7 +67,7 @@ const INTROSPECTION_FILE_NAME = `schema.introspection.json`
 export const read = (
   options: Options,
   projectRoot: string,
-): Effect.Effect<Catalog.Unversioned.Unversioned | null, InputSourceError, FileSystem> =>
+): Effect.Effect<Catalog.Unversioned.Unversioned | null, InputSource.InputSourceError, FileSystem> =>
   Effect.gen(function*() {
     const config = normalizeOptions(options, projectRoot)
     const fs = yield* FileSystem
@@ -80,7 +80,7 @@ export const read = (
 
     const introspectionFileContent = yield* fs.readFileString(config.path).pipe(
       Effect.mapError((error) =>
-        InputSourceError('introspectionFile', `Failed to read file ${config.path}: ${error}`, error)
+        InputSource.InputSourceError('introspectionFile', `Failed to read file ${config.path}: ${error}`, error)
       ),
     )
 
@@ -90,16 +90,24 @@ export const read = (
       try: () => Json.codec.decode(introspectionFileContent),
       catch: (error) => {
         if (error instanceof SyntaxError) {
-          return InputSourceError('introspectionFile', `Invalid JSON in ${config.path}: ${error.message}`, error)
+          return InputSource.InputSourceError(
+            'introspectionFile',
+            `Invalid JSON in ${config.path}: ${error.message}`,
+            error,
+          )
         }
-        return InputSourceError('introspectionFile', `Failed to parse JSON in ${config.path}: ${error}`, error)
+        return InputSource.InputSourceError(
+          'introspectionFile',
+          `Failed to parse JSON in ${config.path}: ${error}`,
+          error,
+        )
       },
     })
 
     // Validate introspection data structure before passing to fromIntrospectionQuery
     if (!introspectionData || typeof introspectionData !== 'object') {
       return yield* Effect.fail(
-        InputSourceError('introspectionFile', 'Introspection data must be a valid JSON object'),
+        InputSource.InputSourceError('introspectionFile', 'Introspection data must be a valid JSON object'),
       )
     }
 
@@ -107,7 +115,7 @@ export const read = (
     // It will provide more specific GraphQL-related error messages
     if (!('data' in introspectionData)) {
       return yield* Effect.fail(
-        InputSourceError(
+        InputSource.InputSourceError(
           'introspectionFile',
           'Introspection data missing required "data" property (expected GraphQL introspection result format)',
         ),
@@ -125,7 +133,7 @@ export const read = (
  */
 const createCatalogFromSchema = (
   schemaData: Grafaid.Schema.Schema,
-): Effect.Effect<Catalog.Unversioned.Unversioned, InputSourceError> =>
+): Effect.Effect<Catalog.Unversioned.Unversioned, InputSource.InputSourceError> =>
   Effect.gen(function*() {
     const date = new Date()
     const dateString = date.toISOString().split('T')[0]!
@@ -136,7 +144,7 @@ const createCatalogFromSchema = (
       after,
     }).pipe(
       Effect.mapError((error) =>
-        InputSourceError('introspectionFile', `Failed to calculate changeset: ${error}`, error)
+        InputSource.InputSourceError('introspectionFile', `Failed to calculate changeset: ${error}`, error)
       ),
     )
 

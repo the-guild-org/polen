@@ -60,7 +60,7 @@ export const hydrate = (value: unknown, index: Index.Index, parentUhl: Uhl.Uhl[]
 
     // Try with parent context first (for nested hydratables)
     if (parentUhl.length > 0) {
-      const contextualUhl = [...parentUhl, ...uhl]
+      const contextualUhl = [...parentUhl, ...uhl] as any
       const contextualUhlString = Uhl.toString(contextualUhl)
       const hydratedValue = index.fragments.get(contextualUhlString)
       if (hydratedValue && !isDehydrated(hydratedValue)) {
@@ -74,7 +74,7 @@ export const hydrate = (value: unknown, index: Index.Index, parentUhl: Uhl.Uhl[]
     const hydratedValue = index.fragments.get(uhlString)
     if (hydratedValue && !isDehydrated(hydratedValue)) {
       // Recursively hydrate the replacement value
-      return hydrate(hydratedValue, index, uhl)
+      return hydrate(hydratedValue, index, uhl as any)
     }
 
     // If not found in index, return the dehydrated value as-is
@@ -88,7 +88,7 @@ export const hydrate = (value: unknown, index: Index.Index, parentUhl: Uhl.Uhl[]
     // by matching the value
     for (const [uhlString, fragmentValue] of index.fragments.entries()) {
       if (fragmentValue === value) {
-        currentUhl = Uhl.fromString(uhlString)
+        currentUhl = Uhl.fromString(uhlString) as any
         break
       }
     }
@@ -370,7 +370,7 @@ const dehydrate_ = (
           uniqueKeys = Object.fromEntries(keys.map(key => [key, encoded[key]]).filter(([_, v]) => v != null))
         }
 
-        const segment = Uhl.Segment.make({ tag, uniqueKeys })
+        const segment = Uhl.Segment.make({ tag, uniqueKeys: uniqueKeys as any })
         currentUhl = Uhl.make(segment)
       }
     }
