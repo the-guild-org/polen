@@ -1,5 +1,4 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { InputSourceError } from '#api/schema/input-source/$$'
 import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { DateOnly } from '#lib/date-only/$'
@@ -120,7 +119,7 @@ export const loader = InputSource.createEffect({
       }
 
       const files = filesResult.right
-      const graphqlFiles = files.filter(file => file.endsWith('.graphql'))
+      const graphqlFiles = files.filter((file: string) => file.endsWith('.graphql'))
 
       if (!Arr.isntEmpty(graphqlFiles)) {
         return null
@@ -157,7 +156,7 @@ export const loader = InputSource.createEffect({
 
 const read = (
   revisionInputs: { date: string; filePath: string }[],
-): Effect.Effect<Schema.Unversioned.Unversioned, InputSourceError, FileSystem> =>
+): Effect.Effect<Schema.Unversioned.Unversioned, InputSource.InputSourceError, FileSystem> =>
   Effect.gen(function*() {
     const revisionInputsLoaded = yield* Effect.all(
       Arr.map(revisionInputs, (revisionInput) =>
@@ -166,12 +165,20 @@ const read = (
           const content = yield* fs.readFileString(revisionInput.filePath)
           const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
             Effect.mapError((error) =>
-              InputSourceError('directory', `Failed to parse schema file ${revisionInput.filePath}: ${error}`, error)
+              InputSource.InputSourceError(
+                'directory',
+                `Failed to parse schema file ${revisionInput.filePath}: ${error}`,
+                error,
+              )
             ),
           )
           const schema = yield* Grafaid.Schema.fromAST(ast).pipe(
             Effect.mapError((error) =>
-              InputSourceError('directory', `Failed to build schema from ${revisionInput.filePath}: ${error}`, error)
+              InputSource.InputSourceError(
+                'directory',
+                `Failed to build schema from ${revisionInput.filePath}: ${error}`,
+                error,
+              )
             ),
           )
 
@@ -197,7 +204,9 @@ const read = (
           const after = current.schema
 
           const changes = yield* Change.calcChangeset({ before, after }).pipe(
-            Effect.mapError((error) => InputSourceError('directory', `Failed to calculate changeset: ${error}`, error)),
+            Effect.mapError((error) =>
+              InputSource.InputSourceError('directory', `Failed to calculate changeset: ${error}`, error)
+            ),
           )
 
           return Revision.make({
@@ -211,7 +220,7 @@ const read = (
     // Get the latest schema (last in the array after sorting)
     const latestSchemaData = revisionInputsLoaded[revisionInputsLoaded.length - 1]?.schema
     if (!latestSchemaData) {
-      return yield* Effect.fail(InputSourceError('directory', 'No schema files found'))
+      return yield* Effect.fail(InputSource.InputSourceError('directory', 'No schema files found'))
     }
 
     // Create unversioned schema with full revisions

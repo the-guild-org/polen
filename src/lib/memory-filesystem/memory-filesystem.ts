@@ -44,13 +44,13 @@ export const IO = Context.GenericTag<IOService>('@memory-filesystem/IO')
  */
 export const layer = (diskLayout: DiskLayout) =>
   Layer.succeed(
-    FileSystem.FileSystem,
+    FileSystem,
     FileSystem.make({
       // File existence check
-      exists: (path) => Effect.succeed(path in diskLayout),
+      exists: (path: string) => Effect.succeed(path in diskLayout),
 
       // Read file as string
-      readFileString: (path) => {
+      readFileString: (path: string) => {
         const content = diskLayout[path]
         return content !== undefined
           ? Effect.succeed(content)
@@ -58,7 +58,7 @@ export const layer = (diskLayout: DiskLayout) =>
       },
 
       // Read directory contents
-      readDirectory: (path) => {
+      readDirectory: (path: string) => {
         const normalizedPath = path.endsWith('/') ? path : path + '/'
         const entries = Object.keys(diskLayout)
           .filter(filePath => filePath.startsWith(normalizedPath))
@@ -71,7 +71,7 @@ export const layer = (diskLayout: DiskLayout) =>
       },
 
       // File stats (simplified - just checks existence)
-      stat: (path) => {
+      stat: (path: string) => {
         if (path in diskLayout) {
           return Effect.succeed({
             isFile: () => true,
@@ -114,13 +114,13 @@ export const layer = (diskLayout: DiskLayout) =>
       copyFile: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
       chmod: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
       chown: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      access: (path) =>
+      access: (path: string) =>
         path in diskLayout
           ? Effect.void
           : Effect.fail(new Error(`ENOENT: no such file or directory, access '${path}'`)),
       link: () => Effect.fail(new Error('Write operations not supported in memory filesystem')),
-      realPath: (path) => Effect.succeed(path),
-      readFile: (path) => {
+      realPath: (path: string) => Effect.succeed(path),
+      readFile: (path: string) => {
         const content = diskLayout[path]
         return content !== undefined
           ? Effect.succeed(new TextEncoder().encode(content))
@@ -201,3 +201,12 @@ export const ioLayer = (options?: {
     },
   )
 }
+
+/**
+ * Convenience function for creating memory filesystem layers from disk layout.
+ * This matches the API used in schema tests.
+ *
+ * @param diskLayout - Object mapping file paths to their contents
+ * @returns Layer that provides an Effect Platform FileSystem service backed by memory
+ */
+export const layerFromDiskLayout = (diskLayout: DiskLayout) => layer(diskLayout)

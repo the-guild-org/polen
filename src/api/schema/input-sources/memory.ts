@@ -1,5 +1,4 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { InputSourceError } from '#api/schema/input-source/$$'
 import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { DateOnly } from '#lib/date-only/$'
@@ -127,14 +126,14 @@ export const normalize = (configInput: Options): Config => {
   return config
 }
 
-const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema, InputSourceError> =>
+const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema, InputSource.InputSourceError> =>
   Effect.gen(function*() {
     if (typeof value === 'string') {
       const ast = yield* Grafaid.Schema.AST.parse(value).pipe(
-        Effect.mapError((error) => InputSourceError('memory', `Failed to parse schema: ${error}`, error)),
+        Effect.mapError((error) => InputSource.InputSourceError('memory', `Failed to parse schema: ${error}`, error)),
       )
       return yield* Grafaid.Schema.fromAST(ast).pipe(
-        Effect.mapError((error) => InputSourceError('memory', `Failed to build schema: ${error}`, error)),
+        Effect.mapError((error) => InputSource.InputSourceError('memory', `Failed to build schema: ${error}`, error)),
       )
     }
     return value // Already a GraphQLSchema
@@ -192,7 +191,9 @@ export const read = (
           const after = current.schema
 
           const changes = yield* Change.calcChangeset({ before, after }).pipe(
-            Effect.mapError((error) => InputSourceError('memory', `Failed to calculate changeset: ${error}`, error)),
+            Effect.mapError((error) =>
+              InputSource.InputSourceError('memory', `Failed to calculate changeset: ${error}`, error)
+            ),
           )
 
           return Revision.make({

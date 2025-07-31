@@ -42,9 +42,29 @@ When you have multiple schema versions configured, Polen enables version-specifi
 
 For complete details on schema versioning including configuration and version formats, see [Schema Overview](/guides/features/schema-overview).
 
-### Navigation
+### Interactive Version Navigation
 
-The [basic URL structure](#navigation) shown earlier always displays the latest version. When you have multiple schema versions, you can access specific versions using an extended URL pattern:
+Polen provides both UI-based and URL-based methods for navigating between schema versions:
+
+#### Version Picker Dropdown
+
+When multiple schema versions are available, Polen automatically displays an interactive version picker in the reference documentation interface. This dropdown allows you to:
+
+- Switch between any available schema version instantly
+- Jump to the latest version using the "Latest" option
+- Navigate to the equivalent page in the target version (when possible)
+
+The version picker handles complex navigation scenarios intelligently:
+
+- **Automatic Path Resolution**: If a type or field doesn't exist in the target version, Polen finds the closest equivalent page
+- **Smart Notifications**: When schema elements have moved or been removed, Polen shows helpful toast notifications with options to:
+  - Go back to the previous version
+  - View the changelog to understand what changed
+- **Seamless Experience**: Version switching preserves your current context whenever possible
+
+#### Manual URL Navigation
+
+You can also navigate to specific versions directly using URLs. The [basic URL structure](#navigation) shown earlier always displays the latest version. When you have multiple schema versions, you can access specific versions using an extended URL pattern:
 
 - Type overview: `/reference/version/{version}/{type}`
 - Field details: `/reference/version/{version}/{type}/{field}`

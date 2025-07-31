@@ -67,30 +67,32 @@ You can augment descriptions for both **types** and **fields** in your schema. P
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
-  schemaAugmentations: [
-    // Replace a type's description
-    {
-      type: `description`,
-      on: {
-        type: `TargetType`,
-        name: `User`,
+  schema: {
+    augmentations: [
+      // Replace a type's description
+      {
+        type: `description`,
+        on: {
+          type: `TargetType`,
+          name: `User`,
+        },
+        placement: `over`,
+        content:
+          `Represents a user in the system. See the [User API Guide](/guides/users) for detailed usage.`,
       },
-      placement: `over`,
-      content:
-        `Represents a user in the system. See the [User API Guide](/guides/users) for detailed usage.`,
-    },
-    // Add a deprecation notice before existing description
-    {
-      type: `description`,
-      on: {
-        type: `TargetType`,
-        name: `LegacyAuth`,
+      // Add a deprecation notice before existing description
+      {
+        type: `description`,
+        on: {
+          type: `TargetType`,
+          name: `LegacyAuth`,
+        },
+        placement: `before`,
+        content:
+          `⚠️ **Deprecated**: Use the new Auth type instead. This will be removed in v3.0.\n\n`,
       },
-      placement: `before`,
-      content:
-        `⚠️ **Deprecated**: Use the new Auth type instead. This will be removed in v3.0.\n\n`,
-    },
-  ],
+    ],
+  },
 })
 ```
 

@@ -81,11 +81,18 @@ If your changelog shows a version from "March 10, 2024", you can view that versi
 
 **Important**: The version string must match the exact format shown in the changelog. Pay attention to zero-padding for single-digit months and days.
 
+#### Integration with Reference Documentation
+
+The changelog is tightly integrated with Polen's versioned reference documentation:
+
+- **Interactive Version Navigation**: Use the version picker dropdown in reference docs to quickly jump between schema versions shown in the changelog
+- **Smart Notifications**: When switching versions through the reference docs, Polen provides helpful notifications about schema changes, with direct links to view the changelog
+- **Seamless Workflow**: Navigate from changelog entries to explore the actual schema at that point in time using the reference documentation
+
 #### Current Limitations
 
-- Version navigation must be done manually via URL (no UI version selector yet)
-- Types mentioned in the changelog are not clickable links to their versioned reference pages (yet)
-- You need to manually construct URLs using the exact `YYYY-MM-DD` format from the changelog
+- Types mentioned in the changelog are not yet clickable links to their versioned reference pages
+- Direct navigation from changelog entries to specific types requires manually constructing URLs using the exact version format from the changelog
 
 ### Navigation
 

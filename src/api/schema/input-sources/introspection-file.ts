@@ -1,5 +1,4 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { InputSourceError } from '#api/schema/input-source/$$'
 import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { DateOnly } from '#lib/date-only/$'
