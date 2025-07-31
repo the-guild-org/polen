@@ -1,4 +1,4 @@
-import { EffectKit } from '#lib/kit-temp/effect'
+import { EffectKit, S } from '#lib/kit-temp/effect'
 import type * as AST from 'effect/SchemaAST'
 import { isTypeLiteral, isUnion } from 'effect/SchemaAST'
 import { Hydratable } from '../hydratable/$.js'
@@ -38,23 +38,38 @@ const locateHydratables_ = (
     if (hydratableAST) {
       // This is a hydratable - build its UHL
       const uniqueKeys = Hydratable.getHydrationKeys(hydratableAST, value._tag)
+      const isSingleton = Hydratable.isSingleton(hydratableAST)
       const keyValues: Hydratable.UniqueKeysMutable = {}
 
-      // Extract unique key values in encoded form
-      let sourceValue = value as any
-      const encoder = context.encoders.get(value._tag)
-      if (encoder) {
-        try {
-          sourceValue = encoder(value)
-        } catch {
-          // If encoding fails, fall back to raw value
-          sourceValue = value as any
-        }
-      }
+      if (isSingleton) {
+        // For singleton hydratables, generate hash key
+        const schema = S.make(hydratableAST)
+        const hash = Hydratable.generateSingletonHash(value, schema)
+        keyValues.hash = hash
+      } else {
+        // Extract unique key values in encoded form
+        const encoder = context.encoders.get(value._tag)
 
-      for (const key of uniqueKeys) {
-        if (key in sourceValue) {
-          keyValues[key] = sourceValue[key]
+        for (const key of uniqueKeys) {
+          if (key in value) {
+            // For each key, we need to check if it has a transformation
+            // and encode it properly
+            let keyValue = (value as any)[key]
+
+            if (encoder) {
+              try {
+                // Encode the entire value and extract the key
+                const encodedValue = encoder(value) as any
+                if (key in encodedValue) {
+                  keyValue = encodedValue[key]
+                }
+              } catch {
+                // If encoding fails, use the raw value
+              }
+            }
+
+            keyValues[key] = keyValue
+          }
         }
       }
 

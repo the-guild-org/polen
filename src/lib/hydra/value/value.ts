@@ -38,37 +38,73 @@ export type GetPickableUniqueKeys<$Value extends Value> = Exclude<keyof $Value, 
 /**
  * Hydrate a value by replacing dehydrated references with actual values from the index.
  */
-export const hydrate = (value: Value, index: Index.Index): unknown => {
+export const hydrate = (value: unknown, index: Index.Index, parentUhl: Uhl.Uhl[] = []): unknown => {
+  // Handle null/undefined
+  if (value == null) {
+    return value
+  }
+
+  // Handle non-objects
+  if (typeof value !== 'object') {
+    return value
+  }
+
+  // If it's a dehydrated value, look it up and hydrate
   if (isDehydrated(value)) {
-    const tag = value._tag
+    const tag = (value as any)._tag
     // Build UHL from dehydrated value
     const keys = Object.keys(value).filter(k => k !== '_tag' && k !== DEHYDRATED_PROPERTY_NAME)
-    const segments = keys.map(k => (value as any)[k]).filter(v => v != null)
-    const segment = Uhl.Segment.make({
-      tag,
-      uniqueKeys: Object.fromEntries(keys.map((k, i) => [k, segments[i]]).filter(([_, v]) => v != null)),
-    })
+    const uniqueKeys = Object.fromEntries(keys.map(k => [k, (value as any)[k]]).filter(([_, v]) => v != null))
+    const segment = Uhl.Segment.make({ tag, uniqueKeys })
     const uhl = Uhl.make(segment)
+
+    // Try with parent context first (for nested hydratables)
+    if (parentUhl.length > 0) {
+      const contextualUhl = [...parentUhl, ...uhl]
+      const contextualUhlString = Uhl.toString(contextualUhl)
+      const hydratedValue = index.fragments.get(contextualUhlString)
+      if (hydratedValue && !isDehydrated(hydratedValue)) {
+        // Recursively hydrate the replacement value with its own UHL as context
+        return hydrate(hydratedValue, index, contextualUhl)
+      }
+    }
+
+    // Try without context (for root-level hydratables)
     const uhlString = Uhl.toString(uhl)
-
-    // Look up in index
     const hydratedValue = index.fragments.get(uhlString)
-    if (hydratedValue) {
+    if (hydratedValue && !isDehydrated(hydratedValue)) {
       // Recursively hydrate the replacement value
-      return hydrate(hydratedValue, index)
+      return hydrate(hydratedValue, index, uhl)
+    }
+
+    // If not found in index, return the dehydrated value as-is
+    return value
+  }
+
+  // For hydrated hydratables, we need to determine their UHL for context
+  let currentUhl = parentUhl
+  if (is(value) && !isDehydrated(value)) {
+    // This is a hydrated hydratable - we need to find its UHL in the index
+    // by matching the value
+    for (const [uhlString, fragmentValue] of index.fragments.entries()) {
+      if (fragmentValue === value) {
+        currentUhl = Uhl.fromString(uhlString)
+        break
+      }
     }
   }
 
-  // Recursively hydrate object/array
+  // Recursively hydrate arrays
   if (Array.isArray(value)) {
-    return value.map(item => is(item) ? hydrate(item, index) : item)
-  } else {
-    const result: any = {}
-    for (const [key, childValue] of Object.entries(value)) {
-      result[key] = is(childValue) ? hydrate(childValue, index) : childValue
-    }
-    return result
+    return value.map(item => hydrate(item, index, currentUhl))
   }
+
+  // Recursively hydrate objects
+  const result: any = {}
+  for (const [key, childValue] of Object.entries(value)) {
+    result[key] = hydrate(childValue, index, currentUhl)
+  }
+  return result
 }
 
 /**
@@ -140,6 +176,59 @@ export const dehydrateWithContext = <value>(value: value, context: Hydratable.Co
 }
 
 /**
+ * Encode a fragment for export. This encodes the value (handling transformations) but
+ * keeps the fragment itself hydrated. Only nested hydratables are dehydrated.
+ */
+export const encodeFragmentForExport = <value>(value: value, context: Hydratable.Context): unknown => {
+  // If this is a hydratable, we need to handle it specially
+  if (EffectKit.Struct.isTagged(value) && !isDehydrated(value)) {
+    const tag = (value as any)._tag
+    const encoder = context.encoders.get(tag)
+    if (encoder) {
+      // First encode the value to handle transformations
+      const encoded = encoder(value)
+
+      // Now we need to handle nested hydratables in the encoded form
+      // We can't use dehydrate_ on the encoded form because it might have different structure
+      // Instead, we need to traverse the original value and encoded value in parallel
+
+      if (typeof encoded === 'object' && encoded !== null && typeof value === 'object' && value !== null) {
+        const result: any = { ...encoded }
+        const visited = new WeakSet<object>()
+        const graph = Graph.create()
+
+        // For each property in the original value
+        for (const [key, childValue] of Object.entries(value as any)) {
+          if (key === '_tag') continue
+
+          // Check if this child is a hydratable that needs dehydration
+          if (
+            childValue && typeof childValue === 'object'
+            && EffectKit.Struct.isTagged(childValue) && !isDehydrated(childValue)
+          ) {
+            const childTag = childValue._tag
+            const childAst = context.index.get(childTag)
+            if (childAst) {
+              // This is a nested hydratable - dehydrate it
+              const dehydrateResult = dehydrate_(childValue, context, visited, graph)
+              result[key] = dehydrateResult.value
+            }
+          }
+          // Otherwise keep the encoded value as-is
+        }
+
+        return result
+      }
+
+      return encoded
+    }
+  }
+
+  // Not a hydratable, just dehydrate normally
+  return dehydrateWithContext(value, context)
+}
+
+/**
  * Dehydrate a value and collect dependencies.
  * Returns both the dehydrated value and a dependency graph.
  */
@@ -208,31 +297,42 @@ const dehydrate_ = (
     if (ast && encoder && !isDehydrated(value)) {
       // This is a hydratable that needs dehydration
       const keys = Hydratable.getHydrationKeys(ast, tag)
-      if (keys.length > 0) {
-        // First encode the value to get keys in encoded form
-        const encoded = encoder(value) as Record<string, unknown>
-        const result: any = { [EffectKit.Struct.tagPropertyName]: tag, [DEHYDRATED_PROPERTY_NAME]: true }
+      const isSingleton = Hydratable.isSingleton(ast)
+
+      // First encode the value to get keys in encoded form
+      const encoded = encoder(value) as Record<string, unknown>
+      const result: any = { [EffectKit.Struct.tagPropertyName]: tag, [DEHYDRATED_PROPERTY_NAME]: true }
+
+      // Handle singleton hydratables
+      if (isSingleton) {
+        // Get the schema for this hydratable
+        const schema = S.make(ast)
+        // Generate hash for the value
+        const hash = Hydratable.generateSingletonHash(value, schema)
+        result.hash = hash
+      } else {
+        // Add unique keys if any
         for (const key of keys) {
           if (key in encoded) {
             result[key] = encoded[key]
           }
         }
-
-        // Create UHL for this dehydrated value
-        const segments = keys.map(key => encoded[key]).filter(v => v != null)
-        const segment = Uhl.Segment.make({
-          tag,
-          uniqueKeys: Object.fromEntries(keys.map((key, i) => [key, segments[i]]).filter(([_, v]) => v != null)),
-        })
-        const uhl = Uhl.make(segment)
-
-        // Add dependency if we have a parent
-        if (parentUhl) {
-          Graph.addDependencyMutable(graph, Uhl.toString(parentUhl), Uhl.toString(uhl))
-        }
-
-        return { value: result, uhl }
       }
+
+      // Create UHL for this dehydrated value
+      const uniqueKeys = isSingleton
+        ? { hash: result.hash }
+        : Object.fromEntries(keys.map(key => [key, encoded[key]]).filter(([_, v]) => v != null))
+
+      const segment = Uhl.Segment.make({ tag, uniqueKeys })
+      const uhl = Uhl.make(segment)
+
+      // Add dependency if we have a parent
+      if (parentUhl) {
+        Graph.addDependencyMutable(graph, Uhl.toString(parentUhl), Uhl.toString(uhl))
+      }
+
+      return { value: result, uhl }
     }
   }
 
@@ -254,14 +354,23 @@ const dehydrate_ = (
     if (ast) {
       // This is a hydrated hydratable - create its UHL
       const keys = Hydratable.getHydrationKeys(ast, tag)
+      const isSingleton = Hydratable.isSingleton(ast)
       const encoder = context.encoders.get(tag)
-      if (keys.length > 0 && encoder) {
+      if ((keys.length > 0 || isSingleton) && encoder) {
         const encoded = encoder(value) as Record<string, unknown>
-        const segments = keys.map(key => encoded[key]).filter(v => v != null)
-        const segment = Uhl.Segment.make({
-          tag,
-          uniqueKeys: Object.fromEntries(keys.map((key, i) => [key, segments[i]]).filter(([_, v]) => v != null)),
-        })
+
+        let uniqueKeys: Record<string, unknown>
+        if (isSingleton) {
+          // Get the schema for this hydratable
+          const schema = S.make(ast)
+          // Generate hash for the value
+          const hash = Hydratable.generateSingletonHash(value, schema)
+          uniqueKeys = { hash }
+        } else {
+          uniqueKeys = Object.fromEntries(keys.map(key => [key, encoded[key]]).filter(([_, v]) => v != null))
+        }
+
+        const segment = Uhl.Segment.make({ tag, uniqueKeys })
         currentUhl = Uhl.make(segment)
       }
     }

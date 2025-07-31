@@ -4,12 +4,11 @@ import { Catalog } from '#lib/catalog/$'
 import { GrafaidOld } from '#lib/grafaid-old'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { route } from '#lib/react-router-aid/react-router-aid'
-import { schemaRoute, useLoaderData } from '#lib/react-router-effect/react-router-effect'
-import { ReferenceLoaderData } from '#lib/route-schemas/route-schemas'
 import { Version } from '#lib/version/$'
 import { neverCase } from '@wollybeard/kit/language'
-import { Effect, Match } from 'effect'
+import { Effect, Match, Schema as S } from 'effect'
 import React from 'react'
+import { useLoaderData } from 'react-router'
 import { useParams } from 'react-router'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
@@ -25,15 +24,24 @@ const referenceLoader = async ({ params }: any) => {
     throw new Error('No schema available')
   }
 
-  // For now, we need to get the full catalog using view() until peek selections are implemented
-  // view() returns the fully hydrated catalog
+  // For the reference route, we need the fully hydrated catalog
+  // since it contains GraphQLSchema instances that can't be serialized
   const catalog = await Effect.runPromise(catalogBridge.view())
 
   console.log('Catalog from bridge:', catalog)
   console.log('Catalog type:', typeof catalog)
   console.log('Catalog _tag:', catalog?._tag)
 
-  // Return decoded data - encoding is handled automatically by schemaRoute
+  // Debug: Check the structure of the first entry
+  if (catalog._tag === 'CatalogVersioned' && catalog.entries.length > 0) {
+    const firstEntry = catalog.entries[0]
+    console.log('First entry schema:', firstEntry.schema)
+    console.log('First entry schema definition:', firstEntry.schema?.definition)
+    console.log('First entry schema definition type:', typeof firstEntry.schema?.definition)
+  }
+
+  // Return plain data without schema encoding
+  // GraphQLSchema instances will be reconstructed on client
   return {
     catalog,
     requestedVersion: params.version ?? Api.Schema.VERSION_LATEST,
@@ -43,8 +51,8 @@ const referenceLoader = async ({ params }: any) => {
 // Single component that handles all reference route variations
 const ReferenceView = () => {
   const params = useParams() as { version?: string; type?: string; field?: string }
-  // Data is automatically decoded using the schema
-  const loaderData = useLoaderData(ReferenceLoaderData)
+  // Get loader data without schema decoding
+  const loaderData = useLoaderData() as { catalog: Catalog.Catalog; requestedVersion: string }
   console.log('Loader data:', loaderData)
   const { catalog, requestedVersion } = loaderData
 
@@ -162,24 +170,21 @@ const ReferenceView = () => {
 
 // Define routes that handle type and field params
 const typeAndFieldRoutes = [
-  schemaRoute({
+  route({
     index: true,
     Component: ReferenceView,
-    schema: ReferenceLoaderData,
     loader: referenceLoader,
-  } as any),
-  schemaRoute({
+  }),
+  route({
     path: `:type`,
     Component: ReferenceView,
     errorElement: <MissingSchema />,
-    schema: ReferenceLoaderData,
     loader: referenceLoader,
     children: [
-      schemaRoute({
+      route({
         path: `:field`,
         Component: ReferenceView,
         errorElement: <MissingSchema />,
-        schema: ReferenceLoaderData,
         loader: referenceLoader,
       }),
     ],
@@ -193,8 +198,8 @@ const typeAndFieldRoutes = [
  * - Single ReferenceView component handles all variations
  */
 // We need to determine if we have versioned catalog statically
-// This is okay because PROJECT_SCHEMA is available at build time
-const hasVersionedCatalog = PROJECT_SCHEMA && PROJECT_SCHEMA._tag === 'CatalogVersioned'
+// Since PROJECT_SCHEMA is now a file map, we check for version-specific files
+const hasVersionedCatalog = PROJECT_SCHEMA && Object.keys(PROJECT_SCHEMA).some(key => key.includes('version'))
 
 export const reference = !hasCatalog()
   ? null

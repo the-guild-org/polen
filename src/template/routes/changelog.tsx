@@ -1,9 +1,9 @@
 import { Catalog } from '#lib/catalog/$'
-import { schemaRoute, useLoaderData } from '#lib/react-router-effect/react-router-effect'
+import { route } from '#lib/react-router-aid/react-router-aid'
 import { Revision } from '#lib/revision/$'
-import { ChangelogLoaderData } from '#lib/route-schemas/route-schemas'
 import { Effect, Match } from 'effect'
 import React from 'react'
+import { useLoaderData } from 'react-router'
 import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { Changelog } from '../components/Changelog.js'
 import { ChangelogLayout } from '../layouts/index.js'
@@ -18,13 +18,14 @@ const changelogLoader = async () => {
   // view() returns the fully hydrated catalog
   const catalog = await Effect.runPromise(catalogBridge.view())
 
-  // Return decoded data - encoding is handled automatically by schemaRoute
+  // Return plain data without schema encoding
+  // GraphQLSchema instances will be handled on client
   return catalog
 }
 
 const Component = () => {
-  // Data is automatically decoded using the schema
-  const catalog = useLoaderData(ChangelogLoaderData)
+  // Get loader data without schema decoding
+  const catalog = useLoaderData() as Catalog.Catalog | null
 
   if (!catalog) {
     return <div>No schema changes available for changelog.</div>
@@ -32,7 +33,7 @@ const Component = () => {
 
   // Extract revisions based on catalog type
   const revisions = Match.value(catalog).pipe(
-    Match.tag('CatalogUnversioned', (c) => c.revisions),
+    Match.tag('CatalogUnversioned', (c) => c.schema.revisions),
     Match.tag('CatalogVersioned', (c) => c.entries.flatMap(e => e.revisions)),
     Match.exhaustive,
   )
@@ -52,9 +53,8 @@ const Component = () => {
   )
 }
 
-export const changelog = schemaRoute({
+export const changelog = route({
   path: `changelog`,
-  schema: ChangelogLoaderData,
   loader: changelogLoader,
   Component,
 })

@@ -234,6 +234,12 @@
     },
     "#template/components/content/$$": {
       "default": "./build/template/components/content/$$.js"
+    },
+    "#lib/memory-filesystem": {
+      "default": "./build/lib/memory-filesystem/$.js"
+    },
+    "#lib/memory-filesystem/memory-filesystem": {
+      "default": "./build/lib/memory-filesystem/$$.js"
     }
   },
   "exports": {

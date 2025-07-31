@@ -1,4 +1,3 @@
-import { Hydra } from '#lib/hydra/$'
 import { S } from '#lib/kit-temp/effect'
 import { Order } from 'effect'
 import { Revision } from '../revision/$.js'
@@ -8,17 +7,15 @@ import { SchemaDefinition } from '../schema-definition/$.js'
 // Schema
 // ============================================================================
 
-export const Unversioned = Hydra.Hydratable(
-  S.TaggedStruct('SchemaUnversioned', {
-    revisions: S.Array(Revision.Revision),
-    definition: SchemaDefinition.SchemaDefinition,
-  }).annotations({
-    identifier: 'SchemaUnversioned',
-    title: 'Unversioned Schema',
-    description: 'A GraphQL schema without semantic versioning',
-    adt: { name: 'Schema' },
-  }),
-)
+export const Unversioned = S.TaggedStruct('SchemaUnversioned', {
+  revisions: S.Array(Revision.Revision),
+  definition: SchemaDefinition.SchemaDefinition,
+}).annotations({
+  identifier: 'SchemaUnversioned',
+  title: 'Unversioned Schema',
+  description: 'A GraphQL schema without semantic versioning',
+  adt: { name: 'Schema' },
+})
 
 export type Unversioned = S.Schema.Type<typeof Unversioned>
 

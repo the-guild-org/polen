@@ -11,7 +11,9 @@ import { Hydra } from '#lib/hydra/$'
 import { ViteVirtual } from '#lib/vite-virtual'
 import type { ProjectData } from '#project-data'
 import { debugPolen } from '#singletons/debug'
+import { NodeFileSystem } from '@effect/platform-node/NodeFileSystem'
 import { Json, Str } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
 import { Pages } from './pages.js'
@@ -32,7 +34,11 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
   const readSchema = async () => {
     if (loadedCatalogCache === null) {
-      const loadedCatalog = await Schema.loadOrThrow(config)
+      const loadedCatalog = await Effect.runPromise(
+        Schema.loadOrNull(config).pipe(
+          Effect.provide(NodeFileSystem.layer),
+        ),
+      )
       loadedCatalogCache = loadedCatalog
     }
     return loadedCatalogCache
@@ -150,14 +156,21 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             debug(`load`, { id: viProjectSchema.id })
 
             const schemaResult = await readSchema()
-            if (!schemaResult) throw new Error('Schema is disabled')
+            if (!schemaResult || !schemaResult.data) {
+              return `export default null`
+            }
 
-            // Create dehydrator for the Catalog schema
-            const dehydrateCatalog = Hydra.Value.dehydrate(Catalog.Catalog)
+            // Convert the catalog to bridge files format for proper serialization
+            // This handles the transformation of GraphQLSchema instances to AST
+            const files = Hydra.Bridge.dataToFiles(schemaResult.data, Catalog.Catalog)
 
-            // Dehydrate the catalog (finds and dehydrates any hydratable children)
-            const dehydrated = schemaResult.data ? dehydrateCatalog(schemaResult.data) : null
-            return `export default ${JSON.stringify(dehydrated)}`
+            // Create an object that represents the file system state
+            const fileSystemState: Record<string, string> = {}
+            for (const [filename, content] of files) {
+              fileSystemState[filename] = content
+            }
+
+            return `export default ${JSON.stringify(fileSystemState)}`
           },
         },
         {
@@ -204,7 +217,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
                   )
                   return totalRevisions > 1
                 },
-                (unversioned) => unversioned.revisions.length > 1,
+                (unversioned) => unversioned.schema.revisions?.length > 1,
               )(catalog)
 
               if (hasMultipleRevisions) {

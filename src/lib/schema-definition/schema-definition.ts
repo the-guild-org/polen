@@ -63,7 +63,6 @@ export const SchemaDefinition = S.transformOrFail(
 // ============================================================================
 
 export type SchemaDefinition = S.Schema.Type<typeof SchemaDefinition>
-export type Encoded = S.Schema.Encoded<typeof SchemaDefinition>
 
 // ============================================================================
 // SDL Codec
@@ -113,6 +112,7 @@ export const is = S.is(SchemaDefinition)
 // ============================================================================
 
 export const decode = S.decode(SchemaDefinition)
+export const decodeSync = S.decodeSync(SchemaDefinition)
 export const encode = S.encode(SchemaDefinition)
 
 // ============================================================================

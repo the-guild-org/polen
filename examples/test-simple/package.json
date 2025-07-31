@@ -1,0 +1,10 @@
+{
+  "name": "test-simple",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "polen dev"
+  },
+  "dependencies": {
+    "polen": "workspace:*"
+  }
+}

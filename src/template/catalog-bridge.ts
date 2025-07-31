@@ -9,19 +9,21 @@ import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 
 /**
  * Create the IO layer based on the environment
- * - SSR: Use file system IO
- * - Client: Use browser fetch IO
+ * For now, we'll use Memory IO for both SSR and client
+ * TODO: Implement proper progressive hydration with Browser IO
  */
 const createIOLayer = () => {
-  if (import.meta.env.SSR) {
-    // During SSR, we use the File IO layer with the assets directory
-    // The path would be configured based on where Vite outputs the assets
-    return Hydra.Io.File('.vite/polen-assets/schemas')
-  } else {
-    // On client, use the Browser IO layer to fetch from the served assets
-    const baseUrl = new URL('/assets/schemas/', window.location.origin).toString()
-    return Hydra.Io.Browser(baseUrl)
+  // Create initial files from the virtual module data
+  const initialFiles = new Map<string, string>()
+
+  if (PROJECT_SCHEMA && typeof PROJECT_SCHEMA === 'object') {
+    // PROJECT_SCHEMA is now an object mapping filenames to content
+    for (const [filename, content] of Object.entries(PROJECT_SCHEMA)) {
+      initialFiles.set(filename, content as string)
+    }
   }
+
+  return Hydra.Io.Memory({ initialFiles })
 }
 
 /**
@@ -29,16 +31,20 @@ const createIOLayer = () => {
  * This manages the progressive hydration of catalog data
  */
 const createCatalogBridge = () => {
-  // Create Bridge with appropriate IO layer
+  // Create IO layer based on the environment (with initial files from virtual module)
   const ioLayer = createIOLayer()
 
   // Create the Bridge with the Catalog schema
   const bridge = Catalog.Bridge({})
 
-  // Import the dehydrated data from the virtual module if available
-  if (PROJECT_SCHEMA) {
-    // importFromMemory is synchronous and populates the index
-    bridge.importFromMemory(PROJECT_SCHEMA)
+  // Import from IO if data is available
+  console.log('PROJECT_SCHEMA available:', !!PROJECT_SCHEMA)
+  console.log('PROJECT_SCHEMA type:', typeof PROJECT_SCHEMA)
+
+  if (PROJECT_SCHEMA && typeof PROJECT_SCHEMA === 'object') {
+    // Import data from IO layer (which has the files from PROJECT_SCHEMA)
+    Effect.runSync(Effect.provide(bridge.import(), ioLayer))
+    console.log('Bridge index after import:', bridge.index.fragments)
   }
 
   // Return the bridge with IO layer attached

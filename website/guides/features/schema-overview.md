@@ -126,6 +126,62 @@ export default Polen.defineConfig({
 - The `schema.introspection.json` file contains the raw introspection query result in standard GraphQL format
 - The file format is validated when read - invalid JSON or introspection data will produce clear error messages
 
+### Versioned Directory Structure
+
+The versioned directory source organizes schemas into separate subdirectories for clear version boundaries. This is ideal for APIs with distinct major versions rather than just evolutionary revisions.
+
+```ts
+import { polen } from 'polen'
+
+export default Polen.defineConfig({
+  schema: {
+    sources: {
+      versionedDirectory: {
+        path: './schema', // Directory containing version subdirectories
+      },
+    },
+  },
+})
+```
+
+#### Directory Structure Examples
+
+**Semantic Versioning:**
+
+```
+schema/
+  1.0.0/
+    schema.graphql
+  1.1.0/
+    schema.graphql  
+  2.0.0/
+    schema.graphql
+```
+
+**Date-based Versioning:**
+
+```
+schema/
+  2024-01-15/
+    schema.graphql
+  2024-03-20/
+    schema.graphql
+  2024-06-10/
+    schema.graphql
+```
+
+**Custom Versioning:**
+
+```
+schema/
+  v1/
+    schema.graphql
+  v2-beta/
+    schema.graphql
+  production/
+    schema.graphql
+```
+
 ### Precedence
 
 When multiple schema sources are available, Polen uses the following precedence order:
@@ -154,11 +210,32 @@ schema: {
 
 Polen supports documenting different versions of your schema.
 
-### Specifier Kinds
+### Versions vs Revisions
 
-Each schema needs a version identifier, just like package releases on npm. Polen supports different specifier kinds to accommodate various versioning strategies.
+Polen distinguishes between two related but different concepts:
 
-**Important**: All schemas in your project must use the same specifier kind.
+- **Version**: An identifier for a different version of your API (e.g., `1.0.0`, `2.0.0`, `v1`, `v2`). Each version represents a distinct API version that may have:
+  - Breaking changes or new features
+  - Different endpoints
+  - Different authentication/headers
+  - Completely different schemas
+- **Revision**: A point-in-time change within a version's evolution, tracking incremental changes and their dates as the schema evolves over time.
+
+Each version can have multiple revisions as your schema evolves. This enables Polen to generate detailed changelogs showing what changed between versions and when those changes occurred.
+
+### Version Formats
+
+Each schema needs a version identifier, just like package releases on npm. Polen supports multiple version formats to accommodate various versioning strategies.
+
+**Important**: All schemas in your project must use the same version format.
+
+#### Semantic Versioning (Semver)
+
+Polen supports semantic versioning following the [SemVer specification](https://semver.org/):
+
+- **Format**: `MAJOR.MINOR.PATCH` (e.g., `1.0.0`, `2.1.3`, `3.0.0-beta.1`)
+- **Examples**: `1.0.0`, `2.1.0`, `3.0.0-alpha.1`
+- **Behavior**: Natural semantic version ordering (1.0.0 < 1.1.0 < 2.0.0)
 
 #### Date
 
@@ -166,25 +243,28 @@ Polen supports date-based versions in [ISO 8601](https://en.wikipedia.org/wiki/I
 
 - **Format**: `YYYY-MM-DD`
 - **Examples**: `2024-01-15`, `2023-12-31`, `2024-03-20`
-- **Behavior**: Shows the schema version from that specific date
+- **Behavior**: Chronological ordering by date
 
-#### Future
+#### Custom Strings
 
-::: info Future Support
-Additional version formats like semantic versioning (semver) may be supported in future releases. [Share your feedback](https://github.com/the-guild-org/polen/issues/123) on what version formats would be most valuable for your use case.
-:::
+Polen also supports arbitrary string versions for custom versioning schemes:
+
+- **Format**: Any string
+- **Examples**: `v1`, `beta`, `production`, `winter-2024`
+- **Behavior**: Alphabetical string ordering
 
 ### Supplying Your Versioned Schema
 
 Here's how supplying multiple schemas maps to the different sources:
 
-| Source Type                            | How Multiple Schemas Are Provided                                                                      | Examples                                                               |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| **[File](#file-convention)**           | N/A (single schema only)                                                                               | N/A                                                                    |
-| **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [version](#specifier-kinds) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre> |
-| **[Configuration](#configuration)**    | Define multiple versions in `sources.memory.versions` array                                            | [See example above](#configuration)                                    |
-| **Introspection File**                 | N/A (single schema only)                                                                               | N/A                                                                    |
-| **Automatic Introspection**            | N/A (single schema only)                                                                               | N/A                                                                    |
+| Source Type                            | How Multiple Schemas Are Provided                                                                      | Examples                                                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| **[File](#file-convention)**           | N/A (single schema only)                                                                               | N/A                                                                                           |
+| **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [version](#version-formats) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre>                        |
+| **Versioned Directory**                | Create subdirectories for each version, each containing a `schema.graphql` file                        | <pre>schema/<br>├── 1.0.0/<br>│ └── schema.graphql<br>└── 2.0.0/<br> └── schema.graphql</pre> |
+| **[Configuration](#configuration)**    | Define multiple versions in `sources.memory.versions` array                                            | [See example above](#configuration)                                                           |
+| **Introspection File**                 | N/A (single schema only)                                                                               | N/A                                                                                           |
+| **Automatic Introspection**            | N/A (single schema only)                                                                               | N/A                                                                                           |
 
 ## Features Enabled
 

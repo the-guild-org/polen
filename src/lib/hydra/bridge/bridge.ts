@@ -1,6 +1,6 @@
 import { Graph } from '#lib/graph/$'
 import { EffectKit, S } from '#lib/kit-temp/effect'
-import { Context, Effect } from 'effect'
+import { Context, Effect, Option } from 'effect'
 import * as AST from 'effect/SchemaAST'
 import { Hydratable } from '../hydratable/$.js'
 import { Index } from '../index/$.js'
@@ -27,6 +27,8 @@ const createDehydratedVariant = (hydratableSchema: Hydratable.Hydratable): S.Sch
   const config = Hydratable.getConfigOrThrow(hydratableSchema)
   const uniqueKeys = config._tag === 'HydratableConfigStruct'
     ? config.uniqueKeys
+    : config._tag === 'HydratableConfigSingleton'
+    ? ['hash'] // Singleton has synthetic hash key
     : [] // TODO: Handle ADT case when needed
 
   // Get the encoded schema to extract encoded field types
@@ -38,13 +40,24 @@ const createDehydratedVariant = (hydratableSchema: Hydratable.Hydratable): S.Sch
     _dehydrated: S.Literal(true) as unknown as S.Schema.Any,
   }
 
-  // Extract the actual encoded types for unique keys
-  if (AST.isTypeLiteral(encodedAst)) {
-    for (const key of uniqueKeys) {
-      const propSig = encodedAst.propertySignatures.find(p => p.name === key)
-      if (propSig) {
-        // Create schema from the property's AST
-        fields[key] = S.make(propSig.type)
+  // Handle singleton hydratables specially
+  if (config._tag === 'HydratableConfigSingleton') {
+    // For singletons, add a hash field as a string
+    fields.hash = S.String
+  } else {
+    // Extract the actual encoded types for unique keys
+    if (AST.isTypeLiteral(encodedAst)) {
+      for (const key of uniqueKeys) {
+        const propSig = encodedAst.propertySignatures.find(p => p.name === key)
+        if (propSig) {
+          // For transformations, we need the 'from' side (encoded type)
+          let fieldAst = propSig.type
+          if (AST.isTransformation(fieldAst)) {
+            fieldAst = fieldAst.from
+          }
+          // Create schema from the property's AST
+          fields[key] = S.make(fieldAst)
+        }
       }
     }
   }
@@ -63,40 +76,87 @@ const transformSchemaWithHydratables = (
   ast: AST.AST,
   hydrationContext: Hydratable.Context,
 ): AST.AST => {
+  // Helper to check if an AST node represents a hydratable
+  const isHydratableAst = (node: AST.AST): boolean => {
+    // Check various ways an AST might represent a hydratable
+
+    // 1. Direct reference - the AST is exactly a hydratable AST
+    for (const [tag, hydratableAst] of hydrationContext.index) {
+      if (node === hydratableAst) {
+        return true
+      }
+    }
+
+    // 2. Declaration reference - the AST has an identifier that matches a hydratable
+    if ('_id' in node && typeof node._id === 'string') {
+      // Check if this identifier corresponds to a hydratable
+      for (const [tag, hydratableAst] of hydrationContext.index) {
+        if ('_id' in hydratableAst && node._id === hydratableAst._id) {
+          return true
+        }
+      }
+    }
+
+    // 3. Check if it's a TypeLiteral with a tag that matches a hydratable
+    if (AST.isTypeLiteral(node)) {
+      const tagField = node.propertySignatures.find(f => f.name === '_tag')
+      if (tagField && AST.isLiteral(tagField.type)) {
+        const tag = tagField.type.literal as string
+        return hydrationContext.index.has(tag)
+      }
+    }
+
+    return false
+  }
+
   const transform = (node: AST.AST): AST.AST => {
+    // Check if this is a hydratable reference (not the hydratable itself being defined)
+    if (isHydratableAst(node)) {
+      // Get the tag to identify which hydratable this is
+      let tag: string | undefined
+
+      // Try different ways to get the tag
+      for (const [hydratableTag, hydratableAst] of hydrationContext.index) {
+        if (
+          node === hydratableAst
+          || ('_id' in node && '_id' in hydratableAst && node._id === hydratableAst._id)
+        ) {
+          tag = hydratableTag
+          break
+        }
+      }
+
+      // If it's a TypeLiteral, get tag from the field
+      if (!tag && AST.isTypeLiteral(node)) {
+        const tagField = node.propertySignatures.find(f => f.name === '_tag')
+        if (tagField && AST.isLiteral(tagField.type)) {
+          tag = tagField.type.literal as string
+        }
+      }
+
+      if (tag && hydrationContext.index.has(tag)) {
+        // This is a reference to a hydratable - create a union with its dehydrated variant
+        const hydratableSchema = S.make(node)
+        const dehydratedSchema = createDehydratedVariant(hydratableSchema as unknown as Hydratable.Hydratable)
+        const unionSchema = S.Union(dehydratedSchema, hydratableSchema)
+        return unionSchema.ast
+      }
+    }
     switch (node._tag) {
       case 'TypeLiteral': {
-        // Check if this is a hydratable by looking for its tag in the index
-        const fields = node.propertySignatures
-        const tagField = fields.find(f => f.name === '_tag')
-
-        if (tagField && AST.isLiteral(tagField.type)) {
-          const tag = tagField.type.literal as string
-          const hydratableAst = hydrationContext.index.get(tag)
-
-          if (hydratableAst) {
-            // This is a hydratable - create its dehydrated variant
-            const hydratableSchema = S.make(hydratableAst)
-            const dehydratedSchema = createDehydratedVariant(hydratableSchema as unknown as Hydratable.Hydratable)
-
-            // Create a union of dehydrated and hydrated schemas
-            const unionSchema = S.Union(dehydratedSchema, S.make(node))
-            return unionSchema.ast
-          }
-        }
-
-        // Not a hydratable, but transform its fields recursively
-        // Not a hydratable, but transform its fields recursively
+        // Transform all properties recursively
+        // Properties that reference hydratables will be transformed to unions
         return new AST.TypeLiteral(
-          node.propertySignatures.map(sig =>
-            new AST.PropertySignature(
+          node.propertySignatures.map(sig => {
+            const transformedType = transform(sig.type)
+            return new AST.PropertySignature(
               sig.name,
-              transform(sig.type),
+              transformedType,
               sig.isOptional,
               sig.isReadonly,
               sig.annotations,
             )
-          ),
+          }),
           node.indexSignatures.map(sig =>
             new AST.IndexSignature(
               sig.parameter,
@@ -156,6 +216,31 @@ const transformSchemaWithHydratables = (
       case 'Refinement':
         // Transform the underlying schema
         return new AST.Refinement(transform(node.from), node.filter, node.annotations)
+
+      case 'Declaration':
+        // Declarations are references to other schemas
+        // Check if this declaration references a hydratable
+        const typeParameters = node.typeParameters.map(transform)
+
+        // Transform the declaration to see if it resolves to a hydratable
+        const transformedDeclaration = new AST.Declaration(
+          typeParameters,
+          (...args) => transform(node.decodeUnknown(...args)),
+          node.decodeUnknown,
+          node.encodeUnknown,
+          node.annotations,
+        )
+
+        // Also check if the declaration itself is a hydratable reference
+        if (isHydratableAst(node)) {
+          // This declaration references a hydratable - create a union
+          const hydratableSchema = S.make(node)
+          const dehydratedSchema = createDehydratedVariant(hydratableSchema as unknown as Hydratable.Hydratable)
+          const unionSchema = S.Union(dehydratedSchema, hydratableSchema)
+          return unionSchema.ast
+        }
+
+        return transformedDeclaration
 
       default:
         // For other AST types (literals, primitives, etc.), return as-is
@@ -221,6 +306,38 @@ export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
 }
 
 export const ContextBridge = Context.GenericTag<Bridge>('@hydra/bridge/Bridge')
+
+/**
+ * Convert in-memory data to bridge file format.
+ * This is useful for testing or initializing a bridge with data.
+ *
+ * @param data - The fully hydrated data to convert
+ * @param schema - The schema for the data
+ * @returns Array of [filename, json content] pairs
+ */
+export const dataToFiles = <schema extends S.Schema.Any>(
+  data: S.Schema.Type<schema>,
+  schema: schema,
+): Array<[string, string]> => {
+  const hydrationContext = Hydratable.createContext(schema)
+  const result: Array<[string, string]> = []
+
+  // Handle root value
+  const dehydrationResult = Value.dehydrateWithDependenciesAndContext(data, hydrationContext)
+  const rootJson = JSON.stringify(dehydrationResult.value, null, 2)
+  result.push([ROOT_FILENAME, rootJson])
+
+  // Locate and export all hydratables
+  const locatedHydratables = Value.locateHydratedHydratables(data, hydrationContext)
+  for (const located of locatedHydratables) {
+    const uhl = Uhl.toString(located.uhl)
+    const fragmentToExport = Value.encodeFragmentForExport(located.value, hydrationContext)
+    const json = JSON.stringify(fragmentToExport, null, 2)
+    result.push([uhl + '.json', json])
+  }
+
+  return result
+}
 
 /**
  * Creates a bridge factory function for a given schema.
@@ -303,8 +420,9 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
       }
 
       for (const [uhlExpression, value] of index.fragments.entries()) {
-        const dehydrated = Value.dehydrateWithContext(value, hydrationContext)
-        const json = JSON.stringify(dehydrated, null, 2)
+        // Fragments should be shallow hydrated - encode but don't dehydrate the fragment itself
+        const fragmentToExport = Value.encodeFragmentForExport(value, hydrationContext)
+        const json = JSON.stringify(fragmentToExport, null, 2)
         const uhlExpressionExported = uhlExpression + '.json'
         result.push([uhlExpressionExported, json])
       }
@@ -347,25 +465,54 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
 
           // For each UHL generated from this selection
           for (const uhl of uhls) {
-            const indexKey = Uhl.toString(uhl)
+            const uhlString = Uhl.toString(uhl)
 
-            // Check index first
-            let value = index.fragments.get(indexKey)
+            // Load from disk - contains the encoded fragment (shallow hydrated)
+            const fileName = Uhl.toFileName(uhl)
+            const filePath = fileName
 
-            if (value === undefined) {
-              // Not in index, load from disk
-              const fileName = Uhl.toFileName(uhl)
-              const filePath = fileName
-
+            let value: any
+            try {
               const content = yield* io.read(filePath)
-              value = JSON.parse(content)
+              const encodedFragment = JSON.parse(content)
 
-              // Add to index for future access
-              index.fragments.set(Uhl.toString(uhl), value)
+              // The fragment is already in the correct form (shallow hydrated)
+              // We just need to parse the JSON
+              value = encodedFragment
+            } catch (error) {
+              // File not found or parse error - return error
+              return yield* Effect.fail(
+                new Error(
+                  `Failed to load hydratable at ${uhlString}: ${
+                    error instanceof Error ? error.message : String(error)
+                  }`,
+                ),
+              )
             }
 
-            // Store in result using the tag as key
-            result[tag] = value
+            // Check if we need to handle deep selection
+            const isDeepSelection = typeof selectionValue === 'object' && selectionValue !== null
+              && Object.keys(selectionValue).some(k => k.startsWith('$'))
+
+            if (isDeepSelection) {
+              // For deep selections, we need to recursively process child selections
+              const childSelections = Object.entries(selectionValue as Record<string, any>)
+                .filter(([k]) => k.startsWith('$'))
+                .map(([k, v]) => ({ [k.slice(1)]: v }))
+
+              // Process child selections recursively
+              for (const childSelection of childSelections) {
+                const childResult = yield* peek(childSelection)
+                // Merge child results into the main result
+                Object.assign(result, childResult)
+              }
+
+              // Store the hydrated parent value
+              result[tag] = value
+            } else {
+              // For shallow selections, return the hydrated value directly
+              result[tag] = value
+            }
           }
         }
 
@@ -387,9 +534,12 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
           )
         }
 
-        // Decode using the transformed schema that handles dehydrated values
-        const decoded = decode(index.root)
-        return decoded
+        // Hydrate the root value fully before returning
+        const hydrated = Value.hydrate(index.root, index)
+
+        // The hydrated value is already in decoded form, so we can return it directly
+        // The transformed schema is used for peek/partial hydration scenarios
+        return hydrated as S.Schema.Type<schema>
       })
 
     const clear: Bridge<schema>['clear'] = () =>

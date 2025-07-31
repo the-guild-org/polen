@@ -1,5 +1,4 @@
 import { S } from '#lib/kit-temp/effect'
-import { Revision } from '../revision/$.js'
 import { Schema } from '../schema/$.js'
 
 // ============================================================================
@@ -8,7 +7,6 @@ import { Schema } from '../schema/$.js'
 
 export const Unversioned = S.TaggedStruct('CatalogUnversioned', {
   schema: Schema.Unversioned.Unversioned,
-  revisions: S.Array(Revision.Revision),
 }).annotations({
   identifier: 'CatalogUnversioned',
   title: 'Unversioned Catalog',

@@ -110,7 +110,12 @@ export namespace EffectKit {
         schema: schema,
       ): ArgTagString<schema> => {
         // Resolve non-structural wrappers
-        const resolved = AST.resolve(schema.ast)
+        let resolved = AST.resolve(schema.ast)
+
+        // If it's a transformation, check the 'to' side
+        if (isTransformation(schema.ast)) {
+          resolved = AST.resolve(schema.ast.to)
+        }
 
         // Check if we reached a TypeLiteral (struct)
         if (!isTypeLiteral(resolved)) {

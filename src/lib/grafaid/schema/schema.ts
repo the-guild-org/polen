@@ -1,12 +1,19 @@
+import { Effect } from 'effect'
 import { buildASTSchema, type GraphQLSchema } from 'graphql'
 
 export {
-  buildASTSchema as fromAST,
   buildClientSchema as fromIntrospectionQuery,
   GraphQLSchema as Schema,
   introspectionFromSchema as toIntrospectionQuery,
   printSchema as print,
 } from 'graphql'
+
+// Effect-based version of fromAST
+export const fromAST = (ast: AST.Document): Effect.Effect<GraphQLSchema, Error> =>
+  Effect.try({
+    try: () => buildASTSchema(ast),
+    catch: (error) => new Error(`Failed to build schema from AST: ${error}`),
+  })
 
 export * as AST from './ast.js'
 

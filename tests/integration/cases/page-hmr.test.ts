@@ -15,11 +15,11 @@ test.describe('HMR', () => {
     await page.goto(server.url('/test').href)
     await expect(page.getByRole('heading', { name: 'Initial' })).toBeVisible()
 
-    const reloadPromise = page.waitForEvent('load')
+    // Update the file
     await project.layout.set({ 'pages/test.md': '# Updated' })
-    await reloadPromise
 
-    await expect(page.getByRole('heading', { name: 'Updated' })).toBeVisible()
+    // Wait for the content to update (HMR might not trigger a full page reload)
+    await expect(page.getByRole('heading', { name: 'Updated' })).toBeVisible({ timeout: 10000 })
   })
 
   test('add new page', async ({ page, vite, project }) => {

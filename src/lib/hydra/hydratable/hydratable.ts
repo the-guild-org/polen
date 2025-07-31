@@ -1,7 +1,7 @@
 import type { Ob } from '#lib/kit-temp/$'
 import { EffectKit } from '#lib/kit-temp/effect'
 import { S } from '#lib/kit-temp/effect'
-import { Match, ParseResult } from 'effect'
+import { Hash, Match, ParseResult } from 'effect'
 import * as AST from 'effect/SchemaAST'
 import { isTypeLiteral, isUnion } from 'effect/SchemaAST'
 import { type Options, type OptionsWithDefualts } from './options.js'
@@ -81,7 +81,13 @@ export const HydratableConfigAdt = S.TaggedStruct('HydratableConfigAdt', {
   memberKeys: S.Record({ key: S.String, value: S.Array(S.String) }),
 })
 
-export const Config = S.Union(HydratableConfigStruct, HydratableConfigAdt).annotations({
+export const HydratableConfigSingleton = S.TaggedStruct('HydratableConfigSingleton', {
+  // Empty - singleton hydratables have no explicit keys
+}).annotations({
+  description: 'Configuration for singleton hydratables that use content-based addressing',
+})
+
+export const Config = S.Union(HydratableConfigStruct, HydratableConfigAdt, HydratableConfigSingleton).annotations({
   identifier: 'HydratableConfig',
   description: 'Configuration for hydration behavior',
 })
@@ -172,8 +178,88 @@ export const getHydrationKeys = (ast: AST.AST, tag?: string): readonly string[] 
   return Match.value(config).pipe(
     Match.when({ _tag: 'HydratableConfigStruct' }, (c) => c.uniqueKeys),
     Match.when({ _tag: 'HydratableConfigAdt' }, (c) => tag ? c.memberKeys[tag] ?? [] : []),
+    Match.when({ _tag: 'HydratableConfigSingleton' }, () => ['hash']), // Synthetic hash key
     Match.exhaustive,
   )
+}
+
+/**
+ * Check if a hydratable is in singleton mode (no explicit keys)
+ */
+export const isSingleton = (ast: AST.AST): boolean => {
+  const config = ast.annotations?.[HydrationConfigSymbol] as Config | undefined
+  return config?._tag === 'HydratableConfigSingleton'
+}
+
+/**
+ * Check if an AST represents a scalar type (can be hashed directly)
+ */
+const isScalarAST = (ast: AST.AST): boolean => {
+  const resolved = EffectKit.Schema.AST.resolve(ast)
+  return (
+    resolved._tag === 'StringKeyword'
+    || resolved._tag === 'NumberKeyword'
+    || resolved._tag === 'BooleanKeyword'
+    || resolved._tag === 'BigIntKeyword'
+    || resolved._tag === 'SymbolKeyword'
+  )
+}
+
+/**
+ * Check if an AST represents a transformation with scalar encoding
+ */
+const hasScalarEncoding = (ast: AST.AST): boolean => {
+  if (ast._tag === 'Transformation') {
+    return isScalarAST(ast.from)
+  }
+  return false
+}
+
+/**
+ * Validate that a schema is eligible for singleton mode
+ */
+const validateSingletonEligibility = (ast: AST.AST): void => {
+  // Allow direct scalars or transformations with scalar encoding
+  if (!isScalarAST(ast) && !hasScalarEncoding(ast)) {
+    throw new Error(
+      'Singleton hydratables require scalar types or transformations with scalar encoding. '
+        + 'For complex types like structs, provide explicit keys.',
+    )
+  }
+}
+
+/**
+ * Generate a hash for a singleton hydratable value
+ * @param value - The value to hash
+ * @param schema - The schema of the value
+ * @returns The hash as a string
+ */
+export const generateSingletonHash = (value: unknown, schema: S.Schema.Any): string => {
+  const ast = schema.ast
+
+  // For transformations, encode to the scalar form first
+  if (ast._tag === 'Transformation') {
+    const encoded = ParseResult.encodeSync(schema)(value)
+    return Hash.string(String(encoded)).toString()
+  }
+
+  // For direct scalars
+  const resolved = EffectKit.Schema.AST.resolve(ast)
+  switch (resolved._tag) {
+    case 'StringKeyword':
+      return Hash.string(value as string).toString()
+    case 'NumberKeyword':
+      return Hash.number(value as number).toString()
+    case 'BooleanKeyword':
+      return Hash.string(String(value)).toString()
+    case 'BigIntKeyword':
+      return Hash.string((value as bigint).toString()).toString()
+    case 'SymbolKeyword':
+      return Hash.string((value as symbol).toString()).toString()
+    default:
+      // Fallback - should not reach here if validation is correct
+      return Hash.string(JSON.stringify(value)).toString()
+  }
 }
 
 /**
@@ -239,10 +325,20 @@ export const buildASTIndex = (
 
     if (config) {
       const typedConfig = config as Config
-      if (typedConfig._tag === 'HydratableConfigStruct' && isTypeLiteral(ast)) {
-        // Single tagged struct
-        const tag = EffectKit.Schema.AST.extractTag(ast)
-        if (tag) index.set(tag, ast)
+
+      // For transformations, check the 'to' side for type literal
+      let astToCheck = ast
+      if (AST.isTransformation(ast)) {
+        astToCheck = ast.to
+      }
+
+      if (
+        (typedConfig._tag === 'HydratableConfigStruct' || typedConfig._tag === 'HydratableConfigSingleton')
+        && isTypeLiteral(astToCheck)
+      ) {
+        // Single tagged struct (regular or singleton)
+        const tag = EffectKit.Schema.AST.extractTag(astToCheck)
+        if (tag) index.set(tag, ast) // Store the original ast, not the checked one
       } else if (typedConfig._tag === 'HydratableConfigAdt') {
         // ADT union - add entry for each member tag
         for (const memberTag of Object.keys(typedConfig.memberKeys)) {
@@ -296,13 +392,19 @@ export function Hydratable<
   schema: schema,
   options?: $Options,
 ): Hydratable<schema, $Options> {
+  // For transformations, check the 'to' side
+  let astToCheck = schema.ast
+  if (AST.isTransformation(schema.ast)) {
+    astToCheck = schema.ast.to
+  }
+
   // Validate schema is tagged struct or union of tagged structs
-  if (isTypeLiteral(schema.ast)) {
-    const tag = EffectKit.Schema.AST.extractTag(schema.ast)
+  if (isTypeLiteral(astToCheck)) {
+    const tag = EffectKit.Schema.AST.extractTag(astToCheck)
     if (!tag) throw new Error('Schema must be a tagged struct')
-  } else if (isUnion(schema.ast)) {
+  } else if (isUnion(astToCheck)) {
     // Check all members are tagged structs
-    for (const member of schema.ast.types) {
+    for (const member of astToCheck.types) {
       if (!isTypeLiteral(member) || !EffectKit.Schema.AST.extractTag(member)) {
         throw new Error('Union members must be tagged structs')
       }
@@ -314,12 +416,21 @@ export function Hydratable<
   // Build new config structure
   let config: Config
 
-  if (isTypeLiteral(schema.ast)) {
+  if (isTypeLiteral(astToCheck)) {
     // Simple struct
-    config = HydratableConfigStruct.make({ uniqueKeys: options?.keys ?? [] })
+    const keys = options?.keys ?? []
+
+    // If no keys provided, enter singleton mode
+    if (keys.length === 0) {
+      // Validate eligibility for singleton mode (use original ast for validation)
+      validateSingletonEligibility(schema.ast)
+      config = HydratableConfigSingleton.make({})
+    } else {
+      config = HydratableConfigStruct.make({ uniqueKeys: keys })
+    }
   } else {
     // Union - detect ADT
-    const allTags = EffectKit.Schema.AST.extractTagsFromUnion(schema.ast)
+    const allTags = EffectKit.Schema.AST.extractTagsFromUnion(astToCheck)
     const unionAdt = EffectKit.Schema.UnionAdt.parse(allTags)
 
     if (unionAdt) {
@@ -329,6 +440,12 @@ export function Hydratable<
       // Build memberKeys from options
       if (typeof options?.keys === 'object' && !Array.isArray(options.keys)) {
         Object.assign(memberKeys, options.keys)
+      }
+
+      // Check if any member has no keys (singleton mode not supported for unions yet)
+      const hasEmptyKeys = Object.values(memberKeys).some(keys => keys.length === 0)
+      if (hasEmptyKeys) {
+        throw new Error('Singleton mode is not currently supported for union hydratables')
       }
 
       config = HydratableConfigAdt.make({ name: unionAdt.name, memberKeys })

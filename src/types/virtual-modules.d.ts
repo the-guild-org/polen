@@ -21,8 +21,8 @@ declare module 'virtual:polen/project/data.json' {
 }
 
 declare module 'virtual:polen/project/schema.json' {
-  // The dehydrated catalog data
-  const schema: import('#lib/catalog/$').Catalog.Catalog & import('#lib/hydra/$').Hydra.Value.Dehydrated | null
+  // Object mapping filenames to JSON content for the catalog bridge
+  const schema: Record<string, string> | null
   export { schema as default }
 }
 

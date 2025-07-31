@@ -1,4 +1,5 @@
 import { GraphqlInspector } from '#dep/graphql-inspector/index'
+import { Effect } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 import * as Change from './change.js'
 import * as Criticality from './criticality.js'
@@ -627,19 +628,23 @@ const mapChange = (change: GraphqlInspector.Core.Change): Change.Change | null =
 /**
  * Calculate the changeset between two GraphQL schemas
  */
-export const calcChangeset = async (parameters: {
+export const calcChangeset = (parameters: {
   after: GraphQLSchema
   before: GraphQLSchema
-}): Promise<Change.Change[]> => {
-  const inspectorChanges = await GraphqlInspector.Core.diff(parameters.before, parameters.after)
+}): Effect.Effect<Change.Change[], Error> =>
+  Effect.gen(function*() {
+    const inspectorChanges = yield* Effect.tryPromise({
+      try: () => GraphqlInspector.Core.diff(parameters.before, parameters.after),
+      catch: (error) => new Error(`Failed to calculate changeset: ${error}`),
+    })
 
-  const mappedChanges: Change.Change[] = []
-  for (const change of inspectorChanges) {
-    const mapped = mapChange(change)
-    if (mapped) {
-      mappedChanges.push(mapped)
+    const mappedChanges: Change.Change[] = []
+    for (const change of inspectorChanges) {
+      const mapped = mapChange(change)
+      if (mapped) {
+        mappedChanges.push(mapped)
+      }
     }
-  }
 
-  return mappedChanges
-}
+    return mappedChanges
+  })

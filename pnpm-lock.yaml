@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  graphql: 16.11.0
+
 importers:
 
   .:
@@ -102,7 +105,7 @@ importers:
         specifier: 8.0.0-next.163
         version: 8.0.0-next.163(graphql@16.11.0)
       graphql:
-        specifier: ^16.11.0
+        specifier: 16.11.0
         version: 16.11.0
       gray-matter:
         specifier: ^4.0.3
@@ -319,6 +322,27 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  examples/test-memory:
+    dependencies:
+      graphql:
+        specifier: 16.11.0
+        version: 16.11.0
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
+  examples/test-simple:
+    dependencies:
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
+  examples/test-unversioned:
+    dependencies:
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
   website:
     devDependencies:
       vitepress:
@@ -330,7 +354,7 @@ packages:
   '@0no-co/graphql.web@1.1.2':
     resolution: {integrity: sha512-N2NGsU5FLBhT8NZ+3l2YrzZSHITjNXNuDhC4iDiikv0IujaJ0Xc6xIxQZ/Ek3Cb+rgPjnLHYyJm11tInuJn+cw==}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+      graphql: 16.11.0
     peerDependenciesMeta:
       graphql:
         optional: true
@@ -1070,36 +1094,36 @@ packages:
     resolution: {integrity: sha512-PxL3fNblfKx/h/B4MIXN1yGHsGdY+uuySz8MAy/ogDk7eU1+va2zDZicLMEBHf7nsKfHWCAN1WFtD1GQP824NQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+      graphql: 16.11.0
 
   '@graphql-tools/load@8.1.2':
     resolution: {integrity: sha512-WhDPv25/jRND+0uripofMX0IEwo6mrv+tJg6HifRmDu8USCD7nZhufT0PP7lIcuutqjIQFyogqT70BQsy6wOgw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: 16.11.0
 
   '@graphql-tools/merge@9.1.1':
     resolution: {integrity: sha512-BJ5/7Y7GOhTuvzzO5tSBFL4NGr7PVqTJY3KeIDlVTT8YLcTXtBR+hlrC3uyEym7Ragn+zyWdHeJ9ev+nRX1X2w==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: 16.11.0
 
   '@graphql-tools/schema@10.0.25':
     resolution: {integrity: sha512-/PqE8US8kdQ7lB9M5+jlW8AyVjRGCKU7TSktuW3WNKSKmDO0MK1wakvb5gGdyT49MjAIb4a3LWxIpwo5VygZuw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: 16.11.0
 
   '@graphql-tools/utils@10.9.1':
     resolution: {integrity: sha512-B1wwkXk9UvU7LCBkPs8513WxOQ2H8Fo5p8HR1+Id9WmYE5+bd51vqN+MbrqvWczHCH2gwkREgHJN88tE0n1FCw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: 16.11.0
 
   '@graphql-typed-document-node/core@3.2.0':
     resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
     peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+      graphql: 16.11.0
 
   '@hiogawa/vite-plugin-ssr-css@0.0.1':
     resolution: {integrity: sha512-jt6E7T5Qd9YDUTUBvgTAxTVZi+eFOe73oerZqu7aqhN+kd2DzLsfYyuDmJOyBP+DAjOTit2QEpDYcHKzyImZUA==}
@@ -3411,7 +3435,7 @@ packages:
       '@dprint/formatter': ^0.4.0
       '@dprint/typescript': ^0.93.0
       '@opentelemetry/api': ^1.9.0
-      graphql: 14 - 16
+      graphql: 16.11.0
       prettier: ^3.3.3
     peerDependenciesMeta:
       '@dprint/formatter':

@@ -4,6 +4,7 @@ import type { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
 import { Hydra } from '#lib/hydra/$'
 import { debugPolen } from '#singletons/debug'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Cache } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import * as NodeFs from 'node:fs/promises'
@@ -30,7 +31,11 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
   let viteServer: Vite.ViteDevServer | null = null
 
   const schemaLoad = Cache.memoize(async () => {
-    return await Api.Schema.loadOrThrow(config)
+    return await Effect.runPromise(
+      Api.Schema.loadOrNull(config).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
+    )
   })
 
   // Helper to check if a file is a schema file that should trigger regeneration

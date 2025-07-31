@@ -70,7 +70,7 @@ export const getVersionCount = (catalog: Catalog): number =>
 export const getRevisions = (catalog: Catalog): ReadonlyArray<Versioned.Entry['revisions'][number]> =>
   fold(
     (versioned) => versioned.entries.flatMap(entry => entry.revisions),
-    (unversioned) => unversioned.revisions,
+    (unversioned) => unversioned.schema.revisions,
   )(catalog)
 
 // ============================================================================

@@ -4,7 +4,9 @@ import { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
 import { SchemaDefinition } from '#lib/schema-definition/$'
 import { debugPolen } from '#singletons/debug'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import consola from 'consola'
+import { Effect } from 'effect'
 import { isInterfaceType, isObjectType } from 'graphql'
 import * as fs from 'node:fs/promises'
 
@@ -28,11 +30,19 @@ export const RoutesManifest = (config: Config.Config): Vite.Plugin => {
       routes.push('/changelog')
 
       // Check if schema exists using configured sources
-      const schemaExists = await Api.Schema.hasSchema(config)
+      const schemaExists = await Effect.runPromise(
+        Api.Schema.hasSchema(config).pipe(
+          Effect.provide(NodeFileSystem.layer),
+        ),
+      )
 
       if (schemaExists) {
         // Load catalog data
-        const catalogData = await Api.Schema.loadOrThrow(config)
+        const catalogData = await Effect.runPromise(
+          Api.Schema.loadOrThrow(config).pipe(
+            Effect.provide(NodeFileSystem.layer),
+          ),
+        )
 
         const catalog = catalogData?.data
 

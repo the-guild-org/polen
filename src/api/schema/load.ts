@@ -1,65 +1,159 @@
 import type { Config } from '#api/config/config'
 import { Augmentations } from '#api/schema/augmentations/$'
-import type { InputSource } from '#api/schema/input-source/input-source'
+import type { EffectInputSource, InputSource, InputSourceError } from '#api/schema/input-source/input-source'
 import * as InputSourceLoader from '#api/schema/input-source/load'
 import { InputSources } from '#api/schema/input-sources/$'
 import { Catalog } from '#lib/catalog/$'
+import type { PlatformError } from '@effect/platform/Error'
+import type { FileSystem } from '@effect/platform/FileSystem'
 import { Arr } from '@wollybeard/kit'
+import { Effect } from 'effect'
+
+// For now, we'll need a type that accepts both promise and effect sources
+type AnyInputSource = InputSource | EffectInputSource
 
 /**
  * Find the first applicable source for the given config.
  * Returns the source and its config, or null if none found.
  */
-const findApplicableSource = async (
+const findApplicableSource = (
   config: Config,
-): Promise<
+): Effect.Effect<
   {
-    source: InputSource
+    source: AnyInputSource
     sourceConfig: object
-  } | null
-> => {
-  if (config.schema?.enabled === false) return null
+  } | null,
+  PlatformError | InputSourceError,
+  FileSystem
+> =>
+  Effect.gen(function*() {
+    if (config.schema?.enabled === false) return null
 
-  const allSources = [
-    InputSources.VersionedDirectory.loader,
-    InputSources.Directory.loader,
-    InputSources.File.loader,
-    InputSources.Memory.loader,
-    InputSources.Introspection.loader,
-    InputSources.IntrospectionFile.loader,
-  ]
+    const allSources: AnyInputSource[] = [
+      InputSources.VersionedDirectory.loader,
+      InputSources.Directory.loader,
+      InputSources.File.loader,
+      InputSources.Memory.loader,
+      InputSources.Introspection.loader,
+      InputSources.IntrospectionFile.loader,
+    ]
 
-  const useFirst = config.schema?.useSources
-    ? Arr.sure(config.schema.useSources)
-    : null
+    const useFirst = config.schema?.useSources
+      ? Arr.sure(config.schema.useSources)
+      : null
 
-  const context: InputSourceLoader.Context = { paths: config.paths }
+    const context: InputSourceLoader.Context = { paths: config.paths }
 
-  const sourcesToTry = useFirst
-    ? useFirst.map(name => allSources.find(s => s.name === name)).filter(Boolean) as InputSource[]
-    : allSources
+    const sourcesToTry = useFirst
+      ? useFirst.map(name => allSources.find(s => s.name === name)).filter(Boolean) as AnyInputSource[]
+      : allSources
 
-  for (const source of sourcesToTry) {
-    const sourceConfig = (config.schema?.sources as any)?.[source.name] ?? {}
-    if (await source.isApplicable(sourceConfig, context)) {
-      return {
-        source: source as any,
-        sourceConfig,
+    for (const source of sourcesToTry) {
+      const sourceConfig = (config.schema?.sources as any)?.[source.name] ?? {}
+
+      // Check if this is an Effect-based source by checking the source type
+      const isEffectSource = (source as any).__effectInputSource === true
+
+      let isApplicable: boolean
+
+      if (isEffectSource) {
+        // It's an Effect-based source
+        const effectSource = source as EffectInputSource
+        isApplicable = yield* effectSource.isApplicable(sourceConfig, context)
+      } else {
+        // It's a promise-based source
+        const promiseSource = source as InputSource
+        isApplicable = yield* Effect.promise(() => promiseSource.isApplicable(sourceConfig, context))
+      }
+
+      if (isApplicable) {
+        return {
+          source: source as any,
+          sourceConfig,
+        }
       }
     }
-  }
 
-  return null
-}
+    return null
+  })
 
 /**
  * Check if a schema exists using the configured sources.
  * Returns true if any source has a schema, false otherwise.
  */
-export const hasSchema = async (config: Config): Promise<boolean> => {
-  const source = await findApplicableSource(config)
-  return source !== null
-}
+export const hasSchema = (config: Config): Effect.Effect<boolean, PlatformError | InputSourceError, FileSystem> =>
+  Effect.gen(function*() {
+    const source = yield* findApplicableSource(config)
+    return source !== null
+  })
+
+/**
+ * Load schema without throwing if none found.
+ * Returns null if no schema is configured or found.
+ */
+export const loadOrNull = (
+  config: Config,
+): Effect.Effect<InputSourceLoader.LoadedCatalog | null, PlatformError | InputSourceError, FileSystem> =>
+  Effect.gen(function*() {
+    if (config.schema?.enabled === false) return null
+
+    const applicable = yield* findApplicableSource(config)
+    if (!applicable) {
+      return null
+    }
+
+    const context: InputSourceLoader.Context = { paths: config.paths }
+
+    // Check if this is an Effect-based source by checking the source type
+    const isEffectSource = (applicable.source as any).__effectInputSource === true
+
+    let catalog: Catalog.Catalog | null
+
+    if (isEffectSource) {
+      // It's an Effect-based source
+      const effectSource = applicable.source as EffectInputSource
+      catalog = yield* effectSource.readIfApplicableOrThrow(
+        applicable.sourceConfig,
+        context,
+      )
+    } else {
+      // It's a promise-based source
+      const promiseSource = applicable.source as InputSource
+      catalog = yield* Effect.promise(() =>
+        promiseSource.readIfApplicableOrThrow(
+          applicable.sourceConfig,
+          context,
+        )
+      )
+    }
+
+    if (!catalog) {
+      return null
+    }
+
+    const loadedSchema: InputSourceLoader.LoadedCatalog = {
+      data: catalog,
+      source: applicable.source,
+    }
+
+    // Apply augmentations if configured and catalog was loaded
+    if (loadedSchema.data && config.schema?.augmentations) {
+      const augmentations = config.schema.augmentations
+      const catalog = loadedSchema.data as Catalog.Catalog
+      Catalog.fold(
+        (versioned) => {
+          for (const entry of versioned.entries) {
+            applyAugmentations(entry.schema.definition, augmentations)
+          }
+        },
+        (unversioned) => {
+          applyAugmentations(unversioned.schema.definition, augmentations)
+        },
+      )(catalog)
+    }
+
+    return loadedSchema
+  })
 
 /**
  * High-level schema loader that handles all configuration and source assembly.
@@ -70,52 +164,28 @@ export const hasSchema = async (config: Config): Promise<boolean> => {
  * - Calls the low-level InputSource.loadOrThrow
  *
  * @param config - The Polen configuration
- * @returns Promise resolving to the loaded schema with source information or null if schema is disabled.
+ * @returns Effect resolving to the loaded schema with source information or null if schema is disabled.
  */
-export const loadOrThrow = async (
+export const loadOrThrow = (
   config: Config,
-): Promise<InputSourceLoader.LoadedCatalog | null> => {
-  if (config.schema?.enabled === false) return null
+): Effect.Effect<InputSourceLoader.LoadedCatalog | null, PlatformError | InputSourceError | Error, FileSystem> =>
+  Effect.gen(function*() {
+    const result = yield* loadOrNull(config)
 
-  const applicable = await findApplicableSource(config)
-  if (!applicable) {
-    throw new Error(`No applicable schema source found. Please check your configuration.`)
-  }
+    if (result === null && config.schema?.enabled !== false) {
+      // Only throw if schema is enabled but none found
+      const applicable = yield* findApplicableSource(config)
+      if (!applicable) {
+        return yield* Effect.fail(new Error(`No applicable schema source found. Please check your configuration.`))
+      } else {
+        return yield* Effect.fail(new Error(`Schema source was applicable but returned no data`))
+      }
+    }
 
-  const context: InputSourceLoader.Context = { paths: config.paths }
-  const catalog = await applicable.source.readIfApplicableOrThrow(
-    applicable.sourceConfig,
-    context,
-  )
+    return result
+  })
 
-  if (!catalog) {
-    throw new Error(`Schema source ${applicable.source.name} was applicable but returned no data`)
-  }
-
-  const loadedSchema: InputSourceLoader.LoadedCatalog = {
-    data: catalog,
-    source: applicable.source,
-  }
-
-  // Apply augmentations if configured and catalog was loaded
-  if (loadedSchema.data && config.schema?.augmentations) {
-    const augmentations = config.schema.augmentations
-    const catalog = loadedSchema.data as Catalog.Catalog
-    Catalog.fold(
-      (versioned) => {
-        for (const entry of versioned.entries) {
-          if (entry.schema.definition) {
-            Augmentations.apply(entry.schema.definition, augmentations)
-          }
-        }
-      },
-      (unversioned) => {
-        if (unversioned.schema.definition) {
-          Augmentations.apply(unversioned.schema.definition, augmentations)
-        }
-      },
-    )(catalog)
-  }
-
-  return loadedSchema
+const applyAugmentations = (schema: any, augmentations: Config['schema']['augmentations']): void => {
+  // @ts-expect-error - TODO fix augmentations type
+  Augmentations.apply(schema, augmentations)
 }
