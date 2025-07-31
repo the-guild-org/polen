@@ -83,7 +83,7 @@ export default Polen.defineConfig({
   schema: {
     sources: {
       introspectionFile: {
-        path: './custom-introspection.json' // Custom path if needed
+        path: './custom-introspection.json', // Custom path if needed
       },
     },
   },
@@ -184,7 +184,7 @@ Here's how supplying multiple schemas maps to the different sources:
 | **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [version](#specifier-kinds) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre> |
 | **[Configuration](#configuration)**    | Define multiple versions in `sources.memory.versions` array                                            | [See example above](#configuration)                                    |
 | **Introspection File**                 | N/A (single schema only)                                                                               | N/A                                                                    |
-| **Automatic Introspection**           | N/A (single schema only)                                                                               | N/A                                                                    |
+| **Automatic Introspection**            | N/A (single schema only)                                                                               | N/A                                                                    |
 
 ## Features Enabled
 

@@ -1,3 +1,4 @@
+import { Graph } from '#lib/graph/$'
 import { EffectKit } from '#lib/kit-temp/effect'
 import { Uhl } from '../uhl/$.js'
 import { Value } from '../value/$.js'
@@ -5,20 +6,24 @@ import { Value } from '../value/$.js'
 /**
  * Map type for the bridge index - UHL string to hydratable value
  */
-export type Data = Map<string, Value.Hydratable>
+export type Fragments = Map<string, Value.Hydratable>
 
 /**
  * Bridge index for O(1) asset lookups
  * Maps UHL string representations to hydratable values
  */
 export interface Index {
-  readonly fragments: Data
+  readonly fragments: Fragments
   root: Value.Hydratable | null
+  hasImported: boolean
+  graph: Graph.DependencyGraph
 }
 
 export const create = (): Index => ({
   root: null,
   fragments: new Map(),
+  hasImported: false,
+  graph: Graph.create(),
 })
 
 /**

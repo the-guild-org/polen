@@ -11,7 +11,7 @@ export const DependencyGraph = S.Struct({
    * Map from parent ID to array of child IDs (parent depends on children)
    */
   dependencies: S.Record({ key: S.String, value: S.Array(S.String) }),
-  
+
   /**
    * Map from child ID to array of parent IDs (child is depended on by parents)
    */
@@ -30,10 +30,11 @@ export const make = DependencyGraph.make
 /**
  * Create an empty dependency graph
  */
-export const create = (): DependencyGraph => make({
-  dependencies: {},
-  dependents: {},
-})
+export const create = (): DependencyGraph =>
+  make({
+    dependencies: {},
+    dependents: {},
+  })
 
 // ─── Domain Logic ────────────────────────────────────────────────────────────
 
@@ -52,13 +53,13 @@ export const addDependency = (
   // Get existing arrays or create empty ones
   const children = graph.dependencies[parent] || []
   const parents = graph.dependents[child] || []
-  
+
   // Add child if not already present
   const newChildren = children.includes(child) ? children : [...children, child]
-  
+
   // Add parent if not already present
   const newParents = parents.includes(parent) ? parents : [...parents, parent]
-  
+
   return make({
     dependencies: {
       ...graph.dependencies,
@@ -87,7 +88,7 @@ export const addDependencyMutable = (
     dependencies: Record<string, string[]>
     dependents: Record<string, string[]>
   }
-  
+
   // Add to dependencies
   if (!mutableGraph.dependencies[parent]) {
     mutableGraph.dependencies[parent] = []
@@ -95,7 +96,7 @@ export const addDependencyMutable = (
   if (!mutableGraph.dependencies[parent].includes(child)) {
     mutableGraph.dependencies[parent].push(child)
   }
-  
+
   // Add to dependents
   if (!mutableGraph.dependents[child]) {
     mutableGraph.dependents[child] = []
@@ -110,7 +111,7 @@ export const addDependencyMutable = (
  */
 export const findLeafNodes = (graph: DependencyGraph): Set<string> => {
   const leaves = new Set<string>()
-  
+
   // Check all nodes that appear as children
   for (const child of Object.keys(graph.dependents)) {
     const deps = graph.dependencies[child]
@@ -118,7 +119,7 @@ export const findLeafNodes = (graph: DependencyGraph): Set<string> => {
       leaves.add(child)
     }
   }
-  
+
   return leaves
 }
 
@@ -132,14 +133,14 @@ export const areDependenciesReady = (
 ): boolean => {
   const deps = graph.dependencies[node]
   if (!deps) return true
-  
+
   return deps.every(dep => processed.has(dep))
 }
 
 /**
  * Get topological ordering of nodes (children before parents)
  * This ensures we process dependencies before the nodes that depend on them
- * 
+ *
  * @param graph - The dependency graph
  * @returns Array of node IDs in topological order
  */
@@ -147,7 +148,7 @@ export const topologicalSort = (graph: DependencyGraph): string[] => {
   const result: string[] = []
   const visited = new Set<string>()
   const visiting = new Set<string>() // For cycle detection
-  
+
   // Get all nodes
   const allNodes = new Set<string>()
   for (const parent of Object.keys(graph.dependencies)) {
@@ -156,17 +157,17 @@ export const topologicalSort = (graph: DependencyGraph): string[] => {
   for (const child of Object.keys(graph.dependents)) {
     allNodes.add(child)
   }
-  
+
   const visit = (node: string): void => {
     if (visited.has(node)) return
-    
+
     if (visiting.has(node)) {
       // Cycle detected - just skip this node
       return
     }
-    
+
     visiting.add(node)
-    
+
     // Visit all children first
     const children = graph.dependencies[node]
     if (children) {
@@ -174,17 +175,17 @@ export const topologicalSort = (graph: DependencyGraph): string[] => {
         visit(child)
       }
     }
-    
+
     visiting.delete(node)
     visited.add(node)
     result.push(node)
   }
-  
+
   // Visit all nodes
   for (const node of allNodes) {
     visit(node)
   }
-  
+
   return result
 }
 
