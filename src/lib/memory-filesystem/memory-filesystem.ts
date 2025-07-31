@@ -141,15 +141,23 @@ export const layer = (diskLayout: DiskLayout) =>
  * Creates a Hydra IO service layer from a disk layout specification.
  * This provides the simpler IO interface compatible with Hydra Bridge.
  *
- * @param diskLayout - Object mapping file paths to their contents
- * @param basePath - Optional base path to simulate directory structure
+ * @param options - Configuration options
+ * @param options.basePath - Optional base path to simulate directory structure
+ * @param options.initialFiles - Initial files as a Map or Record
  * @returns Layer that provides a Hydra IO service backed by memory
  */
-export const ioLayer = (diskLayout: DiskLayout, basePath: string = '.') => {
-  const files = new Map<string, string>()
+export const ioLayer = (options?: {
+  basePath?: string
+  initialFiles?: Map<string, string> | Record<string, string>
+}) => {
+  const basePath = options?.basePath || '.'
+  const initialFilesInput = options?.initialFiles instanceof Map
+    ? options.initialFiles
+    : new Map(Object.entries(options?.initialFiles || {}))
 
-  // Convert disk layout to use full paths
-  for (const [filename, content] of Object.entries(diskLayout)) {
+  // Convert initial files to use full paths
+  const files = new Map<string, string>()
+  for (const [filename, content] of initialFilesInput) {
     const fullPath = path.join(basePath, filename)
     files.set(fullPath, content)
   }
