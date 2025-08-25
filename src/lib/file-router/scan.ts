@@ -1,5 +1,6 @@
-import { TinyGlobby } from '#dep/tiny-globby/index'
+import * as TinyGlobbyModule from '#dep/tiny-globby/index'
 import { Path, Str } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import { type Diagnostic, lint } from './linter.js'
 import { type Route, type RouteFile, type RouteLogical } from './route.js'
 
@@ -41,27 +42,31 @@ export interface ScanResult {
 //
 //
 
-export const scan = async (parameters: {
+export const scan = (parameters: {
   dir: string
   glob?: string
-}): Promise<ScanResult> => {
-  const { dir, glob = `**/*.{md,mdx}` } = parameters
+}): Effect.Effect<ScanResult, Error, never> =>
+  Effect.gen(function*() {
+    const { dir, glob = `**/*.{md,mdx}` } = parameters
 
-  // Get all files directly
-  const filePaths = await TinyGlobby.glob(glob, {
-    absolute: true,
-    cwd: dir,
-    onlyFiles: true,
+    // Get all files directly
+    const filePaths = yield* TinyGlobbyModule.EffectGlobby.glob(glob, {
+      absolute: true,
+      cwd: dir,
+      onlyFiles: true,
+    })
+
+    // Convert to routes
+    const routes = filePaths.map((filePath: string) => filePathToRoute(filePath, dir))
+
+    // Apply linting
+    const lintResult = lint(routes)
+
+    return {
+      routes: lintResult.routes,
+      diagnostics: lintResult.diagnostics,
+    }
   })
-
-  // Convert to routes
-  const routes = filePaths.map(filePath => filePathToRoute(filePath, dir))
-
-  // Apply linting
-  const lintResult = lint(routes)
-
-  return lintResult
-}
 
 export const filePathToRoute = (filePathExpression: string, rootDir: string): Route => {
   const file: RouteFile = {

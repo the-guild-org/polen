@@ -7,11 +7,14 @@ import type { ConfigInput } from './configurator.js'
  * The second config (overrides) takes precedence over the first (base).
  */
 export const mergeInputs = (
-  base: ConfigInput,
+  base?: ConfigInput | undefined,
   overrides?: ConfigInput | undefined,
 ): ConfigInput => {
+  if (!base) {
+    return overrides ?? {}
+  }
   if (!overrides) {
-    return base
+    return base ?? {}
   }
 
   const merged: ConfigInput = spreadShallow(base, overrides)
@@ -54,6 +57,10 @@ export const mergeInputs = (
         base.advanced?.vite ?? {},
         overrides.advanced?.vite ?? {},
       )
+    }
+
+    if (base.advanced?.paths ?? overrides.advanced?.paths) {
+      merged.advanced.paths = spreadShallow(base.advanced?.paths, overrides.advanced?.paths)
     }
   }
 

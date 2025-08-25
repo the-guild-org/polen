@@ -1,5 +1,6 @@
 import { Resource } from '#lib/kit-temp/$$'
 import { S } from '#lib/kit-temp/effect'
+import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
 
@@ -30,19 +31,16 @@ const routesManifestResource = Resource.create({
  * Get a routes manifest from the specified directory.
  *
  * @param directory - The directory containing the routes.manifest.json file
- * @returns Promise resolving to the routes manifest
+ * @returns Effect resolving to the routes manifest
  */
-export const get = async (directory: string): Promise<RoutesManifest> => {
-  return Effect.runPromise(
-    routesManifestResource.read(directory).pipe(
-      Effect.provide(NodeFileSystem.layer),
-      Effect.catchAll(error =>
-        Effect.fail(
-          new Error(
-            `Failed to load routes manifest from ${directory}/routes.manifest.json. Ensure the build has completed successfully. ${error.message}`,
-          ),
-        )
-      ),
+export const get = (directory: string): Effect.Effect<RoutesManifest, Error, FileSystem.FileSystem> => {
+  return routesManifestResource.read(directory).pipe(
+    Effect.catchAll(error =>
+      Effect.fail(
+        new Error(
+          `Failed to load routes manifest from ${directory}/routes.manifest.json. Ensure the build has completed successfully. ${error.message}`,
+        ),
+      )
     ),
   )
 }
@@ -53,11 +51,11 @@ export const get = async (directory: string): Promise<RoutesManifest> => {
  * @param manifest - The routes manifest to write
  * @param directory - The directory where to write the routes.manifest.json file
  */
-export const write = async (manifest: RoutesManifest, directory: string): Promise<void> => {
-  return Effect.runPromise(
-    routesManifestResource.write(manifest, directory).pipe(
-      Effect.provide(NodeFileSystem.layer),
-      Effect.catchAll(error => Effect.fail(new Error(`Failed to write routes manifest: ${error.message}`))),
-    ),
+export const write = (
+  manifest: RoutesManifest,
+  directory: string,
+): Effect.Effect<void, Error, FileSystem.FileSystem> => {
+  return routesManifestResource.write(manifest, directory).pipe(
+    Effect.catchAll(error => Effect.fail(new Error(`Failed to write routes manifest: ${error.message}`))),
   )
 }

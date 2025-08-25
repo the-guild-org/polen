@@ -23,7 +23,7 @@ export const toUHL = (selection: Selection): Uhl.Uhl[] => {
   const results: Uhl.Uhl[] = []
 
   for (const [tag, value] of Object.entries(selection)) {
-    const uhls = processSelectionEntry(tag, value, [])
+    const uhls = processSelectionEntry(tag, value, Uhl.makeRoot())
     results.push(...uhls)
   }
 
@@ -67,7 +67,11 @@ const processSelectionEntry = (
   // Handle shallow selection
   if (value === true || (typeof value === 'object' && value !== null && Object.keys(value).length === 0)) {
     // Singleton or empty object selection
-    return [[...context, Uhl.Segment.make({ tag: tag, uniqueKeys: {}, ...(adt && { adt }) })]]
+    const segment = Uhl.Segment.make({ tag: tag, uniqueKeys: {}, ...(adt && { adt }) })
+    const resultUhl = context._tag === 'UhlRoot'
+      ? Uhl.makePath(segment)
+      : Uhl.makePath(...context.segments, segment)
+    return [resultUhl]
   }
 
   // Handle single-key shorthand (e.g., { User: 'abc123' })
@@ -89,19 +93,37 @@ const processSelectionEntry = (
     if (disambiguationPath) {
       // The disambiguation path already contains the full path from root
       // We just need to add our segment at the end
-      return [[...disambiguationPath, Uhl.Segment.make({ tag: tag, uniqueKeys, ...(adt && { adt }) })]]
+      const segment = Uhl.Segment.make({ tag: tag, uniqueKeys, ...(adt && { adt }) })
+      const resultUhl = disambiguationPath._tag === 'UhlRoot'
+        ? Uhl.makePath(segment)
+        : Uhl.makePath(...disambiguationPath.segments, segment)
+      return [resultUhl]
     }
 
     // If we have context, we need to prepend it to our segment
     if (contextUHLs.length > 0) {
       const results: Uhl.Uhl[] = []
       for (const contextUHL of contextUHLs) {
-        const fullContext = [...context, ...contextUHL]
-        results.push([...fullContext, Uhl.Segment.make({ tag: tag, uniqueKeys, ...(adt && { adt }) })])
+        // Combine context and contextUHL
+        let fullContextSegments: Uhl.Segment.Segment[] = []
+        if (context._tag === 'UhlPath') {
+          fullContextSegments.push(...context.segments)
+        }
+        if (contextUHL._tag === 'UhlPath') {
+          fullContextSegments.push(...contextUHL.segments)
+        }
+
+        const segment = Uhl.Segment.make({ tag: tag, uniqueKeys, ...(adt && { adt }) })
+        const resultUhl = Uhl.makePath(...fullContextSegments, segment)
+        results.push(resultUhl)
       }
       return results
     } else {
-      return [[...context, Uhl.Segment.make({ tag: tag, uniqueKeys, ...(adt && { adt }) })]]
+      const segment = Uhl.Segment.make({ tag: tag, uniqueKeys, ...(adt && { adt }) })
+      const resultUhl = context._tag === 'UhlRoot'
+        ? Uhl.makePath(segment)
+        : Uhl.makePath(...context.segments, segment)
+      return [resultUhl]
     }
   }
 
@@ -126,7 +148,7 @@ const extractKeysAndContext = (
       // This is a deep selection for a child hydratable
       const childTag = key.slice(1) // Remove $
       // Process the child selection recursively
-      const childUHLs = processSelectionEntry(childTag, val as any, [])
+      const childUHLs = processSelectionEntry(childTag, val as any, Uhl.makeRoot())
       contextUHLs.push(...childUHLs)
     } else {
       // This is either a unique key or an intermediate struct property
@@ -195,5 +217,8 @@ const parseDisambiguationPath = (pathObj: unknown): Uhl.Uhl => {
     }
   }
 
-  return segments
+  if (segments.length === 0) {
+    return Uhl.makeRoot()
+  }
+  return Uhl.makePath(...segments)
 }

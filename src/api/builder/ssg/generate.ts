@@ -2,8 +2,10 @@ import type { Config } from '#api/config/index'
 import { Routes } from '#api/routes/$'
 import { chunk } from '#lib/kit-temp'
 import { debugPolen } from '#singletons/debug'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Path } from '@wollybeard/kit'
 import consola from 'consola'
+import { Effect } from 'effect'
 import getPort from 'get-port'
 import { cpus, totalmem } from 'node:os'
 import workerpool from 'workerpool'
@@ -14,7 +16,12 @@ const debug = debugPolen.sub(`api:ssg:generate`)
 
 export async function generate(config: Config.Config) {
   // Read routes from the manifest generated during build
-  const manifest = await Routes.Manifest.get(config.paths.project.absolute.build.assets.root)
+  const manifest = await Effect.runPromise(
+    Effect.provide(
+      Routes.Manifest.get(config.paths.project.absolute.build.assets.root),
+      NodeFileSystem.layer,
+    ),
+  )
   const routes = manifest.routes
 
   const totalRoutes = routes.length

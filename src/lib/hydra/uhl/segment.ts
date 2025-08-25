@@ -20,7 +20,7 @@ import { Hydratable } from '../hydratable/$.js'
 export const Segment = S.Struct({
   tag: S.String,
   adt: S.optional(S.String),
-  uniqueKeys: S.optionalWith(Hydratable.UniqueKeys, { default: () => ({}) }),
+  uniqueKeys: S.optionalWith(S.Record({ key: S.String, value: S.Union(S.String, S.Number) }), { default: () => ({}) }),
 }).annotations({
   identifier: 'UHL.Segment',
   description: 'A segment in the UHL path - instance data for a hydratable',
@@ -99,7 +99,7 @@ export const toString = (segment: Segment): string => {
   if (keyNames.length > 0) {
     const kvPairs = keyNames
       .sort() // Ensure consistent ordering
-      .map(key => `${key}${KEY_VALUE_SEPARATOR}${segment.uniqueKeys[key]}`)
+      .map((key: string) => `${key}${KEY_VALUE_SEPARATOR}${segment.uniqueKeys[key]}`)
       .join(PROPERTY_SEPARATOR)
     result += PROPERTY_SEPARATOR + kvPairs
   }

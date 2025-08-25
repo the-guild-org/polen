@@ -69,9 +69,17 @@ Test.suite<FromStringCase>('fromString', [
       ] },
   ], ({ string, expected }) => {
   const uhl = Uhl.fromString(string)
-  expect(uhl).toHaveLength(expected.length)
-  for (let i = 0; i < expected.length; i++) {
-    expect(uhl[i]).toMatchObject(expected[i]!)
+  
+  if (expected.length === 0) {
+    expect(uhl._tag).toBe('UhlRoot')
+  } else {
+    expect(uhl._tag).toBe('UhlPath')
+    if (uhl._tag === 'UhlPath') {
+      expect(uhl.segments).toHaveLength(expected.length)
+      for (let i = 0; i < expected.length; i++) {
+        expect(uhl.segments[i]).toMatchObject(expected[i]!)
+      }
+    }
   }
 })
 

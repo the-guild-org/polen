@@ -1,6 +1,7 @@
 import { Graph } from '#lib/graph/$'
+import type { FragmentAsset } from '#lib/hydra/fragment-asset'
 import { EffectKit, S } from '#lib/kit-temp/effect'
-import { Context, Effect, Option } from 'effect'
+import { Context, Effect } from 'effect'
 import * as AST from 'effect/SchemaAST'
 import { Hydratable } from '../hydratable/$.js'
 import { Index } from '../index/$.js'
@@ -9,17 +10,16 @@ import { Selection } from '../selection/$.js'
 import { Uhl } from '../uhl/$.js'
 import { Value } from '../value/$.js'
 
-/**
- * Special filename used to store the root value in bridge persistence
- */
-const ROOT_FILENAME = '__root__.json' as const
+// Root is now stored as a regular fragment with UHL key '__root__'
 
 /**
  * Create a dehydrated variant schema for a hydratable tagged struct.
  * The dehydrated variant contains only the tag, _dehydrated flag, and unique keys
  * with their actual encoded types extracted from the hydratable schema.
  */
-const createDehydratedVariant = (hydratableSchema: Hydratable.Hydratable): S.Schema.Any => {
+const createDehydratedVariant = <$Schema extends Hydratable.Hydratable>(
+  hydratableSchema: $Schema,
+): any => { // Using any to avoid complex type constraints
   // Extract tag from the schema
   const tag = EffectKit.Schema.TaggedStruct.getTagOrThrow(hydratableSchema)
 
@@ -62,7 +62,7 @@ const createDehydratedVariant = (hydratableSchema: Hydratable.Hydratable): S.Sch
     }
   }
 
-  return S.Struct(fields)
+  return S.Struct(fields) as any // Cast to any to avoid complex type constraints
 }
 
 /**
@@ -81,7 +81,7 @@ const transformSchemaWithHydratables = (
     // Check various ways an AST might represent a hydratable
 
     // 1. Direct reference - the AST is exactly a hydratable AST
-    for (const [tag, hydratableAst] of hydrationContext.index) {
+    for (const [tag, hydratableAst] of hydrationContext.astIndex) {
       if (node === hydratableAst) {
         return true
       }
@@ -90,7 +90,7 @@ const transformSchemaWithHydratables = (
     // 2. Declaration reference - the AST has an identifier that matches a hydratable
     if ('_id' in node && typeof node._id === 'string') {
       // Check if this identifier corresponds to a hydratable
-      for (const [tag, hydratableAst] of hydrationContext.index) {
+      for (const [tag, hydratableAst] of hydrationContext.astIndex) {
         if ('_id' in hydratableAst && node._id === hydratableAst._id) {
           return true
         }
@@ -102,7 +102,7 @@ const transformSchemaWithHydratables = (
       const tagField = node.propertySignatures.find(f => f.name === '_tag')
       if (tagField && AST.isLiteral(tagField.type)) {
         const tag = tagField.type.literal as string
-        return hydrationContext.index.has(tag)
+        return hydrationContext.astIndex.has(tag)
       }
     }
 
@@ -116,7 +116,7 @@ const transformSchemaWithHydratables = (
       let tag: string | undefined
 
       // Try different ways to get the tag
-      for (const [hydratableTag, hydratableAst] of hydrationContext.index) {
+      for (const [hydratableTag, hydratableAst] of hydrationContext.astIndex) {
         if (
           node === hydratableAst
           || ('_id' in node && '_id' in hydratableAst && node._id === hydratableAst._id)
@@ -134,11 +134,12 @@ const transformSchemaWithHydratables = (
         }
       }
 
-      if (tag && hydrationContext.index.has(tag)) {
-        // This is a reference to a hydratable - create a union with its dehydrated variant
+      if (tag && hydrationContext.astIndex.has(tag)) {
+        // This is a reference to a hydratable in a property - create a union with its dehydrated variant
+        // The dehydrated variant comes second so hydrated is preferred during decoding
         const hydratableSchema = S.make(node)
         const dehydratedSchema = createDehydratedVariant(hydratableSchema as unknown as Hydratable.Hydratable)
-        const unionSchema = S.Union(dehydratedSchema, hydratableSchema)
+        const unionSchema = S.Union(hydratableSchema, dehydratedSchema)
         return unionSchema.ast
       }
     }
@@ -211,7 +212,28 @@ const transformSchemaWithHydratables = (
 
       case 'Suspend':
         // For suspended schemas, transform the resolved schema
-        return new AST.Suspend(() => transform(node.f()))
+        return new AST.Suspend(() => {
+          const resolvedAst = node.f()
+          const transformedResolved = transform(resolvedAst)
+
+          // Check if the resolved AST is a hydratable
+          if (AST.isTypeLiteral(resolvedAst)) {
+            const tagField = resolvedAst.propertySignatures.find(f => f.name === '_tag')
+            if (tagField && AST.isLiteral(tagField.type)) {
+              const tag = tagField.type.literal as string
+              if (hydrationContext.astIndex.has(tag)) {
+                // This suspended schema resolves to a hydratable
+                // Create a union with its dehydrated variant
+                const hydratableSchema = S.make(transformedResolved)
+                const dehydratedSchema = createDehydratedVariant(hydratableSchema as unknown as Hydratable.Hydratable)
+                const unionSchema = S.Union(hydratableSchema, dehydratedSchema)
+                return unionSchema.ast
+              }
+            }
+          }
+
+          return transformedResolved
+        })
 
       case 'Refinement':
         // Transform the underlying schema
@@ -252,6 +274,14 @@ const transformSchemaWithHydratables = (
 export interface Options {
 }
 
+/**
+ * A fragment exported to memory with filename and JSON content
+ */
+export interface ExportedFragment {
+  readonly filename: string
+  readonly content: string
+}
+
 export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
   readonly index: Index.Index
   readonly schemaIndex: Hydratable.ASTIndex
@@ -262,9 +292,9 @@ export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
   readonly export: () => Effect.Effect<void, Error, Io.IOService>
 
   /**
-   * Export all hydratables from index to memory as [UHL Expression Exported, JSON] pairs
+   * Export all hydratables from index to memory as exported fragments
    */
-  readonly exportToMemory: () => Array<[string, string]>
+  readonly exportToMemory: () => ExportedFragment[]
 
   /**
    * Import hydratables from disk into index
@@ -274,7 +304,7 @@ export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
   /**
    * Import hydratables from memory into index
    */
-  readonly importFromMemory: (data: S.Schema.Type<$Schema>) => void
+  readonly addRootValue: (data: S.Schema.Type<$Schema>) => void
 
   /**
    * Clear all assets from disk and reset the in-memory index
@@ -306,38 +336,6 @@ export interface Bridge<$Schema extends S.Schema.Any = S.Schema.Any> {
 export const ContextBridge = Context.GenericTag<Bridge>('@hydra/bridge/Bridge')
 
 /**
- * Convert in-memory data to bridge file format.
- * This is useful for testing or initializing a bridge with data.
- *
- * @param data - The fully hydrated data to convert
- * @param schema - The schema for the data
- * @returns Array of [filename, json content] pairs
- */
-export const dataToFiles = <schema extends S.Schema.Any>(
-  data: S.Schema.Type<schema>,
-  schema: schema,
-): Array<[string, string]> => {
-  const hydrationContext = Hydratable.createContext(schema)
-  const result: Array<[string, string]> = []
-
-  // Handle root value
-  const dehydrationResult = Value.dehydrateWithDependenciesAndContext(data, hydrationContext)
-  const rootJson = JSON.stringify(dehydrationResult.value, null, 2)
-  result.push([ROOT_FILENAME, rootJson])
-
-  // Locate and export all hydratables
-  const locatedHydratables = Value.locateHydratedHydratables(data, hydrationContext)
-  for (const located of locatedHydratables) {
-    const uhl = Uhl.toString(located.uhl)
-    const fragmentToExport = Value.encodeFragmentForExport(located.value, hydrationContext)
-    const json = JSON.stringify(fragmentToExport, null, 2)
-    result.push([uhl + '.json', json])
-  }
-
-  return result
-}
-
-/**
  * Creates a bridge factory function for a given schema.
  * The bridge manages hydrated/dehydrated data persistence and retrieval.
  *
@@ -347,36 +345,29 @@ export const dataToFiles = <schema extends S.Schema.Any>(
 export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?: Options) => Bridge<schema> => {
   return () => {
     const index = Index.create()
-    const hydrationContext = Hydratable.createContext(schema)
-    // We'll create the decoder after transformation
-    let decode: (u: unknown) => S.Schema.Type<schema>
-
-    // Create dehydrator from original schema before transformation
-    const dehydrate = Value.dehydrate(schema)
-    const dehydrateWithDeps = Value.dehydrateWithDependencies(schema)
 
     // Transform the schema to handle hydratables as unions
-    const transformedAst = transformSchemaWithHydratables(schema.ast, hydrationContext)
+    const baseContext = Hydratable.createContext(schema)
+    const transformedAst = transformSchemaWithHydratables(schema.ast, baseContext)
     const transformedSchema = S.make(transformedAst)
 
-    // Create decoder from transformed schema
-    // @ts-expect-error - Schema context type mismatch
-    decode = S.decodeSync(transformedSchema)
+    // Create transformed schemas for each hydratable type as well
+    const transformedAstIndex = new Map<string, S.Schema.Any>()
+    for (const [tag, ast] of baseContext.astIndex) {
+      const transformedHydratableAst = transformSchemaWithHydratables(ast, baseContext)
+      const transformedSchema = S.make(transformedHydratableAst)
+      transformedAstIndex.set(tag, transformedSchema)
+    }
 
-    const importFromMemory: Bridge<schema>['importFromMemory'] = (data) => {
-      // Store the root value
-      index.root = data
+    // Create hydration context with transformed schema
+    const hydrationContext: Hydratable.Context = {
+      ...baseContext,
+      transformedSchema,
+      transformedAstIndex,
+    }
 
-      // Continue to locate and store nested hydratables
-      const locatedHydratables = Value.locateHydratedHydratables(data, hydrationContext)
-      Index.addHydratablesToIndex(locatedHydratables, index)
-
-      // Dehydrate with dependencies to build the graph
-      const dehydrationResult = dehydrateWithDeps(data as any)
-      index.graph = dehydrationResult.graph
-
-      // Mark as imported
-      index.hasImported = true
+    const addRootValue: Bridge<schema>['addRootValue'] = (rootValue) => {
+      Index.addRootValue(index, rootValue, hydrationContext)
     }
 
     const importFromIo: Bridge<schema>['import'] = () =>
@@ -385,55 +376,28 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
         const entries = yield* io.list('.')
         const jsonFiles = entries.filter(file => file.endsWith('.json'))
 
+        // Read all files first
+        const fragmentAssets: FragmentAsset[] = []
         for (const filename of jsonFiles) {
-          if (filename === ROOT_FILENAME) {
-            // Special handling for root value
-            const content = yield* io.read(filename)
-            const value = JSON.parse(content)
-            index.root = value
-          } else {
-            // Regular hydratable handling
-            const uhl = Uhl.fromFileName(filename)
-            const content = yield* io.read(filename)
-            const value = JSON.parse(content)
-            index.fragments.set(Uhl.toString(uhl), value)
-          }
+          const content = yield* io.read(filename)
+          // zz('content', content)
+          fragmentAssets.push({ filename, content })
         }
 
-        // Mark as imported after successful load
-        index.hasImported = true
+        Index.addFragmentAssets(fragmentAssets, index, hydrationContext)
       })
 
     const exportToMemory: Bridge<schema>['exportToMemory'] = () => {
-      const result: Array<[string, string]> = []
-
-      // Export root value if it exists
-      if (index.root !== null) {
-        const dehydrationResult = Value.dehydrateWithDependenciesAndContext(index.root, hydrationContext)
-        const json = JSON.stringify(dehydrationResult.value, null, 2)
-        result.push(['__root__.json', json])
-
-        // Update the graph in the index
-        index.graph = dehydrationResult.graph
-      }
-
-      for (const [uhlExpression, value] of index.fragments.entries()) {
-        // Fragments should be shallow hydrated - encode but don't dehydrate the fragment itself
-        const fragmentToExport = Value.encodeFragmentForExport(value, hydrationContext)
-        const json = JSON.stringify(fragmentToExport, null, 2)
-        const uhlExpressionExported = uhlExpression + '.json'
-        result.push([uhlExpressionExported, json])
-      }
-
-      return result
+      const fragmentAssets = Index.toFragmentAssets(index, hydrationContext)
+      return fragmentAssets
     }
 
     const exportToIo: Bridge<schema>['export'] = () =>
       Effect.gen(function*() {
         const io = yield* Io.IO
-        const files = exportToMemory()
+        const exportedFragments = exportToMemory()
         yield* Effect.all(
-          files.map(([filename, json]) => io.write(filename, json)),
+          exportedFragments.map(({ filename, content }) => io.write(filename, content)),
           { concurrency: 'unbounded' },
         )
       })
@@ -519,13 +483,12 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
 
     const view: Bridge<schema>['view'] = () =>
       Effect.gen(function*() {
-        // Only import if not already imported
-        if (!index.hasImported) {
-          yield* importFromIo()
-        }
+        // todo: Only import if not already imported
+        yield* importFromIo()
 
         // Check if root value exists now
-        if (index.root === null) {
+        const rootValue = Index.getRootValue(index)
+        if (rootValue === null) {
           throw new Error(
             'View operation could not find root value. '
               + 'Ensure importFromMemory() has been called with valid data.',
@@ -533,10 +496,11 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
         }
 
         // Hydrate the root value fully before returning
-        const hydrated = Value.hydrate(index.root, index)
+        const hydrated = Value.hydrate(rootValue, index)
 
-        // The hydrated value is already in decoded form, so we can return it directly
-        // The transformed schema is used for peek/partial hydration scenarios
+        // Both import paths now store decoded data:
+        // - importFromDisk: decoded during fragment import
+        // - importFromMemory: stored decoded as-is
         return hydrated as S.Schema.Type<schema>
       })
 
@@ -547,23 +511,23 @@ export const makeMake = <schema extends S.Schema.Any>(schema: schema): (options?
         const entries = yield* io.list('.')
         const jsonFiles = entries.filter(file => file.endsWith('.json'))
 
-        // Remove each JSON file (including __root__.json)
+        // Remove each JSON file
         for (const filename of jsonFiles) {
           yield* io.remove(filename)
         }
 
         // Clear the in-memory index
         index.fragments.clear()
-        index.root = null
-        index.hasImported = false
         index.graph = Graph.create()
       })
 
+    const dehydrate = Value.dehydrate(schema)
+
     return {
       index,
-      schemaIndex: hydrationContext.index,
+      schemaIndex: hydrationContext.astIndex,
       import: importFromIo,
-      importFromMemory,
+      addRootValue,
       export: exportToIo,
       exportToMemory,
       clear,

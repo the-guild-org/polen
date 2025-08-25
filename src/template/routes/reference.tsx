@@ -2,6 +2,7 @@ import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
 import { Catalog } from '#lib/catalog/$'
 import { GrafaidOld } from '#lib/grafaid-old'
+import { zz } from '#lib/kit-temp/other'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { route } from '#lib/react-router-aid/react-router-aid'
 import { Version } from '#lib/version/$'
@@ -28,20 +29,22 @@ const referenceLoader = async ({ params }: any) => {
   // since it contains GraphQLSchema instances that can't be serialized
   const catalog = await Effect.runPromise(catalogBridge.view())
 
-  console.log('Catalog from bridge:', catalog)
-  console.log('Catalog type:', typeof catalog)
-  console.log('Catalog _tag:', catalog?._tag)
-
+  // z('Catalog from bridge:', catalog)
+  // z('Catalog type:', typeof catalog)
+  // z('Catalog _tag:', catalog?._tag)
   // Debug: Check the structure of the first entry
-  if (catalog._tag === 'CatalogVersioned' && catalog.entries.length > 0) {
+  if (catalog._tag === 'CatalogVersioned') {
     const firstEntry = catalog.entries[0]!
-    console.log('First entry schema:', firstEntry.schema)
-    console.log('First entry schema definition:', firstEntry.schema?.definition)
-    console.log('First entry schema definition type:', typeof firstEntry.schema?.definition)
+    zz('First entry schema:', firstEntry.schema)
+    zz('First entry schema definition:', firstEntry.schema?.definition)
+    zz('First entry schema definition type:', typeof firstEntry.schema?.definition)
+  } else {
+    zz(catalog.schema.definition.getDirective('if'))
   }
 
   // Return plain data without schema encoding
   // GraphQLSchema instances will be reconstructed on client
+  zz('referenceLoader', catalog)
   return {
     catalog,
     requestedVersion: params.version ?? Api.Schema.VERSION_LATEST,
@@ -50,15 +53,16 @@ const referenceLoader = async ({ params }: any) => {
 
 // Single component that handles all reference route variations
 const ReferenceView = () => {
+  zz('ReferenceView')
   const params = useParams() as { version?: string; type?: string; field?: string }
   // Get loader data without schema decoding
   const loaderData = useLoaderData() as { catalog: Catalog.Catalog; requestedVersion: string }
-  console.log('Loader data:', loaderData)
+  // z('Loader data:', loaderData)
   const { catalog, requestedVersion } = loaderData
 
-  console.log('Catalog in component:', catalog)
-  console.log('Catalog type:', typeof catalog)
-  console.log('Catalog _tag:', catalog._tag)
+  // z('Catalog in component:', catalog)
+  // z('Catalog type:', typeof catalog)
+  // z('Catalog _tag:', catalog._tag)
 
   // Create lifecycles from catalog
   const lifecycle = React.useMemo(() => Lifecycles.create(catalog), [catalog])

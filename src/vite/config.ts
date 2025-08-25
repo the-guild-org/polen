@@ -13,14 +13,13 @@ export const toViteUserConfig = (
     plugins: [Main(config)],
   }
 
-  const viteUserConfigMerged = config.advanced.vite
+  const viteUserConfigMerged = (config.advanced.vite
     ? Vite.mergeConfig(viteUserConfigFromPolen, config.advanced.vite)
-    : viteUserConfigFromPolen
+    : viteUserConfigFromPolen) as ViteUserConfigWithPolen
 
-  return {
-    ...viteUserConfigMerged,
-    _polen: config,
-  }
+  viteUserConfigMerged._polen = config
+
+  return viteUserConfigMerged
 }
 
 export interface ViteUserConfigWithPolen extends Vite.UserConfig {

@@ -549,7 +549,6 @@ async function main() {
     console.log('4. Plugin functions compute properties on-demand')
     console.log('5. Type discrimination uses instanceof for GraphQL types, kind for our types')
   } catch (error) {
-    console.error('❌ Error:', error)
   }
 }
 

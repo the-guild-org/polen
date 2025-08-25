@@ -28,10 +28,32 @@ import * as Segment from './segment.js'
  *   { tag: "RevisionInitial", adt: "Revision", uniqueKeys: { date: "2024-01-15" } }
  * ]
  */
-export const Uhl = S.Array(Segment.Segment).annotations({
-  identifier: 'UHL',
-  description: 'UniversalHydratableLocator - a path to a hydratable',
+/**
+ * Root UHL - represents the root location (has no segments)
+ */
+export const UhlRoot = S.TaggedStruct('UhlRoot', {}).annotations({
+  identifier: 'UhlRoot',
+  description: 'Root UniversalHydratableLocator - points to the root value',
 })
+
+/**
+ * Path UHL - represents a descendant location with segments
+ */
+export const UhlPath = S.TaggedStruct('UhlPath', {
+  segments: S.Array(Segment.Segment),
+}).annotations({
+  identifier: 'UhlPath',
+  description: 'Path UniversalHydratableLocator - path to a descendant hydratable',
+})
+
+/**
+ * UniversalHydratableLocator ADT - either root or path to a hydratable
+ */
+export const Uhl = S.Union(UhlRoot, UhlPath).annotations({
+  identifier: 'UHL',
+  description: 'UniversalHydratableLocator - identifies location of a hydratable',
+})
+
 export type Uhl = S.Schema.Type<typeof Uhl>
 
 // ============================================================================
@@ -55,7 +77,11 @@ export const encode = S.encode(Uhl)
 /**
  * Create a UHL from segments
  */
-export const make = (...segments: Segment.Segment[]): Uhl => segments
+export const makeRoot = (): Uhl => UhlRoot.make({})
+
+export const makePath = (...segments: Segment.Segment[]): Uhl => UhlPath.make({ segments })
+
+export const make = (...segments: Segment.Segment[]): Uhl => segments.length === 0 ? makeRoot() : makePath(...segments)
 
 // ============================================================================
 // Parsing and Serialization
@@ -72,7 +98,12 @@ export const make = (...segments: Segment.Segment[]): Uhl => segments
  * ]) // "Schema@SchemaVersioned!version@1.0.0___Revision@RevisionInitial!date@2024-01-15"
  */
 export const toString = (uhl: Uhl): string => {
-  return uhl.map(Segment.toString).join(SEGMENT_SEPARATOR)
+  switch (uhl._tag) {
+    case 'UhlRoot':
+      return '__root__'
+    case 'UhlPath':
+      return uhl.segments.map(Segment.toString).join(SEGMENT_SEPARATOR)
+  }
 }
 
 /**
@@ -106,10 +137,10 @@ export const fromFileName = (fileName: string): Uhl => {
  * // Returns the parsed UHL structure
  */
 export const fromString = (str: string): Uhl => {
-  if (!str) return []
+  if (!str || str === '__root__') return makeRoot()
 
   const segments = str.split(SEGMENT_SEPARATOR)
-  return segments.map(Segment.fromString)
+  return makePath(...segments.map(Segment.fromString))
 }
 
 // ============================================================================

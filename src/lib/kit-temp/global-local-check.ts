@@ -1,4 +1,5 @@
-import * as fs from 'node:fs/promises'
+import { FileSystem, Path } from '@effect/platform'
+import { Effect } from 'effect'
 import * as path from 'node:path'
 
 interface GlobalLocalCheckOptions {
@@ -34,37 +35,39 @@ interface PackageJson {
 /**
  * Check if a package exists in any package.json from the current directory up to root
  */
-async function findPackageInAncestors(packageName: string): Promise<string | null> {
-  let dir = process.cwd()
+const findPackageInAncestors = (packageName: string): Effect.Effect<string | null, Error, FileSystem.FileSystem> =>
+  Effect.gen(function*() {
+    let dir = process.cwd()
 
-  while (true) {
-    const packageJsonPath = path.join(dir, 'package.json')
+    while (true) {
+      const packageJsonPath = path.join(dir, 'package.json')
+      const fs = yield* FileSystem.FileSystem
 
-    try {
-      const content = await fs.readFile(packageJsonPath, 'utf8')
-      const pkg: PackageJson = JSON.parse(content)
+      try {
+        const content = yield* fs.readFileString(packageJsonPath)
+        const pkg: PackageJson = JSON.parse(content)
 
-      if (
-        pkg.dependencies?.[packageName]
-        || pkg.devDependencies?.[packageName]
-        || pkg.peerDependencies?.[packageName]
-      ) {
-        return dir
+        if (
+          pkg.dependencies?.[packageName]
+          || pkg.devDependencies?.[packageName]
+          || pkg.peerDependencies?.[packageName]
+        ) {
+          return dir
+        }
+      } catch {
+        // No package.json in this directory, continue
       }
-    } catch {
-      // No package.json in this directory, continue
+
+      const parent = path.dirname(dir)
+      if (parent === dir) {
+        // Reached root directory
+        break
+      }
+      dir = parent
     }
 
-    const parent = path.dirname(dir)
-    if (parent === dir) {
-      // Reached root directory
-      break
-    }
-    dir = parent
-  }
-
-  return null
-}
+    return null
+  })
 
 /**
  * Create a descriptive error for global vs local package conflicts
@@ -109,46 +112,68 @@ To bypass this check:
  * @example
  * ```typescript
  * // In your CLI entry point
- * await checkGlobalVsLocal({
- *   packageName: 'my-cli',
- *   currentExecutablePath: process.argv[1]
- * })
+ * await Effect.runPromise(
+ *   Effect.provide(
+ *     checkGlobalVsLocal({
+ *       packageName: 'my-cli',
+ *       currentExecutablePath: process.argv[1]
+ *     }),
+ *     NodeFileSystem.layer
+ *   )
+ * )
  * ```
  */
-export async function checkGlobalVsLocal(options: GlobalLocalCheckOptions): Promise<void> {
-  const {
-    packageName,
-    currentExecutablePath,
-    allowGlobalFlag = '--allow-global',
-  } = options
+export const checkGlobalVsLocal = (
+  options: GlobalLocalCheckOptions,
+): Effect.Effect<void, Error, FileSystem.FileSystem> =>
+  Effect.gen(function*() {
+    const {
+      packageName,
+      currentExecutablePath,
+      allowGlobalFlag = '--allow-global',
+    } = options
 
-  // Check if running from global install
-  // Common global installation patterns:
-  // - pnpm: /Users/.../Library/pnpm/packagename
-  // - npm: /usr/local/lib/node_modules/packagename
-  // - yarn: /Users/.../config/yarn/global/node_modules/packagename
-  const isGlobalInstall = currentExecutablePath.includes('pnpm/global')
-    || currentExecutablePath.includes('.npm/global')
-    || currentExecutablePath.includes('yarn/global')
-    || currentExecutablePath.includes(`/Library/pnpm/${packageName}`)
-    || currentExecutablePath.includes('/usr/local/lib/node_modules/')
-    || currentExecutablePath.includes('/usr/lib/node_modules/')
-    || !currentExecutablePath.includes(`node_modules/${packageName}`)
+    // Check if running from global install
+    // Common global installation patterns:
+    // - pnpm: /Users/.../Library/pnpm/packagename
+    // - npm: /usr/local/lib/node_modules/packagename
+    // - yarn: /Users/.../config/yarn/global/node_modules/packagename
+    const isGlobalInstall = currentExecutablePath.includes('pnpm/global')
+      || currentExecutablePath.includes('.npm/global')
+      || currentExecutablePath.includes('yarn/global')
+      || currentExecutablePath.includes(`/Library/pnpm/${packageName}`)
+      || currentExecutablePath.includes('/usr/local/lib/node_modules/')
+      || currentExecutablePath.includes('/usr/lib/node_modules/')
+      || !currentExecutablePath.includes(`node_modules/${packageName}`)
 
-  if (!isGlobalInstall) {
-    // Running from local install, all good
-    return
-  }
+    if (!isGlobalInstall) {
+      // Running from local install, all good
+      return
+    }
 
-  // Check for bypass flag
-  if (process.argv.includes(allowGlobalFlag)) {
-    return
-  }
+    // Check for bypass flag
+    if (process.argv.includes(allowGlobalFlag)) {
+      return
+    }
 
-  // Check if package exists in any ancestor package.json
-  const projectDir = await findPackageInAncestors(packageName)
+    // Check if package exists in any ancestor package.json
+    const projectDir = yield* findPackageInAncestors(packageName)
 
-  if (projectDir) {
-    throw createGlobalLocalConflictError(packageName, projectDir, options.errorMessageTemplate)
-  }
+    if (projectDir) {
+      return yield* Effect.fail(createGlobalLocalConflictError(packageName, projectDir, options.errorMessageTemplate))
+    }
+  })
+
+/**
+ * Legacy Promise-based wrapper for backward compatibility.
+ * @deprecated Use the Effect-based version with appropriate Effect runtime
+ */
+export async function checkGlobalVsLocalAsync(options: GlobalLocalCheckOptions): Promise<void> {
+  const { NodeFileSystem } = await import('@effect/platform-node')
+  return Effect.runPromise(
+    Effect.provide(
+      checkGlobalVsLocal(options),
+      NodeFileSystem.layer,
+    ),
+  )
 }

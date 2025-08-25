@@ -59,6 +59,7 @@ const polenConfig = await Api.ConfigResolver.fromFile({
 })
 
 const viteUserConfig = toViteUserConfig(polenConfig)
+
 const viteDevServer = await Err.tryCatch(() => Vite.createServer(viteUserConfig))
 
 if (Err.is(viteDevServer)) {

@@ -15,7 +15,7 @@ describe('Schema', () => {
       version: Version.decodeSync('1.0.0'),
       parent: null,
       revisions: [],
-      definition: mockGraphQLSchema,
+      definition: mockGraphQLSchema as any,
     })
 
     expect(versionedSchema._tag).toBe('SchemaVersioned')
@@ -25,7 +25,7 @@ describe('Schema', () => {
   test('creates unversioned schema', () => {
     const unversionedSchema = Schema.Unversioned.make({
       revisions: [],
-      definition: mockGraphQLSchema,
+      definition: mockGraphQLSchema as any,
     })
 
     expect(unversionedSchema._tag).toBe('SchemaUnversioned')
@@ -36,12 +36,12 @@ describe('Schema', () => {
       version: Version.decodeSync('1.0.0'),
       parent: null,
       revisions: [],
-      definition: mockGraphQLSchema,
+      definition: mockGraphQLSchema as any,
     })
 
     const unversionedSchema = Schema.Unversioned.make({
       revisions: [],
-      definition: mockGraphQLSchema,
+      definition: mockGraphQLSchema as any,
     })
 
     expect(Schema.is(versionedSchema)).toBe(true)

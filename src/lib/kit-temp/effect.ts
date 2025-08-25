@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { Schema as S } from 'effect'
 import type * as E from 'effect'
 import type * as EAST from 'effect/SchemaAST'
 import { isLiteral, isSuspend, isTransformation, isTypeLiteral } from 'effect/SchemaAST'
@@ -35,6 +35,7 @@ export namespace EffectKit {
       }
     }
   }
+
   export namespace Tag {
     export type PropertyName = '_tag'
   }

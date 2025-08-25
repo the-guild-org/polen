@@ -149,7 +149,7 @@ export const create = async (parameters: {
               }
             } catch (error) {
               // Log any errors that occur
-              console.error(`[DEV SERVER ERROR]`, error)
+              
               if (!urlFound) {
                 reject(error)
               }

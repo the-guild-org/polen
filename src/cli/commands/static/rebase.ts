@@ -4,6 +4,7 @@ import { allowGlobalParameter } from '#cli/_/parameters'
 import { Task } from '#lib/task'
 import { Command } from '@molt/command'
 import { Err, Path } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import { z } from 'zod'
 
 const args = Command.create()
@@ -35,4 +36,9 @@ const plan: Api.Static.RebasePlan = args.target
     newBasePath: args.newBasePath,
   }
 
-await Task.runAndExit(Api.Static.rebase, plan)
+// Wrap the Promise-based API to make it Effect-based
+const rebaseEffect = (plan: Api.Static.RebasePlan) => Effect.promise(() => Api.Static.rebase(plan))
+
+await Effect.runPromise(
+  Task.runAndExit(rebaseEffect, plan),
+)

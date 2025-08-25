@@ -24,7 +24,7 @@ if (__BUILDING__) {
       serve({ fetch: app.fetch, port })
       break
     case `spa`:
-      throw new Error(`Sorry, SPA build type not supported`)
+      throw new Error(`SPA build type not yet supported.`)
     default:
       neverCase(__BUILD_ARCHITECTURE__)
   }

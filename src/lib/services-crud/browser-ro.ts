@@ -1,5 +1,24 @@
-import { Effect, Layer } from 'effect'
+import { Data, Effect, Layer } from 'effect'
 import { CrudService } from './service.js'
+
+/**
+ * Structured error types for browser read-only operations
+ */
+export class FetchError extends Data.TaggedError('FetchError')<{
+  readonly url: string
+  readonly status: number
+  readonly statusText: string
+}> {}
+
+export class NetworkError extends Data.TaggedError('NetworkError')<{
+  readonly relativePath: string
+  readonly cause: unknown
+}> {}
+
+export class UnsupportedOperationError extends Data.TaggedError('UnsupportedOperationError')<{
+  readonly operation: string
+  readonly message: string
+}> {}
 
 /**
  * Create a read-only CRUD service layer for browser environments.
@@ -24,43 +43,56 @@ export const browserReadOnly = (baseUrl: string) => {
 
   return Layer.succeed(CrudService, {
     read: (relativePath: string) =>
-      Effect.tryPromise({
-        try: async () => {
-          const url = new URL(relativePath, normalizedBaseUrl).toString()
-          const response = await fetch(url)
+      Effect.gen(function*() {
+        const url = new URL(relativePath, normalizedBaseUrl).toString()
 
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-          }
+        const response = yield* Effect.tryPromise({
+          try: () => fetch(url),
+          catch: (cause) => new NetworkError({ relativePath, cause }),
+        })
 
-          return await response.text()
-        },
-        catch: (error) => new Error(`Failed to read ${relativePath}: ${error}`),
+        if (!response.ok) {
+          return yield* Effect.fail(
+            new FetchError({
+              url,
+              status: response.status,
+              statusText: response.statusText,
+            }),
+          )
+        }
+
+        return yield* Effect.tryPromise({
+          try: () => response.text(),
+          catch: (cause) => new NetworkError({ relativePath, cause }),
+        })
       }),
 
     write: (_relativePath: string, _data: string) =>
       Effect.fail(
-        new Error(
-          'Write operations not supported by Browser Read-Only service. '
+        new UnsupportedOperationError({
+          operation: 'write',
+          message: 'Write operations not supported by Browser Read-Only service. '
             + 'Use a server-side CRUD service or implement a custom browser service for your API.',
-        ),
+        }),
       ),
 
     list: (_relativePath: string) =>
       Effect.fail(
-        new Error(
-          'List operations not supported by Browser Read-Only service. '
+        new UnsupportedOperationError({
+          operation: 'list',
+          message: 'List operations not supported by Browser Read-Only service. '
             + 'Browser environments cannot list remote directories. '
             + 'Consider using a manifest file or selection-based loading.',
-        ),
+        }),
       ),
 
     remove: (_relativePath: string) =>
       Effect.fail(
-        new Error(
-          'Remove operations not supported by Browser Read-Only service. '
+        new UnsupportedOperationError({
+          operation: 'remove',
+          message: 'Remove operations not supported by Browser Read-Only service. '
             + 'Use a server-side CRUD service or implement a custom browser service for your API.',
-        ),
+        }),
       ),
   })
 }

@@ -2,8 +2,10 @@ import type { SelfContainedModeHooksData } from '#cli/_/self-contained-mode'
 import { assertOptionalPathAbsolute, pickFirstPathExisting } from '#lib/kit-temp'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import type { Prom } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import * as Module from 'node:module'
 import type { ConfigInput } from './configurator.js'
 
@@ -48,7 +50,11 @@ export const load = async (options: LoadOptions): Promise<ConfigInput> => {
   //
 
   const filePaths = fileNames.map(fileName => Path.join(options.dir, fileName))
-  const filePath = await pickFirstPathExisting(filePaths)
+  const filePath = await Effect.runPromise(
+    pickFirstPathExisting(filePaths).pipe(
+      Effect.provide(NodeFileSystem.layer),
+    ),
+  )
 
   let configInput: ConfigInput | undefined = undefined
   if (!filePath) {

@@ -1,24 +1,8 @@
 import { S } from '#lib/kit-temp/effect'
-import { Order, ParseResult } from 'effect'
-import { type DocumentNode, GraphQLSchema } from 'graphql'
+import { ParseResult } from 'effect'
+import { GraphQLSchema } from 'graphql'
 import { buildASTSchema, parse, printSchema } from 'graphql'
-
-// ============================================================================
-// Special
-// ============================================================================
-
-const graphqlAst = S.declare(
-  (input: unknown): input is DocumentNode =>
-    typeof input === 'object'
-    && input !== null
-    && 'kind' in input
-    && (input as any).kind === 'Document',
-  {
-    identifier: 'GraphQLDocumentNode',
-    title: 'GraphQL AST',
-    description: 'GraphQL Abstract Syntax Tree',
-  },
-)
+import { graphqlAst } from './graphql-ast.js'
 
 // ============================================================================
 // Schema
@@ -30,6 +14,7 @@ export const SchemaDefinition = S.transformOrFail(
   {
     strict: true,
     decode: (ast, options, astSchema) => {
+      console.log('decode')
       try {
         const schema = buildASTSchema(ast)
         return ParseResult.succeed(schema)

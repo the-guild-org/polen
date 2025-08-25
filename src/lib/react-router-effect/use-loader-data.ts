@@ -110,7 +110,7 @@ export function useRouteData(): Record<string, unknown> {
         acc[match.id] = decoded
       } catch (error) {
         // Log decode errors but don't throw to allow partial data access
-        console.error(`Failed to decode data for route ${match.id}:`, error)
+        
       }
     }
     return acc

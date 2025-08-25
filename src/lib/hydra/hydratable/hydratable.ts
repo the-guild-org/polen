@@ -2,8 +2,10 @@ import type { Ob } from '#lib/kit-temp/$'
 import { EffectKit } from '#lib/kit-temp/effect'
 import { S } from '#lib/kit-temp/effect'
 import { Hash, Match, ParseResult } from 'effect'
+import { isPropertySignature } from 'effect/Schema'
 import * as AST from 'effect/SchemaAST'
 import { isTypeLiteral, isUnion } from 'effect/SchemaAST'
+import { Value } from '../value/$.js'
 import { type Options, type OptionsWithDefualts } from './options.js'
 
 type AnyAdt = EffectKit.Schema.UnionAdt.$any
@@ -44,9 +46,11 @@ export type EncodersMap = Map<string, (value: unknown) => unknown>
  * Context object containing all hydration-related data
  */
 export interface Context {
-  readonly ast: AST.AST
-  readonly index: ASTIndex
-  readonly encoders: EncodersMap
+  readonly astIndex: ASTIndex
+  readonly encodersIndex: EncodersMap
+  readonly originalSchema: S.Schema.Any
+  readonly transformedSchema?: S.Schema.Any
+  readonly transformedAstIndex?: Map<string, S.Schema.Any>
 }
 
 /**
@@ -65,9 +69,13 @@ export const buildEncoders = (index: ASTIndex): EncodersMap => {
  * Create a hydration context from a schema
  */
 export const createContext = (schema: S.Schema.Any): Context => {
-  const index = buildASTIndex(schema)
-  const encoders = buildEncoders(index)
-  return { ast: schema.ast, index, encoders }
+  const astIndex = buildASTIndex(schema)
+  const encodersIndex = buildEncoders(astIndex)
+  return {
+    astIndex,
+    encodersIndex,
+    originalSchema: schema,
+  }
 }
 
 /**
@@ -117,12 +125,29 @@ export const getConfigOrThrow = <hydratable_>(
  */
 // @claude make this use effect Option
 export const getConfigMaybe = (schema: unknown): Config | null => {
-  if (!schema) return null
+  if (!schema) {
+    return null
+  }
+  // console.log('getConfigMaybe', schema, schema.annotations)
+  if (schema instanceof AST.PropertySignature) {
+    return getConfigMaybeFromAnnotations(schema.annotations)
+  }
+  if (schema instanceof AST.TupleType) {
+    return getConfigMaybeFromAnnotations(schema.annotations)
+  }
   const ast = (schema as any).ast
   if (!ast || typeof ast !== 'object') return null
   const annotations = ast.annotations
   if (!annotations || typeof annotations !== 'object') return null
-  const config = annotations[HydrationConfigSymbol]
+  return getConfigMaybeFromAnnotations(annotations)
+}
+
+export const getConfigMaybeFromAstNode = (node: AST.AST): Config | null => {
+  return getConfigMaybeFromAnnotations(node.annotations)
+}
+
+export const getConfigMaybeFromAnnotations = (annotations: AST.Annotations): Config | null => {
+  const config = annotations[HydrationConfigSymbol] as Config | undefined
   return config || null
 }
 
@@ -131,6 +156,19 @@ type HydratableConfigInput = Options.Keys
 // ============================================================================
 // Core
 // ============================================================================
+
+/**
+ * A hydratable that is NOT in singleton mode - has explicit unique keys.
+ * These hydratables support both makeDehydrated() and dehydrate() methods.
+ * Singleton hydratables only support dehydrate() since they need the actual value to generate a hash.
+ */
+export type HydratableNonSingleton<
+  $Schema extends AnySchema = AnySchema,
+  $Keys extends readonly string[] = readonly string[],
+> = Hydratable<$Schema, Options<$Keys>> & {
+  // Ensure the config is not singleton
+  readonly [HydrationConfigSymbol]: typeof HydratableConfigStruct | typeof HydratableConfigAdt
+}
 
 /**
  * Enhanced schema interface that tracks hydration keys at type level
@@ -148,6 +186,10 @@ export interface HydratableProperties<
   ___Keys extends HydratableConfigInput = HydratableConfigInput,
 > {
   readonly [HydrationConfigSymbol]: Config
+
+  // Dehydrated schema projection methods
+  readonly makeDehydrated: MakeDehydratedFn<___Encoded, ___Keys>
+  readonly dehydrate: DehydrateFn<___Decoded>
 }
 
 export type _Dehydrated<
@@ -161,6 +203,41 @@ export type _Dehydrated<
 export interface DehydratedPropertiesStatic {
   readonly _dehydrated: true
 }
+
+// ============================================================================
+// Dehydrated Schema Projections
+// ============================================================================
+
+// Export type helper for consumers
+export type Dehydrated<$Schema extends Hydratable> = $Schema extends Hydratable<infer __schema__, infer __keys__>
+  ? _Dehydrated<EffectKit.Schema.ArgEncoded<__schema__>, any> // Using any to avoid constraint issues
+  : never
+
+/**
+ * Schema projection for dehydrated form - like Effect's encodedSchema but for dehydrated
+ */
+export type DehydratedSchema<
+  $Schema extends AnySchema,
+  ___Keys extends HydratableConfigInput = HydratableConfigInput,
+> = S.Schema<
+  _Dehydrated<EffectKit.Schema.ArgEncoded<$Schema>, ___Keys>,
+  _Dehydrated<EffectKit.Schema.ArgEncoded<$Schema>, ___Keys>
+>
+
+/**
+ * Function type for makeDehydrated method - handles singleton vs keyed cases
+ */
+export type MakeDehydratedFn<
+  $Encoded extends object,
+  $ConfigKeys extends HydratableConfigInput,
+> = $ConfigKeys extends readonly string[] ? $ConfigKeys['length'] extends 0 ? () => _Dehydrated<$Encoded, $ConfigKeys>
+  : (keys: Ob.OnlyKeysInArray<$Encoded, [...$ConfigKeys]>) => _Dehydrated<$Encoded, $ConfigKeys>
+  : never
+
+/**
+ * Function type for dehydrate method - dehydrates hydrated values
+ */
+export type DehydrateFn<___Decoded extends object> = (value: ___Decoded) => _Dehydrated<___Decoded, any>
 
 /**
  * Extract hydration keys from a hydratable schema
@@ -458,6 +535,22 @@ export function Hydratable<
   // Store in annotations
   const annotatedSchema = schema.annotations({
     [HydrationConfigSymbol]: config,
+  })
+
+  Object.defineProperty(annotatedSchema, 'makeDehydrated', {
+    value: (keys?: any) => {
+      return Value.makeDehydratedValue(config, annotatedSchema, keys)
+    },
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  })
+
+  Object.defineProperty(annotatedSchema, 'dehydrate', {
+    value: Value.dehydrate(annotatedSchema),
+    writable: false,
+    enumerable: false,
+    configurable: false,
   })
 
   return annotatedSchema as any

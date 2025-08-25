@@ -4,9 +4,11 @@ import type { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router'
 import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { debugPolen } from '#singletons/debug'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import mdx from '@mdx-js/rollup'
 import { Arr, Cache, Path, Str } from '@wollybeard/kit'
 import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
+import { Effect } from 'effect'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import { polenVirtual } from '../vi.js'
@@ -35,10 +37,14 @@ export const Pages = ({
   config,
 }: Options): Vite.Plugin[] => {
   const scanPages = Cache.memoize(debug.trace(async function scanPages() {
-    const result = await Content.scan({
-      dir: config.paths.project.absolute.pages,
-      glob: `**/*.{md,mdx}`,
-    })
+    const result = await Effect.runPromise(
+      Content.scan({
+        dir: config.paths.project.absolute.pages,
+        glob: `**/*.{md,mdx}`,
+      }).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
+    )
     return result
   }))
 

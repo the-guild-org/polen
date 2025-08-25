@@ -1,15 +1,16 @@
+import { Effect } from 'effect'
 import * as fc from 'fast-check'
 import { describe, expect, test, vi } from 'vitest'
 import { Task } from './$.js'
 
 describe('create', () => {
-  test('executes async function and captures timing', async () => {
+  test('executes Effect function and captures timing', async () => {
     const double = Task.create(
-      async (x: number) => x * 2,
+      (x: number) => Effect.succeed(x * 2),
       { name: 'double' },
     )
 
-    const report = await double(5)
+    const report = await Effect.runPromise(double(5))
 
     expect(report.task.name).toBe('double')
     expect(report.execution.input).toBe(5)
@@ -19,26 +20,25 @@ describe('create', () => {
 
   test('captures errors', async () => {
     const failing = Task.create(
-      async () => {
-        throw new Error('Failed')
-      },
+      () => Effect.fail(new Error('Failed')),
       { name: 'failing' },
     )
 
-    const report = await failing(null)
+    const report = await Effect.runPromise(failing(null))
 
     expect(report.execution.output).toBeInstanceOf(Error)
-    expect(report.execution.output.message).toBe('Failed')
+    expect((report.execution.output as Error).message).toBe('Failed')
   })
 })
 
 describe('formatReport', () => {
   test('masks sensitive data', async () => {
     const createUser = Task.create(
-      async (data: any) => ({
-        email: data.email,
-        token: 'abc123',
-      }),
+      (data: any) =>
+        Effect.succeed({
+          email: data.email,
+          token: 'abc123',
+        }),
       {
         name: 'create-user',
         mask: {
@@ -48,10 +48,10 @@ describe('formatReport', () => {
       },
     )
 
-    const report = await createUser({
+    const report = await Effect.runPromise(createUser({
       email: 'user@example.com',
       password: 'secret',
-    })
+    }))
 
     // Uses mask from task definition by default
     const formatted = Task.formatReport(report)
@@ -64,10 +64,11 @@ describe('formatReport', () => {
 
   test('debug mode reveals all data', async () => {
     const createUser = Task.create(
-      async (data: any) => ({
-        email: data.email,
-        token: 'abc123',
-      }),
+      (data: any) =>
+        Effect.succeed({
+          email: data.email,
+          token: 'abc123',
+        }),
       {
         name: 'create-user',
         mask: {
@@ -77,10 +78,10 @@ describe('formatReport', () => {
       },
     )
 
-    const report = await createUser({
+    const report = await Effect.runPromise(createUser({
       email: 'user@example.com',
       password: 'secret',
-    })
+    }))
 
     const formatted = Task.formatReport(report, { debug: true })
 
@@ -96,8 +97,8 @@ describe('exitWithReport', () => {
     })
     const mockLog = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const success = Task.create(async () => 'result')
-    const report = await success(null)
+    const success = Task.create(() => Effect.succeed('result'))
+    const report = await Effect.runPromise(success(null))
 
     expect(() => Task.exitWithReport(report)).toThrow('process.exit called')
     expect(mockExit).toHaveBeenCalledWith(0)
@@ -113,10 +114,8 @@ describe('exitWithReport', () => {
     })
     const mockLog = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const failing = Task.create(async () => {
-      throw new Error('Failed')
-    })
-    const report = await failing(null)
+    const failing = Task.create(() => Effect.fail(new Error('Failed')))
+    const report = await Effect.runPromise(failing(null))
 
     expect(() => Task.exitWithReport(report)).toThrow('process.exit called')
     expect(mockExit).toHaveBeenCalledWith(1)
@@ -134,9 +133,11 @@ describe('runAndExit', () => {
     })
     const mockLog = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const double = async (x: number) => x * 2
+    const double = (x: number) => Effect.succeed(x * 2)
 
-    await expect(() => Task.runAndExit(double, 5, { name: 'double' })).rejects.toThrow('process.exit called')
+    await expect(() => Effect.runPromise(Task.runAndExit(double, 5, { name: 'double' }))).rejects.toThrow(
+      'process.exit called',
+    )
 
     expect(mockExit).toHaveBeenCalledWith(0)
     expect(mockLog).toHaveBeenCalled()
@@ -156,11 +157,11 @@ describe('runAndExit', () => {
     })
     const mockLog = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const failing = async () => {
-      throw new Error('Task failed')
-    }
+    const failing = () => Effect.fail(new Error('Task failed'))
 
-    await expect(() => Task.runAndExit(failing, null, { name: 'failing' })).rejects.toThrow('process.exit called')
+    await expect(() => Effect.runPromise(Task.runAndExit(failing, null, { name: 'failing' }))).rejects.toThrow(
+      'process.exit called',
+    )
 
     expect(mockExit).toHaveBeenCalledWith(1)
     expect(mockLog).toHaveBeenCalled()
@@ -177,11 +178,11 @@ describe('property-based tests', () => {
         fc.integer(),
         async (input) => {
           const identity = Task.create(
-            async (x: any) => x,
+            (x: any) => Effect.succeed(x),
             { name: 'identity' },
           )
 
-          const report = await identity(input)
+          const report = await Effect.runPromise(identity(input))
 
           expect(report.execution.timings.duration).toBeGreaterThanOrEqual(0)
           expect(report.execution.output).toBe(input)
@@ -195,8 +196,8 @@ describe('property-based tests', () => {
       fc.asyncProperty(
         fc.anything(),
         async (input) => {
-          const noop = Task.create(async (_: any) => null)
-          const report = await noop(input)
+          const noop = Task.create((_: any) => Effect.succeed(null))
+          const report = await Effect.runPromise(noop(input))
 
           const { start, end, duration } = report.execution.timings
 

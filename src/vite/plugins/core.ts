@@ -12,7 +12,7 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import type { ProjectData } from '#project-data'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Json, Str } from '@wollybeard/kit'
+import { Idx, Json, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
@@ -105,9 +105,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         }
       },
     },
-    ...Pages({
-      config,
-    }),
+    ...Pages({ config }),
     {
       name: `polen:core`,
       config(_, { command }) {
@@ -162,14 +160,11 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
 
             // Convert the catalog to bridge files format for proper serialization
             // This handles the transformation of GraphQLSchema instances to AST
-            const files = Hydra.Bridge.dataToFiles(schemaResult.data, Catalog.Catalog)
-
+            const assets = Hydra.rootValueToAssets(schemaResult.data, Catalog.Catalog)
             // Create an object that represents the file system state
-            const fileSystemState: Record<string, string> = {}
-            for (const [filename, content] of files) {
-              fileSystemState[filename] = content
-            }
-
+            const fileSystemState = Object.fromEntries(
+              Idx.fromArray(assets, { key: (_) => _.filename }).toMap().entries(),
+            )
             return `export default ${JSON.stringify(fileSystemState)}`
           },
         },
@@ -190,6 +185,7 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         {
           identifier: viProjectData,
           async loader() {
+            console.log(1)
             const debug = debugPolen.sub(`module-project-data`)
 
             debug(`load`, { id: viProjectData.id })
@@ -230,7 +226,11 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             //
 
             const pagesDir = config.paths.project.absolute.pages
-            const scanResult = await Content.scan({ dir: pagesDir })
+            const scanResult = await Effect.runPromise(
+              Content.scan({ dir: pagesDir }).pipe(
+                Effect.provide(NodeFileSystem.layer),
+              ),
+            )
             const data = createNavbar(scanResult.list)
             navbar.push(...data)
 

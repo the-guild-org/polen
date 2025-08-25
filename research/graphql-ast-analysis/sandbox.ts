@@ -602,8 +602,8 @@ async function main() {
 
     console.log(`\n${'█'.repeat(100)}`)
   } catch (error) {
-    console.error(`❌ Fatal sandbox error: ${error instanceof Error ? error.message : error}`)
-    console.error('   The sandbox encountered an unrecoverable error')
+    
+    
   }
 }
 

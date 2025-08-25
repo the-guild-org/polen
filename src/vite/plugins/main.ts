@@ -1,5 +1,6 @@
 import type { Config } from '#api/config/index'
 import type { Vite } from '#dep/vite/index'
+import { Manifest } from '#vite/plugins/manifest'
 import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
 import ViteReact from '@vitejs/plugin-react-oxc'
 import { Path } from '@wollybeard/kit'
@@ -31,9 +32,10 @@ export const Main = (
       entries: [`/${config.paths.framework.template.relative.client.entrypoint}`],
     }),
     Branding(config),
-    Core(config),
+    Manifest(config),
     Serve(config),
-    Build(config),
+    Core(config),
+    // Build(config),
   )
 
   return plugins

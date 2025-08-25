@@ -101,7 +101,7 @@ export type SidebarIndex = Record<string, Sidebar>
  *
  * @example
  * ```ts
- * const scanResult = await Content.scan({ dir: './pages' })
+ * const scanResult = await Effect.runPromise(Content.scan({ dir: './pages' }))
  * const sidebars = buildSidebarIndex(scanResult)
  * // Returns: {
  * //   '/guide': { items: [...] },

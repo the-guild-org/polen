@@ -1,4 +1,4 @@
-import { Schema } from 'effect'
+import { Effect, Schema } from 'effect'
 import type { SchemaRoute, SchemaRouteConfig } from './types.js'
 
 /**
@@ -34,10 +34,14 @@ export const schemaRoute = <TSchema extends Schema.Schema.Any>(
 
   if (loader) {
     route.loader = async (args: any) => {
-      // Get the decoded data from the loader
-      const data = await loader(args)
-      // Encode it for transport using the schema
-      return Schema.encodeSync(schema as any)(data as any)
+      // Convert Promise to Effect for internal consistency
+      const loaderEffect = Effect.tryPromise(() => loader(args))
+      const decodedData = await Effect.runPromise(loaderEffect)
+
+      // Encode the data for transport using the schema
+      const encodedData = Schema.encodeSync(schema as any)(decodedData as any)
+
+      return encodedData
     }
   }
 

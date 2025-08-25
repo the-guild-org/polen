@@ -255,14 +255,19 @@ export interface ConfigInput {
      * @see https://vite.dev/guide/api-javascript.html#mergeconfig
      */
     vite?: Vite.UserConfig | undefined
+    paths?: ConfigAdvancedPathsInput
   } | undefined
+}
+
+export interface ConfigAdvancedPathsInput {
+  devAssets?: string
 }
 
 export interface TemplateVariables {
   title: string
 }
 
-const buildPaths = (rootDir: string): Config[`paths`] => {
+const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput): Config[`paths`] => {
   if (!Path.isAbsolute(rootDir)) throw new Error(`Root dir path must be absolute: ${rootDir}`)
   const rootAbsolute = Path.ensureAbsoluteWith(rootDir)
 
@@ -275,8 +280,12 @@ const buildPaths = (rootDir: string): Config[`paths`] => {
   const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
 
   // Dev assets paths
-  const devAssetsRelative = 'node_modules/.vite/polen-assets'
-  const devAssetsAbsolute = Path.join(packagePaths.rootDir, devAssetsRelative)
+  let devAssetsRelative = 'node_modules/.vite/polen-assets'
+  let devAssetsAbsolute = Path.join(rootDir, devAssetsRelative)
+  if (overrides?.devAssets) {
+    devAssetsRelative = Path.relative(rootDir, overrides?.devAssets)
+    devAssetsAbsolute = overrides?.devAssets
+  }
 
   return {
     project: {
@@ -477,7 +486,7 @@ export const normalizeInput = async (
 
   // Always use the baseRootDirPath as the project root
   // This is either the --project directory or the config file directory
-  config.paths = buildPaths(baseRootDirPath)
+  config.paths = buildPaths(baseRootDirPath, configInput?.advanced?.paths)
 
   // Try to read package.json name as fallback for title
   if (!configInput?.templateVariables?.title) {

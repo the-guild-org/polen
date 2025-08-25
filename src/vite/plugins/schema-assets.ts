@@ -104,7 +104,7 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
           yield* catalogBridge.clear()
 
           // Import catalog and export to filesystem
-          catalogBridge.importFromMemory(catalog)
+          catalogBridge.addRootValue(catalog)
           yield* catalogBridge.export()
         }),
         Hydra.Io.File(config.paths.framework.devAssets.schemas),
@@ -246,22 +246,22 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
       const catalogBridge = Catalog.Bridge({})
 
       // Import catalog into Bridge
-      catalogBridge.importFromMemory(schemaData)
+      catalogBridge.addRootValue(schemaData)
 
       // Export dehydrated assets from Bridge
-      const assets = catalogBridge.exportToMemory()
+      const exportedFragments = catalogBridge.exportToMemory()
 
       // Emit each asset file
-      for (const [uhlExpressionExported, json] of assets) {
+      for (const { filename, content } of exportedFragments) {
         this.emitFile({
           type: `asset`,
-          fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/${uhlExpressionExported}`,
-          source: json, // Already stringified with proper indentation
+          fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/${filename}`,
+          source: content, // Already stringified with proper indentation
         })
       }
 
       debug(`buildMode:hydratableAssetsEmitted`, {
-        assetCount: assets.length,
+        assetCount: exportedFragments.length,
       })
     },
 

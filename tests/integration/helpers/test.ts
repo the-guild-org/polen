@@ -1,6 +1,6 @@
-import { Path, Ts } from '@wollybeard/kit'
+import { Path } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
-import { test as base } from 'playwright/test'
+import { expect, test as base } from 'playwright/test'
 import { polen as createPolenBuilder } from './polen-builder.js'
 import { ViteController } from './vite-controller/index.js'
 
@@ -27,9 +27,21 @@ export const test = base.extend<Fixtures>({
     })
     await use(project)
   },
-  vite: async ({}, use) => {
-    const viteController = ViteController.create()
+  vite: async ({ project }, use) => {
+    const viteController = ViteController.create({
+      cwd: project.layout.cwd,
+      defaultConfigInput: {
+        advanced: {
+          paths: {
+            devAssets: project.layout.cwd + '/.polen/dev/assets',
+          },
+        },
+      },
+    })
     await use(viteController)
+    for (const store of viteController.devLoggerStores) {
+      expect(store.errors).toEqual([])
+    }
     await viteController.stopDevelopmentServer()
   },
   polen: async ({ page, vite }, use) => {

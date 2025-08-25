@@ -1,5 +1,6 @@
 import { Catalog } from '#lib/catalog/$'
 import { Hydra } from '#lib/hydra/$'
+import { zd, zz } from '#lib/kit-temp/other'
 import { Effect, Match } from 'effect'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 
@@ -38,13 +39,16 @@ const createCatalogBridge = () => {
   const bridge = Catalog.Bridge({})
 
   // Import from IO if data is available
-  console.log('PROJECT_SCHEMA available:', !!PROJECT_SCHEMA)
-  console.log('PROJECT_SCHEMA type:', typeof PROJECT_SCHEMA)
+  // z('PROJECT_SCHEMA available:', !!PROJECT_SCHEMA)
+  // z('PROJECT_SCHEMA type:', typeof PROJECT_SCHEMA)
 
   if (PROJECT_SCHEMA && typeof PROJECT_SCHEMA === 'object') {
     // Import data from IO layer (which has the files from PROJECT_SCHEMA)
     Effect.runSync(Effect.provide(bridge.import(), ioLayer))
-    console.log('Bridge index after import:', bridge.index.fragments)
+    console.log('Bridge index after import:')
+    // zd(bridge.index.fragments.get('__root__').schema.definition)
+    // zd(bridge.index.fragments.get('__root__').schema.definition.getDirective('if'))
+    // bridge.index.fragments.__root__
   }
 
   // Return the bridge with IO layer attached
@@ -57,7 +61,7 @@ const createCatalogBridge = () => {
      * This provides the IO layer to the effect
      */
     view: () => {
-      console.log('Bridge index before view:', bridge.index.fragments)
+      // z('Bridge index before view:', bridge.index.fragments)
       return Effect.provide(bridge.view(), ioLayer)
     },
 
@@ -101,17 +105,17 @@ export const hasCatalog = (): boolean => {
 /**
  * Get catalog type (versioned or unversioned)
  */
-export const getCatalogType = async (): Promise<'versioned' | 'unversioned' | 'none'> => {
-  if (!hasCatalog()) return 'none'
+export const getCatalogType = (): Effect.Effect<'versioned' | 'unversioned' | 'none', never> => {
+  if (!hasCatalog()) return Effect.succeed('none')
 
-  try {
-    const catalog = await Effect.runPromise(catalogBridge.view())
-    return Match.value(catalog).pipe(
-      Match.tag('CatalogVersioned', () => 'versioned' as const),
-      Match.tag('CatalogUnversioned', () => 'unversioned' as const),
-      Match.exhaustive,
-    )
-  } catch {
-    return 'none'
-  }
+  return catalogBridge.view().pipe(
+    Effect.map(catalog =>
+      Match.value(catalog).pipe(
+        Match.tag('CatalogVersioned', () => 'versioned' as const),
+        Match.tag('CatalogUnversioned', () => 'unversioned' as const),
+        Match.exhaustive,
+      )
+    ),
+    Effect.catchAll(() => Effect.succeed('none' as const)),
+  )
 }

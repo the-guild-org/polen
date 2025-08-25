@@ -36,7 +36,7 @@ Test.suite<SchemaTestCase>('SchemaDefinition', [
       expect(SchemaDefinition.sdl.encode(schema)).toContain(expected as string)
       break
     case 'isEmpty':
-      expect(SchemaDefinition.isEmpty(schema)).toBe(expected)
+      expect(SchemaDefinition.isEmpty(schema as any)).toBe(expected)
       break
   }
 })
@@ -54,5 +54,5 @@ Test.suite<EquivalenceTestCase>('equivalence', [
 ], ({ sdl1, sdl2, shouldBeEqual }) => {
   const schema1 = SchemaDefinition.sdl.decode(sdl1)
   const schema2 = SchemaDefinition.sdl.decode(sdl2)
-  expect(SchemaDefinition.equivalence(schema1, schema2)).toBe(shouldBeEqual)
+  expect(SchemaDefinition.equivalence(schema1 as any, schema2 as any)).toBe(shouldBeEqual)
 })

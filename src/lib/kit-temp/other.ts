@@ -12,7 +12,10 @@
 //
 //
 
+import { FileSystem } from '@effect/platform'
 import { Arr, Err, Fs, Http, Path, Undefined } from '@wollybeard/kit'
+import { dump } from '@wollybeard/kit/debug'
+import { Effect } from 'effect'
 import type { ResolveHookContext } from 'node:module'
 
 export const arrayEquals = (a: any[], b: any[]) => {
@@ -46,10 +49,25 @@ export const assertOptionalPathAbsolute = (pathExpression: string | undefined, m
   throw new Error(message_)
 }
 
-export const pickFirstPathExisting = async (paths: string[]): Promise<string | undefined> => {
-  const checks = await Promise.all(paths.map(path => Fs.exists(path).then(exists => exists ? path : undefined)))
-  return checks.find(maybePath => maybePath !== undefined)
-}
+export const pickFirstPathExisting = (
+  paths: string[],
+): Effect.Effect<string | undefined, Error, FileSystem.FileSystem> =>
+  Effect.gen(function*() {
+    const fs = yield* FileSystem.FileSystem
+
+    // Check each path for existence
+    const checks = yield* Effect.all(
+      paths.map(path =>
+        fs.exists(path).pipe(
+          Effect.map(exists => exists ? path : undefined),
+          Effect.mapError(error => new Error(`Failed to check path existence: ${path} - ${error}`)),
+        )
+      ),
+    )
+
+    // Return the first existing path
+    return checks.find(maybePath => maybePath !== undefined)
+  })
 
 export const isSpecifierFromPackage = (specifier: string, packageName: string): boolean => {
   return specifier === packageName || specifier.startsWith(packageName + `/`)
@@ -202,21 +220,55 @@ export const ResponseInternalServerError = () =>
 
 /**
  * Execute an operation on multiple items, continuing even if some fail
+ * Effect-based version with proper error handling and concurrency control
  */
-export async function tryCatchMany<item, result>(
+export const tryCatchMany = <item, result, E = never, R = never>(
+  items: readonly item[],
+  operation: (item: item) => Effect.Effect<result, E, R>,
+): Effect.Effect<[result[], (Error & { context: { item: item } })[], { success: boolean }], never, R> =>
+  Effect.gen(function*() {
+    const results = yield* Effect.all(
+      items.map(item =>
+        Effect.gen(function*() {
+          const result = yield* Effect.either(operation(item))
+          if (result._tag === 'Left') {
+            const error = result.left instanceof Error ? result.left : new Error(String(result.left))
+            const enhancedError = error as Error & { context: { item: item } }
+            enhancedError.context = { item }
+            return enhancedError
+          }
+          return result.right
+        })
+      ),
+      { concurrency: 'unbounded' },
+    )
+
+    // Manually partition results to ensure proper typing
+    const successes: result[] = []
+    const failures: (Error & { context: { item: item } })[] = []
+
+    for (const result of results) {
+      if (result instanceof Error) {
+        failures.push(result as Error & { context: { item: item } })
+      } else {
+        successes.push(result as result)
+      }
+    }
+
+    return [successes, failures, { success: failures.length === 0 }] as const
+  })
+
+/**
+ * Legacy Promise-based wrapper for backward compatibility
+ * @deprecated Use the Effect-based version
+ */
+export async function tryCatchManyAsync<item, result>(
   items: item[],
   operation: (item: item) => Promise<result>,
 ): Promise<[result[], (Error & { context: { item: item } })[]]> {
-  const partitionedResults = await Promise.all(items.map(async (item) => {
-    const result = await Err.tryCatch(() => operation(item))
-    if (Err.is(result)) {
-      const error = result as Error & { context: { item: item } }
-      error.context = { item }
-      return error
-    }
-    return result
-  })).then(Arr.partitionErrors)
-  return partitionedResults as any
+  const effectOperation = (item: item) => Effect.tryPromise(() => operation(item))
+  const [results, errors] = await Effect.runPromise(tryCatchMany(items, effectOperation))
+  return [results, errors]
 }
 
 /**
@@ -256,12 +308,12 @@ export const chunk = <T>(array: readonly T[], size: number): T[][] => {
   return chunks
 }
 
-export interface AsyncParallelOptions {
+export interface EffectParallelOptions {
   /**
    * Maximum number of items to process concurrently
    * @default 10
    */
-  concurrency?: number
+  concurrency?: number | 'unbounded'
 
   /**
    * If true, stops processing on first error
@@ -277,7 +329,7 @@ export interface AsyncParallelOptions {
   batchSize?: number
 }
 
-export interface AsyncParallelResult<$T, $R> {
+export interface EffectParallelResult<$T, $R> {
   /** Successfully processed results */
   results: $R[]
   /** Errors that occurred during processing */
@@ -286,72 +338,177 @@ export interface AsyncParallelResult<$T, $R> {
   success: boolean
 }
 
+/** @deprecated Use EffectParallelOptions */
+export type AsyncParallelOptions = EffectParallelOptions
+
+/** @deprecated Use EffectParallelResult */
+export type AsyncParallelResult<$T, $R> = EffectParallelResult<$T, $R>
+
 /**
- * Process items in parallel with configurable options
+ * Process items in parallel with configurable options using Effect
  *
  * @param items - Items to process
- * @param operation - Async function to apply to each item (with optional index)
+ * @param operation - Effect function to apply to each item (with optional index)
  * @param options - Configuration options
  * @returns Results and errors from processing
  *
  * @example
  * ```ts
  * const items = [1, 2, 3, 4, 5]
- * const result = await asyncParallel(items, async (n, index) => n * 2, {
- *   concurrency: 2,
- *   batchSize: 3,
- *   failFast: false
- * })
+ * const result = await Effect.runPromise(
+ *   effectParallel(items, (n, index) => Effect.succeed(n * 2), {
+ *     concurrency: 2,
+ *     batchSize: 3,
+ *     failFast: false
+ *   })
+ * )
  * // result.results: [2, 4, 6, 8, 10]
  * // result.errors: []
  * // result.success: true
  * ```
+ */
+export const effectParallel = <T, R, E = never, Context = never>(
+  items: readonly T[],
+  operation: (item: T, index: number) => Effect.Effect<R, E, Context>,
+  options: EffectParallelOptions = {},
+): Effect.Effect<EffectParallelResult<T, R>, never, Context> =>
+  Effect.gen(function*() {
+    const { concurrency = 10, failFast = false, batchSize } = options
+
+    if (items.length === 0) {
+      return { results: [], errors: [], success: true }
+    }
+
+    const allResults: R[] = []
+    const allErrors: (Error & { item: T })[] = []
+
+    // If batchSize is specified, process in batches
+    if (batchSize !== undefined) {
+      const batches = chunk(items, batchSize)
+      let globalIndex = 0
+
+      for (const batch of batches) {
+        const batchResult = yield* processEffectBatch(batch, operation, concurrency, failFast, globalIndex)
+        allResults.push(...batchResult.results)
+        allErrors.push(...batchResult.errors)
+        globalIndex += batch.length
+
+        if (failFast && batchResult.errors.length > 0) {
+          break
+        }
+      }
+    } else {
+      // Process all items with specified concurrency
+      const result = yield* processEffectBatch(items, operation, concurrency, failFast, 0)
+      allResults.push(...result.results)
+      allErrors.push(...result.errors)
+    }
+
+    return {
+      results: allResults,
+      errors: allErrors,
+      success: allErrors.length === 0,
+    }
+  })
+
+/**
+ * Legacy Promise-based version for backward compatibility
+ * @deprecated Use effectParallel with Effect.runPromise
  */
 export const asyncParallel = async <T, R>(
   items: readonly T[],
   operation: (item: T, index: number) => Promise<R>,
   options: AsyncParallelOptions = {},
 ): Promise<AsyncParallelResult<T, R>> => {
-  const { concurrency = 10, failFast = false, batchSize } = options
-
-  if (items.length === 0) {
-    return { results: [], errors: [], success: true }
-  }
-
-  const allResults: R[] = []
-  const allErrors: (Error & { item: T })[] = []
-
-  // If batchSize is specified, process in batches
-  if (batchSize !== undefined) {
-    const batches = chunk(items, batchSize)
-    let globalIndex = 0
-
-    for (const batch of batches) {
-      const batchResult = await processBatch(batch, operation, concurrency, failFast, globalIndex)
-      allResults.push(...batchResult.results)
-      allErrors.push(...batchResult.errors)
-      globalIndex += batch.length
-
-      if (failFast && batchResult.errors.length > 0) {
-        break
-      }
-    }
-  } else {
-    // Process all items with specified concurrency
-    const result = await processBatch(items, operation, concurrency, failFast, 0)
-    allResults.push(...result.results)
-    allErrors.push(...result.errors)
-  }
-
-  return {
-    results: allResults,
-    errors: allErrors,
-    success: allErrors.length === 0,
-  }
+  const effectOperation = (item: T, index: number) => Effect.tryPromise(() => operation(item, index))
+  return Effect.runPromise(effectParallel(items, effectOperation, options))
 }
 
 /**
- * Process a batch of items with limited concurrency
+ * Process a batch of items with limited concurrency using Effect
+ */
+const processEffectBatch = <T, R, E, Context>(
+  items: readonly T[],
+  operation: (item: T, index: number) => Effect.Effect<R, E, Context>,
+  concurrency: number | 'unbounded',
+  failFast: boolean,
+  startIndex = 0,
+): Effect.Effect<EffectParallelResult<T, R>, never, Context> =>
+  Effect.gen(function*() {
+    const results: R[] = []
+    const errors: (Error & { item: T })[] = []
+
+    if (concurrency === 'unbounded') {
+      // Process all items concurrently without limit
+      const itemEffects = items.map((item, index) =>
+        Effect.gen(function*() {
+          const globalIndex = startIndex + index
+          const result = yield* Effect.either(operation(item, globalIndex))
+          if (result._tag === 'Left') {
+            const error = result.left instanceof Error ? result.left : new Error(String(result.left))
+            const enhancedError = error as Error & { item: T }
+            enhancedError.item = item
+            return { success: false as const, error: enhancedError, item }
+          }
+          return { success: true as const, result: result.right, item }
+        })
+      )
+
+      const chunkResults = yield* Effect.all(itemEffects, { concurrency: 'unbounded' })
+
+      for (const itemResult of chunkResults) {
+        if (itemResult.success) {
+          results.push(itemResult.result)
+        } else {
+          errors.push(itemResult.error)
+          if (failFast) {
+            return { results, errors, success: false }
+          }
+        }
+      }
+    } else {
+      // Process items in chunks based on concurrency limit
+      const chunks = chunk(items, concurrency)
+      let currentIndex = startIndex
+
+      for (const chunkItems of chunks) {
+        const itemEffects = chunkItems.map((item, chunkIndex) =>
+          Effect.gen(function*() {
+            const globalIndex = currentIndex + chunkIndex
+            const result = yield* Effect.either(operation(item, globalIndex))
+            if (result._tag === 'Left') {
+              const error = result.left instanceof Error ? result.left : new Error(String(result.left))
+              const enhancedError = error as Error & { item: T }
+              enhancedError.item = item
+              return { success: false as const, error: enhancedError, item }
+            }
+            return { success: true as const, result: result.right, item }
+          })
+        )
+
+        currentIndex += chunkItems.length
+
+        const chunkResults = yield* Effect.all(itemEffects, { concurrency: 'unbounded' })
+
+        for (const itemResult of chunkResults) {
+          if (itemResult.success) {
+            results.push(itemResult.result)
+          } else {
+            errors.push(itemResult.error)
+            if (failFast) {
+              return { results, errors, success: false }
+            }
+          }
+        }
+      }
+    }
+
+    return { results, errors, success: errors.length === 0 }
+  })
+
+/**
+ * Legacy Promise-based batch processor for backward compatibility
+ * @deprecated Use processEffectBatch
  */
 const processBatch = async <T, R>(
   items: readonly T[],
@@ -360,54 +517,8 @@ const processBatch = async <T, R>(
   failFast: boolean,
   startIndex = 0,
 ): Promise<AsyncParallelResult<T, R>> => {
-  const results: R[] = []
-  const errors: (Error & { item: T })[] = []
-
-  // Process items in chunks based on concurrency limit
-  const chunks = chunk(items, concurrency)
-  let currentIndex = startIndex
-
-  for (const chunkItems of chunks) {
-    const promises = chunkItems.map(async (item, chunkIndex) => {
-      const globalIndex = currentIndex + chunkIndex
-      try {
-        const result = await operation(item, globalIndex)
-        return { success: true, result, item }
-      } catch (error) {
-        const enhancedError = error instanceof Error ? error : new Error(String(error))
-        Object.assign(enhancedError, { item })
-        return { success: false, error: enhancedError as Error & { item: T }, item }
-      }
-    })
-
-    currentIndex += chunkItems.length
-
-    const chunkResults = await Promise.allSettled(promises)
-
-    for (const promiseResult of chunkResults) {
-      if (promiseResult.status === `fulfilled`) {
-        const { success, result, error, item } = promiseResult.value
-        if (success) {
-          results.push(result!)
-        } else {
-          errors.push(error!)
-          if (failFast) {
-            return { results, errors, success: false }
-          }
-        }
-      } else {
-        // This shouldn't happen since we're catching errors above
-        // But handle it just in case
-        const error = new Error(`Unexpected promise rejection`) as Error & { item: any }
-        errors.push(error)
-        if (failFast) {
-          return { results, errors, success: false }
-        }
-      }
-    }
-  }
-
-  return { results, errors, success: errors.length === 0 }
+  const effectOperation = (item: T, index: number) => Effect.tryPromise(() => operation(item, index))
+  return Effect.runPromise(processEffectBatch(items, effectOperation, concurrency, failFast, startIndex))
 }
 
 // /**
@@ -678,3 +789,15 @@ export type CaseBigint<$Result extends bigint> = $Result
 export type CaseNever<$Result extends never> = $Result
 
 export type ObjReplace<$Object1, $Object2> = Omit<$Object1, keyof $Object2> & $Object2
+
+export const zz = (...args: any[]) => {
+  console.log('---------------------------------------------')
+  console.log(...args)
+  console.log('---------------------------------------------')
+}
+
+export const zd = (...args: any) => {
+  console.log('---------------------------------------------')
+  args.forEach(dump)
+  console.log('---------------------------------------------')
+}

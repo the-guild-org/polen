@@ -101,17 +101,17 @@ export namespace Test {
 
   /**
    * A test case that can be either executable, skipped, or marked as todo.
-   * 
+   *
    * @typeParam $Input - Additional properties required for the test case.
    *                     When no additional properties are needed, defaults to empty object.
-   * 
+   *
    * @example With input properties
    * ```typescript
    * interface StringCase {
    *   input: string
    *   expected: string
    * }
-   * 
+   *
    * const cases: Test.Case<StringCase>[] = [
    *   { name: 'uppercase', input: 'hello', expected: 'HELLO' },
    *   { name: 'empty string', input: '', expected: '' },
@@ -125,10 +125,10 @@ export namespace Test {
 
   /**
    * Executes a parameterized test for each case in the provided array.
-   * 
-   * Automatically handles todo, skip, skipIf, and only cases, reducing boilerplate 
+   *
+   * Automatically handles todo, skip, skipIf, and only cases, reducing boilerplate
    * compared to using `test.for` directly.
-   * 
+   *
    * @example Basic test with default name
    * ```typescript
    * Test.each(cases, (case_) => {
@@ -137,7 +137,7 @@ export namespace Test {
    *   expect(transform(input)).toBe(expected)
    * })
    * ```
-   * 
+   *
    * @example With custom name template
    * ```typescript
    * Test.each('transform $input to $expected', cases, (case_) => {
@@ -145,7 +145,7 @@ export namespace Test {
    *   expect(transform(input)).toBe(expected)
    * })
    * ```
-   * 
+   *
    * @example Name template syntax
    * ```typescript
    * // Access nested properties with dot notation
@@ -153,14 +153,14 @@ export namespace Test {
    *   const { user, age } = case_
    *   expect(getAge(user)).toBe(age)
    * })
-   * 
+   *
    * // Use any case property in the template
    * Test.each('$method: $input → $output', cases, (case_) => {
    *   const { method, input, output } = case_
    *   expect(process(method, input)).toBe(output)
    * })
    * ```
-   * 
+   *
    * @remarks
    * - Default uses the `name` property from each case
    * - Custom templates use `$property` syntax for interpolation
@@ -189,12 +189,12 @@ export namespace Test {
     const nameTemplate = typeof arg1 === 'string' ? arg1 : '$name'
     const cases = typeof arg1 === 'string' ? arg2 as Case<caseInput>[] : arg1
     const runner = typeof arg1 === 'string' ? arg3! : arg2 as (caseInput: CaseFilled & caseInput, context: TestContext) => void | Promise<void>
-    
+
     // Check if any cases have 'only' set
     const hasOnly = cases.some(c => 'only' in c && c.only === true)
     const testFn = hasOnly ? test.only : test
 
-    testFn.for<Case<caseInput>>(cases)(nameTemplate, (caseInput, context) => {
+    testFn.for<Case<caseInput>>(cases)(nameTemplate, async (caseInput, context) => {
       if ('todo' in caseInput) {
         const { todo } = caseInput
         context.skip(typeof todo === 'string' ? todo : undefined)
@@ -202,7 +202,7 @@ export namespace Test {
       }
 
       const filledCase = caseInput as CaseFilled
-      
+
       // Handle skip
       if (filledCase.skip) {
         context.skip(typeof filledCase.skip === 'string' ? filledCase.skip : undefined)
@@ -221,16 +221,16 @@ export namespace Test {
         return
       }
 
-      runner(caseInput as CaseFilled & caseInput, context)
+      await runner(caseInput as CaseFilled & caseInput, context)
     })
   }
 
   /**
    * Creates a test suite that combines describe and Test.each for cleaner table-driven tests.
-   * 
+   *
    * This reduces boilerplate by automatically wrapping Test.each in a describe block,
    * eliminating the need for separate interface declarations and nested structures.
-   * 
+   *
    * @example Basic usage
    * ```typescript
    * Test.suite<{ input: string; expected: string }>('string transformations', [
@@ -240,7 +240,7 @@ export namespace Test {
    *   expect(transform(input)).toBe(expected)
    * })
    * ```
-   * 
+   *
    * @example With custom name template
    * ```typescript
    * interface MathCase {
@@ -248,7 +248,7 @@ export namespace Test {
    *   b: number
    *   expected: number
    * }
-   * 
+   *
    * Test.suite<MathCase>('math operations', '$a + $b = $expected', [
    *   { name: 'addition', a: 2, b: 3, expected: 5 },
    *   { name: 'subtraction', a: 5, b: 3, expected: 2 },
@@ -256,7 +256,7 @@ export namespace Test {
    *   expect(calculate(a, b)).toBe(expected)
    * })
    * ```
-   * 
+   *
    * @example With nested expected property pattern (recommended for complex cases)
    * ```typescript
    * interface ComplexCase {
@@ -270,7 +270,7 @@ export namespace Test {
    *     metadata: { processed: boolean; warnings?: string[] }
    *   }
    * }
-   * 
+   *
    * // Using expected property pattern keeps expectations together on one line
    * Test.suite<ComplexCase>('complex transformations', [
    *   { name: 'uppercase with trimming',
@@ -292,7 +292,7 @@ export namespace Test {
    *   expect(result.metadata).toEqual(expected.metadata)
    * })
    * ```
-   * 
+   *
    * @example Inline case typing with column alignment
    * ```typescript
    * // dprint-ignore
@@ -307,7 +307,7 @@ export namespace Test {
    *   expect(input.length).toBe(expected)
    * })
    * ```
-   * 
+   *
    * @example With todo and skip cases
    * ```typescript
    * Test.suite<{ feature: string }>('feature tests', [
@@ -318,7 +318,7 @@ export namespace Test {
    *   expect(isFeatureEnabled(feature)).toBe(true)
    * })
    * ```
-   * 
+   *
    * @remarks
    * - Type parameter is mandatory to encourage explicit typing
    * - Supports all Test.each features (todo, skip, only, etc.)
@@ -330,24 +330,59 @@ export namespace Test {
    * - For simple types, prefer inline typing with `// dprint-ignore` and column alignment
    *   over separate interface declarations for better readability.
    */
-  export function suite<$Case extends object>(
-    description: string,
-    cases: Case<$Case>[],
-    runner: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>
-  ): void
-  export function suite<$Case extends object>(
-    description: string,
-    nameTemplate: string,
-    cases: Case<$Case>[],
-    runner: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>
-  ): void
-  export function suite<$Case extends object>(
+   interface SuiteBase {
+     <$Case extends object>(
+       description: string,
+       cases: Case<$Case>[],
+       runner: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>
+     ): void
+     <$Case extends object>(
+       description: string,
+       nameTemplate: string,
+       cases: Case<$Case>[],
+       runner: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>
+     ): void
+   }
+
+  interface Suite extends SuiteBase {
+    only: SuiteBase
+  }
+
+  // export function suite<$Case extends object>(
+  //   description: string,
+  //   cases: Case<$Case>[],
+  //   runner: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>
+  // ): void
+  // export function suite<$Case extends object>(
+  //   description: string,
+  //   nameTemplate: string,
+  //   cases: Case<$Case>[],
+  //   runner: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>
+  // ): void
+  export const suite: Suite = <$Case extends object>(
     description: string,
     arg2: string | Case<$Case>[],
     arg3: Case<$Case>[] | ((caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>),
     arg4?: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>,
-  ) {
+  ) => {
     describe(description, () => {
+      if (typeof arg2 === 'string') {
+        // Called with custom name template
+        each(arg2, arg3 as Case<$Case>[], arg4!)
+      } else {
+        // Called without custom name template
+        each(arg2, arg3 as (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>)
+      }
+    })
+  }
+
+  suite.only = <$Case extends object>(
+    description: string,
+    arg2: string | Case<$Case>[],
+    arg3: Case<$Case>[] | ((caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>),
+    arg4?: (caseInput: CaseFilled & $Case, context: TestContext) => void | Promise<void>,
+  ) => {
+    describe.only(description, () => {
       if (typeof arg2 === 'string') {
         // Called with custom name template
         each(arg2, arg3 as Case<$Case>[], arg4!)
@@ -364,15 +399,15 @@ export namespace Test {
 
   /**
    * Test function that returns an Effect for use with Effect-based test suites.
-   * 
+   *
    * The function receives a test case (merged with CaseFilled properties) and must return
    * an Effect that performs the test logic. The Effect will be automatically executed
    * with appropriate layers and error handling.
-   * 
+   *
    * @template $Case - The test case type containing input data and expected results
    * @template $Error - The error type the Effect can fail with (typically never or Error)
    * @template $Requirements - The context requirements that must be satisfied by layers
-   * 
+   *
    * @param testCase - Test case data merged with Test.CaseFilled properties (name, skip, etc.)
    * @returns Effect that performs the test, typically yielding void on success
    */
@@ -382,27 +417,27 @@ export namespace Test {
 
   /**
    * Creates Effect-based test suites with automatic layer provision and Effect execution.
-   * 
+   *
    * This curried function enables front-loading layers while constraining test functions
    * to return Effects. Each test case is automatically wrapped in vitest's test framework
    * with proper error handling, skip/todo support, and Effect execution.
-   * 
+   *
    * **Key Features:**
    * - Type-safe test functions that must return Effects
    * - Automatic layer provision via `Effect.provide`
    * - Full support for todo, skip, skipIf, and only test cases
    * - Perfect type inference for test case properties
    * - Natural parameter destructuring in test functions
-   * 
+   *
    * @example Basic usage with single layer
    * ```typescript
    * interface LoadCase {
    *   config: Config
    *   expected: { result: string | null }
    * }
-   * 
+   *
    * const testWithSchema = Test.suiteWithLayers(TestLayers.schema)
-   * 
+   *
    * testWithSchema<LoadCase>('Schema operations', [
    *   { name: 'no config', config: {}, expected: { result: null } },
    *   { name: 'with config', config: { enabled: true }, expected: { result: 'loaded' } },
@@ -411,14 +446,14 @@ export namespace Test {
    *   expect(result).toEqual(expected.result)
    * }))
    * ```
-   * 
+   *
    * @example Multiple layers with complex requirements
    * ```typescript
    * const testIntegration = Test.suiteWithLayers(
    *   Layer.merge(TestLayers.database, TestLayers.fileSystem, TestLayers.httpClient)
    * )
-   * 
-   * testIntegration<ApiTestCase>('API integration', cases, 
+   *
+   * testIntegration<ApiTestCase>('API integration', cases,
    *   ({ endpoint, payload, expected }) => Effect.gen(function* () {
    *     // All services from merged layers are available
    *     const data = yield* Database.findById(payload.id)
@@ -428,7 +463,7 @@ export namespace Test {
    *   })
    * )
    * ```
-   * 
+   *
    * @example With test case modifiers
    * ```typescript
    * testWithLayers<TestCase>('feature tests', [
@@ -441,8 +476,8 @@ export namespace Test {
    *   expect(result).toBe(expected)
    * }))
    * ```
-   * 
-   * @example Error handling in Effects  
+   *
+   * @example Error handling in Effects
    * ```typescript
    * testWithLayers<ErrorCase>('error scenarios', cases,
    *   ({ input, shouldFail }) => Effect.gen(function* () {
@@ -456,13 +491,13 @@ export namespace Test {
    *   })
    * )
    * ```
-   * 
+   *
    * @example Typed error handling with withErrors
    * ```typescript
    * class ValidationError extends Error {
    *   constructor(message: string) { super(message) }
    * }
-   * 
+   *
    * // Use .withErrors<T>() for precise error type constraints
    * testWithLayers.withErrors<ValidationError>()<UserCase>('validation tests', cases,
    *   ({ user, shouldValidate }) => Effect.gen(function* () {
@@ -475,24 +510,24 @@ export namespace Test {
    *   })
    * )
    * ```
-   * 
+   *
    * @template $Requirements - Context requirements that the layers parameter must satisfy
    * @param layers - Layer providing services/context required by test Effects
    * @returns Curried function that accepts test suite parameters and creates the suite
-   * 
+   *
    * @remarks
    * **Two API variants available:**
-   * - **Simple**: `testWithLayers<$Case>(description, cases, testFn)` - error types inferred as `any`  
+   * - **Simple**: `testWithLayers<$Case>(description, cases, testFn)` - error types inferred as `any`
    * - **Typed**: `testWithLayers.withErrors<$Error>()<$Case>(description, cases, testFn)` - precise error types
-   * 
+   *
    * **Type signatures:**
    * - Main function: Only `$Case` type parameter required
    * - WithErrors function: `$Error` type parameter for error constraint, then `$Case` parameter
    * - Test functions return `Effect<void, $Error, $Requirements>`
-   * 
+   *
    * **Implementation details:**
    * - All test case properties available with proper type inference
-   * - Effects executed with `Effect.runPromise` for vitest compatibility  
+   * - Effects executed with `Effect.runPromise` for vitest compatibility
    * - Layer provision automatic via `Effect.provide(effect, layers)`
    * - Full support for Test.Case features (skip, todo, only, skipIf, tags)
    * - Both APIs share the same underlying implementation for consistency
@@ -518,7 +553,7 @@ export namespace Test {
           }
 
           const filledCase = caseInput as CaseFilled & $Case
-          
+
           // Handle skip
           if (filledCase.skip) {
             context.skip(typeof filledCase.skip === 'string' ? filledCase.skip : undefined)

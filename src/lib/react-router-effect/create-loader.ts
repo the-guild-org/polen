@@ -1,4 +1,4 @@
-import { Schema } from 'effect'
+import { Effect, Schema } from 'effect'
 import type { LoaderFunction } from 'react-router'
 
 /**
@@ -22,8 +22,9 @@ export const createEffectLoader = <TSchema extends Schema.Schema.Any = Schema.Sc
   loader: (args: Parameters<LoaderFunction>[0]) => Promise<Schema.Schema.Type<TSchema>>,
 ): LoaderFunction => {
   return async (args) => {
-    // Execute the loader to get decoded data
-    const decodedData = await loader(args)
+    // Convert Promise to Effect for internal consistency
+    const loaderEffect = Effect.tryPromise(() => loader(args))
+    const decodedData = await Effect.runPromise(loaderEffect)
 
     // Encode the data for transport using the schema
     const encodedData = Schema.encodeSync(schema as any)(decodedData as any)

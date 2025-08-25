@@ -23,6 +23,7 @@
 - always use `tsconfig.json` when running tsc to ensure correct configuration
 - always use `.js` extension on relative imports (ESM requirement with nodenext module resolution)
 - function contracts (public APIs) must be properly typed, but NEVER complicate internal implementations for type safety - use simple types or cast to `any` internally if needed
+- **CRITICAL: MUST CAPTURE FAILING TESTS BEFORE FIXING** - Before implementing any fix for a bug or issue, you MUST first create a failing unit test that reproduces the problem, confirm it fails, then implement the fix. This applies to ALL bug fixes except very complex integration scenarios like massive deep state in Playwright browser tests. No exceptions - TDD is mandatory for bug fixes.
 
 # Project Layout
 

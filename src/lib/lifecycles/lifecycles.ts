@@ -86,10 +86,10 @@ const populateTypeFields = (
       | Lifecycle.InputObjectType.InputObjectType
 
     for (const fieldName of Object.keys(fields)) {
-      ;(typeWithFields.fields as any)[fieldName] = {
+      ;(typeWithFields.fields as any)[fieldName] = Lifecycle.FieldType.make({
         name: fieldName,
         events: [addedEvent],
-      }
+      })
     }
   }
 }
@@ -219,10 +219,10 @@ const processChange = (
 
       const typeLifecycle = data[typeName]
       if ('fields' in typeLifecycle) {
-        ;(typeLifecycle.fields as any)[fieldName] = {
+        ;(typeLifecycle.fields as any)[fieldName] = Lifecycle.FieldType.make({
           name: fieldName,
           events: [addedEvent],
-        }
+        })
       }
     }),
     Match.tag('FIELD_REMOVED', (change) => {
@@ -261,10 +261,10 @@ const processChange = (
 
       const typeLifecycle = data[typeName]
       if ('fields' in typeLifecycle) {
-        ;(typeLifecycle.fields as any)[fieldName] = {
+        ;(typeLifecycle.fields as any)[fieldName] = Lifecycle.FieldType.make({
           name: fieldName,
           events: [addedEvent],
-        }
+        })
       }
     }),
     Match.tag('INPUT_FIELD_REMOVED', (change) => {
@@ -384,16 +384,14 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
   const processUnversionedCatalog = (cat: Catalog.Unversioned.Unversioned) => {
     const revisions = [...cat.schema.revisions].reverse() // Process chronologically
 
-    // Create the hydrated schema for unversioned catalog
-    const schemaHydratable: SchemaType = {
-      _tag: 'SchemaUnversioned',
-      revisions: cat.schema.revisions.map((r: any) => ({
-        _tag: 'Revision' as const,
+    // Create the hydrated schema for unversioned catalog using proper constructors
+    const schemaHydratable: SchemaType = Schema.Unversioned.make({
+      revisions: cat.schema.revisions.map((r: any) => Revision.make({
         date: r.date,
         changes: r.changes,
       })),
       definition: cat.schema.definition,
-    }
+    })
 
     // Process first revision as initial schema
     if (revisions.length > 0) {
@@ -420,26 +418,23 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
     for (const entry of cat.entries) {
       const revisions = [...entry.revisions].reverse() // Process chronologically
 
-      // Create the hydrated schema for versioned catalog
-      const schemaHydratable: SchemaType = {
-        _tag: 'SchemaVersioned',
+      // Create the hydrated schema for versioned catalog using proper constructors
+      const schemaHydratable: SchemaType = Schema.Versioned.make({
         version: entry.schema.version,
         parent: entry.parent
-          ? {
-            _tag: 'SchemaVersioned' as const,
+          ? Schema.Versioned.make({
             version: entry.parent.version,
             parent: null,
             revisions: [],
             definition: entry.parent.definition,
-          }
+          })
           : null,
-        revisions: entry.revisions.map(r => ({
-          _tag: 'Revision' as const,
+        revisions: entry.revisions.map(r => Revision.make({
           date: r.date,
           changes: r.changes,
         })),
         definition: entry.schema.definition,
-      }
+      })
 
       // Process first revision as initial schema
       if (revisions.length > 0) {

@@ -1,6 +1,7 @@
 import { S } from '#lib/kit-temp/effect'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Fs, Path } from '@wollybeard/kit'
-import { Either } from 'effect'
+import { Effect, Either } from 'effect'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { Test } from '../../../tests/unit/helpers/test.js'
 import { Content } from './$.js'
@@ -47,10 +48,14 @@ description: Page description
 Content`,
       })
 
-      const result = await Content.scan({
-        dir: testDir,
-        glob: '**/*.md',
-      })
+      const result = await Effect.runPromise(
+        Content.scan({
+          dir: testDir,
+          glob: '**/*.md',
+        }).pipe(
+          Effect.provide(NodeFileSystem.layer),
+        ),
+      )
 
       expect(result.list).toHaveLength(1)
       expect(result.list[0]?.metadata).toEqual({

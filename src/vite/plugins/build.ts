@@ -1,12 +1,10 @@
 import type { Config } from '#api/config/index'
 import type { PolenBuildManifest } from '#api/static/manifest'
 import { Vite } from '#dep/vite/index'
-import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { Fs, Path } from '@wollybeard/kit'
 import packageJson from '../../../package.json' with { type: 'json' }
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
-import { polenVirtual } from '../vi.js'
 import { RoutesManifest } from './routes-manifest.js'
 
 export const Build = (config: Config.Config): Vite.Plugin[] => {
@@ -17,7 +15,6 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
   // const outDir = Path.join(config.paths.project.rootDir, `dist`)
 
   return [
-    Manifest(config),
     BuildManifest(config),
     RoutesManifest(config),
     {
@@ -125,37 +122,6 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
       },
     },
   ]
-}
-
-const viClientManifest = polenVirtual([`vite`, `client`, `manifest`])
-
-const Manifest = (config: Config.Config): Vite.Plugin => {
-  let configEnv: Vite.ConfigEnv
-
-  return {
-    name: `polen-manifest`,
-    config(_, configEnv_) {
-      configEnv = configEnv_
-    },
-    ...ViteVirtual.IdentifiedLoader.toHooks(
-      {
-        identifier: viClientManifest,
-        loader: async () => {
-          // In development just return an empty manifest
-          if (configEnv.mode === Vite.ModeName.development) {
-            return `export default {}`
-          }
-
-          const manifestPath = Path.join(config.paths.project.absolute.build.root, `.vite`, `manifest.json`)
-          const module = await import(manifestPath, { with: { type: `json` } }) as {
-            default: Vite.Manifest
-          }
-
-          return `export default ${JSON.stringify(module.default)}`
-        },
-      },
-    ),
-  }
 }
 
 const BuildManifest = (config: Config.Config): Vite.Plugin => {
