@@ -24,7 +24,7 @@ describe('parseGraphQLWithTreeSitter - comments', () => {
 
     const tokens = await parseGraphQLWithTreeSitter(code, [], schema)
 
-    // Find the comment token (tree-sitter may parse this as a single comment node)
+    // Find the comment token
     const commentToken = tokens.find(t => t.text.startsWith('#') && t.text.includes('comment'))
 
     expect(commentToken).toBeDefined()

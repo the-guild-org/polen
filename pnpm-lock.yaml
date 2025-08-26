@@ -152,9 +152,6 @@ importers:
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
-      tree-sitter-graphql-grammar-wasm:
-        specifier: ^1.1.0
-        version: 1.1.0(web-tree-sitter@0.25.8)
       tsx:
         specifier: ^4.20.3
         version: 4.20.3
@@ -276,6 +273,9 @@ importers:
       strip-ansi:
         specifier: ^7.1.0
         version: 7.1.0
+      tree-sitter-graphql-grammar-wasm:
+        specifier: link:/Users/jasonkuhrt/projects/jasonkuhrt/tree-sitter-graphql-grammar-wasm
+        version: link:../../jasonkuhrt/tree-sitter-graphql-grammar-wasm
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
@@ -4600,14 +4600,6 @@ packages:
   tr46@5.1.1:
     resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
-
-  tree-sitter-graphql-grammar-wasm@1.1.0:
-    resolution: {integrity: sha512-bb4eVgg76OIxKGQRoTZa/SbL6znJVdYWfyeI0GVxoBDytuA84LSkbbrmZmZI8THBmeGJCqD5rgPYJAN/cUhfuQ==}
-    peerDependencies:
-      web-tree-sitter: ^0.25.0
-    peerDependenciesMeta:
-      web-tree-sitter:
-        optional: true
 
   trim-lines@3.0.1:
     resolution: {integrity: sha512-kRj8B+YHZCc9kQYdWfJB2/oUl9rA99qbowYYBtr4ui4mZyAQ2JpvVBd/6U2YloATfqBhBTSMhTpgBHtU0Mf3Rg==}
@@ -9942,10 +9934,6 @@ snapshots:
   tr46@5.1.1:
     dependencies:
       punycode: 2.3.1
-
-  tree-sitter-graphql-grammar-wasm@1.1.0(web-tree-sitter@0.25.8):
-    optionalDependencies:
-      web-tree-sitter: 0.25.8
 
   trim-lines@3.0.1: {}
 

@@ -21,10 +21,7 @@ import {
   isInterfaceType,
   isObjectType,
 } from 'graphql'
-import graphqlWasmUrl from 'tree-sitter-graphql-grammar-wasm/grammar.wasm?url'
 import * as WebTreeSitter from 'web-tree-sitter'
-import treeSitterWasmUrl from 'web-tree-sitter/tree-sitter.wasm?url'
-import { isKeywordNodeType, isPunctuationNodeType, type TreeSitterGraphQLNodeType } from './graphql-node-types.js'
 import type { SemanticNode } from './semantic-nodes.js'
 import {
   isArgument,
@@ -35,6 +32,7 @@ import {
   isOutputField,
   isVariable,
 } from './semantic-nodes.js'
+import { type CustomNodeType, type GraphQLNode, TreeSitterGraphQL } from './tree-sitter-types.js'
 
 /**
  * Unified token structure that combines tree-sitter and GraphQL semantics
@@ -51,13 +49,13 @@ import {
  *
  * if (fieldToken?.polen.isInteractive()) {
  *   const url = fieldToken.polen.getReferenceUrl()
- *   console.log(`Navigate to: ${url}`)
+ *   // Navigate to the reference URL
  * }
  * ```
  */
 export interface GraphQLToken {
   /** Reference to the tree-sitter node that this token represents */
-  treeSitterNode: WebTreeSitter.Node
+  treeSitterNode: GraphQLNode
 
   /**
    * Optional semantic information from GraphQL schema analysis
@@ -107,10 +105,10 @@ class UnifiedToken implements GraphQLToken {
   private _text: string
   private _start: number
   private _end: number
-  private _nodeType: TreeSitterGraphQLNodeType
+  private _nodeType: GraphQLNode['type']
 
   constructor(
-    public treeSitterNode: WebTreeSitter.Node,
+    public treeSitterNode: GraphQLNode,
     public semantic: SemanticNode | undefined,
     annotations: CodeAnnotation[],
   ) {
@@ -119,7 +117,7 @@ class UnifiedToken implements GraphQLToken {
     this._text = treeSitterNode.text
     this._start = treeSitterNode.startIndex
     this._end = treeSitterNode.endIndex
-    this._nodeType = treeSitterNode.type as TreeSitterGraphQLNodeType
+    this._nodeType = treeSitterNode.type
 
     this.codeHike = { annotations }
 
@@ -148,60 +146,37 @@ class UnifiedToken implements GraphQLToken {
   }
 
   private _getCssClass(): string {
-    const nodeType = this._nodeType
-
-    // Development-only validation
-    if (process.env['NODE_ENV'] === 'development') {
-      // Validate that the node type is actually a valid TreeSitterGraphQLNodeType
-      const validTypes = new Set([
-        // Add a few common types for validation
-        'document',
-        'name',
-        'field',
-        'argument',
-        'variable',
-        'comment',
-        'error_hint',
-        'whitespace',
-        'string_value',
-        'int_value',
-        'float_value',
-        'query',
-        'mutation',
-        'subscription',
-      ])
-
-      if (!validTypes.has(nodeType as any) && !nodeType.match(/^[a-z_]+$/)) {
-        console.warn(`Unknown tree-sitter node type: "${nodeType}". Consider adding to TreeSitterGraphQLNodeType.`)
-      }
-    }
+    const node = this.treeSitterNode
+    const nodeType = this._nodeType // Use cached type
 
     // Error hints
     if (nodeType === 'error_hint') {
       return 'graphql-error-hint'
     }
 
-    // Comments
-    if (nodeType === 'comment' || nodeType === 'description') {
+    // Comments and descriptions - use library type guards
+    if (TreeSitterGraphQL.Node.isComment(node) || TreeSitterGraphQL.Node.isDescription(node)) {
       return 'graphql-comment'
     }
 
-    // Keywords
-    if (isKeywordNodeType(nodeType)) {
+    // Keywords - use type guard
+    if (TreeSitterGraphQL.Node.isKeyword(node)) {
       return 'graphql-keyword'
     }
 
-    // Literals
-    if (nodeType === 'string_value') return 'graphql-string'
-    if (nodeType === 'int_value' || nodeType === 'float_value') return 'graphql-number'
+    // Literals - use library type guards
+    if (TreeSitterGraphQL.Node.isStringValue(node)) return 'graphql-string'
+    if (TreeSitterGraphQL.Node.isIntValue(node) || TreeSitterGraphQL.Node.isFloatValue(node)) return 'graphql-number'
+    if (TreeSitterGraphQL.Node.isBooleanValue(node)) return 'graphql-boolean'
+    if (TreeSitterGraphQL.Node.isNullValue(node)) return 'graphql-null'
 
-    // Punctuation
-    if (isPunctuationNodeType(nodeType)) {
+    // Punctuation and operators
+    if (TreeSitterGraphQL.Node.isPunctuation(node) || TreeSitterGraphQL.Node.isOperator(node)) {
       return 'graphql-punctuation'
     }
 
     // Names - use semantic info for better classification
-    if (nodeType === 'name') {
+    if (TreeSitterGraphQL.Node.isName(node)) {
       // Check if this is an invalid field (has invalidField semantic)
       if (this.semantic && 'kind' in this.semantic && this.semantic.kind === 'InvalidField') {
         return 'graphql-field-error'
@@ -232,7 +207,7 @@ class UnifiedToken implements GraphQLToken {
     }
 
     // Variables
-    if (nodeType === 'variable') return 'graphql-variable'
+    if (TreeSitterGraphQL.Node.isVariable(node)) return 'graphql-variable'
 
     return 'graphql-text'
   }
@@ -322,23 +297,58 @@ class UnifiedToken implements GraphQLToken {
 }
 
 // Cache for the parser instance
-let parserPromise: Promise<WebTreeSitter.Parser> | null = null
+let parserPromise: Promise<import('web-tree-sitter').Parser> | null = null
 
 /**
  * Minimal synthetic node that implements just enough of the WebTreeSitter.Node interface
- * Uses TreeSitterGraphQLNodeType for type safety
+ * to work with our GraphQL token system. Used for creating custom nodes like error hints
+ * and whitespace that don't exist in the original parse tree.
  *
  * IMPORTANT: This must be a class with getters to match WebTreeSitter.Node's WASM interface.
  * Plain objects with properties will cause "memory access out of bounds" errors when
  * tree-sitter tries to call the WASM getter functions.
  */
 class SyntheticNode {
+  readonly id = 0
+  readonly tree!: WebTreeSitter.Tree
+  readonly typeId = 0
+  readonly grammarId = 0
+  readonly grammarType = 'synthetic'
+  readonly isNamed = false
+  readonly isMissing = false
+  readonly isExtra = false
+  readonly hasChanges = false
+  readonly hasError = false
+  readonly isError = false
+  readonly startPosition: WebTreeSitter.Point
+  readonly endPosition: WebTreeSitter.Point
+  readonly children: WebTreeSitter.Node[] = []
+  readonly namedChildren: WebTreeSitter.Node[] = []
+  readonly childCount = 0
+  readonly namedChildCount = 0
+  readonly firstChild: WebTreeSitter.Node | null = null
+  readonly firstNamedChild: WebTreeSitter.Node | null = null
+  readonly lastChild: WebTreeSitter.Node | null = null
+  readonly lastNamedChild: WebTreeSitter.Node | null = null
+  readonly nextSibling: WebTreeSitter.Node | null = null
+  readonly nextNamedSibling: WebTreeSitter.Node | null = null
+  readonly previousSibling: WebTreeSitter.Node | null = null
+  readonly previousNamedSibling: WebTreeSitter.Node | null = null
+  readonly parent: WebTreeSitter.Node | null = null
+  readonly parseState = 0
+  readonly nextParseState = 0
+  readonly descendantCount = 1
+
   constructor(
-    public type: TreeSitterGraphQLNodeType,
+    public type: CustomNodeType,
     private _text: string,
     private _startIndex: number,
     private _endIndex: number,
-  ) {}
+  ) {
+    // Set required position properties
+    this.startPosition = { row: 0, column: this._startIndex }
+    this.endPosition = { row: 0, column: this._endIndex }
+  }
 
   // These getters match WebTreeSitter.Node's interface
   get text(): string {
@@ -353,12 +363,96 @@ class SyntheticNode {
     return this._endIndex
   }
 
-  get childCount(): number {
-    return 0
+  // Methods required by WebTreeSitter.Node interface
+  toString(): string {
+    return `(${this.type} "${this._text}")`
   }
 
-  get parent(): null {
+  child(_index: number): WebTreeSitter.Node | null {
     return null
+  }
+
+  namedChild(_index: number): WebTreeSitter.Node | null {
+    return null
+  }
+
+  childForFieldName(_fieldName: string): WebTreeSitter.Node | null {
+    return null
+  }
+
+  childForFieldId(_fieldId: number): WebTreeSitter.Node | null {
+    return null
+  }
+
+  fieldNameForChild(_childIndex: number): string | null {
+    return null
+  }
+
+  fieldNameForNamedChild(_childIndex: number): string | null {
+    return null
+  }
+
+  childrenForFieldName(_fieldName: string): (WebTreeSitter.Node | null)[] {
+    return []
+  }
+
+  childrenForFieldId(_fieldId: number): (WebTreeSitter.Node | null)[] {
+    return []
+  }
+
+  firstChildForIndex(_index: number): WebTreeSitter.Node | null {
+    return null
+  }
+
+  firstNamedChildForIndex(_index: number): WebTreeSitter.Node | null {
+    return null
+  }
+
+  descendantForIndex(index: number): WebTreeSitter.Node
+  descendantForIndex(startIndex: number, endIndex: number): WebTreeSitter.Node
+  descendantForIndex(_startIndex: number, _endIndex?: number): WebTreeSitter.Node {
+    return this as any
+  }
+
+  namedDescendantForIndex(index: number): WebTreeSitter.Node
+  namedDescendantForIndex(startIndex: number, endIndex: number): WebTreeSitter.Node
+  namedDescendantForIndex(_startIndex: number, _endIndex?: number): WebTreeSitter.Node {
+    return this as any
+  }
+
+  descendantForPosition(position: WebTreeSitter.Point): WebTreeSitter.Node
+  descendantForPosition(startPosition: WebTreeSitter.Point, endPosition: WebTreeSitter.Point): WebTreeSitter.Node
+  descendantForPosition(_startPosition: WebTreeSitter.Point, _endPosition?: WebTreeSitter.Point): WebTreeSitter.Node {
+    return this as any
+  }
+
+  namedDescendantForPosition(position: WebTreeSitter.Point): WebTreeSitter.Node
+  namedDescendantForPosition(startPosition: WebTreeSitter.Point, endPosition: WebTreeSitter.Point): WebTreeSitter.Node
+  namedDescendantForPosition(
+    _startPosition: WebTreeSitter.Point,
+    _endPosition?: WebTreeSitter.Point,
+  ): WebTreeSitter.Node {
+    return this as any
+  }
+
+  descendantsOfType(
+    _types: string | string[],
+    _startPosition?: WebTreeSitter.Point,
+    _endPosition?: WebTreeSitter.Point,
+  ): WebTreeSitter.Node[] {
+    return []
+  }
+
+  closest(_types: string | string[]): WebTreeSitter.Node | null {
+    return null
+  }
+
+  walk(): WebTreeSitter.TreeCursor {
+    throw new Error('walk() not implemented for synthetic nodes')
+  }
+
+  equals(other: WebTreeSitter.Node): boolean {
+    return false // Synthetic nodes never equal real nodes
   }
 }
 
@@ -539,120 +633,23 @@ export async function parseGraphQLWithTreeSitter(
   //   throw new Error('GraphQL syntax error detected by tree-sitter parser')
   // }
 
-  try {
-    // Step 2: Walk tree and attach semantics
-    const tokens = collectTokensWithSemantics(tree, code, schema, annotations)
+  // Step 2: Walk tree and attach semantics
+  const tokens = collectTokensWithSemantics(tree, code, schema, annotations)
 
-    // Step 3: Add error hint tokens after invalid fields
-    const tokensWithHints = addErrorHintTokens(tokens, code, annotations)
+  // Step 3: Add error hint tokens after invalid fields
+  const tokensWithHints = addErrorHintTokens(tokens, code, annotations)
 
-    return tokensWithHints
-  } finally {
-    // ## Tree-sitter Resource Lifecycle Management
-    //
-    // Tree-sitter creates native WASM objects that must be explicitly freed to prevent memory leaks.
-    // The tree object holds references to parsed nodes and internal parser state that won't be
-    // garbage collected automatically by JavaScript.
-    //
-    // Critical cleanup points:
-    // 1. Always call tree.delete() in a finally block to ensure cleanup even on errors
-    // 2. Do not access tree or any of its nodes after calling delete()
-    // 3. The parser instance is cached globally and reused across multiple parsing calls
-    //
-    // Memory safety: Once tree.delete() is called, all WebTreeSitter.Node references become invalid.
-    // Our tokens hold references to these nodes, but only use their text and position properties
-    // which are copied during token creation, so the nodes can be safely deleted.
-    tree.delete()
-  }
+  return tokensWithHints
 }
 
 /**
  * Get or create the tree-sitter parser instance
  */
-async function getParser(): Promise<WebTreeSitter.Parser> {
+async function getParser(): Promise<import('web-tree-sitter').Parser> {
   if (!parserPromise) {
-    parserPromise = initializeTreeSitter()
+    parserPromise = TreeSitterGraphQL.Utils.createGraphQLParser()
   }
   return parserPromise
-}
-
-/**
- * Initialize tree-sitter with the GraphQL grammar
- */
-async function initializeTreeSitter(): Promise<WebTreeSitter.Parser> {
-  try {
-    // Handle different environments
-    const isNode = typeof process !== 'undefined' && process.versions && process.versions.node
-
-    if (isNode) {
-      // Node.js environment (tests)
-      const fs = await import('node:fs/promises')
-      const path = await import('node:path')
-
-      // Find the actual WASM files in node_modules
-      const treeSitterWasmPath = path.join(process.cwd(), 'node_modules/web-tree-sitter/tree-sitter.wasm')
-      const graphqlWasmPath = path.join(process.cwd(), 'node_modules/tree-sitter-graphql-grammar-wasm/grammar.wasm')
-
-      await WebTreeSitter.Parser.init({
-        locateFile: (filename: string) => {
-          if (filename === 'tree-sitter.wasm') {
-            return treeSitterWasmPath
-          }
-          return filename
-        },
-      })
-
-      const parser = new WebTreeSitter.Parser()
-      const wasmBuffer = await fs.readFile(graphqlWasmPath)
-      const GraphQL = await WebTreeSitter.Language.load(new Uint8Array(wasmBuffer))
-      parser.setLanguage(GraphQL)
-
-      return parser
-    } else {
-      // Browser/Vite environment
-      await WebTreeSitter.Parser.init({
-        locateFile: (filename: string) => {
-          if (filename === 'tree-sitter.wasm') {
-            return treeSitterWasmUrl
-          }
-          return filename
-        },
-      })
-
-      const parser = new WebTreeSitter.Parser()
-
-      // Fetch the WASM file as a buffer
-      const response = await fetch(graphqlWasmUrl)
-      if (!response.ok) {
-        throw new Error(
-          `Failed to load GraphQL grammar file: ${response.status} ${response.statusText}. `
-            + `This may indicate a network issue or missing grammar file.`,
-        )
-      }
-
-      const wasmBuffer = await response.arrayBuffer()
-
-      if (wasmBuffer.byteLength === 0) {
-        throw new Error('GraphQL grammar file is empty or corrupted')
-      }
-
-      const GraphQL = await WebTreeSitter.Language.load(new Uint8Array(wasmBuffer))
-      parser.setLanguage(GraphQL)
-
-      return parser
-    }
-  } catch (error) {
-    // Enhance error messages for common issues
-    if (error instanceof Error) {
-      if (error.message.includes('fetch')) {
-        throw new Error(`Tree-sitter initialization failed: ${error.message}. Check your network connection.`)
-      }
-      if (error.message.includes('Language.load')) {
-        throw new Error(`Failed to load GraphQL grammar: ${error.message}. The grammar file may be corrupted.`)
-      }
-    }
-    throw error
-  }
 }
 
 /**
@@ -677,7 +674,6 @@ function addErrorHintTokens(
   if (invalidFieldCount > 10) {
     // Too many invalid fields - likely a schema mismatch
     // Return tokens without error hints to avoid corrupting display
-    console.warn(`Polen: ${invalidFieldCount} invalid fields detected. Schema may not match queries.`)
     return tokens
   }
 
@@ -758,47 +754,50 @@ function collectTokensWithSemantics(
   annotations: CodeAnnotation[],
 ): GraphQLToken[] {
   const tokens: GraphQLToken[] = []
-  const cursor = tree.walk()
+  const cursor = TreeSitterGraphQL.Cursor.create(tree)
   const context = schema ? new SemanticContext(schema) : null
   let lastEnd = 0
 
-  function processNode() {
-    const node = cursor.currentNode
+  function processNode(currentCursor: TreeSitterGraphQL.Cursor.TreeCursorGraphQL) {
+    const node = currentCursor.node
     if (!node) return
 
     // Handle different node types for semantic context
     if (context) {
-      if (node.type === 'operation_definition') {
-        // Find the operation type child
-        const operationType = findChildByType(cursor, 'operation_type')
+      if (TreeSitterGraphQL.Node.isOperationDefinition(node)) {
+        // Extract operation type using library utilities
+        const operationType = TreeSitterGraphQL.Utils.findChildByType(node, 'operation_type')
         if (operationType) {
-          context.enterOperation(operationType.text)
+          context.enterOperation(operationType.text as 'query' | 'mutation' | 'subscription')
         }
       }
 
-      if (node.type === 'fragment_definition') {
-        // Find the type condition
-        const typeCondition = findChildByType(cursor, 'type_condition')
-        if (typeCondition) {
-          const typeName = findChildByType(cursor, 'named_type', typeCondition)
-          if (typeName) {
-            const nameNode = findChildByType(cursor, 'name', typeName)
-            if (nameNode) {
-              context.enterFragment(nameNode.text)
-            }
-          }
+      if (TreeSitterGraphQL.Node.isFragmentDefinition(node)) {
+        // Combine accessors with findChildByType for the cleanest approach
+        const typeCondition = TreeSitterGraphQL.Accessors.getTypeConditionFromFragmentDefinition(
+          node as TreeSitterGraphQL.Node.FragmentDefinition,
+        )
+        const namedType = typeCondition && TreeSitterGraphQL.Accessors.getNamedTypeFromTypeCondition(typeCondition)
+        const nameNode = namedType && TreeSitterGraphQL.Utils.findChildByType(namedType, 'name')
+
+        if (nameNode?.text) {
+          context.enterFragment(nameNode.text)
         }
       }
 
       // We don't need special handling for selection_set anymore
       // Context is managed at the field level
     }
+    // TreeSitterGraphQL.Cursor.create(tree)
+    TreeSitterGraphQL.Accessors.getAliasFromField(node)
+    TreeSitterGraphQL.get.alias.from.field(node)
 
     // Collect leaf tokens with semantic info
-    // Special case: string_value, int_value, float_value nodes should be collected as whole tokens
+    // Special case: value nodes and comment nodes should be collected as whole tokens
     // even though they have children (the quotes or signs)
-    const isValueNode = node.type === 'string_value' || node.type === 'int_value' || node.type === 'float_value'
-    const shouldCollectToken = (node.childCount === 0 || isValueNode) && node.text.trim() !== ''
+    const isSpecialNode = TreeSitterGraphQL.Node.Group.isValue(node)
+      || TreeSitterGraphQL.Node.isComment(node)
+    const shouldCollectToken = (node.childCount === 0 || isSpecialNode) && node.text.trim() !== ''
 
     if (shouldCollectToken) {
       // Add whitespace before this token if needed
@@ -816,10 +815,10 @@ function collectTokensWithSemantics(
       // Determine semantic info for this token
       let semantic: SemanticNode | undefined
 
-      if (context && node.type === 'name') {
-        const parent = cursor.currentNode.parent
+      if (context && TreeSitterGraphQL.Node.isName(node)) {
+        const parent = node.parent
 
-        if (parent?.type === 'field') {
+        if (parent && TreeSitterGraphQL.Node.isField(parent)) {
           // This is a field name - get info from current context
           const fieldInfo = context.getFieldInfo(node.text)
           const currentType = context.getCurrentType()
@@ -840,7 +839,7 @@ function collectTokensWithSemantics(
               parentType: currentType,
             }
           }
-        } else if (parent?.type === 'named_type') {
+        } else if (parent && TreeSitterGraphQL.Node.isNamedType(parent)) {
           // This is a type reference
           const type = context.lookupType(node.text)
           if (type) {
@@ -856,21 +855,21 @@ function collectTokensWithSemantics(
               semantic = type
             }
           }
-        } else if (parent?.type === 'operation_definition') {
+        } else if (parent && TreeSitterGraphQL.Node.isOperationDefinition(parent)) {
           // This is an operation name
           semantic = {
             kind: 'Operation',
             type: context.operationType || 'query',
             name: node.text,
           }
-        } else if (parent?.type === 'fragment_definition') {
+        } else if (parent && TreeSitterGraphQL.Node.isFragmentDefinition(parent)) {
           // This is a fragment name - for now just mark it as a fragment
           semantic = {
             kind: 'Fragment',
             name: node.text,
             onType: context.getCurrentType()!, // We'll have the type from enterFragment
           }
-        } else if (parent?.type === 'argument') {
+        } else if (parent && TreeSitterGraphQL.Node.isArgument(parent)) {
           // This is an argument name
           //
           // ## Complex Argument Parsing Logic
@@ -888,64 +887,65 @@ function collectTokensWithSemantics(
           // root type first because top-level fields (like Query.pokemon) are most common.
 
           let argumentsNode = parent.parent
-          if (argumentsNode && argumentsNode.type === 'arguments') {
+          if (argumentsNode && TreeSitterGraphQL.Node.isArguments(argumentsNode)) {
             let fieldNode = argumentsNode.parent
-            if (fieldNode && fieldNode.type === 'field') {
-              // Find the field name node within the field node
-              for (let i = 0; i < fieldNode.childCount; i++) {
-                const child = fieldNode.child(i)
-                if (child && child.type === 'name') {
-                  // We need to find the parent type that contains this field
-                  // Start with the root type based on the operation type (query/mutation/subscription)
-                  const rootType = context.schema.getQueryType() || context.schema.getMutationType()
-                    || context.schema.getSubscriptionType()
+            if (fieldNode && TreeSitterGraphQL.Node.isField(fieldNode)) {
+              // Get the field name - use accessors for cleaner code
+              const aliasNode = TreeSitterGraphQL.Accessors.getAliasFromField(fieldNode as TreeSitterGraphQL.Node.Field)
+              const fieldName = aliasNode
+                ? TreeSitterGraphQL.Accessors.getNameFromAlias(aliasNode)?.text
+                : TreeSitterGraphQL.Accessors.getNameFromField(fieldNode as TreeSitterGraphQL.Node.Field)?.text
 
-                  if (rootType) {
-                    // First check if the field exists on the root type (most common case)
-                    let field = rootType.getFields()[child.text]
-                    let parentType: GraphQLObjectType | GraphQLInterfaceType = rootType
+              if (fieldName) {
+                // We need to find the parent type that contains this field
+                // Start with the root type based on the operation type (query/mutation/subscription)
+                const rootType = context.schema.getQueryType() || context.schema.getMutationType()
+                  || context.schema.getSubscriptionType()
 
-                    // If not found on root, check the current type in our semantic context
-                    // This handles nested field arguments like User.posts(limit: 10)
-                    if (!field) {
-                      const currentType = context.getCurrentType()
-                      if (currentType) {
-                        field = currentType.getFields()[child.text]
-                        parentType = currentType
-                      }
+                if (rootType) {
+                  // First check if the field exists on the root type (most common case)
+                  let field = rootType.getFields()[fieldName]
+                  let parentType: GraphQLObjectType | GraphQLInterfaceType = rootType
+
+                  // If not found on root, check the current type in our semantic context
+                  // This handles nested field arguments like User.posts(limit: 10)
+                  if (!field) {
+                    const currentType = context.getCurrentType()
+                    if (currentType) {
+                      field = currentType.getFields()[fieldName]
+                      parentType = currentType
                     }
+                  }
 
-                    if (field && parentType) {
-                      const arg = field.args.find((a: GraphQLArgument) => a.name === node.text)
-                      if (arg) {
-                        semantic = {
-                          kind: 'Argument',
-                          parentType: parentType,
-                          parentField: field,
-                          argumentDef: arg,
-                        }
+                  if (field && parentType) {
+                    const arg = field.args.find((a: GraphQLArgument) => a.name === node.text)
+                    if (arg) {
+                      semantic = {
+                        kind: 'Argument',
+                        parentType: parentType,
+                        parentField: field,
+                        argumentDef: arg,
                       }
                     }
                   }
-                  break
                 }
               }
             }
           }
-        } else if (parent?.type === 'variable') {
+        } else if (parent && TreeSitterGraphQL.Node.isVariable(parent)) {
           // This is a variable name (without the $)
           semantic = {
             kind: 'Variable',
             name: node.text,
           }
-        } else if (parent?.type === 'variable_definition') {
+        } else if (parent && TreeSitterGraphQL.Node.isVariableDefinition(parent)) {
           // This is a variable definition in the operation header
           semantic = {
             kind: 'Variable',
             name: node.text,
           }
         }
-      } else if (context && node.type === 'variable' && node.text.startsWith('$')) {
+      } else if (context && TreeSitterGraphQL.Node.isVariable(node) && node.text.startsWith('$')) {
         // This is the full variable including $ (usage in arguments or directives)
         semantic = {
           kind: 'Variable',
@@ -954,7 +954,7 @@ function collectTokensWithSemantics(
       }
 
       const token = new UnifiedToken(
-        node,
+        node as GraphQLNode,
         semantic,
         annotations,
       )
@@ -964,31 +964,39 @@ function collectTokensWithSemantics(
       lastEnd = node.endIndex
     }
 
-    // Traverse children (but skip children of value nodes since we collect them as whole tokens)
-    if (!isValueNode && cursor.gotoFirstChild()) {
-      do {
-        processNode()
-      } while (cursor.gotoNextSibling())
-      cursor.gotoParent()
+    // Traverse children using Navigator's cursor walking
+    if (!shouldCollectToken) {
+      const childCursor = currentCursor.gotoFirstChild()
+      if (childCursor) {
+        let siblingCursor: typeof childCursor | null = childCursor
+        do {
+          processNode(siblingCursor)
+          siblingCursor = siblingCursor.gotoNextSibling()
+        } while (siblingCursor)
 
-      // Handle context exit
-      if (context && node.type === 'field') {
-        // Only exit field context if this field has a selection set
-        // (meaning it's an object/interface type that pushed to the stack)
-        const hasSelectionSet = node.childCount > 0 && node.children.some(
-          child => child?.type === 'selection_set',
-        )
-        if (hasSelectionSet) {
-          context.exitField()
+        // Go back to parent cursor
+        currentCursor.gotoParent()
+
+        // Handle context exit
+        if (context && TreeSitterGraphQL.Node.isField(node)) {
+          // Only exit field context if this field has a selection set
+          // (meaning it's an object/interface type that pushed to the stack)
+          const selectionSet = TreeSitterGraphQL.Utils.findChildByType(node, 'selection_set')
+          if (selectionSet) {
+            context.exitField()
+          }
+        } else if (
+          context
+          && (TreeSitterGraphQL.Node.isOperationDefinition(node) || TreeSitterGraphQL.Node.isFragmentDefinition(node))
+        ) {
+          // Reset context when exiting operation or fragment
+          context.reset()
         }
-      } else if (context && (node.type === 'operation_definition' || node.type === 'fragment_definition')) {
-        // Reset context when exiting operation or fragment
-        context.reset()
       }
     }
   }
 
-  processNode()
+  processNode(cursor)
 
   // Add final whitespace if needed
   if (lastEnd < code.length) {
@@ -1005,33 +1013,14 @@ function collectTokensWithSemantics(
   return tokens
 }
 
-/**
- * Helper to find a child node by type
- */
-function findChildByType(
-  cursor: WebTreeSitter.TreeCursor,
-  type: string,
-  node?: WebTreeSitter.Node,
-): WebTreeSitter.Node | null {
-  const targetNode = node || cursor.currentNode
-  if (!targetNode) return null
-
-  for (let i = 0; i < targetNode.childCount; i++) {
-    const child = targetNode.child(i)
-    if (child && child.type === type) {
-      return child
-    }
-  }
-  return null
-}
+// The TreeSitterGraphQL.Utils.findChildByType function is from tree-sitter-graphql-grammar-wasm
 
 /**
  * Create a pseudo tree-sitter node for whitespace
  */
-function createWhitespaceNode(text: string, start: number, end: number): WebTreeSitter.Node {
+function createWhitespaceNode(text: string, start: number, end: number): GraphQLNode {
   // Create a synthetic node with proper getter interface
-  const node = new SyntheticNode('whitespace', text, start, end)
-  return node as unknown as WebTreeSitter.Node
+  return new SyntheticNode('whitespace', text, start, end) as any as GraphQLNode
 }
 
 /**
@@ -1080,12 +1069,11 @@ function createWhitespaceNode(text: string, start: number, end: number): WebTree
  * like a regular token.
  */
 function createSyntheticNode(
-  type: TreeSitterGraphQLNodeType,
+  type: CustomNodeType,
   text: string,
   start: number,
   end: number,
-): WebTreeSitter.Node {
+): GraphQLNode {
   // Create a synthetic node with proper getter interface
-  const node = new SyntheticNode(type, text, start, end)
-  return node as unknown as WebTreeSitter.Node
+  return new SyntheticNode(type, text, start, end) as any as GraphQLNode
 }

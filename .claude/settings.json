@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "serena": {
+      "command": "/opt/homebrew/bin//uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/jasonkuhrt/projects/oraios/serena",
+        "serena-mcp-server"
+      ]
+    }
+  }
+}

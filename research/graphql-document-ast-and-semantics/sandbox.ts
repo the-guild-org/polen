@@ -39,6 +39,7 @@ import {
 } from 'graphql'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { TreeSitterGraphQL } from 'tree-sitter-graphql-grammar-wasm/tree-sitter-graphql'
 import * as WebTreeSitter from 'web-tree-sitter'
 
 // Get filesystem paths for WASM files
@@ -300,6 +301,9 @@ const highlightPlugin = {
         return 'operation-name'
       }
     }
+
+    // Could use TreeSitterGraphQL type guards for better syntax classification:
+    // TreeSitterGraphQL.isPunctuationNode(), TreeSitterGraphQL.isKeywordNode(), etc.
 
     // Variables
     if (nodeType === 'variable') return 'variable'
