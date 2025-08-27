@@ -1,4 +1,3 @@
-import { Hydra } from '#lib/hydra/$'
 import { S } from '#lib/kit-temp/effect'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
@@ -73,12 +72,3 @@ export const getRevisions = (catalog: Catalog): ReadonlyArray<Versioned.Entry['r
     (unversioned) => unversioned.schema.revisions,
   )(catalog)
 
-// ============================================================================
-// Bridge Factory
-// ============================================================================
-
-/**
- * Create a Bridge instance for managing catalog data with incremental loading.
- * This factory follows the pattern specified in the research plan.
- */
-export const Bridge = Hydra.Bridge.makeMake(Catalog)

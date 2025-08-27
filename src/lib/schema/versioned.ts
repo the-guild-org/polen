@@ -1,4 +1,3 @@
-import { Hydra } from '#lib/hydra/$'
 import { S } from '#lib/kit-temp/effect'
 import type { ObjReplace } from '#lib/kit-temp/other'
 import { Order } from 'effect'
@@ -20,23 +19,21 @@ export interface Versioned {
 
 export interface VersionedEncoded extends
   ObjReplace<Versioned, {
-    readonly revisions: ReadonlyArray<S.Schema.Encoded<typeof Revision.Revision>>
     readonly version: S.Schema.Encoded<typeof Version.Version>
+    readonly parent: VersionedEncoded | null
+    readonly revisions: ReadonlyArray<S.Schema.Encoded<typeof Revision.Revision>>
     readonly definition: S.Schema.Encoded<typeof SchemaDefinition.SchemaDefinition>
   }>
 {}
 
-export const Versioned = Hydra.Hydratable(
-  S.TaggedStruct('SchemaVersioned', {
-    version: Version.Version,
-    parent: S.NullOr(
-      S.suspend((): Hydra.Hydratable<S.Schema<Versioned, VersionedEncoded>, { keys: ['version'] }> => Versioned as any),
-    ),
-    revisions: S.Array(Revision.Revision),
-    definition: SchemaDefinition.SchemaDefinition,
-  }),
-  { keys: ['version'] },
-)
+export const Versioned = S.TaggedStruct('SchemaVersioned', {
+  version: Version.Version,
+  parent: S.NullOr(
+    S.suspend((): S.Schema<Versioned, VersionedEncoded> => Versioned),
+  ),
+  revisions: S.Array(Revision.Revision),
+  definition: SchemaDefinition.SchemaDefinition,
+})
 
 // ============================================================================
 // Constructors

@@ -1,8 +1,7 @@
 import type { NavbarProps } from '#api/hooks/types'
 import type { ReactRouter } from '#dep/react-router/index'
-import { route } from '#lib/react-router-aid/react-router-aid'
-import { schemaRoute } from '#lib/react-router-effect/react-router-effect'
-import { RootLoaderData } from '#lib/route-schemas/route-schemas'
+import { route } from '#lib/react-router-effect/route'
+import { RootLoaderData } from '#template/route-schemas/route-schemas'
 import type { Stores } from '#template/stores/$'
 import { Box, Flex, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
@@ -12,7 +11,6 @@ import PROJECT_DATA from 'virtual:polen/project/data.json'
 import * as projectHooks from 'virtual:polen/project/hooks'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { templateVariables } from 'virtual:polen/template/variables'
-import { Link as PolenLink } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
 import { DefaultNavbar } from '../components/navbar/DefaultNavbar.js'
 import { Item } from '../components/navbar/Item.js'
@@ -121,14 +119,14 @@ if (PROJECT_SCHEMA) {
 //
 //
 
-const notFoundRoute = route({
+const notFoundRoute = {
   id: `*_not_found`,
   path: `*`,
   Component: NotFound,
   handle: {
     statusCode: 404,
   },
-})
+}
 children.push(notFoundRoute)
 
 //
@@ -143,7 +141,7 @@ const storeModules = import.meta.glob('../stores/!($.*)*.ts', { eager: true }) a
   Stores.StoreModule
 >
 
-export const root = schemaRoute({
+export const root = route({
   path: `/`,
   Component,
   schema: RootLoaderData,

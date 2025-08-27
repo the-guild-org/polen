@@ -1,6 +1,5 @@
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
-import { Catalog } from '#lib/catalog/$'
 import { Version } from '#lib/version/$'
 import { Select } from '@radix-ui/themes'
 import { Effect } from 'effect'
@@ -28,6 +27,10 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
     const error = await tryWithToast(async () => {
       // Get the full catalog to find the target schema
       const catalog = await Effect.runPromise(catalogBridge.view())
+
+      if (!catalog) {
+        throw new Error('No catalog available')
+      }
 
       // This component is only used for versioned catalogs
       if (catalog._tag !== 'CatalogVersioned') {

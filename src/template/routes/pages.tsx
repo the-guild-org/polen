@@ -1,6 +1,4 @@
-import { Catalog } from '#lib/catalog/$'
-import { schemaRoute, useLoaderData } from '#lib/react-router-effect/react-router-effect'
-import { PagesLoaderData } from '#lib/route-schemas/route-schemas'
+import { route } from '#lib/react-router-effect/route'
 import { SidebarLayout } from '#template/layouts/index'
 import { MDXProvider } from '@mdx-js/react'
 import {
@@ -22,42 +20,12 @@ import {
   Text,
   Tooltip,
 } from '@radix-ui/themes'
-import { Effect, Match } from 'effect'
 import { Outlet, useLocation } from 'react-router'
 import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.json'
 import { routes } from 'virtual:polen/project/routes.jsx'
-import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { CodeBlock } from '../components/CodeBlock.js'
 
-const pagesLoader = async () => {
-  // Check if catalog exists first
-  if (!hasCatalog()) {
-    return { hasSchema: false }
-  }
-
-  // For now, we need to get the full catalog using view() until peek selections are implemented
-  // view() returns the fully hydrated catalog
-  const catalogData = await Effect.runPromise(catalogBridge.view())
-
-  // Fetch the schema for MDX pages
-  const schema = Match.value(catalogData).pipe(
-    Match.tag('CatalogUnversioned', (catalog) => catalog.schema.definition),
-    Match.tag('CatalogVersioned', (catalog) => {
-      // Get latest version
-      const latestEntry = catalog.entries[catalog.entries.length - 1]
-      return latestEntry?.schema.definition
-    }),
-    Match.exhaustive,
-  )
-
-  // GraphQL schema objects can't be serialized directly over the wire
-  // For now, we return a flag indicating if schema exists
-  return { hasSchema: !!schema }
-}
-
 const Component = () => {
-  // Data is automatically decoded using the schema
-  const { hasSchema } = useLoaderData(PagesLoaderData)
   const location = useLocation()
 
   // Build sidebar from pages catalog
@@ -119,10 +87,8 @@ const Component = () => {
   )
 }
 
-export const pages = schemaRoute({
+export const pages = route({
   // Pathless layout route - doesn't affect URL paths
-  schema: PagesLoaderData,
-  loader: pagesLoader,
   Component,
   children: [...routes], // All MDX page routes go here
 })

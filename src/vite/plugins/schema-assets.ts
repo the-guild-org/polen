@@ -2,11 +2,11 @@ import type { Config } from '#api/config/index'
 import { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
-import { Hydra } from '#lib/hydra/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Cache } from '@wollybeard/kit'
 import { Effect } from 'effect'
+import { GraphQLSchema } from 'graphql'
 import * as NodeFs from 'node:fs/promises'
 import * as NodePath from 'node:path'
 
@@ -91,25 +91,16 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     const { data: catalog } = loadedCatalog
     if (!catalog) throw new Error('No catalog data to write')
 
-    // Create Bridge with dev assets directory as base path
-    const catalogBridge = Catalog.Bridge({
-      dir: config.paths.framework.devAssets.schemas,
-    })
-
-    // Clear any existing assets and export to filesystem
-    // Note: We need to run these Effects
-    await Effect.runPromise(
-      Effect.provide(
-        Effect.gen(function*() {
-          yield* catalogBridge.clear()
-
-          // Import catalog and export to filesystem
-          catalogBridge.addRootValue(catalog)
-          yield* catalogBridge.export()
-        }),
-        Hydra.Io.File(config.paths.framework.devAssets.schemas),
-      ),
-    )
+    // Encode catalog to convert GraphQLSchema to AST, then write as JSON
+    const devAssetsDir = config.paths.framework.devAssets.schemas
+    await NodeFs.mkdir(devAssetsDir, { recursive: true })
+    const catalogPath = NodePath.join(devAssetsDir, 'catalog.json')
+    
+    
+    const encodedCatalog = await Effect.runPromise(Catalog.encode(catalog))
+    
+    
+    await NodeFs.writeFile(catalogPath, JSON.stringify(encodedCatalog, null, 2))
 
     debug(`devAssetsWritten`)
   }
@@ -199,10 +190,10 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
               await writeDevAssets(loadedSchema)
               debug(`hmr:schemaAssetsUpdatedAfterRemoval`)
             } else {
-              // No schema data and cannot recreate - clear all assets
-              const devAssetsDir = config.paths.framework.devAssets.schemas
-              await NodeFs.rm(devAssetsDir, { recursive: true, force: true })
-              debug(`hmr:allAssetsCleared`, {})
+              // No schema data and cannot recreate - clear catalog file
+              const catalogPath = NodePath.join(config.paths.framework.devAssets.schemas, 'catalog.json')
+              await NodeFs.rm(catalogPath, { force: true })
+              debug(`hmr:catalogCleared`, {})
             }
           } catch (error) {
             debug(`hmr:schemaRemovalFailed`, { error })
@@ -238,31 +229,16 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
         return
       }
 
-      // Build mode: Use Bridge to dehydrate and emit individual assets
-
-      // Create Bridge instance (no dir needed for memory operations)
-      // @claude the passed options {} should be optional paramter. the following should work:
-      // const catalogBridge = Catalog.Bridge()
-      const catalogBridge = Catalog.Bridge({})
-
-      // Import catalog into Bridge
-      catalogBridge.addRootValue(schemaData)
-
-      // Export dehydrated assets from Bridge
-      const exportedFragments = catalogBridge.exportToMemory()
-
-      // Emit each asset file
-      for (const { filename, content } of exportedFragments) {
-        this.emitFile({
-          type: `asset`,
-          fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/${filename}`,
-          source: content, // Already stringified with proper indentation
-        })
-      }
-
-      debug(`buildMode:hydratableAssetsEmitted`, {
-        assetCount: exportedFragments.length,
+      // Build mode: Encode and emit catalog as a single JSON file
+      const encodedCatalog = await Effect.runPromise(Catalog.encode(schemaData))
+      const catalogJson = JSON.stringify(encodedCatalog, null, 2)
+      this.emitFile({
+        type: `asset`,
+        fileName: `${config.paths.project.relative.build.relative.assets.root}/schemas/catalog.json`,
+        source: catalogJson,
       })
+
+      debug(`buildMode:catalogAssetEmitted`)
     },
 
     async handleHotUpdate({ file, server }) {

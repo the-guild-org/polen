@@ -2,16 +2,15 @@ import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
 import { Catalog } from '#lib/catalog/$'
 import { GrafaidOld } from '#lib/grafaid-old'
-import { zz } from '#lib/kit-temp/other'
 import { Lifecycles } from '#lib/lifecycles/$'
-import { route } from '#lib/react-router-aid/react-router-aid'
+import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Version } from '#lib/version/$'
+import { catalog } from '#template/data/catalog'
+import { ReferenceLoaderData } from '#template/route-schemas/route-schemas'
 import { neverCase } from '@wollybeard/kit/language'
-import { Effect, Match, Schema as S } from 'effect'
+import { Effect, Match } from 'effect'
 import React from 'react'
-import { useLoaderData } from 'react-router'
 import { useParams } from 'react-router'
-import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
@@ -21,48 +20,20 @@ import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js
 import { SidebarLayout } from '../layouts/index.js'
 
 const referenceLoader = async ({ params }: any) => {
-  if (!hasCatalog()) {
-    throw new Error('No schema available')
-  }
-
-  // For the reference route, we need the fully hydrated catalog
-  // since it contains GraphQLSchema instances that can't be serialized
   const catalog = await Effect.runPromise(catalogBridge.view())
-
-  // z('Catalog from bridge:', catalog)
-  // z('Catalog type:', typeof catalog)
-  // z('Catalog _tag:', catalog?._tag)
-  // Debug: Check the structure of the first entry
-  if (catalog._tag === 'CatalogVersioned') {
-    const firstEntry = catalog.entries[0]!
-    zz('First entry schema:', firstEntry.schema)
-    zz('First entry schema definition:', firstEntry.schema?.definition)
-    zz('First entry schema definition type:', typeof firstEntry.schema?.definition)
-  } else {
-    zz(catalog.schema.definition.getDirective('if'))
-  }
-
-  // Return plain data without schema encoding
-  // GraphQLSchema instances will be reconstructed on client
-  zz('referenceLoader', catalog)
   return {
-    catalog,
+    catalog: catalog!,
     requestedVersion: params.version ?? Api.Schema.VERSION_LATEST,
   }
 }
 
 // Single component that handles all reference route variations
 const ReferenceView = () => {
-  zz('ReferenceView')
   const params = useParams() as { version?: string; type?: string; field?: string }
-  // Get loader data without schema decoding
-  const loaderData = useLoaderData() as { catalog: Catalog.Catalog; requestedVersion: string }
-  // z('Loader data:', loaderData)
-  const { catalog, requestedVersion } = loaderData
 
-  // z('Catalog in component:', catalog)
-  // z('Catalog type:', typeof catalog)
-  // z('Catalog _tag:', catalog._tag)
+  const loaderData = useLoaderData(ReferenceLoaderData)
+
+  const { catalog, requestedVersion } = loaderData
 
   // Create lifecycles from catalog
   const lifecycle = React.useMemo(() => Lifecycles.create(catalog), [catalog])
@@ -178,18 +149,21 @@ const typeAndFieldRoutes = [
     index: true,
     Component: ReferenceView,
     loader: referenceLoader,
+    schema: ReferenceLoaderData,
   }),
   route({
     path: `:type`,
     Component: ReferenceView,
     errorElement: <MissingSchema />,
     loader: referenceLoader,
+    schema: ReferenceLoaderData,
     children: [
       route({
         path: `:field`,
         Component: ReferenceView,
         errorElement: <MissingSchema />,
         loader: referenceLoader,
+        schema: ReferenceLoaderData,
       }),
     ],
   }),
@@ -201,20 +175,21 @@ const typeAndFieldRoutes = [
  * - Leaf routes have components and loaders that always run fresh
  * - Single ReferenceView component handles all variations
  */
-// We need to determine if we have versioned catalog statically
-// Since PROJECT_SCHEMA is now a file map, we check for version-specific files
-const hasVersionedCatalog = PROJECT_SCHEMA && Object.keys(PROJECT_SCHEMA).some(key => key.includes('version'))
 
 export const reference = !hasCatalog()
   ? null
   : route({
     path: `reference`,
+    // loader: referenceLoader,
+    // schema: ReferenceLoaderData,
     children: [
       ...typeAndFieldRoutes,
       // Only add version routes if versioned
-      ...(hasVersionedCatalog
+      ...(Catalog.Versioned.is(catalog)
         ? [route({
           path: `version/:version`,
+          // loader: referenceLoader,
+          // schema: ReferenceLoaderData,
           children: typeAndFieldRoutes,
         })]
         : []),

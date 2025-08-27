@@ -7,13 +7,13 @@ import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
-import { Hydra } from '#lib/hydra/$'
 import { ViteVirtual } from '#lib/vite-virtual'
 import type { ProjectData } from '#project-data'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Idx, Json, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
+import { GraphQLSchema } from 'graphql'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
 import { Pages } from './pages.js'
@@ -158,14 +158,12 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
               return `export default null`
             }
 
-            // Convert the catalog to bridge files format for proper serialization
-            // This handles the transformation of GraphQLSchema instances to AST
-            const assets = Hydra.rootValueToAssets(schemaResult.data, Catalog.Catalog)
-            // Create an object that represents the file system state
-            const fileSystemState = Object.fromEntries(
-              Idx.fromArray(assets, { key: (_) => _.filename }).toMap().entries(),
-            )
-            return `export default ${JSON.stringify(fileSystemState)}`
+            // Encode the catalog to convert GraphQLSchema to AST before serializing
+            
+            const encodedCatalog = await Effect.runPromise(Catalog.encode(schemaResult.data))
+            
+            
+            return `export default ${JSON.stringify(encodedCatalog)}`
           },
         },
         {
@@ -185,7 +183,6 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
         {
           identifier: viProjectData,
           async loader() {
-            console.log(1)
             const debug = debugPolen.sub(`module-project-data`)
 
             debug(`load`, { id: viProjectData.id })

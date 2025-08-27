@@ -1,6 +1,18 @@
+import type { Http } from '@wollybeard/kit'
 import type { Schema } from 'effect'
 import type React from 'react'
 import type { RouteObject } from 'react-router'
+
+/**
+ * Base route handle interface that can be extended by routes.
+ * Includes properties like custom status codes.
+ */
+export interface RouteHandle {
+  /**
+   * Optional HTTP status code to use for this route.
+   */
+  statusCode?: Http.Status.Code.All
+}
 
 /**
  * Global registry of route schemas that can be augmented by route definitions.
@@ -17,8 +29,9 @@ export type GetRouteSchema<TRouteId extends keyof RouteSchemaRegistry> = RouteSc
 
 /**
  * Handle interface for routes with Effect schemas attached.
+ * Extends the base RouteHandle to include schema information.
  */
-export interface SchemaRouteHandle<TSchema extends Schema.Schema.Any = Schema.Schema.Any> {
+export interface SchemaRouteHandle<TSchema extends Schema.Schema.Any = Schema.Schema.Any> extends RouteHandle {
   /**
    * The Effect schema for this route's loader data.
    */

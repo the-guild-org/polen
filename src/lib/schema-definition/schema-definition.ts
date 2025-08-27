@@ -14,7 +14,6 @@ export const SchemaDefinition = S.transformOrFail(
   {
     strict: true,
     decode: (ast, options, astSchema) => {
-      console.log('decode')
       try {
         const schema = buildASTSchema(ast)
         return ParseResult.succeed(schema)

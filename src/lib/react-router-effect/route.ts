@@ -1,12 +1,15 @@
+import type { ReactRouter } from '#dep/react-router/index'
 import { Effect, Schema } from 'effect'
+import type { IsNever } from 'type-fest'
 import type { SchemaRoute, SchemaRouteConfig } from './types.js'
 
 /**
- * Creates a route with an attached Effect schema for automatic encoding/decoding.
+ * Creates a route with an optional Effect schema for automatic encoding/decoding.
  *
  * @example
  * ```typescript
- * export const catalogRoute = schemaRoute({
+ * // With schema
+ * export const catalogRoute = route({
  *   id: 'catalog',
  *   path: '/catalog/:id',
  *   schema: CatalogSchema,
@@ -16,13 +19,30 @@ import type { SchemaRoute, SchemaRouteConfig } from './types.js'
  *   },
  *   Component: CatalogView,
  * })
+ *
+ * // Without schema
+ * export const pages = route({
+ *   Component: PagesLayout,
+ *   children: [...routes],
+ * })
  * ```
  */
-export const schemaRoute = <TSchema extends Schema.Schema.Any>(
-  config: SchemaRouteConfig<TSchema>,
-): SchemaRoute<TSchema> => {
-  const { schema, loader, handle, ...routeConfig } = config
+export const route = <TSchema extends Schema.Schema.Any = never>(
+  config: IsNever<TSchema> extends true ? ReactRouter.RouteObject
+    : SchemaRouteConfig<TSchema>,
+): TSchema extends never ? ReactRouter.RouteObject : SchemaRoute<TSchema> => {
+  const { schema, loader, handle, ...routeConfig } = config as any
 
+  // If no schema provided, return a regular route
+  if (!schema) {
+    return {
+      ...routeConfig,
+      handle,
+      loader,
+    } as any
+  }
+
+  // Schema provided - add schema handling
   const route: any = {
     ...routeConfig,
     handle: {
@@ -45,5 +65,5 @@ export const schemaRoute = <TSchema extends Schema.Schema.Any>(
     }
   }
 
-  return route as SchemaRoute<TSchema>
+  return route as any
 }

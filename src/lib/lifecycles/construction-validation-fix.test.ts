@@ -1,3 +1,4 @@
+import { DateOnly } from '#lib/date-only/$'
 import { describe, expect, test } from '@effect/vitest'
 import { buildSchema } from 'graphql'
 import { Catalog } from '../catalog/$.js'
@@ -11,7 +12,7 @@ describe('lifecycles construction vs validation fix', () => {
     // This test should pass after we fix the construction vs validation issue
     const schema = buildSchema(`type Query { hello: String }`)
     const version = Version.fromString('1.0.0') as any
-    const revision = Revision.make({ date: '2024-01-01', changes: [] })
+    const revision = Revision.make({ date: DateOnly.make('2024-01-01'), changes: [] })
 
     const versionedSchema = Schema.Versioned.make({
       version,

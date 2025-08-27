@@ -3,7 +3,7 @@ import type { Hono } from '#dep/hono/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import { React } from '#dep/react/index'
 import { ResponseInternalServerError } from '#lib/kit-temp'
-import type { ReactRouterAid } from '#lib/react-router-aid'
+import type { RouteHandle } from '#lib/react-router-effect/react-router-effect'
 import * as Theme from '#lib/theme/theme'
 import { Arr } from '@wollybeard/kit'
 import * as ReactDomServer from 'react-dom/server'
@@ -99,7 +99,7 @@ const getStatusCode = (
   }
 
   // Then check for custom status in route handle
-  const handle = Arr.getLast(context.matches)?.route.handle as ReactRouterAid.RouteHandle | undefined
+  const handle = Arr.getLast(context.matches)?.route.handle as RouteHandle | undefined
   if (handle?.statusCode) {
     return handle.statusCode
   }

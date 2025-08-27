@@ -1,9 +1,8 @@
-import { Catalog } from '#lib/catalog/$'
-import { route } from '#lib/react-router-aid/react-router-aid'
+import { route } from '#lib/react-router-effect/route'
+import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
 import { Revision } from '#lib/revision/$'
+import { ChangelogLoaderData } from '#template/route-schemas/route-schemas'
 import { Effect, Match } from 'effect'
-import React from 'react'
-import { useLoaderData } from 'react-router'
 import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { Changelog } from '../components/Changelog.js'
 import { ChangelogLayout } from '../layouts/index.js'
@@ -24,8 +23,7 @@ const changelogLoader = async () => {
 }
 
 const Component = () => {
-  // Get loader data without schema decoding
-  const catalog = useLoaderData() as Catalog.Catalog | null
+  const catalog = useLoaderData(ChangelogLoaderData)
 
   if (!catalog) {
     return <div>No schema changes available for changelog.</div>
@@ -54,6 +52,7 @@ const Component = () => {
 }
 
 export const changelog = route({
+  schema: ChangelogLoaderData,
   path: `changelog`,
   loader: changelogLoader,
   Component,

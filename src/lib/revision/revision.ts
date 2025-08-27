@@ -1,6 +1,5 @@
 import { Change } from '#lib/change/$'
 import { DateOnly } from '#lib/date-only/$'
-import { Hydra } from '#lib/hydra/$'
 import { S } from '#lib/kit-temp/effect'
 import { Order } from 'effect'
 
@@ -8,17 +7,14 @@ import { Order } from 'effect'
 // Schema
 // ============================================================================
 
-export const Revision = Hydra.Hydratable(
-  S.TaggedStruct('Revision', {
-    date: DateOnly.DateOnly,
-    changes: S.Array(Change.Change),
-  }).annotations({
-    identifier: 'Revision',
-    title: 'Revision',
-    description: 'A revision in the schema history',
-  }),
-  { keys: ['date'] },
-)
+export const Revision = S.TaggedStruct('Revision', {
+  date: DateOnly.DateOnly,
+  changes: S.Array(Change.Change),
+}).annotations({
+  identifier: 'Revision',
+  title: 'Revision',
+  description: 'A revision in the schema history',
+})
 
 export type Revision = S.Schema.Type<typeof Revision>
 

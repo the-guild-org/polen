@@ -148,12 +148,6 @@
     "#lib/path-map/path-map": {
       "default": "./build/lib/path-map/$$.js"
     },
-    "#lib/react-router-aid": {
-      "default": "./build/lib/react-router-aid/$.js"
-    },
-    "#lib/react-router-aid/react-router-aid": {
-      "default": "./build/lib/react-router-aid/$$.js"
-    },
     "#lib/react-router-effect": {
       "default": "./build/lib/react-router-effect/$.js"
     },
