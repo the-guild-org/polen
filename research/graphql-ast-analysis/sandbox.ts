@@ -602,8 +602,6 @@ async function main() {
 
     console.log(`\n${'█'.repeat(100)}`)
   } catch (error) {
-    
-    
   }
 }
 

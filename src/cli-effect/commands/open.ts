@@ -1,22 +1,22 @@
-import { Command, Options } from '@effect/cli'
-import { Effect, Option } from 'effect'
 import { Api } from '#api/index'
-import { allowGlobalParameter } from '../_/parameters.js'
 import { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid'
 import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'
 import { toViteUserConfig } from '#vite/config'
+import { Command, Options } from '@effect/cli'
 import type { Fn } from '@wollybeard/kit'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'
+import { Effect, Option } from 'effect'
 import { homedir } from 'node:os'
+import { allowGlobalParameter } from '../_/parameters.js'
 
 // Define introspection headers option
 const introspectionHeaders = Options.text('introspection-headers').pipe(
   Options.withAlias('inh'),
   Options.optional,
   Options.withDescription(
-    'Include headers in the introspection query request sent when using --introspection-url. Format is JSON Object.'
-  )
+    'Include headers in the introspection query request sent when using --introspection-url. Format is JSON Object.',
+  ),
 )
 
 // Define mutually exclusive source options
@@ -24,26 +24,28 @@ const introspectUrl = Options.text('introspect').pipe(
   Options.withAlias('in'),
   Options.withAlias('i'),
   Options.optional,
-  Options.withDescription('Get the schema by sending a GraphQL introspection query to this URL.')
+  Options.withDescription('Get the schema by sending a GraphQL introspection query to this URL.'),
 )
 
 const sdlPath = Options.text('sdl').pipe(
   Options.withAlias('s'),
   Options.optional,
   Options.withDescription(
-    'Get the schema from a GraphQL Schema Definition Language file. Can be a path to a local file or an HTTP URL to a remote one.'
-  )
+    'Get the schema from a GraphQL Schema Definition Language file. Can be a path to a local file or an HTTP URL to a remote one.',
+  ),
 )
 
 const namedSchema = Options.choice('name', ['github', 'hive']).pipe(
   Options.withAlias('n'),
   Options.optional,
-  Options.withDescription('Pick from a well known public API. Polen already knows how to fetch the schema for these APIs.')
+  Options.withDescription(
+    'Pick from a well known public API. Polen already knows how to fetch the schema for these APIs.',
+  ),
 )
 
 const cache = Options.boolean('cache').pipe(
   Options.withDefault(true),
-  Options.withDescription('Enable or disable caching. By default this command caches fetched schemas for re-use.')
+  Options.withDescription('Enable or disable caching. By default this command caches fetched schemas for re-use.'),
 )
 
 // Cache implementation
@@ -79,8 +81,8 @@ const cacheRead = async (source: string, useCache: boolean) => {
 }
 
 const wrapCache = (fn: typeof GraphqlSchemaLoader.load, useCache: boolean) => {
-  const wrapped = (...args: Parameters<typeof GraphqlSchemaLoader.load>) => 
-    Effect.gen(function* () {
+  const wrapped = (...args: Parameters<typeof GraphqlSchemaLoader.load>) =>
+    Effect.gen(function*() {
       const cacheKey = JSON.stringify(args)
       const cachedSchema = yield* Effect.promise(() => cacheRead(cacheKey, useCache))
 
@@ -118,13 +120,13 @@ export const open = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ introspectionHeaders, introspectUrl, sdlPath, namedSchema, cache, allowGlobal }) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Validate that exactly one source option is provided
       const introspectValue = Option.getOrUndefined(introspectUrl)
       const sdlValue = Option.getOrUndefined(sdlPath)
       const namedValue = Option.getOrUndefined(namedSchema)
       const headersValue = Option.getOrUndefined(introspectionHeaders)
-      
+
       const sources = [introspectValue, sdlValue, namedValue].filter(Boolean)
       if (sources.length === 0) {
         return yield* Effect.fail(new Error('Must specify one of: --introspect, --sdl, or --name'))
@@ -135,7 +137,7 @@ export const open = Command.make(
 
       // Determine source type and value
       let sourceConfig: any
-      
+
       if (introspectValue) {
         sourceConfig = {
           type: 'introspect',
@@ -180,5 +182,5 @@ export const open = Command.make(
 
       yield* Effect.promise(() => viteDevServer.listen())
       viteDevServer.printUrls()
-    })
+    }),
 )

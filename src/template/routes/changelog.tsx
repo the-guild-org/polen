@@ -8,8 +8,8 @@ import { Changelog } from '../components/Changelog.js'
 import { Railway } from '../components/Changelog/Railway.js'
 import { VersionColumns } from '../components/Changelog/VersionColumns.js'
 import { useChangelogScroll } from '../hooks/useChangelogScroll.js'
-import { ChangelogLayout } from '../layouts/index.js'
 import { ChangelogRailwayLayout } from '../layouts/ChangelogRailwayLayout.js'
+import { ChangelogLayout } from '../layouts/index.js'
 
 const changelogLoader = async () => {
   // Check if catalog exists first
@@ -42,7 +42,7 @@ const Component = () => {
     Match.tag('CatalogUnversioned', (c) => [{
       schema: c.schema,
       parent: null,
-      revisions: c.schema.revisions
+      revisions: c.schema.revisions,
     }]),
     Match.exhaustive,
   )
@@ -58,9 +58,9 @@ const Component = () => {
     handleNodeClick,
     handleScroll,
   } = useChangelogScroll(entries as any)
-  
+
   return (
-    <div 
+    <div
       ref={scrollContainerRef}
       onScroll={handleScroll}
       style={{ height: '100vh', overflow: 'auto' }}

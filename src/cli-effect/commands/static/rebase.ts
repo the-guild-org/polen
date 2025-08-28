@@ -1,21 +1,21 @@
-import { Command, Args, Options } from '@effect/cli'
-import { Effect, Option } from 'effect'
 import { Api } from '#api/index'
-import { allowGlobalParameter } from '../../_/parameters.js'
 import { Task } from '#lib/task'
+import { Args, Command, Options } from '@effect/cli'
+import { Effect, Option } from 'effect'
+import { allowGlobalParameter } from '../../_/parameters.js'
 
 const source = Args.text({ name: 'source' }).pipe(
-  Args.withDescription('Path to the Polen build directory to rebase')
+  Args.withDescription('Path to the Polen build directory to rebase'),
 )
 
 const newBasePath = Args.text({ name: 'newBasePath' }).pipe(
-  Args.withDescription('New base path for the build (e.g., /new-path/)')
+  Args.withDescription('New base path for the build (e.g., /new-path/)'),
 )
 
 const target = Options.text('target').pipe(
   Options.withAlias('t'),
   Options.optional,
-  Options.withDescription('Target directory for copy mode (if not provided, mutate in place)')
+  Options.withDescription('Target directory for copy mode (if not provided, mutate in place)'),
 )
 
 export const staticRebase = Command.make(
@@ -27,7 +27,7 @@ export const staticRebase = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ source, newBasePath, target, allowGlobal }) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const targetPath = Option.getOrUndefined(target)
       const plan: Api.Static.RebasePlan = targetPath
         ? {
@@ -46,5 +46,5 @@ export const staticRebase = Command.make(
       const rebaseEffect = (plan: Api.Static.RebasePlan) => Effect.promise(() => Api.Static.rebase(plan))
 
       yield* Task.runAndExit(rebaseEffect, plan)
-    })
+    }),
 )

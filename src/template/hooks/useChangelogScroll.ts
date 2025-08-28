@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 
 interface Entry {
   schema: any
@@ -10,59 +10,61 @@ interface Entry {
 export const useChangelogScroll = (entries: Entry[]) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [currentPosition, setCurrentPosition] = useState<{
-    version: string
-    revision: string
-  } | undefined>()
-  
+  const [currentPosition, setCurrentPosition] = useState<
+    {
+      version: string
+      revision: string
+    } | undefined
+  >()
+
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const isScrollingRef = useRef(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  
+
   // Get version from entry
   const getVersion = (entry: Entry) => {
     if (entry?.schema?.version) {
       const version = entry.schema.version
       // Version might be an object with value property (from Effect Schema)
-      return typeof version === 'object' && (version as any).value 
-        ? (version as any).value 
+      return typeof version === 'object' && (version as any).value
+        ? (version as any).value
         : version
     }
     return 'main'
   }
-  
+
   // Build version map for navigation
   const versionMap = new Map(
-    entries.map(entry => [getVersion(entry), entry])
+    entries.map(entry => [getVersion(entry), entry]),
   )
-  
+
   // Find parent version
   const getParentVersion = (version: string) => {
     const entry = versionMap.get(version)
     if (entry?.parent?.version) {
       const parentVer = entry.parent.version
-      return typeof parentVer === 'object' && (parentVer as any).value 
-        ? (parentVer as any).value 
+      return typeof parentVer === 'object' && (parentVer as any).value
+        ? (parentVer as any).value
         : parentVer
     }
     return null
   }
-  
+
   // Find child version
   const getChildVersion = (version: string) => {
     return entries.find(entry => {
       if (entry.parent?.version) {
         const parentVer = entry.parent.version
-        const parentVersion = typeof parentVer === 'object' && (parentVer as any).value 
-          ? (parentVer as any).value 
+        const parentVersion = typeof parentVer === 'object' && (parentVer as any).value
+          ? (parentVer as any).value
           : parentVer
         return parentVersion === version
       }
       return false
     })
   }
-  
+
   // Update URL without triggering navigation
   const updateURL = useCallback((version: string, revision: string) => {
     const newPath = `/changelog/version/${version}/revision/${revision}`
@@ -71,7 +73,7 @@ export const useChangelogScroll = (entries: Entry[]) => {
       window.history.replaceState(null, '', newPath)
     }
   }, [location.pathname])
-  
+
   // Handle node click from Railway
   const handleNodeClick = useCallback((version: string, revision: string) => {
     const element = document.getElementById(`${version}-${revision}`)
@@ -81,29 +83,29 @@ export const useChangelogScroll = (entries: Entry[]) => {
       updateURL(version, revision)
     }
   }, [updateURL])
-  
+
   // Handle scroll to detect current revision
   useEffect(() => {
     if (!scrollContainerRef.current) return
-    
+
     // Set up Intersection Observer
     const options = {
       root: scrollContainerRef.current,
       rootMargin: '-40% 0px -40% 0px', // Focus on middle of viewport
       threshold: 0,
     }
-    
+
     observerRef.current = new IntersectionObserver((entries) => {
       if (isScrollingRef.current) return
-      
+
       const visibleEntry = entries.find(entry => entry.isIntersecting)
       if (visibleEntry) {
         const [version, ...dateParts] = visibleEntry.target.id.split('-')
         const revision = dateParts.join('-')
-        
+
         if (version && revision) {
           setCurrentPosition({ version, revision })
-          
+
           // Debounce URL updates
           if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current)
@@ -114,7 +116,7 @@ export const useChangelogScroll = (entries: Entry[]) => {
         }
       }
     }, options)
-    
+
     // Observe all revision cards
     entries.forEach(entry => {
       const version = getVersion(entry)
@@ -125,7 +127,7 @@ export const useChangelogScroll = (entries: Entry[]) => {
         }
       })
     })
-    
+
     return () => {
       observerRef.current?.disconnect()
       if (scrollTimeoutRef.current) {
@@ -133,27 +135,26 @@ export const useChangelogScroll = (entries: Entry[]) => {
       }
     }
   }, [entries, updateURL, getVersion])
-  
+
   // Handle version boundary scrolling
   const handleScroll = useCallback(() => {
     if (!currentPosition || !scrollContainerRef.current) return
-    
+
     const container = scrollContainerRef.current
     const { scrollTop, scrollHeight, clientHeight } = container
-    
+
     const currentEntry = versionMap.get(currentPosition.version)
     if (!currentEntry) return
-    
+
     const currentRevisionIndex = currentEntry.revisions.findIndex(
-      r => r.date === currentPosition.revision
+      r => r.date === currentPosition.revision,
     )
-    
+
     // Check if at version boundaries
     const atVersionTop = currentRevisionIndex === 0 && scrollTop < 100
-    const atVersionBottom = 
-      currentRevisionIndex === currentEntry.revisions.length - 1 && 
-      scrollTop + clientHeight > scrollHeight - 100
-    
+    const atVersionBottom = currentRevisionIndex === currentEntry.revisions.length - 1
+      && scrollTop + clientHeight > scrollHeight - 100
+
     if (atVersionBottom) {
       // Jump to parent version
       const parentVersion = getParentVersion(currentPosition.version)
@@ -164,7 +165,9 @@ export const useChangelogScroll = (entries: Entry[]) => {
           const firstRevision = parentEntry.revisions[0]
           if (firstRevision) {
             handleNodeClick(parentVersion, firstRevision.date)
-            setTimeout(() => { isScrollingRef.current = false }, 500)
+            setTimeout(() => {
+              isScrollingRef.current = false
+            }, 500)
           }
         }
       }
@@ -177,12 +180,14 @@ export const useChangelogScroll = (entries: Entry[]) => {
         if (lastRevision) {
           isScrollingRef.current = true
           handleNodeClick(childVersion, lastRevision.date)
-          setTimeout(() => { isScrollingRef.current = false }, 500)
+          setTimeout(() => {
+            isScrollingRef.current = false
+          }, 500)
         }
       }
     }
   }, [currentPosition, versionMap, getParentVersion, getChildVersion, handleNodeClick, getVersion])
-  
+
   // Handle deep linking on mount
   useEffect(() => {
     const pathMatch = location.pathname.match(/\/changelog\/version\/([^\/]+)\/revision\/(.+)/)
@@ -199,7 +204,7 @@ export const useChangelogScroll = (entries: Entry[]) => {
       }
     }
   }, [location.pathname])
-  
+
   return {
     scrollContainerRef,
     currentPosition,

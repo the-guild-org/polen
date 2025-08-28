@@ -110,7 +110,6 @@ export function useRouteData(): Record<string, unknown> {
         acc[match.id] = decoded
       } catch (error) {
         // Log decode errors but don't throw to allow partial data access
-        
       }
     }
     return acc

@@ -20,8 +20,7 @@ import { staticCommand } from './commands/static.js'
 const polenMain = Command.make(
   'polen',
   { allowGlobal: allowGlobalParameter },
-  ({ allowGlobal }) =>
-    Console.log('Polen Effect CLI - Use --help to see available commands')
+  ({ allowGlobal }) => Console.log('Polen Effect CLI - Use --help to see available commands'),
 )
 
 // Combine all commands into the main CLI
@@ -66,7 +65,6 @@ try {
     },
   })
 } catch (error) {
-  
   process.exit(1)
 }
 
@@ -77,5 +75,5 @@ const filteredArgv = process.argv.filter(arg => arg !== '--allow-global')
 NodeRuntime.runMain(
   cli(filteredArgv).pipe(
     Effect.provide(NodeContext.layer),
-  )
+  ),
 )

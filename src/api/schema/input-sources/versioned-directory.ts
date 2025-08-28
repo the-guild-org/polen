@@ -105,7 +105,7 @@ export const readOrThrow = (
 
     for (const entry of entries) {
       const versionPath = Path.join(config.path, entry)
-      
+
       // Check if this is a directory
       const dirStatsResult = yield* Effect.either(fs.stat(versionPath))
       if (dirStatsResult._tag === 'Left' || dirStatsResult.right.type !== 'Directory') {
@@ -157,7 +157,7 @@ export const readOrThrow = (
       const revisionFiles = dirFiles
         .filter(file => /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file))
         .sort() // Sort chronologically
-      
+
       // If no revision files, check for schema.graphql
       if (revisionFiles.length === 0) {
         const schemaPath = Path.join(versionPath, 'schema.graphql')
@@ -293,14 +293,14 @@ export const readOrThrow = (
           if (version.parentVersion) {
             const parentVersionStr = Version.toString(version.parentVersion)
             const parentVersionData = versionMap.get(parentVersionStr)
-            
+
             if (parentVersionData) {
               // Find the specific revision to branch from
               let parentRevision: Revision.Revision | null = null
               if (version.branchDate && parentVersionData.revisions.length > 0) {
                 // Find the revision matching the branch date
                 const matchingRevisionIndex = parentVersionData.revisions.findIndex(
-                  rev => rev.date === version.branchDate
+                  rev => rev.date === version.branchDate,
                 )
                 if (matchingRevisionIndex >= 0) {
                   // Calculate parent's revisions up to branch point
@@ -330,7 +330,7 @@ export const readOrThrow = (
                       })),
                     { concurrency: 1 },
                   )
-                  
+
                   const parentSchemaAtBranch = parentVersionData.revisions[matchingRevisionIndex]?.schema
                   parentSchema = Schema.Versioned.make({
                     version: version.parentVersion,
@@ -401,7 +401,7 @@ export const loader = InputSource.createEffect({
       // Check if at least one entry looks like a version directory
       for (const entry of entries) {
         const versionPath = Path.join(config.path, entry)
-        
+
         // Check if it's a directory
         const dirStatsResult = yield* Effect.either(fs.stat(versionPath))
         if (dirStatsResult._tag === 'Left' || dirStatsResult.right.type !== 'Directory') {
@@ -425,7 +425,7 @@ export const loader = InputSource.createEffect({
           // Check for revision files or schema.graphql
           const dirFiles = yield* Effect.either(fs.readDirectory(versionPath))
           if (dirFiles._tag === 'Right') {
-            const hasRevisions = dirFiles.right.some(file => 
+            const hasRevisions = dirFiles.right.some(file =>
               /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql'
             )
             if (hasRevisions) {
@@ -496,7 +496,7 @@ export const loader = InputSource.createEffect({
           const hasSchemaFiles = dirFiles.right.some(file =>
             /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql'
           )
-          
+
           if (hasSchemaFiles) {
             debug('found valid schema files, proceeding with full read')
             // Found at least one valid version directory, proceed with full read

@@ -1,41 +1,41 @@
-import { Command, Options, Args } from '@effect/cli'
-import { Effect, Console, Option } from 'effect'
 import { Api } from '#api/index'
+import { Args, Command, Options } from '@effect/cli'
 import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
 import * as Ansis from 'ansis'
 import consola from 'consola'
+import { Console, Effect, Option } from 'effect'
 import { $ } from 'zx'
 
 // Define all the options and arguments exactly matching the original
 const nameArg = Args.text({ name: 'name' }).pipe(
   Args.optional,
   Args.withDescription(
-    'The name of your project. Used by the package name and the default path. Defaults to a random name.'
-  )
+    'The name of your project. Used by the package name and the default path. Defaults to a random name.',
+  ),
 )
 
 const pathArg = Args.text({ name: 'path' }).pipe(
   Args.optional,
   Args.withDescription(
-    'The path to a directory to create your project. Must point to an empty or non-existing directory. Defaults to a new directory named after your project in your cwd (current working directory).'
-  )
+    'The path to a directory to create your project. Must point to an empty or non-existing directory. Defaults to a new directory named after your project in your cwd (current working directory).',
+  ),
 )
 
 const link = Options.boolean('link').pipe(
   Options.withDefault(false),
   Options.withDescription(
-    'When installing polen, do so as a link. You must have Polen globally linked on your machine.'
-  )
+    'When installing polen, do so as a link. You must have Polen globally linked on your machine.',
+  ),
 )
 
 const version = Options.text('version').pipe(
   Options.optional,
-  Options.withDescription('Version of Polen to use. Defaults to latest release. Ignored if --link is used.')
+  Options.withDescription('Version of Polen to use. Defaults to latest release. Ignored if --link is used.'),
 )
 
 const example = Options.choice('example', ['hive']).pipe(
   Options.withDefault('hive' as const),
-  Options.withDescription('The example to use to scaffold your project.')
+  Options.withDescription('The example to use to scaffold your project.'),
 )
 
 const getProjectRoot = async (args: { name?: string; path?: string }): Promise<string> => {
@@ -83,7 +83,7 @@ const copyGitRepositoryTemplate = async (input: {
       // Verify the example exists
       if (!await Fs.exists(templatePath)) {
         consola.error(
-          `Example "${input.exampleName}" not found in the Polen repository. Are you using the latest version of the CLI?`
+          `Example "${input.exampleName}" not found in the Polen repository. Are you using the latest version of the CLI?`,
         )
         await cleanup()
         throw new Error(`Example not found`)
@@ -113,14 +113,16 @@ export const create = Command.make(
     example,
   },
   ({ name, path, link, version, example }) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const finalName = Str.Case.kebab(Option.getOrUndefined(name) ?? Name.generate())
       const nameValue = Option.getOrUndefined(name)
       const pathValue = Option.getOrUndefined(path)
-      const projectRoot = yield* Effect.promise(() => getProjectRoot({ 
-        ...(nameValue && { name: nameValue }),
-        ...(pathValue && { path: pathValue })
-      }))
+      const projectRoot = yield* Effect.promise(() =>
+        getProjectRoot({
+          ...(nameValue && { name: nameValue }),
+          ...(pathValue && { path: pathValue }),
+        })
+      )
       const project$ = $({ cwd: projectRoot })
 
       console.log('')
@@ -161,5 +163,5 @@ export const create = Command.make(
       consola.success('Your project is ready! Get Started:')
       console.log('')
       console.log(Ansis.magenta(`  cd ${Path.relative(process.cwd(), projectRoot)} && pnpm dev`))
-    })
+    }),
 )

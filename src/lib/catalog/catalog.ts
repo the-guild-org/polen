@@ -71,4 +71,3 @@ export const getRevisions = (catalog: Catalog): ReadonlyArray<Versioned.Entry['r
     (versioned) => versioned.entries.flatMap(entry => entry.revisions),
     (unversioned) => unversioned.schema.revisions,
   )(catalog)
-

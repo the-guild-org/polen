@@ -149,7 +149,7 @@ export const create = async (parameters: {
               }
             } catch (error) {
               // Log any errors that occur
-              
+
               if (!urlFound) {
                 reject(error)
               }

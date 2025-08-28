@@ -95,11 +95,9 @@ export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
     const devAssetsDir = config.paths.framework.devAssets.schemas
     await NodeFs.mkdir(devAssetsDir, { recursive: true })
     const catalogPath = NodePath.join(devAssetsDir, 'catalog.json')
-    
-    
+
     const encodedCatalog = await Effect.runPromise(Catalog.encode(catalog))
-    
-    
+
     await NodeFs.writeFile(catalogPath, JSON.stringify(encodedCatalog, null, 2))
 
     debug(`devAssetsWritten`)

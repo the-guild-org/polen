@@ -1,12 +1,12 @@
+import { Api } from '#api/index'
 import { Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
-import { Api } from '#api/index'
 import { allowGlobalParameter } from '../../_/parameters.js'
 
 const depth = Options.integer('depth').pipe(
   Options.withAlias('d'),
   Options.withDefault(2),
-  Options.withDescription('Maximum depth for directory tree display')
+  Options.withDescription('Maximum depth for directory tree display'),
 )
 
 // Helper to format bytes
@@ -48,7 +48,7 @@ export const cacheShow = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ depth, allowGlobal }) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       // Get cache info
       const info = yield* Effect.promise(() => Api.Cache.info({ depth }))
 
@@ -95,5 +95,5 @@ export const cacheShow = Command.make(
       } else {
         console.log('  Status: empty')
       }
-    })
+    }),
 )

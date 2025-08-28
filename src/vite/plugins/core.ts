@@ -159,10 +159,9 @@ export const Core = (config: Config.Config): Vite.PluginOption[] => {
             }
 
             // Encode the catalog to convert GraphQLSchema to AST before serializing
-            
+
             const encodedCatalog = await Effect.runPromise(Catalog.encode(schemaResult.data))
-            
-            
+
             return `export default ${JSON.stringify(encodedCatalog)}`
           },
         },

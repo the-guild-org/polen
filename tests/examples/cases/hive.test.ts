@@ -12,7 +12,6 @@ test('no hydration errors on navigation links', async ({ runDev, page }) => {
   page.on('console', msg => {
     if (msg.type() === 'error') {
       errors.push(msg.text())
-      
     }
   })
 
@@ -47,12 +46,10 @@ test('hive guide page renders with MDX content', async ({ runDev, page }) => {
   // Listen for errors
   page.on('console', msg => {
     if (msg.type() === 'error') {
-      
     }
   })
 
   page.on('pageerror', error => {
-    
   })
 
   // Navigate to home page first

@@ -1,10 +1,10 @@
-import { Command } from '@effect/cli'
-import { Effect, Option } from 'effect'
 import { Api } from '#api/index'
-import { allowGlobalParameter, projectParameter } from '../../_/parameters.js'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
+import { Command } from '@effect/cli'
 import { Fs, Path } from '@wollybeard/kit'
 import consola from 'consola'
+import { Effect, Option } from 'effect'
+import { allowGlobalParameter, projectParameter } from '../../_/parameters.js'
 
 export const configCreate = Command.make(
   'create',
@@ -13,7 +13,7 @@ export const configCreate = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ project, allowGlobal }) =>
-    Effect.gen(function* () {
+    Effect.gen(function*() {
       const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
 
       const isValidProject = yield* Effect.promise(() => Api.Project.validateProjectDirectory(dir))
@@ -37,11 +37,13 @@ export default Polen.defineConfig({
         return
       }
 
-      yield* Effect.promise(() => Fs.write({
-        path: filePath,
-        content: fileContent,
-      }))
+      yield* Effect.promise(() =>
+        Fs.write({
+          path: filePath,
+          content: fileContent,
+        })
+      )
 
       consola.success(`Created Polen configuration file at ${fileName}`)
-    })
+    }),
 )

@@ -386,10 +386,12 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
 
     // Create the hydrated schema for unversioned catalog using proper constructors
     const schemaHydratable: SchemaType = Schema.Unversioned.make({
-      revisions: cat.schema.revisions.map((r: any) => Revision.make({
-        date: r.date,
-        changes: r.changes,
-      })),
+      revisions: cat.schema.revisions.map((r: any) =>
+        Revision.make({
+          date: r.date,
+          changes: r.changes,
+        })
+      ),
       definition: cat.schema.definition,
     })
 
@@ -429,10 +431,12 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
             definition: entry.parent.definition,
           })
           : null,
-        revisions: entry.revisions.map(r => Revision.make({
-          date: r.date,
-          changes: r.changes,
-        })),
+        revisions: entry.revisions.map(r =>
+          Revision.make({
+            date: r.date,
+            changes: r.changes,
+          })
+        ),
         definition: entry.schema.definition,
       })
 
