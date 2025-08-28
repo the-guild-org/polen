@@ -12,12 +12,17 @@ import { ComponentDispatch } from './ComponentDispatch.js'
 
 export const renderDate = (dateString: string) => {
   // DateOnly is in YYYY-MM-DD format
-  const date = new Date(dateString + 'T00:00:00Z')
+  // Parse the date parts to avoid timezone issues
+  const parts = dateString.split('-').map(Number)
+  const year = parts[0]!
+  const month = parts[1]!
+  const day = parts[2]!
+  const date = new Date(Date.UTC(year, month - 1, day))
   return date.toLocaleString(`default`, {
     month: `long`,
     year: `numeric`,
     day: `numeric`,
-    timeZone: `utc`,
+    timeZone: `UTC`,
   })
 }
 

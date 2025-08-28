@@ -131,7 +131,7 @@ export default Polen.defineConfig({
 
 ### Versioned Directory Structure
 
-The versioned directory source organizes schemas into separate subdirectories for clear version boundaries. This is ideal for APIs with distinct major versions rather than just evolutionary revisions.
+The versioned directory source organizes schemas into version directories with support for both versions and revisions within each version. This provides Git-like semantics where versions are like branches and revisions are like commits.
 
 ```ts
 import { Polen } from 'polen'
@@ -150,41 +150,61 @@ export default Polen.defineConfig({
 
 #### Directory Structure Examples
 
-**Semantic Versioning:**
+**Simple Versions (No Revisions):**
 
 ```
 schema/
   1.0.0/
-    schema.graphql
-  1.1.0/
-    schema.graphql  
+    schema.graphql      # Single schema file per version
   2.0.0/
     schema.graphql
 ```
 
-**Date-based Versioning:**
+**Versions with Revisions:**
 
 ```
 schema/
-  2024-01-15/
-    schema.graphql
-  2024-03-20/
-    schema.graphql
-  2024-06-10/
-    schema.graphql
+  1.0.0/
+    2024-01-15.graphql  # Initial release
+    2024-02-20.graphql  # Added evolution queries
+    2024-03-15.graphql  # Added battle system
+  2.0.0/
+    2024-04-01.graphql  # Major redesign
+    2024-05-10.graphql  # Added features
 ```
 
-**Custom Versioning:**
+**Versions with Branch Points:**
+
+Directory names can encode where a version branched from using the format: `<version>[><parent-version>[@<branch-date>]]`
 
 ```
 schema/
-  v1/
-    schema.graphql
-  v2-beta/
-    schema.graphql
-  production/
-    schema.graphql
+  1.0.0/                          # Root version
+    2024-01-15.graphql
+    2024-02-20.graphql
+    2024-03-15.graphql
+    
+  2.0.0>1.0.0@2024-02-20/        # Branched from 1.0.0 at revision 2024-02-20
+    2024-04-01.graphql
+    2024-05-10.graphql
+    
+  2.1.0>2.0.0/                   # Branched from 2.0.0 (no specific revision)
+    2024-06-01.graphql
 ```
+
+Branch point syntax:
+- `2.0.0>1.0.0@2024-02-20` - Version 2.0.0 branched from 1.0.0's revision on 2024-02-20
+- `2.0.0>1.0.0` - Version 2.0.0 branched from 1.0.0's initial state (no revisions)
+- `2.0.0` - Version 2.0.0 has no parent (root version)
+
+#### How It Works
+
+1. **Version Detection**: Directories are parsed to extract version number and optional branch information
+2. **Revision Loading**: Within each version directory, Polen looks for:
+   - Date-named files (`YYYY-MM-DD.graphql`) for revisions
+   - Fallback to `schema.graphql` if no revision files exist
+3. **Change Calculation**: Changes are calculated between adjacent revisions within the same version
+4. **Branch Tracking**: Parent versions and specific revision branch points are preserved for accurate history
 
 ### Precedence
 
@@ -218,14 +238,39 @@ Polen supports documenting different versions of your schema.
 
 Polen distinguishes between two related but different concepts:
 
-- **Version**: An identifier for a different version of your API (e.g., `1.0.0`, `2.0.0`, `v1`, `v2`). Each version represents a distinct API version that may have:
-  - Breaking changes or new features
-  - Different endpoints
-  - Different authentication/headers
-  - Completely different schemas
-- **Revision**: A point-in-time change within a version's evolution, tracking incremental changes and their dates as the schema evolves over time.
+- **Version**: An identifier for a different version of your API (e.g., `1.0.0`, `2.0.0`, `v1`, `v2`). Think of versions like Git branches - they represent major API versions that may diverge and evolve independently. Each version:
+  - Has its own evolution timeline
+  - Can branch from a specific point in another version's history
+  - May contain breaking changes from its parent
+  - Represents a distinct API contract
+  
+- **Revision**: A point-in-time change within a version's evolution. Think of revisions like Git commits - they capture the incremental changes made to a version over time. Each revision:
+  - Has a date (when the change was made)
+  - Contains a set of changes from the previous revision
+  - Helps track the evolution within a single version
+  - Enables detailed changelogs
 
-Each version can have multiple revisions as your schema evolves. This enables Polen to generate detailed changelogs showing what changed between versions and when those changes occurred.
+#### Example: Version and Revision Timeline
+
+```
+Version 1.0.0:
+  2024-01-15 (revision) - Initial schema
+  2024-02-20 (revision) - Added evolution queries
+  2024-03-15 (revision) - Added battle system
+    ┃
+    ┗━━> Version 2.0.0 branches here
+         2024-04-01 (revision) - Major redesign
+         2024-05-10 (revision) - Added regional variants
+           ┃
+           ┗━━> Version 3.0.0 branches here
+                2024-06-01 (revision) - GraphQL Federation
+```
+
+This Git-like model enables:
+- **Version branching**: New versions can branch from any revision of a parent version
+- **Revision tracking**: Each version maintains its own revision history
+- **Change calculation**: Changes are computed between adjacent revisions
+- **Branch point preservation**: Polen knows exactly where versions diverged
 
 ### Version Formats
 
@@ -264,8 +309,8 @@ Here's how supplying multiple schemas maps to the different sources:
 | Source Type                            | How Multiple Schemas Are Provided                                                                      | Examples                                                                                      |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | **[File](#file-convention)**           | N/A (single schema only)                                                                               | N/A                                                                                           |
-| **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [version](#version-formats) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre>                        |
-| **Versioned Directory**                | Create subdirectories for each version, each containing a `schema.graphql` file                        | <pre>schema/<br>├── 1.0.0/<br>│ └── schema.graphql<br>└── 2.0.0/<br> └── schema.graphql</pre> |
+| **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [revision](#version-formats) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre>                        |
+| **Versioned Directory**                | Create version subdirectories with revision files inside, optionally with branch point syntax          | <pre>schema/<br>├── 1.0.0/<br>│ ├── 2024-01-15.graphql<br>│ └── 2024-02-20.graphql<br>└── 2.0.0>1.0.0@2024-02-20/<br> └── 2024-04-01.graphql</pre> |
 | **[Configuration](#configuration)**    | Define multiple versions in `sources.memory.versions` array                                            | [See example above](#configuration)                                                           |
 | **Introspection File**                 | N/A (single schema only)                                                                               | N/A                                                                                           |
 | **Automatic Introspection**            | N/A (single schema only)                                                                               | N/A                                                                                           |

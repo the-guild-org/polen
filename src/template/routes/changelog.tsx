@@ -5,7 +5,11 @@ import { ChangelogLoaderData } from '#template/route-schemas/route-schemas'
 import { Effect, Match } from 'effect'
 import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
 import { Changelog } from '../components/Changelog.js'
+import { Railway } from '../components/Changelog/Railway.js'
+import { VersionColumns } from '../components/Changelog/VersionColumns.js'
+import { useChangelogScroll } from '../hooks/useChangelogScroll.js'
 import { ChangelogLayout } from '../layouts/index.js'
+import { ChangelogRailwayLayout } from '../layouts/ChangelogRailwayLayout.js'
 
 const changelogLoader = async () => {
   // Check if catalog exists first
@@ -29,25 +33,53 @@ const Component = () => {
     return <div>No schema changes available for changelog.</div>
   }
 
-  // Extract revisions based on catalog type
-  const revisions = Match.value(catalog).pipe(
-    Match.tag('CatalogUnversioned', (c) => c.schema.revisions),
-    Match.tag('CatalogVersioned', (c) => c.entries.flatMap(e => e.revisions)),
+  // Use entries directly for versioned, wrap unversioned in single entry
+  const entries = Match.value(catalog).pipe(
+    Match.tag('CatalogVersioned', (c) => {
+      // Entries already have the correct structure: { schema, parent, revisions }
+      return c.entries
+    }),
+    Match.tag('CatalogUnversioned', (c) => [{
+      schema: c.schema,
+      parent: null,
+      revisions: c.schema.revisions
+    }]),
     Match.exhaustive,
   )
 
-  if (revisions.length === 0) {
+  if (entries.length === 0 || entries.every(e => e.revisions.length === 0)) {
     return <div>No schema changes available for changelog.</div>
   }
 
-  // For now, always show revisions in a flat list
-  // TODO: In the future, enhance to show grouped by version for versioned schemas
+  // Use the new railway UI
+  const {
+    scrollContainerRef,
+    currentPosition,
+    handleNodeClick,
+    handleScroll,
+  } = useChangelogScroll(entries as any)
+  
   return (
-    <ChangelogLayout revisions={revisions as Revision.Revision[]}>
-      <Changelog
-        revisions={revisions as [Revision.Revision, ...Revision.Revision[]]}
-      />
-    </ChangelogLayout>
+    <div 
+      ref={scrollContainerRef}
+      onScroll={handleScroll}
+      style={{ height: '100vh', overflow: 'auto' }}
+    >
+      <ChangelogRailwayLayout
+        railway={
+          <Railway
+            entries={entries as any}
+            currentPosition={currentPosition}
+            onNodeClick={handleNodeClick}
+          />
+        }
+      >
+        <VersionColumns
+          entries={entries as any}
+          currentRevision={currentPosition ? `${currentPosition.version}-${currentPosition.revision}` : undefined}
+        />
+      </ChangelogRailwayLayout>
+    </div>
   )
 }
 
@@ -56,4 +88,12 @@ export const changelog = route({
   path: `changelog`,
   loader: changelogLoader,
   Component,
+  children: [
+    // Support deep linking to specific version/revision
+    route({
+      path: `version/:version/revision/:revision`,
+      loader: changelogLoader,
+      Component,
+    }),
+  ],
 })
