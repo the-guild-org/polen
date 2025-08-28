@@ -4,7 +4,6 @@ import { Change } from '#lib/change/$'
 import { DateOnly } from '#lib/date-only/$'
 import { Grafaid } from '#lib/grafaid'
 import { Revision } from '#lib/revision/$'
-import { SchemaDefinition } from '#lib/schema-definition/$'
 import { Schema } from '#lib/schema/$'
 import { debugPolen } from '#singletons/debug'
 import { PlatformError } from '@effect/platform/Error'
@@ -194,8 +193,8 @@ const read = (
     )
     debug(`read revisions`)
 
-    // Sort by date ascending (oldest first)
-    revisionInputsLoaded.sort((a, b) => a.date.localeCompare(b.date))
+    // Sort by date descending (newest first for consistent catalog structure)
+    revisionInputsLoaded.sort((a, b) => b.date.localeCompare(a.date))
 
     const revisions = yield* Effect.all(
       Arr.map(revisionInputsLoaded, (item, index) =>
@@ -220,15 +219,15 @@ const read = (
       { concurrency: 1 }, // Keep sequential for correct changeset calculation
     )
 
-    // Get the latest schema (last in the array after sorting)
-    const latestSchemaData = revisionInputsLoaded[revisionInputsLoaded.length - 1]?.schema
+    // Get the latest schema (first in the array after sorting newest first)
+    const latestSchemaData = revisionInputsLoaded[0]?.schema
     if (!latestSchemaData) {
       return yield* Effect.fail(InputSource.InputSourceError('directory', 'No schema files found'))
     }
 
     // Create unversioned schema with full revisions
     const schema = Schema.Unversioned.make({
-      revisions: revisions.slice().reverse(), // Back to chronological order
+      revisions: revisions, // Already sorted newest first
       definition: latestSchemaData, // GraphQLSchema object
     })
 

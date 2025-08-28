@@ -1,62 +1,81 @@
+import { Schema as S } from 'effect'
 import { proxy } from 'valtio'
 
-/**
- * Toast notification types
- */
-export const Type = {
-  info: 'info',
-  success: 'success',
-  warning: 'warning',
-  error: 'error',
-} as const
-
-export type Type = typeof Type[keyof typeof Type]
+// ============================================================================
+// Schema Definitions
+// ============================================================================
 
 /**
- * Toast notification interface
+ * Toast notification types schema
  */
-export interface Toast {
+export const Type = S.Enums(
+  {
+    Info: 'info',
+    Success: 'success',
+    Warning: 'warning',
+    Error: 'error',
+  } as const,
+)
+export type Type = S.Schema.Type<typeof Type>
+
+/**
+ * Toast action schema
+ */
+export const ToastAction = S.Struct({
+  /** Action button label */
+  label: S.String,
+  /** Action button click handler */
+  onClick: S.Any, // Functions can't be validated
+})
+
+export type ToastAction = S.Schema.Type<typeof ToastAction>
+
+/**
+ * Toast notification schema
+ */
+export const Toast = S.Struct({
   /** Unique identifier for the toast */
-  id: string
+  id: S.String,
   /** Primary message text */
-  message: string
+  message: S.String,
   /** Optional secondary description text */
-  description?: string
+  description: S.optional(S.String),
   /** Visual type/variant of the toast */
-  type?: Type
+  type: S.optional(Type),
   /** Duration in milliseconds before auto-dismiss. Set to 0 to disable auto-dismiss */
-  duration?: number
+  duration: S.optional(S.Number),
   /** Optional action buttons configuration */
-  actions: {
-    /** Action button label */
-    label: string
-    /** Action button click handler */
-    onClick: () => void
-  }[]
-}
+  actions: S.Array(ToastAction),
+})
+
+export type Toast = S.Schema.Type<typeof Toast>
 
 /**
- * Toast store state interface
+ * Toast store state
  */
-export interface State {
+export const State = S.Struct({
   /** Array of active toast notifications */
-  toasts: Toast[]
-}
+  toasts: S.mutable(S.Array(Toast)),
+})
 
-/**
- * Initial state for the toast store
- */
+export type State = S.Schema.Type<typeof State>
+
+// ============================================================================
+// Initial State & Defaults
+// ============================================================================
+
 export const initialState: State = {
   toasts: [],
 }
 
-/**
- * Default values for toast properties
- */
 const toastDefaults = {
   duration: 5000,
   actions: [],
 } satisfies Partial<Toast>
+
+// ============================================================================
+// Store
+// ============================================================================
 
 /**
  * Toast notification store
@@ -89,7 +108,7 @@ export const store = proxy({
    */
   remove(id: string): void {
     const index = store.toasts.findIndex(t => t.id === id)
-    if (index > -1) {
+    if (index !== -1) {
       store.toasts.splice(index, 1)
     }
   },
@@ -116,7 +135,7 @@ export const store = proxy({
    * @returns Generated toast ID
    */
   info(message: string, options?: InputOptions) {
-    return store.add({ ...toastDefaults, ...options, message, type: Type.info })
+    return store.add({ ...toastDefaults, ...options, message, type: Type.enums.Info })
   },
 
   /**
@@ -126,7 +145,7 @@ export const store = proxy({
    * @returns Generated toast ID
    */
   success(message: string, options?: InputOptions) {
-    return store.add({ ...toastDefaults, ...options, message, type: Type.success })
+    return store.add({ ...toastDefaults, ...options, message, type: Type.enums.Success })
   },
 
   /**
@@ -136,7 +155,7 @@ export const store = proxy({
    * @returns Generated toast ID
    */
   warning(message: string, options?: InputOptions) {
-    return store.add({ ...toastDefaults, ...options, message, type: Type.warning })
+    return store.add({ ...toastDefaults, ...options, message, type: Type.enums.Warning })
   },
 
   /**
@@ -146,7 +165,7 @@ export const store = proxy({
    * @returns Generated toast ID
    */
   error(message: string, options?: InputOptions) {
-    return store.add({ ...toastDefaults, ...options, message, type: Type.error })
+    return store.add({ ...toastDefaults, ...options, message, type: Type.enums.Error })
   },
 })
 

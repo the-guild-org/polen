@@ -95,18 +95,15 @@ function processVersionedCatalog(
   catalog: Catalog.Versioned.Versioned,
   routes: string[],
 ): void {
-  for (const entry of catalog.entries) {
-    const version = entry.schema.version
+  for (const schema of catalog.entries) {
+    const version = schema.version
     routes.push(`/reference/version/${version}`)
 
-    // Process schema definition if it exists
-    if (entry.schema.definition) {
-      processSchemaDefinition(
-        entry.schema.definition,
-        routes,
-        `/reference/version/${version}`,
-      )
-    }
+    processSchemaDefinition(
+      schema.definition,
+      routes,
+      `/reference/version/${version}`,
+    )
   }
 }
 

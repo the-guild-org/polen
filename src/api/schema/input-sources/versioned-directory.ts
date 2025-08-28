@@ -11,7 +11,7 @@ import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Arr, Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { type GraphQLSchema } from 'graphql'
+import type { GraphQLSchema } from 'graphql'
 
 const debug = debugPolen.sub(`schema:data-source-versioned-schema-directory`)
 
@@ -163,8 +163,6 @@ export const readOrThrow = (
         const schemaPath = Path.join(versionPath, 'schema.graphql')
         const schemaExistsResult = yield* Effect.either(fs.stat(schemaPath))
         if (schemaExistsResult._tag === 'Right' && schemaExistsResult.right.type === 'File') {
-          // Use today's date for the single schema file
-          const today = new Date().toISOString().split('T')[0]!
           revisionFiles.push('schema.graphql')
         } else {
           debug(`skipping ${entry} - no schema files found`)
@@ -256,6 +254,21 @@ export const readOrThrow = (
     const catalogEntries = yield* Effect.all(
       Arr.map(versions, (version) =>
         Effect.gen(function*() {
+          // Get parent schema for first revision comparison if this is a branched version
+          let parentSchemaForComparison: GraphQLSchema | null = null
+          if (version.parentVersion && version.branchDate) {
+            const parentVersionStr = Version.toString(version.parentVersion)
+            const parentVersionData = versionMap.get(parentVersionStr)
+            if (parentVersionData) {
+              const matchingRevisionIndex = parentVersionData.revisions.findIndex(
+                rev => rev.date === version.branchDate,
+              )
+              if (matchingRevisionIndex >= 0) {
+                parentSchemaForComparison = parentVersionData.revisions[matchingRevisionIndex]?.schema ?? null
+              }
+            }
+          }
+
           // Calculate revisions with changes
           const revisions = yield* Effect.all(
             Arr.map(version.revisions, (revisionData, index) =>
@@ -263,7 +276,11 @@ export const readOrThrow = (
                 const current = revisionData
                 const previous = version.revisions[index - 1]
 
-                const before = previous?.schema ?? Grafaid.Schema.empty
+                // For first revision of a branched version, compare against parent's schema at branch point
+                // Otherwise compare against previous revision in same version (or empty if first version)
+                const before = index === 0 && parentSchemaForComparison
+                  ? parentSchemaForComparison
+                  : (previous?.schema ?? Grafaid.Schema.empty)
                 const after = current.schema
 
                 const changes = yield* Change.calcChangeset({ before, after }).pipe(
@@ -295,8 +312,6 @@ export const readOrThrow = (
             const parentVersionData = versionMap.get(parentVersionStr)
 
             if (parentVersionData) {
-              // Find the specific revision to branch from
-              let parentRevision: Revision.Revision | null = null
               if (version.branchDate && parentVersionData.revisions.length > 0) {
                 // Find the revision matching the branch date
                 const matchingRevisionIndex = parentVersionData.revisions.findIndex(
@@ -334,7 +349,7 @@ export const readOrThrow = (
                   const parentSchemaAtBranch = parentVersionData.revisions[matchingRevisionIndex]?.schema
                   parentSchema = Schema.Versioned.make({
                     version: version.parentVersion,
-                    parent: null, // TODO: Support nested parent relationships
+                    branchPoint: null, // TODO: Support nested branchPoint relationships
                     revisions: parentRevisions.reverse(), // Newest first
                     definition: parentSchemaAtBranch ?? Grafaid.Schema.empty,
                   })
@@ -343,27 +358,34 @@ export const readOrThrow = (
                 // No specific branch date or no revisions - use parent's initial state
                 parentSchema = Schema.Versioned.make({
                   version: version.parentVersion,
-                  parent: null,
-                  revisions: [],
+                  branchPoint: null,
+                  revisions: [], // No revisions for initial state
                   definition: parentVersionData.revisions[0]?.schema ?? Grafaid.Schema.empty,
                 })
               }
             }
           }
 
-          // Create the versioned schema
+          // Create branchPoint if we have a parent and branch date
+          let branchPoint: Schema.Versioned.BranchPoint | null = null
+          if (parentSchema && version.branchDate) {
+            // Find the revision at the branch point
+            const branchRevision = parentSchema.revisions.find(r =>
+              r.date === version.branchDate
+            )
+            if (branchRevision) {
+              branchPoint = { schema: parentSchema, revision: branchRevision }
+            }
+          }
+
           const schema = Schema.Versioned.make({
             version: version.version,
-            parent: parentSchema,
+            branchPoint: branchPoint,
             revisions: revisions.slice().reverse(), // Newest first
             definition: schemaDefinition,
           })
 
-          return {
-            schema,
-            parent: parentSchema,
-            revisions: revisions.slice().reverse(),
-          }
+          return schema
         })),
       { concurrency: 'unbounded' },
     )

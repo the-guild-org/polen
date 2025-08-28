@@ -97,3 +97,16 @@ export const getMonth = (date: DateOnly): number => parseInt(date.substring(5, 7
  * Get the day from a date (1-31)
  */
 export const getDay = (date: DateOnly): number => parseInt(date.substring(8, 10), 10)
+
+/**
+ * Calculate the number of days between two dates
+ * @param from - The starting date
+ * @param to - The ending date
+ * @returns Number of days between the dates (positive if to > from, negative otherwise)
+ */
+export const getDaysBetween = (from: DateOnly, to: DateOnly): number => {
+  const fromDate = toDate(from)
+  const toDate_ = toDate(to)
+  const diffMs = toDate_.getTime() - fromDate.getTime()
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24))
+}

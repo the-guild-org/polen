@@ -9,10 +9,20 @@ import { Version } from '../version/$.js'
 // Schema
 // ============================================================================
 
+export interface BranchPoint {
+  readonly schema: Versioned
+  readonly revision: Revision.Revision
+}
+
+export interface BranchPointEncoded {
+  readonly schema: VersionedEncoded
+  readonly revision: Revision.Revision
+}
+
 export interface Versioned {
   readonly _tag: 'SchemaVersioned'
   readonly version: Version.Version
-  readonly parent: Versioned | null
+  readonly branchPoint: BranchPoint | null
   readonly revisions: ReadonlyArray<Revision.Revision>
   readonly definition: SchemaDefinition.SchemaDefinition
 }
@@ -20,7 +30,7 @@ export interface Versioned {
 export interface VersionedEncoded extends
   ObjReplace<Versioned, {
     readonly version: S.Schema.Encoded<typeof Version.Version>
-    readonly parent: VersionedEncoded | null
+    readonly branchPoint: BranchPointEncoded | null
     readonly revisions: ReadonlyArray<S.Schema.Encoded<typeof Revision.Revision>>
     readonly definition: S.Schema.Encoded<typeof SchemaDefinition.SchemaDefinition>
   }>
@@ -28,9 +38,10 @@ export interface VersionedEncoded extends
 
 export const Versioned = S.TaggedStruct('SchemaVersioned', {
   version: Version.Version,
-  parent: S.NullOr(
-    S.suspend((): S.Schema<Versioned, VersionedEncoded> => Versioned),
-  ),
+  branchPoint: S.NullOr(S.Struct({
+    schema: S.suspend((): S.Schema<Versioned, VersionedEncoded> => Versioned as any),
+    revision: Revision.Revision,
+  })),
   revisions: S.Array(Revision.Revision),
   definition: SchemaDefinition.SchemaDefinition,
 })

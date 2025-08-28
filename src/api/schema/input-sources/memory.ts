@@ -9,14 +9,6 @@ import { Arr } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 
-// Create an empty schema using the same GraphQL instance to avoid realm issues
-const createEmptySchema = (): Effect.Effect<GraphQLSchema, Error> =>
-  Effect.gen(function*() {
-    const emptySDL = 'type Query { _empty: String }'
-    const ast = yield* Grafaid.Schema.AST.parse(emptySDL)
-    return yield* Grafaid.Schema.fromAST(ast)
-  })
-
 /**
  * Configuration for defining schemas programmatically in memory.
  *
@@ -70,19 +62,11 @@ export interface Options {
     | GraphQLSchema
     | GraphQLSchema[]
     | { date: Date; value: GraphQLSchema }[]
-    | Catalog.Catalog
+    | Catalog.Unversioned.Unversioned
 }
 
 export interface Config {
-  versions: { date: Date; value: string | GraphQLSchema }[] | Catalog.Catalog
-}
-
-// Type guard to check if value is a Catalog
-const isCatalog = (value: unknown): value is Catalog.Catalog => {
-  return value !== null
-    && typeof value === 'object'
-    && '_tag' in value
-    && ((value as any)._tag === 'CatalogUnversioned' || (value as any)._tag === 'CatalogVersioned')
+  versions: { date: Date; value: string | GraphQLSchema }[] | Catalog.Unversioned.Unversioned
 }
 
 // Type guard to check if value is a GraphQLSchema
@@ -92,7 +76,7 @@ const isGraphQLSchema = (value: unknown): value is GraphQLSchema => {
 
 export const normalize = (configInput: Options): Config => {
   // If it's already a Catalog, return it as-is
-  if (isCatalog(configInput.versions)) {
+  if (Catalog.is(configInput.versions)) {
     return {
       versions: configInput.versions,
     }
@@ -150,27 +134,17 @@ const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema
 export const read = (
   options: Options,
 ): Effect.Effect<
-  null | { schema: Schema.Unversioned.Unversioned; revisions: Revision.Revision[] },
+  null | { schema: Schema.Unversioned.Unversioned; revisions: readonly Revision.Revision[] },
   InputSource.InputSourceError
 > =>
   Effect.gen(function*() {
     const config = normalize(options)
 
     // If it's already a Catalog, extract schema and revisions
-    if (isCatalog(config.versions)) {
-      if (config.versions._tag === 'CatalogUnversioned') {
-        return {
-          schema: config.versions.schema,
-          revisions: [...config.versions.schema.revisions],
-        }
-      } else {
-        // For versioned catalog, return the latest entry
-        const latestEntry = config.versions.entries[0]
-        if (!latestEntry) return null
-        return {
-          schema: latestEntry.schema as any, // TODO: handle versioned to unversioned conversion
-          revisions: [], // TODO: handle versioned schema revisions
-        }
+    if (Catalog.Unversioned.is(config.versions)) {
+      return {
+        schema: config.versions.schema,
+        revisions: [...config.versions.schema.revisions],
       }
     }
 
@@ -190,7 +164,7 @@ export const read = (
       { concurrency: 'unbounded' },
     )
 
-    versions.sort((a, b) => a.date.getTime() - b.date.getTime())
+    versions.sort((a, b) => b.date.getTime() - a.date.getTime())
 
     const revisions = yield* Effect.all(
       Arr.map(versions, (version, index) =>
@@ -222,20 +196,19 @@ export const read = (
       { concurrency: 1 }, // Keep sequential for correct changeset calculation
     )
 
-    // Get the latest schema
-    const latestSchemaData = versions[versions.length - 1]?.schema
+    // Get the latest schema (first after sorting newest first)
+    const latestSchemaData = versions[0]?.schema
     if (!latestSchemaData) return null
 
-    // Create unversioned schema
     const schema = Schema.Unversioned.make({
-      revisions: revisions.slice().reverse(), // Back to chronological order
+      revisions: revisions, // Already sorted newest first
       definition: latestSchemaData, // GraphQLSchema object
     })
 
-    // Reverse revisions to have newest first
-    revisions.reverse()
-
-    return { schema, revisions }
+    return {
+      schema: schema,
+      revisions: schema.revisions,
+    }
   })
 
 export const loader = InputSource.createEffect({
@@ -247,7 +220,7 @@ export const loader = InputSource.createEffect({
       const config = normalize(options)
 
       // If it's already a Catalog, return it directly
-      if (isCatalog(config.versions)) {
+      if (Catalog.is(config.versions)) {
         return config.versions
       }
 

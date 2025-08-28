@@ -142,8 +142,8 @@ export const loadOrNull = (
       const catalog = loadedSchema.data as Catalog.Catalog
       Catalog.fold(
         (versioned) => {
-          for (const entry of versioned.entries) {
-            Augmentations.apply(entry.schema.definition, augmentations)
+          for (const schema of versioned.entries) {
+            Augmentations.apply(schema.definition, augmentations)
           }
         },
         (unversioned) => {

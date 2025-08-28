@@ -2,11 +2,11 @@ import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
 import { Catalog } from '#lib/catalog/$'
 import { GrafaidOld } from '#lib/grafaid-old'
+import { S } from '#lib/kit-temp/effect'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Version } from '#lib/version/$'
 import { catalog } from '#template/data/catalog'
-import { ReferenceLoaderData } from '#template/route-schemas/route-schemas'
 import { neverCase } from '@wollybeard/kit/language'
 import { Effect, Match } from 'effect'
 import React from 'react'
@@ -18,6 +18,11 @@ import { NamedType } from '../components/NamedType.js'
 import { VersionPicker } from '../components/VersionPicker.js'
 import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
 import { SidebarLayout } from '../layouts/index.js'
+
+const routeSchema = S.Struct({
+  catalog: Catalog.Catalog,
+  requestedVersion: S.String,
+})
 
 const referenceLoader = async ({ params }: any) => {
   const catalog = await Effect.runPromise(catalogBridge.view())
@@ -31,7 +36,7 @@ const referenceLoader = async ({ params }: any) => {
 const ReferenceView = () => {
   const params = useParams() as { version?: string; type?: string; field?: string }
 
-  const loaderData = useLoaderData(ReferenceLoaderData)
+  const loaderData = useLoaderData(routeSchema)
 
   const { catalog, requestedVersion } = loaderData
 
@@ -50,15 +55,15 @@ const ReferenceView = () => {
         // Find the matching version
         let schemaObj
         if (requestedVersion === Api.Schema.VERSION_LATEST) {
-          const latestEntry = c.entries[c.entries.length - 1]
-          schemaObj = latestEntry?.schema
+          const schema = c.entries[c.entries.length - 1]
+          schemaObj = schema
         } else {
-          const entry = c.entries.find(e => Version.toString(e.schema.version) === requestedVersion)
-          schemaObj = entry?.schema
+          const schema = c.entries.find(schema => Version.toString(schema.version) === requestedVersion)
+          schemaObj = schema
         }
         return {
           schema: schemaObj?.definition,
-          availableVersions: c.entries.map(e => Version.toString(e.schema.version)),
+          availableVersions: c.entries.map(schema => Version.toString(schema.version)),
           currentVersion: requestedVersion,
         }
       }),
@@ -149,21 +154,21 @@ const typeAndFieldRoutes = [
     index: true,
     Component: ReferenceView,
     loader: referenceLoader,
-    schema: ReferenceLoaderData,
+    schema: routeSchema,
   }),
   route({
     path: `:type`,
     Component: ReferenceView,
     errorElement: <MissingSchema />,
     loader: referenceLoader,
-    schema: ReferenceLoaderData,
+    schema: routeSchema,
     children: [
       route({
         path: `:field`,
         Component: ReferenceView,
         errorElement: <MissingSchema />,
         loader: referenceLoader,
-        schema: ReferenceLoaderData,
+        schema: routeSchema,
       }),
     ],
   }),
@@ -180,16 +185,12 @@ export const reference = !hasCatalog()
   ? null
   : route({
     path: `reference`,
-    // loader: referenceLoader,
-    // schema: ReferenceLoaderData,
     children: [
       ...typeAndFieldRoutes,
       // Only add version routes if versioned
       ...(Catalog.Versioned.is(catalog)
         ? [route({
           path: `version/:version`,
-          // loader: referenceLoader,
-          // schema: ReferenceLoaderData,
           children: typeAndFieldRoutes,
         })]
         : []),

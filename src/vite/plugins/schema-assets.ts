@@ -6,7 +6,6 @@ import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Cache } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { GraphQLSchema } from 'graphql'
 import * as NodeFs from 'node:fs/promises'
 import * as NodePath from 'node:path'
 

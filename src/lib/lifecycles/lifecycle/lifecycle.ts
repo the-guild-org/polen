@@ -64,7 +64,7 @@ export const equivalence = S.equivalence(Lifecycle)
 // Factory
 // ============================================================================
 
-export const make = EffectKit.Schema.UnionAdt.makeMake(LifecycleSchema)
+export const make: any = EffectKit.Schema.UnionAdt.makeMake(LifecycleSchema)
 
 // ============================================================================
 // Type Utilities

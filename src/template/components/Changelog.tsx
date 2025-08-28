@@ -18,12 +18,13 @@ export const renderDate = (dateString: string) => {
   const month = parts[1]!
   const day = parts[2]!
   const date = new Date(Date.UTC(year, month - 1, day))
-  return date.toLocaleString(`default`, {
-    month: `long`,
-    year: `numeric`,
-    day: `numeric`,
-    timeZone: `UTC`,
-  })
+  return `${year} ${
+    date.toLocaleString('default', {
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC',
+    })
+  }`
 }
 
 export const Changelog: React.FC<{ revisions: Revision.Revision[] }> = ({ revisions }) => {

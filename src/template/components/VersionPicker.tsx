@@ -40,11 +40,11 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
       // Find the schema for the target version
       let targetSchema
       if (newVersion === Api.Schema.VERSION_LATEST) {
-        const latestEntry = catalog.entries[catalog.entries.length - 1]
-        targetSchema = latestEntry?.schema
+        const schema = catalog.entries[catalog.entries.length - 1]
+        targetSchema = schema
       } else {
-        const entry = catalog.entries.find(e => Version.toString(e.schema.version) === newVersion)
-        targetSchema = entry?.schema
+        const schema = catalog.entries.find(schema => Version.toString(schema.version) === newVersion)
+        targetSchema = schema
       }
 
       if (!targetSchema) {

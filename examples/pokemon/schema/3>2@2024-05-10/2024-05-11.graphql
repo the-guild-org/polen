@@ -31,7 +31,7 @@ type Query {
   """
   Search for Pokemon by name
   """
-  searchPokemon(name: String!): [Pokemon!]!
+  searchPokemon(name: String!): PokemonConnection!
   
   """
   Get battle matchup information
@@ -66,7 +66,7 @@ type Mutation {
   """
   Trade Pokemon between trainers
   """
-  tradePokemon(pokemonId: ID!, fromTrainerId: ID!, toTrainerId: ID!): Trade!
+  tradePokemon(pokemonId: ID!, fromTrainerId: ID!, toTrainerId: ID!): Pokemon!
   
   """
   Battle between two Pokemon
@@ -215,27 +215,6 @@ type Pokemon {
 }
 
 """
-Paginated Pokemon results
-"""
-type PokemonConnection {
-  edges: [PokemonEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type PokemonEdge {
-  node: Pokemon!
-  cursor: String!
-}
-
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
-}
-
-"""
 Base statistics that determine a Pokemon's potential
 """
 type Stats {
@@ -279,7 +258,7 @@ type Evolution {
   """
   The Pokemon this evolves into
   """
-  evolvesTo: [Pokemon!]!
+  evolvesTo: Pokemon
   
   """
   The Pokemon this evolved from
@@ -719,4 +698,63 @@ type BattleUpdate {
   criticalHit: Boolean!
   statusInflicted: StatusCondition
   message: String!
+}
+"""
+Paginated list of Pokemon
+"""
+type PokemonConnection {
+  """
+  List of Pokemon edges
+  """
+  edges: [PokemonEdge!]!
+  
+  """
+  Pagination information
+  """
+  pageInfo: PageInfo!
+  
+  """
+  Total count of Pokemon
+  """
+  totalCount: Int!
+}
+
+"""
+Edge in Pokemon connection
+"""
+type PokemonEdge {
+  """
+  The Pokemon at this edge
+  """
+  node: Pokemon!
+  
+  """
+  Cursor for pagination
+  """
+  cursor: String!
+}
+
+"""
+Information about pagination in a connection
+"""
+type PageInfo {
+  """
+  Whether there are more items after this page
+  """
+  hasNextPage: Boolean!
+  
+  """
+  Whether there are items before this page
+  """
+  hasPreviousPage: Boolean!
+  
+  """
+  Cursor of the first edge
+  """
+  startCursor: String
+  
+  """
+  Cursor of the last edge
+  """
+  endCursor: String
 }

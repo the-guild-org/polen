@@ -1,3 +1,4 @@
+import { Match } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { Test } from '../../../tests/unit/helpers/test.js'
 import { DateOnly } from '../date-only/$.js'
@@ -53,16 +54,19 @@ describe('Version', () => {
 
   // dprint-ignore
   Test.suite<{ input: string; expected: string }>('pattern matching', [
+    { name: 'matches on integer version',                                                               input: '123',                                                                                       expected: 'Integer: 123' },
     { name: 'matches on semver version',                                                                input: '1.2.3',                                                                                    expected: 'Semver: 1.2.3' },
     { name: 'matches on date version',                                                                  input: '2024-01-15',                                                                               expected: 'Date: 2024-01-15' },
     { name: 'matches on custom version',                                                                input: 'v1.0-beta',                                                                                expected: 'Custom: v1.0-beta' },
   ], ({ input, expected }) => {
     const version = Version.decodeSync(input)
-    const result = Version.match({
-      onSemver: (v) => `Semver: ${v.value}`,
-      onDate: (v) => `Date: ${v.value}`,
-      onCustom: (v) => `Custom: ${v.value}`,
-    })(version)
+    const result = Match.value(version).pipe(
+      Match.tag('VersionInteger', (v) => `Integer: ${v.value}`),
+      Match.tag('VersionSemver', (v) => `Semver: ${v.value}`),
+      Match.tag('VersionDate', (v) => `Date: ${v.value}`),
+      Match.tag('VersionCustom', (v) => `Custom: ${v.value}`),
+      Match.exhaustive
+    )
     expect(result).toBe(expected)
   })
 

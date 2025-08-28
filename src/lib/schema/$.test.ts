@@ -13,7 +13,7 @@ describe('Schema', () => {
   test('creates versioned schema', () => {
     const versionedSchema = Schema.Versioned.make({
       version: Version.decodeSync('1.0.0'),
-      parent: null,
+      branchPoint: null,
       revisions: [],
       definition: mockGraphQLSchema as any,
     })
@@ -34,7 +34,7 @@ describe('Schema', () => {
   test('type guards work correctly for union', () => {
     const versionedSchema = Schema.Versioned.make({
       version: Version.decodeSync('1.0.0'),
-      parent: null,
+      branchPoint: null,
       revisions: [],
       definition: mockGraphQLSchema as any,
     })

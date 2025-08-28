@@ -1,94 +1,105 @@
+import { Catalog } from '#lib/catalog/$'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
-import { Revision } from '#lib/revision/$'
-import { ChangelogLoaderData } from '#template/route-schemas/route-schemas'
-import { Effect, Match } from 'effect'
-import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
-import { Changelog } from '../components/Changelog.js'
-import { Railway } from '../components/Changelog/Railway.js'
+import { Version } from '#lib/version/$'
+import { Box, Button, Flex } from '@radix-ui/themes'
+import { Effect } from 'effect'
+import React from 'react'
+import { useNavigate, useParams } from 'react-router'
+import { catalogBridge } from '../catalog-bridge.js'
+import {
+  CatalogRailway,
+  type RevisionClickEventHandler,
+  type VersionClickEventHandler,
+} from '../components/CatalogRailway/CatalogRailway.js'
+import { type LayoutMode, RevisionAddress, VersionAddress } from '../components/CatalogRailway/helpers.js'
 import { VersionColumns } from '../components/Changelog/VersionColumns.js'
-import { useChangelogScroll } from '../hooks/useChangelogScroll.js'
 import { ChangelogRailwayLayout } from '../layouts/ChangelogRailwayLayout.js'
-import { ChangelogLayout } from '../layouts/index.js'
+
+const schema = Catalog.Catalog
 
 const changelogLoader = async () => {
-  // Check if catalog exists first
-  if (!hasCatalog()) {
-    return null
-  }
-
-  // For now, we need to get the full catalog using view() until peek selections are implemented
-  // view() returns the fully hydrated catalog
   const catalog = await Effect.runPromise(catalogBridge.view())
-
-  // Return plain data without schema encoding
-  // GraphQLSchema instances will be handled on client
-  return catalog
+  return catalog!
 }
 
 const Component = () => {
-  const catalog = useLoaderData(ChangelogLoaderData)
+  const catalog = useLoaderData(schema)
+  const navigate = useNavigate()
+  const params = useParams()
 
-  if (!catalog) {
-    return <div>No schema changes available for changelog.</div>
+  // Layout mode state
+  const [layoutMode, setLayoutMode] = React.useState<LayoutMode>('uniform')
+
+  // Determine current address from URL params
+  const currentAddress = React.useMemo(() => {
+    const urlVersion = params['version']
+    const urlRevision = params['revision']
+
+    if (!urlVersion) return undefined
+
+    if (Catalog.Unversioned.is(catalog)) return undefined
+
+    // Find matching schema
+    const schema = catalog.entries.find(entry => Version.toString(entry.version) === urlVersion)
+
+    if (!schema) return undefined
+
+    // If revision is provided, create a RevisionAddress
+    if (urlRevision) {
+      const revision = schema.revisions.find(rev => rev.date === urlRevision)
+      return revision ? RevisionAddress.make(schema, revision) : undefined
+    }
+
+    // If only version is provided, create a VersionAddress
+    return VersionAddress.make(schema)
+  }, [catalog, params['version'], params['revision']])
+
+  const handleRevisionClick: RevisionClickEventHandler = (event) => {
+    const versionString = Version.toString(event.address.schema.version)
+    const revisionDate = event.address.revision.date
+    navigate(`/changelog/version/${versionString}/revision/${revisionDate}`)
   }
 
-  // Use entries directly for versioned, wrap unversioned in single entry
-  const entries = Match.value(catalog).pipe(
-    Match.tag('CatalogVersioned', (c) => {
-      // Entries already have the correct structure: { schema, parent, revisions }
-      return c.entries
-    }),
-    Match.tag('CatalogUnversioned', (c) => [{
-      schema: c.schema,
-      parent: null,
-      revisions: c.schema.revisions,
-    }]),
-    Match.exhaustive,
-  )
-
-  if (entries.length === 0 || entries.every(e => e.revisions.length === 0)) {
-    return <div>No schema changes available for changelog.</div>
+  const handleVersionClick: VersionClickEventHandler = (event) => {
+    const versionString = Version.toString(event.schema.version)
+    navigate(`/changelog/version/${versionString}`)
   }
-
-  // Use the new railway UI
-  const {
-    scrollContainerRef,
-    currentPosition,
-    handleNodeClick,
-    handleScroll,
-  } = useChangelogScroll(entries as any)
 
   return (
-    <div
-      ref={scrollContainerRef}
-      onScroll={handleScroll}
-      style={{ height: '100vh', overflow: 'auto' }}
-    >
-      <ChangelogRailwayLayout
-        railway={
-          <Railway
-            entries={entries as any}
-            currentPosition={currentPosition}
-            onNodeClick={handleNodeClick}
-          />
-        }
-      >
-        <VersionColumns
-          entries={entries as any}
-          currentRevision={currentPosition ? `${currentPosition.version}-${currentPosition.revision}` : undefined}
+    <ChangelogRailwayLayout
+      railway={
+        <CatalogRailway
+          catalog={catalog}
+          currentAddress={currentAddress}
+          onRevisionClick={handleRevisionClick}
+          onVersionClick={handleVersionClick}
+          layoutMode={layoutMode}
         />
-      </ChangelogRailwayLayout>
-    </div>
+      }
+    >
+      <VersionColumns
+        catalog={catalog}
+        currentRevision={undefined}
+        layoutMode={layoutMode}
+        onLayoutModeChange={setLayoutMode}
+      />
+    </ChangelogRailwayLayout>
   )
 }
 
 export const changelog = route({
-  schema: ChangelogLoaderData,
+  schema,
   path: `changelog`,
   loader: changelogLoader,
   Component,
   children: [
+    // Support deep linking to specific version
+    route({
+      path: `version/:version`,
+      loader: changelogLoader,
+      Component,
+    }),
     // Support deep linking to specific version/revision
     route({
       path: `version/:version/revision/:revision`,

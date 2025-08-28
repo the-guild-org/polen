@@ -37,7 +37,7 @@ export const is = S.is(Revision)
 // Ordering
 // ============================================================================
 
-export const order: Order.Order<Revision> = Order.mapInput(DateOnly.order, (revision) => revision.date)
+export const order: Order.Order<Revision> = Order.reverse(Order.mapInput(DateOnly.order, (revision) => revision.date))
 
 export const min = Order.min(order)
 

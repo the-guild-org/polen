@@ -1,4 +1,6 @@
 import { S } from '#lib/kit-temp/effect'
+import { Schema } from '#lib/schema/$'
+import { Version } from '#lib/version/$'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
 
@@ -62,12 +64,12 @@ export const getVersionCount = (catalog: Catalog): number =>
   )(catalog)
 
 /**
- * Get all revisions from any catalog type.
- * For versioned catalogs, collects revisions from all entries.
- * For unversioned catalogs, returns the revisions directly.
+ * Get the version string from a schema.
+ * Returns the stringified version for versioned schemas, or '__UNVERSIONED__' for unversioned schemas.
  */
-export const getRevisions = (catalog: Catalog): ReadonlyArray<Versioned.Entry['revisions'][number]> =>
-  fold(
-    (versioned) => versioned.entries.flatMap(entry => entry.revisions),
-    (unversioned) => unversioned.schema.revisions,
-  )(catalog)
+export const getSchemaVersionString = (schema: Schema.Schema): string => {
+  if (schema._tag === 'SchemaVersioned') {
+    return Version.toString(schema.version)
+  }
+  return '__UNVERSIONED__'
+}

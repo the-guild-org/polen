@@ -99,18 +99,13 @@ const populateTypeFields = (
  */
 const processInitialSchema = (
   data: Record<string, Lifecycle.Lifecycle>,
-  schema: GraphQLSchema | DocumentNode,
   revision: Revision.Revision,
-  schemaHydratable: SchemaType,
+  schema: SchemaType,
 ) => {
-  // Ensure schema is a GraphQLSchema instance
-  const graphqlSchema = schema instanceof GraphQLSchema
-    ? schema
-    : SchemaDefinition.decodeSync(schema)
-  const typeMap = graphqlSchema.getTypeMap()
+  const typeMap = schema.definition.getTypeMap()
 
   const addedEvent = LifecycleEvent.make('LifecycleEventAdded', {
-    schema: schemaHydratable,
+    schema: schema,
     revision: revision,
   })
 
@@ -142,15 +137,10 @@ const processChange = (
   data: Record<string, Lifecycle.Lifecycle>,
   change: Change.Change,
   revision: Revision.Revision,
-  schema: GraphQLSchema | DocumentNode,
-  schemaHydratable: SchemaType,
+  schema: SchemaType,
 ) => {
-  // Ensure schema is a GraphQLSchema instance
-  const graphqlSchema = schema instanceof GraphQLSchema
-    ? schema
-    : SchemaDefinition.decodeSync(schema)
   const eventFields = {
-    schema: schemaHydratable,
+    schema: schema,
     revision: revision,
   }
 
@@ -164,7 +154,7 @@ const processChange = (
   Match.value(change).pipe(
     Match.tag('TYPE_ADDED', (change) => {
       const typeName = change.name
-      const graphqlType = graphqlSchema.getType(typeName)
+      const graphqlType = schema.definition.getType(typeName)
 
       if (!graphqlType || !isNamedType(graphqlType)) {
         throw new Error(`Type ${typeName} not found in schema`)
@@ -201,7 +191,7 @@ const processChange = (
 
       // Ensure type exists
       if (!data[typeName]) {
-        const graphqlType = graphqlSchema.getType(typeName)
+        const graphqlType = schema.definition.getType(typeName)
         if (!graphqlType || !isNamedType(graphqlType)) {
           throw new Error(`Type ${typeName} not found in schema`)
         }
@@ -217,7 +207,7 @@ const processChange = (
         })
       }
 
-      const typeLifecycle = data[typeName]
+      const typeLifecycle = data[typeName]!
       if ('fields' in typeLifecycle) {
         ;(typeLifecycle.fields as any)[fieldName] = Lifecycle.FieldType.make({
           name: fieldName,
@@ -243,7 +233,7 @@ const processChange = (
 
       // Ensure type exists
       if (!data[typeName]) {
-        const graphqlType = graphqlSchema.getType(typeName)
+        const graphqlType = schema.definition.getType(typeName)
         if (!graphqlType || !isNamedType(graphqlType)) {
           throw new Error(`Type ${typeName} not found in schema`)
         }
@@ -259,7 +249,7 @@ const processChange = (
         })
       }
 
-      const typeLifecycle = data[typeName]
+      const typeLifecycle = data[typeName]!
       if ('fields' in typeLifecycle) {
         ;(typeLifecycle.fields as any)[fieldName] = Lifecycle.FieldType.make({
           name: fieldName,
@@ -285,7 +275,7 @@ const processChange = (
 
       // Ensure enum type exists
       if (!data[enumName]) {
-        const graphqlType = graphqlSchema.getType(enumName)
+        const graphqlType = schema.definition.getType(enumName)
         if (!graphqlType || !isNamedType(graphqlType)) {
           throw new Error(`Enum ${enumName} not found in schema`)
         }
@@ -312,7 +302,7 @@ const processChange = (
 
       // Ensure union type exists
       if (!data[unionName]) {
-        const graphqlType = graphqlSchema.getType(unionName)
+        const graphqlType = schema.definition.getType(unionName)
         if (!graphqlType || !isNamedType(graphqlType)) {
           throw new Error(`Union ${unionName} not found in schema`)
         }
@@ -339,7 +329,7 @@ const processChange = (
 
       // Ensure object type exists
       if (!data[objectName]) {
-        const graphqlType = graphqlSchema.getType(objectName)
+        const graphqlType = schema.definition.getType(objectName)
         if (!graphqlType || !isNamedType(graphqlType)) {
           throw new Error(`Object ${objectName} not found in schema`)
         }
@@ -385,31 +375,17 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
     const revisions = [...cat.schema.revisions].reverse() // Process chronologically
 
     // Create the hydrated schema for unversioned catalog using proper constructors
-    const schemaHydratable: SchemaType = Schema.Unversioned.make({
-      revisions: cat.schema.revisions.map((r: any) =>
-        Revision.make({
-          date: r.date,
-          changes: r.changes,
-        })
-      ),
-      definition: cat.schema.definition,
-    })
 
     // Process first revision as initial schema
     if (revisions.length > 0) {
       const firstRevision = revisions[0]!
-      // Ensure schema definition is a GraphQLSchema instance
-      const schemaDef = cat.schema.definition
-      const schema = schemaDef instanceof GraphQLSchema
-        ? schemaDef
-        : SchemaDefinition.decodeSync(schemaDef)
-      processInitialSchema(data, schema, firstRevision, schemaHydratable)
+      processInitialSchema(data, firstRevision, cat.schema)
 
       // Process subsequent revisions
       for (let i = 1; i < revisions.length; i++) {
         const revision = revisions[i]!
         for (const change of revision.changes) {
-          processChange(data, change, revision, schema, schemaHydratable)
+          processChange(data, change, revision, cat.schema)
         }
       }
     }
@@ -417,44 +393,18 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
 
   const processVersionedCatalog = (cat: Catalog.Versioned.Versioned) => {
     // For versioned catalog, process each version's revisions
-    for (const entry of cat.entries) {
-      const revisions = [...entry.revisions].reverse() // Process chronologically
-
-      // Create the hydrated schema for versioned catalog using proper constructors
-      const schemaHydratable: SchemaType = Schema.Versioned.make({
-        version: entry.schema.version,
-        parent: entry.parent
-          ? Schema.Versioned.make({
-            version: entry.parent.version,
-            parent: null,
-            revisions: [],
-            definition: entry.parent.definition,
-          })
-          : null,
-        revisions: entry.revisions.map(r =>
-          Revision.make({
-            date: r.date,
-            changes: r.changes,
-          })
-        ),
-        definition: entry.schema.definition,
-      })
-
+    for (const schema of cat.entries) {
+      const revisions = [...schema.revisions].reverse() // Process chronologically
       // Process first revision as initial schema
       if (revisions.length > 0) {
         const firstRevision = revisions[0]!
-        // Ensure schema definition is a GraphQLSchema instance
-        const schemaDef = entry.schema.definition
-        const schema = schemaDef instanceof GraphQLSchema
-          ? schemaDef
-          : SchemaDefinition.decodeSync(schemaDef)
-        processInitialSchema(data, schema, firstRevision, schemaHydratable)
+        processInitialSchema(data, firstRevision, schema)
 
         // Process subsequent revisions
         for (let i = 1; i < revisions.length; i++) {
           const revision = revisions[i]!
           for (const change of revision.changes) {
-            processChange(data, change, revision, schema, schemaHydratable)
+            processChange(data, change, revision, schema)
           }
         }
       }

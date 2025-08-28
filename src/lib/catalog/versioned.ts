@@ -1,21 +1,12 @@
 import { S } from '#lib/kit-temp/effect'
-import * as Revision from '../revision/revision.js'
 import { Schema } from '../schema/$.js'
 
 // ============================================================================
 // Schema
 // ============================================================================
 
-export const Entry = S.Struct({
-  schema: Schema.Versioned.Versioned,
-  parent: S.NullOr(Schema.Versioned.Versioned),
-  revisions: S.Array(Revision.Revision),
-})
-
-export type Entry = S.Schema.Type<typeof Entry>
-
 export const Versioned = S.TaggedStruct('CatalogVersioned', {
-  entries: S.Array(Entry),
+  entries: S.Array(Schema.Versioned.Versioned),
 }).annotations({
   identifier: 'CatalogVersioned',
   title: 'Versioned Catalog',

@@ -1,9 +1,11 @@
 import type { NavbarProps } from '#api/hooks/types'
 import type { ReactRouter } from '#dep/react-router/index'
+import { S } from '#lib/kit-temp/effect'
 import { route } from '#lib/react-router-effect/route'
-import { RootLoaderData } from '#template/route-schemas/route-schemas'
 import type { Stores } from '#template/stores/$'
 import { Box, Flex, Theme } from '@radix-ui/themes'
+
+const schema = S.Struct({})
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
@@ -144,7 +146,7 @@ const storeModules = import.meta.glob('../stores/!($.*)*.ts', { eager: true }) a
 export const root = route({
   path: `/`,
   Component,
-  schema: RootLoaderData,
+  schema,
   loader: async () => {
     // Reset all stores on SSR to prevent cross-request pollution
     if (import.meta.env.SSR) {

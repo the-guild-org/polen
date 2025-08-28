@@ -801,3 +801,30 @@ export const zd = (...args: any) => {
   args.forEach(dump)
   console.log('---------------------------------------------')
 }
+
+/**
+ * Filter object properties by key pattern matching
+ *
+ * @param obj - The object to filter
+ * @param predicate - Function that returns true to keep a key
+ * @returns A new object with only the key/value pairs where key predicate returned true
+ *
+ * @example
+ * ```ts
+ * const props = { 'data-type': 'button', 'data-current': true, onClick: fn, className: 'btn' }
+ * const dataAttrs = pickMatching(props, key => key.startsWith('data-'))
+ * // { 'data-type': 'button', 'data-current': true }
+ * ```
+ */
+export const pickMatching = <T extends object>(
+  obj: T,
+  predicate: (key: keyof T) => boolean,
+): Partial<T> => {
+  const result = {} as Partial<T>
+  for (const key of Object.keys(obj) as (keyof T)[]) {
+    if (predicate(key)) {
+      result[key] = obj[key]
+    }
+  }
+  return result
+}
