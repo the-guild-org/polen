@@ -3,9 +3,8 @@
  * This is executed in a worker thread using Effect Worker API.
  */
 import { debugPolen } from '#singletons/debug'
-import { WorkerRunner } from '@effect/platform'
-import { NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Path } from '@wollybeard/kit'
+import { Path, WorkerRunner } from '@effect/platform'
+import { NodeContext, NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
 import { Effect, Layer } from 'effect'
 import { promises as fs } from 'node:fs'
 import { type GenerateResult, PageMessage } from './worker-messages.js'
@@ -21,6 +20,7 @@ const handlers = {
     { routes, serverPort, outputDir }: { routes: readonly string[]; serverPort: number; outputDir: string },
   ) =>
     Effect.gen(function*() {
+      const path = yield* Path.Path
       const startTime = Date.now()
       let processedCount = 0
 
@@ -44,13 +44,13 @@ const handlers = {
             const html = await response.text()
 
             // Determine output file path
-            const outputPath = Path.join(
+            const outputPath = path.join(
               outputDir,
               route === '/' ? 'index.html' : `${route.slice(1)}/index.html`,
             )
 
             // Ensure directory exists
-            const dir = Path.dirname(outputPath)
+            const dir = path.dirname(outputPath)
             await fs.mkdir(dir, { recursive: true })
 
             // Write the HTML file
@@ -104,7 +104,7 @@ const handlers = {
 // Run the worker
 WorkerRunner.launch(
   Layer.provide(
-    WorkerRunner.layerSerialized(PageMessage, handlers as any),
-    NodeWorkerRunner.layer,
+    WorkerRunner.layerSerialized(PageMessage, handlers),
+    Layer.merge(NodeWorkerRunner.layer, NodeContext.layer),
   ),
-).pipe(NodeRuntime.runMain as any)
+).pipe(NodeRuntime.runMain)

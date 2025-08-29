@@ -71,14 +71,18 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
       }
 
       // Write manifest using the new Routes API
-      await Api.Routes.Manifest.write(
-        {
-          version: `1.0.0`,
-          timestamp: new Date().toISOString(),
-          totalRoutes: routes.length,
-          routes: routes.sort(), // Sort for deterministic output
-        },
-        config.paths.project.absolute.build.assets.root,
+      await Effect.runPromise(
+        Api.Routes.Manifest.write(
+          {
+            version: `1.0.0`,
+            timestamp: new Date().toISOString(),
+            totalRoutes: routes.length,
+            routes: routes.sort(), // Sort for deterministic output
+          },
+          config.paths.project.absolute.build.assets.root,
+        ).pipe(
+          Effect.provide(NodeFileSystem.layer),
+        ),
       )
 
       consola.success(`Generated routes manifest with ${routes.length} routes`)

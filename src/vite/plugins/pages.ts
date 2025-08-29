@@ -231,8 +231,8 @@ export const Pages = ({
             pages: scanResult.list,
           }
 
-          // Return a JavaScript module that exports the data
-          return `export default ${JSON.stringify(projectPagesCatalog)}`
+          // Return pure JSON for the .json extension
+          return JSON.stringify(projectPagesCatalog)
         },
       },
     },

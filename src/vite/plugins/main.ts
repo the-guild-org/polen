@@ -6,6 +6,7 @@ import ViteReact from '@vitejs/plugin-react-oxc'
 import { Path } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
 import { Branding } from './branding.js'
+import { Build } from './build.js'
 import { Core } from './core.js'
 import { Serve } from './serve.js'
 
@@ -34,7 +35,7 @@ export const Main = (
     Manifest(config),
     Serve(config),
     Core(config),
-    // Build(config),
+    Build(config),
   )
 
   return plugins

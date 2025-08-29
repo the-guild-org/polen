@@ -13,8 +13,8 @@ import { cpus, totalmem } from 'node:os'
 import {
   GeneratePagesMessage,
   type GenerateResult,
-  type PageMessage,
-  type ServerMessage,
+  PageMessage,
+  ServerMessage,
   StartServerMessage,
 } from './worker-messages.js'
 import { createPageSpawner, createServerSpawner } from './worker-spawners.js'
@@ -77,15 +77,26 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
     // Create and use worker pools within a scoped context
     yield* Effect.scoped(
       Effect.gen(function*() {
-        // Create the worker pools
+        // Create the server pool with its spawner
         const serverPool = yield* Worker.makePoolSerialized<ServerMessage>({
           size: optimalWorkers,
-        })
+        }).pipe(
+          Effect.provide(Layer.mergeAll(
+            createServerSpawner(serverRunnerPath),
+            NodeWorker.layerManager,
+          )),
+        )
 
+        // Create the page pool with its spawner
         const pagePool = yield* Worker.makePoolSerialized<PageMessage>({
           size: optimalWorkers,
           concurrency: 1, // One batch at a time per worker
-        })
+        }).pipe(
+          Effect.provide(Layer.mergeAll(
+            createPageSpawner(pageGeneratorPath),
+            NodeWorker.layerManager,
+          )),
+        )
 
         const serverPorts: number[] = []
 
@@ -202,15 +213,8 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
         // Cleanup happens automatically when the scope ends
         debug(`SSG generation complete, cleaning up resources`)
       }).pipe(
-        // Provide all required layers
-        Effect.provide(
-          Layer.mergeAll(
-            createServerSpawner(serverRunnerPath),
-            createPageSpawner(pageGeneratorPath),
-            NodeWorker.layerManager,
-            NodeContext.layer,
-          ),
-        ),
+        // Provide NodeContext for Path service used in page generator
+        Effect.provide(NodeContext.layer),
       ),
     )
 

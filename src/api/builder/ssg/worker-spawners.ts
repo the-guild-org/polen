@@ -1,6 +1,5 @@
 import { NodeWorker } from '@effect/platform-node'
 import { Path } from '@wollybeard/kit'
-import { spawn } from 'node:child_process'
 import { Worker as NodeWorkerThread } from 'node:worker_threads'
 
 // ============================================================================
@@ -9,22 +8,32 @@ import { Worker as NodeWorkerThread } from 'node:worker_threads'
 
 /**
  * Creates a layer for spawning server processes.
- * Each server runs in its own child process.
+ * Each server runs in its own worker thread.
  */
 export const createServerSpawner = (workerPath: string) =>
-  NodeWorker.layer((id: number) =>
-    spawn('node', [
-      '--experimental-strip-types',
-      '--disable-warning=ExperimentalWarning',
-      workerPath,
-    ], {
-      stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-      env: {
-        ...process.env,
-        WORKER_ID: String(id),
-      },
-    })
-  )
+  NodeWorker.layer((id: number) => {
+    // For TypeScript files, we need to use tsx import
+    const isTypeScript = workerPath.endsWith('.ts')
+
+    if (isTypeScript) {
+      // Use tsx import for TypeScript (Node 20.6+ / 18.19+)
+      return new NodeWorkerThread(workerPath, {
+        execArgv: ['--import', 'tsx'],
+        env: {
+          ...process.env,
+          WORKER_ID: String(id),
+        },
+      })
+    } else {
+      // For JavaScript, use worker threads directly
+      return new NodeWorkerThread(workerPath, {
+        env: {
+          ...process.env,
+          WORKER_ID: String(id),
+        },
+      })
+    }
+  })
 
 // ============================================================================
 // Page Generator Spawner
@@ -35,9 +44,26 @@ export const createServerSpawner = (workerPath: string) =>
  * Each generator runs in a worker thread for better performance.
  */
 export const createPageSpawner = (workerPath: string) =>
-  NodeWorker.layer((id: number) =>
-    new NodeWorkerThread(workerPath, {
-      execArgv: ['--experimental-strip-types', '--disable-warning=ExperimentalWarning'],
-      workerData: { workerId: id },
-    })
-  )
+  NodeWorker.layer((id: number) => {
+    // For TypeScript files, we need to use tsx import
+    const isTypeScript = workerPath.endsWith('.ts')
+
+    if (isTypeScript) {
+      // Use tsx import for TypeScript (Node 20.6+ / 18.19+)
+      return new NodeWorkerThread(workerPath, {
+        execArgv: ['--import', 'tsx'],
+        env: {
+          ...process.env,
+          WORKER_ID: String(id),
+        },
+      })
+    } else {
+      // For JavaScript, use worker threads directly
+      return new NodeWorkerThread(workerPath, {
+        env: {
+          ...process.env,
+          WORKER_ID: String(id),
+        },
+      })
+    }
+  })

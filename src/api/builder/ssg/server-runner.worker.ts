@@ -5,7 +5,7 @@
 import { debugPolen } from '#singletons/debug'
 import { WorkerRunner } from '@effect/platform'
 import { NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Duration, Effect, Layer } from 'effect'
+import { Duration, Effect, Layer, Scope } from 'effect'
 import { spawn } from 'node:child_process'
 import type { ChildProcess } from 'node:child_process'
 import { ServerMessage } from './worker-messages.js'
@@ -32,7 +32,8 @@ const handlers = {
         serverProcess = null
       }
 
-      yield* Effect.async<void, Error>((resume) => {
+      // Start the server process
+      const startServer = Effect.sync((): ChildProcess => {
         debug(`Starting server with command: node ${serverPath}`)
 
         serverProcess = spawn('node', [serverPath], {
@@ -51,41 +52,85 @@ const handlers = {
           debug(`[Server ${port}] stderr`, data.toString().trim())
         })
 
-        serverProcess.on('error', (error) => {
-          resume(Effect.die(new Error(`Server failed to start on port ${port}: ${error.message}`)))
-        })
+        return serverProcess
+      })
 
-        serverProcess.on('exit', (code, signal) => {
+      const proc: ChildProcess = yield* startServer
+
+      // Wait for server to be ready with proper interruption support
+      const waitForReady = Effect.async<void>((resume) => {
+        // Handle process errors
+        const errorHandler = (error: Error) => {
+          resume(Effect.die(new Error(`Server failed to start on port ${port}: ${error.message}`)))
+        }
+
+        // Handle process exit
+        const exitHandler = (code: number | null, signal: NodeJS.Signals | null) => {
           if (code !== 0 && code !== null) {
             resume(Effect.die(new Error(`Server exited with code ${code} (signal: ${signal})`)))
           }
-        })
+        }
+
+        proc.on('error', errorHandler)
+        proc.on('exit', exitHandler)
 
         // Check if server is ready by polling
+        let checkInterval: NodeJS.Timeout | null = null
         const checkServer = async () => {
           try {
             const response = await fetch(`http://localhost:${port}/`)
             if (response.ok || response.status === 404) {
               debug(`[Server ${port}] Ready!`)
+              if (checkInterval) clearInterval(checkInterval)
+              proc.removeListener('error', errorHandler)
+              proc.removeListener('exit', exitHandler)
               resume(Effect.succeed(undefined))
-            } else {
-              setTimeout(checkServer, 100)
             }
           } catch (error) {
-            // Server not ready yet, retry
-            setTimeout(checkServer, 100)
+            // Server not ready yet, will retry on next interval
           }
         }
 
-        // Start checking after a small delay
-        setTimeout(checkServer, 500)
-
-        // Timeout after 30 seconds
+        // Start polling after initial delay
         setTimeout(() => {
-          resume(Effect.die(new Error(`Server on port ${port} failed to start within 30 seconds`)))
-        }, 30000)
+          checkServer() // First check
+          checkInterval = setInterval(checkServer, 100)
+        }, 500)
+
+        // Return cleanup function for interruption
+        return Effect.sync(() => {
+          if (checkInterval) {
+            clearInterval(checkInterval)
+          }
+          proc.removeListener('error', errorHandler)
+          proc.removeListener('exit', exitHandler)
+        })
       })
-    }),
+
+      // Apply timeout with proper Effect interruption
+      yield* waitForReady.pipe(
+        Effect.timeout(Duration.seconds(30)),
+        Effect.catchTag('TimeoutException', () =>
+          Effect.die(new Error(`Server on port ${port} failed to start within 30 seconds`))),
+      )
+
+      // Add finalizer to ensure cleanup
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          debug(`Finalizer: Stopping server on port ${port}`)
+          if (serverProcess && !serverProcess.killed) {
+            serverProcess.kill('SIGTERM')
+            // Try to kill forcefully after a brief wait
+            setTimeout(() => {
+              if (serverProcess && !serverProcess.killed) {
+                serverProcess.kill('SIGKILL')
+              }
+              serverProcess = null
+            }, 100)
+          }
+        })
+      )
+    }).pipe(Effect.scoped),
   StopServer: () =>
     Effect.gen(function*() {
       if (serverProcess) {
@@ -107,7 +152,7 @@ const handlers = {
 // Run the worker
 WorkerRunner.launch(
   Layer.provide(
-    WorkerRunner.layerSerialized(ServerMessage, handlers as any),
+    WorkerRunner.layerSerialized(ServerMessage, handlers),
     NodeWorkerRunner.layer,
   ),
-).pipe(NodeRuntime.runMain as any)
+).pipe(NodeRuntime.runMain)
