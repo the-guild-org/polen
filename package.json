@@ -64,12 +64,6 @@
     "#lib/grafaid-old": {
       "default": "./build/lib/grafaid-old/$.js"
     },
-    "#lib/graphql-change": {
-      "default": "./build/lib/graphql-change/$.js"
-    },
-    "#lib/graphql-change/graphql-change": {
-      "default": "./build/lib/graphql-change/$$.js"
-    },
     "#lib/graphql-path": {
       "default": "./build/lib/graphql-path/$.js"
     },
@@ -89,19 +83,13 @@
       "default": "./build/lib/catalog/$.js"
     },
     "#lib/catalog/catalog": {
-      "default": "./build/lib/catalog/$$.js"
+      "default": "./build/lib/catalog/catalog.js"
     },
     "#lib/change": {
       "default": "./build/lib/change/$.js"
     },
     "#lib/change/change": {
       "default": "./build/lib/change/$$.js"
-    },
-    "#lib/hydra": {
-      "default": "./build/lib/hydra/$.js"
-    },
-    "#lib/hydra/hydra": {
-      "default": "./build/lib/hydra/$$.js"
     },
     "#lib/lifecycles": {
       "default": "./build/lib/lifecycles/$.js"
@@ -113,28 +101,25 @@
       "default": "./build/lib/revision/$.js"
     },
     "#lib/revision/revision": {
-      "default": "./build/lib/revision/$$.js"
+      "default": "./build/lib/revision/revision.js"
     },
     "#lib/schema": {
       "default": "./build/lib/schema/$.js"
     },
     "#lib/schema/schema": {
-      "default": "./build/lib/schema/$$.js"
+      "default": "./build/lib/schema/schema.js"
     },
     "#lib/schema-definition": {
       "default": "./build/lib/schema-definition/$.js"
     },
     "#lib/schema-definition/schema-definition": {
-      "default": "./build/lib/schema-definition/$$.js"
+      "default": "./build/lib/schema-definition/schema-definition.js"
     },
     "#lib/semver": {
       "default": "./build/lib/semver/$.js"
     },
     "#lib/semver/semver": {
       "default": "./build/lib/semver/$$.js"
-    },
-    "#lib/revision-date": {
-      "default": "./build/lib/revision-date/revision-date.js"
     },
     "#lib/mask": {
       "default": "./build/lib/mask/$.js"
@@ -154,12 +139,6 @@
     "#lib/react-router-effect/react-router-effect": {
       "default": "./build/lib/react-router-effect/$$.js"
     },
-    "#lib/route-schemas": {
-      "default": "./build/lib/route-schemas/$.js"
-    },
-    "#lib/route-schemas/route-schemas": {
-      "default": "./build/lib/route-schemas/$$.js"
-    },
     "#lib/kit-temp": {
       "default": "./build/lib/kit-temp/$.js"
     },
@@ -169,26 +148,8 @@
     "#lib/file-path/file-path": {
       "default": "./build/lib/file-path/$$.js"
     },
-    "#lib/worker-pool": {
-      "default": "./build/lib/worker-pool/$.js"
-    },
-    "#lib/worker-pool/worker-pool": {
-      "default": "./build/lib/worker-pool/$$.js"
-    },
-    "#lib/graphql-lifecycle": {
-      "default": "./build/lib/graphql-lifecycle/$.js"
-    },
-    "#lib/graphql-lifecycle/graphql-lifecycle": {
-      "default": "./build/lib/graphql-lifecycle/$$.js"
-    },
     "#lib/stack-processor": {
       "default": "./build/lib/stack-processor/$.js"
-    },
-    "#lib/superjson-codec": {
-      "default": "./build/lib/superjson-codec/$.js"
-    },
-    "#lib/superjson-codec/superjson-codec": {
-      "default": "./build/lib/superjson-codec/$$.js"
     },
     "#lib/task": {
       "default": "./build/lib/task/$.js"
