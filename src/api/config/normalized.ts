@@ -1,4 +1,5 @@
-import { Schema } from '#api/schema/$'
+import { ConfigSchema as ConfigSchemaOriginal } from '#api/schema/config-schema'
+// import { Schema } from '#api/schema/$'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import { packagePaths } from '#package-paths'
@@ -172,7 +173,7 @@ export const ConfigSchema = S.Struct({
   /**
    * Schema configuration or null if disabled.
    */
-  schema: S.Union(S.Null, Schema.ConfigSchema.ConfigSchema),
+  schema: S.Union(S.Null, ConfigSchemaOriginal),
 
   /**
    * SSR configuration.

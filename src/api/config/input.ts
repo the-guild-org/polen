@@ -1,4 +1,4 @@
-import { Schema } from '#api/schema/$'
+import { ConfigSchema } from '#api/schema/config-schema'
 import { Vite } from '#dep/vite/index'
 import { spreadShallow } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
@@ -240,7 +240,7 @@ const AdvancedConfigSchema = S.Struct({
  * All options are optional. Polen provides sensible defaults for a great developer experience out of the box.
  */
 export const ConfigInputSchema = S.Struct({
-  schema: S.optional(Schema.ConfigSchema.ConfigSchema),
+  schema: S.optional(ConfigSchema),
   templateVariables: S.optional(TemplateVariablesSchema),
   build: S.optional(BuildConfigSchema),
   server: S.optional(ServerConfigSchema),
