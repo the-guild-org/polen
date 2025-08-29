@@ -1,6 +1,7 @@
 import { Fn } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import { describe, expect } from 'vitest'
-import { test } from '../../../tests/unit/helpers/test.js'
+import { test } from '../../../tests/unit/helpers/test-with-fixtures.js'
 import { FileRouter } from './$.js'
 
 /* Note
@@ -12,7 +13,7 @@ absolute: { dir: expect.stringMatching(/^pages\/$/) },
 */
 
 const $ = Fn.$identityPartial<FileRouter.ScanResult> // subset data factory
-const scan = (path: string) => FileRouter.scan({ dir: path + '/pages' })
+const scan = (path: string) => Effect.runPromise(FileRouter.scan({ dir: path + '/pages' }))
 
 describe('.scan', () => {
   describe('literal', () => {

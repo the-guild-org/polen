@@ -1,10 +1,13 @@
 // @ts-nocheck
 import { Api } from '#api/index'
-import { projectParameter } from '#cli/_/parameters'
+import { allowGlobalParameter, projectParameter } from '#cli/_/parameters'
 import { Vite } from '#dep/vite/index'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
+import { toViteUserConfig } from '#vite/config'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Command } from '@molt/command'
 import { Err } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import { z } from 'zod'
 
 const args = Command.create()
@@ -22,6 +25,7 @@ const args = Command.create()
     `--port`,
     z.number().optional().describe('Port to run the development server on'),
   )
+  .parameter(`--allow-global`, allowGlobalParameter)
   .settings({
     parameters: {
       environment: {
@@ -41,20 +45,26 @@ if (!await Api.Project.validateProjectDirectory(dir)) {
   process.exit(1)
 }
 
-const viteUserConfig = await Api.ConfigResolver.fromFile({
-  dir,
-  overrides: {
-    build: {
-      base: args.base,
+const polenConfig = await Effect.runPromise(
+  Api.ConfigResolver.fromFile({
+    dir,
+    overrides: {
+      build: {
+        base: args.base,
+      },
+      server: {
+        port: args.port,
+      },
+      advanced: {
+        debug: args.debug,
+      },
     },
-    server: {
-      port: args.port,
-    },
-    advanced: {
-      debug: args.debug,
-    },
-  },
-})
+  }).pipe(
+    Effect.provide(NodeFileSystem.layer),
+  ),
+)
+
+const viteUserConfig = toViteUserConfig(polenConfig)
 
 const viteDevServer = await Err.tryCatch(() => Vite.createServer(viteUserConfig))
 

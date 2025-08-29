@@ -1,11 +1,16 @@
 import { Api } from '#api/index'
+import { toViteUserConfig } from '#vite/config'
+import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
 test.describe('Theme functionality', () => {
   test('starts with system theme preference', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
-    const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+    const polenConfig = await Effect.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    )
+    const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
     await page.goto(viteDevServer.url('/').href)
@@ -24,7 +29,10 @@ test.describe('Theme functionality', () => {
 
   test('theme toggle creates cookie and persists on reload', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
-    const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+    const polenConfig = await Effect.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    )
+    const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
     await page.goto(viteDevServer.url('/').href)
@@ -67,7 +75,10 @@ test.describe('Theme functionality', () => {
 
   test('theme toggle cycles through system, light, dark', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
-    const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+    const polenConfig = await Effect.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    )
+    const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
     // Start with no cookie (system preference)
@@ -120,7 +131,10 @@ test.describe('Theme functionality', () => {
 
   test('theme toggle updates cookie on subsequent clicks', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
-    const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+    const polenConfig = await Effect.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    )
+    const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
     // Start with a dark theme cookie
@@ -172,7 +186,10 @@ test.describe('Theme functionality', () => {
       'pages/about.md': '# About',
       'pages/contact.md': '# Contact',
     })
-    const viteConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+    const polenConfig = await Effect.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    )
+    const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 
     // Start with a dark theme cookie

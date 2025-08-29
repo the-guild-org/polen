@@ -16,7 +16,7 @@ You can provide schema augmentations to Polen in various ways.
 
 ### Configuration
 
-Define augmentations in your `polen.config.ts` file using the `schemaAugmentations` array. Each augmentation specifies:
+Define augmentations in your `polen.config.ts` file using the `schema.augmentations` array. Each augmentation specifies:
 
 - **`type`** - What to augment (e.g., `'description'`)
 - **`on`** - Where to target it (type name, field name, etc.)
@@ -34,18 +34,20 @@ The JSDoc documentation provides extensive details on all available options.
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
-  schemaAugmentations: [
-    {
-      type: 'description',
-      on: {
-        type: 'TargetType',
-        name: 'User',
+  schema: {
+    augmentations: [
+      {
+        type: 'description',
+        on: {
+          type: 'TargetType',
+          name: 'User',
+        },
+        placement: 'after',
+        content: 'Additional context about the User type.',
       },
-      placement: 'after',
-      content: 'Additional context about the User type.',
-    },
-    // ... more augmentations
-  ],
+      // ... more augmentations
+    ],
+  },
 })
 ```
 
@@ -65,61 +67,65 @@ You can augment descriptions for both **types** and **fields** in your schema. P
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
-  schemaAugmentations: [
-    // Replace a type's description
-    {
-      type: `description`,
-      on: {
-        type: `TargetType`,
-        name: `User`,
+  schema: {
+    augmentations: [
+      // Replace a type's description
+      {
+        type: `description`,
+        on: {
+          type: `TargetType`,
+          name: `User`,
+        },
+        placement: `over`,
+        content:
+          `Represents a user in the system. See the [User API Guide](/guides/users) for detailed usage.`,
       },
-      placement: `over`,
-      content:
-        `Represents a user in the system. See the [User API Guide](/guides/users) for detailed usage.`,
-    },
-    // Add a deprecation notice before existing description
-    {
-      type: `description`,
-      on: {
-        type: `TargetType`,
-        name: `LegacyAuth`,
+      // Add a deprecation notice before existing description
+      {
+        type: `description`,
+        on: {
+          type: `TargetType`,
+          name: `LegacyAuth`,
+        },
+        placement: `before`,
+        content:
+          `⚠️ **Deprecated**: Use the new Auth type instead. This will be removed in v3.0.\n\n`,
       },
-      placement: `before`,
-      content:
-        `⚠️ **Deprecated**: Use the new Auth type instead. This will be removed in v3.0.\n\n`,
-    },
-  ],
+    ],
+  },
 })
 ```
 
 ```ts [Field]
 export default Polen.defineConfig({
-  schemaAugmentations: [
-    // Add usage example after a field's description
-    {
-      type: `description`,
-      on: {
-        type: `TargetField`,
-        targetType: `Query`,
-        name: `users`,
+  schema: {
+    augmentations: [
+      // Add usage example after a field's description
+      {
+        type: `description`,
+        on: {
+          type: `TargetField`,
+          targetType: `Query`,
+          name: `users`,
+        },
+        placement: `after`,
+        content:
+          `\n\n**Example:**\n\`\`\`graphql\nquery GetActiveUsers {\n  users(filter: { status: ACTIVE }) {\n    id\n    name\n    email\n  }\n}\n\`\`\``,
       },
-      placement: `after`,
-      content:
-        `\n\n**Example:**\n\`\`\`graphql\nquery GetActiveUsers {\n  users(filter: { status: ACTIVE }) {\n    id\n    name\n    email\n  }\n}\n\`\`\``,
-    },
-    // Add implementation note to a mutation field
-    {
-      type: `description`,
-      on: {
-        type: `TargetField`,
-        targetType: `Mutation`,
-        name: `createUser`,
+      // Add implementation note to a mutation field
+      {
+        type: `description`,
+        on: {
+          type: `TargetField`,
+          targetType: `Mutation`,
+          name: `createUser`,
+        },
+        placement: `after`,
+        content:
+          `\n\n**Note:** This mutation requires authentication. Include your API key in the \`Authorization\` header.`,
       },
-      placement: `after`,
-      content:
-        `\n\n**Note:** This mutation requires authentication. Include your API key in the \`Authorization\` header.`,
-    },
-  ],
+    ],
+  },
 })
 ```
 

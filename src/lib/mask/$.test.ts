@@ -1,93 +1,71 @@
 import * as fc from 'fast-check'
 import { describe, expect, test } from 'vitest'
+import { Test } from '../../../tests/unit/helpers/test.js'
 import { Mask } from './$.js'
 
-describe('Mask.create', () => {
-  test('boolean options create binary masks', () => {
-    const showMask = Mask.create(true)
-    const hideMask = Mask.create(false)
-
-    expect(showMask.type).toBe('binary')
-    expect(hideMask.type).toBe('binary')
-
-    if (showMask.type === 'binary' && hideMask.type === 'binary') {
-      expect(showMask.show).toBe(true)
-      expect(hideMask.show).toBe(false)
-    }
-  })
-
-  test('array options create allow mode properties mask', () => {
-    const mask = Mask.create(['name', 'age'])
-
-    expect(mask.type).toBe('properties')
-    if (mask.type === 'properties') {
-      expect(mask.mode).toBe('allow')
-      expect(mask.properties).toEqual(['name', 'age'])
-    }
-  })
-
-  test('object options create mode based on values', () => {
-    const allowMask = Mask.create({ name: true, age: true, password: false })
-    const denyMask = Mask.create({ password: false, secret: false })
-
-    expect(allowMask.type).toBe('properties')
-    expect(denyMask.type).toBe('properties')
-
-    if (allowMask.type === 'properties' && denyMask.type === 'properties') {
-      expect(allowMask.mode).toBe('allow')
-      expect(allowMask.properties).toEqual(['name', 'age'])
-
-      expect(denyMask.mode).toBe('deny')
-      expect(denyMask.properties).toEqual(['password', 'secret'])
-    }
-  })
+// dprint-ignore
+Test.suite<{ options: any; expectedType: 'binary' | 'properties'; expectedMode?: 'allow' | 'deny'; expectedShow?: boolean; expectedProperties?: string[] }>('Mask.create', [
+  { name: 'boolean true creates binary show mask',       options: true,                                        expectedType: 'binary',     expectedShow: true },
+  { name: 'boolean false creates binary hide mask',      options: false,                                       expectedType: 'binary',     expectedShow: false },
+  { name: 'array creates allow mode properties mask',    options: ['name', 'age'],                             expectedType: 'properties', expectedMode: 'allow', expectedProperties: ['name', 'age'] },
+  { name: 'object with true values creates allow mode',  options: { name: true, age: true, password: false },  expectedType: 'properties', expectedMode: 'allow', expectedProperties: ['name', 'age'] },
+  { name: 'object with false values creates deny mode',  options: { password: false, secret: false },          expectedType: 'properties', expectedMode: 'deny',  expectedProperties: ['password', 'secret'] },
+], ({ options, expectedType, expectedMode, expectedShow, expectedProperties }) => {
+  const mask = Mask.create(options)
+  expect(mask.type).toBe(expectedType)
+  
+  if (expectedType === 'binary' && mask.type === 'binary') {
+    expect(mask.show).toBe(expectedShow)
+  }
+  
+  if (expectedType === 'properties' && mask.type === 'properties') {
+    expect(mask.mode).toBe(expectedMode)
+    expect(mask.properties).toEqual(expectedProperties)
+  }
 })
 
-describe('Mask.apply', () => {
-  test('binary masks show/hide data', () => {
-    const data = { a: 1 }
-
-    expect(Mask.apply(data, Mask.create(true))).toBe(data)
-    expect(Mask.apply(data, Mask.create(false))).toBe(undefined)
-  })
-
-  test('properties masks filter objects', () => {
-    const data = { name: 'John', age: 30, password: 'secret' }
-
-    // Allow mode
-    const allowMask = Mask.create(['name', 'age'])
-    expect(Mask.apply(data, allowMask)).toEqual({ name: 'John', age: 30 })
-
-    // Deny mode
-    const denyMask = Mask.create({ password: false })
-    expect(Mask.apply(data, denyMask)).toEqual({ name: 'John', age: 30 })
-  })
-
-  test('properties masks throw for non-objects', () => {
-    const mask = Mask.create(['name'])
-
-    expect(() => Mask.apply('string' as any, mask)).toThrow()
-    expect(() => Mask.apply(123 as any, mask)).toThrow()
-    expect(() => Mask.apply(null as any, mask)).toThrow()
-  })
+// dprint-ignore
+Test.suite<{ data: any; maskOptions: any; shouldThrow?: boolean; expected?: any }>('Mask.apply', [
+  { name: 'binary show mask returns data',               data: { a: 1 },                                 maskOptions: true,              expected: { a: 1 } },
+  { name: 'binary hide mask returns undefined',          data: { a: 1 },                                 maskOptions: false,             expected: undefined },
+  { name: 'allow mode filters properties',               data: { name: 'John', age: 30, password: 'secret' }, maskOptions: ['name', 'age'],    expected: { name: 'John', age: 30 } },
+  { name: 'deny mode removes properties',                data: { name: 'John', age: 30, password: 'secret' }, maskOptions: { password: false }, expected: { name: 'John', age: 30 } },
+  { name: 'properties mask throws for string',           data: 'string',                                 maskOptions: ['name'],          shouldThrow: true },
+  { name: 'properties mask throws for number',           data: 123,                                      maskOptions: ['name'],          shouldThrow: true },
+  { name: 'properties mask throws for null',             data: null,                                     maskOptions: ['name'],          shouldThrow: true },
+], ({ data, maskOptions, shouldThrow, expected }) => {
+  const mask = Mask.create(maskOptions)
+  
+  if (shouldThrow) {
+    expect(() => Mask.apply(data as any, mask)).toThrow()
+  } else {
+    const result = Mask.apply(data, mask)
+    if (expected === undefined) {
+      expect(result).toBe(undefined)
+    } else {
+      expect(result).toEqual(expected)
+    }
+  }
 })
 
-describe('apply variants', () => {
-  test('applyPartial allows missing properties', () => {
-    const mask = Mask.create<{ name: string; age: number }>(['name', 'age'])
-    const partial = { name: 'John' }
-
-    expect(Mask.applyPartial(partial, mask)).toEqual({ name: 'John' })
-    expect(Mask.applyPartial({}, mask)).toEqual({})
-  })
-
-  test('applyExact works with any data for binary masks', () => {
-    const showMask = Mask.create(true)
-    const hideMask = Mask.create(false)
-
-    expect(Mask.applyExact('hello' as any, showMask)).toBe('hello')
-    expect(Mask.applyExact('hello' as any, hideMask)).toBe(undefined)
-  })
+// dprint-ignore
+Test.suite<{ method: 'applyPartial' | 'applyExact'; data: any; maskOptions: any; expected: any }>('apply variants', [
+  { name: 'applyPartial allows missing properties',      method: 'applyPartial', data: { name: 'John' },  maskOptions: ['name', 'age'], expected: { name: 'John' } },
+  { name: 'applyPartial with empty object',              method: 'applyPartial', data: {},                maskOptions: ['name', 'age'], expected: {} },
+  { name: 'applyExact with binary show mask',            method: 'applyExact',   data: 'hello',           maskOptions: true,             expected: 'hello' },
+  { name: 'applyExact with binary hide mask',            method: 'applyExact',   data: 'hello',           maskOptions: false,            expected: undefined },
+], ({ method, data, maskOptions, expected }) => {
+  const mask = Mask.create(maskOptions)
+  
+  const result = method === 'applyPartial' 
+    ? Mask.applyPartial(data, mask)
+    : Mask.applyExact(data as any, mask)
+    
+  if (expected === undefined) {
+    expect(result).toBe(undefined)
+  } else {
+    expect(result).toEqual(expected)
+  }
 })
 
 describe('property-based tests', () => {

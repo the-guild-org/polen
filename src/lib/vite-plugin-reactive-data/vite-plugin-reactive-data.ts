@@ -18,7 +18,7 @@ interface ReactiveDataOptions {
    */
   data: ComputedRef<object | unknown[]> | (() => object | unknown[]) | object | unknown[]
   /**
-   * JSON codec to use (e.g., superjson)
+   * JSON codec to use
    * Default: JSON
    * Only used when includeJsonPlugin is true
    */

@@ -1,93 +1,104 @@
 import { buildSchema } from 'graphql'
 import { describe, expect, test } from 'vitest'
+import { Test } from '../../../../../tests/unit/helpers/test.js'
 import { parseGraphQLWithTreeSitter } from '../lib/parser.js'
 import { isArgument } from '../lib/semantic-nodes.js'
 
 describe('parseGraphQLWithTreeSitter', () => {
-  describe('argument parsing', () => {
-    test('should recognize argument names as interactive tokens', async () => {
-      const schema = buildSchema(`
+  interface ArgumentParsingCase {
+    schemaSDL: string
+    code: string
+    checks: Array<{
+      tokenText: string
+      isArgument: boolean
+      expectedInteractive?: boolean
+      expectedUrl?: string
+      checkVariable?: boolean
+    }>
+  }
+
+  // dprint-ignore
+  Test.suite<ArgumentParsingCase>('argument parsing', [
+    {
+      name: 'should recognize argument names as interactive tokens',
+      schemaSDL: `
         type Query {
           pokemon(id: ID!): String
         }
-      `)
-
-      const code = `query {
+      `,
+      code: `query {
         pokemon(id: "123") {
           __typename
         }
-      }`
-
-      const tokens = await parseGraphQLWithTreeSitter(code, [], schema)
-
-      // Find the argument "id" token
-      const argumentToken = tokens.find(t =>
-        t.text === 'id'
-        && isArgument(t.semantic)
-      )
-
-      expect(argumentToken).toBeDefined()
-      expect(argumentToken?.polen.isInteractive()).toBe(true)
-      expect(argumentToken?.polen.getReferenceUrl()).toBe('/reference/Query#pokemon__id')
-    })
-
-    test('should handle multiple arguments', async () => {
-      const schema = buildSchema(`
+      }`,
+      checks: [
+        { tokenText: 'id', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#pokemon__id' },
+      ],
+    },
+    {
+      name: 'should handle multiple arguments',
+      schemaSDL: `
         type Query {
           search(query: String!, limit: Int, offset: Int): [String!]!
         }
-      `)
-
-      const code = `query {
+      `,
+      code: `query {
         search(query: "test", limit: 10) {
           __typename
         }
-      }`
-
-      const tokens = await parseGraphQLWithTreeSitter(code, [], schema)
-
-      const queryArg = tokens.find(t => t.text === 'query' && isArgument(t.semantic))
-      const limitArg = tokens.find(t => t.text === 'limit' && isArgument(t.semantic))
-
-      expect(queryArg).toBeDefined()
-      expect(queryArg?.polen.isInteractive()).toBe(true)
-      expect(queryArg?.polen.getReferenceUrl()).toBe('/reference/Query#search__query')
-
-      expect(limitArg).toBeDefined()
-      expect(limitArg?.polen.isInteractive()).toBe(true)
-      expect(limitArg?.polen.getReferenceUrl()).toBe('/reference/Query#search__limit')
-    })
-
-    test('should handle arguments with variables', async () => {
-      const schema = buildSchema(`
+      }`,
+      checks: [
+        { tokenText: 'query', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#search__query' },
+        { tokenText: 'limit', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#search__limit' },
+      ],
+    },
+    {
+      name: 'should handle arguments with variables',
+      schemaSDL: `
         type Query {
           pokemon(id: ID!): String
         }
-      `)
-
-      const code = `query GetPokemon($pokemonId: ID!) {
+      `,
+      code: `query GetPokemon($pokemonId: ID!) {
         pokemon(id: $pokemonId) {
           __typename
         }
-      }`
-
-      const tokens = await parseGraphQLWithTreeSitter(code, [], schema)
-
-      // The argument name "id" should still be recognized even when value is a variable
-      const idArgument = tokens.find(t =>
-        t.text === 'id'
-        && isArgument(t.semantic)
-      )
-
-      expect(idArgument).toBeDefined()
-      expect(idArgument?.polen.isInteractive()).toBe(true)
-
-      // Variable tokens - basic implementation completed
-      const variable = tokens.find(t => t.text === '$pokemonId')
-      if (variable && variable.semantic && 'kind' in variable.semantic) {
-        expect(variable.semantic.kind).toBe('Variable')
+      }`,
+      checks: [
+        { tokenText: 'id', isArgument: true, expectedInteractive: true },
+        { tokenText: '$pokemonId', isArgument: false, checkVariable: true },
+      ],
+    },
+  ], async ({ schemaSDL, code, checks }) => {
+    const schema = buildSchema(schemaSDL)
+    const tokens = await parseGraphQLWithTreeSitter(code, [], schema)
+    
+    for (const check of checks) {
+      const token = tokens.find(t => {
+        if (check.isArgument) {
+          return t.text === check.tokenText && isArgument(t.semantic)
+        }
+        return t.text === check.tokenText
+      })
+      
+      if (check.isArgument || check.expectedInteractive !== undefined || check.expectedUrl) {
+        expect(token).toBeDefined()
       }
-    })
+      
+      if (token) {
+        if (check.expectedInteractive !== undefined) {
+          expect(token.polen.isInteractive()).toBe(check.expectedInteractive)
+        }
+        
+        if (check.expectedUrl) {
+          expect(token.polen.getReferenceUrl()).toBe(check.expectedUrl)
+        }
+        
+        if (check.checkVariable && token.semantic && 'kind' in token.semantic) {
+          expect(token.semantic.kind).toBe('Variable')
+        }
+      }
+    }
   })
 
   describe('field parsing', () => {

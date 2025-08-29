@@ -1,11 +1,13 @@
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { GrafaidOld } from '#lib/grafaid-old'
-import { GraphQLPath } from '#lib/graphql-path'
-import { SchemaLifecycle } from '#lib/schema-lifecycle'
+import { Lifecycles } from '#lib/lifecycles/$'
+import { Schema } from '#lib/schema/$'
+import { Version } from '#lib/version/$'
 import type { BoxProps } from '@radix-ui/themes'
-import { Badge, Box, Text } from '@radix-ui/themes'
-import { useSchemaLifecycle } from '../contexts/SchemaLifecycleContext.js'
+import { Badge, Box, Link, Text } from '@radix-ui/themes'
+import { Match } from 'effect'
+import { useSchema } from '../contexts/GraphqlLifecycleContext.js'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.js'
 import { DeprecationReason } from './DeprecationReason.js'
 import { Description } from './Description.js'
@@ -17,27 +19,19 @@ export const Field: React.FC<
     parentTypeName?: string
   }
 > = ({ data, parentTypeName, ...boxProps }) => {
-  const { lifecycle, currentVersion } = useSchemaLifecycle()
+  const { schema, lifecycles } = useSchema()
 
   const argumentList = GrafaidOld.isOutputField(data)
     ? <ArgumentListAnnotation field={data} />
     : null
 
   // Get field lifecycle information if available
-  let fieldLifecycle = null
-  let addedDate = null
-  let removedDate = null
-  let isAvailable = true
-
-  if (lifecycle && parentTypeName) {
-    const fieldPath = GraphQLPath.Definition.field(parentTypeName, data.name)
-    fieldLifecycle = SchemaLifecycle.getFieldLifecycle(lifecycle, fieldPath)
-    if (fieldLifecycle) {
-      addedDate = SchemaLifecycle.getFieldAddedDate(lifecycle, fieldPath)
-      removedDate = SchemaLifecycle.getFieldRemovedDate(lifecycle, fieldPath)
-      isAvailable = SchemaLifecycle.isFieldCurrentlyAvailable(lifecycle, fieldPath)
-    }
-  }
+  const since = parentTypeName
+    ? Lifecycles.getFieldSince(lifecycles, parentTypeName, data.name, schema)
+    : null
+  const removedDate = parentTypeName
+    ? Lifecycles.getFieldRemovedDate(lifecycles, parentTypeName, data.name, schema)
+    : null
 
   return (
     <Box {...boxProps} id={data.name}>
@@ -45,19 +39,35 @@ export const Field: React.FC<
       <DeprecationReason data={data} />
       <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Text weight='medium'>{data.name}</Text>
-        {addedDate && (
-          <Badge color='green' variant='soft' size='1'>
-            Added {Api.Schema.dateToVersionString(addedDate)}
-          </Badge>
+        {since && (
+          since._tag === 'initial'
+            ? (
+              <Badge color='blue' variant='soft' size='1'>
+                Since initial version
+              </Badge>
+            )
+            : (
+              <Link
+                href={Api.Schema.Routing.createChangelogUrl(
+                  since.revision.date,
+                  since.schema,
+                )}
+                style={{ textDecoration: 'none' }}
+              >
+                <Badge color='green' variant='soft' size='1' style={{ cursor: 'pointer' }}>
+                  Added {Match.value(since.schema).pipe(
+                    Match.tagsExhaustive({
+                      SchemaVersioned: (s) => `${Version.toString(s.version)}@${since.revision.date}`,
+                      SchemaUnversioned: () => since.revision.date,
+                    }),
+                  )}
+                </Badge>
+              </Link>
+            )
         )}
         {removedDate && (
           <Badge color='red' variant='soft' size='1'>
             Removed {Api.Schema.dateToVersionString(removedDate)}
-          </Badge>
-        )}
-        {!isAvailable && (
-          <Badge color='orange' variant='soft' size='1'>
-            Not available in current version
           </Badge>
         )}
       </Box>

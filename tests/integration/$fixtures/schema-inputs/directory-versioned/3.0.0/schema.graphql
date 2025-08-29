@@ -1,0 +1,722 @@
+"""
+The root query type for accessing Pokemon data
+"""
+type Query {
+  """
+  Get a specific Pokemon by ID
+  """
+  pokemon(id: ID!): Pokemon
+  
+  """
+  List all Pokemon with advanced filtering
+  """
+  pokemons(
+    type: PokemonType
+    generation: Int
+    isLegendary: Boolean
+    limit: Int = 20
+    offset: Int = 0
+  ): PokemonConnection!
+  
+  """
+  Get a trainer by ID
+  """
+  trainer(id: ID!): Trainer
+  
+  """
+  List all trainers
+  """
+  trainers: [Trainer!]!
+  
+  """
+  Search for Pokemon by name
+  """
+  searchPokemon(name: String!): [Pokemon!]!
+  
+  """
+  Get battle matchup information
+  """
+  battleMatchup(attacker: ID!, defender: ID!): BattleMatchup!
+}
+
+"""
+Mutations for Pokemon operations
+"""
+type Mutation {
+  """
+  Catch a wild Pokemon
+  """
+  catchPokemon(pokemonId: ID!, trainerId: ID!): Pokemon!
+  
+  """
+  Level up a Pokemon
+  """
+  levelUpPokemon(id: ID!): Pokemon!
+  
+  """
+  Teach a move to a Pokemon
+  """
+  teachMove(pokemonId: ID!, moveId: ID!): Pokemon!
+  
+  """
+  Evolve a Pokemon if conditions are met
+  """
+  evolvePokemon(id: ID!): Pokemon!
+  
+  """
+  Trade Pokemon between trainers
+  """
+  tradePokemon(pokemonId: ID!, fromTrainerId: ID!, toTrainerId: ID!): Trade!
+  
+  """
+  Battle between two Pokemon
+  """
+  battle(attackerId: ID!, defenderId: ID!): BattleResult!
+}
+
+"""
+Subscriptions for real-time updates
+"""
+type Subscription {
+  """
+  Subscribe to Pokemon level up events
+  """
+  pokemonLevelUp(trainerId: ID!): Pokemon!
+  
+  """
+  Subscribe to new Pokemon captures
+  """
+  pokemonCaught: Pokemon!
+  
+  """
+  Subscribe to ongoing battles
+  """
+  battleUpdate(battleId: ID!): BattleUpdate!
+}
+
+"""
+A Pokemon creature with full feature set
+"""
+type Pokemon {
+  """
+  Unique identifier
+  """
+  id: ID!
+  
+  """
+  Species name (e.g., Pikachu, Charizard)
+  """
+  name: String!
+  
+  """
+  Pokemon can have one or two types
+  """
+  types: [PokemonType!]!
+  
+  """
+  Comprehensive battle statistics
+  """
+  stats: Stats!
+  
+  """
+  Current level (1-100)
+  """
+  level: Int!
+  
+  """
+  Experience points toward next level
+  """
+  experience: Int!
+  
+  """
+  Evolution chain information
+  """
+  evolution: Evolution
+  
+  """
+  Special abilities that provide battle advantages
+  """
+  abilities: [Ability!]!
+  
+  """
+  Battle moves this Pokemon knows
+  """
+  moves: [Move!]!
+  
+  """
+  The trainer who owns this Pokemon
+  """
+  trainer: Trainer
+  
+  """
+  Rare alternate coloration
+  """
+  isShiny: Boolean!
+  
+  """
+  Individual values - genetic potential
+  """
+  ivs: IVStats!
+  
+  """
+  Effort values - training results
+  """
+  evs: EVStats!
+  
+  """
+  Nature affects stat growth
+  """
+  nature: Nature!
+  
+  """
+  Held item that provides battle effects
+  """
+  heldItem: Item
+  
+  """
+  Current HP in battle
+  """
+  currentHP: Int!
+  
+  """
+  Status conditions affecting the Pokemon
+  """
+  status: StatusCondition
+  
+  """
+  Friendship level affects certain evolutions and moves
+  """
+  friendship: Int!
+  
+  """
+  Generation this Pokemon was introduced
+  """
+  generation: Int!
+  
+  """
+  Whether this is a legendary Pokemon
+  """
+  isLegendary: Boolean!
+  
+  """
+  Whether this is a mythical Pokemon
+  """
+  isMythical: Boolean!
+  
+  """
+  Base form of this Pokemon species
+  """
+  baseForm: Pokemon
+  
+  """
+  All forms of this Pokemon species
+  """
+  forms: [Pokemon!]!
+}
+
+"""
+Paginated Pokemon results
+"""
+type PokemonConnection {
+  edges: [PokemonEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PokemonEdge {
+  node: Pokemon!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+"""
+Base statistics that determine a Pokemon's potential
+"""
+type Stats {
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+  speed: Int!
+  total: Int!
+}
+
+"""
+Individual values - the Pokemon's genetic potential
+"""
+type IVStats {
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+  speed: Int!
+}
+
+"""
+Effort values - results of training
+"""
+type EVStats {
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+  speed: Int!
+}
+
+"""
+Evolution information for Pokemon species
+"""
+type Evolution {
+  """
+  The Pokemon this evolves into
+  """
+  evolvesTo: [Pokemon!]!
+  
+  """
+  The Pokemon this evolved from
+  """
+  evolvesFrom: Pokemon
+  
+  """
+  Evolution method and requirements
+  """
+  method: EvolutionMethod!
+  
+  """
+  Level required for evolution
+  """
+  level: Int
+  
+  """
+  Item required for evolution
+  """
+  item: Item
+  
+  """
+  Special condition for evolution
+  """
+  condition: String
+  
+  """
+  Time of day requirement
+  """
+  timeOfDay: TimeOfDay
+}
+
+"""
+Methods of evolution
+"""
+enum EvolutionMethod {
+  LEVEL_UP
+  ITEM
+  TRADE
+  FRIENDSHIP
+  LOCATION
+  TIME_OF_DAY
+  WEATHER
+  MOVE_KNOWN
+  PARTY_POKEMON
+}
+
+"""
+Time of day for evolutions
+"""
+enum TimeOfDay {
+  DAY
+  NIGHT
+}
+
+"""
+Special abilities that Pokemon possess
+"""
+type Ability {
+  id: ID!
+  name: String!
+  description: String!
+  
+  """
+  Whether this is a hidden ability
+  """
+  isHidden: Boolean!
+  
+  """
+  Battle effect of this ability
+  """
+  effect: String!
+}
+
+"""
+Battle moves that Pokemon can learn
+"""
+type Move {
+  id: ID!
+  name: String!
+  description: String!
+  type: PokemonType!
+  power: Int
+  accuracy: Int!
+  pp: Int!
+  
+  """
+  Physical, Special, or Status move
+  """
+  category: MoveCategory!
+  
+  """
+  Priority determines move order
+  """
+  priority: Int!
+  
+  """
+  Critical hit ratio modifier
+  """
+  critRate: Int!
+  
+  """
+  Secondary effects of the move
+  """
+  secondaryEffect: SecondaryEffect
+  
+  """
+  Target of the move
+  """
+  target: MoveTarget!
+}
+
+"""
+Secondary effects that moves can have
+"""
+type SecondaryEffect {
+  chance: Int!
+  status: StatusCondition
+  statChanges: [StatChange!]
+}
+
+"""
+Stat changes from moves or abilities
+"""
+type StatChange {
+  stat: BattleStat!
+  stages: Int!
+}
+
+"""
+Battle stats that can be modified
+"""
+enum BattleStat {
+  ATTACK
+  DEFENSE
+  SPECIAL_ATTACK
+  SPECIAL_DEFENSE
+  SPEED
+  ACCURACY
+  EVASION
+}
+
+"""
+Move categories for damage calculation
+"""
+enum MoveCategory {
+  PHYSICAL
+  SPECIAL
+  STATUS
+}
+
+"""
+Move target options
+"""
+enum MoveTarget {
+  SINGLE_OPPONENT
+  ALL_OPPONENTS
+  SELF
+  ALL_POKEMON
+  ALLY
+  ALL_ALLIES
+  FIELD
+}
+
+"""
+Items that Pokemon can hold or use
+"""
+type Item {
+  id: ID!
+  name: String!
+  description: String!
+  
+  """
+  Category of item
+  """
+  category: ItemCategory!
+  
+  """
+  Effect when held by a Pokemon
+  """
+  heldEffect: String
+  
+  """
+  Effect when used on a Pokemon
+  """
+  useEffect: String
+  
+  """
+  Fling move power when this item is thrown
+  """
+  flingPower: Int
+}
+
+"""
+Item categories
+"""
+enum ItemCategory {
+  MEDICINE
+  POKEBALL
+  BATTLE
+  BERRY
+  TM
+  TREASURE
+  KEY_ITEM
+  EVOLUTION
+}
+
+"""
+Pokemon trainers who catch and train Pokemon
+"""
+type Trainer {
+  id: ID!
+  name: String!
+  
+  """
+  Trainer's hometown
+  """
+  hometown: String!
+  
+  """
+  Number of gym badges earned
+  """
+  badges: Int!
+  
+  """
+  Pokemon owned by this trainer
+  """
+  pokemon: [Pokemon!]!
+  
+  """
+  Date the trainer started their journey
+  """
+  startDate: String!
+  
+  """
+  Trainer class (e.g., Ace Trainer, Bug Catcher)
+  """
+  class: TrainerClass!
+  
+  """
+  Money earned from battles
+  """
+  money: Int!
+  
+  """
+  Items in trainer's bag
+  """
+  items: [ItemStack!]!
+  
+  """
+  Pokedex completion percentage
+  """
+  pokedexCompletion: Float!
+  
+  """
+  Battle statistics
+  """
+  battleStats: TrainerBattleStats!
+}
+
+"""
+Stack of items in inventory
+"""
+type ItemStack {
+  item: Item!
+  quantity: Int!
+}
+
+"""
+Trainer battle statistics
+"""
+type TrainerBattleStats {
+  wins: Int!
+  losses: Int!
+  draws: Int!
+  winRate: Float!
+}
+
+"""
+Trainer classes
+"""
+enum TrainerClass {
+  ACE_TRAINER
+  YOUNGSTER
+  BUG_CATCHER
+  SWIMMER
+  PSYCHIC
+  BIRD_KEEPER
+  DRAGON_TAMER
+  BLACK_BELT
+  SCIENTIST
+  CHAMPION
+  GYM_LEADER
+  ELITE_FOUR
+}
+
+"""
+Status conditions that affect Pokemon
+"""
+enum StatusCondition {
+  NONE
+  PARALYSIS
+  SLEEP
+  FREEZE
+  BURN
+  POISON
+  BADLY_POISONED
+  CONFUSION
+  INFATUATION
+  CURSE
+}
+
+"""
+Pokemon natures that affect stat growth
+"""
+enum Nature {
+  HARDY
+  LONELY
+  BRAVE
+  ADAMANT
+  NAUGHTY
+  BOLD
+  DOCILE
+  RELAXED
+  IMPISH
+  LAX
+  TIMID
+  HASTY
+  SERIOUS
+  JOLLY
+  NAIVE
+  MODEST
+  MILD
+  QUIET
+  BASHFUL
+  RASH
+  CALM
+  GENTLE
+  SASSY
+  CAREFUL
+  QUIRKY
+}
+
+"""
+Elemental types that determine strengths and weaknesses
+"""
+enum PokemonType {
+  NORMAL
+  FIRE
+  WATER
+  GRASS
+  ELECTRIC
+  ICE
+  FIGHTING
+  POISON
+  GROUND
+  FLYING
+  PSYCHIC
+  BUG
+  ROCK
+  GHOST
+  DRAGON
+  DARK
+  STEEL
+  FAIRY
+}
+
+"""
+Pokemon trade information
+"""
+type Trade {
+  id: ID!
+  pokemon: Pokemon!
+  fromTrainer: Trainer!
+  toTrainer: Trainer!
+  timestamp: String!
+  
+  """
+  Whether this trade triggered an evolution
+  """
+  triggeredEvolution: Boolean!
+}
+
+"""
+Battle matchup analysis
+"""
+type BattleMatchup {
+  attacker: Pokemon!
+  defender: Pokemon!
+  
+  """
+  Type effectiveness multiplier
+  """
+  effectiveness: Float!
+  
+  """
+  Predicted outcome based on stats
+  """
+  predictedWinner: Pokemon!
+  
+  """
+  Win probability for attacker
+  """
+  attackerWinChance: Float!
+  
+  """
+  Recommended moves for attacker
+  """
+  recommendedMoves: [Move!]!
+}
+
+"""
+Battle result information
+"""
+type BattleResult {
+  id: ID!
+  winner: Pokemon!
+  loser: Pokemon!
+  isDraw: Boolean!
+  turns: Int!
+  experienceGained: Int!
+  moneyEarned: Int!
+  timestamp: String!
+}
+
+"""
+Real-time battle update
+"""
+type BattleUpdate {
+  battleId: ID!
+  turn: Int!
+  attacker: Pokemon!
+  defender: Pokemon!
+  moveUsed: Move!
+  damage: Int!
+  effectiveness: Float!
+  criticalHit: Boolean!
+  statusInflicted: StatusCondition
+  message: String!
+}

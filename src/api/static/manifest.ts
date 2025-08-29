@@ -1,16 +1,51 @@
-import { Codec, Resource } from '@wollybeard/kit'
-import { z } from 'zod/v4'
+import { Resource } from '#lib/kit-temp/$$'
+import { S } from '#lib/kit-temp/effect'
+import { NodeFileSystem } from '@effect/platform-node'
+import { Effect } from 'effect'
 
-export const PolenBuildManifestSchema = z.object({
-  type: z.enum([`ssg`, `ssr`]),
-  version: z.string(),
-  basePath: z.string(),
+export const PolenBuildManifestSchema = S.Struct({
+  type: S.Literal('ssg', 'ssr'),
+  version: S.String,
+  basePath: S.String,
 })
 
-export type PolenBuildManifest = z.infer<typeof PolenBuildManifestSchema>
+export type PolenBuildManifest = S.Schema.Type<typeof PolenBuildManifestSchema>
 
-export const buildManifest = Resource.create({
-  name: `polen-build-manifest`,
-  path: `.polen/build.json`,
-  codec: Codec.fromZod(PolenBuildManifestSchema),
+const buildManifestResource = Resource.create({
+  name: 'polen-build-manifest',
+  path: '.polen/build.json',
+  schema: PolenBuildManifestSchema,
 })
+
+/**
+ * Resource for reading and writing the Polen build manifest.
+ * The manifest contains information about the build type and configuration.
+ */
+export const buildManifest = {
+  /**
+   * Read the build manifest from the specified directory.
+   * @param directory - The directory containing the .polen/build.json file
+   * @returns Promise resolving to Either with error or manifest data
+   */
+  read: async (directory: string) => {
+    return Effect.runPromiseExit(
+      buildManifestResource.read(directory).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
+    )
+  },
+
+  /**
+   * Write the build manifest to the specified directory.
+   * @param data - The manifest data to write
+   * @param directory - The directory where to write the .polen/build.json file
+   * @returns Promise resolving to Either with error or void
+   */
+  write: async (data: PolenBuildManifest, directory: string) => {
+    return Effect.runPromiseExit(
+      buildManifestResource.write(data, directory).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
+    )
+  },
+}

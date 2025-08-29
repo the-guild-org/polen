@@ -1,7 +1,7 @@
 import { type HighlightedCode, Pre } from 'codehike/code'
 import type { GraphQLSchema } from 'graphql'
 import React from 'react'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import PROJECT_DATA from 'virtual:polen/project/data.json'
 import { GraphQLInteractive } from './GraphQLInteractive/index.js'
 
 interface CodeBlockProps {
@@ -16,11 +16,15 @@ interface CodeBlockProps {
 export const CodeBlock: React.FC<CodeBlockProps> = ({ codeblock, schema }) => {
   // Check if this is an interactive GraphQL block
   if (codeblock.lang === 'graphql' && codeblock.meta?.includes('interactive')) {
+    // Only render interactive if we have a schema
+    if (!schema) {
+      return <Pre code={codeblock} />
+    }
     return (
       <GraphQLInteractive
         codeblock={codeblock}
         schema={schema}
-        showWarningIfNoSchema={PROJECT_DATA.warnings.interactiveWithoutSchema.enabled}
+        showWarningIfNoSchema={PROJECT_DATA?.warnings?.interactiveWithoutSchema?.enabled ?? false}
       />
     )
   }

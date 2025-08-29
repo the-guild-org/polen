@@ -8,11 +8,12 @@ Explore Polen's powerful changelog feature with a fun Pokemon GraphQL API that e
 
 This example highlights:
 
-- **Schema Changelog**: 10 versions spanning almost 2 years of API evolution
+- **Schema Changelog**: Multiple versions showing API evolution with integer-based versioning
 - **Change Criticality**: Breaking, dangerous, and safe changes clearly grouped
-- **All Change Types**: Demonstrates 50+ types of GraphQL schema changes
-- **Interactive Navigation**: Easy browsing between releases via sidebar
+- **All Change Types**: Demonstrates comprehensive GraphQL schema changes
+- **Interactive Navigation**: Easy browsing between releases via sidebar and version picker
 - **Version Comparison**: See exactly what changed between any two versions
+- **Versioned Directory Structure**: Clean organization with separate directories per version
 
 ## Run Locally
 
@@ -28,10 +29,11 @@ pnpm dev
 
 ## Key Files
 
-- `polen.config.ts` - Configuration with multiple schema versions
-- `schema/` - Directory containing versioned schema files (one per version)
-- `schema/2022-11-01.graphql` - Initial Pokemon API schema
-- `schema/2024-09-30.graphql` - Latest evolution with all Pokemon types
+- `polen.config.ts` - Configuration using versioned directory source
+- `schema/` - Directory containing version subdirectories
+- `schema/1/` - Initial Pokemon API schema (version 1)
+- `schema/2>1@2024-02-20/` - Expanded schema with new types (version 2, branched from 1)
+- `schema/3>2@2024-05-10/` - Latest evolution with comprehensive Pokemon data (version 3, branched from 2)
 
 ## Source Code
 

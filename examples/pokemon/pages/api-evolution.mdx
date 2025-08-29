@@ -1,0 +1,173 @@
+# API Evolution
+
+See how the Pokemon API has evolved across three major versions.
+
+## Version 1.0.0 - The Foundation
+
+Released: January 1, 2024
+
+The initial release focused on basic Pokemon data:
+
+- **Simple Pokemon type**: Single type per Pokemon
+- **Basic stats**: HP, Attack, Defense only
+- **Query-only**: No mutations or subscriptions
+- **Simple filtering**: Filter by type only
+
+### Example v1.0.0 Query
+
+```graphql
+query V1Example {
+  pokemon(id: "025") {
+    id
+    name
+    type
+    hp
+    attack
+    defense
+  }
+  
+  pokemons(type: ELECTRIC) {
+    name
+    type
+  }
+}
+```
+
+## Version 2.0.0 - Battle Ready
+
+Released: June 1, 2024
+
+Major expansion adding battle mechanics and trainers:
+
+### New Features
+
+- **Multiple types**: Pokemon can now have 1-2 types
+- **Full stats system**: Added Special Attack/Defense and Speed
+- **Trainer system**: Track trainers and their Pokemon
+- **Evolution chains**: See how Pokemon evolve
+- **Abilities & Moves**: Complete battle system
+- **Mutations**: Catch Pokemon, level up, teach moves
+
+### Breaking Changes
+
+- `type` field replaced with `types` array
+- Stats moved from flat fields to nested `stats` object
+
+### Example v2.0.0 Query
+
+```graphql
+query V2Example {
+  pokemon(id: "006") {
+    name
+    types  # Now an array!
+    stats {  # Nested object
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+    }
+    abilities {
+      name
+      isHidden
+    }
+    evolution {
+      evolvesTo {
+        name
+      }
+      level
+    }
+  }
+}
+```
+
+## Version 3.0.0 - Competitive Edition
+
+Released: December 1, 2024
+
+Full-featured API for competitive Pokemon battles:
+
+### New Features
+
+- **Pagination**: Proper cursor-based pagination for large datasets
+- **Subscriptions**: Real-time updates for battles and events
+- **Advanced filtering**: Filter by generation, legendary status
+- **IVs/EVs/Natures**: Complete competitive mechanics
+- **Items system**: Hold items and inventory management
+- **Battle analysis**: Type matchups and predictions
+- **Trade system**: Trade Pokemon between trainers
+
+### Enhanced Features
+
+- Evolution now supports all methods (items, friendship, time of day)
+- Moves include priority, critical rate, and secondary effects
+- Trainers have classes, money, and battle statistics
+- Status conditions and weather effects
+
+### Example v3.0.0 Query
+
+```graphql
+query V3Example {
+  pokemons(
+    isLegendary: true
+    generation: 1
+    limit: 10
+  ) {
+    edges {
+      node {
+        name
+        types
+        stats {
+          total
+        }
+        isLegendary
+        generation
+      }
+    }
+    pageInfo {
+      hasNextPage
+      totalCount
+    }
+  }
+  
+  battleMatchup(
+    attacker: "006"  # Charizard
+    defender: "009"  # Blastoise
+  ) {
+    effectiveness
+    predictedWinner {
+      name
+    }
+    attackerWinChance
+  }
+}
+```
+
+## Migration Guide
+
+### v1.0.0 → v2.0.0
+
+1. Replace `type` with `types[0]` for single type
+2. Move stat fields into `stats` object
+3. Update queries to handle arrays for types
+
+### v2.0.0 → v3.0.0
+
+1. Update list queries to use pagination
+2. Add error handling for new required fields
+3. Consider using subscriptions for real-time features
+
+## Version Comparison
+
+| Feature | v1.0.0 | v2.0.0 | v3.0.0 |
+|---------|--------|--------|--------|
+| Single Pokemon Query | ✓ | ✓ | ✓ |
+| Multiple Types | ✗ | ✓ | ✓ |
+| Full Stats | ✗ | ✓ | ✓ |
+| Trainers | ✗ | ✓ | ✓ |
+| Mutations | ✗ | ✓ | ✓ |
+| Subscriptions | ✗ | ✗ | ✓ |
+| Pagination | ✗ | ✗ | ✓ |
+| IVs/EVs | ✗ | ✗ | ✓ |
+| Battle Analysis | ✗ | ✗ | ✓ |

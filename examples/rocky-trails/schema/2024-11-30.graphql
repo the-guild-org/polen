@@ -1,0 +1,789 @@
+# Rocky Mountain Trails API
+# Added routing and trip planning features
+
+type Coordinates {
+  """Latitude in decimal degrees"""
+  latitude: Float!
+  
+  """Longitude in decimal degrees"""
+  longitude: Float!
+  
+  """Elevation in meters above sea level"""
+  elevation: Float
+}
+
+type Place {
+  """Unique identifier for the place"""
+  id: ID!
+  
+  """Name of the location"""
+  name: String!
+  
+  """GPS coordinates"""
+  coordinates: Coordinates!
+  
+  """Type of location"""
+  type: PlaceType!
+  
+  """Optional description or notes"""
+  description: String
+  
+  """Current weather conditions at this location"""
+  currentWeather: Weather
+  
+  """Facilities available at this location"""
+  facilities: [Facility!]!
+}
+
+enum PlaceType {
+  """Designated camping area with facilities"""
+  CAMPGROUND
+  
+  """Mountain summit"""
+  PEAK
+  
+  """Trail starting point with parking"""
+  TRAILHEAD
+  
+  """Alpine or valley lake"""
+  LAKE
+  
+  """Mountain pass between valleys"""
+  PASS
+  
+  """River or creek junction"""
+  JUNCTION
+  
+  """Emergency shelter or hut"""
+  SHELTER
+}
+
+enum Facility {
+  """Parking area available"""
+  PARKING
+  
+  """Toilet facilities"""
+  TOILETS
+  
+  """Potable water source"""
+  WATER
+  
+  """Fire pits or cooking areas"""
+  FIRE_PITS
+  
+  """Bear-proof food storage"""
+  BEAR_BOXES
+  
+  """Picnic tables"""
+  PICNIC_TABLES
+  
+  """Emergency shelter"""
+  SHELTER
+  
+  """Cell phone coverage"""
+  CELL_COVERAGE
+}
+
+"""Trail information with routing capabilities"""
+type Trail {
+  """Unique identifier for the trail"""
+  id: ID!
+  
+  """Official trail name"""
+  name: String!
+  
+  """Starting location"""
+  start: Place!
+  
+  """Ending location (null for branching trails)"""
+  end: Place
+  
+  """Distance in kilometers"""
+  distanceKm: Float!
+  
+  """Estimated hiking time in hours"""
+  estimatedHours: Float!
+  
+  """Trail description and notable features"""
+  description: String
+  
+  """Difficulty rating for this trail"""
+  difficulty: DifficultyRating!
+  
+  """Types of terrain encountered on this trail"""
+  terrain: [TerrainType!]!
+  
+  """Total elevation gain in meters"""
+  elevationGain: Float!
+  
+  """Total elevation loss in meters"""
+  elevationLoss: Float!
+  
+  """Highest point on the trail in meters"""
+  maxElevation: Float!
+  
+  """Trail type classification"""
+  trailType: TrailType!
+  
+  """Branches for branching trails"""
+  branches: [TrailConnection!]
+  
+  """Current trail conditions"""
+  conditions: TrailConditions
+}
+
+enum TrailType {
+  """A trail that ends at a specific destination"""
+  TERMINAL
+  
+  """A trail that branches into multiple other trails"""
+  BRANCHING
+}
+
+"""Connection point between trails"""
+type TrailConnection {
+  """The connected trail"""
+  trail: Trail!
+  
+  """Distance from parent trail start to junction in km"""
+  distanceFromStart: Float!
+  
+  """GPS coordinates of the junction"""
+  junctionCoordinates: Coordinates!
+  
+  """Description of the junction (landmarks, signage, etc.)"""
+  description: String
+  
+  """Type of connection"""
+  connectionType: ConnectionType!
+}
+
+enum ConnectionType {
+  """Y-shaped junction where trail splits"""
+  FORK
+  
+  """T-junction with another trail"""
+  INTERSECTION
+  
+  """Trail merges with another"""
+  MERGE
+  
+  """Side trail or detour"""
+  SPUR
+  
+  """Loop returns to main trail"""
+  LOOP
+}
+
+"""Current conditions on a trail"""
+type TrailConditions {
+  """Last time conditions were updated"""
+  lastUpdated: String!
+  
+  """Overall trail status"""
+  status: TrailStatus!
+  
+  """Elevation where continuous snow begins (meters)"""
+  snowLine: Float
+  
+  """Specific condition warnings"""
+  warnings: [String!]!
+  
+  """Recent trip reports from hikers"""
+  recentReports: [TripReport!]!
+}
+
+enum TrailStatus {
+  """Trail is clear and in good condition"""
+  CLEAR
+  
+  """Some obstacles but passable"""
+  PARTIALLY_BLOCKED
+  
+  """Major obstacles, very difficult"""
+  IMPASSABLE
+  
+  """Trail officially closed"""
+  CLOSED
+  
+  """Seasonal closure in effect"""
+  SEASONAL_CLOSURE
+}
+
+"""User-submitted trail condition report"""
+type TripReport {
+  """Date of the hike"""
+  date: String!
+  
+  """User who submitted the report"""
+  userName: String!
+  
+  """Conditions observed"""
+  conditions: String!
+  
+  """Hazards encountered"""
+  hazards: [String!]!
+  
+  """Photos URLs if available"""
+  photos: [String!]!
+}
+
+"""Network of interconnected trails"""
+type TrailNetwork {
+  """Unique identifier for the network"""
+  id: ID!
+  
+  """Name of the trail network or area"""
+  name: String!
+  
+  """All trails in this network"""
+  trails: [Trail!]!
+  
+  """All places accessible in this network"""
+  places: [Place!]!
+  
+  """Total combined distance of all trails"""
+  totalDistanceKm: Float!
+  
+  """Suggested multi-day routes through the network"""
+  suggestedRoutes: [SuggestedRoute!]!
+}
+
+"""Pre-planned route through trail network"""
+type SuggestedRoute {
+  """Name of the suggested route"""
+  name: String!
+  
+  """Ordered list of trails to follow"""
+  trails: [Trail!]!
+  
+  """Recommended camping spots along the route"""
+  campgrounds: [Place!]!
+  
+  """Total distance of the route"""
+  totalDistanceKm: Float!
+  
+  """Recommended number of days"""
+  recommendedDays: Int!
+  
+  """Difficulty level of the overall route"""
+  difficulty: DifficultyLevel!
+  
+  """Description and highlights"""
+  description: String!
+}
+
+"""Calculated route between two places"""
+type Route {
+  """Starting place"""
+  start: Place!
+  
+  """Ending place"""
+  end: Place!
+  
+  """Ordered list of trails to follow"""
+  trails: [Trail!]!
+  
+  """Total distance of the route"""
+  totalDistanceKm: Float!
+  
+  """Total elevation gain"""
+  totalElevationGain: Float!
+  
+  """Total elevation loss"""
+  totalElevationLoss: Float!
+  
+  """Estimated total time in hours"""
+  estimatedHours: Float!
+  
+  """Estimated number of days based on pace"""
+  estimatedDays: Int!
+  
+  """Available campgrounds along the route"""
+  campgrounds: [Place!]!
+  
+  """Water sources along the route"""
+  waterSources: [Place!]!
+  
+  """Highest point on the route"""
+  maxElevation: Float!
+  
+  """Overall difficulty of the route"""
+  overallDifficulty: DifficultyLevel!
+  
+  """Alternative routes if available"""
+  alternatives: [Route!]!
+}
+
+"""Options for route finding"""
+input RouteOptions {
+  """Maximum number of days for the trip"""
+  maxDays: Int
+  
+  """Preferred difficulty level"""
+  preferredDifficulty: DifficultyLevel
+  
+  """Terrain types to avoid"""
+  avoidTerrain: [TerrainType!]
+  
+  """Minimum fitness level of group"""
+  fitnessLevel: FitnessLevel
+  
+  """Whether to prefer loop routes"""
+  preferLoop: Boolean
+  
+  """Whether to include alternative routes"""
+  includeAlternatives: Boolean
+}
+
+"""Trip planning information"""
+type TripPlan {
+  """The planned route"""
+  route: Route!
+  
+  """Day-by-day itinerary"""
+  itinerary: [DayPlan!]!
+  
+  """Required permits"""
+  permits: [String!]!
+  
+  """Recommended gear based on conditions"""
+  recommendedGear: [String!]!
+  
+  """Emergency exit points along the route"""
+  emergencyExits: [EmergencyExit!]!
+  
+  """Weather forecast for trip dates"""
+  weatherForecast: [WeatherForecast!]!
+}
+
+"""Daily plan for a multi-day trip"""
+type DayPlan {
+  """Day number"""
+  day: Int!
+  
+  """Starting point for the day"""
+  start: Place!
+  
+  """Ending point for the day"""
+  end: Place!
+  
+  """Trails to hike this day"""
+  trails: [Trail!]!
+  
+  """Distance to cover in km"""
+  distanceKm: Float!
+  
+  """Estimated hiking hours"""
+  estimatedHours: Float!
+  
+  """Elevation gain for the day"""
+  elevationGain: Float!
+  
+  """Suggested rest stops"""
+  restStops: [Place!]!
+}
+
+"""Emergency exit information"""
+type EmergencyExit {
+  """Nearest exit point"""
+  exitPoint: Place!
+  
+  """Distance to exit in km"""
+  distanceKm: Float!
+  
+  """Direction to exit (compass bearing)"""
+  bearing: Int!
+  
+  """Description of how to reach exit"""
+  instructions: String!
+  
+  """Cell coverage availability"""
+  hasCellCoverage: Boolean!
+}
+
+type DifficultyRating {
+  """Overall difficulty level"""
+  overall: DifficultyLevel!
+  
+  """Technical scrambling classification if applicable"""
+  scrambleClass: ScrambleClass
+  
+  """Number of river/creek fordings"""
+  riverFordings: Int!
+  
+  """Level of exposure to heights"""
+  exposureLevel: ExposureLevel!
+  
+  """Physical fitness level required"""
+  fitnessLevel: FitnessLevel!
+  
+  """Route finding difficulty"""
+  routeFinding: RouteFindingDifficulty!
+  
+  """Specific hazards or challenges"""
+  hazards: [String!]!
+}
+
+enum DifficultyLevel {
+  """Easy - Well-maintained trail, minimal elevation gain"""
+  EASY
+  
+  """Moderate - Some steep sections, good fitness required"""
+  MODERATE
+  
+  """Hard - Steep terrain, route finding skills needed"""
+  HARD
+  
+  """Expert - Technical terrain, mountaineering skills required"""
+  EXPERT
+}
+
+enum ScrambleClass {
+  """No scrambling required"""
+  NONE
+  
+  """Class 1 - Hands occasionally for balance"""
+  CLASS_1
+  
+  """Class 2 - Hands frequently required"""
+  CLASS_2
+  
+  """Class 3 - Exposure present, fall could be fatal"""
+  CLASS_3
+  
+  """Class 4 - Technical climbing, rope recommended"""
+  CLASS_4
+  
+  """Class 5 - Technical climbing, rope required"""
+  CLASS_5
+}
+
+enum TerrainType {
+  """Large rocks requiring careful navigation"""
+  BOULDER_FIELD
+  
+  """Loose rock slopes"""
+  SCREE
+  
+  """Steep loose gravel"""
+  TALUS
+  
+  """Forest trail"""
+  FOREST
+  
+  """Open meadow above treeline"""
+  ALPINE_MEADOW
+  
+  """Glacier travel (equipment required)"""
+  GLACIER
+  
+  """Wetland or boggy terrain"""
+  SWAMP
+  
+  """River or creek crossing"""
+  RIVER_CROSSING
+  
+  """Seasonal or permanent snow"""
+  SNOW_FIELD
+  
+  """Exposed rock slabs"""
+  SLAB
+  
+  """Narrow ridge with exposure"""
+  RIDGE
+  
+  """Dense bush requiring bushwhacking"""
+  BUSHWHACK
+  
+  """Avalanche terrain"""
+  AVALANCHE_ZONE
+}
+
+enum ExposureLevel {
+  """No exposure to heights"""
+  NONE
+  
+  """Mild exposure, comfortable for most"""
+  MILD
+  
+  """Moderate exposure, may cause discomfort"""
+  MODERATE
+  
+  """Severe exposure, not for those with fear of heights"""
+  SEVERE
+  
+  """Extreme exposure, technical skills required"""
+  EXTREME
+}
+
+enum FitnessLevel {
+  """Low fitness, suitable for families"""
+  LOW
+  
+  """Moderate fitness required"""
+  MODERATE
+  
+  """High fitness, regular hikers"""
+  HIGH
+  
+  """Very high fitness, experienced backpackers"""
+  VERY_HIGH
+  
+  """Elite fitness, mountaineers"""
+  ELITE
+}
+
+enum RouteFindingDifficulty {
+  """Well-marked trail, impossible to lose"""
+  TRIVIAL
+  
+  """Occasional cairns or markers"""
+  EASY
+  
+  """Some route finding required"""
+  MODERATE
+  
+  """Significant route finding, GPS recommended"""
+  DIFFICULT
+  
+  """Expert navigation, GPS and map essential"""
+  EXPERT
+}
+
+type Weather {
+  """Temperature in Celsius"""
+  temperature: Float!
+  
+  """Feels like temperature in Celsius"""
+  feelsLike: Float!
+  
+  """Current weather conditions"""
+  conditions: WeatherCondition!
+  
+  """Wind speed in km/h"""
+  windSpeedKmh: Float!
+  
+  """Wind direction in degrees (0-360)"""
+  windDirection: Int!
+  
+  """Precipitation amount in mm"""
+  precipitation: Float!
+  
+  """Visibility in kilometers"""
+  visibilityKm: Float!
+  
+  """Humidity percentage"""
+  humidity: Int!
+  
+  """UV index (0-11+)"""
+  uvIndex: Int!
+  
+  """Time of observation"""
+  observedAt: String!
+}
+
+enum WeatherCondition {
+  """Clear skies"""
+  CLEAR
+  
+  """Partly cloudy"""
+  PARTLY_CLOUDY
+  
+  """Overcast"""
+  CLOUDY
+  
+  """Light rain"""
+  LIGHT_RAIN
+  
+  """Heavy rain"""
+  HEAVY_RAIN
+  
+  """Light snow"""
+  LIGHT_SNOW
+  
+  """Heavy snow"""
+  HEAVY_SNOW
+  
+  """Fog or low visibility"""
+  FOG
+  
+  """Thunderstorm"""
+  STORM
+  
+  """Mixed rain and snow"""
+  MIXED_PRECIPITATION
+}
+
+type WeatherForecast {
+  """Date of forecast"""
+  date: String!
+  
+  """High temperature in Celsius"""
+  highTemp: Float!
+  
+  """Low temperature in Celsius"""
+  lowTemp: Float!
+  
+  """Expected conditions"""
+  conditions: WeatherCondition!
+  
+  """Probability of precipitation (0-100)"""
+  precipitationChance: Int!
+  
+  """Expected precipitation in mm"""
+  expectedPrecipitation: Float!
+  
+  """Expected wind speed in km/h"""
+  windSpeedKmh: Float!
+}
+
+type TrailWeather {
+  """The trail being queried"""
+  trail: Trail!
+  
+  """Weather at the start point"""
+  startWeather: Weather!
+  
+  """Weather at key points along the trail"""
+  waypoints: [WaypointWeather!]!
+  
+  """Weather advisories or warnings"""
+  advisories: [String!]!
+}
+
+type WaypointWeather {
+  """Location description"""
+  location: String!
+  
+  """Coordinates of this waypoint"""
+  coordinates: Coordinates!
+  
+  """Weather at this point"""
+  weather: Weather!
+}
+
+type Query {
+  """Get all available places"""
+  places: [Place!]!
+  
+  """Get a specific place by ID"""
+  place(id: ID!): Place
+  
+  """Get all trails"""
+  trails: [Trail!]!
+  
+  """Get a specific trail by ID"""
+  trail(id: ID!): Trail
+  
+  """Find trails starting from a specific place"""
+  trailsFrom(placeId: ID!): [Trail!]!
+  
+  """Find trails ending at a specific place"""
+  trailsTo(placeId: ID!): [Trail!]!
+  
+  """Get trail networks in a region"""
+  trailNetworks: [TrailNetwork!]!
+  
+  """Get a specific trail network"""
+  trailNetwork(id: ID!): TrailNetwork
+  
+  """Find all trails connected to a given trail"""
+  connectedTrails(trailId: ID!): [Trail!]!
+  
+  """Filter trails by difficulty level"""
+  trailsByDifficulty(level: DifficultyLevel!): [Trail!]!
+  
+  """Find trails with specific terrain types"""
+  trailsByTerrain(terrain: [TerrainType!]!): [Trail!]!
+  
+  """Find the best route between two places"""
+  findRoute(startId: ID!, endId: ID!, options: RouteOptions): Route
+  
+  """Plan a multi-day trip"""
+  planTrip(
+    startId: ID!
+    endId: ID!
+    startDate: String!
+    options: RouteOptions
+  ): TripPlan
+  
+  """Find campsites near a location"""
+  findCampsitesNear(placeId: ID!, radiusKm: Float!): [Place!]!
+  
+  """Find water sources along a trail"""
+  findWaterSources(trailId: ID!): [Place!]!
+  
+  """Get current trail conditions"""
+  getTrailConditions(trailId: ID!): TrailConditions
+  
+  """Search places by name"""
+  searchPlaces(query: String!): [Place!]!
+  
+  """Get elevation profile for a trail"""
+  getElevationProfile(trailId: ID!): ElevationProfile
+  
+  """Get current weather at a specific location"""
+  getWeatherAt(placeId: ID!): Weather
+  
+  """Get weather forecast for a location (up to 7 days)"""
+  getWeatherForecast(placeId: ID!, days: Int = 3): [WeatherForecast!]!
+  
+  """Get weather along an entire trail route"""
+  getTrailWeather(trailId: ID!): TrailWeather
+}
+
+"""Elevation profile data for visualization"""
+type ElevationProfile {
+  """Trail being profiled"""
+  trail: Trail!
+  
+  """Array of elevation points"""
+  points: [ElevationPoint!]!
+  
+  """Maximum elevation"""
+  maxElevation: Float!
+  
+  """Minimum elevation"""
+  minElevation: Float!
+  
+  """Total ascent"""
+  totalAscent: Float!
+  
+  """Total descent"""
+  totalDescent: Float!
+}
+
+"""Single point in an elevation profile"""
+type ElevationPoint {
+  """Distance from start in km"""
+  distanceKm: Float!
+  
+  """Elevation in meters"""
+  elevation: Float!
+  
+  """Grade percentage at this point"""
+  grade: Float!
+  
+  """Notable feature at this point if any"""
+  feature: String
+}
+
+type Mutation {
+  """Submit a trip report for a trail"""
+  submitTripReport(
+    trailId: ID!
+    date: String!
+    conditions: String!
+    hazards: [String!]
+    photos: [String!]
+  ): TripReport!
+  
+  """Update trail conditions (admin only)"""
+  updateTrailConditions(
+    trailId: ID!
+    status: TrailStatus!
+    snowLine: Float
+    warnings: [String!]
+  ): TrailConditions!
+}

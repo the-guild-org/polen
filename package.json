@@ -24,19 +24,15 @@
     "type": "git",
     "url": "git+https://github.com/the-guild-org/polen.git"
   },
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": ">=24.0.0",
-      "onFail": "error"
-    }
-  },
   "imports": {
     "#*": {
       "default": "./build/*.js"
     },
     "#api/iso": {
       "default": "./build/api/iso/$.js"
+    },
+    "#vite": {
+      "default": "./build/vite/index.js"
     },
     "#lib/apple-touch-icon": {
       "default": "./build/lib/apple-touch-icon/$.js"
@@ -68,15 +64,6 @@
     "#lib/grafaid-old": {
       "default": "./build/lib/grafaid-old/$.js"
     },
-    "#lib/graphql-change": {
-      "default": "./build/lib/graphql-change/$.js"
-    },
-    "#lib/graphql-change/graphql-change": {
-      "default": "./build/lib/graphql-change/$$.js"
-    },
-    "#lib/graphql-changeset": {
-      "default": "./build/lib/graphql-changeset/$.js"
-    },
     "#lib/graphql-path": {
       "default": "./build/lib/graphql-path/$.js"
     },
@@ -92,6 +79,48 @@
     "#lib/html-utils": {
       "default": "./build/lib/html-utils/$.js"
     },
+    "#lib/catalog": {
+      "default": "./build/lib/catalog/$.js"
+    },
+    "#lib/catalog/catalog": {
+      "default": "./build/lib/catalog/catalog.js"
+    },
+    "#lib/change": {
+      "default": "./build/lib/change/$.js"
+    },
+    "#lib/change/change": {
+      "default": "./build/lib/change/$$.js"
+    },
+    "#lib/lifecycles": {
+      "default": "./build/lib/lifecycles/$.js"
+    },
+    "#lib/lifecycles/lifecycles": {
+      "default": "./build/lib/lifecycles/$$.js"
+    },
+    "#lib/revision": {
+      "default": "./build/lib/revision/$.js"
+    },
+    "#lib/revision/revision": {
+      "default": "./build/lib/revision/revision.js"
+    },
+    "#lib/schema": {
+      "default": "./build/lib/schema/$.js"
+    },
+    "#lib/schema/schema": {
+      "default": "./build/lib/schema/schema.js"
+    },
+    "#lib/schema-definition": {
+      "default": "./build/lib/schema-definition/$.js"
+    },
+    "#lib/schema-definition/schema-definition": {
+      "default": "./build/lib/schema-definition/schema-definition.js"
+    },
+    "#lib/semver": {
+      "default": "./build/lib/semver/$.js"
+    },
+    "#lib/semver/semver": {
+      "default": "./build/lib/semver/$$.js"
+    },
     "#lib/mask": {
       "default": "./build/lib/mask/$.js"
     },
@@ -104,32 +133,23 @@
     "#lib/path-map/path-map": {
       "default": "./build/lib/path-map/$$.js"
     },
-    "#lib/react-router-aid": {
-      "default": "./build/lib/react-router-aid/$.js"
+    "#lib/react-router-effect": {
+      "default": "./build/lib/react-router-effect/$.js"
     },
-    "#lib/react-router-aid/react-router-aid": {
-      "default": "./build/lib/react-router-aid/$$.js"
+    "#lib/react-router-effect/react-router-effect": {
+      "default": "./build/lib/react-router-effect/$$.js"
     },
-    "#lib/react-router-loader": {
-      "default": "./build/lib/react-router-loader/$.js"
+    "#lib/kit-temp": {
+      "default": "./build/lib/kit-temp/$.js"
     },
-    "#lib/react-router-loader/react-router-loader": {
-      "default": "./build/lib/react-router-loader/$$.js"
+    "#lib/file-path": {
+      "default": "./build/lib/file-path/$.js"
     },
-    "#lib/schema-lifecycle": {
-      "default": "./build/lib/schema-lifecycle/$.js"
-    },
-    "#lib/schema-lifecycle/schema-lifecycle": {
-      "default": "./build/lib/schema-lifecycle/$$.js"
+    "#lib/file-path/file-path": {
+      "default": "./build/lib/file-path/$$.js"
     },
     "#lib/stack-processor": {
       "default": "./build/lib/stack-processor/$.js"
-    },
-    "#lib/superjson-codec": {
-      "default": "./build/lib/superjson-codec/$.js"
-    },
-    "#lib/superjson-codec/superjson-codec": {
-      "default": "./build/lib/superjson-codec/$$.js"
     },
     "#lib/task": {
       "default": "./build/lib/task/$.js"
@@ -169,6 +189,12 @@
     },
     "#template/components/content/$$": {
       "default": "./build/template/components/content/$$.js"
+    },
+    "#lib/memory-filesystem": {
+      "default": "./build/lib/memory-filesystem/$.js"
+    },
+    "#lib/memory-filesystem/memory-filesystem": {
+      "default": "./build/lib/memory-filesystem/$$.js"
     }
   },
   "exports": {
@@ -207,21 +233,24 @@
   ],
   "dependencies": {
     "@0no-co/graphql.web": "^1.1.2",
+    "@effect/cli": "^0.63.0",
+    "@effect/platform": "^0.90.0",
+    "@effect/platform-node": "^0.94.0",
     "@graphql-inspector/core": "^6.2.1",
-    "@graphql-tools/load": "^8.1.0",
+    "@graphql-tools/load": "^8.1.2",
     "@hiogawa/vite-plugin-ssr-css": "^0.0.1",
-    "@hono/node-server": "^1.16.0",
+    "@hono/node-server": "^1.17.1",
     "@mdx-js/mdx": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@mdx-js/rollup": "^3.1.0",
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/themes": "^3.2.1",
-    "@rolldown/pluginutils": "1.0.0-beta.27",
+    "@rolldown/pluginutils": "1.0.0-beta.29",
     "@rollup/pluginutils": "^5.2.0",
     "@types/jsesc": "^3.0.3",
-    "@vitejs/plugin-react": "^4.6.0",
-    "@vitejs/plugin-react-oxc": "^0.2.3",
-    "@vltpkg/semver": "0.0.0-17",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react-oxc": "^0.3.0",
+    "@vltpkg/semver": "0.0.0-18",
     "@vue/reactivity": "^3.5.17",
     "@wollybeard/kit": "^0.41.0",
     "@wollybeard/projector": "^0.3.0",
@@ -230,8 +259,10 @@
     "codehike": "^1.0.7",
     "consola": "^3.4.2",
     "defu": "^6.1.4",
+    "effect": "^3.17.0",
     "es-toolkit": "^1.39.7",
     "fuse.js": "^7.1.0",
+    "get-port": "^7.1.0",
     "graffle": "8.0.0-next.163",
     "graphql": "^16.11.0",
     "gray-matter": "^4.0.3",
@@ -240,7 +271,7 @@
     "jsonc-parser": "^3.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router": "^7.6.3",
+    "react-router": "^7.7.0",
     "rehype-stringify": "^10.0.1",
     "remark": "^15.0.1",
     "remark-frontmatter": "^5.0.0",
@@ -249,18 +280,19 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
     "resolve.imports": "^2.0.3",
-    "rolldown": "1.0.0-beta.27",
+    "rolldown": "1.0.0-beta.29",
     "simple-git": "^3.28.0",
     "source-map": "^0.7.4",
     "superjson": "^2.2.2",
     "tinyglobby": "^0.2.14",
     "tree-sitter-graphql-grammar-wasm": "^1.1.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
+    "type-fest": "^4.41.0",
+    "typescript": "^5.9.2",
     "unified": "^11.0.5",
     "valtio": "^2.1.5",
     "vfile": "^6.0.3",
-    "vite": "npm:rolldown-vite@^7.0.9",
+    "vite": "npm:rolldown-vite@^7.0.10",
     "vite-plugin-inspect": "^11.3.0",
     "web-tree-sitter": "^0.25.8",
     "youch-core": "^0.3.3",
@@ -273,6 +305,7 @@
     "@actions/glob": "^0.5.0",
     "@actions/io": "^1.1.3",
     "@changesets/cli": "^2.29.5",
+    "@effect/vitest": "^0.25.0",
     "@molt/command": "^0.9.0",
     "@octokit/core": "^7.0.3",
     "@octokit/types": "^14.1.0",
@@ -282,7 +315,7 @@
     "@tsconfig/node22": "^22.0.2",
     "@tsconfig/strictest": "^2.0.5",
     "@types/jsdom": "^21.1.7",
-    "@types/node": "^24.0.14",
+    "@types/node": "^24.1.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/semver": "^7.7.0",
@@ -297,7 +330,6 @@
     "publint": "^0.3.12",
     "semver": "^7.7.2",
     "strip-ansi": "^7.1.0",
-    "type-fest": "^4.41.0",
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
@@ -310,9 +342,11 @@
     "sb": "pnpm sandbox",
     "sb:w": "pnpm sandbox:watch",
     "polen": "tsx ./src/cli/index.ts",
+    "polen-effect": "tsx ./src/cli-effect/index.ts",
     "test:examples": "playwright test --config 'tests/playwright.config.ts' --project=examples",
     "test:integration": "playwright test --config 'tests/playwright.config.ts' --project=integration",
     "test:unit": "vitest",
+    "test:e2e": "vitest tests/e2e",
     "dev": "pnpm build:watch:emit",
     "dev:hive": "pnpm polen dev --project examples/hive",
     "dev:pokemon": "pnpm polen dev --project examples/pokemon",
@@ -337,7 +371,8 @@
     "fix": "pnpm run '/^fix:.+/'",
     "f": "pnpm run '/^fix:.+/'",
     "fc": "pnpm run '/^fix:.+/' && pnpm run '/^check:(?!pedantic:).+/'",
-    "release": "dripip stable"
+    "release": "dripip stable",
+    "refresh:serena-prompt": "serena print-system-prompt > .claude/prompt.md"
   },
   "bin": "./build/cli/index.js"
 }

@@ -1,0 +1,209 @@
+# Rocky Mountain Trails API
+# Added weather reporting capabilities
+
+type Coordinates {
+  """Latitude in decimal degrees"""
+  latitude: Float!
+  
+  """Longitude in decimal degrees"""
+  longitude: Float!
+  
+  """Elevation in meters above sea level"""
+  elevation: Float
+}
+
+type Place {
+  """Unique identifier for the place"""
+  id: ID!
+  
+  """Name of the location"""
+  name: String!
+  
+  """GPS coordinates"""
+  coordinates: Coordinates!
+  
+  """Type of location"""
+  type: PlaceType!
+  
+  """Optional description or notes"""
+  description: String
+  
+  """Current weather conditions at this location"""
+  currentWeather: Weather
+}
+
+enum PlaceType {
+  """Designated camping area with facilities"""
+  CAMPGROUND
+  
+  """Mountain summit"""
+  PEAK
+  
+  """Trail starting point with parking"""
+  TRAILHEAD
+  
+  """Alpine or valley lake"""
+  LAKE
+  
+  """Mountain pass between valleys"""
+  PASS
+  
+  """River or creek junction"""
+  JUNCTION
+  
+  """Emergency shelter or hut"""
+  SHELTER
+}
+
+type Trail {
+  """Unique identifier for the trail"""
+  id: ID!
+  
+  """Official trail name"""
+  name: String!
+  
+  """Starting location"""
+  start: Place!
+  
+  """Ending location"""
+  end: Place!
+  
+  """Total distance in kilometers"""
+  distanceKm: Float!
+  
+  """Estimated hiking time in hours"""
+  estimatedHours: Float!
+  
+  """Trail description and notable features"""
+  description: String
+}
+
+type Weather {
+  """Temperature in Celsius"""
+  temperature: Float!
+  
+  """Feels like temperature in Celsius"""
+  feelsLike: Float!
+  
+  """Current weather conditions"""
+  conditions: WeatherCondition!
+  
+  """Wind speed in km/h"""
+  windSpeedKmh: Float!
+  
+  """Wind direction in degrees (0-360)"""
+  windDirection: Int!
+  
+  """Precipitation amount in mm"""
+  precipitation: Float!
+  
+  """Visibility in kilometers"""
+  visibilityKm: Float!
+  
+  """Humidity percentage"""
+  humidity: Int!
+  
+  """UV index (0-11+)"""
+  uvIndex: Int!
+  
+  """Time of observation"""
+  observedAt: String!
+}
+
+enum WeatherCondition {
+  """Clear skies"""
+  CLEAR
+  
+  """Partly cloudy"""
+  PARTLY_CLOUDY
+  
+  """Overcast"""
+  CLOUDY
+  
+  """Light rain"""
+  LIGHT_RAIN
+  
+  """Heavy rain"""
+  HEAVY_RAIN
+  
+  """Light snow"""
+  LIGHT_SNOW
+  
+  """Heavy snow"""
+  HEAVY_SNOW
+  
+  """Fog or low visibility"""
+  FOG
+  
+  """Thunderstorm"""
+  STORM
+  
+  """Mixed rain and snow"""
+  MIXED_PRECIPITATION
+}
+
+type WeatherForecast {
+  """Date of forecast"""
+  date: String!
+  
+  """High temperature in Celsius"""
+  highTemp: Float!
+  
+  """Low temperature in Celsius"""
+  lowTemp: Float!
+  
+  """Expected conditions"""
+  conditions: WeatherCondition!
+  
+  """Probability of precipitation (0-100)"""
+  precipitationChance: Int!
+  
+  """Expected precipitation in mm"""
+  expectedPrecipitation: Float!
+  
+  """Expected wind speed in km/h"""
+  windSpeedKmh: Float!
+}
+
+type Query {
+  """Get all available places"""
+  places: [Place!]!
+  
+  """Get a specific place by ID"""
+  place(id: ID!): Place
+  
+  """Get all trails"""
+  trails: [Trail!]!
+  
+  """Get a specific trail by ID"""
+  trail(id: ID!): Trail
+  
+  """Find trails starting from a specific place"""
+  trailsFrom(placeId: ID!): [Trail!]!
+  
+  """Find trails ending at a specific place"""
+  trailsTo(placeId: ID!): [Trail!]!
+  
+  """Get current weather at a specific location"""
+  getWeatherAt(placeId: ID!): Weather
+  
+  """Get weather forecast for a location (up to 7 days)"""
+  getWeatherForecast(placeId: ID!, days: Int = 3): [WeatherForecast!]!
+  
+  """Get weather along an entire trail route"""
+  getTrailWeather(trailId: ID!): TrailWeather
+}
+
+type TrailWeather {
+  """The trail being queried"""
+  trail: Trail!
+  
+  """Weather at the start point"""
+  startWeather: Weather!
+  
+  """Weather at the end point"""
+  endWeather: Weather!
+  
+  """Weather advisories or warnings"""
+  advisories: [String!]!
+}

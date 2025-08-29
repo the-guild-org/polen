@@ -1,20 +1,20 @@
-import type { GraphqlChange } from '#lib/graphql-change'
+import { Change as GraphqlChange } from '#lib/change/$'
 import { Code } from '@radix-ui/themes'
 import type React from 'react'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const EnumValueOperation: React.FC<{ change: GraphqlChange.Group.EnumValueOperation }> = ({ change }) => {
-  switch (change.type) {
+export const EnumValueOperation: React.FC<{ change: any }> = ({ change }) => {
+  switch (change._tag) {
     case `ENUM_VALUE_ADDED`:
       return (
         <ChangeBase change={change}>
-          Added value <Code>{change.meta.addedEnumValueName}</Code> to enum <Code>{change.meta.enumName}</Code>
+          Added value <Code>{change.value}</Code> to enum <Code>{change.enumName}</Code>
         </ChangeBase>
       )
     case `ENUM_VALUE_REMOVED`:
       return (
         <ChangeBase change={change}>
-          Removed value <Code>{change.meta.removedEnumValueName}</Code> from enum <Code>{change.meta.enumName}</Code>
+          Removed value <Code>{change.value}</Code> from enum <Code>{change.enumName}</Code>
         </ChangeBase>
       )
   }

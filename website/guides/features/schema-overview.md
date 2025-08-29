@@ -32,17 +32,17 @@ schema/
 You can use [configuration](/guides/features/configuration) if you wish, supplying a schema inline even. Refer to extensive JSDoc on configuration properties for details.
 
 ```ts
+import { buildSchema } from 'graphql'
 import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
-    useDataSources: 'memory',
-    dataSources: {
+    useSources: ['memory'],
+    sources: {
       memory: {
         versions: [
           {
-            date: new Date('2023-01-15'),
-            value: `
+            schema: buildSchema(`
               type Query {
                 users: [User]
               }
@@ -50,7 +50,8 @@ export default Polen.defineConfig({
                 id: ID!
                 name: String!
               }
-            `,
+            `),
+            date: '2023-01-15',
           },
         ],
       },
@@ -74,6 +75,23 @@ If you have a `schema.introspection.json` file in your project root, Polen will 
 schema.introspection.json  # Polen automatically detects this
 ```
 
+You can also configure this explicitly:
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  schema: {
+    useSources: ['introspectionFile'],
+    sources: {
+      introspectionFile: {
+        path: './custom-introspection.json', // Custom path if needed
+      },
+    },
+  },
+})
+```
+
 #### Automatic Introspection
 
 Polen can also fetch and cache introspection results for you if you configure it. For example:
@@ -83,7 +101,8 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
-    dataSources: {
+    useSources: ['introspection'],
+    sources: {
       introspection: {
         url: 'https://api.example.com/graphql',
         headers: {
@@ -110,23 +129,102 @@ export default Polen.defineConfig({
 - The `schema.introspection.json` file contains the raw introspection query result in standard GraphQL format
 - The file format is validated when read - invalid JSON or introspection data will produce clear error messages
 
+### Versioned Directory Structure
+
+The versioned directory source organizes schemas into version directories with support for both versions and revisions within each version. This provides Git-like semantics where versions are like branches and revisions are like commits.
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  schema: {
+    useSources: ['versionedDirectory'],
+    sources: {
+      versionedDirectory: {
+        path: './schema', // Directory containing version subdirectories
+      },
+    },
+  },
+})
+```
+
+#### Directory Structure Examples
+
+**Simple Versions (No Revisions):**
+
+```
+schema/
+  1.0.0/
+    schema.graphql      # Single schema file per version
+  2.0.0/
+    schema.graphql
+```
+
+**Versions with Revisions:**
+
+```
+schema/
+  1.0.0/
+    2024-01-15.graphql  # Initial release
+    2024-02-20.graphql  # Added evolution queries
+    2024-03-15.graphql  # Added battle system
+  2.0.0/
+    2024-04-01.graphql  # Major redesign
+    2024-05-10.graphql  # Added features
+```
+
+**Versions with Branch Points:**
+
+Directory names can encode where a version branched from using the format: `<version>[><parent-version>[@<branch-date>]]`
+
+```
+schema/
+  1.0.0/                          # Root version
+    2024-01-15.graphql
+    2024-02-20.graphql
+    2024-03-15.graphql
+    
+  2.0.0>1.0.0@2024-02-20/        # Branched from 1.0.0 at revision 2024-02-20
+    2024-04-01.graphql
+    2024-05-10.graphql
+    
+  2.1.0>2.0.0/                   # Branched from 2.0.0 (no specific revision)
+    2024-06-01.graphql
+```
+
+Branch point syntax:
+
+- `2.0.0>1.0.0@2024-02-20` - Version 2.0.0 branched from 1.0.0's revision on 2024-02-20
+- `2.0.0>1.0.0` - Version 2.0.0 branched from 1.0.0's initial state (no revisions)
+- `2.0.0` - Version 2.0.0 has no parent (root version)
+
+#### How It Works
+
+1. **Version Detection**: Directories are parsed to extract version number and optional branch information
+2. **Revision Loading**: Within each version directory, Polen looks for:
+   - Date-named files (`YYYY-MM-DD.graphql`) for revisions
+   - Fallback to `schema.graphql` if no revision files exist
+3. **Change Calculation**: Changes are calculated between adjacent revisions within the same version
+4. **Branch Tracking**: Parent versions and specific revision branch points are preserved for accurate history
+
 ### Precedence
 
 When multiple schema sources are available, Polen uses the following precedence order:
 
-1. **Data** - Pre-built schema objects (if configured)
-2. **Directory Convention** - `schema/` directory with versioned SDL files
-3. **File Convention** - Single `schema.graphql` file
-4. **Memory** - Inline schemas in configuration
-5. **Introspection** - GraphQL endpoint introspection
+1. **versionedDirectory** - Versioned schemas from subdirectories (default: `./schema/`)
+2. **directory** - Multiple SDL files from a directory (default: `./schema/`)
+3. **file** - Single SDL file (default: `./schema.graphql`)
+4. **memory** - Schemas defined in configuration
+5. **introspection** - GraphQL endpoint introspection
+6. **introspectionFile** - Pre-existing introspection JSON file
 
-You can override this default order using the `useDataSources` configuration:
+You can override this default order using the `useSources` configuration:
 
 ```ts
 schema: {
   // Try introspection first, fall back to file
-  useDataSources: ['introspection', 'file'],
-  dataSources: {
+  useSources: ['introspection', 'file'],
+  sources: {
     introspection: { url: 'https://api.example.com/graphql' },
     file: { path: './fallback-schema.graphql' }
   }
@@ -137,11 +235,58 @@ schema: {
 
 Polen supports documenting different versions of your schema.
 
-### Specifier Kinds
+### Versions vs Revisions
 
-Each schema needs a version identifier, just like package releases on npm. Polen supports different specifier kinds to accommodate various versioning strategies.
+Polen distinguishes between two related but different concepts:
 
-**Important**: All schemas in your project must use the same specifier kind.
+- **Version**: An identifier for a different version of your API (e.g., `1.0.0`, `2.0.0`, `v1`, `v2`). Think of versions like Git branches - they represent major API versions that may diverge and evolve independently. Each version:
+  - Has its own evolution timeline
+  - Can branch from a specific point in another version's history
+  - May contain breaking changes from its parent
+  - Represents a distinct API contract
+
+- **Revision**: A point-in-time change within a version's evolution. Think of revisions like Git commits - they capture the incremental changes made to a version over time. Each revision:
+  - Has a date (when the change was made)
+  - Contains a set of changes from the previous revision
+  - Helps track the evolution within a single version
+  - Enables detailed changelogs
+
+#### Example: Version and Revision Timeline
+
+```
+Version 1.0.0:
+  2024-01-15 (revision) - Initial schema
+  2024-02-20 (revision) - Added evolution queries
+  2024-03-15 (revision) - Added battle system
+    ┃
+    ┗━━> Version 2.0.0 branches here
+         2024-04-01 (revision) - Major redesign
+         2024-05-10 (revision) - Added regional variants
+           ┃
+           ┗━━> Version 3.0.0 branches here
+                2024-06-01 (revision) - GraphQL Federation
+```
+
+This Git-like model enables:
+
+- **Version branching**: New versions can branch from any revision of a parent version
+- **Revision tracking**: Each version maintains its own revision history
+- **Change calculation**: Changes are computed between adjacent revisions
+- **Branch point preservation**: Polen knows exactly where versions diverged
+
+### Version Formats
+
+Each schema needs a version identifier, just like package releases on npm. Polen supports multiple version formats to accommodate various versioning strategies.
+
+**Important**: All schemas in your project must use the same version format.
+
+#### Semantic Versioning (Semver)
+
+Polen supports semantic versioning following the [SemVer specification](https://semver.org/):
+
+- **Format**: `MAJOR.MINOR.PATCH` (e.g., `1.0.0`, `2.1.3`, `3.0.0-beta.1`)
+- **Examples**: `1.0.0`, `2.1.0`, `3.0.0-alpha.1`
+- **Behavior**: Natural semantic version ordering (1.0.0 < 1.1.0 < 2.0.0)
 
 #### Date
 
@@ -149,23 +294,28 @@ Polen supports date-based versions in [ISO 8601](https://en.wikipedia.org/wiki/I
 
 - **Format**: `YYYY-MM-DD`
 - **Examples**: `2024-01-15`, `2023-12-31`, `2024-03-20`
-- **Behavior**: Shows the schema version from that specific date
+- **Behavior**: Chronological ordering by date
 
-#### Future
+#### Custom Strings
 
-::: info Future Support
-Additional version formats like semantic versioning (semver) may be supported in future releases. [Share your feedback](https://github.com/the-guild-org/polen/issues/123) on what version formats would be most valuable for your use case.
-:::
+Polen also supports arbitrary string versions for custom versioning schemes:
+
+- **Format**: Any string
+- **Examples**: `v1`, `beta`, `production`, `winter-2024`
+- **Behavior**: Alphabetical string ordering
 
 ### Supplying Your Versioned Schema
 
 Here's how supplying multiple schemas maps to the different sources:
 
-| Source Type                            | How Multiple Schemas Are Provided                                                                      | Examples                                                               |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| **[File](#file-convention)**           | N/A (single schema only)                                                                               | N/A                                                                    |
-| **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [version](#specifier-kinds) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre> |
-| **[Configuration](#configuration)**    | Define multiple versions in `dataSources.memory.versions` array                                        | [See example above](#configuration)                                    |
+| Source Type                            | How Multiple Schemas Are Provided                                                                       | Examples                                                                                                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[File](#file-convention)**           | N/A (single schema only)                                                                                | N/A                                                                                                                                                |
+| **[Directory](#directory-convention)** | Place multiple SDL files in `schema/` directory with each [revision](#version-formats) as the file name | <pre>schema/<br>├── 2024-01-15.graphql<br>└── 2024-03-20.graphql</pre>                                                                             |
+| **Versioned Directory**                | Create version subdirectories with revision files inside, optionally with branch point syntax           | <pre>schema/<br>├── 1.0.0/<br>│ ├── 2024-01-15.graphql<br>│ └── 2024-02-20.graphql<br>└── 2.0.0>1.0.0@2024-02-20/<br> └── 2024-04-01.graphql</pre> |
+| **[Configuration](#configuration)**    | Define multiple versions in `sources.memory.versions` array                                             | [See example above](#configuration)                                                                                                                |
+| **Introspection File**                 | N/A (single schema only)                                                                                | N/A                                                                                                                                                |
+| **Automatic Introspection**            | N/A (single schema only)                                                                                | N/A                                                                                                                                                |
 
 ## Features Enabled
 
@@ -179,7 +329,6 @@ Polen provides the following schema-related features:
 ## Current Limitations
 
 - Introspection only supports single schemas (no versioning/changelog support)
-- Version navigation in the reference docs requires manual URL construction
 - Changelog doesn't include clickable links to versioned reference pages
 
 ```

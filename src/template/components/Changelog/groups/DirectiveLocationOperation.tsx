@@ -1,24 +1,22 @@
-import type { GraphqlChange } from '#lib/graphql-change'
+import { Change as GraphqlChange } from '#lib/change/$'
 import { Code } from '@radix-ui/themes'
 import type React from 'react'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const DirectiveLocationOperation: React.FC<{ change: GraphqlChange.Group.DirectiveLocationOperation }> = (
+export const DirectiveLocationOperation: React.FC<{ change: any }> = (
   { change },
 ) => {
-  switch (change.type) {
+  switch (change._tag) {
     case `DIRECTIVE_LOCATION_ADDED`:
       return (
         <ChangeBase change={change}>
-          Directive <Code>@{change.meta.directiveName}</Code> can now be used on{' '}
-          <Code>{change.meta.addedDirectiveLocation}</Code>
+          Directive <Code>@{change.name}</Code> can now be used on <Code>{change.location}</Code>
         </ChangeBase>
       )
     case `DIRECTIVE_LOCATION_REMOVED`:
       return (
         <ChangeBase change={change}>
-          Directive <Code>@{change.meta.directiveName}</Code> can no longer be used on{' '}
-          <Code>{change.meta.removedDirectiveLocation}</Code>
+          Directive <Code>@{change.name}</Code> can no longer be used on <Code>{change.location}</Code>
         </ChangeBase>
       )
   }

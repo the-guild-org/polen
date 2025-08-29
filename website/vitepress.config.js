@@ -80,6 +80,7 @@ export default defineConfig({
             { text: 'Overview', link: '/examples/overview' },
             { text: 'Hive', link: '/examples/hive' },
             { text: 'Pokemon', link: '/examples/pokemon' },
+            { text: 'Rocky Trails', link: '/examples/rocky-trails' },
           ],
         },
       ],

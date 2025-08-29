@@ -1,9 +1,20 @@
 // @ts-nocheck
 import { Api } from '#api/index'
-import { projectParameter } from '#cli/_/parameters'
+import { allowGlobalParameter, projectParameter } from '#cli/_/parameters'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Command } from '@molt/command'
+import { Effect } from 'effect'
 import { z } from 'zod'
+
+// todo remove these inline defs once using effect cli instead of molt
+export const BuildArchitectureEnum = {
+  ssg: `ssg`,
+  spa: `spa`,
+  ssr: `ssr`,
+} as const
+
+export const BuildArchitecture = z.nativeEnum(BuildArchitectureEnum)
 
 const args = Command.create()
   .parameter(`--debug -d`, z.boolean().default(false))
@@ -13,7 +24,7 @@ const args = Command.create()
   )
   .parameter(
     `--architecture -a`,
-    Api.Config.BuildArchitecture.default('ssg').describe('Which kind of application architecture to output.'),
+    BuildArchitecture.default('ssg').describe('Which kind of application architecture to output.'),
   )
   .parameter(
     `--base -b`,
@@ -23,6 +34,7 @@ const args = Command.create()
     `--port`,
     z.number().optional().describe('Default port for the SSR application'),
   )
+  .parameter(`--allow-global`, allowGlobalParameter)
   .settings({
     parameters: {
       environment: {
@@ -42,18 +54,22 @@ if (!await Api.Project.validateProjectDirectory(dir)) {
   process.exit(1)
 }
 
-await Api.Builder.build({
-  dir,
-  overrides: {
-    build: {
-      architecture: args.architecture,
-      base: args.base,
+await Effect.runPromise(
+  Api.Builder.build({
+    dir,
+    overrides: {
+      build: {
+        architecture: args.architecture,
+        base: args.base,
+      },
+      server: {
+        port: args.port,
+      },
+      advanced: {
+        debug: args.debug,
+      },
     },
-    server: {
-      port: args.port,
-    },
-    advanced: {
-      debug: args.debug,
-    },
-  },
-})
+  }).pipe(
+    Effect.provide(NodeFileSystem.layer),
+  ),
+)

@@ -47,8 +47,8 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
               setMobileMenuOpen(false)
             }}
             sidebarData={sidebar}
-            basePath={basePath}
-            topContent={topContent}
+            {...(basePath !== undefined && { basePath })}
+            {...(topContent !== undefined && { topContent })}
           />
         </Box>
       )}
@@ -60,7 +60,11 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
           gridColumn='1 / 3'
           gridRow='1 / auto'
         >
-          <Sidebar data={sidebar} basePath={basePath} topContent={topContent} />
+          <Sidebar
+            data={sidebar}
+            {...(basePath !== undefined && { basePath })}
+            {...(topContent !== undefined && { topContent })}
+          />
         </Box>
       )}
 
