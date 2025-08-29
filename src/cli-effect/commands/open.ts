@@ -163,7 +163,7 @@ export const open = Command.make(
         schema: {
           sources: {
             memory: {
-              versions: [
+              revisions: [
                 {
                   date: new Date(),
                   value: schema,
