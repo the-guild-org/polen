@@ -229,4 +229,28 @@ describe('mergeShallow', () => {
       ),
     )
   })
+
+  test('protects against prototype pollution', () => {
+    // Test __proto__ pollution attempt
+    const maliciousObj = { '__proto__': { polluted: true } } as any
+    const normalObj = { safe: 'value' }
+
+    const result = spreadShallow(normalObj, maliciousObj)
+
+    // The result should not have __proto__ key
+    expect(Object.prototype.hasOwnProperty.call(result, '__proto__')).toBe(false)
+
+    // The Object prototype should not be polluted
+    expect((Object.prototype as any).polluted).toBeUndefined()
+
+    // Test constructor pollution attempt
+    const constructorObj = { constructor: { polluted: true } } as any
+    const result2 = spreadShallow(normalObj, constructorObj)
+    expect(Object.prototype.hasOwnProperty.call(result2, 'constructor')).toBe(false)
+
+    // Test prototype pollution attempt
+    const prototypeObj = { prototype: { polluted: true } } as any
+    const result3 = spreadShallow(normalObj, prototypeObj)
+    expect(Object.prototype.hasOwnProperty.call(result3, 'prototype')).toBe(false)
+  })
 })

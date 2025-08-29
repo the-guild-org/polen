@@ -141,36 +141,39 @@ const IntrospectionFileOptionsSchema = S.Struct({
   description: 'Configuration for loading schema from an existing introspection file.',
 })
 
-// Complex union for memory versions - we define the actual runtime types here
+// Complex union for memory revisions - we define the actual runtime types here
 // and use S.Unknown for now, with a TODO to properly type this later
-const MemoryVersionsSchema = S.Unknown.annotations({
-  description: `Schema versions in various formats: SDL strings, GraphQL schema objects, or pre-built Catalog`,
+const MemoryRevisionsSchema = S.Unknown.annotations({
+  description:
+    `Schema revisions in various formats: SDL strings, GraphQL schema objects, or pre-built unversioned Catalog`,
 })
 
 const MemoryOptionsSchema = S.Struct({
   /**
-   * Schema versions defined in various formats.
+   * Schema revisions defined in various formats.
+   *
+   * Creates an unversioned catalog with multiple revisions (dated snapshots) that can show changes over time.
    *
    * Can be:
-   * - A single SDL string (no changelog)
+   * - A single SDL string (single revision, no changelog)
    * - Array of SDL strings (uses current date for all)
    * - Array of objects with date and SDL (full changelog support)
-   * - A GraphQLSchema object (no changelog)
+   * - A GraphQLSchema object (single revision, no changelog)
    * - Array of GraphQLSchema objects (uses current date for all)
    * - Array of objects with date and GraphQLSchema (full changelog support)
-   * - A pre-built Catalog object
+   * - A pre-built unversioned Catalog object
    *
    * @example
    * ```ts
-   * // Single SDL schema
-   * versions: `
+   * // Single SDL schema revision
+   * revisions: `
    *   type Query {
    *     hello: String
    *   }
    * `
    *
-   * // Multiple versions with explicit dates
-   * versions: [
+   * // Multiple revisions with explicit dates (enables changelog)
+   * revisions: [
    *   {
    *     date: new Date('2024-01-15'),
    *     value: `type Query { users: [User] }`
@@ -182,16 +185,17 @@ const MemoryOptionsSchema = S.Struct({
    * ]
    *
    * // GraphQL schema object
-   * versions: buildSchema(`type Query { hello: String }`)
+   * revisions: buildSchema(`type Query { hello: String }`)
    *
-   * // Pre-built catalog
-   * versions: myCatalog
+   * // Pre-built unversioned catalog
+   * revisions: myCatalog
    * ```
    */
-  versions: MemoryVersionsSchema,
+  revisions: MemoryRevisionsSchema,
 }).annotations({
   identifier: 'MemoryOptions',
-  description: 'Configuration for defining schemas programmatically in memory.',
+  description:
+    'Configuration for defining schema revisions programmatically in memory. Creates an unversioned catalog.',
 })
 
 // ============================================================================

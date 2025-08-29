@@ -9,7 +9,7 @@ import { debugPolen } from '#singletons/debug'
 import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Arr, Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Array, Effect, Order } from 'effect'
 
 // const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
 const debug = debugPolen.sub(`schema:data-source-schema-directory`)
@@ -95,14 +95,17 @@ export const loader = InputSource.createEffect({
       // Get all files in directory
       const files = yield* fs.readDirectory(config.path)
 
-      // Check if we have any .graphql files with valid date names
-      const hasValidFiles = files.some(file => {
+      // Check if we have either:
+      // 1. A single schema.graphql file (non-versioned mode)
+      // 2. Any .graphql files with valid date names (versioned mode)
+      const hasSchemaFile = files.some(file => file === 'schema.graphql')
+      const hasVersionedFiles = files.some(file => {
         if (!file.endsWith('.graphql')) return false
         const name = Path.basename(file, '.graphql')
         return /^\d{4}-\d{2}-\d{2}$/.test(name)
       })
 
-      return hasValidFiles
+      return hasSchemaFile || hasVersionedFiles
     }),
   readIfApplicableOrThrow: (options: Options, context) =>
     Effect.gen(function*() {
@@ -130,13 +133,30 @@ export const loader = InputSource.createEffect({
       const filePaths = graphqlFiles.map(file => Path.join(config.path, file))
       debug(`did find`, filePaths)
 
+      // Check for single schema.graphql file (non-versioned mode)
+      const singleSchemaPath = filePaths.find(p => Path.basename(p) === 'schema.graphql')
+      if (singleSchemaPath) {
+        // Use today's date for single schema file
+        const today = DateOnly.fromDate(new Date())
+        const revisionInputs = [{
+          date: today,
+          filePath: singleSchemaPath,
+        }]
+        debug(`using single schema.graphql as non-versioned schema`)
+        const schema = yield* read(revisionInputs)
+        return Catalog.Unversioned.make({
+          schema,
+        })
+      }
+
+      // Otherwise, look for versioned files with date prefixes
       const revisionInputs = Arr.map(filePaths, (filePath) => {
         const name = Path.basename(filePath, '.graphql')
         // Validate date format YYYY-MM-DD
         const dateMatch = name.match(/^\d{4}-\d{2}-\d{2}$/)
         if (!dateMatch) return null
         return {
-          date: name,
+          date: DateOnly.make(name),
           filePath,
         }
       }).filter((x): x is NonNullable<typeof x> => x !== null)
@@ -157,7 +177,7 @@ export const loader = InputSource.createEffect({
 })
 
 const read = (
-  revisionInputs: { date: string; filePath: string }[],
+  revisionInputs: { date: DateOnly.DateOnly; filePath: string }[],
 ): Effect.Effect<Schema.Unversioned.Unversioned, InputSource.InputSourceError | PlatformError, FileSystem> =>
   Effect.gen(function*() {
     const revisionInputsLoaded = yield* Effect.all(
@@ -194,13 +214,16 @@ const read = (
     debug(`read revisions`)
 
     // Sort by date descending (newest first for consistent catalog structure)
-    revisionInputsLoaded.sort((a, b) => b.date.localeCompare(a.date))
+    const revisionInputsSorted = Array.sort(
+      revisionInputsLoaded,
+      Order.reverse(Order.mapInput(DateOnly.order, (item: typeof revisionInputsLoaded[0]) => item.date)),
+    )
 
     const revisions = yield* Effect.all(
-      Arr.map(revisionInputsLoaded, (item, index) =>
+      Arr.map(revisionInputsSorted, (item, index) =>
         Effect.gen(function*() {
           const current = item
-          const previous = revisionInputsLoaded[index - 1]
+          const previous = revisionInputsSorted[index - 1]
 
           const before = previous?.schema ?? Grafaid.Schema.empty
           const after = current.schema
@@ -212,7 +235,7 @@ const read = (
           )
 
           return Revision.make({
-            date: DateOnly.make(current.date),
+            date: current.date,
             changes,
           })
         })),
@@ -220,7 +243,7 @@ const read = (
     )
 
     // Get the latest schema (first in the array after sorting newest first)
-    const latestSchemaData = revisionInputsLoaded[0]?.schema
+    const latestSchemaData = revisionInputsSorted[0]?.schema
     if (!latestSchemaData) {
       return yield* Effect.fail(InputSource.InputSourceError('directory', 'No schema files found'))
     }

@@ -2,7 +2,7 @@ import type { Polen } from '#exports/index'
 import type { Page } from 'playwright/test'
 import { expect } from 'playwright/test'
 import type { WritableDeep } from 'type-fest'
-import { configMemorySchema, configMemorySchemaVersions, pc } from './polen.js'
+import { configMemorySchema, configMemorySchemaRevisions, pc } from './polen.js'
 import type { ViteController } from './vite-controller/index.js'
 
 interface PolenAssertions {
@@ -58,7 +58,7 @@ export class PolenBuilder {
         sdl,
       }
     })
-    this.config.schema = configMemorySchemaVersions(parsedVersions) as WritableDeep<Polen.ConfigInput[`schema`]>
+    this.config.schema = configMemorySchemaRevisions(parsedVersions) as WritableDeep<Polen.ConfigInput[`schema`]>
     return this
   }
 

@@ -756,6 +756,11 @@ export const spreadShallow = <T extends object>(...objects: (T | undefined)[]): 
     if (obj === undefined) continue
 
     for (const key in obj) {
+      // Protect against prototype pollution by skipping dangerous keys
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue
+      }
+
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const value = obj[key]
         if (value !== undefined) {

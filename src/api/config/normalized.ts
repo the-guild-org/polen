@@ -1,9 +1,8 @@
 import { ConfigSchema as ConfigSchemaOriginal } from '#api/schema/config-schema'
-// import { Schema } from '#api/schema/$'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import { packagePaths } from '#package-paths'
-import { Err, Manifest, Path, Str } from '@wollybeard/kit'
+import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
 import { BuildArchitecture, type ConfigInput, ConfigInputSchema } from './input.js'
@@ -383,16 +382,18 @@ export const normalizeInput = (
 
     // Try to read package.json name as fallback for title
     if (!configInput_as_writeable?.templateVariables?.title) {
-      const packageJson = yield* Effect.tryPromise({
+      const packageJsonResult = yield* Effect.tryPromise({
         try: () => Manifest.resource.read(config.paths.project.rootDir),
         catch: (error) => new Error(`Failed to read package.json: ${error}`),
-      })
+      }).pipe(
+        Effect.either, // Convert failure to Either.Left, success to Either.Right
+      )
 
-      // todo: let the user know there was an error...
-      if (!Err.is(packageJson) && packageJson.name) {
-        // Package name will be used as default, but can still be overridden below
-        config.templateVariables.title = Str.Case.title(packageJson.name)
+      // If we successfully read package.json and it has a name, use it
+      if (packageJsonResult._tag === 'Right' && packageJsonResult.right.name) {
+        config.templateVariables.title = Str.Case.title(packageJsonResult.right.name)
       }
+      // Otherwise, the default title from getConfigInputDefaults() will be used
     }
 
     if (configInput_as_writeable?.advanced?.vite) {

@@ -1,11 +1,11 @@
 import { expect } from 'playwright/test'
 import { DateOnly } from '../../../src/lib/date-only/$.js'
 import { renderDate } from '../../../src/template/components/Changelog/Changelog.js'
-import { configMemorySchemaVersions, pc } from '../helpers/polen.js'
+import { configMemorySchemaRevisions, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
 
-test('shows changelog in navigation bar when multiple schema versions are provided', async ({ page, vite }) => {
-  // Set up schema versions with different content
+test('shows changelog in navigation bar when multiple schema revisions are provided', async ({ page, vite }) => {
+  // Set up schema revisions with different content
   const olderSchema = {
     date: new Date('2023-01-01'),
     sdl: `
@@ -25,9 +25,9 @@ test('shows changelog in navigation bar when multiple schema versions are provid
     `,
   }
 
-  // Create Polen configuration with multiple schema versions
+  // Create Polen configuration with multiple schema revisions
   const viteUserConfig = await pc({
-    schema: configMemorySchemaVersions([olderSchema, newerSchema]),
+    schema: configMemorySchemaRevisions([olderSchema, newerSchema]),
   })
 
   // Start the development server

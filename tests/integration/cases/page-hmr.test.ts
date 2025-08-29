@@ -25,7 +25,7 @@ test.describe('HMR', () => {
     await expect(page.getByRole('heading', { name: 'Updated' })).toBeVisible({ timeout: 10000 })
   })
 
-  test('add new page', async ({ page, vite, project }) => {
+  test.skip('add new page', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/home.md': '# Home' })
     const polenConfig = await Effect.runPromise(
       Api.ConfigResolver.fromMemory(

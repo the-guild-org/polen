@@ -150,28 +150,28 @@ testWithFileSystem<BaseTestCase&{
     latestRevisionDate?: string
   }
 }>('Memory Input Source', [
-  { name: 'undefined versions',
+  { name: 'undefined revisions',
     config: {},
     expected: { isApplicable: false, result: 'null' } },
 
-  { name: 'null versions',
-    config: { versions: null },
+  { name: 'null revisions',
+    config: { revisions: null },
     expected: { isApplicable: false, result: 'null' } },
 
   { name: 'empty array',
-    config: { versions: [] },
+    config: { revisions: [] },
     expected: { isApplicable: true, result: 'null' } },
 
   { name: 'single SDL string',
-    config: { versions: sdl1 },
+    config: { revisions: sdl1 },
     expected: { isApplicable: true, result: 'unversioned', revisionCount: 1 } },
 
   { name: 'GraphQLSchema objects',
-    config: { versions: 'USE_EFFECT_SCHEMAS' }, // Will be replaced in test
+    config: { revisions: 'USE_EFFECT_SCHEMAS' }, // Will be replaced in test
     expected: { isApplicable: true, result: 'unversioned', revisionCount: 1 } },
 
   { name: 'pre-built unversioned catalog',
-    config: { versions: 'USE_EFFECT_CATALOG' }, // Will be replaced in test
+    config: { revisions: 'USE_EFFECT_CATALOG' }, // Will be replaced in test
     expected: { isApplicable: true, result: 'unversioned' } },
 ], ({ config, expected }) => Effect.gen(function* () {
   const source = Schema.InputSources.Memory.loader
@@ -179,13 +179,13 @@ testWithFileSystem<BaseTestCase&{
 
   // Handle special effect-based cases
   let testConfig = config
-  if (config.versions === 'USE_EFFECT_SCHEMAS') {
+  if (config.revisions === 'USE_EFFECT_SCHEMAS') {
     const schema1 = yield* buildSchemaWithGrafaid(sdl1)
-    testConfig = { versions: [schema1] } // Use single schema to avoid changeset calculation
-  } else if (config.versions === 'USE_EFFECT_CATALOG') {
+    testConfig = { revisions: [schema1] } // Use single schema to avoid changeset calculation
+  } else if (config.revisions === 'USE_EFFECT_CATALOG') {
     const schema = yield* buildSchemaWithGrafaid(sdl1)
     testConfig = {
-      versions: Catalog.Unversioned.make({
+      revisions: Catalog.Unversioned.make({
         schema: {
           _tag: 'SchemaUnversioned',
           revisions: [],
@@ -249,7 +249,7 @@ testWithFileSystem<BaseTestCase & {
     config: {
       schema: {
         sources: {
-          memory: { versions: sdl1 } // Single SDL to avoid changeset calculation
+          memory: { revisions: sdl1 } // Single SDL to avoid changeset calculation
         }
       }
     },

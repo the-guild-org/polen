@@ -16,28 +16,28 @@ import type { GraphQLSchema } from 'graphql'
  */
 export interface Options {
   /**
-   * Schema versions defined in various formats.
+   * Schema revisions defined in various formats.
    *
    * Can be:
-   * - A single SDL string (no changelog)
+   * - A single SDL string (single revision, no changelog)
    * - Array of SDL strings (uses current date for all)
    * - Array of objects with date and SDL (full changelog support)
-   * - A GraphQLSchema object (no changelog)
+   * - A GraphQLSchema object (single revision, no changelog)
    * - Array of GraphQLSchema objects (uses current date for all)
    * - Array of objects with date and GraphQLSchema (full changelog support)
-   * - A pre-built Catalog object
+   * - A pre-built unversioned Catalog object
    *
    * @example
    * ```ts
-   * // Single SDL schema
-   * versions: `
+   * // Single SDL schema revision
+   * revisions: `
    *   type Query {
    *     hello: String
    *   }
    * `
    *
-   * // Multiple versions with explicit dates
-   * versions: [
+   * // Multiple revisions with explicit dates (enables changelog)
+   * revisions: [
    *   {
    *     date: new Date('2024-01-15'),
    *     value: `type Query { users: [User] }`
@@ -49,13 +49,13 @@ export interface Options {
    * ]
    *
    * // GraphQL schema object
-   * versions: buildSchema(`type Query { hello: String }`)
+   * revisions: buildSchema(`type Query { hello: String }`)
    *
-   * // Pre-built catalog
-   * versions: myCatalog
+   * // Pre-built unversioned catalog
+   * revisions: myCatalog
    * ```
    */
-  versions:
+  revisions:
     | string
     | string[]
     | { date: Date; value: string }[]
@@ -66,7 +66,7 @@ export interface Options {
 }
 
 export interface Config {
-  versions: { date: Date; value: string | GraphQLSchema }[] | Catalog.Unversioned.Unversioned
+  revisions: { date: Date; value: string | GraphQLSchema }[] | Catalog.Unversioned.Unversioned
 }
 
 // Type guard to check if value is a GraphQLSchema
@@ -76,24 +76,24 @@ const isGraphQLSchema = (value: unknown): value is GraphQLSchema => {
 
 export const normalize = (configInput: Options): Config => {
   // If it's already a Catalog, return it as-is
-  if (Catalog.is(configInput.versions)) {
+  if (Catalog.is(configInput.revisions)) {
     return {
-      versions: configInput.versions,
+      revisions: configInput.revisions,
     }
   }
 
-  // Handle undefined/null versions
-  if (!configInput.versions) {
+  // Handle undefined/null revisions
+  if (!configInput.revisions) {
     return {
-      versions: [],
+      revisions: [],
     }
   }
 
   // Convert all other formats to normalized array format
-  const versionsArray = Arr.sure(configInput.versions)
+  const revisionsArray = Arr.sure(configInput.revisions)
 
   const config: Config = {
-    versions: Arr.map(versionsArray, (item) => {
+    revisions: Arr.map(revisionsArray, (item) => {
       // Handle string (SDL)
       if (typeof item === 'string') {
         return {
@@ -141,19 +141,19 @@ export const read = (
     const config = normalize(options)
 
     // If it's already a Catalog, extract schema and revisions
-    if (Catalog.Unversioned.is(config.versions)) {
+    if (Catalog.Unversioned.is(config.revisions)) {
       return {
-        schema: config.versions.schema,
-        revisions: [...config.versions.schema.revisions],
+        schema: config.revisions.schema,
+        revisions: [...config.revisions.schema.revisions],
       }
     }
 
-    if (!Arr.isntEmpty(config.versions)) {
+    if (!Arr.isntEmpty(config.revisions)) {
       return null
     }
 
-    const versions = yield* Effect.all(
-      Arr.map(config.versions, (item) =>
+    const parsedRevisions = yield* Effect.all(
+      Arr.map(config.revisions, (item) =>
         Effect.gen(function*() {
           const schema = yield* parseSchema(item.value)
           return {
@@ -164,22 +164,25 @@ export const read = (
       { concurrency: 'unbounded' },
     )
 
-    versions.sort((a, b) => b.date.getTime() - a.date.getTime())
+    // Sort revisions newest first
+    parsedRevisions.sort((a, b) => b.date.getTime() - a.date.getTime())
 
     const revisions = yield* Effect.all(
-      Arr.map(versions, (version, index) =>
+      Arr.map(parsedRevisions, (revision, index) =>
         Effect.gen(function*() {
-          const current = version
-          const previous = versions[index - 1]
+          const current = revision
+          const previous = parsedRevisions[index - 1]
 
-          // Skip changeset calculation for the first version to avoid GraphQL realm issues
+          // Skip changeset calculation for the newest revision (first in array after sorting)
           let changes: Change.Change[]
           if (!previous) {
-            // For the first version, we don't have changes - just an empty array
+            // For the newest revision, we don't have changes - just an empty array
             changes = []
           } else {
-            const before = previous.schema
-            const after = current.schema
+            // Fix: Swap before/after to calculate changes correctly
+            // previous is NEWER (lower index), current is OLDER (higher index)
+            const before = current.schema // older
+            const after = previous.schema // newer
 
             changes = yield* Change.calcChangeset({ before, after }).pipe(
               Effect.mapError((error) =>
@@ -197,7 +200,7 @@ export const read = (
     )
 
     // Get the latest schema (first after sorting newest first)
-    const latestSchemaData = versions[0]?.schema
+    const latestSchemaData = parsedRevisions[0]?.schema
     if (!latestSchemaData) return null
 
     const schema = Schema.Unversioned.make({
@@ -214,17 +217,17 @@ export const read = (
 export const loader = InputSource.createEffect({
   name: 'memory',
   isApplicable: (options: Options, _context) =>
-    Effect.succeed(options.versions !== undefined && options.versions !== null),
+    Effect.succeed(options.revisions !== undefined && options.revisions !== null),
   readIfApplicableOrThrow: (options: Options, _context) =>
     Effect.gen(function*() {
       const config = normalize(options)
 
       // If it's already a Catalog, return it directly
-      if (Catalog.is(config.versions)) {
-        return config.versions
+      if (Catalog.is(config.revisions)) {
+        return config.revisions
       }
 
-      if (!Arr.isntEmpty(config.versions)) {
+      if (!Arr.isntEmpty(config.revisions)) {
         return null
       }
 
