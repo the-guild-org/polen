@@ -7,18 +7,10 @@ import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 // ============================================================================
 
 // Store the catalog data directly in memory
-let catalogData: Catalog.Catalog | null = null
+let catalogData: Catalog.Catalog
 
-// Initialize with PROJECT_SCHEMA if available
-if (PROJECT_SCHEMA && typeof PROJECT_SCHEMA === 'object') {
-  try {
-    // PROJECT_SCHEMA contains the encoded catalog JSON, we need to decode it
-    // to transform AST back to GraphQLSchema instances
-    const decoded = Effect.runSync(Catalog.decode(PROJECT_SCHEMA as any))
-    catalogData = decoded
-  } catch (error) {
-    // Failed to load initial catalog data
-  }
+if (PROJECT_SCHEMA) {
+  catalogData = Effect.runSync(Catalog.decode(PROJECT_SCHEMA as any))
 }
 
 // ============================================================================
@@ -29,25 +21,29 @@ if (PROJECT_SCHEMA && typeof PROJECT_SCHEMA === 'object') {
  * Create a simplified catalog bridge without hydra
  */
 const createCatalogBridge = () => {
+  const assertCatalogLoaded = () => {
+    if (!catalogData) {
+      throw new Error(
+        'No schema catalog available. This page requires a GraphQL schema to be configured. '
+          + 'Please ensure your Polen configuration includes a valid schema source.',
+      )
+    }
+  }
+
   return {
     /**
      * Get the full catalog
      */
-    view: () => Effect.succeed(catalogData),
+    view: () => {
+      assertCatalogLoaded()
+      return Effect.succeed(catalogData)
+    },
 
     /**
      * Set catalog data
      */
     setData: (data: Catalog.Catalog) => {
       catalogData = data
-      return Effect.succeed(undefined)
-    },
-
-    /**
-     * Clear the catalog data
-     */
-    clear: () => {
-      catalogData = null
       return Effect.succeed(undefined)
     },
 
@@ -102,5 +98,5 @@ export const catalogBridge = createCatalogBridge()
  * Check if catalog data is available
  */
 export const hasCatalog = (): boolean => {
-  return catalogData !== null
+  return catalogData !== undefined && catalogData !== null
 }

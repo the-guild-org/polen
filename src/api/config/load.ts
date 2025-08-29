@@ -3,11 +3,14 @@ import { assertOptionalPathAbsolute, pickFirstPathExisting } from '#lib/kit-temp
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { FileSystem } from '@effect/platform/FileSystem'
 import type { Prom } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Effect, ParseResult } from 'effect'
 import * as Module from 'node:module'
-import type { ConfigInput } from './configurator.js'
+import type { WritableDeep } from 'type-fest'
+import type { ConfigInput } from './input.js'
+import { validateConfigInput, validateConfigInputEffect } from './input.js'
 
 export const fileNameBases = [`polen.config`, `.polen.config`]
 export const fileNameExtensionsTypeScript = [`.ts`, `.js`, `.mjs`, `.mts`]
@@ -21,86 +24,101 @@ export interface LoadOptions {
 
 let isSelfContainedModeRegistered = false
 
-export const load = async (options: LoadOptions): Promise<ConfigInput> => {
-  const debug = debugPolen.sub(`load`)
-  assertOptionalPathAbsolute(options.dir)
+export const load = (options: LoadOptions): Effect.Effect<ConfigInput, Error, FileSystem> =>
+  Effect.gen(function*() {
+    const debug = debugPolen.sub(`load`)
+    assertOptionalPathAbsolute(options.dir)
 
-  //
-  // ━━ Enable Self-Contained Mode
-  //
-  //  - When we're running CLI from source code
-  //  - Do this BEFORE trying to load the config file
-  //
+    //
+    // ━━ Enable Self-Contained Mode
+    //
+    //  - When we're running CLI from source code
+    //  - Do this BEFORE trying to load the config file
+    //
 
-  const isSelfContainedModeEnabled = packagePaths.isRunningFromSource
-  if (isSelfContainedModeEnabled && !isSelfContainedModeRegistered) {
-    const initializeData: SelfContainedModeHooksData = {
-      projectDirPathExp: options.dir,
+    const isSelfContainedModeEnabled = packagePaths.isRunningFromSource
+    if (isSelfContainedModeEnabled && !isSelfContainedModeRegistered) {
+      const initializeData: SelfContainedModeHooksData = {
+        projectDirPathExp: options.dir,
+      }
+      debug(`register node module hooks`, { data: initializeData })
+      // TODO: would be simpler to use sync hooks
+      // https://nodejs.org/api/module.html#synchronous-hooks-accepted-by-moduleregisterhooks
+      // Requires NodeJS 22.15+ -- which is not working with PW until its next release.
+      Module.register(`#cli/_/self-contained-mode`, import.meta.url, { data: initializeData })
+      isSelfContainedModeRegistered = true
     }
-    debug(`register node module hooks`, { data: initializeData })
-    // TODO: would be simpler to use sync hooks
-    // https://nodejs.org/api/module.html#synchronous-hooks-accepted-by-moduleregisterhooks
-    // Requires NodeJS 22.15+ -- which is not working with PW until its next release.
-    Module.register(`#cli/_/self-contained-mode`, import.meta.url, { data: initializeData })
-    isSelfContainedModeRegistered = true
-  }
 
-  //
-  // ━━ Fetch the Config
-  //
+    //
+    // ━━ Fetch the Config
+    //
 
-  const filePaths = fileNames.map(fileName => Path.join(options.dir, fileName))
-  const filePath = await Effect.runPromise(
-    pickFirstPathExisting(filePaths).pipe(
-      Effect.provide(NodeFileSystem.layer),
-    ),
-  )
+    const filePaths = fileNames.map(fileName => Path.join(options.dir, fileName))
+    const filePath = yield* pickFirstPathExisting(filePaths)
 
-  let configInput: ConfigInput | undefined = undefined
-  if (!filePath) {
-    configInput = {}
-  } else {
-    // If the user's config is a TypeScript file, we will use TSX to import it.
-
-    let module: { default?: Prom.Maybe<ConfigInput>; config?: Prom.Maybe<ConfigInput> }
-    if (fileNameExtensionsTypeScript.some(_ => filePath.endsWith(_))) {
-      // @see https://tsx.is/dev-api/ts-import#usage
-      const { tsImport } = await import(`tsx/esm/api`)
-      module = await tsImport(filePath, import.meta.url)
+    let configInput: ConfigInput
+    if (!filePath) {
+      // No config file found, use empty config (will use all defaults)
+      configInput = validateConfigInput({})
     } else {
-      module = await import(filePath)
-    }
-    debug(`imported config module`)
+      // If the user's config is a TypeScript file, we will use TSX to import it.
 
-    //       // Use dynamic import with file URL to support Windows
-    //       const configUrl = pathToFileURL(configPath).href
+      const module = yield* Effect.tryPromise({
+        try: async () => {
+          if (fileNameExtensionsTypeScript.some(_ => filePath.endsWith(_))) {
+            // @see https://tsx.is/dev-api/ts-import#usage
+            const { tsImport } = await import(`tsx/esm/api`)
+            return await tsImport(filePath, import.meta.url) as {
+              default?: Prom.Maybe<ConfigInput>
+              config?: Prom.Maybe<ConfigInput>
+            }
+          } else {
+            return await import(filePath) as { default?: Prom.Maybe<ConfigInput>; config?: Prom.Maybe<ConfigInput> }
+          }
+        },
+        catch: (error) => new Error(`Failed to import config module from ${filePath}: ${error}`),
+      })
+      debug(`imported config module`)
 
-    // todo: report errors nicely if this fails
-    const configInputFromFile = await (module.default ?? module.config)
+      //       // Use dynamic import with file URL to support Windows
+      //       const configUrl = pathToFileURL(configPath).href
 
-    // todo: check schema of configInput
+      const configInputFromFile = yield* Effect.tryPromise({
+        try: async () => await (module.default ?? module.config),
+        catch: (error) => new Error(`Failed to resolve config from module: ${error}`),
+      })
 
-    // todo: report errors nicely
-    if (!configInputFromFile) {
-      throw new Error(
-        `Your Polen config module (${filePath}) must export a config. You can use a default export or named export of \`config\`.`,
+      if (!configInputFromFile) {
+        return yield* Effect.fail(
+          new Error(
+            `Your Polen config module (${filePath}) must export a config. You can use a default export or named export of \`config\`.`,
+          ),
+        )
+      }
+
+      // Validate the config against the schema using Effect
+      configInput = yield* validateConfigInputEffect(configInputFromFile).pipe(
+        Effect.mapError((parseError) =>
+          new Error(
+            `Invalid Polen configuration in ${filePath}:\n${ParseResult.TreeFormatter.formatErrorSync(parseError)}`,
+          )
+        ),
       )
     }
-    configInput = configInputFromFile
-  }
 
-  //
-  // ━━ Record Any Change of Self-Contained Mode
-  //
-  //  - This will enable a Vite plugin to handle polen imports from non-JS files
-  //    in the user's project (like Markdown) in a self-contained way.
+    //
+    // ━━ Record Any Change of Self-Contained Mode
+    //
+    //  - This will enable a Vite plugin to handle polen imports from non-JS files
+    //    in the user's project (like Markdown) in a self-contained way.
 
-  if (isSelfContainedModeEnabled) {
-    configInput.advanced ??= {}
-    configInput.advanced.isSelfContainedMode = true
-  }
+    if (isSelfContainedModeEnabled) {
+      const configInput_as_writable = configInput as WritableDeep<ConfigInput>
+      configInput_as_writable.advanced ??= {}
+      configInput_as_writable.advanced.isSelfContainedMode = true
+    }
 
-  debug(`loaded config input`, configInput)
+    debug(`loaded config input`, configInput)
 
-  return configInput
-}
+    return configInput
+  })

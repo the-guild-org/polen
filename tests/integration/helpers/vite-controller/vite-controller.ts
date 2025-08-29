@@ -3,6 +3,7 @@ import { Vite } from '#dep/vite/index'
 import { toViteUserConfig, type ViteUserConfigWithPolen } from '#vite/config'
 import { ViteMemoryLogger } from '#vite/logger'
 import { Obj, Url } from '@wollybeard/kit'
+import { Effect } from 'effect'
 
 export type ViteDevServerPlus = Vite.ViteDevServer & {
   cannonicalUrl: URL
@@ -61,7 +62,9 @@ export const create = (
   const self: ViteController = {
     devPolen: async (configInput, testOptions) => {
       const configInputMerged = Api.Config.mergeInputs(config?.defaultConfigInput, configInput)
-      const appConfig = await Api.ConfigResolver.fromMemory(configInputMerged, config?.cwd)
+      const appConfig = await Effect.runPromise(
+        Api.ConfigResolver.fromMemory(configInputMerged, config?.cwd),
+      )
       // dump(appConfig)
       const viteConfig = toViteUserConfig(appConfig)
       const svr = await self.startDevelopmentServer(viteConfig, testOptions)

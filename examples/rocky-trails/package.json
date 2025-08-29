@@ -1,0 +1,13 @@
+{
+  "name": "rocky-trails-api",
+  "description": "Plan your backcountry adventures in the Canadian Rocky Mountains with comprehensive trail and weather data.",
+  "type": "module",
+  "scripts": {
+    "dev": "polen dev",
+    "build": "polen build",
+    "start": "node build/app.js"
+  },
+  "dependencies": {
+    "polen": "workspace:*"
+  }
+}

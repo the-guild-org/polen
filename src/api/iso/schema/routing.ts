@@ -1,8 +1,9 @@
 import { Grafaid } from '#lib/grafaid'
-import { VERSION_LATEST } from './constants.js'
+import { Schema } from '#lib/schema/$'
+import { Version } from '#lib/version/$'
 
 export interface ReferencePathParts {
-  version?: string
+  version?: Version.Version
   type?: string
   field?: string
 }
@@ -21,7 +22,7 @@ export const createReferencePath = (parts: ReferencePathParts): string => {
  * Create a base path for reference pages based on the current version
  * Used for sidebar navigation and other UI components that need version-aware paths
  */
-export const createReferenceBasePath = (version?: string): string => {
+export const createReferenceBasePath = (version?: Version.Version): string => {
   return joinSegmentsAndPaths(segmentLiterals.reference, createReferenceVersionPath(version))
 }
 
@@ -35,11 +36,11 @@ export const segmentLiterals = {
  * Create a base path for reference pages based on the current version
  * Used for sidebar navigation and other UI components that need version-aware paths
  */
-export const createReferenceVersionPath = (version?: string): string => {
+export const createReferenceVersionPath = (version?: Version.Version): string => {
   if (version === undefined) return ''
-  return version === VERSION_LATEST
-    ? ``
-    : `/${segmentLiterals.version}/${version}`
+  // VERSION_LATEST is not used with the Version type anymore
+  // Just use the version string directly
+  return `/${segmentLiterals.version}/${Version.toString(version)}`
 }
 
 export const joinSegmentsAndPaths = (
@@ -93,7 +94,7 @@ export type ReferenceViewType =
   | 'field-missing' // Field not found on type
 
 export interface ReferenceViewParams {
-  schema: import('graphql').GraphQLSchema
+  schema: Schema.Schema
   type?: string
   field?: string
 }
@@ -110,7 +111,7 @@ export const getReferenceViewType = (params: ReferenceViewParams): ReferenceView
   }
 
   // Check if type exists
-  const type = schema.getType(typeName)
+  const type = schema.definition.getType(typeName)
   if (!type) {
     return 'type-missing'
   }
@@ -148,10 +149,11 @@ export const isMissingView = (viewType: ReferenceViewType): viewType is 'type-mi
  * @param currentVersion - The current version being viewed (optional)
  * @returns URL path to the changelog with anchor to the specific date
  */
-export const createChangelogUrl = (revisionDate: string, currentVersion?: string): string => {
+export const createChangelogUrl = (revisionDate: string, schema: Schema.Schema): string => {
   // Create base changelog path with version if needed
-  const changelogBase = currentVersion && currentVersion !== VERSION_LATEST
-    ? joinSegmentsAndPaths(segmentLiterals.changelog, segmentLiterals.version, currentVersion)
+  const version = Schema.getVersion(schema)
+  const changelogBase = version
+    ? joinSegmentsAndPaths(segmentLiterals.changelog, segmentLiterals.version, Version.toString(version))
     : `/${segmentLiterals.changelog}`
 
   // Add anchor for the specific date

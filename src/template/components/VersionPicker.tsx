@@ -10,16 +10,16 @@ import { Stores } from '../stores/$.js'
 import { tryWithToast } from '../utils/try-with-toast.js'
 
 interface Props {
-  all: string[]
-  current: string
+  data: readonly Version.Version[]
+  current: Version.Version
 }
 
-export const VersionPicker: React.FC<Props> = ({ all, current }) => {
+export const VersionPicker: React.FC<Props> = ({ data, current }) => {
   const navigate = useNavigate()
   const currentPath = useReferencePath()
 
   // Don't show selector if only one version
-  if (all.length <= 1) {
+  if (data.length <= 1) {
     return null
   }
 
@@ -38,14 +38,8 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
       }
 
       // Find the schema for the target version
-      let targetSchema
-      if (newVersion === Api.Schema.VERSION_LATEST) {
-        const schema = catalog.entries[catalog.entries.length - 1]
-        targetSchema = schema
-      } else {
-        const schema = catalog.entries.find(schema => Version.toString(schema.version) === newVersion)
-        targetSchema = schema
-      }
+      // Note: newVersion is a string that we need to parse
+      const targetSchema = catalog.entries.find(schema => Version.toString(schema.version) === newVersion)
 
       if (!targetSchema) {
         throw new Error(`Version ${newVersion} not found`)
@@ -60,9 +54,9 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
         fallbackPath,
         newVersion,
       )
-      // Create the new path
+      // Create the new path - parse newVersion string to Version type
       const newPath = Api.Schema.Routing.createReferencePath({
-        version: newVersion,
+        version: Version.fromString(newVersion),
         type: fallbackPath.type || '',
         field: fallbackPath.field || '',
       })
@@ -95,7 +89,7 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
     if (error) {
       // Fallback to simple navigation if schema loading fails
       const newPath = Api.Schema.Routing.createReferencePath({
-        version: newVersion,
+        version: Version.fromString(newVersion),
         type: currentPath.type || '',
         field: currentPath.field || '',
       })
@@ -103,17 +97,22 @@ export const VersionPicker: React.FC<Props> = ({ all, current }) => {
     }
   }
 
+  const currentStr = Version.toString(current)
+
   return (
-    <Select.Root value={current} onValueChange={handleVersionChange}>
+    <Select.Root value={currentStr} onValueChange={handleVersionChange}>
       <Select.Trigger>
-        {current === Api.Schema.VERSION_LATEST ? `Latest` : current}
+        {currentStr}
       </Select.Trigger>
       <Select.Content>
-        {all.map(version => (
-          <Select.Item key={version} value={version}>
-            {version === Api.Schema.VERSION_LATEST ? `Latest` : version}
-          </Select.Item>
-        ))}
+        {data.map(version => {
+          const versionStr = Version.toString(version)
+          return (
+            <Select.Item key={versionStr} value={versionStr}>
+              {versionStr}
+            </Select.Item>
+          )
+        })}
       </Select.Content>
     </Select.Root>
   )

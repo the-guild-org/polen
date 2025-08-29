@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/index'
+import type { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
 import { Manifest } from '#vite/plugins/manifest'
 import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
@@ -6,12 +6,11 @@ import ViteReact from '@vitejs/plugin-react-oxc'
 import { Path } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
 import { Branding } from './branding.js'
-import { Build } from './build.js'
 import { Core } from './core.js'
 import { Serve } from './serve.js'
 
 export const Main = (
-  config: Config.Config,
+  config: Api.Config.Config,
 ): Vite.PluginOption => {
   const plugins: Vite.PluginOption = []
 

@@ -1,21 +1,33 @@
 import type { GrafaidOld } from '#lib/grafaid-old'
+import { S } from '#lib/kit-temp/effect'
 import { neverCase } from '@wollybeard/kit/language'
-import type { Target } from '../target.js'
+import { TargetSchema } from '../target.js'
 import { locateTargetField, locateTargetType } from '../target.js'
 
+// ============================================================================
+// Schema
+// ============================================================================
+
+export const PlacementSchema = S.Literal('before', 'after', 'over')
+export type Placement = S.Schema.Type<typeof PlacementSchema>
+
+export const DescriptionAugmentationSchema = S.Struct({
+  type: S.Literal('description'),
+  on: TargetSchema,
+  placement: PlacementSchema,
+  content: S.String,
+})
+
+export type DescriptionAugmentation = S.Schema.Type<typeof DescriptionAugmentationSchema>
+
+// ============================================================================
+// Constants
+// ============================================================================
+
 export const Placement = {
-  Before: `before`,
-  After: `after`,
-  Over: `over`,
-} as const
-
-export type Placement = (typeof Placement)[keyof typeof Placement]
-
-export interface DescriptionAugmentation {
-  type: `description`
-  on: Target
-  placement: Placement
-  content: string
+  Before: `before` as const,
+  After: `after` as const,
+  Over: `over` as const,
 }
 
 export const applyDescriptionContent = (

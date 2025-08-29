@@ -1,5 +1,5 @@
-import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
+import type { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router'
 import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
@@ -22,7 +22,7 @@ export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-cat
 })
 
 export interface Options {
-  config: Config.Config
+  config: Api.Config.Config
 }
 
 export interface ProjectPagesCatalog {

@@ -5,6 +5,7 @@ import { GrafaidOld } from '#lib/grafaid-old'
 import { S } from '#lib/kit-temp/effect'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { catalog } from '#template/data/catalog'
 import { neverCase } from '@wollybeard/kit/language'
@@ -21,62 +22,60 @@ import { SidebarLayout } from '../layouts/index.js'
 
 const routeSchema = S.Struct({
   catalog: Catalog.Catalog,
-  requestedVersion: S.String,
+  schema: Schema.Schema,
 })
 
-const referenceLoader = async ({ params }: any) => {
-  const catalog = await Effect.runPromise(catalogBridge.view())
-  return {
-    catalog: catalog!,
-    requestedVersion: params.version ?? Api.Schema.VERSION_LATEST,
-  }
-}
+const referenceLoader = ({ params }: any) =>
+  catalogBridge.view().pipe(
+    Effect.map(catalog => {
+      // Resolve the actual schema based on catalog type and params
+      const schema = Match.value(catalog).pipe(
+        Match.tagsExhaustive({
+          CatalogUnversioned: (c) => c.schema,
+          CatalogVersioned: (c) => {
+            // If version param provided, find that specific version
+            if (params.version) {
+              const requestedVersion = Version.decodeSync(params.version)
+              const found = c.entries.find(s => Version.equivalence(requestedVersion, s.version))
+              if (!found) {
+                // TODO: Return 404 error
+                throw new Error(`Version ${params.version} not found`)
+              }
+              return found
+            }
+            // No version param means "latest" - use the last entry
+            const latest = c.entries[c.entries.length - 1]
+            if (!latest) {
+              throw new Error('No schemas available in versioned catalog')
+            }
+            return latest
+          },
+        }),
+      )
+
+      return {
+        catalog,
+        schema,
+      }
+    }),
+  )
 
 // Single component that handles all reference route variations
 const ReferenceView = () => {
   const params = useParams() as { version?: string; type?: string; field?: string }
-
   const loaderData = useLoaderData(routeSchema)
+  const { catalog, schema } = loaderData
 
-  const { catalog, requestedVersion } = loaderData
-
-  // Create lifecycles from catalog
-  const lifecycle = React.useMemo(() => Lifecycles.create(catalog), [catalog])
-
-  // Extract schema and version info based on catalog type
-  const { schema, availableVersions, currentVersion } = React.useMemo(() => {
-    return Match.value(catalog).pipe(
-      Match.tag('CatalogUnversioned', (c) => ({
-        schema: c.schema.definition,
-        availableVersions: [],
-        currentVersion: '',
-      })),
-      Match.tag('CatalogVersioned', (c) => {
-        // Find the matching version
-        let schemaObj
-        if (requestedVersion === Api.Schema.VERSION_LATEST) {
-          const schema = c.entries[c.entries.length - 1]
-          schemaObj = schema
-        } else {
-          const schema = c.entries.find(schema => Version.toString(schema.version) === requestedVersion)
-          schemaObj = schema
-        }
-        return {
-          schema: schemaObj?.definition,
-          availableVersions: c.entries.map(schema => Version.toString(schema.version)),
-          currentVersion: requestedVersion,
-        }
-      }),
-      Match.exhaustive,
-    )
-  }, [catalog, requestedVersion])
+  // Create lifecycles from schema
+  const lifecycle = React.useMemo(() => Lifecycles.createFromSchema(schema), [schema])
 
   if (!schema) {
+    // this would be some sort of internal error, make issue more clear.
     return <MissingSchema />
   }
 
   // Build reference sidebar from schema types
-  const kindMap = GrafaidOld.getKindMap(schema)
+  const kindMap = GrafaidOld.getKindMap(schema.definition)
 
   const sidebarItems: Content.Item[] = []
   const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
@@ -95,8 +94,10 @@ const ReferenceView = () => {
     })
   }
 
-  // Calculate basePath based on current version
-  const basePath = Api.Schema.Routing.createReferenceBasePath(currentVersion)
+  // Calculate basePath based on schema version
+  const basePath = Api.Schema.Routing.createReferenceBasePath(
+    Schema.getVersion(schema),
+  )
 
   // Determine view type and render appropriate content
   const viewType = Api.Schema.Routing.getReferenceViewType({
@@ -111,10 +112,10 @@ const ReferenceView = () => {
     } else if (viewType === 'type-missing' || viewType === 'field-missing') {
       return <MissingSchema />
     } else if (viewType === 'type') {
-      const type = schema.getType(params.type!)!
+      const type = schema.definition.getType(params.type!)!
       return <NamedType data={type} />
     } else if (viewType === 'field') {
-      const type = schema.getType(params.type!)!
+      const type = schema.definition.getType(params.type!)!
       const fields = (type as any).getFields()
       const field = fields[params.field!]
       return (
@@ -129,18 +130,21 @@ const ReferenceView = () => {
   })()
 
   return (
-    <GraphqlLifecycleProvider lifecycle={lifecycle} currentVersion={currentVersion}>
+    <GraphqlLifecycleProvider lifecycle={lifecycle} schema={schema}>
       <SidebarLayout
         sidebar={sidebarItems}
         basePath={basePath}
-        topContent={availableVersions.length > 0
-          ? (
-            <VersionPicker
-              all={[...availableVersions]} // Convert readonly to mutable
-              current={currentVersion}
-            />
-          )
-          : null}
+        topContent={(() => {
+          const version = Schema.getVersion(schema)
+          return catalog._tag === 'CatalogVersioned' && version
+            ? (
+              <VersionPicker
+                data={catalog.entries.map(entry => entry.version)}
+                current={version}
+              />
+            )
+            : null
+        })()}
       >
         {content}
       </SidebarLayout>

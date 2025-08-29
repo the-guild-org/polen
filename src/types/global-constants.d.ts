@@ -19,7 +19,7 @@ declare const __BUILD_ARCHITECTURE_SSG__: boolean
  * - `'ssg'` for Static Site Generation (default)
  * - `'ssr'` for Server-Side Rendering (future support)
  */
-declare const __BUILD_ARCHITECTURE__: import('#api/config/index').Config.BuildArchitecture
+declare const __BUILD_ARCHITECTURE__: import('#api/config/input').BuildArchitecture
 
 /**
  * Indicates whether the code is running in development server mode.

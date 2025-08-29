@@ -1,5 +1,4 @@
 import { Api } from '#api/index'
-import { Task } from '#lib/task'
 import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
 import { allowGlobalParameter } from '../../_/parameters.js'
@@ -42,9 +41,26 @@ export const staticRebase = Command.make(
           newBasePath,
         }
 
-      // Wrap the Promise-based API to make it Effect-based
-      const rebaseEffect = (plan: Api.Static.RebasePlan) => Effect.promise(() => Api.Static.rebase(plan))
+      // Direct Effect execution with timing and error handling
+      const start = Date.now()
 
-      yield* Task.runAndExit(rebaseEffect, plan)
+      const result = yield* Effect.promise(() => Api.Static.rebase(plan))
+        .pipe(
+          Effect.tap(() => {
+            const duration = Date.now() - start
+            console.log(`Task: rebase`)
+            console.log(`Duration: ${duration}ms`)
+            console.log(`Input: ${JSON.stringify(plan, null, 2)}`)
+          }),
+          Effect.tapError((error) => {
+            const duration = Date.now() - start
+            console.error(`Task: rebase failed`)
+            console.error(`Duration: ${duration}ms`)
+            console.error(`Error:`, error)
+            return Effect.succeed(undefined)
+          }),
+        )
+
+      return result
     }),
 )

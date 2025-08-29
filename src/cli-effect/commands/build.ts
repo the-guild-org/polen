@@ -47,22 +47,20 @@ export const build = Command.make(
         return yield* Effect.fail(new Error('Invalid project directory'))
       }
 
-      yield* Effect.promise(() =>
-        Api.Builder.build({
-          dir,
-          overrides: {
-            build: {
-              architecture,
-              base: Option.getOrUndefined(base),
-            },
-            server: {
-              port: Option.getOrUndefined(port),
-            },
-            advanced: {
-              debug,
-            },
+      yield* Api.Builder.build({
+        dir,
+        overrides: {
+          build: {
+            architecture,
+            base: Option.getOrUndefined(base),
           },
-        })
-      )
+          server: {
+            port: Option.getOrUndefined(port),
+          },
+          advanced: {
+            debug,
+          },
+        },
+      })
     }),
 )

@@ -2,7 +2,8 @@
   "name": "test-simple",
   "version": "0.0.0",
   "scripts": {
-    "dev": "polen dev"
+    "dev": "polen dev",
+    "build": "polen build"
   },
   "dependencies": {
     "polen": "workspace:*"

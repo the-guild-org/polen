@@ -1,4 +1,3 @@
-import type { Config } from '#api/config/index'
 import { Api } from '#api/index'
 import { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
@@ -15,7 +14,7 @@ import * as fs from 'node:fs/promises'
  * This manifest contains all concrete route paths (no parameters)
  * that the SSG process needs to generate.
  */
-export const RoutesManifest = (config: Config.Config): Vite.Plugin => {
+export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
   const debug = debugPolen.sub(`vite:routes-manifest`)
 
   return {

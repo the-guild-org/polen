@@ -1,5 +1,6 @@
 export * from '../iso/schema/constants.js'
 export * as Routing from '../iso/schema/routing.js'
+export * as ConfigSchema from './config-schema.js'
 export * from './config.js'
 export * from './input-source/$.js'
 export * from './input-sources/$.js'

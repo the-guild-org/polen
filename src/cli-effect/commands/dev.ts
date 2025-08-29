@@ -43,22 +43,20 @@ export const dev = Command.make(
         return yield* Effect.fail(new Error('Invalid project directory'))
       }
 
-      const polenConfig = yield* Effect.promise(() =>
-        Api.ConfigResolver.fromFile({
-          dir,
-          overrides: {
-            build: {
-              base: Option.getOrUndefined(base),
-            },
-            server: {
-              port: Option.getOrUndefined(port),
-            },
-            advanced: {
-              debug: Option.getOrUndefined(debug),
-            },
+      const polenConfig = yield* Api.ConfigResolver.fromFile({
+        dir,
+        overrides: {
+          build: {
+            base: Option.getOrUndefined(base),
           },
-        })
-      )
+          server: {
+            port: Option.getOrUndefined(port),
+          },
+          advanced: {
+            debug: Option.getOrUndefined(debug),
+          },
+        },
+      })
 
       const viteUserConfig = toViteUserConfig(polenConfig)
       const viteDevServerResult = yield* Effect.promise(() => Err.tryCatch(() => Vite.createServer(viteUserConfig)))

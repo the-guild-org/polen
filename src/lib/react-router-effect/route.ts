@@ -54,9 +54,18 @@ export const route = <TSchema extends Schema.Schema.Any = never>(
 
   if (loader) {
     route.loader = async (args: any) => {
-      // Convert Promise to Effect for internal consistency
-      const loaderEffect = Effect.tryPromise(() => loader(args))
-      const decodedData = await Effect.runPromise(loaderEffect)
+      // Call the loader function
+      const result = loader(args)
+
+      // Check if result is an Effect or a Promise
+      let decodedData: any
+      if (Effect.isEffect(result)) {
+        // It's an Effect, run it
+        decodedData = await Effect.runPromise(result as any)
+      } else {
+        // It's a Promise, await it
+        decodedData = await result
+      }
 
       // Encode the data for transport using the schema
       const encodedData = Schema.encodeSync(schema as any)(decodedData as any)

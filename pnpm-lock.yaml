@@ -322,6 +322,12 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  examples/rocky-trails:
+    dependencies:
+      polen:
+        specifier: workspace:*
+        version: link:../..
+
   examples/test-memory:
     dependencies:
       graphql:

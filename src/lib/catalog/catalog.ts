@@ -68,8 +68,6 @@ export const getVersionCount = (catalog: Catalog): number =>
  * Returns the stringified version for versioned schemas, or '__UNVERSIONED__' for unversioned schemas.
  */
 export const getSchemaVersionString = (schema: Schema.Schema): string => {
-  if (schema._tag === 'SchemaVersioned') {
-    return Version.toString(schema.version)
-  }
-  return '__UNVERSIONED__'
+  const version = Schema.getVersion(schema)
+  return version ? Version.toString(version) : '__UNVERSIONED__'
 }

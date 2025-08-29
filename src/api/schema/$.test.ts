@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/config'
+import type { Config } from '#api/config/$'
 import { Catalog } from '#lib/catalog/$'
 import { Grafaid } from '#lib/grafaid'
 import { MemoryFilesystem } from '#lib/memory-filesystem/$'
@@ -33,7 +33,7 @@ const sdl3 = `
   }
 `
 
-const createTestConfig = (overrides?: Partial<Config>): Config => ({
+const createTestConfig = (overrides?: Partial<Config.Config>): Config.Config => ({
   paths: {
     project: {
       rootDir: '/project',
@@ -107,7 +107,7 @@ const createTestConfig = (overrides?: Partial<Config>): Config => ({
   schema: null,
   _input: {},
   ...overrides,
-} as Config)
+} as Config.Config)
 
 // Helper to build GraphQL schema using Grafaid to avoid realm issues
 const buildSchemaWithGrafaid = (sdl: string) =>
@@ -123,9 +123,9 @@ const buildSchemaWithGrafaid = (sdl: string) =>
 // Create test suite with FileSystem layer
 const testWithFileSystem = Test.suiteWithLayers(NodeFileSystem.layer)
 
-// Create test suite with memory filesystem layer
-const testWithMemoryFileSystem = <T>(diskLayout: MemoryFilesystem.DiskLayout) =>
-  Test.suiteWithLayers(MemoryFilesystem.layer(diskLayout))
+// // Create test suite with memory filesystem layer
+// const testWithMemoryFileSystem = <T>(diskLayout: MemoryFilesystem.DiskLayout) =>
+//   Test.suiteWithLayers(MemoryFilesystem.layer(diskLayout))
 
 // ============================================================================
 // Base Test Case Interfaces
@@ -230,7 +230,7 @@ testWithFileSystem<BaseTestCase&{
 
 // dprint-ignore
 testWithFileSystem<BaseTestCase & {
-  config: Partial<Config>
+  config: Partial<Config.Config>
   expected: {
     loadOrNull: 'null' | 'catalog'
     loadOrThrow: 'null' | 'catalog' | 'throws'
@@ -401,7 +401,7 @@ testWithFileSystem<BaseTestCase & {
   // Get the appropriate input source loader
   const sourceLoaders = {
     'file': Schema.InputSources.File.loader,
-    'directory': Schema.InputSources.Directory.loader, 
+    'directory': Schema.InputSources.Directory.loader,
     'versionedDirectory': Schema.InputSources.VersionedDirectory.loader,
   }
   const source = sourceLoaders[sourceType]
@@ -443,7 +443,7 @@ testWithFileSystem<BaseTestCase & {
 // dprint-ignore
 testWithFileSystem<BaseTestCase & {
   diskLayout: Record<string, string>
-  config: Partial<Config>
+  config: Partial<Config.Config>
   expected: {
     detectedSource: string
     catalogType: 'unversioned' | 'versioned'
@@ -487,12 +487,12 @@ testWithFileSystem<BaseTestCase & {
   const program = Effect.gen(function* () {
     const result = yield* Schema.loadOrNull(fullConfig)
     expect(result).not.toBe(null)
-    
+
     // Note: This is a simplified test since we don't have access to which source was detected
     // In a full implementation, we would need the Schema.load function to return source info
     expect(result!.data).not.toBe(null)
     expect(Catalog.is(result!.data!)).toBe(true)
-    
+
     if (expected.catalogType === 'versioned') {
       expect(result!.data!._tag).toBe('CatalogVersioned')
     } else {

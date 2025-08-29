@@ -1,4 +1,5 @@
 import { Api } from '#api/iso'
+import { Version } from '#lib/version/$'
 import { useParams } from 'react-router'
 
 /**
@@ -7,6 +8,10 @@ import { useParams } from 'react-router'
  */
 export const useVersionPath = (): string => {
   const params = useParams()
-  const version = params[`version`] || Api.Schema.VERSION_LATEST
+  const versionParam = params[`version`]
+  if (!versionParam) {
+    return ''
+  }
+  const version = Version.fromString(versionParam)
   return Api.Schema.Routing.createReferenceVersionPath(version)
 }

@@ -16,6 +16,12 @@ A fun exploration of Polen's changelog capabilities, tracking the evolution of a
 
 **Key Features**: 10 schema versions, change criticality analysis, interactive version navigation
 
+### [Rocky Trails](/examples/rocky-trails)
+
+Experience Polen's revision-based changelog with a Canadian Rocky Mountains trail planning API, demonstrating schema evolution without versioning.
+
+**Key Features**: Date-based revisions, automatic changelog generation, rich domain modeling with trails, weather, and route planning
+
 ## Quick Start
 
 Run any example locally in minutes:
@@ -27,7 +33,9 @@ cd polen
 pnpm install
 
 # Choose an example
-cd examples/hive    # or examples/pokemon
+cd examples/hive       # Real production API
+cd examples/pokemon    # Versioned changelog demo
+cd examples/rocky-trails  # Revision-based evolution
 pnpm dev
 ```
 
@@ -35,7 +43,8 @@ pnpm dev
 
 1. **Start with Hive** to see Polen documenting a real production API
 2. **Explore Pokemon** to understand changelog and versioning features
-3. **Run locally** to examine the source code and configuration
+3. **Try Rocky Trails** to see revision-based evolution without versioning
+4. **Run locally** to examine the source code and configuration
 
 ## What's Coming
 

@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/index'
+import type { Api } from '#api/index'
 import { Vite } from '#dep/vite/index'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { Path } from '@wollybeard/kit'
@@ -6,7 +6,7 @@ import { polenVirtual } from '../vi.js'
 
 const viClientManifest = polenVirtual([`vite`, `client`, `manifest`])
 
-export const Manifest = (config: Config.Config): Vite.Plugin => {
+export const Manifest = (config: Api.Config.Config): Vite.Plugin => {
   let configEnv: Vite.ConfigEnv
 
   return {

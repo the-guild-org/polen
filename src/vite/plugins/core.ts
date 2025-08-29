@@ -1,4 +1,3 @@
-import type { Config } from '#api/config/index'
 import { Content } from '#api/content/$'
 import { createNavbar, type NavbarItem } from '#api/content/navbar'
 import { Api } from '#api/index'
@@ -11,9 +10,8 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import type { ProjectData } from '#project-data'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Idx, Json, Str } from '@wollybeard/kit'
+import { Json, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { GraphQLSchema } from 'graphql'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
 import { Pages } from './pages.js'
@@ -29,7 +27,7 @@ export interface ProjectRoutesModule {
   routes: ReactRouter.RouteObject[]
 }
 
-export const Core = (config: Config.Config): Vite.PluginOption[] => {
+export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
   let loadedCatalogCache: Api.Schema.InputSource.LoadedCatalog | null = null
 
   const readSchema = async () => {

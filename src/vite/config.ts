@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/configurator'
+import type { Api } from '#api/index'
 import { Vite } from '#dep/vite/index'
 import { Main } from './plugins/main.js'
 
@@ -6,7 +6,7 @@ import { Main } from './plugins/main.js'
  * Transform Polen config into a Vite configuration.
  */
 export const toViteUserConfig = (
-  config: Config,
+  config: Api.Config.Config,
 ): ViteUserConfigWithPolen => {
   const viteUserConfigFromPolen: Vite.UserConfig = {
     base: config.build.base,
@@ -23,5 +23,5 @@ export const toViteUserConfig = (
 }
 
 export interface ViteUserConfigWithPolen extends Vite.UserConfig {
-  _polen: Config
+  _polen: Api.Config.Config
 }

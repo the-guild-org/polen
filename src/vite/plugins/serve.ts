@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/index'
+import type { Api } from '#api/index'
 import { reportError } from '#api/server/report-error'
 import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
@@ -18,7 +18,7 @@ type AppPromise = AppPromiseGeneric<App>
 type PluginScope = { server?: Vite.ViteDevServer | undefined }
 
 export const Serve = (
-  config: Config.Config,
+  config: Api.Config.Config,
 ): Vite.PluginOption => {
   const PLUGIN_SCOPE: PluginScope = {}
 

@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/index'
+import type { Api } from '#api/index'
 import type { PolenBuildManifest } from '#api/static/manifest'
 import { Vite } from '#dep/vite/index'
 import { debugPolen } from '#singletons/debug'
@@ -7,7 +7,7 @@ import packageJson from '../../../package.json' with { type: 'json' }
 import { isKitUnusedExternalImport, isRadixModuleLevelDirective } from '../log-filters.js'
 import { RoutesManifest } from './routes-manifest.js'
 
-export const Build = (config: Config.Config): Vite.Plugin[] => {
+export const Build = (config: Api.Config.Config): Vite.Plugin[] => {
   const debug = debugPolen.sub(`vite-build`)
   debug(`construct`)
   // let viteConfigResolved: Vite.ResolvedConfig
@@ -124,7 +124,7 @@ export const Build = (config: Config.Config): Vite.Plugin[] => {
   ]
 }
 
-const BuildManifest = (config: Config.Config): Vite.Plugin => {
+const BuildManifest = (config: Api.Config.Config): Vite.Plugin => {
   return {
     name: `polen:build-manifest`,
     apply: `build`,

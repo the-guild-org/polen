@@ -1,4 +1,4 @@
-import type { Config as PolenConfig } from '#api/config/config'
+import { Config as PolenConfig } from '#api/config/$'
 import type { Config } from '#api/schema/config'
 import type { InputSource } from '#api/schema/input-source/input-source'
 import type { Catalog } from '#lib/catalog/$'
@@ -24,7 +24,7 @@ export interface LoadedCatalog {
 }
 
 export interface Context {
-  paths: PolenConfig['paths']
+  paths: PolenConfig.Config['paths']
 }
 
 type InputSourceName = string

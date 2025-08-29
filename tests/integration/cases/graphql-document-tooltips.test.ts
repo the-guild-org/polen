@@ -5,6 +5,7 @@
 import { Api } from '#api/index'
 import { toViteUserConfig } from '#vite/config'
 import type { FsLayout } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
@@ -179,7 +180,9 @@ export default defineConfig({
 // GraphQL Document Tooltips Integration Tests
 test.skip('should show tooltip on hover after delay', async ({ page, vite, project }) => {
   await project.layout.set(createTestFixture())
-  const polenConfig = await Api.ConfigResolver.fromMemory({}, project.layout.cwd)
+  const polenConfig = await Effect.runPromise(
+    Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+  )
   const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)
 

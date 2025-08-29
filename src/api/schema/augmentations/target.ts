@@ -1,17 +1,28 @@
 import { Grafaid } from '#lib/grafaid'
+import { S } from '#lib/kit-temp/effect'
 
-export type Target = TargetType | TargetField
+// ============================================================================
+// Schema
+// ============================================================================
 
-export interface TargetType {
-  type: `TargetType`
-  name: string
-}
+export const TargetTypeSchema = S.Struct({
+  type: S.Literal('TargetType'),
+  name: S.String,
+})
 
-export interface TargetField {
-  type: `TargetField`
-  name: string
-  typeTarget: TargetType
-}
+export type TargetType = S.Schema.Type<typeof TargetTypeSchema>
+
+export const TargetFieldSchema = S.Struct({
+  type: S.Literal('TargetField'),
+  name: S.String,
+  targetType: S.String,
+})
+
+export type TargetField = S.Schema.Type<typeof TargetFieldSchema>
+
+export const TargetSchema = S.Union(TargetTypeSchema, TargetFieldSchema)
+
+export type Target = S.Schema.Type<typeof TargetSchema>
 
 export const locateTargetType = (
   schema: Grafaid.Schema.Schema,
@@ -28,14 +39,14 @@ export const locateTargetField = (
   schema: Grafaid.Schema.Schema,
   target: TargetField,
 ): Grafaid.Schema.NodesLike.Field => {
-  const type = schema.getType(target.typeTarget.name)
+  const type = schema.getType(target.targetType)
 
   if (!type) {
-    throw new Error(`Could not find type ${target.typeTarget.name}`)
+    throw new Error(`Could not find type ${target.targetType}`)
   }
 
   if (!Grafaid.Schema.TypesLike.isFielded(type)) {
-    throw new Error(`Type ${target.typeTarget.name} does not have fields`)
+    throw new Error(`Type ${target.targetType} does not have fields`)
   }
 
   const fields = type.getFields()
@@ -43,7 +54,7 @@ export const locateTargetField = (
 
   if (!field) {
     // dprint-ignore
-    throw new Error(`Could not find field ${target.name} on type ${target.typeTarget.name}`)
+    throw new Error(`Could not find field ${target.name} on type ${target.targetType}`)
   }
 
   return field

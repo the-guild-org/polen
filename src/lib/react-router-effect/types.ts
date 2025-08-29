@@ -1,5 +1,5 @@
 import type { Http } from '@wollybeard/kit'
-import type { Schema } from 'effect'
+import type { Effect, Schema } from 'effect'
 import type React from 'react'
 import type { RouteObject } from 'react-router'
 
@@ -60,9 +60,12 @@ export interface SchemaRouteConfig<TSchema extends Schema.Schema.Any> {
   schema: TSchema
   /**
    * The loader function that returns data matching the schema type.
+   * Can return either a Promise or an Effect.
    * The returned data will be automatically encoded using the schema.
    */
-  loader?: (args: any) => Promise<Schema.Schema.Type<TSchema>>
+  loader?:
+    | ((args: any) => Promise<Schema.Schema.Type<TSchema>>)
+    | ((args: any) => Effect.Effect<Schema.Schema.Type<TSchema>, any, any>)
   /**
    * Additional handle properties beyond the schema.
    */

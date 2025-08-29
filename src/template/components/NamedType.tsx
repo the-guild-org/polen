@@ -1,10 +1,12 @@
 import { Api } from '#api/iso'
 import { Lifecycles } from '#lib/lifecycles/$'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { Badge, Box, Heading, Link, Text } from '@radix-ui/themes'
+import { Match } from 'effect'
 import { type GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'
-import { useGraphqlLifecycle } from '../contexts/GraphqlLifecycleContext.js'
+import { useSchema } from '../contexts/GraphqlLifecycleContext.js'
 import { FieldListSection } from './FieldListSection.js'
 import { Markdown } from './Markdown.js'
 
@@ -13,7 +15,7 @@ export interface Props {
 }
 
 export const NamedType: FC<Props> = ({ data }) => {
-  const { lifecycle, currentVersion } = useGraphqlLifecycle()
+  const { schema, lifecycles } = useSchema()
 
   const description = data.description
     ? (
@@ -24,9 +26,8 @@ export const NamedType: FC<Props> = ({ data }) => {
     : null
 
   // Get lifecycle information for this type
-  // Pass currentVersion to filter badges appropriately for reference docs
-  const since = lifecycle ? Lifecycles.getTypeSince(lifecycle, data.name, currentVersion) : null
-  const removedDate = lifecycle ? Lifecycles.getTypeRemovedDate(lifecycle, data.name, currentVersion) : null
+  const since = Lifecycles.getTypeSince(lifecycles, data.name, schema)
+  const removedDate = Lifecycles.getTypeRemovedDate(lifecycles, data.name, schema)
 
   return (
     <Box>
@@ -43,14 +44,17 @@ export const NamedType: FC<Props> = ({ data }) => {
               <Link
                 href={Api.Schema.Routing.createChangelogUrl(
                   since.revision.date,
-                  since.schema._tag === 'SchemaVersioned' ? Version.toString(since.schema.version) : undefined,
+                  since.schema,
                 )}
                 style={{ textDecoration: 'none' }}
               >
                 <Badge color='green' variant='soft' size='1' style={{ cursor: 'pointer' }}>
-                  Added {since.schema._tag === 'SchemaVersioned'
-                    ? `${Version.toString(since.schema.version)}@${since.revision.date}`
-                    : since.revision.date}
+                  Added {Match.value(since.schema).pipe(
+                    Match.tagsExhaustive({
+                      SchemaVersioned: (s) => `${Version.toString(s.version)}@${since.revision.date}`,
+                      SchemaUnversioned: () => since.revision.date,
+                    }),
+                  )}
                 </Badge>
               </Link>
             )

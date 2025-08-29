@@ -1,36 +1,53 @@
 import { ConfigResolver } from '#api/config-resolver/index'
-import type { ConfigInput } from '#api/config/configurator'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig } from '#vite/config'
-import { Fs } from '@wollybeard/kit'
+import { FileSystem } from '@effect/platform/FileSystem'
 import consola from 'consola'
+import { Effect } from 'effect'
+import type { Config } from '../config/$.js'
 import { generate } from './ssg/generate.js'
 
 interface BuildInput {
   dir: string
-  overrides?: Partial<ConfigInput>
+  overrides?: Partial<Config.ConfigInput>
 }
 
-export const build = async (input: BuildInput) => {
-  const polenConfig = await ConfigResolver.fromFile({
-    dir: input.dir,
-    overrides: input.overrides,
+export const build = (input: BuildInput): Effect.Effect<void, Error, FileSystem> =>
+  Effect.gen(function*() {
+    const polenConfig = yield* ConfigResolver.fromFile({
+      dir: input.dir,
+      overrides: input.overrides,
+    })
+
+    const viteUserConfig = toViteUserConfig(polenConfig)
+
+    const builder = yield* Effect.tryPromise({
+      try: () => Vite.createBuilder(viteUserConfig),
+      catch: (error) => new Error(`Failed to create Vite builder: ${error}`),
+    })
+
+    yield* Effect.tryPromise({
+      try: () => builder.buildApp(),
+      catch: (error) => new Error(`Failed to build app: ${error}`),
+    })
+
+    const architecture = viteUserConfig._polen.build.architecture
+    if (architecture === `ssg`) {
+      // Run SSG generation directly from the builder
+      yield* generate(viteUserConfig._polen)
+
+      // Clean up server file which is not needed for static sites
+      const fs = yield* FileSystem
+      const serverEntrypoint = viteUserConfig._polen.paths.project.absolute.build.serverEntrypoint
+      const exists = yield* fs.exists(serverEntrypoint)
+      if (exists) {
+        yield* fs.remove(serverEntrypoint)
+      }
+
+      // todo: there is also some kind of prompt js asset that we probably need to clean up or review...
+      consola.info(`try it: npx serve ${viteUserConfig._polen.paths.project.relative.build.root} -p 4000`)
+    } else if (architecture === `ssr`) {
+      consola.info(`try it: node ${viteUserConfig._polen.paths.project.relative.build.root}/app.js`)
+      consola.info(`Then visit http://localhost:${viteUserConfig._polen.server.port}`)
+    }
   })
-
-  const viteUserConfig = toViteUserConfig(polenConfig)
-  const builder = await Vite.createBuilder(viteUserConfig)
-  await builder.buildApp()
-
-  const architecture = viteUserConfig._polen.build.architecture
-  if (architecture === `ssg`) {
-    // Run SSG generation directly from the builder
-    await generate(viteUserConfig._polen)
-    // Clean up server file which is not needed for static sites
-    await Fs.remove(viteUserConfig._polen.paths.project.absolute.build.serverEntrypoint)
-    // todo: there is also some kind of prompt js asset that we probably need to clean up or review...
-    consola.info(`try it: npx serve ${viteUserConfig._polen.paths.project.relative.build.root} -p 4000`)
-  } else if (architecture === `ssr`) {
-    consola.info(`try it: node ${viteUserConfig._polen.paths.project.relative.build.root}/app.js`)
-    consola.info(`Then visit http://localhost:${viteUserConfig._polen.server.port}`)
-  }
-}

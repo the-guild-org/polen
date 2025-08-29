@@ -63,6 +63,33 @@ const extractTypeNameFromChange = (change: Change.Change): string | null => {
 }
 
 /**
+ * Build lifecycle data from a single schema
+ */
+export const createFromSchema = (schema: Schema.Schema): Lifecycles => {
+  const lifecycles: Lifecycles = {}
+
+  // Process all revisions for this schema
+  for (const revision of schema.revisions) {
+    // Process all changes in this revision
+    for (const change of revision.changes) {
+      const typeName = extractTypeNameFromChange(change)
+      if (typeName) {
+        if (!lifecycles[typeName]) {
+          lifecycles[typeName] = []
+        }
+        lifecycles[typeName].push({
+          change, // reference to existing change object
+          revision, // reference to existing revision object
+          schema, // reference to existing schema object
+        })
+      }
+    }
+  }
+
+  return lifecycles
+}
+
+/**
  * Build lifecycle data from a catalog
  */
 export const create = (catalog: Catalog.Catalog): Lifecycles => {
@@ -112,22 +139,24 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
 /**
  * Get when a type was introduced (initial or added)
  */
-export const getTypeSince = (lifecycles: Lifecycles, typeName: string, currentVersion?: string): Since | undefined => {
+export const getTypeSince = (
+  lifecycles: Lifecycles,
+  typeName: string,
+  currentSchema?: Schema.Schema,
+): Since | undefined => {
   const entries = lifecycles[typeName]
 
   // If no entries at all, type doesn't exist in any form
   if (!entries || entries.length === 0) return undefined
 
-  // Parse current version if provided
-  const currentVer = currentVersion ? Version.fromString(currentVersion) : undefined
-
   // Look for TYPE_ADDED change
   for (const entry of entries) {
     if (entry.change._tag === 'TYPE_ADDED' && entry.change.name === typeName) {
       // If we have a current version and this entry has a version, check if it's not after current
-      if (currentVer && entry.schema._tag === 'SchemaVersioned') {
+      if (currentSchema && entry.schema._tag === 'SchemaVersioned') {
+        if (currentSchema._tag !== 'SchemaVersioned') throw new Error('todo -- version/unversioned mismatch!')
         const entryVer = entry.schema.version
-        if (Version.greaterThan(entryVer, currentVer)) {
+        if (Version.greaterThan(entryVer, currentSchema.version)) {
           continue // Skip entries from future versions
         }
       }
@@ -193,13 +222,13 @@ export const getTypeAddedDate = (
 export const getTypeRemovedDate = (
   lifecycles: Lifecycles,
   typeName: string,
-  currentVersion?: string,
+  currentSchema?: Schema.Schema,
 ): Date | undefined => {
   const entries = lifecycles[typeName]
   if (!entries) return undefined
 
-  // If no current version specified (e.g., in changelog), show any removal
-  if (!currentVersion) {
+  // If no current schema specified (e.g., in changelog), show any removal
+  if (!currentSchema) {
     // Find the latest TYPE_REMOVED change
     let latestDate: Date | undefined
 
@@ -215,15 +244,17 @@ export const getTypeRemovedDate = (
     return latestDate
   }
 
-  // For reference docs with current version:
+  // For reference docs with current schema:
   // Only show removal if it happens AFTER the current version (future removal warning)
   // If the type exists in the current version, it cannot have been removed
-  const currentVer = Version.fromString(currentVersion)
+  const currentVer = Schema.getVersion(currentSchema)
+  if (!currentVer) return undefined
 
   for (const entry of entries) {
     if (entry.change._tag === 'TYPE_REMOVED' && entry.change.name === typeName) {
       // Check if removal is after current version
       if (entry.schema._tag === 'SchemaVersioned') {
+        if (currentSchema._tag !== 'SchemaVersioned') throw new Error('todo -- version/unversioned mismatch!')
         const entryVer = entry.schema.version
         if (Version.greaterThan(entryVer, currentVer)) {
           // This is a future removal - could show as a deprecation warning
@@ -272,15 +303,15 @@ export const getFieldSince = (
   lifecycles: Lifecycles,
   typeName: string,
   fieldName: string,
-  currentVersion?: string,
+  currentSchema?: Schema.Schema,
 ): Since | undefined => {
   const entries = lifecycles[typeName]
 
   // If no entries for the type, we can't determine field info
   if (!entries || entries.length === 0) return undefined
 
-  // Parse current version if provided
-  const currentVer = currentVersion ? Version.fromString(currentVersion) : undefined
+  // Get current version from schema if provided
+  const currentVer = currentSchema ? Schema.getVersion(currentSchema) : undefined
 
   // Look for FIELD_ADDED or INPUT_FIELD_ADDED change
   for (const entry of entries) {
@@ -294,6 +325,9 @@ export const getFieldSince = (
     if (isFieldAdded) {
       // If we have a current version and this entry has a version, check if it's not after current
       if (currentVer && entry.schema._tag === 'SchemaVersioned') {
+        if (currentSchema && currentSchema._tag !== 'SchemaVersioned') {
+          throw new Error('todo -- version/unversioned mismatch!')
+        }
         const entryVer = entry.schema.version
         if (Version.greaterThan(entryVer, currentVer)) {
           continue // Skip entries from future versions
@@ -324,13 +358,13 @@ export const getFieldAddedDate = (
   lifecycles: Lifecycles,
   typeName: string,
   fieldName: string,
-  currentVersion?: string,
+  currentSchema?: Schema.Schema,
 ): Date | undefined => {
   const entries = lifecycles[typeName]
   if (!entries) return undefined
 
-  // Parse current version if provided
-  const currentVer = currentVersion ? Version.fromString(currentVersion) : undefined
+  // Get current version from schema if provided
+  const currentVer = currentSchema ? Schema.getVersion(currentSchema) : undefined
 
   // Find the earliest FIELD_ADDED or INPUT_FIELD_ADDED change for this field
   let earliestDate: Date | undefined
@@ -346,6 +380,9 @@ export const getFieldAddedDate = (
     if (isFieldAdded) {
       // If we have a current version and this entry has a version, check if it's not after current
       if (currentVer && entry.schema._tag === 'SchemaVersioned') {
+        if (currentSchema && currentSchema._tag !== 'SchemaVersioned') {
+          throw new Error('todo -- version/unversioned mismatch!')
+        }
         const entryVer = entry.schema.version
         if (Version.greaterThan(entryVer, currentVer)) {
           continue // Skip entries from future versions
@@ -371,13 +408,13 @@ export const getFieldRemovedDate = (
   lifecycles: Lifecycles,
   typeName: string,
   fieldName: string,
-  currentVersion?: string,
+  currentSchema?: Schema.Schema,
 ): Date | undefined => {
   const entries = lifecycles[typeName]
   if (!entries) return undefined
 
-  // If no current version specified (e.g., in changelog), show any removal
-  if (!currentVersion) {
+  // If no current schema specified (e.g., in changelog), show any removal
+  if (!currentSchema) {
     // Find the latest FIELD_REMOVED or INPUT_FIELD_REMOVED change for this field
     let latestDate: Date | undefined
 

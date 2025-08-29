@@ -1,6 +1,7 @@
 import type { Polen } from '#exports/index'
 import type { Page } from 'playwright/test'
 import { expect } from 'playwright/test'
+import type { WritableDeep } from 'type-fest'
 import { configMemorySchema, configMemorySchemaVersions, pc } from './polen.js'
 import type { ViteController } from './vite-controller/index.js'
 
@@ -13,7 +14,7 @@ interface PolenAssertions {
 }
 
 export class PolenBuilder {
-  private config: Polen.ConfigInput = {}
+  private config: WritableDeep<Polen.ConfigInput> = {}
   private server?: ViteController.ViteDevServerPlus
 
   constructor(
@@ -23,7 +24,7 @@ export class PolenBuilder {
 
   // Configuration builders
   withSchema(sdl: string): PolenBuilder {
-    this.config.schema = configMemorySchema(sdl)
+    this.config.schema = configMemorySchema(sdl) as WritableDeep<Polen.ConfigInput[`schema`]>
     return this
   }
 
@@ -57,7 +58,7 @@ export class PolenBuilder {
         sdl,
       }
     })
-    this.config.schema = configMemorySchemaVersions(parsedVersions)
+    this.config.schema = configMemorySchemaVersions(parsedVersions) as WritableDeep<Polen.ConfigInput[`schema`]>
     return this
   }
 

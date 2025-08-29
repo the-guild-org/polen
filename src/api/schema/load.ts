@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/config'
+import type { Config } from '#api/config/normalized'
 import { Augmentations } from '#api/schema/augmentations/$'
 import type { EffectInputSource, InputSource, InputSourceError } from '#api/schema/input-source/input-source'
 import * as InputSourceLoader from '#api/schema/input-source/load'

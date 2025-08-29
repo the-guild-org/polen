@@ -1,4 +1,5 @@
 import { S } from '#lib/kit-temp/effect'
+import { Match } from 'effect'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
 
@@ -35,3 +36,15 @@ export const encode = S.encode(Schema)
 // ============================================================================
 
 export const equivalence = S.equivalence(Schema)
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+export const getVersion = (schema: Schema) =>
+  Match.value(schema).pipe(
+    Match.tagsExhaustive({
+      SchemaUnversioned: () => undefined,
+      SchemaVersioned: (s) => s.version,
+    }),
+  )

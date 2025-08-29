@@ -1,96 +1,113 @@
 /**
- * Worker pool task that runs a Polen server for SSG.
- * This is executed in a child process by workerpool.
+ * Worker that runs a Polen server for SSG.
+ * This is executed in a child process using Effect Worker API.
  */
 import { debugPolen } from '#singletons/debug'
+import { WorkerRunner } from '@effect/platform'
+import { NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
+import { Duration, Effect, Layer } from 'effect'
 import { spawn } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
+import { ServerMessage } from './worker-messages.js'
 
 const debug = debugPolen.sub(`api:ssg:server-runner`)
 
-export interface ServerConfig {
-  serverPath: string
-  port: number
-}
+// Store the server process for cleanup
+let serverProcess: ChildProcess | null = null
 
-let serverProcess: ReturnType<typeof spawn> | null = null
+// ============================================================================
+// Handlers
+// ============================================================================
 
-/**
- * Start a Polen server on the specified port.
- */
-export async function startServer(config: ServerConfig): Promise<void> {
-  return new Promise((resolve, reject) => {
-    debug(`Starting server with command: node ${config.serverPath}`)
-    serverProcess = spawn('node', [config.serverPath], {
-      env: {
-        ...process.env,
-        PORT: config.port.toString(),
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-
-    serverProcess.stdout?.on('data', (data) => {
-      debug(`[Server ${config.port}] stdout`, data.toString().trim())
-    })
-
-    serverProcess.stderr?.on('data', (data) => {
-      debug(`[Server ${config.port}] stderr`, data.toString().trim())
-    })
-
-    serverProcess.on('error', (error) => {
-      reject(new Error(`Server failed to start on port ${config.port}: ${error.message}`))
-    })
-
-    serverProcess.on('exit', (code, signal) => {
-      if (code !== 0 && code !== null) {
-        reject(new Error(`Server exited with code ${code} (signal: ${signal})`))
-      }
-    })
-
-    // Check if server is ready by polling
-    const checkServer = async () => {
-      try {
-        const response = await fetch(`http://localhost:${config.port}/`)
-        if (response.ok || response.status === 404) {
-          debug(`[Server ${config.port}] Ready!`)
-          resolve()
-        } else {
-          setTimeout(checkServer, 100)
+const handlers = {
+  StartServer: ({ serverPath, port }: { serverPath: string; port: number }) =>
+    Effect.gen(function*() {
+      // If there's already a server running, stop it first
+      if (serverProcess) {
+        serverProcess.kill('SIGTERM')
+        yield* Effect.sleep(Duration.millis(500))
+        if (!serverProcess.killed) {
+          serverProcess.kill('SIGKILL')
         }
-      } catch (error) {
-        // Server not ready yet, retry
-        setTimeout(checkServer, 100)
+        serverProcess = null
       }
-    }
 
-    // Start checking after a small delay
-    setTimeout(checkServer, 500)
+      yield* Effect.async<void, Error>((resume) => {
+        debug(`Starting server with command: node ${serverPath}`)
 
-    // Timeout after 30 seconds
-    setTimeout(() => {
-      reject(new Error(`Server on port ${config.port} failed to start within 30 seconds`))
-    }, 30000)
-  })
+        serverProcess = spawn('node', [serverPath], {
+          env: {
+            ...process.env,
+            PORT: port.toString(),
+          },
+          stdio: ['ignore', 'pipe', 'pipe'],
+        })
+
+        serverProcess.stdout?.on('data', (data) => {
+          debug(`[Server ${port}] stdout`, data.toString().trim())
+        })
+
+        serverProcess.stderr?.on('data', (data) => {
+          debug(`[Server ${port}] stderr`, data.toString().trim())
+        })
+
+        serverProcess.on('error', (error) => {
+          resume(Effect.die(new Error(`Server failed to start on port ${port}: ${error.message}`)))
+        })
+
+        serverProcess.on('exit', (code, signal) => {
+          if (code !== 0 && code !== null) {
+            resume(Effect.die(new Error(`Server exited with code ${code} (signal: ${signal})`)))
+          }
+        })
+
+        // Check if server is ready by polling
+        const checkServer = async () => {
+          try {
+            const response = await fetch(`http://localhost:${port}/`)
+            if (response.ok || response.status === 404) {
+              debug(`[Server ${port}] Ready!`)
+              resume(Effect.succeed(undefined))
+            } else {
+              setTimeout(checkServer, 100)
+            }
+          } catch (error) {
+            // Server not ready yet, retry
+            setTimeout(checkServer, 100)
+          }
+        }
+
+        // Start checking after a small delay
+        setTimeout(checkServer, 500)
+
+        // Timeout after 30 seconds
+        setTimeout(() => {
+          resume(Effect.die(new Error(`Server on port ${port} failed to start within 30 seconds`)))
+        }, 30000)
+      })
+    }),
+  StopServer: () =>
+    Effect.gen(function*() {
+      if (serverProcess) {
+        serverProcess.kill('SIGTERM')
+        // Give it time to shut down gracefully
+        yield* Effect.sleep(Duration.millis(500))
+        if (!serverProcess.killed) {
+          serverProcess.kill('SIGKILL')
+        }
+        serverProcess = null
+      }
+    }),
 }
 
-/**
- * Stop the server gracefully.
- */
-export async function stopServer(): Promise<void> {
-  if (serverProcess) {
-    serverProcess.kill('SIGTERM')
-    // Give it time to shut down gracefully
-    await new Promise(resolve => setTimeout(resolve, 500))
-    if (!serverProcess.killed) {
-      serverProcess.kill('SIGKILL')
-    }
-    serverProcess = null
-  }
-}
+// ============================================================================
+// Worker Runner
+// ============================================================================
 
-// Register with workerpool for ESM
-import workerpool from 'workerpool'
-
-workerpool.worker({
-  startServer,
-  stopServer,
-})
+// Run the worker
+WorkerRunner.launch(
+  Layer.provide(
+    WorkerRunner.layerSerialized(ServerMessage, handlers as any),
+    NodeWorkerRunner.layer,
+  ),
+).pipe(NodeRuntime.runMain as any)

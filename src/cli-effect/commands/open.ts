@@ -4,7 +4,6 @@ import { Grafaid } from '#lib/grafaid'
 import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'
 import { toViteUserConfig } from '#vite/config'
 import { Command, Options } from '@effect/cli'
-import type { Fn } from '@wollybeard/kit'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'
 import { Effect, Option } from 'effect'
 import { homedir } from 'node:os'
@@ -160,22 +159,20 @@ export const open = Command.make(
       const schema = yield* load(sourceConfig)
 
       const tempDir = yield* Effect.promise(() => Fs.makeTemporaryDirectory())
-      const config = yield* Effect.promise(() =>
-        Api.ConfigResolver.fromMemory({
-          schema: {
-            sources: {
-              memory: {
-                versions: [
-                  {
-                    date: new Date(),
-                    value: schema,
-                  },
-                ],
-              },
+      const config = yield* Api.ConfigResolver.fromMemory({
+        schema: {
+          sources: {
+            memory: {
+              versions: [
+                {
+                  date: new Date(),
+                  value: schema,
+                },
+              ],
             },
           },
-        }, tempDir)
-      )
+        },
+      }, tempDir)
 
       const viteConfig = toViteUserConfig(config)
       const viteDevServer = yield* Effect.promise(() => Vite.createServer(viteConfig))

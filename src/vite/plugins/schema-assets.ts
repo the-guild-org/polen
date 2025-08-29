@@ -1,4 +1,3 @@
-import type { Config } from '#api/config/index'
 import { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
@@ -25,7 +24,7 @@ import * as NodePath from 'node:path'
  * @param config - Polen configuration object
  * @returns Vite plugin instance
  */
-export const SchemaAssets = (config: Config.Config): Vite.Plugin => {
+export const SchemaAssets = (config: Api.Config.Config): Vite.Plugin => {
   const debug = debugPolen.sub(`vite-plugin:schema-assets`)
   let viteServer: Vite.ViteDevServer | null = null
 
