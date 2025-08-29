@@ -4,3 +4,4 @@ packages:
 onlyBuiltDependencies:
   - dprint
   - '@playwright/browser-chromium'
+  - lightningcss

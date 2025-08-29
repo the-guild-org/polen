@@ -1,5 +1,4 @@
-import { route } from '#lib/react-router-aid/react-router-aid'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
+import { route } from '#lib/react-router-effect/route'
 import { SidebarLayout } from '#template/layouts/index'
 import { MDXProvider } from '@mdx-js/react'
 import {
@@ -22,24 +21,11 @@ import {
   Tooltip,
 } from '@radix-ui/themes'
 import { Outlet, useLocation } from 'react-router'
-import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.jsonsuper'
+import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.json'
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { CodeBlock } from '../components/CodeBlock.js'
-import { schemaSource } from '../sources/schema-source.js'
-
-const loader = createLoader(async () => {
-  // Check if schema exists first
-  if (schemaSource.isEmpty) {
-    return { schema: null }
-  }
-
-  // Fetch the latest schema for MDX pages
-  const schema = await schemaSource.get('latest')
-  return { schema }
-})
 
 const Component = () => {
-  const { schema } = useLoaderData<typeof loader>()
   const location = useLocation()
 
   // Build sidebar from pages catalog
@@ -90,8 +76,8 @@ const Component = () => {
         Tabs,
         Tooltip,
 
-        // Code Hike component with schema injected
-        CodeBlock: (props: any) => <CodeBlock {...props} schema={schema} />,
+        // Code Hike component - schema will be loaded client-side if needed
+        CodeBlock: (props: any) => <CodeBlock {...props} schema={null} />,
       }}
     >
       <SidebarLayout sidebar={sidebar}>
@@ -103,7 +89,6 @@ const Component = () => {
 
 export const pages = route({
   // Pathless layout route - doesn't affect URL paths
-  loader,
   Component,
   children: [...routes], // All MDX page routes go here
 })

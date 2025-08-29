@@ -61,7 +61,7 @@ export interface GraphQLToken {
    * Optional semantic information from GraphQL schema analysis
    * This includes type information, field definitions, and validation results
    */
-  semantic?: SemanticNode
+  semantic: SemanticNode | undefined
 
   /** Text content of the token (computed from tree-sitter node) */
   get text(): string

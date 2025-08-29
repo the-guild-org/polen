@@ -1,4 +1,4 @@
-import type { Config } from '#api/config/index'
+import type { Config } from '#api/config/$'
 import type { NavbarItem } from '#api/content/navbar'
 
 export interface ProjectData {

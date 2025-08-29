@@ -77,7 +77,9 @@ export const VitePluginMdx = (options?: Readonly<Options> | null): Plugin => {
           code,
           moduleType: `jsx`,
           // When MDX compiles to JS (not JSX), we don't need to set moduleType
-          map: compiled.map,
+          // Cast to any because vfile's Map type is compatible with Rolldown's source map
+          // but has minor type differences with exactOptionalPropertyTypes
+          map: compiled.map as any,
         }
 
         return sourceDescription

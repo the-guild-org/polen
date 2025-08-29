@@ -1,0 +1,106 @@
+"""
+The root query type for accessing Pokemon data
+"""
+type Query {
+  """
+  Get a specific Pokemon by ID
+  """
+  pokemon(id: ID!): Pokemon
+  
+  """
+  List all Pokemon with optional filtering
+  """
+  pokemons(type: PokemonType): [Pokemon!]!
+  
+  """
+  Get Pokemon evolutions
+  """
+  evolutions(pokemonId: ID!): [Pokemon!]!
+  
+  """
+  Simulate a battle between two Pokemon
+  """
+  battle(pokemon1Id: ID!, pokemon2Id: ID!): BattleResult!
+}
+
+"""
+A Pokemon creature with battle capabilities
+"""
+type Pokemon {
+  """
+  Unique identifier
+  """
+  id: ID!
+  
+  """
+  Species name (e.g., Pikachu, Charizard)
+  """
+  name: String!
+  
+  """
+  Primary elemental type
+  """
+  type: PokemonType!
+  
+  """
+  Battle statistics
+  """
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  speed: Int!
+  
+  """
+  Evolution information
+  """
+  evolvesTo: Pokemon
+  evolvesFrom: Pokemon
+  evolutionLevel: Int
+  
+  """
+  Battle moves this Pokemon can learn
+  """
+  moves: [Move!]!
+}
+
+"""
+Battle move information
+"""
+type Move {
+  id: ID!
+  name: String!
+  type: PokemonType!
+  power: Int!
+  accuracy: Int!
+}
+
+"""
+Result of a Pokemon battle
+"""
+type BattleResult {
+  winner: Pokemon!
+  loser: Pokemon!
+  rounds: Int!
+  criticalHits: Int!
+}
+
+"""
+Elemental types that determine strengths and weaknesses
+"""
+enum PokemonType {
+  NORMAL
+  FIRE
+  WATER
+  GRASS
+  ELECTRIC
+  ICE
+  FIGHTING
+  POISON
+  GROUND
+  FLYING
+  PSYCHIC
+  BUG
+  ROCK
+  GHOST
+  DRAGON
+}

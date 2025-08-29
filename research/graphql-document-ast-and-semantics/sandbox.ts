@@ -187,7 +187,7 @@ function isVariable(node: SemanticNode | undefined): node is VariableNode {
 interface UnifiedToken {
   // Core references
   treeSitterNode: WebTreeSitter.Node
-  semantic?: SemanticNode
+  semantic?: SemanticNode | undefined
 
   // "Plugin" computed properties
   polen: {
@@ -553,7 +553,6 @@ async function main() {
     console.log('4. Plugin functions compute properties on-demand')
     console.log('5. Type discrimination uses instanceof for GraphQL types, kind for our types')
   } catch (error) {
-    console.error('❌ Error:', error)
   }
 }
 

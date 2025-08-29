@@ -1,8 +1,10 @@
 import { Api } from '#api/index'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import type { PackageManager } from '@wollybeard/kit'
 import { Debug, Path } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
+import { Effect } from 'effect'
 import * as GetPortPlease from 'get-port-please'
 import type { ProcessPromise } from 'zx'
 import type { ExampleName } from '../example-name.js'
@@ -17,8 +19,8 @@ export type ExampleController = Awaited<ReturnType<typeof create>>
  */
 export const create = async (parameters: {
   exampleName: ExampleName
-  debugMode?: boolean
-  polenLink?: PackageManager.LinkProtocol
+  debugMode?: boolean | undefined
+  polenLink?: PackageManager.LinkProtocol | undefined
   portProductionServer?: number
 }) => {
   const debug = Debug.create(parameters.exampleName)
@@ -149,7 +151,7 @@ export const create = async (parameters: {
               }
             } catch (error) {
               // Log any errors that occur
-              console.error(`[DEV SERVER ERROR]`, error)
+
               if (!urlFound) {
                 reject(error)
               }
@@ -164,7 +166,11 @@ export const create = async (parameters: {
     }),
   })
 
-  const config = await Api.ConfigResolver.fromFile({ dir: project.layout.cwd })
+  const config = await Effect.runPromise(
+    Api.ConfigResolver.fromFile({ dir: project.layout.cwd }).pipe(
+      Effect.provide(NodeFileSystem.layer),
+    ),
+  )
   debug(`loaded configuration`)
 
   return {

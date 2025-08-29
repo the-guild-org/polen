@@ -36,13 +36,13 @@ export namespace Groups {
   export type Named = GraphQLNamedType
 }
 
-export type GraphQLOutputField<Source = any, Context = any, Args = any> = GraphQLField_graphql<
-  Source,
-  Context,
-  Args
+export type GraphQLOutputField<$Source = any, $Context = any, $Args = any> = GraphQLField_graphql<
+  $Source,
+  $Context,
+  $Args
 >
-export type GraphQLField<Source = any, Context = any, Args = any> =
-  | GraphQLOutputField<Source, Context, Args>
+export type GraphQLField<$Source = any, $Context = any, $Args = any> =
+  | GraphQLOutputField<$Source, $Context, $Args>
   | GraphQLInputField
 
 export const isOutputField = (field: GraphQLField): field is GraphQLOutputField => {

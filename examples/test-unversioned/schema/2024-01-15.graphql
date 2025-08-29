@@ -1,0 +1,10 @@
+type Query {
+  hello: String!
+  pokemon(id: ID!): Pokemon
+}
+
+type Pokemon {
+  id: ID!
+  name: String!
+  type: String!
+}

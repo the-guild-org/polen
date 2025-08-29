@@ -59,7 +59,7 @@ export interface VitePluginJsonImportsOptions {
     }
   }
   /**
-   * Plugin name. Useful to customize if providing a custom codec e.g. `superjson`.
+   * Plugin name. Useful to customize if providing a custom codec.
    *
    * @default 'json'
    */
@@ -95,8 +95,7 @@ export const create = (options: VitePluginJsonImportsOptions = {}): Plugin => {
       if (!shouldHandle(id)) return
 
       try {
-        // Skip validation for superjson since the codec validates the envelope format
-        if (options.codec?.validate && !options.codec.importPath?.includes(`superjson`)) {
+        if (options.codec?.validate) {
           codec.parse(code)
         }
 

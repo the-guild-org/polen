@@ -13,7 +13,7 @@ interface Props extends LayoutProps, MarginProps, BoxOwnProps {
 
 export const Sidebar = ({ data, basePath, topContent, ...props }: Props) => {
   return (
-    <SidebarContext.Provider value={{ basePath }}>
+    <SidebarContext.Provider value={basePath !== undefined ? { basePath } : {}}>
       <Box
         data-testid='sidebar'
         role='Sidebar'

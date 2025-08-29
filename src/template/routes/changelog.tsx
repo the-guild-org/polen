@@ -1,42 +1,42 @@
-import type { GraphqlChangeset } from '#lib/graphql-changeset'
-import { route } from '#lib/react-router-aid/react-router-aid'
-import { createLoader, useLoaderData } from '#lib/react-router-loader/react-router-loader'
-import { Changelog } from '../components/Changelog.js'
-import { ChangelogLayout } from '../layouts/index.js'
-import { schemaSource } from '../sources/schema-source.js'
+import { Catalog } from '#lib/catalog/$'
+import { route } from '#lib/react-router-effect/route'
+import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
+import { catalogBridge } from '../catalog-bridge.js'
 
-const loader = createLoader(async () => {
-  // Check if schema exists first
-  if (schemaSource.isEmpty) {
-    return { changesets: [] }
-  }
+import { ChangelogLayout } from '#template/layouts/index'
+import { Changelog } from '../components/Changelog/Changelog.js'
 
-  // Fetch all changesets with before/after/changes data
-  const changesets = await schemaSource.getAllChangesets()
+const schema = Catalog.Catalog
 
-  return {
-    changesets,
-  }
-})
+const changelogLoader = () => catalogBridge.view()
 
 const Component = () => {
-  const data = useLoaderData<typeof loader>()
-
-  if (data.changesets.length === 0) {
-    return <div>No schema versions available for changelog.</div>
-  }
+  const catalog = useLoaderData(schema)
 
   return (
-    <ChangelogLayout versions={data.changesets}>
-      <Changelog
-        changesets={data.changesets as [GraphqlChangeset.ChangeSet, ...GraphqlChangeset.ChangeSet[]]}
-      />
+    <ChangelogLayout catalog={catalog}>
+      <Changelog catalog={catalog} />
     </ChangelogLayout>
   )
 }
 
 export const changelog = route({
+  schema,
   path: `changelog`,
-  loader,
+  loader: changelogLoader,
   Component,
+  children: [
+    // Support deep linking to specific version
+    route({
+      path: `version/:version`,
+      loader: changelogLoader,
+      Component,
+    }),
+    // Support deep linking to specific version/revision
+    route({
+      path: `version/:version/revision/:revision`,
+      loader: changelogLoader,
+      Component,
+    }),
+  ],
 })

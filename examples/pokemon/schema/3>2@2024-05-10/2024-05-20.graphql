@@ -1,0 +1,343 @@
+"""
+The root query type for accessing Pokemon data
+"""
+type Query {
+  """
+  Get a specific Pokemon by ID
+  """
+  pokemon(id: ID!): Pokemon
+  
+  """
+  List all Pokemon with advanced filtering
+  """
+  pokemons(
+    type: PokemonType
+    generation: Int
+    limit: Int = 20
+    offset: Int = 0
+  ): PokemonConnection!
+  
+  """
+  Get a trainer by ID
+  """
+  trainer(id: ID!): Trainer
+  
+  """
+  List all trainers
+  """
+  trainers: [Trainer!]!
+  
+  """
+  Search for Pokemon by name
+  """
+  searchPokemon(name: String!): PokemonConnection!
+}
+
+"""
+Mutations for Pokemon operations
+"""
+type Mutation {
+  """
+  Catch a wild Pokemon
+  """
+  catchPokemon(pokemonId: ID!, trainerId: ID!): Pokemon!
+  
+  """
+  Level up a Pokemon
+  """
+  levelUpPokemon(id: ID!): Pokemon!
+  
+  """
+  Teach a move to a Pokemon
+  """
+  teachMove(pokemonId: ID!, moveId: ID!): Pokemon!
+  
+  """
+  Trade Pokemon between trainers
+  """
+  tradePokemon(pokemonId: ID!, fromTrainerId: ID!, toTrainerId: ID!): Pokemon!
+}
+
+"""
+A Pokemon creature with enhanced features
+"""
+type Pokemon {
+  """
+  Unique identifier
+  """
+  id: ID!
+  
+  """
+  Species name (e.g., Pikachu, Charizard)
+  """
+  name: String!
+  
+  """
+  Pokemon can have one or two types
+  """
+  types: [PokemonType!]!
+  
+  """
+  Comprehensive battle statistics
+  """
+  stats: Stats!
+  
+  """
+  Current level (1-100)
+  """
+  level: Int!
+  
+  """
+  Experience points toward next level
+  """
+  experience: Int!
+  
+  """
+  Evolution chain information
+  """
+  evolution: Evolution
+  
+  """
+  Special abilities that provide battle advantages
+  """
+  abilities: [Ability!]!
+  
+  """
+  Battle moves this Pokemon knows
+  """
+  moves: [Move!]!
+  
+  """
+  The trainer who owns this Pokemon
+  """
+  trainer: Trainer
+  
+  """
+  Rare alternate coloration
+  """
+  isShiny: Boolean!
+  
+  """
+  Regional variant information
+  """
+  region: Region
+  
+  """
+  Base form if this is a regional variant
+  """
+  baseForm: Pokemon
+  
+  """
+  Generation this Pokemon was introduced
+  """
+  generation: Int!
+}
+
+"""
+Pokemon regions from different generations
+"""
+enum Region {
+  KANTO
+  JOHTO
+  HOENN
+  SINNOH
+  UNOVA
+  KALOS
+  ALOLA
+  GALAR
+  PALDEA
+}
+
+"""
+Base statistics that determine a Pokemon's potential
+"""
+type Stats {
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+  speed: Int!
+}
+
+"""
+Evolution information for Pokemon species
+"""
+type Evolution {
+  """
+  The Pokemon this evolves into
+  """
+  evolvesTo: Pokemon
+  
+  """
+  The Pokemon this evolved from
+  """
+  evolvesFrom: Pokemon
+  
+  """
+  Level required for evolution
+  """
+  level: Int
+  
+  """
+  Special condition for evolution
+  """
+  condition: String
+}
+
+"""
+Special abilities that Pokemon possess
+"""
+type Ability {
+  id: ID!
+  name: String!
+  description: String!
+  
+  """
+  Whether this is a hidden ability
+  """
+  isHidden: Boolean!
+}
+
+"""
+Battle moves that Pokemon can learn
+"""
+type Move {
+  id: ID!
+  name: String!
+  description: String!
+  type: PokemonType!
+  power: Int
+  accuracy: Int!
+  pp: Int!
+  
+  """
+  Physical or Special move
+  """
+  category: MoveCategory!
+}
+
+"""
+Move categories for damage calculation
+"""
+enum MoveCategory {
+  PHYSICAL
+  SPECIAL
+  STATUS
+}
+
+"""
+Pokemon trainers who catch and train Pokemon
+"""
+type Trainer {
+  id: ID!
+  name: String!
+  
+  """
+  Trainer's hometown
+  """
+  hometown: String!
+  
+  """
+  Number of gym badges earned
+  """
+  badges: Int!
+  
+  """
+  Pokemon owned by this trainer
+  """
+  pokemon: [Pokemon!]!
+  
+  """
+  Date the trainer started their journey
+  """
+  startDate: String!
+  
+  """
+  Trainer's home region
+  """
+  region: Region!
+}
+
+"""
+Elemental types that determine strengths and weaknesses
+"""
+enum PokemonType {
+  NORMAL
+  FIRE
+  WATER
+  GRASS
+  ELECTRIC
+  ICE
+  FIGHTING
+  POISON
+  GROUND
+  FLYING
+  PSYCHIC
+  BUG
+  ROCK
+  GHOST
+  DRAGON
+  DARK
+  STEEL
+  FAIRY
+}
+"""
+Paginated list of Pokemon
+"""
+type PokemonConnection {
+  """
+  List of Pokemon edges
+  """
+  edges: [PokemonEdge!]!
+  
+  """
+  Pagination information
+  """
+  pageInfo: PageInfo!
+  
+  """
+  Total count of Pokemon
+  """
+  totalCount: Int!
+}
+
+"""
+Edge in Pokemon connection
+"""
+type PokemonEdge {
+  """
+  The Pokemon at this edge
+  """
+  node: Pokemon!
+  
+  """
+  Cursor for pagination
+  """
+  cursor: String!
+}
+
+"""
+Information about pagination in a connection
+"""
+type PageInfo {
+  """
+  Whether there are more items after this page
+  """
+  hasNextPage: Boolean!
+  
+  """
+  Whether there are items before this page
+  """
+  hasPreviousPage: Boolean!
+  
+  """
+  Cursor of the first edge
+  """
+  startCursor: String
+  
+  """
+  Cursor of the last edge
+  """
+  endCursor: String
+}

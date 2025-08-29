@@ -45,12 +45,23 @@ import { Polen } from 'polen'
 
 export default Polen.defineConfig({
   schema: {
-    useDataSources: 'directory',
-    dataSources: {
+    useSources: ['directory'],
+    sources: {
       directory: {
         path: './schema',
       },
     },
+    augmentations: [
+      {
+        type: 'description',
+        on: {
+          type: 'TargetType',
+          name: 'Query',
+        },
+        placement: 'over',
+        content: 'Root query operations',
+      },
+    ],
   },
   templateVariables: {
     title: 'Acme GraphQL API',
@@ -60,16 +71,5 @@ export default Polen.defineConfig({
     architecture: 'ssg',
     basePath: '/api-docs/',
   },
-  schemaAugmentations: [
-    {
-      type: 'description',
-      on: {
-        type: 'TargetType',
-        name: 'Query',
-      },
-      placement: 'over',
-      content: 'Root query operations',
-    },
-  ],
 })
 ```

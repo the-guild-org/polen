@@ -57,6 +57,9 @@ jobs:
           - name: pokemon
             path: examples/pokemon
             base: /examples-live/pokemon/
+          - name: rocky-trails
+            path: examples/rocky-trails
+            base: /examples-live/rocky-trails/
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,6 +119,12 @@ jobs:
         with:
           name: pokemon-dist
           path: deploy-dist/examples-live/pokemon
+
+      - name: Download Rocky Trails demo artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: rocky-trails-dist
+          path: deploy-dist/examples-live/rocky-trails
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

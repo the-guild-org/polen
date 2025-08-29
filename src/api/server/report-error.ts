@@ -51,12 +51,15 @@ const cleanStackRecursive = (value: unknown, excludePattern: RegExp) => {
   }
   // console.log(`Filtering path: ${path}`, isInclude ? 'Included' : 'Excluded')
   if (value instanceof Error) {
-    value.stack = cleanStack(value.stack, {
+    const cleanedStack = cleanStack(value.stack, {
       pathFilter: (path) => !path.match(excludePattern),
       // todo
       // basePath: config.paths.project.rootDir,
       // pretty: true,
     })
+    if (cleanedStack) {
+      value.stack = cleanedStack
+    }
 
     cleanStackRecursive(value.cause, excludePattern)
   }

@@ -1,4 +1,4 @@
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import PROJECT_DATA from 'virtual:polen/project/data.json'
 
 /**
  * Create a Polen URL path that respects the configured base path for UI navigation.

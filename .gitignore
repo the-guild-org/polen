@@ -44,3 +44,4 @@ temp
 # flo context files
 CLAUDE.local.md
 .flo/
+.serena

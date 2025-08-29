@@ -1,17 +1,18 @@
 import type { NavbarProps } from '#api/hooks/types'
 import type { ReactRouter } from '#dep/react-router/index'
-import { route } from '#lib/react-router-aid/react-router-aid'
-import { createLoader } from '#lib/react-router-loader/react-router-loader'
+import { S } from '#lib/kit-temp/effect'
+import { route } from '#lib/react-router-effect/route'
 import type { Stores } from '#template/stores/$'
 import { Box, Flex, Theme } from '@radix-ui/themes'
+
+const schema = S.Struct({})
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
-import PROJECT_DATA from 'virtual:polen/project/data.jsonsuper'
+import PROJECT_DATA from 'virtual:polen/project/data.json'
 import * as projectHooks from 'virtual:polen/project/hooks'
-import PROJECT_SCHEMA from 'virtual:polen/project/schema.jsonsuper'
+import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { templateVariables } from 'virtual:polen/template/variables'
-import { Link as PolenLink } from '../components/Link.js'
 import { Logo } from '../components/Logo.js'
 import { DefaultNavbar } from '../components/navbar/DefaultNavbar.js'
 import { Item } from '../components/navbar/Item.js'
@@ -106,7 +107,9 @@ const children: ReactRouter.RouteObject[] = [index, pages]
 
 if (PROJECT_SCHEMA) {
   children.push(changelog)
-  children.push(reference)
+  if (reference) {
+    children.push(reference)
+  }
 }
 
 //
@@ -118,14 +121,14 @@ if (PROJECT_SCHEMA) {
 //
 //
 
-const notFoundRoute = route({
+const notFoundRoute = {
   id: `*_not_found`,
   path: `*`,
   Component: NotFound,
   handle: {
     statusCode: 404,
   },
-})
+}
 children.push(notFoundRoute)
 
 //
@@ -143,7 +146,8 @@ const storeModules = import.meta.glob('../stores/!($.*)*.ts', { eager: true }) a
 export const root = route({
   path: `/`,
   Component,
-  loader: createLoader(async () => {
+  schema,
+  loader: async () => {
     // Reset all stores on SSR to prevent cross-request pollution
     if (import.meta.env.SSR) {
       for (const module of Object.values(storeModules)) {
@@ -154,6 +158,6 @@ export const root = route({
     }
 
     return {}
-  }),
+  },
   children,
 })

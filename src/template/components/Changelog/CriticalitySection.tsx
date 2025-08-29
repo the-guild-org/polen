@@ -1,5 +1,21 @@
-import type { GraphqlChange } from '#lib/graphql-change'
-import { CRITICALITY_CONFIG, type CriticalityLevel } from '#lib/graphql-change/criticality'
+import { Change as GraphqlChange } from '#lib/change/$'
+
+type CriticalityLevel = 'BREAKING' | 'DANGEROUS' | 'NON_BREAKING'
+
+const CRITICALITY_CONFIG = {
+  BREAKING: {
+    label: 'Breaking Changes',
+    color: 'red',
+  },
+  DANGEROUS: {
+    label: 'Dangerous Changes',
+    color: 'orange',
+  },
+  NON_BREAKING: {
+    label: 'Safe Changes',
+    color: 'green',
+  },
+} as const
 import { Heading } from '@radix-ui/themes'
 import type React from 'react'
 

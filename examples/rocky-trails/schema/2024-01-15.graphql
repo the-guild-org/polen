@@ -1,0 +1,96 @@
+# Rocky Mountain Trails API
+# Initial schema for trail planning in the Canadian Rockies
+
+type Coordinates {
+  """Latitude in decimal degrees"""
+  latitude: Float!
+  
+  """Longitude in decimal degrees"""
+  longitude: Float!
+  
+  """Elevation in meters above sea level"""
+  elevation: Float
+}
+
+type Place {
+  """Unique identifier for the place"""
+  id: ID!
+  
+  """Name of the location"""
+  name: String!
+  
+  """GPS coordinates"""
+  coordinates: Coordinates!
+  
+  """Type of location"""
+  type: PlaceType!
+  
+  """Optional description or notes"""
+  description: String
+}
+
+enum PlaceType {
+  """Designated camping area with facilities"""
+  CAMPGROUND
+  
+  """Mountain summit"""
+  PEAK
+  
+  """Trail starting point with parking"""
+  TRAILHEAD
+  
+  """Alpine or valley lake"""
+  LAKE
+  
+  """Mountain pass between valleys"""
+  PASS
+  
+  """River or creek junction"""
+  JUNCTION
+  
+  """Emergency shelter or hut"""
+  SHELTER
+}
+
+type Trail {
+  """Unique identifier for the trail"""
+  id: ID!
+  
+  """Official trail name"""
+  name: String!
+  
+  """Starting location"""
+  start: Place!
+  
+  """Ending location"""
+  end: Place!
+  
+  """Total distance in kilometers"""
+  distanceKm: Float!
+  
+  """Estimated hiking time in hours"""
+  estimatedHours: Float!
+  
+  """Trail description and notable features"""
+  description: String
+}
+
+type Query {
+  """Get all available places"""
+  places: [Place!]!
+  
+  """Get a specific place by ID"""
+  place(id: ID!): Place
+  
+  """Get all trails"""
+  trails: [Trail!]!
+  
+  """Get a specific trail by ID"""
+  trail(id: ID!): Trail
+  
+  """Find trails starting from a specific place"""
+  trailsFrom(placeId: ID!): [Trail!]!
+  
+  """Find trails ending at a specific place"""
+  trailsTo(placeId: ID!): [Trail!]!
+}

@@ -4,7 +4,7 @@ export { DirectiveArgumentOperation } from './DirectiveArgumentOperation.js'
 export { DirectiveDescription } from './DirectiveDescription.js'
 export { DirectiveLocationOperation } from './DirectiveLocationOperation.js'
 export { DirectiveOperation } from './DirectiveOperation.js'
-export { DirectiveUsage } from './DirectiveUsage.js'
+// export { DirectiveUsage } from './DirectiveUsage.js' // TODO: Add directive usage change types
 export { EnumValueDeprecationReason } from './EnumValueDeprecationReason.js'
 export { EnumValueDescription } from './EnumValueDescription.js'
 export { EnumValueOperation } from './EnumValueOperation.js'

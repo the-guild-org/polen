@@ -1,24 +1,23 @@
-import type { GraphqlChange } from '#lib/graphql-change'
+import { Change as GraphqlChange } from '#lib/change/$'
 import { Code } from '@radix-ui/themes'
 import type React from 'react'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const DirectiveArgument: React.FC<{ change: GraphqlChange.Group.DirectiveArgument }> = ({ change }) => {
-  switch (change.type) {
+export const DirectiveArgument: React.FC<{ change: any }> = ({ change }) => {
+  switch (change._tag) {
     case `DIRECTIVE_ARGUMENT_DEFAULT_VALUE_CHANGED`:
       return (
         <ChangeBase change={change}>
-          Changed default value for directive <Code>@{change.meta.directiveName}</Code> argument{' '}
-          <Code>{change.meta.directiveArgumentName}</Code>
+          Changed default value for directive <Code>@{change.directiveName}</Code> argument{' '}
+          <Code>{change.argumentName}</Code>
         </ChangeBase>
       )
     case `DIRECTIVE_ARGUMENT_TYPE_CHANGED`:
       return (
         <ChangeBase change={change}>
-          Changed directive <Code>@{change.meta.directiveName}</Code> argument{' '}
-          <Code>{change.meta.directiveArgumentName}</Code> type from <Code>{change.meta.oldDirectiveArgumentType}</Code>
+          Changed directive <Code>@{change.directiveName}</Code> argument <Code>{change.argumentName}</Code> type from
           {' '}
-          to <Code>{change.meta.newDirectiveArgumentType}</Code>
+          <Code>{change.oldType}</Code> to <Code>{change.newType}</Code>
         </ChangeBase>
       )
   }

@@ -1,0 +1,121 @@
+"""
+The root query type for accessing Pokemon data
+"""
+type Query {
+  """
+  Get a specific Pokemon by ID
+  """
+  pokemon(id: ID!): Pokemon
+  
+  """
+  List all Pokemon with optional filtering
+  """
+  pokemons(type: PokemonType, limit: Int = 20): [Pokemon!]!
+  
+  """
+  Get a trainer by ID
+  """
+  trainer(id: ID!): Trainer
+}
+
+"""
+Mutations for Pokemon operations
+"""
+type Mutation {
+  """
+  Catch a wild Pokemon
+  """
+  catchPokemon(pokemonId: ID!, trainerId: ID!): Pokemon!
+}
+
+"""
+A Pokemon creature with enhanced battle capabilities
+"""
+type Pokemon {
+  """
+  Unique identifier
+  """
+  id: ID!
+  
+  """
+  Species name (e.g., Pikachu, Charizard)
+  """
+  name: String!
+  
+  """
+  Pokemon can have one or two types
+  """
+  types: [PokemonType!]!
+  
+  """
+  Battle statistics
+  """
+  hp: Int!
+  attack: Int!
+  defense: Int!
+  specialAttack: Int!
+  specialDefense: Int!
+  speed: Int!
+  
+  """
+  Current level (1-100)
+  """
+  level: Int!
+  
+  """
+  The trainer who owns this Pokemon
+  """
+  trainer: Trainer
+  
+  """
+  Rare alternate coloration
+  """
+  isShiny: Boolean!
+}
+
+"""
+Pokemon trainers who catch and train Pokemon
+"""
+type Trainer {
+  id: ID!
+  name: String!
+  
+  """
+  Trainer's hometown
+  """
+  hometown: String!
+  
+  """
+  Number of gym badges earned
+  """
+  badges: Int!
+  
+  """
+  Pokemon owned by this trainer
+  """
+  pokemon: [Pokemon!]!
+}
+
+"""
+Elemental types that determine strengths and weaknesses
+"""
+enum PokemonType {
+  NORMAL
+  FIRE
+  WATER
+  GRASS
+  ELECTRIC
+  ICE
+  FIGHTING
+  POISON
+  GROUND
+  FLYING
+  PSYCHIC
+  BUG
+  ROCK
+  GHOST
+  DRAGON
+  DARK
+  STEEL
+  FAIRY
+}

@@ -58,14 +58,14 @@ function getPopoverContent(
   token: GraphQLToken,
 ): {
   title: string
-  path?: Array<{ name: string; url: string | null }>
-  description?: string
-  type?: string
-  invalid?: boolean
-  availableFields?: string[]
-  typeName?: string
-  typeUrl?: string
-  fieldName?: string
+  path?: Array<{ name: string; url: string | null }> | undefined
+  description?: string | undefined
+  type?: string | undefined
+  invalid?: boolean | undefined
+  availableFields?: string[] | undefined
+  typeName?: string | undefined
+  typeUrl?: string | undefined
+  fieldName?: string | undefined
 } | null {
   const semantic = token.semantic
 

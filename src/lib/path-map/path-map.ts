@@ -15,52 +15,52 @@ export interface PathInput {
 /**
  * Processed paths with $ properties added to directories
  */
-export type ProcessedPaths<T> =
+export type ProcessedPaths<$T> =
   & {
-    [K in keyof T]: T[K] extends string ? string
-      : ProcessedPaths<T[K]> & { [DIR_KEY]: string }
+    [K in keyof $T]: $T[K] extends string ? string
+      : ProcessedPaths<$T[K]> & { [DIR_KEY]: string }
   }
-  & (T extends PathInput ? { [DIR_KEY]: string } : {})
+  & ($T extends PathInput ? { [DIR_KEY]: string } : {})
 
 /**
  * Path map containing only relative paths
  */
-export type RelativePathMap<T extends PathInput = PathInput> = ProcessedPaths<T>
+export type RelativePathMap<$T extends PathInput = PathInput> = ProcessedPaths<$T>
 
 /**
  * Path map containing paths rooted at the PathMap's origin
  */
-export type RootedPathMap<T extends PathInput = PathInput> = ProcessedPaths<T>
+export type RootedPathMap<$T extends PathInput = PathInput> = ProcessedPaths<$T>
 
 /**
  * Path map containing absolute paths
  */
-export type AbsolutePathMap<T extends PathInput = PathInput> = ProcessedPaths<T>
+export type AbsolutePathMap<$T extends PathInput = PathInput> = ProcessedPaths<$T>
 
 /**
  * Combined path map with relative, rooted, and absolute variants
  */
-export interface PathMap<T extends PathInput = PathInput> {
+export interface PathMap<$T extends PathInput = PathInput> {
   /**
    * Paths relative to their parent directory
    * @example
    * paths.relative.template.server.app // 'app.ts'
    */
-  relative: RelativePathMap<T>
+  relative: RelativePathMap<$T>
 
   /**
    * Paths from the PathMap's root
    * @example
    * paths.rooted.template.server.app // 'template/server/app.ts'
    */
-  rooted: RootedPathMap<T>
+  rooted: RootedPathMap<$T>
 
   /**
    * Absolute paths from the filesystem root
    * @example
    * paths.absolute.template.server.app // '/project/template/server/app.ts'
    */
-  absolute: AbsolutePathMap<T>
+  absolute: AbsolutePathMap<$T>
 
   /**
    * The base path used for absolute paths
@@ -143,13 +143,13 @@ export function create<T extends PathInput>(paths: T, base?: string): RelativePa
  * prod.absolute.src.lib.utils // '/prod/src/lib/utils.ts'
  * ```
  */
-export const rebase = <T extends PathInput>(
-  pathMap: PathMap<T> | RelativePathMap<T>,
+export const rebase = <$T extends PathInput>(
+  pathMap: PathMap<$T> | RelativePathMap<$T>,
   base: string,
-): PathMap<T> => {
+): PathMap<$T> => {
   // Extract the input structure from the relative paths
   const input = extractInput(pathMap)
-  return create(input, base) as PathMap<T>
+  return create(input, base) as PathMap<$T>
 }
 
 // Helper to process paths for relative variant (local to parent)

@@ -19,13 +19,13 @@ export interface FormatOptions<$Input, $Output> {
   /**
    * Force masks to reveal all data
    */
-  debug?: boolean
+  debug?: boolean | undefined
   /**
    * A mask to apply to the input (if any) and successful return (if any).
    *
    * @default Uses the mask bundled with the task, if any.
    */
-  mask?: MaskOptions<$Input, $Output>
+  mask?: MaskOptions<$Input, $Output> | undefined
 }
 
 export const formatReport = <$Input, $Output>(

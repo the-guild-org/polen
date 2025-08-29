@@ -49,15 +49,15 @@ export type TypeClassName =
   | TypeClassName.NonNull
 
 // dprint-ignore
-export type TypeClassToName<C> =
-    C extends GraphQLScalarType    		? TypeClassName.Scalar
-  : C extends GraphQLObjectType    		? TypeClassName.Object
-  : C extends GraphQLInterfaceType 		? TypeClassName.Interface
-  : C extends GraphQLUnionType     		? TypeClassName.Union
-  : C extends GraphQLEnumType      		? TypeClassName.Enum
-  : C extends GraphQLInputObjectType 	? TypeClassName.InputObject
-  : C extends GraphQLList<any>       	? TypeClassName.List
-  : C extends GraphQLNonNull<any>    	? TypeClassName.NonNull
+export type TypeClassToName<$C> =
+    $C extends GraphQLScalarType    		? TypeClassName.Scalar
+  : $C extends GraphQLObjectType    		? TypeClassName.Object
+  : $C extends GraphQLInterfaceType 		? TypeClassName.Interface
+  : $C extends GraphQLUnionType     		? TypeClassName.Union
+  : $C extends GraphQLEnumType      		? TypeClassName.Enum
+  : $C extends GraphQLInputObjectType 	? TypeClassName.InputObject
+  : $C extends GraphQLList<any>       	? TypeClassName.List
+  : $C extends GraphQLNonNull<any>    	? TypeClassName.NonNull
   : never
 
 export const typeClassToName = <$Node extends GraphQLNamedType>(

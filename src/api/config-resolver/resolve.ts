@@ -1,22 +1,26 @@
 import { debugPolen } from '#singletons/debug'
-import { type ConfigInput, normalizeInput } from '../config/configurator.js'
+import { FileSystem } from '@effect/platform/FileSystem'
+import { Effect } from 'effect'
+import type { ConfigInput } from '../config/$$.js'
+import { mergeInputs } from '../config/input.js'
 import { load, type LoadOptions } from '../config/load.js'
-import { mergeInputs } from '../config/merge.js'
-import { toViteUserConfig, type ViteUserConfigWithPolen } from './vite.js'
+import type { Config } from '../config/normalized.js'
+import { normalizeInput } from '../config/normalized.js'
 
 interface ResolveFromFileOptions extends LoadOptions {
-  overrides?: ConfigInput
+  overrides?: ConfigInput | undefined
 }
 
-export const fromFile = async (options: ResolveFromFileOptions): Promise<ViteUserConfigWithPolen> => {
-  const configInput = await load(options)
-  const configInputMerged = mergeInputs(configInput, options.overrides)
-  const config = await fromMemory(configInputMerged, options.dir)
-  debugPolen(`resolved config`, config)
-  return config
-}
+export const fromFile = (options: ResolveFromFileOptions): Effect.Effect<Config, Error, FileSystem> =>
+  Effect.gen(function*() {
+    const configInput = yield* load(options)
+    const configInputMerged = mergeInputs(configInput, options.overrides)
+    const config = yield* fromMemory(configInputMerged, options.dir)
+    debugPolen(`resolved config`, config)
+    return config
+  })
 
-export const fromMemory = async (
+export const fromMemory = (
   input: ConfigInput,
   /**
    * Refer to `baseRootDirPath` parameter on {@link normalizeInput}.
@@ -24,8 +28,6 @@ export const fromMemory = async (
    * @default `process.cwd()`
    */
   baseRootDirPath?: string,
-) => {
-  const configNormalized = await normalizeInput(input, baseRootDirPath ?? process.cwd())
-  const viteUserConfig = toViteUserConfig(configNormalized)
-  return viteUserConfig
+): Effect.Effect<Config, Error, never> => {
+  return normalizeInput(input, baseRootDirPath ?? process.cwd())
 }

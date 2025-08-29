@@ -1,4 +1,4 @@
-import { routeIndex } from '#lib/react-router-aid/react-router-aid'
+import { routeIndex } from '#lib/react-router-effect/react-router-effect'
 import { Box } from '@radix-ui/themes'
 
 const Component = () => {

@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter, useLocation } from 'react-router'
 // todo: #lib/kit-temp does not work as import
-import { ObjPartition } from '../../lib/kit-temp.js'
+import { ObjPartition } from '#lib/kit-temp'
 import { useClientOnly } from '../hooks/useClientOnly.js'
 import type { LinkPropsRadix } from './RadixLink.js'
 import { LinkRadix } from './RadixLink.js'
