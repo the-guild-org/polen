@@ -1,5 +1,6 @@
 import { expect } from 'playwright/test'
-import { renderDate } from '../../../src/template/components/Changelog.jsx'
+import { DateOnly } from '../../../src/lib/date-only/$.js'
+import { renderDate } from '../../../src/template/components/Changelog/Changelog.js'
 import { configMemorySchemaVersions, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
 
@@ -40,7 +41,7 @@ test('shows changelog in navigation bar when multiple schema versions are provid
 
   // Check for changelog content
   // 1. Verify the date is visible as a heading (not just in nav)
-  await expect(page.getByRole('heading', { name: renderDate('2023-02-01') })).toBeVisible()
+  await expect(page.getByRole('heading', { name: renderDate(DateOnly.make('2023-02-01')) })).toBeVisible()
 
   // 2. Verify the change is described
   await expect(page.getByText(/added field/i)).toBeVisible()

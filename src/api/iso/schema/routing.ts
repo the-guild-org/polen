@@ -28,6 +28,7 @@ export const createReferenceBasePath = (version?: string): string => {
 export const segmentLiterals = {
   reference: 'reference',
   version: 'version',
+  changelog: 'changelog',
 }
 
 /**
@@ -139,4 +140,20 @@ export const getReferenceViewType = (params: ReferenceViewParams): ReferenceView
  */
 export const isMissingView = (viewType: ReferenceViewType): viewType is 'type-missing' | 'field-missing' => {
   return viewType === 'type-missing' || viewType === 'field-missing'
+}
+
+/**
+ * Create a URL to the changelog for a specific revision date
+ * @param revisionDate - The date string from the revision (format: YYYY-MM-DD)
+ * @param currentVersion - The current version being viewed (optional)
+ * @returns URL path to the changelog with anchor to the specific date
+ */
+export const createChangelogUrl = (revisionDate: string, currentVersion?: string): string => {
+  // Create base changelog path with version if needed
+  const changelogBase = currentVersion && currentVersion !== VERSION_LATEST
+    ? joinSegmentsAndPaths(segmentLiterals.changelog, segmentLiterals.version, currentVersion)
+    : `/${segmentLiterals.changelog}`
+
+  // Add anchor for the specific date
+  return `${changelogBase}#${revisionDate}`
 }

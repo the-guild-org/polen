@@ -1,13 +1,16 @@
+import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { Revision } from '#lib/revision/$'
+import { Version } from '#lib/version/$'
 import { Box, Flex, Text } from '@radix-ui/themes'
-import type React from 'react'
-import { useEffect, useState } from 'react'
-import { renderDate } from '../components/Changelog.js'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router'
+import { renderDate } from '../components/Changelog/Changelog.js'
+import { ChangelogVersionPicker } from '../components/Changelog/ChangelogVersionPicker.js'
 
 interface ChangelogLayoutProps {
   children: React.ReactNode
-  revisions: Revision.Revision[]
+  catalog: Catalog.Catalog
 }
 
 interface VersionCounts {
@@ -48,6 +51,11 @@ const SidebarEntry: React.FC<{
         }}
         onClick={(e) => {
           e.preventDefault()
+          // Update URL hash
+          window.history.pushState(null, '', `#${dateId}`)
+          // Dispatch custom event for pushState
+          window.dispatchEvent(new Event('pushstate'))
+          // Smooth scroll to element
           document.getElementById(dateId)?.scrollIntoView({ behavior: 'smooth' })
         }}
       >
@@ -76,8 +84,33 @@ const SidebarEntry: React.FC<{
   )
 }
 
-export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, revisions }) => {
+export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, catalog }) => {
   const [activeRevision, setActiveRevision] = useState<string | null>(null)
+  const params = useParams()
+  const urlVersion = params['version']
+
+  // Get available versions if catalog is versioned
+  const availableVersions = useMemo(() => {
+    if (Catalog.Versioned.is(catalog)) {
+      return catalog.entries.map(entry => Version.toString(entry.version))
+    }
+    return []
+  }, [catalog])
+
+  // Get revisions for the current version (for sidebar)
+  const revisions = useMemo(() => {
+    if (Catalog.Unversioned.is(catalog)) {
+      return catalog.schema.revisions
+    } else {
+      // For versioned catalogs, show only current version's revisions
+      if (urlVersion) {
+        const entry = catalog.entries.find(e => Version.toString(e.version) === urlVersion)
+        return entry ? entry.revisions : []
+      }
+      // No revisions if no version selected (will redirect)
+      return []
+    }
+  }, [catalog, urlVersion])
 
   // Calculate counts for all revisions (SSR-safe)
   const revisionsWithCounts = revisions.map(revision => ({
@@ -85,37 +118,27 @@ export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, revi
     counts: calculateCounts(revision),
   }))
 
-  // Set up scroll spy after hydration
+  // Track active revision based on URL hash
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100 // Offset for header
-
-      // Find the current revision based on scroll position
-      let currentRevision: string | null = null
-
-      for (const { revision } of revisionsWithCounts) {
-        const element = document.getElementById(revision.date)
-        if (element) {
-          const { top } = element.getBoundingClientRect()
-          if (top <= 100) {
-            currentRevision = revision.date
-          }
-        }
-      }
-
-      setActiveRevision(currentRevision)
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1)
+      setActiveRevision(hash || null)
     }
 
-    // Initial check
-    handleScroll()
+    // Set initial active revision
+    handleHashChange()
 
-    // Add scroll listener
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange)
+
+    // Listen for pushState/replaceState (custom event we'll dispatch)
+    window.addEventListener('pushstate', handleHashChange)
 
     return () => {
-      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('hashchange', handleHashChange)
+      window.removeEventListener('pushstate', handleHashChange)
     }
-  }, [revisionsWithCounts])
+  }, [])
 
   return (
     <Flex gap='6' style={{ position: 'relative' }}>
@@ -130,8 +153,18 @@ export const ChangelogLayout: React.FC<ChangelogLayoutProps> = ({ children, revi
           overflowY: 'auto',
         }}
       >
+        {/* Version picker for versioned catalogs */}
+        {Catalog.Versioned.is(catalog) && availableVersions.length > 1 && urlVersion && (
+          <Box mb='3'>
+            <ChangelogVersionPicker
+              versions={availableVersions}
+              currentVersion={urlVersion}
+            />
+          </Box>
+        )}
+
         <Text size='2' weight='medium' mb='3' style={{ display: 'block' }}>
-          Releases
+          Revisions
         </Text>
         {revisionsWithCounts.map(({ revision, counts }) => (
           <SidebarEntry

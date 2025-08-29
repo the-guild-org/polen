@@ -1,411 +1,88 @@
 import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
-import { Grafaid } from '#lib/grafaid'
-import { S } from '#lib/kit-temp/effect'
 import { Revision } from '#lib/revision/$'
-import { SchemaDefinition } from '#lib/schema-definition/$'
 import { Schema } from '#lib/schema/$'
+import { Version } from '#lib/version/$'
 import { Match } from 'effect'
-import {
-  type DocumentNode,
-  type GraphQLNamedType,
-  GraphQLSchema,
-  isInputObjectType,
-  isInterfaceType,
-  isNamedType,
-  isObjectType,
-} from 'graphql'
-import { LifecycleEvent } from './lifecycle-event/$.js'
-import { Lifecycle } from './lifecycle/$.js'
-
-const kindToTagMap = Lifecycle.GraphQLKindToLifecycleTag
-// ============================================================================
-// Lifecycles Container
-// ============================================================================
-
-export const Lifecycles = S.TaggedStruct('Lifecycles', {
-  data: S.Record({ key: S.String, value: Lifecycle.Lifecycle }),
-})
-
-export type Lifecycles = S.Schema.Type<typeof Lifecycles>
 
 // ============================================================================
-// Constructors
-// ============================================================================
-
-export const make = Lifecycles.make
-
-// ============================================================================
-// Guards
-// ============================================================================
-
-export const is = S.is(Lifecycles)
-
-// ============================================================================
-// Codecs
-// ============================================================================
-
-// Note: Due to TS2345 error with complex schema types, we need to use type assertions
-export const decode = S.decodeUnknown(Lifecycles as any)
-export const decodeSync = S.decodeUnknownSync(Lifecycles as any)
-export const encode = S.encodeUnknown(Lifecycles as any)
-
-// ============================================================================
-// Equivalence
-// ============================================================================
-
-export const equivalence = S.equivalence(Lifecycles)
-
-// ============================================================================
-// Type Aliases
-// ============================================================================
-
-// Explicit type for Schema to avoid inference issues
-type SchemaType = S.Schema.Type<typeof Schema.Schema>
-
-// Re-export FieldType for backward compatibility
-type FieldLifecycle = Lifecycle.FieldType.FieldType
-
-// ============================================================================
-// Domain Logic - Helper Functions
+// Lifecycles Type - Simple Index
 // ============================================================================
 
 /**
- * Populate fields for a type that has fields (Object, Interface, or InputObject types)
+ * A change entry tracking when a type or field was modified
  */
-const populateTypeFields = (
-  typeLifecycle: Lifecycle.Lifecycle,
-  graphqlType: GraphQLNamedType,
-  addedEvent: LifecycleEvent.LifecycleEvent,
-) => {
-  if (isObjectType(graphqlType) || isInterfaceType(graphqlType) || isInputObjectType(graphqlType)) {
-    const fields = graphqlType.getFields()
-    const typeWithFields = typeLifecycle as
-      | Lifecycle.ObjectType.ObjectType
-      | Lifecycle.InterfaceType.InterfaceType
-      | Lifecycle.InputObjectType.InputObjectType
-
-    for (const fieldName of Object.keys(fields)) {
-      ;(typeWithFields.fields as any)[fieldName] = Lifecycle.FieldType.make({
-        name: fieldName,
-        events: [addedEvent],
-      })
-    }
-  }
+export interface ChangeEntry {
+  /** The change that occurred */
+  change: Change.Change
+  /** The revision containing this change */
+  revision: Revision.Revision
+  /** The schema this change belongs to */
+  schema: Schema.Schema
 }
 
 /**
- * Process initial schema to create lifecycle entries for all types and fields
+ * Lifecycles is a simple index mapping type names to their change history
  */
-const processInitialSchema = (
-  data: Record<string, Lifecycle.Lifecycle>,
-  revision: Revision.Revision,
-  schema: SchemaType,
-) => {
-  const typeMap = schema.definition.getTypeMap()
+export type Lifecycles = Record<string, ChangeEntry[]>
 
-  const addedEvent = LifecycleEvent.make('LifecycleEventAdded', {
-    schema: schema,
-    revision: revision,
-  })
-
-  for (const [typeName, graphqlType] of Object.entries(typeMap)) {
-    // Skip built-in types that start with __
-    if (typeName.startsWith('__')) continue
-    if (!isNamedType(graphqlType)) continue
-
-    const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-    const namedKind = kind as Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>
-    const tag = kindToTagMap[namedKind]
-    const fields = (kind === 'Object' || kind === 'Interface' || kind === 'InputObject') ? { fields: {} } : {}
-    const typeLifecycle = Lifecycle.make(tag, {
-      name: typeName,
-      events: [addedEvent],
-      ...fields,
-    })
-    data[typeName] = typeLifecycle
-
-    // Populate fields for types that have them
-    populateTypeFields(typeLifecycle, graphqlType, addedEvent)
-  }
-}
+// ============================================================================
+// Since Types - For tracking when things were introduced
+// ============================================================================
 
 /**
- * Process a single change and update lifecycle data
+ * Represents when a type or field was introduced
  */
-const processChange = (
-  data: Record<string, Lifecycle.Lifecycle>,
-  change: Change.Change,
-  revision: Revision.Revision,
-  schema: SchemaType,
-) => {
-  const eventFields = {
-    schema: schema,
-    revision: revision,
-  }
-
-  const createEvent = (type: 'Added' | 'Removed') => {
-    return type === 'Added'
-      ? LifecycleEvent.make('LifecycleEventAdded', eventFields)
-      : LifecycleEvent.make('LifecycleEventRemoved', eventFields)
-  }
-
-  // Handle all change types using Match
-  Match.value(change).pipe(
-    Match.tag('TYPE_ADDED', (change) => {
-      const typeName = change.name
-      const graphqlType = schema.definition.getType(typeName)
-
-      if (!graphqlType || !isNamedType(graphqlType)) {
-        throw new Error(`Type ${typeName} not found in schema`)
-      }
-
-      const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-      const addedEvent = createEvent('Added')
-      const namedKind = kind as Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>
-      const tag = kindToTagMap[namedKind]
-      const fields = (kind === 'Object' || kind === 'Interface' || kind === 'InputObject') ? { fields: {} } : {}
-      const typeLifecycle = Lifecycle.make(tag, {
-        name: typeName,
-        events: [addedEvent],
-        ...fields,
-      })
-      data[typeName] = typeLifecycle
-
-      // Populate fields for types that have them
-      populateTypeFields(typeLifecycle, graphqlType, addedEvent)
-    }),
-    Match.tag('TYPE_REMOVED', (change) => {
-      const typeName = change.name
-      if (data[typeName]) {
-        const removedEvent = createEvent('Removed')
-        data[typeName] = {
-          ...data[typeName],
-          events: [removedEvent, ...data[typeName].events],
-        }
-      }
-    }),
-    Match.tag('FIELD_ADDED', (change) => {
-      const { typeName, fieldName } = change
-      const addedEvent = createEvent('Added')
-
-      // Ensure type exists
-      if (!data[typeName]) {
-        const graphqlType = schema.definition.getType(typeName)
-        if (!graphqlType || !isNamedType(graphqlType)) {
-          throw new Error(`Type ${typeName} not found in schema`)
-        }
-
-        const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-        const namedKind = kind as Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>
-        const tag = kindToTagMap[namedKind]
-        const fields = (kind === 'Object' || kind === 'Interface' || kind === 'InputObject') ? { fields: {} } : {}
-        data[typeName] = Lifecycle.make(tag, {
-          name: typeName,
-          events: [addedEvent],
-          ...fields,
-        })
-      }
-
-      const typeLifecycle = data[typeName]!
-      if ('fields' in typeLifecycle) {
-        ;(typeLifecycle.fields as any)[fieldName] = Lifecycle.FieldType.make({
-          name: fieldName,
-          events: [addedEvent],
-        })
-      }
-    }),
-    Match.tag('FIELD_REMOVED', (change) => {
-      const { typeName, fieldName } = change
-      const removedEvent = createEvent('Removed')
-
-      const typeLifecycle = data[typeName]
-      if (typeLifecycle && 'fields' in typeLifecycle && typeLifecycle.fields[fieldName]) {
-        ;(typeLifecycle.fields as any)[fieldName] = {
-          ...typeLifecycle.fields[fieldName],
-          events: [removedEvent, ...typeLifecycle.fields[fieldName].events],
-        }
-      }
-    }),
-    Match.tag('INPUT_FIELD_ADDED', (change) => {
-      const { inputName: typeName, fieldName } = change
-      const addedEvent = createEvent('Added')
-
-      // Ensure type exists
-      if (!data[typeName]) {
-        const graphqlType = schema.definition.getType(typeName)
-        if (!graphqlType || !isNamedType(graphqlType)) {
-          throw new Error(`Type ${typeName} not found in schema`)
-        }
-
-        const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-        const namedKind = kind as Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>
-        const tag = kindToTagMap[namedKind]
-        const fields = (kind === 'Object' || kind === 'Interface' || kind === 'InputObject') ? { fields: {} } : {}
-        data[typeName] = Lifecycle.make(tag, {
-          name: typeName,
-          events: [addedEvent],
-          ...fields,
-        })
-      }
-
-      const typeLifecycle = data[typeName]!
-      if ('fields' in typeLifecycle) {
-        ;(typeLifecycle.fields as any)[fieldName] = Lifecycle.FieldType.make({
-          name: fieldName,
-          events: [addedEvent],
-        })
-      }
-    }),
-    Match.tag('INPUT_FIELD_REMOVED', (change) => {
-      const { inputName: typeName, fieldName } = change
-      const removedEvent = createEvent('Removed')
-
-      const typeLifecycle = data[typeName]
-      if (typeLifecycle && 'fields' in typeLifecycle && typeLifecycle.fields[fieldName]) {
-        ;(typeLifecycle.fields as any)[fieldName] = {
-          ...typeLifecycle.fields[fieldName],
-          events: [removedEvent, ...typeLifecycle.fields[fieldName].events],
-        }
-      }
-    }),
-    Match.tag('ENUM_VALUE_ADDED', (change) => {
-      const { enumName } = change
-      const addedEvent = createEvent('Added')
-
-      // Ensure enum type exists
-      if (!data[enumName]) {
-        const graphqlType = schema.definition.getType(enumName)
-        if (!graphqlType || !isNamedType(graphqlType)) {
-          throw new Error(`Enum ${enumName} not found in schema`)
-        }
-
-        const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-        const namedKind = kind as Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>
-        const tag = kindToTagMap[namedKind]
-        data[enumName] = Lifecycle.make(tag, {
-          name: enumName,
-          events: [addedEvent],
-        })
-      }
-    }),
-    Match.tag('ENUM_VALUE_REMOVED', (change) => {
-      const { enumName } = change
-      // For enum values, we track at the type level
-      if (data[enumName]) {
-        // We could track individual enum values if needed
-      }
-    }),
-    Match.tag('UNION_MEMBER_ADDED', (change) => {
-      const { unionName } = change
-      const addedEvent = createEvent('Added')
-
-      // Ensure union type exists
-      if (!data[unionName]) {
-        const graphqlType = schema.definition.getType(unionName)
-        if (!graphqlType || !isNamedType(graphqlType)) {
-          throw new Error(`Union ${unionName} not found in schema`)
-        }
-
-        const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-        const namedKind = kind as Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>
-        const tag = kindToTagMap[namedKind]
-        data[unionName] = Lifecycle.make(tag, {
-          name: unionName,
-          events: [addedEvent],
-        })
-      }
-    }),
-    Match.tag('UNION_MEMBER_REMOVED', (change) => {
-      const { unionName } = change
-      // For union members, we track at the type level
-      if (data[unionName]) {
-        // We could track individual union members if needed
-      }
-    }),
-    Match.tag('OBJECT_TYPE_INTERFACE_ADDED', (change) => {
-      const { objectName } = change
-      const addedEvent = createEvent('Added')
-
-      // Ensure object type exists
-      if (!data[objectName]) {
-        const graphqlType = schema.definition.getType(objectName)
-        if (!graphqlType || !isNamedType(graphqlType)) {
-          throw new Error(`Object ${objectName} not found in schema`)
-        }
-
-        const kind = Grafaid.Schema.typeKindFromClass(graphqlType)
-        const namedKind = kind as Exclude<Grafaid.Schema.TypeKindName, 'List' | 'NonNull'>
-        const tag = kindToTagMap[namedKind]
-        const fields = (kind === 'Object' || kind === 'Interface' || kind === 'InputObject') ? { fields: {} } : {}
-        data[objectName] = Lifecycle.make(tag, {
-          name: objectName,
-          events: [addedEvent],
-          ...fields,
-        })
-      }
-    }),
-    Match.tag('OBJECT_TYPE_INTERFACE_REMOVED', (change) => {
-      const { objectName } = change
-      // For interface implementations, we track at the type level
-      if (data[objectName]) {
-        // We could track individual interface implementations if needed
-      }
-    }),
-    // All other change types don't affect lifecycle tracking
-    Match.orElse(() => {
-      // Note: Directive changes, schema root type changes, and description/deprecation changes
-      // don't affect the lifecycle tracking since we focus on types and fields being added/removed
-    }),
-  )
-}
+export type Since =
+  | { _tag: 'initial' }
+  | { _tag: 'added'; revision: Revision.Revision; change: Change.Change; schema: Schema.Schema }
 
 // ============================================================================
 // Domain Logic - Create Function
 // ============================================================================
 
 /**
+ * Extract the type name from a change
+ */
+const extractTypeNameFromChange = (change: Change.Change): string | null => {
+  return Match.value(change).pipe(
+    Match.tag('TYPE_ADDED', (c) => c.name),
+    Match.tag('TYPE_REMOVED', (c) => c.name),
+    Match.tag('FIELD_ADDED', (c) => c.typeName),
+    Match.tag('FIELD_REMOVED', (c) => c.typeName),
+    Match.tag('INPUT_FIELD_ADDED', (c) => c.inputName),
+    Match.tag('INPUT_FIELD_REMOVED', (c) => c.inputName),
+    Match.tag('ENUM_VALUE_ADDED', (c) => c.enumName),
+    Match.tag('ENUM_VALUE_REMOVED', (c) => c.enumName),
+    Match.tag('UNION_MEMBER_ADDED', (c) => c.unionName),
+    Match.tag('UNION_MEMBER_REMOVED', (c) => c.unionName),
+    Match.tag('OBJECT_TYPE_INTERFACE_ADDED', (c) => c.objectName),
+    Match.tag('OBJECT_TYPE_INTERFACE_REMOVED', (c) => c.objectName),
+    Match.orElse(() => null),
+  )
+}
+
+/**
  * Build lifecycle data from a catalog
  */
 export const create = (catalog: Catalog.Catalog): Lifecycles => {
-  const data: Record<string, Lifecycle.Lifecycle> = {}
+  const lifecycles: Lifecycles = {}
 
-  // Handle versioned vs unversioned catalogs
-  const processUnversionedCatalog = (cat: Catalog.Unversioned.Unversioned) => {
-    const revisions = [...cat.schema.revisions].reverse() // Process chronologically
-
-    // Create the hydrated schema for unversioned catalog using proper constructors
-
-    // Process first revision as initial schema
-    if (revisions.length > 0) {
-      const firstRevision = revisions[0]!
-      processInitialSchema(data, firstRevision, cat.schema)
-
-      // Process subsequent revisions
-      for (let i = 1; i < revisions.length; i++) {
-        const revision = revisions[i]!
-        for (const change of revision.changes) {
-          processChange(data, change, revision, cat.schema)
-        }
-      }
-    }
-  }
-
-  const processVersionedCatalog = (cat: Catalog.Versioned.Versioned) => {
-    // For versioned catalog, process each version's revisions
-    for (const schema of cat.entries) {
-      const revisions = [...schema.revisions].reverse() // Process chronologically
-      // Process first revision as initial schema
-      if (revisions.length > 0) {
-        const firstRevision = revisions[0]!
-        processInitialSchema(data, firstRevision, schema)
-
-        // Process subsequent revisions
-        for (let i = 1; i < revisions.length; i++) {
-          const revision = revisions[i]!
-          for (const change of revision.changes) {
-            processChange(data, change, revision, schema)
+  const processSchema = (schema: Schema.Schema) => {
+    // Process all revisions for this schema
+    for (const revision of schema.revisions) {
+      // Process all changes in this revision
+      for (const change of revision.changes) {
+        const typeName = extractTypeNameFromChange(change)
+        if (typeName) {
+          if (!lifecycles[typeName]) {
+            lifecycles[typeName] = []
           }
+          lifecycles[typeName].push({
+            change, // reference to existing change object
+            revision, // reference to existing revision object
+            schema, // reference to existing schema object
+          })
         }
       }
     }
@@ -413,75 +90,151 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
 
   // Process based on catalog type
   Catalog.fold(
-    processVersionedCatalog,
-    processUnversionedCatalog,
+    // Versioned catalog - process each versioned schema
+    (versioned) => {
+      for (const schema of versioned.entries) {
+        processSchema(schema)
+      }
+    },
+    // Unversioned catalog - process the single schema
+    (unversioned) => {
+      processSchema(unversioned.schema)
+    },
   )(catalog)
 
-  return make({ data })
+  return lifecycles
 }
 
 // ============================================================================
-// Domain Logic - Utility Functions
+// Domain Logic - Utility Functions for Types
 // ============================================================================
 
 /**
- * Get lifecycle for a specific type
+ * Get when a type was introduced (initial or added)
  */
-export const getTypeLifecycle = (lifecycles: Lifecycles, typeName: string): Lifecycle.Lifecycle | undefined => {
-  return lifecycles.data[typeName]
-}
+export const getTypeSince = (lifecycles: Lifecycles, typeName: string, currentVersion?: string): Since | undefined => {
+  const entries = lifecycles[typeName]
 
-/**
- * Get lifecycle for a specific field
- */
-export const getFieldLifecycle = (
-  lifecycles: Lifecycles,
-  typeName: string,
-  fieldName: string,
-): FieldLifecycle | undefined => {
-  const typeLifecycle = lifecycles.data[typeName]
-  if (typeLifecycle && 'fields' in typeLifecycle) {
-    return typeLifecycle.fields[fieldName]
+  // If no entries at all, type doesn't exist in any form
+  if (!entries || entries.length === 0) return undefined
+
+  // Parse current version if provided
+  const currentVer = currentVersion ? Version.fromString(currentVersion) : undefined
+
+  // Look for TYPE_ADDED change
+  for (const entry of entries) {
+    if (entry.change._tag === 'TYPE_ADDED' && entry.change.name === typeName) {
+      // If we have a current version and this entry has a version, check if it's not after current
+      if (currentVer && entry.schema._tag === 'SchemaVersioned') {
+        const entryVer = entry.schema.version
+        if (Version.greaterThan(entryVer, currentVer)) {
+          continue // Skip entries from future versions
+        }
+      }
+
+      // Found when it was added
+      return {
+        _tag: 'added',
+        revision: entry.revision,
+        change: entry.change,
+        schema: entry.schema,
+      }
+    }
   }
-  return undefined
+
+  // No TYPE_ADDED found, so it must have existed from initial schema
+  return { _tag: 'initial' }
 }
 
 /**
  * Get the date when a type was added
+ * Shows when the type was first introduced via TYPE_ADDED change
+ * Returns undefined if type existed from initial schema (no TYPE_ADDED change)
  */
-export const getTypeAddedDate = (lifecycles: Lifecycles, typeName: string): Date | undefined => {
-  const typeLifecycle = lifecycles.data[typeName]
-  if (!typeLifecycle) return undefined
+export const getTypeAddedDate = (
+  lifecycles: Lifecycles,
+  typeName: string,
+  currentVersion?: string,
+): Date | undefined => {
+  const entries = lifecycles[typeName]
+  if (!entries) return undefined
 
-  // Find the first (oldest) added event
-  for (let i = typeLifecycle.events.length - 1; i >= 0; i--) {
-    const event = typeLifecycle.events[i]
-    if (event) {
-      const result = Match.value(event).pipe(
-        Match.tag('LifecycleEventAdded', (e) => new Date(e.revision.date)),
-        Match.orElse(() => undefined),
-      )
-      if (result) return result
+  // Parse current version if provided
+  const currentVer = currentVersion ? Version.fromString(currentVersion) : undefined
+
+  // Find the earliest TYPE_ADDED change that's not after the current version
+  let earliestDate: Date | undefined
+
+  for (const entry of entries) {
+    if (entry.change._tag === 'TYPE_ADDED' && entry.change.name === typeName) {
+      // If we have a current version and this entry has a version, check if it's not after current
+      if (currentVer && entry.schema._tag === 'SchemaVersioned') {
+        const entryVer = entry.schema.version
+        if (Version.greaterThan(entryVer, currentVer)) {
+          continue // Skip entries from future versions
+        }
+      }
+
+      const date = new Date(entry.revision.date)
+      if (!earliestDate || date < earliestDate) {
+        earliestDate = date
+      }
     }
   }
-  return undefined
+
+  return earliestDate
 }
 
 /**
  * Get the date when a type was removed
+ * For reference docs: Returns undefined if type exists in current version (no removal badge should be shown)
+ * For changelog: Shows removal date if it happened in any version
  */
-export const getTypeRemovedDate = (lifecycles: Lifecycles, typeName: string): Date | undefined => {
-  const typeLifecycle = lifecycles.data[typeName]
-  if (!typeLifecycle) return undefined
+export const getTypeRemovedDate = (
+  lifecycles: Lifecycles,
+  typeName: string,
+  currentVersion?: string,
+): Date | undefined => {
+  const entries = lifecycles[typeName]
+  if (!entries) return undefined
 
-  // Find the most recent removed event
-  for (const event of typeLifecycle.events) {
-    const result = Match.value(event).pipe(
-      Match.tag('LifecycleEventRemoved', (e) => new Date(e.revision.date)),
-      Match.orElse(() => undefined),
-    )
-    if (result) return result
+  // If no current version specified (e.g., in changelog), show any removal
+  if (!currentVersion) {
+    // Find the latest TYPE_REMOVED change
+    let latestDate: Date | undefined
+
+    for (const entry of entries) {
+      if (entry.change._tag === 'TYPE_REMOVED' && entry.change.name === typeName) {
+        const date = new Date(entry.revision.date)
+        if (!latestDate || date > latestDate) {
+          latestDate = date
+        }
+      }
+    }
+
+    return latestDate
   }
+
+  // For reference docs with current version:
+  // Only show removal if it happens AFTER the current version (future removal warning)
+  // If the type exists in the current version, it cannot have been removed
+  const currentVer = Version.fromString(currentVersion)
+
+  for (const entry of entries) {
+    if (entry.change._tag === 'TYPE_REMOVED' && entry.change.name === typeName) {
+      // Check if removal is after current version
+      if (entry.schema._tag === 'SchemaVersioned') {
+        const entryVer = entry.schema.version
+        if (Version.greaterThan(entryVer, currentVer)) {
+          // This is a future removal - could show as a deprecation warning
+          // But for now, we don't show future removals
+          return undefined
+        }
+      }
+    }
+  }
+
+  // No removal found or removal is in the past (but type still exists in current version)
   return undefined
 }
 
@@ -489,63 +242,167 @@ export const getTypeRemovedDate = (lifecycles: Lifecycles, typeName: string): Da
  * Check if a type is currently available (not removed)
  */
 export const isTypeCurrentlyAvailable = (lifecycles: Lifecycles, typeName: string): boolean => {
-  const typeLifecycle = lifecycles.data[typeName]
-  if (!typeLifecycle) return false
+  const entries = lifecycles[typeName]
+  if (!entries || entries.length === 0) return false
 
-  // Type is available if the most recent event is not a removal
-  const mostRecentEvent = typeLifecycle.events[0]
-  if (!mostRecentEvent) return true
+  // Check if type was ever added
+  const wasAdded = entries.some(e => e.change._tag === 'TYPE_ADDED' && e.change.name === typeName)
+  if (!wasAdded) return false
 
-  return Match.value(mostRecentEvent).pipe(
-    Match.tag('LifecycleEventRemoved', () => false),
-    Match.orElse(() => true),
-  )
+  // Check if it was subsequently removed
+  const addedDate = getTypeAddedDate(lifecycles, typeName)
+  const removedDate = getTypeRemovedDate(lifecycles, typeName)
+
+  if (!addedDate) return false
+  if (!removedDate) return true
+
+  // If both dates exist, type is available if it was re-added after being removed
+  // This would require multiple add/remove cycles - for now assume removed means not available
+  return false
+}
+
+// ============================================================================
+// Domain Logic - Utility Functions for Fields
+// ============================================================================
+
+/**
+ * Get when a field was introduced (initial or added)
+ */
+export const getFieldSince = (
+  lifecycles: Lifecycles,
+  typeName: string,
+  fieldName: string,
+  currentVersion?: string,
+): Since | undefined => {
+  const entries = lifecycles[typeName]
+
+  // If no entries for the type, we can't determine field info
+  if (!entries || entries.length === 0) return undefined
+
+  // Parse current version if provided
+  const currentVer = currentVersion ? Version.fromString(currentVersion) : undefined
+
+  // Look for FIELD_ADDED or INPUT_FIELD_ADDED change
+  for (const entry of entries) {
+    const isFieldAdded = (entry.change._tag === 'FIELD_ADDED'
+      && entry.change.typeName === typeName
+      && entry.change.fieldName === fieldName)
+      || (entry.change._tag === 'INPUT_FIELD_ADDED'
+        && entry.change.inputName === typeName
+        && entry.change.fieldName === fieldName)
+
+    if (isFieldAdded) {
+      // If we have a current version and this entry has a version, check if it's not after current
+      if (currentVer && entry.schema._tag === 'SchemaVersioned') {
+        const entryVer = entry.schema.version
+        if (Version.greaterThan(entryVer, currentVer)) {
+          continue // Skip entries from future versions
+        }
+      }
+
+      // Found when it was added
+      return {
+        _tag: 'added',
+        revision: entry.revision,
+        change: entry.change,
+        schema: entry.schema,
+      }
+    }
+  }
+
+  // No FIELD_ADDED found, so it must have existed from initial schema
+  // But only if the type itself exists (has some entries)
+  return { _tag: 'initial' }
 }
 
 /**
  * Get the date when a field was added
+ * Shows when the field was first introduced via FIELD_ADDED change
+ * Returns undefined if field existed from initial schema (no FIELD_ADDED change)
  */
 export const getFieldAddedDate = (
   lifecycles: Lifecycles,
   typeName: string,
   fieldName: string,
+  currentVersion?: string,
 ): Date | undefined => {
-  const fieldLifecycle = getFieldLifecycle(lifecycles, typeName, fieldName)
-  if (!fieldLifecycle) return undefined
+  const entries = lifecycles[typeName]
+  if (!entries) return undefined
 
-  // Find the first (oldest) added event
-  for (let i = fieldLifecycle.events.length - 1; i >= 0; i--) {
-    const event = fieldLifecycle.events[i]
-    if (event) {
-      const result = Match.value(event).pipe(
-        Match.tag('LifecycleEventAdded', (e) => new Date(e.revision.date)),
-        Match.orElse(() => undefined),
-      )
-      if (result) return result
+  // Parse current version if provided
+  const currentVer = currentVersion ? Version.fromString(currentVersion) : undefined
+
+  // Find the earliest FIELD_ADDED or INPUT_FIELD_ADDED change for this field
+  let earliestDate: Date | undefined
+
+  for (const entry of entries) {
+    const isFieldAdded = (entry.change._tag === 'FIELD_ADDED'
+      && entry.change.typeName === typeName
+      && entry.change.fieldName === fieldName)
+      || (entry.change._tag === 'INPUT_FIELD_ADDED'
+        && entry.change.inputName === typeName
+        && entry.change.fieldName === fieldName)
+
+    if (isFieldAdded) {
+      // If we have a current version and this entry has a version, check if it's not after current
+      if (currentVer && entry.schema._tag === 'SchemaVersioned') {
+        const entryVer = entry.schema.version
+        if (Version.greaterThan(entryVer, currentVer)) {
+          continue // Skip entries from future versions
+        }
+      }
+
+      const date = new Date(entry.revision.date)
+      if (!earliestDate || date < earliestDate) {
+        earliestDate = date
+      }
     }
   }
-  return undefined
+
+  return earliestDate
 }
 
 /**
  * Get the date when a field was removed
+ * For reference docs: Returns undefined if field exists in current version (no removal badge should be shown)
+ * For changelog: Shows removal date if it happened in any version
  */
 export const getFieldRemovedDate = (
   lifecycles: Lifecycles,
   typeName: string,
   fieldName: string,
+  currentVersion?: string,
 ): Date | undefined => {
-  const fieldLifecycle = getFieldLifecycle(lifecycles, typeName, fieldName)
-  if (!fieldLifecycle) return undefined
+  const entries = lifecycles[typeName]
+  if (!entries) return undefined
 
-  // Find the most recent removed event
-  for (const event of fieldLifecycle.events) {
-    const result = Match.value(event).pipe(
-      Match.tag('LifecycleEventRemoved', (e) => new Date(e.revision.date)),
-      Match.orElse(() => undefined),
-    )
-    if (result) return result
+  // If no current version specified (e.g., in changelog), show any removal
+  if (!currentVersion) {
+    // Find the latest FIELD_REMOVED or INPUT_FIELD_REMOVED change for this field
+    let latestDate: Date | undefined
+
+    for (const entry of entries) {
+      const isFieldRemoved = (entry.change._tag === 'FIELD_REMOVED'
+        && entry.change.typeName === typeName
+        && entry.change.fieldName === fieldName)
+        || (entry.change._tag === 'INPUT_FIELD_REMOVED'
+          && entry.change.inputName === typeName
+          && entry.change.fieldName === fieldName)
+
+      if (isFieldRemoved) {
+        const date = new Date(entry.revision.date)
+        if (!latestDate || date > latestDate) {
+          latestDate = date
+        }
+      }
+    }
+
+    return latestDate
   }
+
+  // For reference docs with current version:
+  // If the field exists in the current version's schema, it cannot have been removed
+  // So we return undefined (no removal badge should be shown)
   return undefined
 }
 
@@ -557,103 +414,71 @@ export const isFieldCurrentlyAvailable = (
   typeName: string,
   fieldName: string,
 ): boolean => {
-  const fieldLifecycle = getFieldLifecycle(lifecycles, typeName, fieldName)
-  if (!fieldLifecycle) return false
+  const entries = lifecycles[typeName]
+  if (!entries || entries.length === 0) return false
 
-  // Field is available if the most recent event is not a removal
-  const mostRecentEvent = fieldLifecycle.events[0]
-  if (!mostRecentEvent) return true
+  // Check if field was ever added
+  const addedDate = getFieldAddedDate(lifecycles, typeName, fieldName)
+  if (!addedDate) return false
 
-  return Match.value(mostRecentEvent).pipe(
-    Match.tag('LifecycleEventRemoved', () => false),
-    Match.orElse(() => true),
-  )
+  // Check if it was subsequently removed
+  const removedDate = getFieldRemovedDate(lifecycles, typeName, fieldName)
+  if (!removedDate) return true
+
+  // If both dates exist, field is not available if it was removed
+  return false
 }
 
-/**
- * Get all types added on a specific date
- */
-export const getTypesAddedOnDate = (lifecycles: Lifecycles, date: Date): string[] => {
-  const dateString = date.toISOString().split('T')[0]
-  const types: string[] = []
-
-  for (const [typeName, typeLifecycle] of Object.entries(lifecycles.data)) {
-    for (const event of typeLifecycle.events) {
-      const isMatch = Match.value(event).pipe(
-        Match.tag('LifecycleEventAdded', (e) => e.revision.date === dateString),
-        Match.orElse(() => false),
-      )
-      if (isMatch) {
-        types.push(typeName)
-        break
-      }
-    }
-  }
-
-  return types
-}
+// ============================================================================
+// Domain Logic - Compatibility Functions (for existing code)
+// ============================================================================
 
 /**
- * Get all types removed on a specific date
+ * Get field lifecycle info (for compatibility with existing UI code)
  */
-export const getTypesRemovedOnDate = (lifecycles: Lifecycles, date: Date): string[] => {
-  const dateString = date.toISOString().split('T')[0]
-  const types: string[] = []
-
-  for (const [typeName, typeLifecycle] of Object.entries(lifecycles.data)) {
-    for (const event of typeLifecycle.events) {
-      const isMatch = Match.value(event).pipe(
-        Match.tag('LifecycleEventRemoved', (e) => e.revision.date === dateString),
-        Match.orElse(() => false),
-      )
-      if (isMatch) {
-        types.push(typeName)
-        break
-      }
-    }
-  }
-
-  return types
-}
-
-/**
- * Get lifecycle description for a type
- */
-export const getTypeLifecycleDescription = (lifecycles: Lifecycles, typeName: string): string => {
-  const typeLifecycle = lifecycles.data[typeName]
-  if (!typeLifecycle) return 'Type not found'
-
-  const addedDate = getTypeAddedDate(lifecycles, typeName)
-  const removedDate = getTypeRemovedDate(lifecycles, typeName)
-
-  if (removedDate) {
-    return `Added on ${addedDate?.toISOString().split('T')[0]}, removed on ${removedDate.toISOString().split('T')[0]}`
-  } else if (addedDate) {
-    return `Added on ${addedDate.toISOString().split('T')[0]}`
-  }
-
-  return 'Unknown lifecycle'
-}
-
-/**
- * Get lifecycle description for a field
- */
-export const getFieldLifecycleDescription = (
+export const getFieldLifecycle = (
   lifecycles: Lifecycles,
   typeName: string,
   fieldName: string,
-): string => {
-  const fieldLifecycle = getFieldLifecycle(lifecycles, typeName, fieldName)
-  if (!fieldLifecycle) return 'Field not found'
+): { events: ChangeEntry[] } | undefined => {
+  const entries = lifecycles[typeName]
+  if (!entries) return undefined
 
-  const addedDate = getFieldAddedDate(lifecycles, typeName, fieldName)
-  const removedDate = getFieldRemovedDate(lifecycles, typeName, fieldName)
+  // Filter entries related to this specific field
+  const fieldEntries = entries.filter(entry => {
+    return (entry.change._tag === 'FIELD_ADDED'
+      && entry.change.typeName === typeName
+      && entry.change.fieldName === fieldName)
+      || (entry.change._tag === 'FIELD_REMOVED'
+        && entry.change.typeName === typeName
+        && entry.change.fieldName === fieldName)
+      || (entry.change._tag === 'INPUT_FIELD_ADDED'
+        && entry.change.inputName === typeName
+        && entry.change.fieldName === fieldName)
+      || (entry.change._tag === 'INPUT_FIELD_REMOVED'
+        && entry.change.inputName === typeName
+        && entry.change.fieldName === fieldName)
+  })
 
-  if (removedDate) {
-    return `Added on ${addedDate?.toISOString().split('T')[0]}, removed on ${removedDate.toISOString().split('T')[0]}`
-  } else if (addedDate) {
-    return `Added on ${addedDate.toISOString().split('T')[0]}`
-  }
+  if (fieldEntries.length === 0) return undefined
 
-  return 'Unknown lifecycle'
+  // Return in a format compatible with existing code that expects an object with events
+  return { events: fieldEntries }
+}
+
+/**
+ * Get type lifecycle info (for compatibility with existing UI code)
+ */
+export const getTypeLifecycle = (lifecycles: Lifecycles, typeName: string): { events: ChangeEntry[] } | undefined => {
+  const entries = lifecycles[typeName]
+  if (!entries) return undefined
+
+  // Filter entries related to type-level changes
+  const typeEntries = entries.filter(entry => {
+    return entry.change._tag === 'TYPE_ADDED' || entry.change._tag === 'TYPE_REMOVED'
+  })
+
+  if (typeEntries.length === 0) return undefined
+
+  return { events: typeEntries }
 }
