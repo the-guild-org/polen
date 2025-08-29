@@ -285,7 +285,6 @@
     "source-map": "^0.7.4",
     "superjson": "^2.2.2",
     "tinyglobby": "^0.2.14",
-    "tree-sitter-graphql-grammar-wasm": "^1.1.0",
     "tsx": "^4.20.3",
     "type-fest": "^4.41.0",
     "typescript": "^5.9.2",
@@ -330,12 +329,14 @@
     "publint": "^0.3.12",
     "semver": "^7.7.2",
     "strip-ansi": "^7.1.0",
+    "tree-sitter-graphql-grammar-wasm": "link:/Users/jasonkuhrt/projects/jasonkuhrt/tree-sitter-graphql-grammar-wasm",
+    "type-fest": "^4.41.0",
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "zod": "3.25.74"
   },
-  "packageManager": "pnpm@10.11.1",
+  "packageManager": "pnpm@10.13.1",
   "scripts": {
     "sandbox": "tsx src/sandbox",
     "sandbox:watch": "tsx --watch src/sandbox",

@@ -17,6 +17,7 @@ import { buildSchema, parse as parseGraphQL, validate } from 'graphql'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { inspect } from 'node:util'
+import { TreeSitterGraphQL } from 'tree-sitter-graphql-grammar-wasm'
 import * as WebTreeSitter from 'web-tree-sitter'
 
 // Get filesystem paths for WASM files when running outside Vite
@@ -121,25 +122,13 @@ let treeSitterParser: WebTreeSitter.Parser | null = null
 async function initializeTreeSitter(): Promise<WebTreeSitter.Parser> {
   if (treeSitterParser) return treeSitterParser
 
-  await WebTreeSitter.Parser.init({
-    locateFile: (filename: string) => {
-      if (filename === 'tree-sitter.wasm') {
-        return treeSitterWasmPath
-      }
-      return filename
-    },
+  // Use the grammar library's parser helper with custom paths
+  treeSitterParser = await TreeSitterGraphQL.Utils.createGraphQLParser({
+    treeSitterWasmPath,
+    graphqlWasmPath,
   })
-
-  const parser = new WebTreeSitter.Parser()
-
-  // Load GraphQL grammar WASM file from filesystem
-  const fs = await import('node:fs/promises')
-  const wasmBuffer = await fs.readFile(graphqlWasmPath)
-  const GraphQL = await WebTreeSitter.Language.load(wasmBuffer)
-  parser.setLanguage(GraphQL)
-
-  treeSitterParser = parser
-  return parser
+  
+  return treeSitterParser
 }
 
 /*
@@ -242,9 +231,9 @@ function analyzeTreeSitterAST(code: string, tree: WebTreeSitter.Tree) {
   console.log('━'.repeat(80))
 
   try {
-    // Tree-sitter language info removed due to type errors
     console.log('🔍 Tree-sitter Parser Info:')
     console.log('Parser initialized successfully with GraphQL grammar')
+    console.log('Using typed exports from tree-sitter-graphql-grammar-wasm')
 
     console.log('\n🔍 Tree-sitter AST (JSON format):')
     console.log(JSON.stringify(nodeToJSON(tree.rootNode, 0, 50), null, 2))
@@ -262,9 +251,9 @@ function analyzeTreeSitterAST(code: string, tree: WebTreeSitter.Tree) {
       parent?: string | undefined
     }> = []
 
-    function collectNodes() {
+    function collectNodes(currentCursor: any) {
       try {
-        const node = cursor.currentNode
+        const node = currentCursor.node
         if (!node) return
 
         // Only collect leaf nodes (actual tokens)
@@ -278,18 +267,20 @@ function analyzeTreeSitterAST(code: string, tree: WebTreeSitter.Tree) {
           })
         }
 
-        if (cursor.gotoFirstChild()) {
+        const childCursor = currentCursor.gotoFirstChild()
+        if (childCursor) {
+          let siblingCursor: typeof childCursor | null = childCursor
           do {
-            collectNodes()
-          } while (cursor.gotoNextSibling())
-          cursor.gotoParent()
+            collectNodes(siblingCursor)
+            siblingCursor = siblingCursor.gotoNextSibling()
+          } while (siblingCursor)
         }
       } catch (error) {
         console.log(`⚠️  Error collecting tree-sitter node: ${error}`)
       }
     }
 
-    collectNodes()
+    collectNodes(cursor)
 
     // Sort by position
     nodes.sort((a, b) => a.start - b.start)
