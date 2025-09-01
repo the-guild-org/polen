@@ -1,0 +1,23 @@
+# Subscribe to Pokemon level up events for a trainer
+subscription PokemonLevelUpEvents($trainerId: ID!) {
+  pokemonLevelUp(trainerId: $trainerId) {
+    id
+    name
+    level
+    stats {
+      hp
+      attack
+      defense
+      speed
+      specialAttack
+      specialDefense
+    }
+    # New moves learned at this level
+    moves {
+      name
+      type
+      power
+      accuracy
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { Content } from '#api/content/$'
 import { createNavbar, type NavbarItem } from '#api/content/navbar'
+import { Examples } from '#api/examples/$'
 import { Api } from '#api/index'
 import { Schema } from '#api/schema/$'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
@@ -12,6 +13,8 @@ import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Json, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
+import * as FS from 'node:fs/promises'
+import * as Path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
 import { Pages } from './pages.js'
@@ -19,6 +22,8 @@ import { SchemaAssets } from './schema-assets.js'
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
+const viTemplateHomeConfig = polenVirtual([`template`, `home-config`])
+const viProjectExamples = polenVirtual([`project`, `examples`])
 export const viProjectData = polenVirtual([`project`, `data.json`], { allowPluginProcessing: true })
 export const viProjectSchema = polenVirtual([`project`, `schema.json`], { allowPluginProcessing: true })
 export const viProjectHooks = polenVirtual([`project`, `hooks`], { allowPluginProcessing: true })
@@ -109,6 +114,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
       config(_, { command }) {
         return {
           root: config.paths.framework.rootDir,
+          publicDir: config.paths.project.absolute.public.root,
           // todo
           // future: {
           //   removePluginHookHandleHotUpdate: 'warn',
@@ -175,6 +181,51 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
           loader() {
             const s = `export const schemaAugmentations = ${JSON.stringify(config.schema?.augmentations ?? [])}`
             return s
+          },
+        },
+        {
+          identifier: viTemplateHomeConfig,
+          loader() {
+            // Home config should already be normalized in the config layer
+            const s = `export const homeConfig = ${JSON.stringify(config.home)}`
+            return s
+          },
+        },
+        {
+          identifier: viProjectExamples,
+          async loader() {
+            const examples = []
+            const examplesDir = Path.join(config.paths.project.rootDir, 'examples')
+
+            // Check if examples directory exists
+            try {
+              await FS.access(examplesDir)
+              const files = await FS.readdir(examplesDir)
+
+              for (const file of files) {
+                if (file.endsWith('.graphql') || file.endsWith('.gql')) {
+                  const filePath = Path.join(examplesDir, file)
+                  const content = await FS.readFile(filePath, 'utf8')
+
+                  // Convert filename to title (e.g., get-users.graphql -> Get Users)
+                  const name = file.replace(/\.(graphql|gql)$/, '')
+                  const title = name
+                    .split(/[-_]/)
+                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ')
+
+                  examples.push({
+                    title,
+                    filename: file,
+                    query: content.trim(),
+                  })
+                }
+              }
+            } catch {
+              // Directory doesn't exist, that's fine
+            }
+
+            return `export const examples = ${JSON.stringify(examples)}`
           },
         },
         {

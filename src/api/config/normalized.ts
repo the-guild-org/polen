@@ -1,30 +1,33 @@
+import { ExamplesConfig } from '#api/examples/config'
 import { ConfigSchema as ConfigSchemaOriginal } from '#api/schema/config-schema'
+import { Typings } from '#api/typings/$'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import { packagePaths } from '#package-paths'
 import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
-import { BuildArchitecture, type ConfigInput, ConfigInputSchema } from './input.js'
+import { HomeConfig } from './home.js'
+import { BuildArchitecture, ConfigInput } from './input.js'
 
 // ============================================================================
-// Schema - Template Variables
+// Template Variables
 // ============================================================================
 
-const TemplateVariablesSchema = S.Struct({
+const TemplateVariables = S.Struct({
   title: S.String,
 }).annotations({
   identifier: 'TemplateVariablesNormalized',
   description: 'Normalized template variables with resolved defaults.',
 })
 
-export type TemplateVariables = S.Schema.Type<typeof TemplateVariablesSchema>
+export type TemplateVariables = S.Schema.Type<typeof TemplateVariables>
 
 // ============================================================================
-// Schema - Package Paths
+// Package Paths
 // ============================================================================
 
-const PackagePathsSchema = S.Struct({
+const PackagePaths = S.Struct({
   name: S.String,
   isRunningFromSource: S.Boolean,
   static: S.Struct({
@@ -62,10 +65,10 @@ const PackagePathsSchema = S.Struct({
 })
 
 // ============================================================================
-// Schema - Paths
+// Paths
 // ============================================================================
 
-const ProjectPathsSchema = S.Struct({
+const ProjectPaths = S.Struct({
   rootDir: S.String,
   relative: S.Struct({
     build: S.Struct({
@@ -106,30 +109,34 @@ const ProjectPathsSchema = S.Struct({
   description: 'Project paths for build, pages, and public assets.',
 })
 
-const FrameworkPathsSchema = S.extend(
-  PackagePathsSchema,
+const FrameworkPaths = S.extend(
+  PackagePaths,
   S.Struct({
     devAssets: S.Struct({
       relative: S.String,
       absolute: S.String,
       schemas: S.String,
     }),
+    generatedTypes: S.Struct({
+      relative: S.String,
+      absolute: S.String,
+    }),
   }),
 ).annotations({
   identifier: 'FrameworkPaths',
-  description: 'Framework paths including dev assets.',
+  description: 'Framework paths including dev assets and generated types.',
 })
 
-const PathsSchema = S.Struct({
-  project: ProjectPathsSchema,
-  framework: FrameworkPathsSchema,
+const Paths = S.Struct({
+  project: ProjectPaths,
+  framework: FrameworkPaths,
 }).annotations({
   identifier: 'Paths',
   description: 'Complete paths configuration for project and framework.',
 })
 
 // ============================================================================
-// Schema - Main Config
+// Config
 // ============================================================================
 
 /**
@@ -140,11 +147,23 @@ const PathsSchema = S.Struct({
  * - Computing derived paths
  * - Resolving package.json fallbacks
  */
-export const ConfigSchema = S.Struct({
+export const Config = S.Struct({
   /**
    * The original user input configuration.
    */
-  _input: S.suspend(() => ConfigInputSchema),
+  _input: S.suspend(() => ConfigInput),
+
+  /**
+   * Name of the API/project.
+   * Falls back to package.json name or 'My Developer Portal'.
+   */
+  name: S.String,
+
+  /**
+   * Description of the API/project.
+   * Falls back to a generic description.
+   */
+  description: S.String,
 
   /**
    * Build configuration with resolved defaults.
@@ -167,12 +186,22 @@ export const ConfigSchema = S.Struct({
   /**
    * Template variables with resolved defaults.
    */
-  templateVariables: TemplateVariablesSchema,
+  templateVariables: TemplateVariables,
 
   /**
    * Schema configuration or null if disabled.
    */
   schema: S.Union(S.Null, ConfigSchemaOriginal),
+
+  /**
+   * Examples configuration with resolved defaults.
+   */
+  examples: ExamplesConfig,
+
+  /**
+   * Home page configuration with resolved defaults.
+   */
+  home: HomeConfig,
 
   /**
    * SSR configuration.
@@ -193,7 +222,7 @@ export const ConfigSchema = S.Struct({
   /**
    * Computed paths for project and framework.
    */
-  paths: PathsSchema,
+  paths: Paths,
 
   /**
    * Advanced configuration with resolved defaults.
@@ -217,15 +246,15 @@ export const ConfigSchema = S.Struct({
 /**
  * The normalized configuration type derived from the schema.
  */
-export type Config = S.Schema.Type<typeof ConfigSchema>
+export type Config = S.Schema.Type<typeof Config>
 
 // ============================================================================
 // Codecs
 // ============================================================================
 
-export const decode = S.decode(ConfigSchema)
-export const encode = S.encode(ConfigSchema)
-export const validate = S.validate(ConfigSchema)
+export const decode = S.decode(Config)
+export const encode = S.encode(Config)
+export const validate = S.validate(Config)
 
 // -------------
 
@@ -298,12 +327,18 @@ const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | unde
         absolute: devAssetsAbsolute,
         schemas: Path.join(devAssetsAbsolute, 'schemas'),
       },
+      generatedTypes: {
+        relative: Typings.relativePathGeneratedTypesDir,
+        absolute: rootAbsolute(Typings.relativePathGeneratedTypesDir),
+      },
     },
   }
 }
 
 const getConfigInputDefaults = (): Config => ({
   _input: {},
+  name: `My Developer Portal`,
+  description: `Explore and integrate with our GraphQL API`,
   templateVariables: {
     title: `My Developer Portal`,
   },
@@ -318,6 +353,31 @@ const getConfigInputDefaults = (): Config => ({
     },
   },
   schema: null,
+  examples: {
+    display: 'all',
+    validate: true,
+  },
+  home: {
+    enabled: true,
+    hero: {
+      title: undefined,
+      tagline: undefined,
+      callToActions: undefined,
+      heroImage: undefined,
+    },
+    socialProof: false,
+    socialMedia: false,
+    examples: {
+      title: undefined,
+      description: undefined,
+      maxExamples: 3,
+      showExecutionTime: false,
+    },
+    quickStart: false,
+    stats: false,
+    changelog: false,
+    resources: false,
+  },
   ssr: {
     enabled: true,
   },
@@ -380,8 +440,22 @@ export const normalizeInput = (
     // This is either the --project directory or the config file directory
     config.paths = buildPaths(baseRootDirPath, configInput_as_writeable?.advanced?.paths)
 
-    // Try to read package.json name as fallback for title
-    if (!configInput_as_writeable?.templateVariables?.title) {
+    // Handle the top-level name property
+    if (configInput_as_writeable?.name !== undefined) {
+      config.name = configInput_as_writeable.name
+      // Also use it as the default for templateVariables.title if not set
+      if (!configInput_as_writeable?.templateVariables?.title) {
+        config.templateVariables.title = configInput_as_writeable.name
+      }
+    }
+
+    // Handle the top-level description property
+    if (configInput_as_writeable?.description !== undefined) {
+      config.description = configInput_as_writeable.description
+    }
+
+    // Try to read package.json name as fallback for title and name
+    if (!configInput_as_writeable?.templateVariables?.title || !configInput_as_writeable?.name) {
       const packageJsonResult = yield* Effect.tryPromise({
         try: () => Manifest.resource.read(config.paths.project.rootDir),
         catch: (error) => new Error(`Failed to read package.json: ${error}`),
@@ -391,9 +465,19 @@ export const normalizeInput = (
 
       // If we successfully read package.json and it has a name, use it
       if (packageJsonResult._tag === 'Right' && packageJsonResult.right.name) {
-        config.templateVariables.title = Str.Case.title(packageJsonResult.right.name)
+        const titleCasedName = Str.Case.title(packageJsonResult.right.name)
+
+        // Use for title if not already set
+        if (!configInput_as_writeable?.templateVariables?.title) {
+          config.templateVariables.title = titleCasedName
+        }
+
+        // Use for name if not already set
+        if (!configInput_as_writeable?.name) {
+          config.name = titleCasedName
+        }
       }
-      // Otherwise, the default title from getConfigInputDefaults() will be used
+      // Otherwise, the defaults from getConfigInputDefaults() will be used
     }
 
     if (configInput_as_writeable?.advanced?.vite) {
@@ -427,6 +511,117 @@ export const normalizeInput = (
     if (configInput_as_writeable?.warnings?.interactiveWithoutSchema?.enabled !== undefined) {
       config.warnings.interactiveWithoutSchema.enabled =
         configInput_as_writeable.warnings.interactiveWithoutSchema.enabled
+    }
+
+    // Process examples configuration
+    if (configInput_as_writeable?.examples) {
+      const examplesInput = configInput_as_writeable.examples
+
+      if (examplesInput.display !== undefined) {
+        config.examples.display = examplesInput.display
+      }
+
+      if (examplesInput.validate !== undefined) {
+        config.examples.validate = examplesInput.validate
+      }
+    }
+
+    // Process home configuration
+    if (configInput_as_writeable?.home) {
+      const homeInput = configInput_as_writeable.home
+
+      // Handle enabled state
+      if (homeInput.enabled !== undefined) {
+        config.home.enabled = homeInput.enabled
+      }
+
+      // Process each section - false means disabled, true means use defaults, object means custom config
+
+      // Hero section
+      if (homeInput.hero !== undefined) {
+        if (homeInput.hero === false) {
+          config.home.hero = false
+        } else if (homeInput.hero === true) {
+          config.home.hero = {
+            // Use name and description from top-level config as defaults
+            title: config.name,
+            tagline: config.description,
+            callToActions: undefined,
+            heroImage: undefined,
+          }
+        } else {
+          // It's an object with custom configuration
+          config.home.hero = {
+            title: homeInput.hero.title ?? config.name,
+            tagline: homeInput.hero.tagline ?? config.description,
+            callToActions: homeInput.hero.callToActions,
+            heroImage: homeInput.hero.heroImage,
+          }
+        }
+      } else {
+        // Default: hero is enabled with smart defaults
+        config.home.hero = {
+          title: config.name,
+          tagline: config.description,
+          callToActions: undefined,
+          heroImage: undefined,
+        }
+      }
+
+      // Social proof section
+      if (homeInput.socialProof !== undefined) {
+        config.home.socialProof = homeInput.socialProof
+      }
+
+      // Social media section
+      if (homeInput.socialMedia !== undefined) {
+        config.home.socialMedia = homeInput.socialMedia
+      }
+
+      // Examples section
+      if (homeInput.examples !== undefined) {
+        if (homeInput.examples === false) {
+          config.home.examples = false
+        } else if (homeInput.examples === true) {
+          config.home.examples = {
+            title: undefined,
+            description: undefined,
+            maxExamples: 3,
+            showExecutionTime: false,
+          }
+        } else {
+          config.home.examples = {
+            title: homeInput.examples.title,
+            description: homeInput.examples.description,
+            maxExamples: homeInput.examples.maxExamples ?? 3,
+            showExecutionTime: homeInput.examples.showExecutionTime ?? false,
+          }
+        }
+      }
+
+      if (homeInput.quickStart !== undefined) {
+        config.home.quickStart = homeInput.quickStart
+      }
+
+      if (homeInput.stats !== undefined) {
+        config.home.stats = homeInput.stats
+      }
+
+      if (homeInput.changelog !== undefined) {
+        config.home.changelog = homeInput.changelog
+      }
+
+      if (homeInput.resources !== undefined) {
+        config.home.resources = homeInput.resources
+      }
+    } else {
+      // No home config provided, apply smart defaults for hero
+      config.home.hero = {
+        title: config.name,
+        tagline: config.description,
+        callToActions: undefined,
+        heroImage: undefined,
+      }
     }
 
     return config

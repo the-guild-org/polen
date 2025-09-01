@@ -1,8 +1,8 @@
 import { Content } from '#api/content/$'
 import type { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
+import { Diagnostic } from '#lib/diagnostic/$'
 import { FileRouter } from '#lib/file-router'
-import { reportDiagnostics } from '#lib/file-router/diagnostic-reporter'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import mdx from '@mdx-js/rollup'
@@ -17,7 +17,9 @@ import { viProjectData } from './core.js'
 const debug = debugPolen.sub(`vite-pages`)
 
 export const viProjectRoutes = polenVirtual([`project`, `routes.jsx`], { allowPluginProcessing: true })
-export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-catalog.json`], {
+// Using .js extension as a workaround for Rolldown's requirement that virtual modules
+// return JavaScript code (export default) rather than pure JSON
+export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-catalog.js`], {
   allowPluginProcessing: true,
 })
 
@@ -150,7 +152,7 @@ export const Pages = ({
           invalidateVirtualModules(server)
 
           // Report any diagnostics
-          reportDiagnostics(newScanResult.diagnostics)
+          Diagnostic.report(newScanResult.diagnostics)
 
           // Trigger full reload to ensure routes are updated
           server.ws.send({ type: `full-reload` })
@@ -197,7 +199,7 @@ export const Pages = ({
 
         // Invalidate virtual modules and trigger reload
         invalidateVirtualModules(server)
-        reportDiagnostics(newScanResult.diagnostics)
+        Diagnostic.report(newScanResult.diagnostics)
         server.ws.send({ type: `full-reload` })
         return []
       },
@@ -213,7 +215,7 @@ export const Pages = ({
 
           const scanResult = await scanPages()
 
-          reportDiagnostics(scanResult.diagnostics)
+          Diagnostic.report(scanResult.diagnostics)
           debug(`found visible`, { count: scanResult.list.length })
 
           //
@@ -231,7 +233,8 @@ export const Pages = ({
             pages: scanResult.list,
           }
 
-          // Return a JavaScript module that exports the data
+          // Rolldown requires virtual modules to return JavaScript code with exports,
+          // not pure JSON. This is why we use .js extension for the virtual module.
           return `export default ${JSON.stringify(projectPagesCatalog)}`
         },
       },
@@ -251,7 +254,7 @@ export const Pages = ({
           debug(`Loading viProjectRoutes virtual module`)
 
           const scanResult = await scanPages()
-          reportDiagnostics(scanResult.diagnostics)
+          Diagnostic.report(scanResult.diagnostics)
           const code = generateRoutesModule(scanResult.list)
 
           // Generate the module code

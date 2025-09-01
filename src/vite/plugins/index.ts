@@ -1,6 +1,7 @@
 export { Branding } from './branding.js'
 export { Build } from './build.js'
 export { Core } from './core.js'
+export { Examples } from './examples.js'
 export { Main } from './main.js'
 export { Pages } from './pages.js'
 export { SchemaAssets } from './schema-assets.js'

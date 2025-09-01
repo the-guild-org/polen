@@ -1,0 +1,22 @@
+# Trade Pokemon between trainers
+mutation TradePokemon(
+  $pokemonId: ID!
+  $fromTrainerId: ID!
+  $toTrainerId: ID!
+) {
+  tradePokemon(
+    pokemonId: $pokemonId
+    fromTrainerId: $fromTrainerId
+    toTrainerId: $toTrainerId
+  ) {
+    id
+    name
+    # Shows updated trainer ownership
+    trainer {
+      id
+      name
+    }
+    types
+    level
+  }
+}

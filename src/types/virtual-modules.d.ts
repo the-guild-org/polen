@@ -26,14 +26,35 @@ declare module 'virtual:polen/project/schema.json' {
   export { schema as default }
 }
 
-declare module 'virtual:polen/project/data/pages-catalog.json' {
+// Virtual module uses .js extension due to Rolldown requirement
+// that virtual modules must return JavaScript code with exports
+declare module 'virtual:polen/project/data/pages-catalog.js' {
   const data: import('#vite/plugins/pages').ProjectPagesCatalog
+  export { data as default }
+}
+
+// Virtual module uses .js extension due to Rolldown requirement
+// that virtual modules must return JavaScript code with exports
+declare module 'virtual:polen/project/data/examples-catalog.js' {
+  const data: import('#vite/plugins/examples').ProjectExamplesCatalog
   export { data as default }
 }
 
 declare module 'virtual:polen/project/assets/logo.svg' {
   const src: string
   export default src
+}
+
+declare module 'virtual:polen/template/home-config' {
+  export const homeConfig: import('#api/config/home').HomeConfig
+}
+
+declare module 'virtual:polen/project/examples' {
+  export const examples: Array<{
+    title: string
+    filename: string
+    query: string
+  }>
 }
 
 declare module 'virtual:polen/project/hooks' {

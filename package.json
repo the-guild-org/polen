@@ -85,6 +85,18 @@
     "#lib/catalog/catalog": {
       "default": "./build/lib/catalog/catalog.js"
     },
+    "#lib/catalog-statistics": {
+      "default": "./build/lib/catalog-statistics/$.js"
+    },
+    "#lib/catalog-statistics/catalog-statistics": {
+      "default": "./build/lib/catalog-statistics/$$.js"
+    },
+    "#lib/diagnostic": {
+      "default": "./build/lib/diagnostic/$.js"
+    },
+    "#lib/diagnostic/diagnostic": {
+      "default": "./build/lib/diagnostic/$$.js"
+    },
     "#lib/change": {
       "default": "./build/lib/change/$.js"
     },

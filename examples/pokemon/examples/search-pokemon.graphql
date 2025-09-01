@@ -1,0 +1,23 @@
+# Search for Pokemon by name
+query SearchPokemon($name: String!) {
+  searchPokemon(name: $name) {
+    edges {
+      node {
+        id
+        name
+        types
+        level
+        shiny
+        stats {
+          hp
+          attack
+          defense
+          speed
+        }
+      }
+    }
+    pageInfo {
+      totalCount
+    }
+  }
+}

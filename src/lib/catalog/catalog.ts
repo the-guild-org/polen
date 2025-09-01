@@ -71,3 +71,19 @@ export const getSchemaVersionString = (schema: Schema.Schema): string => {
   const version = Schema.getVersion(schema)
   return version ? Version.toString(version) : '__UNVERSIONED__'
 }
+
+
+/**
+ * Get the version string from a schema.
+ * Returns the stringified version for versioned schemas, or '__UNVERSIONED__' for unversioned schemas.
+ */
+export const getLatestSchema = (catalog:Catalog): Schema.Schema =>
+  Match.value(catalog).pipe(Match.tagsExhaustive({
+    CatalogVersioned: (versioned) => {
+      const latestEntry = versioned.entries[versioned.entries.length - 1]!
+      return latestEntry
+    },
+    CatalogUnversioned: (unversioned) => {
+      return unversioned.schema
+    },
+  })

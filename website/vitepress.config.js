@@ -40,6 +40,8 @@ export default defineConfig({
         {
           text: 'Features',
           items: [
+            { text: 'Home Page', link: '/guides/features/home-page' },
+            { text: 'Hero Image', link: '/guides/features/hero-image' },
             { text: 'Pages', link: '/guides/features/pages' },
             { text: 'Schema Overview', link: '/guides/features/schema-overview' },
             { text: 'Schema Augmentations', link: '/guides/features/schema-augmentations' },

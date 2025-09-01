@@ -21,7 +21,7 @@ import {
   Tooltip,
 } from '@radix-ui/themes'
 import { Outlet, useLocation } from 'react-router'
-import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.json'
+import PROJECT_DATA_PAGES_CATALOG from 'virtual:polen/project/data/pages-catalog.js'
 import { routes } from 'virtual:polen/project/routes.jsx'
 import { CodeBlock } from '../components/CodeBlock.js'
 
