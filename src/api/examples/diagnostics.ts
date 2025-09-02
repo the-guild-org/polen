@@ -12,7 +12,7 @@ export const DiagnosticUnusedDefault = Diagnostic.create({
   severity: 'warning',
   context: {
     example: S.Struct({
-      id: S.String,
+      name: S.String,
       path: S.String,
     }),
     versions: S.Array(S.String),
@@ -21,6 +21,7 @@ export const DiagnosticUnusedDefault = Diagnostic.create({
   identifier: 'DiagnosticUnusedDefault',
   description: 'Default example file that is never used because explicit versions exist for all schema versions',
 })
+export const makeDiagnosticUnusedDefault = Diagnostic.createMake(DiagnosticUnusedDefault)
 
 export const DiagnosticDuplicateContent = Diagnostic.create({
   source: 'examples-scanner',
@@ -28,7 +29,7 @@ export const DiagnosticDuplicateContent = Diagnostic.create({
   severity: 'info',
   context: {
     example: S.Struct({
-      id: S.String,
+      name: S.String,
       path: S.String,
     }),
     duplicates: S.Array(S.Struct({
@@ -40,6 +41,7 @@ export const DiagnosticDuplicateContent = Diagnostic.create({
   identifier: 'DiagnosticDuplicateContent',
   description: 'Multiple versions of an example have identical content',
 })
+export const makeDiagnosticDuplicateContent = Diagnostic.createMake(DiagnosticDuplicateContent)
 
 export const DiagnosticMissingVersions = Diagnostic.create({
   source: 'examples-scanner',
@@ -47,7 +49,7 @@ export const DiagnosticMissingVersions = Diagnostic.create({
   severity: 'info',
   context: {
     example: S.Struct({
-      id: S.String,
+      name: S.String,
       path: S.String,
     }),
     providedVersions: S.Array(S.String),
@@ -57,6 +59,7 @@ export const DiagnosticMissingVersions = Diagnostic.create({
   identifier: 'DiagnosticMissingVersions',
   description: 'Example does not have explicit versions for all schema versions',
 })
+export const makeDiagnosticMissingVersions = Diagnostic.createMake(DiagnosticMissingVersions)
 
 export const DiagnosticInvalidFilename = Diagnostic.create({
   source: 'examples-scanner',
@@ -70,6 +73,7 @@ export const DiagnosticInvalidFilename = Diagnostic.create({
   identifier: 'DiagnosticInvalidFilename',
   description: 'Example file has an invalid filename pattern',
 })
+export const makeDiagnosticInvalidFilename = Diagnostic.createMake(DiagnosticInvalidFilename)
 
 // ============================================================================
 // Schema - Examples Validation Diagnostics
@@ -81,18 +85,16 @@ export const DiagnosticValidationError = Diagnostic.create({
   severity: 'error', // Will be overridden based on config
   context: {
     example: S.Struct({
-      id: S.String,
+      name: S.String,
       path: S.String,
     }),
     version: S.String,
     errors: S.Array(GraphQLError.GraphQLError),
   },
+}).annotations({
+  identifier: 'DiagnosticValidationError',
+  description: 'GraphQL document validation error against the schema',
 })
-  .annotations({
-    identifier: 'DiagnosticValidationError',
-    description: 'GraphQL document validation error against the schema',
-  })
-
 export const makeDiagnosticValidationError = Diagnostic.createMake(DiagnosticValidationError)
 
 // Union of all examples-scanner diagnostics

@@ -81,7 +81,8 @@ export const getSchemaVersionString = (schema: Schema.Schema): string => {
 export const getLatestSchema = (catalog:Catalog): Schema.Schema =>
   Match.value(catalog).pipe(Match.tagsExhaustive({
     CatalogVersioned: (versioned) => {
-      const latestEntry = versioned.entries[versioned.entries.length - 1]!
+      // Entries are sorted newest first, so get the first entry
+      const latestEntry = versioned.entries[0]!
       return latestEntry
     },
     CatalogUnversioned: (unversioned) => {

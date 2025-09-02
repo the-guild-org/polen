@@ -10,7 +10,7 @@ export const generateExampleTypes = (
   examples: Example[],
   projectRoot: string,
 ): Effect.Effect<void, Error, FileSystem.FileSystem> => {
-  const exampleNames = examples.map(e => e.id)
+  const exampleNames = examples.map(e => e.name)
   const typeDefinition = generateTypeDefinition(exampleNames)
   return Typings.write(
     {

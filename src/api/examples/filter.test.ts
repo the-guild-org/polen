@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import type { ExampleName, ExampleSelection } from './config.js'
-import type { Example } from './example.js'
+import { UnversionedExample } from './unversioned.js'
 import { filterExamplesBySelection, shouldDisplayExample } from './filter.js'
 
 describe('filterExamplesBySelection', () => {
-  const examples: Example[] = [
-    { id: 'a', path: 'a.graphql', content: { default: 'a' }, versions: ['default'] },
-    { id: 'b', path: 'b.graphql', content: { default: 'b' }, versions: ['default'] },
-    { id: 'c', path: 'c.graphql', content: { default: 'c' }, versions: ['default'] },
+  const examples = [
+    UnversionedExample.make({ name: 'a', path: 'a.graphql', document: 'a' }),
+    UnversionedExample.make({ name: 'b', path: 'b.graphql', document: 'b' }),
+    UnversionedExample.make({ name: 'c', path: 'c.graphql', document: 'c' }),
   ]
 
   test.for([
@@ -22,7 +22,7 @@ describe('filterExamplesBySelection', () => {
     { selection: { exclude: ['c', 'non-existent'] }, expected: ['a', 'b'] },
   ])('selection $selection returns $expected', ({ selection, expected }) => {
     const result = filterExamplesBySelection(examples, selection as ExampleSelection)
-    expect(result.map(e => e.id)).toEqual(expected)
+    expect(result.map(e => e.name)).toEqual(expected)
   })
 })
 

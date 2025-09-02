@@ -1,3 +1,4 @@
+import { Diagnostic } from '#lib/diagnostic/$'
 import { S } from '#lib/kit-temp/effect'
 
 // ============================================================================
@@ -95,6 +96,48 @@ export const ExampleSelection = S.optional(
 export type ExampleSelection = S.Schema.Type<typeof ExampleSelection>
 
 // ============================================================================
+// Schema - Example Diagnostics
+// ============================================================================
+
+/**
+ * Diagnostic controls for example scanning and validation.
+ */
+const ExampleDiagnostics = S.Struct({
+  /**
+   * Control validation of GraphQL documents against the schema.
+   *
+   * @default true (warns in dev, errors in build)
+   */
+  validation: S.optional(S.Union(S.Boolean, Diagnostic.Control)),
+
+  /**
+   * Control warnings about unused default versions when versioned files exist.
+   *
+   * @default true (info in dev, warning in build)
+   */
+  unusedVersions: S.optional(S.Union(S.Boolean, Diagnostic.Control)),
+
+  /**
+   * Control detection of duplicate content across versions.
+   *
+   * @default true in dev only
+   */
+  duplicateContent: S.optional(S.Union(S.Boolean, Diagnostic.Control)),
+
+  /**
+   * Control warnings about missing versions for examples.
+   *
+   * @default true (info in dev, warning in build)
+   */
+  missingVersions: S.optional(S.Union(S.Boolean, Diagnostic.Control)),
+}).annotations({
+  identifier: 'ExampleDiagnostics',
+  description: 'Diagnostic controls for example scanning and validation',
+})
+
+export type ExampleDiagnostics = S.Schema.Type<typeof ExampleDiagnostics>
+
+// ============================================================================
 // Schema - Examples Config
 // ============================================================================
 
@@ -129,16 +172,31 @@ export const ExamplesConfig = S.Struct({
   display: ExampleSelection,
 
   /**
-   * Enable example validation against the schema.
-   * When enabled, examples will be validated to ensure they work with your current schema.
+   * Diagnostic controls for examples.
+   * Can be a simple boolean for all diagnostics, or fine-grained control per diagnostic type.
    *
-   * @default true
+   * @example
+   * ```ts
+   * // Enable all diagnostics with defaults
+   * diagnostics: {
+   *   validation: true
+   * }
+   *
+   * // Fine-grained control
+   * diagnostics: {
+   *   validation: {
+   *     enabled: true,
+   *     dev: { enabled: true, severity: 'warning' },
+   *     build: { enabled: true, severity: 'error' }
+   *   }
+   * }
+   * ```
    */
-  validate: S.optional(S.Boolean),
+  diagnostics: S.optional(ExampleDiagnostics),
 }).annotations({
   identifier: 'ExamplesConfig',
   title: 'Examples Configuration',
-  description: 'Configuration for GraphQL examples behavior and selection',
+  description: 'Configuration for GraphQL examples behavior and diagnostics',
 })
 
 export type ExamplesConfig = S.Schema.Type<typeof ExamplesConfig>

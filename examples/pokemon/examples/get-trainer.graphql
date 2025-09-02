@@ -5,7 +5,7 @@ query GetTrainer($id: ID!) {
     name
     hometown
     badges
-    team {
+    pokemon {
       id
       name
       types

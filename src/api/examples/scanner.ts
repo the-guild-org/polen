@@ -1,10 +1,21 @@
+import { Version } from '#lib/version/$'
 import * as FileSystem from '@effect/platform/FileSystem'
 import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
+import type { ExampleDiagnostics } from './config.js'
 import type { Diagnostic } from './diagnostics.js'
-import { DiagnosticDuplicateContent, DiagnosticMissingVersions, DiagnosticUnusedDefault } from './diagnostics.js'
+import {
+  DiagnosticDuplicateContent,
+  DiagnosticMissingVersions,
+  DiagnosticUnusedDefault,
+  makeDiagnosticDuplicateContent,
+  makeDiagnosticMissingVersions,
+  makeDiagnosticUnusedDefault,
+} from './diagnostics.js'
 import type { Example } from './example.js'
 import * as ExampleModule from './example.js'
+import * as UnversionedExample from './unversioned.js'
+import * as VersionedExample from './versioned.js'
 
 // ============================================================================
 // Types
@@ -32,7 +43,7 @@ const VERSION_PATTERN = /^v\d+$/
 // Helpers
 // ============================================================================
 
-const parseExampleFilename = (filename: string): { name: string; version: string } => {
+const parseExampleFilename = (filename: string): { name: string; version: string | null } => {
   const base = Path.parse(filename).name
 
   // Check if it's a versioned file (e.g., example.v1.graphql)
@@ -53,12 +64,12 @@ const parseExampleFilename = (filename: string): { name: string; version: string
     return { name: dirName || 'unknown', version: base }
   }
 
-  // It's a simple file (e.g., example.graphql)
-  return { name: base, version: 'default' }
+  // It's a simple file (e.g., example.graphql) - unversioned
+  return { name: base, version: null }
 }
 
-const groupExampleFiles = (files: string[]): Map<string, Map<string, string>> => {
-  const grouped = new Map<string, Map<string, string>>()
+const groupExampleFiles = (files: string[]): Map<string, Map<string | null, string>> => {
+  const grouped = new Map<string, Map<string | null, string>>()
 
   for (const file of files) {
     const { name, version } = parseExampleFilename(file)
@@ -75,72 +86,83 @@ const groupExampleFiles = (files: string[]): Map<string, Map<string, string>> =>
 const createDiagnostics = (
   example: Example,
   schemaVersions: string[],
-  fileContents: Map<string, string>,
 ): Diagnostic[] => {
   const diagnostics: Diagnostic[] = []
 
-  // Check for unused default
-  if (example.versions.includes('default') && example.versions.length > 1) {
-    const nonDefaultVersions = example.versions.filter(v => v !== 'default')
-    const allVersionsCovered = schemaVersions.every(sv => nonDefaultVersions.some(v => v === sv))
+  if (example._tag === 'ExampleVersioned') {
+    const versionKeys = Object.keys(example.versionDocuments)
 
-    if (allVersionsCovered) {
-      const diagnostic = DiagnosticUnusedDefault.make({
-        message: `Default example file will never be used because explicit versions exist for all schema versions`,
+    // Check for unused default versions
+    if (example.defaultDocument && versionKeys.length > 0) {
+      const allVersionsCovered = schemaVersions.every(sv => versionKeys.includes(sv))
+
+      if (allVersionsCovered) {
+        const diagnostic = makeDiagnosticUnusedDefault({
+          message:
+            `Default example document will never be used because explicit versions exist for all schema versions`,
+          example: {
+            name: example.name,
+            path: example.path,
+          },
+          versions: versionKeys,
+        })
+        diagnostics.push(diagnostic)
+      }
+    }
+
+    // Check for duplicate content
+    const duplicates: Array<{ version1: string; version2: string }> = []
+    const versionEntries = Object.entries(example.versionDocuments)
+    for (let i = 0; i < versionEntries.length; i++) {
+      for (let j = i + 1; j < versionEntries.length; j++) {
+        const [v1, content1] = versionEntries[i]!
+        const [v2, content2] = versionEntries[j]!
+        if (content1 === content2) {
+          duplicates.push({ version1: v1, version2: v2 })
+        }
+      }
+    }
+
+    // Also check if default document duplicates any version
+    if (example.defaultDocument) {
+      for (const [version, content] of versionEntries) {
+        if (example.defaultDocument === content) {
+          duplicates.push({ version1: 'default', version2: version })
+        }
+      }
+    }
+
+    if (duplicates.length > 0) {
+      const diagnostic = makeDiagnosticDuplicateContent({
+        message: `Multiple versions of example have identical content, consider consolidating`,
         example: {
-          id: example.id,
+          name: example.name,
           path: example.path,
         },
-        versions: nonDefaultVersions,
+        duplicates,
       })
       diagnostics.push(diagnostic)
     }
-  }
 
-  // Check for duplicate content
-  const duplicates: Array<{ version1: string; version2: string }> = []
-  const versions = Array.from(example.versions)
-  for (let i = 0; i < versions.length; i++) {
-    for (let j = i + 1; j < versions.length; j++) {
-      const v1 = versions[i]!
-      const v2 = versions[j]!
-      const content1 = example.content[v1]
-      const content2 = example.content[v2]
-      if (content1 === content2) {
-        duplicates.push({ version1: v1, version2: v2 })
+    // Check for missing versions
+    if (!example.defaultDocument) {
+      const missingVersions = schemaVersions.filter(sv => !versionKeys.includes(sv))
+
+      if (missingVersions.length > 0) {
+        const diagnostic = makeDiagnosticMissingVersions({
+          message: `Example does not provide content for all schema versions`,
+          example: {
+            name: example.name,
+            path: example.path,
+          },
+          providedVersions: versionKeys,
+          missingVersions,
+        })
+        diagnostics.push(diagnostic)
       }
     }
   }
-
-  if (duplicates.length > 0) {
-    const diagnostic = DiagnosticDuplicateContent.make({
-      message: `Multiple versions of example have identical content, consider consolidating`,
-      example: {
-        id: example.id,
-        path: example.path,
-      },
-      duplicates,
-    })
-    diagnostics.push(diagnostic)
-  }
-
-  // Check for missing versions
-  if (!example.versions.includes('default')) {
-    const missingVersions = schemaVersions.filter(sv => !example.versions.includes(sv))
-
-    if (missingVersions.length > 0) {
-      const diagnostic = DiagnosticMissingVersions.make({
-        message: `Example does not provide content for all schema versions`,
-        example: {
-          id: example.id,
-          path: example.path,
-        },
-        providedVersions: example.versions,
-        missingVersions,
-      })
-      diagnostics.push(diagnostic)
-    }
-  }
+  // Unversioned examples don't have version-related diagnostics
 
   return diagnostics
 }
@@ -171,31 +193,68 @@ export const scan = (
     const diagnostics: Diagnostic[] = []
 
     for (const [name, versions] of groupedFiles) {
-      const content: Record<string, string> = {}
-
-      // Read content for each version
-      for (const [version, filePath] of versions) {
-        const fullPath = Path.join(options.dir, filePath)
-        const fileContent = yield* fs.readFileString(fullPath)
-        content[version] = fileContent
-      }
+      // Check if this is a versioned or unversioned example
+      const hasMultipleVersions = versions.size > 1
+      const hasUnversionedFile = versions.has(null)
+      const hasDefaultFile = versions.has('default')
 
       // Determine the base path for this example
-      const basePath = versions.size === 1 && versions.has('default')
-        ? versions.get('default')!
-        : Path.dirname(Array.from(versions.values())[0]!)
+      const firstFilePath = Array.from(versions.values())[0]!
+      const basePath = versions.size === 1
+        ? firstFilePath
+        : Path.dirname(firstFilePath)
 
-      const example = ExampleModule.make({
-        id: name,
-        path: basePath,
-        versions: Array.from(versions.keys()),
-        content,
-      })
+      let example: Example
+
+      if (hasUnversionedFile && versions.size === 1) {
+        // Unversioned example - single file with no version
+        const filePath = versions.get(null)!
+        const fullPath = Path.join(options.dir, filePath)
+        const document = yield* fs.readFileString(fullPath)
+
+        example = UnversionedExample.make({
+          name,
+          path: basePath,
+          document,
+        })
+      } else {
+        // Versioned example - multiple files or versioned files
+        const versionDocuments: Record<string, string> = {}
+        let defaultDocument: string | undefined
+
+        // Read content for each version
+        for (const [version, filePath] of versions) {
+          const fullPath = Path.join(options.dir, filePath)
+          const fileContent = yield* fs.readFileString(fullPath)
+
+          if (version === 'default') {
+            defaultDocument = fileContent
+          } else if (version !== null) {
+            // Convert version string to standardized format
+            let versionKey: string
+            if (version.startsWith('v') && /^v\d+$/.test(version)) {
+              // Keep as v1, v2, etc for integer versions
+              versionKey = version
+            } else {
+              // Use as-is for other version formats
+              versionKey = version
+            }
+            versionDocuments[versionKey] = fileContent
+          }
+        }
+
+        example = VersionedExample.make({
+          name,
+          path: basePath,
+          versionDocuments,
+          defaultDocument,
+        })
+      }
 
       examples.push(example)
 
       // Generate diagnostics for this example
-      const exampleDiagnostics = createDiagnostics(example, options.schemaVersions, versions)
+      const exampleDiagnostics = createDiagnostics(example, options.schemaVersions)
       diagnostics.push(...exampleDiagnostics)
     }
 

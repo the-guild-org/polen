@@ -12,7 +12,7 @@ describe('ExamplesConfig', () => {
       { input: { include: ['example1', 'example2'] }, expected: { include: ['example1', 'example2'] } },
       { input: { exclude: ['example3'] }, expected: { exclude: ['example3'] } },
     ])('accepts $input as display value', ({ input, expected }) => {
-      const result = decodeExamplesConfig({ display: input })
+      const result = decodeExamplesConfig({ display: input as any })
       expect(result.display).toEqual(expected)
     })
 
@@ -31,12 +31,13 @@ describe('ExamplesConfig', () => {
     test('decodes full config', () => {
       const input = {
         display: { include: ['example1', 'example2'] },
-        validate: false,
-        showExecutionTime: true,
-        maxHomePageExamples: 5,
+        diagnostics: {
+          validation: true,
+          unusedVersions: false,
+        },
       }
 
-      const result = decodeExamplesConfig(input)
+      const result = decodeExamplesConfig(input as any)
       expect(result).toEqual(input)
     })
 
@@ -58,7 +59,7 @@ describe('ExamplesConfig', () => {
         config: { display: 'none' },
       },
     ])('accepts $name', ({ config }) => {
-      const result = decodeExamplesConfig(config)
+      const result = decodeExamplesConfig(config as any)
       expect(result.display).toEqual(config.display)
     })
   })

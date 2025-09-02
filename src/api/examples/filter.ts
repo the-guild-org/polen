@@ -29,13 +29,13 @@ export const filterExamplesBySelection = (
   // Handle include pattern
   if ('include' in selection) {
     const includeSet = new Set<ExampleName>(selection.include)
-    return examples.filter(example => includeSet.has(example.id as ExampleName))
+    return examples.filter(example => includeSet.has(example.name as ExampleName))
   }
 
   // Handle exclude pattern
   if ('exclude' in selection) {
     const excludeSet = new Set<ExampleName>(selection.exclude)
-    return examples.filter(example => !excludeSet.has(example.id as ExampleName))
+    return examples.filter(example => !excludeSet.has(example.name as ExampleName))
   }
 
   // Fallback to all examples if selection pattern is not recognized

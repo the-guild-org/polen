@@ -192,43 +192,6 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
           },
         },
         {
-          identifier: viProjectExamples,
-          async loader() {
-            const examples = []
-            const examplesDir = Path.join(config.paths.project.rootDir, 'examples')
-
-            // Check if examples directory exists
-            try {
-              await FS.access(examplesDir)
-              const files = await FS.readdir(examplesDir)
-
-              for (const file of files) {
-                if (file.endsWith('.graphql') || file.endsWith('.gql')) {
-                  const filePath = Path.join(examplesDir, file)
-                  const content = await FS.readFile(filePath, 'utf8')
-
-                  // Convert filename to title (e.g., get-users.graphql -> Get Users)
-                  const name = file.replace(/\.(graphql|gql)$/, '')
-                  const title = name
-                    .split(/[-_]/)
-                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ')
-
-                  examples.push({
-                    title,
-                    filename: file,
-                    query: content.trim(),
-                  })
-                }
-              }
-            } catch {
-              // Directory doesn't exist, that's fine
-            }
-
-            return `export const examples = ${JSON.stringify(examples)}`
-          },
-        },
-        {
           identifier: viProjectData,
           async loader() {
             const debug = debugPolen.sub(`module-project-data`)

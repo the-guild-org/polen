@@ -301,7 +301,7 @@ export const readOrThrow = (
             { concurrency: 1 }, // Sequential for correct changeset calculation
           )
 
-          // Get the latest schema definition
+          // Get the latest schema definition (last element since revisions are still in chronological order)
           const latestRevision = version.revisions[version.revisions.length - 1]
           const schemaDefinition = latestRevision?.schema ?? Grafaid.Schema.empty
 
