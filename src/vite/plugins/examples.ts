@@ -132,44 +132,7 @@ export const Examples = ({
             // Report diagnostics with DiagnosticControl filtering
             reportDiagnostics(loadedExamples.diagnostics, 'dev')
 
-            // Filter examples based on display configuration
-            const filteredExamples = ExamplesModule.filterExamplesBySelection(
-              loadedExamples.examples,
-              config.examples.display,
-            )
-
-            // Convert to the format expected by the template
-            const examplesForTemplate = filteredExamples.map(example => {
-              // Determine the identifier and title based on the example structure
-              let identifier: string
-              let displayName: string
-
-              if (example._tag === 'ExampleUnversioned') {
-                // For unversioned examples, use the filename without extension
-                const filename = Path.basename(example.path)
-                identifier = filename.replace(/\.(graphql|gql)$/, '')
-                displayName = identifier
-              } else {
-                // For versioned examples, use the directory name
-                identifier = Path.basename(example.path)
-                displayName = identifier
-              }
-
-              // Convert to title case (e.g., get-users -> Get Users)
-              const title = displayName
-                .split(/[-_]/)
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ')
-
-              return {
-                ...example,
-                id: example.name,
-                identifier: identifier,
-                title: title,
-              }
-            })
-
-            return `export const examples = ${JSON.stringify(examplesForTemplate)}`
+            return `export const examples = ${JSON.stringify(loadedExamples)}`
           },
         },
       ),

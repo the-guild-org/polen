@@ -17,7 +17,6 @@ query ListPokemons($type: PokemonType, $limit: Int = 10) {
     pageInfo {
       hasNextPage
       hasPreviousPage
-      totalCount
     }
   }
 }

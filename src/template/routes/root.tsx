@@ -10,6 +10,7 @@ import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import PROJECT_DATA from 'virtual:polen/project/data.json'
+import { examples } from 'virtual:polen/project/examples'
 import * as projectHooks from 'virtual:polen/project/hooks'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { templateVariables } from 'virtual:polen/template/variables'
@@ -21,6 +22,7 @@ import { ThemeToggle } from '../components/ThemeToggle.js'
 import { ToastContainer } from '../components/ToastContainer.js'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.js'
 import { changelog } from './changelog.js'
+import { examplesRoute } from './examples.js'
 import { index } from './index.js'
 import { pages } from './pages.js'
 import { reference } from './reference.js'
@@ -94,7 +96,23 @@ const Layout = () => {
   )
 }
 
-const children: ReactRouter.RouteObject[] = [index, pages]
+const children: ReactRouter.RouteObject[] = [
+  index,
+  pages,
+]
+
+//
+//
+//
+//
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Examples Routes
+//
+//
+//
+
+if (examples.length > 0) {
+  children.push(examplesRoute)
+}
 
 //
 //

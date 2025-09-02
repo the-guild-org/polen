@@ -5,7 +5,6 @@ query GetPokemon($id: ID!) {
     name
     level
     types
-    badField  # This field doesn't exist
     stats {
       hp
       attack

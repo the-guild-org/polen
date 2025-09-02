@@ -7,7 +7,7 @@ query SearchPokemon($name: String!) {
         name
         types
         level
-        shiny
+        isShiny
         stats {
           hp
           attack
@@ -17,7 +17,8 @@ query SearchPokemon($name: String!) {
       }
     }
     pageInfo {
-      totalCount
+      hasNextPage
+      hasPreviousPage
     }
   }
 }
