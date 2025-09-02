@@ -26,7 +26,7 @@ describe('getPhaseSettings', () => {
       name: 'phase settings override global enabled'
     },
     {
-      control: { enabled: true, dev: { severity: 'error' } },
+      control: { enabled: true, dev: { severity: 'error' as const } },
       phase: 'dev' as const,
       expected: { enabled: true, severity: 'error' },
       name: 'phase severity overrides default'
@@ -38,7 +38,7 @@ describe('getPhaseSettings', () => {
       name: 'phase enabled false overrides global true'
     },
     {
-      control: { enabled: true, dev: { enabled: false }, build: { enabled: true, severity: 'error' } },
+      control: { enabled: true, dev: { enabled: false }, build: { enabled: true, severity: 'error' as const } },
       phase: 'build' as const,
       expected: { enabled: true, severity: 'error' },
       name: 'build phase uses build settings'
@@ -50,8 +50,8 @@ describe('getPhaseSettings', () => {
   test('different phases can have different severities', () => {
     const control = Control.make({
       enabled: true,
-      dev: { severity: 'info' },
-      build: { severity: 'error' },
+      dev: { severity: 'info' as const },
+      build: { severity: 'error' as const },
     })
     expect(getPhaseSettings(control, 'dev', defaults)).toEqual({ enabled: true, severity: 'info' })
     expect(getPhaseSettings(control, 'build', defaults)).toEqual({ enabled: true, severity: 'error' })

@@ -1,5 +1,5 @@
 import { buildSchema } from 'graphql'
-import { test } from 'vitest'
+import { expect, test } from 'vitest'
 import { UnversionedExample } from './unversioned.js'
 import { validateExamples } from './validator.js'
 import { VersionedExample } from './versioned.js'
@@ -98,17 +98,17 @@ test.for([
   ({ examples, expectedDiagnostics, errorContains, messageContains, version, exampleId }) => {
     const diagnostics = validateExamples(examples, schema)
 
-    test.expect(diagnostics).toHaveLength(expectedDiagnostics)
+    expect(diagnostics).toHaveLength(expectedDiagnostics)
 
     if (expectedDiagnostics > 0) {
       const diagnostic = diagnostics[0]!
 
-      if (errorContains) test.expect(diagnostic.errors[0]?.message).toContain(errorContains)
-      if (messageContains) test.expect(diagnostic.message).toContain(messageContains)
-      if (version) test.expect(diagnostic.version).toBe(version)
-      if (exampleId) test.expect(diagnostic.example.name).toBe(exampleId)
+      if (errorContains) expect(diagnostic.errors[0]?.message).toContain(errorContains)
+      if (messageContains) expect(diagnostic.message).toContain(messageContains)
+      if (version) expect(diagnostic.version).toBe(version)
+      if (exampleId) expect(diagnostic.example.name).toBe(exampleId)
 
-      test.expect(diagnostic).toMatchObject({
+      expect(diagnostic).toMatchObject({
         source: 'examples-validation',
         name: 'invalid-graphql',
         severity: 'error',
@@ -127,9 +127,9 @@ test('includes location information in errors', () => {
   const diagnostics = validateExamples(examples, schema)
   const location = diagnostics[0]?.errors[0]?.locations?.[0]
 
-  test.expect(location).toMatchObject({
-    line: test.expect.any(Number),
-    column: test.expect.any(Number),
+  expect(location).toMatchObject({
+    line: expect.any(Number),
+    column: expect.any(Number),
   })
 })
 
@@ -156,6 +156,6 @@ test.for([
   const examples = [UnversionedExample.make({ name: 'test', path: 'test.graphql', document })]
   const diagnostics = validateExamples(examples, schema)
 
-  test.expect(diagnostics).toHaveLength(1)
-  test.expect(diagnostics[0]?.errors[0]?.message).toContain('Cannot query field')
+  expect(diagnostics).toHaveLength(1)
+  expect(diagnostics[0]?.errors[0]?.message).toContain('Cannot query field')
 })

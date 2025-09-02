@@ -172,6 +172,12 @@
     "#lib/theme": {
       "default": "./build/lib/theme/$.js"
     },
+    "#lib/vite-reactive": {
+      "default": "./build/lib/vite-reactive/$.js"
+    },
+    "#lib/vite-reactive/vite-reactive": {
+      "default": "./build/lib/vite-reactive/$$.js"
+    },
     "#lib/theme/theme": {
       "default": "./build/lib/theme/$$.js"
     },

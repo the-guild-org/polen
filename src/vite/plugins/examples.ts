@@ -91,6 +91,12 @@ export const Examples = ({
       server.moduleGraph.invalidateModule(catalogModule)
       debug(`Invalidated examples catalog virtual module`)
     }
+
+    const examplesModule = server.moduleGraph.getModuleById(viProjectExamples.id)
+    if (examplesModule) {
+      server.moduleGraph.invalidateModule(examplesModule)
+      debug(`Invalidated examples virtual module`)
+    }
   }
 
   return {

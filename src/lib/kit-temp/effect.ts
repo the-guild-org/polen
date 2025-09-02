@@ -63,9 +63,17 @@ export namespace EffectKit {
     export const pickLiteral1FieldsAsLiterals = <schema extends Struct.$any>(
       schema: schema,
     ): { [k in keyof PickLiteral1Fields<schema>]: S.Schema.Type<PickLiteral1Fields<schema>[k]> } => {
-      const fields = pickLiteral1Fields(schema)
-      const fieldsAsLiterals = Ob.mapValues(fields, (v) => S.Literal(v))
-      return fieldsAsLiterals as any
+      const picked = {}
+      const ast = schema.ast
+      if (isTypeLiteral(ast)) {
+        ast.propertySignatures.forEach(prop => {
+          if (isLiteral(prop.type) && prop.name !== '_tag') {
+            // @ts-expect-error - Extract the literal value, not the schema
+            picked[prop.name] = prop.type.literal
+          }
+        })
+      }
+      return picked as any
     }
 
     export const pickLiteral1Fields = <schema extends Struct.$any>(
