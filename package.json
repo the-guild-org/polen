@@ -97,6 +97,12 @@
     "#lib/diagnostic/diagnostic": {
       "default": "./build/lib/diagnostic/$$.js"
     },
+    "#lib/effect-glob": {
+      "default": "./build/lib/effect-glob/$.js"
+    },
+    "#lib/effect-glob/effect-glob": {
+      "default": "./build/lib/effect-glob/$$.js"
+    },
     "#lib/change": {
       "default": "./build/lib/change/$.js"
     },

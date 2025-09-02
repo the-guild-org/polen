@@ -26,7 +26,6 @@ export const validateExamples = (
   examples: Example[],
   schema: GraphQLSchema,
 ): ValidationDiagnostic[] => {
-  console.log('[DEBUG] validateExamples called with', examples.length, 'examples')
   const diagnostics: ValidationDiagnostic[] = []
 
   for (const example of examples) {
@@ -73,11 +72,6 @@ const validateDocument = (
 
     // Validate against the schema
     const errors = validate(schema, document, specifiedRules)
-
-    console.log('[DEBUG] Validation result for', exampleName, version, ':', errors.length, 'errors')
-    if (errors.length > 0) {
-      console.log('[DEBUG] Errors:', errors.map(e => e.message))
-    }
 
     if (errors.length > 0) {
       diagnostics.push(makeDiagnosticValidationError({

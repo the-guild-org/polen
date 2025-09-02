@@ -58,6 +58,8 @@
       "#lib/catalog-statistics/*": ["./src/lib/catalog-statistics/*.ts"],
       "#lib/diagnostic": ["./src/lib/diagnostic/$.ts"],
       "#lib/diagnostic/*": ["./src/lib/diagnostic/*.ts"],
+      "#lib/effect-glob": ["./src/lib/effect-glob/$.ts"],
+      "#lib/effect-glob/*": ["./src/lib/effect-glob/*.ts"],
       "#lib/change": ["./src/lib/change/$.ts"],
       "#lib/change/*": ["./src/lib/change/*.ts"],
       "#lib/hydra": ["./src/lib/hydra/$.ts"],
@@ -95,6 +97,9 @@
       "#lib/stack-processor/*": ["./src/lib/stack-processor/*.ts"],
       "#lib/superjson-codec": ["./src/lib/superjson-codec/$.ts"],
       "#lib/superjson-codec/*": ["./src/lib/superjson-codec/*.ts"],
+      "#lib/vite-reactive": ["./src/lib/vite-reactive/$.ts"],
+      "#lib/vite-reactive/vite-reactive": ["./src/lib/vite-reactive/$$.ts"],
+      "#lib/vite-reactive/*": ["./src/lib/vite-reactive/*.ts"],
       "#lib/task": ["./src/lib/task/$.ts"],
       "#lib/task/*": ["./src/lib/task/*.ts"],
       "#lib/theme": ["./src/lib/theme/$.ts"],
@@ -132,7 +137,6 @@
     "lib": ["DOM", "es2023", "DOM.Iterable"]
   },
   "include": [
-    "src/types/**/*.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".github/**/*.ts"

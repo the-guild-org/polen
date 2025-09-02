@@ -1,19 +1,14 @@
-import { Version } from '#lib/version/$'
-import * as FileSystem from '@effect/platform/FileSystem'
+import { EffectGlob } from '#lib/effect-glob/$'
+import { FileSystem } from '@effect/platform'
 import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import type { ExampleDiagnostics } from './config.js'
 import type { Diagnostic } from './diagnostics.js'
 import {
-  DiagnosticDuplicateContent,
-  DiagnosticMissingVersions,
-  DiagnosticUnusedDefault,
   makeDiagnosticDuplicateContent,
   makeDiagnosticMissingVersions,
   makeDiagnosticUnusedDefault,
 } from './diagnostics.js'
 import type { Example } from './example.js'
-import * as ExampleModule from './example.js'
 import * as UnversionedExample from './unversioned.js'
 import * as VersionedExample from './versioned.js'
 
@@ -178,12 +173,7 @@ export const scan = (
     const fs = yield* FileSystem.FileSystem
     const extensions = options.extensions ?? DEFAULT_EXTENSIONS
     const pattern = `**/*.{${extensions.join(',')}}`
-
-    // Find all example files - allow override for testing
-    const files = options.files ?? (yield* Effect.gen(function*() {
-      const { EffectGlobby } = yield* Effect.promise(() => import('#dep/tiny-globby/index'))
-      return yield* EffectGlobby.glob(pattern, { cwd: options.dir })
-    }))
+    const files = options.files ?? (yield* EffectGlob.glob(pattern, { cwd: options.dir }))
 
     // Group files by example
     const groupedFiles = groupExampleFiles(files)

@@ -33,19 +33,10 @@ export interface ProjectRoutesModule {
 }
 
 export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
-  let loadedCatalogCache: Api.Schema.InputSource.LoadedCatalog | null = null
-
-  const readSchema = async () => {
-    if (loadedCatalogCache === null) {
-      const loadedCatalog = await Effect.runPromise(
-        Schema.loadOrNull(config).pipe(
-          Effect.provide(NodeFileSystem.layer),
-        ),
-      )
-      loadedCatalogCache = loadedCatalog
-    }
-    return loadedCatalogCache
-  }
+  // Create all plugins with their self-contained readers
+  const schemasArea = Schemas(config)
+  const pagesArea = Pages({ config })
+  const examplesArea = Examples({ config, schemaReader: schemasArea.reader })
 
   const plugins: Vite.Plugin[] = []
 
@@ -62,7 +53,8 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
 
   return [
     ...plugins,
-    SchemaAssets(config),
+    examples.plugin,
+    schemaAssets.plugin,
     /**
      * If a `polen*` import is encountered from the user's project, resolve it to the currently
      * running source code of Polen rather than the user's node_modules.
