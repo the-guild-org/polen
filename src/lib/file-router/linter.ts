@@ -23,6 +23,7 @@ export const DiagnosticIndexConflict = Diagnostic.create({
   identifier: 'DiagnosticIndexConflict',
   description: 'Diagnostic for conflicting index and literal file routes',
 })
+export const makeDiagnosticIndexConflict = Diagnostic.createMake(DiagnosticIndexConflict)
 
 export const DiagnosticNumberedPrefixConflict = Diagnostic.create({
   source: 'file-router',
@@ -42,6 +43,7 @@ export const DiagnosticNumberedPrefixConflict = Diagnostic.create({
   identifier: 'DiagnosticNumberedPrefixConflict',
   description: 'Diagnostic for conflicting routes with numbered prefixes',
 })
+export const makeDiagnosticNumberedPrefixConflict = Diagnostic.createMake(DiagnosticNumberedPrefixConflict)
 
 export const DiagnosticNumberedPrefixOnIndex = Diagnostic.create({
   source: 'file-router',
@@ -51,10 +53,13 @@ export const DiagnosticNumberedPrefixOnIndex = Diagnostic.create({
     file: S.Any, // RouteFile
     order: S.Number,
   },
-}).annotations({
-  identifier: 'DiagnosticNumberedPrefixOnIndex',
-  description: 'Diagnostic for numbered prefix on index file that has no effect',
 })
+  .annotations({
+    identifier: 'DiagnosticNumberedPrefixOnIndex',
+    description: 'Diagnostic for numbered prefix on index file that has no effect',
+  })
+
+export const makeDiagnosticNumberedPrefixOnIndex = Diagnostic.createMake(DiagnosticNumberedPrefixOnIndex)
 
 // Union of all file-router diagnostics
 export const FileRouterDiagnostic = S.Union(
@@ -86,7 +91,7 @@ export const lint = (routes: Route[]): LintResult => {
   // ━ Check for numbered prefix on index files
   for (const route of routes) {
     if (routeIsFromIndexFile(route) && route.logical.order !== undefined) {
-      const diagnostic = DiagnosticNumberedPrefixOnIndex.make({
+      const diagnostic = makeDiagnosticNumberedPrefixOnIndex({
         message: `Numbered prefix on index file has no effect. The file:\n  ${
           Path.format(route.file.path.relative)
         }\n\nhas a numbered prefix (${route.logical.order}_) which doesn't affect ordering since index files represent their parent directory.`,
@@ -116,7 +121,7 @@ export const lint = (routes: Route[]): LintResult => {
           ? `Both files have the same order number (${kept.logical.order}). The file processed later is being kept based on processing order.`
           : `The file with lower order number (${dropped.logical.order}) is being dropped in favor of the one with higher order (${kept.logical.order}).`
 
-        const diagnostic = DiagnosticNumberedPrefixConflict.make({
+        const diagnostic = makeDiagnosticNumberedPrefixConflict({
           // dprint-ignore
           message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\n${orderMessage}`,
           kept: {
@@ -139,7 +144,7 @@ export const lint = (routes: Route[]): LintResult => {
       }
 
       // Report
-      const diagnostic = DiagnosticIndexConflict.make({
+      const diagnostic = makeDiagnosticIndexConflict({
         // dprint-ignore
         message: `Your files represent conflicting routes. This index file route:\n  ${Path.format(index.file.path.relative)}\n\nconflicts with this literal file route:\n\n  ${Path.format(literal.file.path.relative)}.\n\nYour index route is being ignored.`,
         literal: {

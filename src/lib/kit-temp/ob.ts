@@ -6,6 +6,12 @@ export type PickWhereValueExtends<$Obj extends object, $Constraint> = {
 
 export type Values<$Obj extends object> = $Obj[keyof $Obj]
 
+export type ReplaceProperty<$Obj extends object, $Key extends keyof $Obj, $NewType> =
+  & Omit<$Obj, $Key>
+  & {
+    [_ in $Key]: $NewType
+  }
+
 export type IsEmpty<$Obj extends object> = keyof $Obj extends never ? true : false
 
 export type KeysArray<$Obj extends object> = Array<keyof $Obj>

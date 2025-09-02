@@ -1,6 +1,7 @@
 import { S } from '#lib/kit-temp/effect'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
+import { Match } from 'effect'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
 
@@ -86,4 +87,4 @@ export const getLatestSchema = (catalog:Catalog): Schema.Schema =>
     CatalogUnversioned: (unversioned) => {
       return unversioned.schema
     },
-  })
+  }))

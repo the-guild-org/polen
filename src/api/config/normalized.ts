@@ -7,8 +7,125 @@ import { packagePaths } from '#package-paths'
 import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
-import { HomeConfig } from './home.js'
 import { BuildArchitecture, ConfigInput } from './input.js'
+
+// ============================================================================
+// Normalized Home Config
+// ============================================================================
+
+/**
+ * Normalized home configuration where all `true` values are expanded to their object forms.
+ * This is the shape after normalization, not the input shape.
+ */
+const HomeConfig = S.Struct({
+  /**
+   * Whether the home page is enabled.
+   */
+  enabled: S.Boolean,
+
+  /**
+   * Hero section - false to disable, object with configuration.
+   * After normalization, `true` is expanded to object with defaults.
+   */
+  hero: S.Union(
+    S.Literal(false),
+    S.Struct({
+      title: S.optional(S.String),
+      tagline: S.optional(S.String),
+      callToActions: S.optional(S.Unknown), // Complex type, using Unknown for now
+      heroImage: S.optional(S.String),
+    }),
+  ),
+
+  /**
+   * Social proof section - false to disable, object with configuration.
+   */
+  socialProof: S.Union(
+    S.Literal(false),
+    S.Struct({
+      title: S.optional(S.String),
+      logos: S.Array(S.Unknown), // Complex type
+    }),
+  ),
+
+  /**
+   * Social media section - false to disable, object with configuration.
+   */
+  socialMedia: S.Union(
+    S.Literal(false),
+    S.Struct({
+      posts: S.Array(S.Unknown), // Complex type
+      displayMode: S.optional(S.Literal('embed', 'screenshot')),
+    }),
+  ),
+
+  /**
+   * Examples section - false to disable, object with configuration.
+   * After normalization, `true` is expanded to object with defaults.
+   */
+  examples: S.Union(
+    S.Literal(false),
+    S.Struct({
+      title: S.optional(S.String),
+      description: S.optional(S.String),
+      maxExamples: S.Number,
+      showExecutionTime: S.Boolean,
+    }),
+  ),
+
+  /**
+   * Quick start section - false to disable, object with configuration.
+   */
+  quickStart: S.Union(
+    S.Literal(false),
+    S.Struct({
+      tabs: S.optional(S.Array(S.Literal('setup', 'examples', 'playground'))),
+      steps: S.optional(S.Array(S.Unknown)), // Complex type
+      languages: S.optional(S.Array(S.String)),
+      playground: S.optional(S.Unknown), // Complex type
+    }),
+  ),
+
+  /**
+   * Stats section - false to disable, object with configuration.
+   */
+  stats: S.Union(
+    S.Literal(false),
+    S.Struct({
+      showSchemaStats: S.optional(S.Boolean),
+      statusEndpoint: S.optional(S.String),
+      customMetrics: S.optional(S.Array(S.Unknown)), // Complex type
+    }),
+  ),
+
+  /**
+   * Changelog section - false to disable, object with configuration.
+   */
+  changelog: S.Union(
+    S.Literal(false),
+    S.Struct({
+      limit: S.optional(S.Number),
+      showVersions: S.optional(S.Boolean),
+    }),
+  ),
+
+  /**
+   * Resources section - false to disable, object with configuration.
+   */
+  resources: S.Union(
+    S.Literal(false),
+    S.Struct({
+      links: S.optional(S.Array(S.Unknown)), // Complex type
+      communityLinks: S.optional(S.Array(S.Unknown)), // Complex type
+      supportContact: S.optional(S.Unknown), // Complex type
+    }),
+  ),
+}).annotations({
+  identifier: 'HomeConfigNormalized',
+  description: 'Normalized home configuration with all boolean shortcuts expanded to their object forms.',
+})
+
+export type HomeConfig = S.Schema.Type<typeof HomeConfig>
 
 // ============================================================================
 // Template Variables
@@ -355,7 +472,6 @@ const getConfigInputDefaults = (): Config => ({
   schema: null,
   examples: {
     display: 'all',
-    validate: true,
   },
   home: {
     enabled: true,
@@ -521,8 +637,8 @@ export const normalizeInput = (
         config.examples.display = examplesInput.display
       }
 
-      if (examplesInput.validate !== undefined) {
-        config.examples.validate = examplesInput.validate
+      if (examplesInput.diagnostics !== undefined) {
+        config.examples.diagnostics = examplesInput.diagnostics
       }
     }
 
@@ -570,12 +686,28 @@ export const normalizeInput = (
 
       // Social proof section
       if (homeInput.socialProof !== undefined) {
-        config.home.socialProof = homeInput.socialProof
+        if (homeInput.socialProof === false) {
+          config.home.socialProof = false
+        } else if (homeInput.socialProof === true) {
+          // When true, we need actual logos data - can't use defaults
+          // So we treat true as false (disabled) since we don't have logos
+          config.home.socialProof = false
+        } else {
+          config.home.socialProof = homeInput.socialProof
+        }
       }
 
       // Social media section
       if (homeInput.socialMedia !== undefined) {
-        config.home.socialMedia = homeInput.socialMedia
+        if (homeInput.socialMedia === false) {
+          config.home.socialMedia = false
+        } else if (homeInput.socialMedia === true) {
+          // When true, we need actual posts data - can't use defaults
+          // So we treat true as false (disabled) since we don't have posts
+          config.home.socialMedia = false
+        } else {
+          config.home.socialMedia = homeInput.socialMedia
+        }
       }
 
       // Examples section
@@ -599,20 +731,64 @@ export const normalizeInput = (
         }
       }
 
+      // Quick start section
       if (homeInput.quickStart !== undefined) {
-        config.home.quickStart = homeInput.quickStart
+        if (homeInput.quickStart === false) {
+          config.home.quickStart = false
+        } else if (homeInput.quickStart === true) {
+          config.home.quickStart = {
+            tabs: ['setup', 'examples', 'playground'],
+            steps: undefined,
+            languages: ['javascript', 'typescript', 'python', 'curl'],
+            playground: undefined,
+          }
+        } else {
+          config.home.quickStart = homeInput.quickStart
+        }
       }
 
+      // Stats section
       if (homeInput.stats !== undefined) {
-        config.home.stats = homeInput.stats
+        if (homeInput.stats === false) {
+          config.home.stats = false
+        } else if (homeInput.stats === true) {
+          config.home.stats = {
+            showSchemaStats: true,
+            statusEndpoint: undefined,
+            customMetrics: undefined,
+          }
+        } else {
+          config.home.stats = homeInput.stats
+        }
       }
 
+      // Changelog section
       if (homeInput.changelog !== undefined) {
-        config.home.changelog = homeInput.changelog
+        if (homeInput.changelog === false) {
+          config.home.changelog = false
+        } else if (homeInput.changelog === true) {
+          config.home.changelog = {
+            limit: 5,
+            showVersions: true,
+          }
+        } else {
+          config.home.changelog = homeInput.changelog
+        }
       }
 
+      // Resources section
       if (homeInput.resources !== undefined) {
-        config.home.resources = homeInput.resources
+        if (homeInput.resources === false) {
+          config.home.resources = false
+        } else if (homeInput.resources === true) {
+          config.home.resources = {
+            links: undefined,
+            communityLinks: undefined,
+            supportContact: undefined,
+          }
+        } else {
+          config.home.resources = homeInput.resources
+        }
       }
     } else {
       // No home config provided, apply smart defaults for hero

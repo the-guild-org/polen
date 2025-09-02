@@ -89,10 +89,11 @@ describe('extending DiagnosticBase', () => {
         lineNumber: S.Number,
       },
     })
+    const makeCustomDiagnostic = Diagnostic.createMake(CustomDiagnostic)
 
     type CustomDiagnostic = S.Schema.Type<typeof CustomDiagnostic>
 
-    const diagnostic = CustomDiagnostic.make({
+    const diagnostic = makeCustomDiagnostic({
       message: 'Custom error occurred',
       customField: 'extra data',
       lineNumber: 42,
@@ -103,6 +104,6 @@ describe('extending DiagnosticBase', () => {
     expect(S.is(CustomDiagnostic)(diagnostic)).toBe(true)
 
     // Type assertion to ensure it's assignable to base
-    Ts.assertSub<Diagnostic.DiagnosticBase>()(diagnostic)
+    Ts.assertSub<Diagnostic.Diagnostic>()(diagnostic)
   })
 })

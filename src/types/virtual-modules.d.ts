@@ -4,7 +4,7 @@ declare module 'virtual:polen/vite/client/manifest' {
 }
 
 declare module 'virtual:polen/template/variables' {
-  export const templateVariables: import('#api/config/configurator').TemplateVariables
+  export const templateVariables: import('#api/config/normalized').TemplateVariables
 }
 
 declare module 'virtual:polen/project/routes.jsx' {
@@ -46,7 +46,7 @@ declare module 'virtual:polen/project/assets/logo.svg' {
 }
 
 declare module 'virtual:polen/template/home-config' {
-  export const homeConfig: import('#api/config/home').HomeConfig
+  export const homeConfig: import('#api/config/normalized').HomeConfig
 }
 
 declare module 'virtual:polen/project/examples' {

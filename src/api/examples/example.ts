@@ -1,18 +1,16 @@
 import { S } from '#lib/kit-temp/effect'
-import { Order } from 'effect'
+import { Version } from '#lib/version/$'
+import { Match, Order } from 'effect'
+import * as UnversionedExample from './unversioned.js'
+import * as VersionedExample from './versioned.js'
 
 // ============================================================================
 // Schema - Example
 // ============================================================================
 
-export const Example = S.Struct({
-  id: S.String,
-  path: S.String,
-  versions: S.Array(S.String),
-  content: S.Record({ key: S.String, value: S.String }),
-}).annotations({
+export const Example = S.Union(VersionedExample.VersionedExample, UnversionedExample.UnversionedExample).annotations({
   identifier: 'Example',
-  description: 'A GraphQL example with versioned content',
+  description: 'A GraphQL example that can be either versioned or unversioned',
 })
 
 export type Example = S.Schema.Type<typeof Example>
@@ -21,7 +19,7 @@ export type Example = S.Schema.Type<typeof Example>
 // Constructors
 // ============================================================================
 
-export const make = Example.make
+// Note: No make constructor for union types - use member constructors
 
 // ============================================================================
 // Ordering
@@ -29,7 +27,7 @@ export const make = Example.make
 
 export const order: Order.Order<Example> = Order.mapInput(
   Order.string,
-  (example: Example) => example.id,
+  (example: Example) => example.name,
 )
 
 // ============================================================================
@@ -45,24 +43,26 @@ export const equivalent = S.equivalence(Example)
 export const is = S.is(Example)
 
 // ============================================================================
-// State Predicates
-// ============================================================================
-
-export const hasDefaultOnly = (example: Example): boolean =>
-  example.versions.length === 1 && example.versions[0] === 'default'
-
-export const hasVersions = (example: Example): boolean =>
-  example.versions.length > 1 || (example.versions.length === 1 && example.versions[0] !== 'default')
-
-export const isUnused = (example: Example, usedVersions: string[]): boolean => {
-  const unusedVersions = example.versions.filter(v => !usedVersions.includes(v))
-  return unusedVersions.length === example.versions.length
-}
-
-// ============================================================================
 // Codec
 // ============================================================================
 
 export const decode = S.decode(Example)
 export const decodeSync = S.decodeSync(Example)
 export const encode = S.encode(Example)
+
+// ============================================================================
+// Domain Logic
+// ============================================================================
+
+/**
+ * Get the best available document content for an example.
+ * For versioned examples, prefers default document if present.
+ * For unversioned examples, returns the single document.
+ */
+export const getBestDocument = (example: Example): string | undefined =>
+  Match.value(example).pipe(
+    Match.tagsExhaustive({
+      ExampleUnversioned: (e) => e.document,
+      ExampleVersioned: VersionedExample.getBestDocument,
+    }),
+  )

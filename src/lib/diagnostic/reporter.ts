@@ -1,12 +1,12 @@
 import { Group } from '@wollybeard/kit'
-import type { DiagnosticBase } from './diagnostic.js'
+import type { Diagnostic } from './diagnostic.js'
 import { Severity } from './severity.js'
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-const getIcon = (severity: DiagnosticBase['severity']): string => {
+const getIcon = (severity: Diagnostic['severity']): string => {
   switch (severity) {
     case Severity.enums.error:
       return '✗'
@@ -17,7 +17,7 @@ const getIcon = (severity: DiagnosticBase['severity']): string => {
   }
 }
 
-const formatSummary = (diagnostics: DiagnosticBase[]): string => {
+const formatSummary = (diagnostics: Diagnostic[]): string => {
   const errors = diagnostics.filter(d => d.severity === Severity.enums.error)
   const warnings = diagnostics.filter(d => d.severity === Severity.enums.warning)
   const infos = diagnostics.filter(d => d.severity === Severity.enums.info)
@@ -54,7 +54,7 @@ const formatSummary = (diagnostics: DiagnosticBase[]): string => {
  * report(diagnostics)
  * ```
  */
-export const report = (diagnostics: DiagnosticBase[]): void => {
+export const report = (diagnostics: Diagnostic[]): void => {
   if (diagnostics.length === 0) return
 
   // Group diagnostics by source using kit's Group.by

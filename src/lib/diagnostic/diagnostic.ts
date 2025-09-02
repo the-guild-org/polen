@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { EffectKit, S } from '#lib/kit-temp/effect'
 import * as SeverityModule from './severity.js'
 
 // ============================================================================
@@ -26,7 +26,7 @@ import * as SeverityModule from './severity.js'
  * )
  * ```
  */
-export const DiagnosticBase = S.Struct({
+export const Diagnostic = S.Struct({
   /**
    * Level 1: Identifies this as a diagnostic.
    * All diagnostics must have this tag.
@@ -60,7 +60,7 @@ export const DiagnosticBase = S.Struct({
   description: 'Base diagnostic structure with three-level hierarchy',
 })
 
-export type DiagnosticBase = S.Schema.Type<typeof DiagnosticBase>
+export type Diagnostic = S.Schema.Type<typeof Diagnostic>
 
 // ============================================================================
 // Helpers
@@ -85,128 +85,57 @@ export type DiagnosticBase = S.Schema.Type<typeof DiagnosticBase>
  * ```
  */
 export const create = <
-  Source extends string,
-  Name extends string,
-  Severity extends 'error' | 'warning' | 'info' | undefined = undefined,
-  Context extends S.Struct.Fields = {},
+  source extends string,
+  name extends string,
+  severity extends SeverityModule.Severity | undefined = undefined,
+  context extends S.Struct.Fields = {},
 >(
-  config: {
-    source: Source
-    name: Name
-    severity?: Severity
-    context?: Context
+  params: {
+    source: source
+    name: name
+    severity?: severity
+    context?: context
   },
-):
-  & Omit<
-    S.Struct<
-      {
-        _tag: typeof S.Literal<['Diagnostic']>
-        source: typeof S.Literal<[Source]>
-        name: typeof S.Literal<[Name]>
-        severity: Severity extends string ? typeof S.Literal<[Severity]> : typeof SeverityModule.Severity
-        message: typeof S.String
-      } & Context
-    >,
-    'make'
-  >
+): S.Struct<
+  & Omit<EffectKit.Schema.Struct.ExtractFields<typeof Diagnostic>, 'name' | 'source' | 'severity'>
   & {
-    make: (
-      fields: { message: string } & (Context extends {} ? S.Struct.Type<Context> : {}),
-    ) => S.Struct.Type<
-      S.Struct<
-        {
-          _tag: typeof S.Literal<['Diagnostic']>
-          source: typeof S.Literal<[Source]>
-          name: typeof S.Literal<[Name]>
-          severity: Severity extends string ? typeof S.Literal<[Severity]> : typeof SeverityModule.Severity
-          message: typeof S.String
-        } & Context
-      >
-    >
-  } =>
-{
-  // Build the complete fields, merging with defaults
-  const baseFields = {
-    _tag: S.Literal('Diagnostic'),
-    source: S.Literal(config.source),
-    name: S.Literal(config.name),
-    severity: config.severity ? S.Literal(config.severity) : SeverityModule.Severity,
-    message: S.String,
+    name: S.Literal<[name]>
+    source: S.Literal<[source]>
+    severity: severity extends string ? S.Literal<[severity]>
+      : EffectKit.Schema.Struct.ExtractFields<typeof Diagnostic>['severity']
   }
+  & context
+> => {
+  return S.Struct({
+    ...Diagnostic.fields,
+    source: S.Literal(params.source),
+    name: S.Literal(params.name),
+    ...(params.severity ? { severity: S.Literal(params.severity) } : {}),
+    ...params.context,
+  }) as any
+}
 
-  const completeFields = config.context
-    ? { ...baseFields, ...config.context }
-    : baseFields
-
-  const schema = S.Struct(completeFields)
-
-  // Create custom make function
-  const customMake = (fields: any) => {
-    const fullFields = {
-      _tag: 'Diagnostic' as const,
-      source: config.source,
-      name: config.name,
-      ...(config.severity ? { severity: config.severity } : { severity: fields.severity || 'info' }),
+export const createMake = <diagnostic extends S.TaggedStruct<any, any>>(
+  diagnostic: diagnostic,
+): EffectKit.Schema.ConstructorUsingOmitLiteral1Algo<diagnostic> => {
+  return (fields: object) => {
+    return diagnostic.make({
+      ...EffectKit.Schema.getLiteral1Fields(diagnostic),
       ...fields,
-    }
-    return schema.make(fullFields)
+    }) as any
   }
-
-  // Return a new object that spreads the schema but replaces make
-  const diagnosticSchema = Object.assign(Object.create(Object.getPrototypeOf(schema)), schema, {
-    make: customMake,
-    // Override annotations to preserve custom make
-    annotations: function(annotations: any) {
-      const newSchema = schema.annotations(annotations)
-      return Object.assign(Object.create(Object.getPrototypeOf(newSchema)), newSchema, {
-        make: customMake,
-      })
-    },
-  })
-
-  return diagnosticSchema as any
 }
 
 // ============================================================================
 // Codec
 // ============================================================================
 
-export const decode = S.decode(DiagnosticBase)
-export const decodeSync = S.decodeSync(DiagnosticBase)
-export const encode = S.encode(DiagnosticBase)
+export const decode = S.decode(Diagnostic)
+export const decodeSync = S.decodeSync(Diagnostic)
+export const encode = S.encode(Diagnostic)
 
 // ============================================================================
 // Type Guards
 // ============================================================================
 
-export const is = S.is(DiagnosticBase)
-
-/**
- * Check if a value is any diagnostic (Level 1).
- */
-export const isDiagnostic = (value: unknown): value is DiagnosticBase => is(value)
-
-/**
- * Check if a diagnostic is from a specific source (Level 2).
- */
-export const isFromSource = (diagnostic: DiagnosticBase, source: string): boolean => diagnostic.source === source
-
-/**
- * Check if a diagnostic has a specific name (Level 3).
- */
-export const isNamed = (diagnostic: DiagnosticBase, name: string): boolean => diagnostic.name === name
-
-/**
- * Check if a diagnostic is from a source and has a specific name.
- */
-export const isSpecific = (diagnostic: DiagnosticBase, source: string, name: string): boolean =>
-  diagnostic.source === source && diagnostic.name === name
-
-export const isError = (diagnostic: DiagnosticBase): boolean =>
-  diagnostic.severity === SeverityModule.Severity.enums.error
-
-export const isWarning = (diagnostic: DiagnosticBase): boolean =>
-  diagnostic.severity === SeverityModule.Severity.enums.warning
-
-export const isInfo = (diagnostic: DiagnosticBase): boolean =>
-  diagnostic.severity === SeverityModule.Severity.enums.info
+export const is = S.is(Diagnostic)
