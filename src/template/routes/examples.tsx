@@ -1,4 +1,5 @@
 import type { Content } from '#api/content/$'
+import { getBestDocument } from '#api/examples/example'
 import { Catalog } from '#lib/catalog'
 import { route } from '#lib/react-router-effect/route'
 import { Box, Flex, Heading, Section, Text } from '@radix-ui/themes'
@@ -57,10 +58,13 @@ const Component = () => {
   // Highlight the selected example code
   React.useEffect(() => {
     const highlightCode = async () => {
-      if (!selectedExample?.document) return
+      if (!selectedExample) return
+
+      const document = getBestDocument(selectedExample)
+      if (!document) return
 
       const highlighted = await highlight(
-        { value: selectedExample.document, lang: 'graphql', meta: 'interactive' },
+        { value: document, lang: 'graphql', meta: 'interactive' },
         { theme: 'github-light' },
       )
       setHighlightedExample(highlighted)
@@ -71,9 +75,10 @@ const Component = () => {
     }
   }, [selectedExample])
 
-  // Check if this is a versioned example (for now just check if document contains version comment)
-  const isVersioned = selectedExample?.document?.includes('# Version:')
-    || selectedExample?.document?.includes('// Version:') || false
+  // Check if this is a versioned example
+  const document = selectedExample ? getBestDocument(selectedExample) : null
+  const isVersioned = document?.includes('# Version:')
+    || document?.includes('// Version:') || false
 
   return (
     <Flex gap='0' style={{ minHeight: '100vh' }}>

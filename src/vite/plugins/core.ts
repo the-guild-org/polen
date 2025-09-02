@@ -186,22 +186,22 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
 
             debug(`load`, { id: viProjectData.id })
 
-            const loadedCatalog = await Effect.runPromise(
+            const loadedSchemaCatalog = await Effect.runPromise(
               schemasArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
             )
 
             const navbar: NavbarItem[] = []
 
             // ━ Examples presence causes adding navbar item
-            const examplesData = await Effect.runPromise(
+            const loadedExamplesCatalog = await Effect.runPromise(
               examplesArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
             )
-            if (examplesData?.examples && examplesData.examples.length > 0) {
+            if (loadedExamplesCatalog.catalog.examples.length > 0) {
               navbar.push({ pathExp: '/examples', title: 'Examples', position: 'left' })
             }
 
             // ━ Schema presence causes adding some navbar items
-            if (loadedCatalog?.data) {
+            if (loadedSchemaCatalog?.data) {
               // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
               // Without the leading slash, React Router treats paths as relative, which causes
               // hydration mismatches between SSR (where base path is prepended) and client
@@ -209,7 +209,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
               const referencePath = Api.Schema.Routing.createReferenceBasePath()
               navbar.push({ pathExp: referencePath, title: `Reference`, position: 'left' })
               // Check if we have revisions to show changelog
-              const catalog = loadedCatalog.data as Catalog.Catalog
+              const catalog = loadedSchemaCatalog.data as Catalog.Catalog
               const hasMultipleRevisions = Catalog.fold(
                 (versioned) => {
                   // For versioned catalogs, count total revisions across all entries

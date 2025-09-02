@@ -49,4 +49,4 @@ Bare exports within the Polen namespace [see /](#/‌).
 
 ## /components
 
-Polen provides React components for use in MDX pages. Learn more at [Pages](/guides/features/pages).
+Polen provides React components for use in MDX pages. Learn more at [Arbitrary Pages](/guides/features/arbitrary-pages).

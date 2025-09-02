@@ -316,12 +316,6 @@ const ExamplesSection = S.Struct({
    */
   maxExamples: S.optional(S.Number),
   /**
-   * Show execution times for examples when available.
-   *
-   * @default false
-   */
-  showExecutionTime: S.optional(S.Boolean),
-  /**
    * Title for the examples section.
    *
    * @default 'API Examples'
@@ -333,6 +327,16 @@ const ExamplesSection = S.Struct({
    * @default 'Explore common queries and mutations for our GraphQL API'
    */
   description: S.optional(S.String),
+  /**
+   * Only show specific examples by name.
+   * When specified, only these examples will be shown on the home page.
+   */
+  only: S.optional(S.Array(S.String)),
+  /**
+   * Exclude specific examples by name.
+   * These examples will not be shown on the home page.
+   */
+  exclude: S.optional(S.Array(S.String)),
 }).annotations({
   identifier: 'ExamplesSectionConfig',
   description: 'Configuration for the examples section on the home page.',

@@ -69,7 +69,8 @@ const HomeConfig = S.Struct({
       title: S.optional(S.String),
       description: S.optional(S.String),
       maxExamples: S.Number,
-      showExecutionTime: S.Boolean,
+      only: S.optional(S.Array(S.String)),
+      exclude: S.optional(S.Array(S.String)),
     }),
   ),
 
@@ -487,7 +488,8 @@ const getConfigInputDefaults = (): Config => ({
       title: undefined,
       description: undefined,
       maxExamples: 3,
-      showExecutionTime: false,
+      only: undefined,
+      exclude: undefined,
     },
     quickStart: false,
     stats: false,
@@ -719,14 +721,16 @@ export const normalizeInput = (
             title: undefined,
             description: undefined,
             maxExamples: 3,
-            showExecutionTime: false,
+            only: undefined,
+            exclude: undefined,
           }
         } else {
           config.home.examples = {
             title: homeInput.examples.title,
             description: homeInput.examples.description,
             maxExamples: homeInput.examples.maxExamples ?? 3,
-            showExecutionTime: homeInput.examples.showExecutionTime ?? false,
+            only: homeInput.examples.only,
+            exclude: homeInput.examples.exclude,
           }
         }
       }

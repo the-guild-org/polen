@@ -1,0 +1,13 @@
+query GetPokemonV2 {
+  pokemon(name: "pikachu") {
+    id
+    name
+    types
+    stats {
+      hp
+      attack
+      defense
+      speed
+    }
+  }
+}

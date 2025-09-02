@@ -1,0 +1,8 @@
+query GetPokemon {
+  pokemon(name: "pikachu") {
+    id
+    name
+    types
+    # Basic info suitable for all API versions
+  }
+}

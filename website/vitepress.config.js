@@ -41,12 +41,30 @@ export default defineConfig({
           text: 'Features',
           items: [
             { text: 'Home Page', link: '/guides/features/home-page' },
-            { text: 'Hero Image', link: '/guides/features/hero-image' },
-            { text: 'Pages', link: '/guides/features/pages' },
-            { text: 'Schema Overview', link: '/guides/features/schema-overview' },
-            { text: 'Schema Augmentations', link: '/guides/features/schema-augmentations' },
-            { text: 'Schema Reference', link: '/guides/features/schema-reference' },
-            { text: 'Schema Changelog', link: '/guides/features/schema-changelog' },
+            {
+              text: 'Arbirary Pages',
+              link: '/guides/features/arbitrary-pages',
+            },
+            {
+              text: 'Schema Overview',
+              link: '/guides/features/schema-overview',
+            },
+            {
+              text: 'Schema Augmentations',
+              link: '/guides/features/schema-augmentations',
+            },
+            {
+              text: 'Schema Reference',
+              link: '/guides/features/schema-reference',
+            },
+            {
+              text: 'Examples',
+              link: '/guides/features/examples',
+            },
+            {
+              text: 'Schema Changelog',
+              link: '/guides/features/schema-changelog',
+            },
             { text: 'Navbar', link: '/guides/features/navbar' },
             { text: 'Logo', link: '/guides/features/logo' },
             { text: 'Configuration', link: '/guides/features/configuration' },
@@ -65,7 +83,9 @@ export default defineConfig({
         },
         {
           text: 'Deployment (SSR)',
-          items: [{ text: 'Overview', link: '/guides/deployment-ssr/overview' }],
+          items: [
+            { text: 'Overview', link: '/guides/deployment-ssr/overview' },
+          ],
         },
         {
           text: 'Reference',

@@ -1,8 +1,8 @@
-# Pages
+# Arbitrary Pages
 
 ## Introduction
 
-You can add pages to your developer portal by adding markdown (`.md`) or MDX (`.mdx`) files to a `pages` directory.
+You can add pages to your developer portal by adding markdown (`.md`) or MDX (`.mdx`) files to an `arbitrary-pages` directory.
 
 ## Frontmatter
 
@@ -21,7 +21,7 @@ Available fields:
 ## Routing
 
 - A file becomes a page.
-- The relative (to `pages` directory) file path becomes the web path.
+- The relative (to `arbitrary-pages` directory) file path becomes the web path.
 - _Navigation Bar_
   - Top level pages are listed in the navigation bar.
   - Titles are auto-generated from the URL segment using title case (e.g., `get-started` → `Get Started`)
@@ -35,14 +35,14 @@ Available fields:
 
 Example:
 
-| File                  | Route      | Navigation Bar Title |
-| --------------------- | ---------- | -------------------- |
-| `pages/foo.md`        | `/foo`     | `Foo`                |
-| `pages/foo.mdx`       | `/foo`     | `Foo`                |
-| `pages/foo/index.md`  | `/foo`     | `Foo`                |
-| `pages/foo/index.mdx` | `/foo`     | `Foo`                |
-| `pages/foo/bar.md`    | `/foo/bar` | -                    |
-| `pages/foo/bar.mdx`   | `/foo/bar` | -                    |
+| File                            | Route      | Navigation Bar Title |
+| ------------------------------- | ---------- | -------------------- |
+| `arbitrary-pages/foo.md`        | `/foo`     | `Foo`                |
+| `arbitrary-pages/foo.mdx`       | `/foo`     | `Foo`                |
+| `arbitrary-pages/foo/index.md`  | `/foo`     | `Foo`                |
+| `arbitrary-pages/foo/index.mdx` | `/foo`     | `Foo`                |
+| `arbitrary-pages/foo/bar.md`    | `/foo/bar` | -                    |
+| `arbitrary-pages/foo/bar.mdx`   | `/foo/bar` | -                    |
 
 Note: Only top-level pages appear in the navigation bar. Nested pages (like `foo/bar.md`) are accessible via the sidebar when viewing pages in the same section.
 

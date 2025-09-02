@@ -1,6 +1,7 @@
 import { Catalog } from '#lib/catalog'
 import { routeIndex } from '#lib/react-router-effect/react-router-effect'
 import { Box } from '@radix-ui/themes'
+import * as React from 'react'
 import { examplesCatalog } from 'virtual:polen/project/examples'
 import { homeConfig } from 'virtual:polen/template/home-config'
 import { ExamplesSection } from '../components/home/ExamplesSection.js'
@@ -22,6 +23,34 @@ const Component = () => {
   //   return null
   // }
 
+  // Filter examples based on home config
+  const filteredExamples = React.useMemo(() => {
+    // Early return if examples is disabled or not configured
+    if (homeConfig.examples === false || !homeConfig.examples) {
+      return examplesCatalog.examples
+    }
+
+    // At this point, TypeScript knows homeConfig.examples is the object type
+    const examplesConfig = homeConfig.examples
+    let examples = [...examplesCatalog.examples]
+
+    // Apply 'only' filter if specified
+    if (examplesConfig.only && examplesConfig.only.length > 0) {
+      examples = examples.filter(
+        example => examplesConfig.only!.includes(example.name),
+      )
+    }
+
+    // Apply 'exclude' filter if specified
+    if (examplesConfig.exclude && examplesConfig.exclude.length > 0) {
+      examples = examples.filter(
+        example => !examplesConfig.exclude!.includes(example.name),
+      )
+    }
+
+    return examples
+  }, [homeConfig.examples])
+
   return (
     <Box>
       {homeConfig.hero !== false && (
@@ -38,9 +67,9 @@ const Component = () => {
         />
       )}
       {homeConfig.quickStart !== false && <QuickStartSection />}
-      {examplesCatalog.examples.length > 0 && schema && (
+      {homeConfig.examples !== false && filteredExamples.length > 0 && schema && (
         <ExamplesSection
-          catalog={examplesCatalog}
+          examples={filteredExamples}
           schema={schema.definition}
           {...(typeof homeConfig.examples === 'object'
             ? Object.fromEntries(
@@ -48,7 +77,6 @@ const Component = () => {
                 title: homeConfig.examples.title,
                 description: homeConfig.examples.description,
                 maxExamples: homeConfig.examples.maxExamples,
-                showExecutionTime: homeConfig.examples.showExecutionTime,
               }).filter(([_, v]) => v !== undefined),
             )
             : {})}

@@ -21,6 +21,8 @@ features:
     details: Automatically generate a beautiful interactive reference from your GraphQL schema.
   - title: Schema Changelog
     details: Track schema evolution over time with automatically generated changelogs showing additions, removals, and modifications.
+  - title: Query Examples
+    details: Auto-discovered GraphQL examples displayed as interactive tabbed code blocks with validation.
   - title: Content
     details: Create custom documentation pages using MDX with full React component support and GraphQL-aware components.
   - title: Multiple Build Architectures
