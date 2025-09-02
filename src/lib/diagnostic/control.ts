@@ -1,4 +1,5 @@
 import { S } from '#lib/kit-temp/effect'
+import type { Diagnostic } from './diagnostic.js'
 import { Severity } from './severity.js'
 
 // ============================================================================
@@ -53,6 +54,41 @@ export type Control = S.Schema.Type<typeof Control>
 // ============================================================================
 
 /**
+ * Filters diagnostics based on control settings and adjusts their severity.
+ *
+ * @param diagnostics - Array of diagnostics to filter
+ * @param getControl - Function to get the control setting for a diagnostic
+ * @param phase - Current phase (dev or build)
+ * @returns Filtered diagnostics with adjusted severity
+ */
+export const applyControl = <T extends Diagnostic>(
+  diagnostics: T[],
+  getControl: (diagnostic: T) => Control | boolean | undefined,
+  phase: Phase = 'dev',
+): T[] => {
+  return diagnostics.filter(diagnostic => {
+    const control = getControl(diagnostic)
+
+    // Get effective settings for this phase
+    const settings = getEffetivePhaseSettings(
+      control,
+      phase,
+      { enabled: true, severity: diagnostic.severity },
+    )
+
+    if (!settings.enabled) {
+      return false // Filter out disabled diagnostics
+    } // Override severity based on control settings
+
+    ;(diagnostic as any).severity = settings.severity
+
+    return true
+  })
+}
+
+export type Phase = 'dev' | 'build'
+
+/**
  * Get effective settings for a specific phase.
  * Call sites provide their own defaults for each diagnostic type.
  *
@@ -61,9 +97,9 @@ export type Control = S.Schema.Type<typeof Control>
  * @param defaults - Default settings to use when not specified
  * @returns Effective enabled state and severity for the phase
  */
-export const getPhaseSettings = (
+export const getEffetivePhaseSettings = (
   control: Control | boolean | undefined,
-  phase: 'dev' | 'build',
+  phase: Phase,
   defaults: {
     enabled: boolean
     severity: Severity

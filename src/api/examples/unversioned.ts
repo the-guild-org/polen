@@ -31,8 +31,7 @@ export const is = S.is(UnversionedExample)
 // State Predicates
 // ============================================================================
 
-export const isEmpty = (example: UnversionedExample): boolean =>
-  example.document.trim().length === 0
+export const isEmpty = (example: UnversionedExample): boolean => example.document.trim().length === 0
 
 // ============================================================================
 // Codec
@@ -50,5 +49,4 @@ export const encode = S.encode(UnversionedExample)
  * Get the document content.
  * For consistency with VersionedExample API.
  */
-export const getDocument = (example: UnversionedExample): string =>
-  example.document
+export const getDocument = (example: UnversionedExample): string => example.document

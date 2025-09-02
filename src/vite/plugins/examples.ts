@@ -1,30 +1,12 @@
-// TODO: MAJOR REFACTOR NEEDED - DRY Principle Violation
-// This file shares significant duplicate code patterns with pages.ts:
-// - Similar file watching logic
-// - Similar cache invalidation patterns
-// - Similar virtual module handling
-// - Similar diagnostic reporting
-// - Similar hot reload triggers
-//
-// Consider extracting shared functionality into a common base plugin factory
-// or shared utilities for:
-// - File system watching with cache invalidation
-// - Virtual module management
-// - Diagnostic collection and reporting
-// - Hot reload coordination
-
 import { Examples as ExamplesModule } from '#api/examples/$'
 import { generateExampleTypes } from '#api/examples/type-generator'
-import { validateExamples } from '#api/examples/validator'
 import type { Api } from '#api/index'
-import { Schema } from '#api/schema/$'
-import { Catalog } from '#lib/catalog/$'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { Version } from '#lib/version/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
+import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Effect } from 'effect'
 import * as Path from 'node:path'
@@ -35,16 +17,10 @@ const debug = debugPolen.sub(`vite-examples`)
 // Virtual modules provided by this plugin
 export const viProjectExamples = polenVirtual([`project`, `examples`])
 
-// Using .js extension as a workaround for Rolldown's requirement that virtual modules
-// return JavaScript code (export default) rather than pure JSON
-export const viProjectExamplesCatalog = polenVirtual([`project`, `data`, `examples-catalog.js`], {
-  allowPluginProcessing: true,
-})
-
 export interface Options {
   config: Api.Config.Config
   // todo: get type ref via import from SOT
-  schemaReader?: AssetReader<Api.Schema.InputSource.LoadedCatalog | null, any, any>
+  schemaReader: AssetReader<Api.Schema.InputSource.LoadedCatalog | null, any, any>
 }
 
 export interface ProjectExamplesCatalog {
@@ -56,158 +32,149 @@ export interface ProjectExamplesCatalog {
  */
 export const Examples = ({
   config,
-  schemaVersions,
-}: Options): Vite.Plugin => {
+  schemaReader,
+}: Options) => {
+  const debug = debugPolen.sub(`vite-examples`)
   const examplesDir = Path.join(config.paths.project.rootDir, 'examples')
 
   // Track last generated example names to detect changes
   let lastGeneratedExampleNames: string[] | null = null
 
-  const scanExamples: (() => Promise<ExamplesModule.ScanResult>) & { clear: () => void } = Cache.memoize(
-    debug.trace(async function scanExamples(): Promise<ExamplesModule.ScanResult> {
-      const result = await Effect.runPromise(
-        ExamplesModule.scan({
-          dir: examplesDir,
-          schemaVersions,
-        }).pipe(
-          Effect.provide(NodeFileSystem.layer),
-        ),
-      )
+  const reader = createAssetReader<ExamplesModule.ScanResult, Error, FileSystem.FileSystem>(() => {
+    return Effect.gen(function*() {
+      const loadedCatalog = yield* schemaReader.read()
+
+      const scanResult = yield* ExamplesModule.scan({
+        dir: examplesDir,
+        catalog: loadedCatalog?.data as any ?? undefined,
+      })
 
       // Generate TypeScript types if examples have changed
-      const currentExampleNames = result.examples.map(e => e.id).sort()
+      const currentExampleNames = scanResult.examples.map(e => e.name).sort()
       const exampleNamesChanged = lastGeneratedExampleNames === null
         || currentExampleNames.length !== lastGeneratedExampleNames.length
         || currentExampleNames.some((id, i) => id !== lastGeneratedExampleNames![i])
 
       if (exampleNamesChanged) {
         debug(`Examples changed, regenerating types`)
-        await Effect.runPromise(
-          generateExampleTypes(result.examples, config.paths.project.rootDir).pipe(
-            Effect.provide(NodeFileSystem.layer),
-          ),
-        )
+        yield* generateExampleTypes(scanResult.examples, config.paths.project.rootDir)
         lastGeneratedExampleNames = currentExampleNames
       }
 
-      return result
-    }),
-  ) as any
+      debug('Found examples', { count: scanResult.examples.length })
+      return scanResult
+    })
+  })
 
-  const invalidateVirtualModules = (server: Vite.ViteDevServer) => {
-    const catalogModule = server.moduleGraph.getModuleById(viProjectExamplesCatalog.id)
-    if (catalogModule) {
-      server.moduleGraph.invalidateModule(catalogModule)
-      debug(`Invalidated examples catalog virtual module`)
+  const scanExamples = async () => {
+    return await Effect.runPromise(
+      reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+    )
+  }
+
+  // Map diagnostic to its control configuration
+  const getControlForDiagnostic = (diagnostic: ExamplesModule.Diagnostic) => {
+    if (diagnostic.source === 'examples-scanner') {
+      switch (diagnostic.name) {
+        case 'unused-default':
+          return config.examples.diagnostics?.unusedVersions
+        case 'duplicate-content':
+          return config.examples.diagnostics?.duplicateContent
+        case 'missing-versions':
+          return config.examples.diagnostics?.missingVersions
+      }
+    } else if (diagnostic.source === 'examples-validation') {
+      return config.examples.diagnostics?.validation
     }
+    return undefined
+  }
 
   // Apply DiagnosticControl filtering and report diagnostics
   const reportDiagnostics = (
     diagnostics: ExamplesModule.Diagnostic[],
     phase: 'dev' | 'build' = 'dev',
   ) => {
-    // Filter diagnostics based on DiagnosticControl settings
-    const filteredDiagnostics = diagnostics.filter(diagnostic => {
-      // Get the diagnostic control for this diagnostic type
-      let control: any = undefined
-
-      if (diagnostic.source === 'examples-scanner') {
-        switch (diagnostic.name) {
-          case 'unused-default':
-            control = config.examples.diagnostics?.unusedVersions
-            break
-          case 'duplicate-content':
-            control = config.examples.diagnostics?.duplicateContent
-            break
-          case 'missing-versions':
-            control = config.examples.diagnostics?.missingVersions
-            break
-        }
-      } else if (diagnostic.source === 'examples-validation') {
-        control = config.examples.diagnostics?.validation
-      }
-
-      // Get effective settings for this phase
-      const settings = Diagnostic.getPhaseSettings(
-        control,
-        phase,
-        { enabled: true, severity: diagnostic.severity }, // Use diagnostic's default severity
-      )
-
-      if (!settings.enabled) {
-        return false // Filter out disabled diagnostics
-      } // Override severity based on control settings
-
-      ;(diagnostic as any).severity = settings.severity
-
-      return true
-    })
-
-    // Report the filtered diagnostics
-    if (filteredDiagnostics.length > 0) {
-      Diagnostic.report(filteredDiagnostics)
-    }
+    Diagnostic.filterAndReport(diagnostics, getControlForDiagnostic, phase)
   }
 
-  return {
-    name: `polen:examples`,
-
-    // Dev server configuration
-    configureServer(server) {
-      // Add examples directory to watcher if it exists
-      if (examplesDir) {
-        debug(`configureServer: watch examples directory`, examplesDir)
-        server.watcher.add(examplesDir)
-
-        // Handle file additions and deletions
-        const handleFileStructureChange = async (file: string, event: `add` | `unlink`) => {
-          if (!file.includes(examplesDir)) return
-          if (!file.endsWith('.graphql') && !file.endsWith('.gql')) return
-
-          debug(`Example file ${event === `add` ? `added` : `deleted`}:`, file)
-
-          // Clear cache and rescan
-          scanExamples.clear()
-          const newScanResult = await scanExamples()
-
-          // Invalidate virtual modules
-          invalidateVirtualModules(server)
-
-          // Report any diagnostics
-          Diagnostic.report(newScanResult.diagnostics)
-
-          // Trigger full reload to ensure routes are updated
-          server.ws.send({ type: `full-reload` })
-        }
-
-        server.watcher.on(`add`, (file) => handleFileStructureChange(file, `add`))
-        server.watcher.on(`unlink`, (file) => handleFileStructureChange(file, `unlink`))
-      }
-
-    resolveId(id) {
-      if (id === viProjectExamplesCatalog.id) {
-        return viProjectExamplesCatalog.resolved
-      }
-    },
-
-    load: {
-      async handler(id) {
-        if (id !== viProjectExamplesCatalog.resolved) return
-        debug(`hook load`)
-
-        const scanResult = await scanExamples()
-
-        Diagnostic.report(scanResult.diagnostics)
-        debug(`found examples`, { count: scanResult.examples.length })
-
-        const projectExamplesCatalog: ProjectExamplesCatalog = {
-          examples: scanResult.examples,
-        }
-
-        // Rolldown requires virtual modules to return JavaScript code with exports,
-        // not pure JSON. This is why we use .js extension for the virtual module.
-        return `export default ${JSON.stringify(projectExamplesCatalog)}`
+  const plugins = [
+    ViteReactive.ReactiveAssetPlugin({
+      name: 'examples',
+      reader,
+      filePatterns: {
+        watch: [examplesDir],
+        isRelevant: (file) => {
+          return file.includes(examplesDir) && (file.endsWith('.graphql') || file.endsWith('.gql'))
+        },
       },
+      dependentVirtualModules: [viProjectExamples],
+      hooks: {
+        async shouldFullReload() {
+          // Always trigger full reload for examples changes
+          return true
+        },
+        async onDiagnostics(data) {
+          // Report diagnostics with DiagnosticControl filtering
+          reportDiagnostics(data.diagnostics, 'dev')
+        },
+      },
+    }),
+    {
+      name: 'polen:examples-virtual',
+      ...ViteVirtual.IdentifiedLoader.toHooks(
+        {
+          identifier: viProjectExamples,
+          async loader() {
+            debug(`Loading viProjectExamples virtual module`)
+
+            const loadedExamples = await scanExamples()
+
+            // Report diagnostics with DiagnosticControl filtering
+            reportDiagnostics(loadedExamples.diagnostics, 'dev')
+
+            // Filter examples based on display configuration
+            const filteredExamples = ExamplesModule.filterExamplesBySelection(
+              loadedExamples.examples,
+              config.examples.display,
+            )
+
+            // Convert to the format expected by the template
+            const examplesForTemplate = filteredExamples.map(example => {
+              // Determine the identifier and title based on the example structure
+              let identifier: string
+              let displayName: string
+
+              if (example._tag === 'ExampleUnversioned') {
+                // For unversioned examples, use the filename without extension
+                const filename = Path.basename(example.path)
+                identifier = filename.replace(/\.(graphql|gql)$/, '')
+                displayName = identifier
+              } else {
+                // For versioned examples, use the directory name
+                identifier = Path.basename(example.path)
+                displayName = identifier
+              }
+
+              // Convert to title case (e.g., get-users -> Get Users)
+              const title = displayName
+                .split(/[-_]/)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ')
+
+              return {
+                ...example,
+                id: example.name,
+                identifier: identifier,
+                title: title,
+              }
+            })
+
+            return `export const examples = ${JSON.stringify(examplesForTemplate)}`
+          },
+        },
+      ),
     },
-  }
+  ]
+
+  return { plugins, reader }
 }

@@ -33,8 +33,7 @@ export const is = S.is(VersionedExample)
 // State Predicates
 // ============================================================================
 
-export const hasDefaultDocument = (example: VersionedExample): boolean =>
-  example.defaultDocument !== undefined
+export const hasDefaultDocument = (example: VersionedExample): boolean => example.defaultDocument !== undefined
 
 export const hasVersionDocument = (example: VersionedExample, version: string): boolean =>
   version in example.versionDocuments
@@ -66,8 +65,7 @@ export const getDocumentForVersion = (
 /**
  * Get all available versions for this example.
  */
-export const getAvailableVersions = (example: VersionedExample): string[] =>
-  Object.keys(example.versionDocuments)
+export const getAvailableVersions = (example: VersionedExample): string[] => Object.keys(example.versionDocuments)
 
 /**
  * Get the best available document content.

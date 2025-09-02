@@ -33,13 +33,6 @@ declare module 'virtual:polen/project/data/pages-catalog.js' {
   export { data as default }
 }
 
-// Virtual module uses .js extension due to Rolldown requirement
-// that virtual modules must return JavaScript code with exports
-declare module 'virtual:polen/project/data/examples-catalog.js' {
-  const data: import('#vite/plugins/examples').ProjectExamplesCatalog
-  export { data as default }
-}
-
 declare module 'virtual:polen/project/assets/logo.svg' {
   const src: string
   export default src

@@ -163,7 +163,7 @@ describe('ExampleDiagnostics', () => {
       dev: { severity: 'warning' as const },
     }
 
-    const settings = Diagnostic.getPhaseSettings(control, 'dev', { enabled: true, severity: 'info' })
+    const settings = Diagnostic.getEffetivePhaseSettings(control, 'dev', { enabled: true, severity: 'info' })
     expect(settings.severity).toBe('warning')
   })
 })

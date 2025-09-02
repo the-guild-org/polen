@@ -78,7 +78,7 @@ const ensurePackageStructure = (
 
     // Check if package.json exists
     const packageJsonExists = yield* fs.exists(packageJsonPath)
-    
+
     if (!packageJsonExists) {
       const packageJson = {
         name: '@types/polen-generated',
@@ -95,7 +95,7 @@ const ensurePackageStructure = (
 
     // Check if index.d.ts exists
     const indexExists = yield* fs.exists(indexPath)
-    
+
     if (!indexExists) {
       const indexContent = `// Auto-generated index file for @types/polen-generated
 // This file is automatically managed by Polen
@@ -155,10 +155,10 @@ export const writeMany = (
   return Effect.gen(function*() {
     // Ensure package structure once before writing all definitions
     yield* ensurePackageStructure(options)
-    
+
     // Write all definitions without re-checking package structure
     const fs = yield* FileSystem.FileSystem
-    
+
     for (const definition of definitions) {
       const outputFile = getGeneratedTypePath(options.projectRoot, definition.name)
       yield* fs.writeFileString(outputFile, definition.content)

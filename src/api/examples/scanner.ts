@@ -1,7 +1,9 @@
+import { Catalog } from '#lib/catalog/$'
 import { EffectGlob } from '#lib/effect-glob/$'
+import { Version } from '#lib/version/$'
 import { FileSystem } from '@effect/platform'
 import { Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Effect, Match } from 'effect'
 import type { Diagnostic } from './diagnostics.js'
 import {
   makeDiagnosticDuplicateContent,
@@ -10,6 +12,7 @@ import {
 } from './diagnostics.js'
 import type { Example } from './example.js'
 import * as UnversionedExample from './unversioned.js'
+import { validateExamples } from './validator.js'
 import * as VersionedExample from './versioned.js'
 
 // ============================================================================
@@ -23,8 +26,8 @@ export interface ScanResult {
 
 export interface ScanOptions {
   dir: string
-  schemaVersions: string[]
   extensions?: string[]
+  catalog?: Catalog.Catalog
 }
 
 // ============================================================================
@@ -78,10 +81,83 @@ const groupExampleFiles = (files: string[]): Map<string, Map<string | null, stri
   return grouped
 }
 
-const createDiagnostics = (
-  example: Example,
-  schemaVersions: string[],
+/**
+ * Validates examples against a catalog with version-aware logic
+ */
+const lintExamplesContent = (
+  examples: Example[],
+  catalog: Catalog.Catalog,
 ): Diagnostic[] => {
+  return Match.value(catalog).pipe(
+    Match.tagsExhaustive({
+      CatalogVersioned: (versioned) => {
+        // For versioned catalog, validate each example appropriately
+        const diagnostics: Diagnostic[] = []
+
+        for (const example of examples) {
+          if (example._tag === 'ExampleVersioned') {
+            // For each schema version, validate the matching example version
+            for (const entry of versioned.entries) {
+              const versionStr = Version.toString(entry.version)
+              const exampleDoc = example.versionDocuments[versionStr] ?? example.defaultDocument
+
+              if (exampleDoc) {
+                // Validate this version
+                const validationDiags = validateExamples(
+                  [{
+                    ...example,
+                    // Create a temporary unversioned example for validation
+                    _tag: 'ExampleUnversioned' as const,
+                    document: exampleDoc,
+                  }],
+                  entry.definition,
+                )
+                diagnostics.push(...validationDiags)
+              }
+            }
+          } else {
+            // Unversioned example with versioned catalog - use latest schema
+            const latestEntry = versioned.entries[0]!
+            const validationDiags = validateExamples([example], latestEntry.definition)
+            diagnostics.push(...validationDiags)
+          }
+        }
+
+        return diagnostics
+      },
+      CatalogUnversioned: (unversioned) => {
+        // For unversioned catalog, only unversioned examples are valid
+        const diagnostics: Diagnostic[] = []
+
+        for (const example of examples) {
+          if (example._tag === 'ExampleUnversioned') {
+            // Validate unversioned example against unversioned schema
+            const validationDiags = validateExamples([example], unversioned.schema.definition)
+            diagnostics.push(...validationDiags)
+          } else {
+            // Versioned example with unversioned catalog is an error
+            // todo: This should be caught by other diagnostics
+          }
+        }
+
+        return diagnostics
+      },
+    }),
+  )
+}
+
+const lintFileLayout = (
+  example: Example,
+  catalog?: Catalog.Catalog,
+): Diagnostic[] => {
+  // Extract schema versions from catalog if provided
+  const schemaVersions: string[] = catalog
+    ? Catalog.fold(
+      (versioned) => versioned.entries.map(entry => Version.toString(entry.version)),
+      (unversioned) => unversioned.schema.revisions?.map(r => r.date) ?? [],
+    )(catalog)
+    : []
+
   const diagnostics: Diagnostic[] = []
 
   if (example._tag === 'ExampleVersioned') {
@@ -244,8 +320,12 @@ export const scan = (
       examples.push(example)
 
       // Generate diagnostics for this example
-      const exampleDiagnostics = createDiagnostics(example, options.schemaVersions)
-      diagnostics.push(...exampleDiagnostics)
+      diagnostics.push(...lintFileLayout(example, options.catalog))
+    }
+
+    // Perform validation if catalog is provided
+    if (options.catalog) {
+      diagnostics.push(...lintExamplesContent(examples, options.catalog))
     }
 
     return { examples, diagnostics }

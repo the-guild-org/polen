@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { ExampleName, ExampleSelection } from './config.js'
-import { UnversionedExample } from './unversioned.js'
 import { filterExamplesBySelection, shouldDisplayExample } from './filter.js'
+import { UnversionedExample } from './unversioned.js'
 
 describe('filterExamplesBySelection', () => {
   const examples = [

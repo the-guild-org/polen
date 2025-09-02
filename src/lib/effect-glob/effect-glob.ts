@@ -18,8 +18,7 @@ export type GlobOptions = Omit<TinyGlobby.GlobOptions, 'patterns'>
 export const glob = (
   pattern: string | string[],
   options?: GlobOptions,
-): Effect.Effect<string[], Error> => 
-  Effect.promise(() => TinyGlobby.glob(pattern, options))
+): Effect.Effect<string[], Error> => Effect.promise(() => TinyGlobby.glob(pattern, options))
 
 /**
  * Synchronous Effect-based wrapper for globbing file patterns.
