@@ -96,8 +96,9 @@ export const create = <
     severity?: severity
     context?: context
   },
-): S.Struct<
-  & Omit<EffectKit.Schema.Struct.ExtractFields<typeof Diagnostic>, 'name' | 'source' | 'severity'>
+): S.TaggedStruct<
+  'Diagnostic',
+  & Omit<EffectKit.Schema.Struct.ExtractFields<typeof Diagnostic>, 'name' | 'source' | 'severity' | '_tag'>
   & {
     name: S.Literal<[name]>
     source: S.Literal<[source]>
@@ -106,8 +107,10 @@ export const create = <
   }
   & context
 > => {
-  return S.Struct({
-    ...Diagnostic.fields,
+  // Use TaggedStruct instead of Struct, and omit _tag from fields since TaggedStruct adds it
+  const { _tag, ...diagnosticFieldsWithoutTag } = Diagnostic.fields
+  return S.TaggedStruct('Diagnostic', {
+    ...diagnosticFieldsWithoutTag,
     source: S.Literal(params.source),
     name: S.Literal(params.name),
     ...(params.severity ? { severity: S.Literal(params.severity) } : {}),
@@ -118,12 +121,12 @@ export const create = <
 export const createMake = <diagnostic extends S.TaggedStruct<any, any>>(
   diagnostic: diagnostic,
 ): EffectKit.Schema.ConstructorUsingOmitLiteral1Algo<diagnostic> => {
-  return (fields: object) => {
+  return ((fields: object) => {
     return diagnostic.make({
-      ...EffectKit.Schema.getLiteral1Fields(diagnostic),
+      ...EffectKit.Schema.pickLiteral1FieldsAsLiterals(diagnostic),
       ...fields,
     }) as any
-  }
+  }) as any
 }
 
 // ============================================================================

@@ -1,7 +1,8 @@
 import { Match } from 'effect'
 import type { GraphQLError, GraphQLSchema } from 'graphql'
 import { parse, specifiedRules, validate } from 'graphql'
-import { DiagnosticValidationError } from './diagnostics.js'
+import type { DiagnosticValidationError } from './diagnostics.js'
+import { makeDiagnosticValidationError } from './diagnostics.js'
 import type { Example } from './example.js'
 
 // ============================================================================
@@ -72,28 +73,28 @@ const validateDocument = (
 
     // Validate against the schema
     const errors = validate(schema, document, specifiedRules)
-    
+
     console.log('[DEBUG] Validation result for', exampleName, version, ':', errors.length, 'errors')
     if (errors.length > 0) {
       console.log('[DEBUG] Errors:', errors.map(e => e.message))
     }
 
     if (errors.length > 0) {
-      diagnostics.push(DiagnosticValidationError.make({
+      diagnostics.push(makeDiagnosticValidationError({
         message: formatValidationMessage(exampleName, version, errors),
-        example: { id: exampleName, path: examplePath },
+        example: { name: exampleName, path: examplePath },
         version,
         errors: errors.map(formatGraphQLError),
-      } as any))
+      }))
     }
   } catch (parseError) {
     // Parse errors are also validation errors
-    diagnostics.push(DiagnosticValidationError.make({
+    diagnostics.push(makeDiagnosticValidationError({
       message: `Example "${exampleName}" (${version}) has invalid GraphQL syntax`,
-      example: { id: exampleName, path: examplePath },
+      example: { name: exampleName, path: examplePath },
       version,
       errors: [{ message: String(parseError) }],
-    } as any))
+    }))
   }
 }
 

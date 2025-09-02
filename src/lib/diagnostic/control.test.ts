@@ -1,97 +1,68 @@
 import { describe, expect, test } from 'vitest'
-import { DiagnosticControl, getPhaseSettings } from './control.js'
+import { Control, getPhaseSettings } from './control.js'
 
-describe('DiagnosticControl', () => {
-  describe('getPhaseSettings', () => {
-    const defaults = { enabled: true, severity: 'warning' as const }
+describe('getPhaseSettings', () => {
+  const defaults = { enabled: true, severity: 'warning' as const }
 
-    test('returns defaults when control is undefined', () => {
-      const result = getPhaseSettings(undefined, 'dev', defaults)
-      expect(result).toEqual(defaults)
-    })
-
-    test('boolean true enables with default severity', () => {
-      const result = getPhaseSettings(true, 'dev', defaults)
-      expect(result).toEqual({ enabled: true, severity: 'warning' })
-    })
-
-    test('boolean false disables', () => {
-      const result = getPhaseSettings(false, 'dev', defaults)
-      expect(result).toEqual({ enabled: false, severity: 'warning' })
-    })
-
-    test('uses global enabled when phase not specified', () => {
-      const control = DiagnosticControl.make({
-        enabled: false,
-      })
-      const result = getPhaseSettings(control, 'dev', defaults)
-      expect(result).toEqual({ enabled: false, severity: 'warning' })
-    })
-
-    test('phase settings override global enabled', () => {
-      const control = DiagnosticControl.make({
-        enabled: false,
-        dev: { enabled: true },
-      })
-      const result = getPhaseSettings(control, 'dev', defaults)
-      expect(result).toEqual({ enabled: true, severity: 'warning' })
-    })
-
-    test('phase severity overrides default', () => {
-      const control = DiagnosticControl.make({
-        enabled: true,
-        dev: { severity: 'error' },
-      })
-      const result = getPhaseSettings(control, 'dev', defaults)
-      expect(result).toEqual({ enabled: true, severity: 'error' })
-    })
-
-    test('phase enabled false overrides global true', () => {
-      const control = DiagnosticControl.make({
-        enabled: true,
-        dev: { enabled: false },
-      })
-      const result = getPhaseSettings(control, 'dev', defaults)
-      expect(result).toEqual({ enabled: false, severity: 'warning' })
-    })
-
-    test('build phase uses build settings', () => {
-      const control = DiagnosticControl.make({
-        enabled: true,
-        dev: { enabled: false },
-        build: { enabled: true, severity: 'error' },
-      })
-      const result = getPhaseSettings(control, 'build', defaults)
-      expect(result).toEqual({ enabled: true, severity: 'error' })
-    })
-
-    test.for([
-      { phase: 'dev' as const, expectedSeverity: 'info' as const },
-      { phase: 'build' as const, expectedSeverity: 'error' as const },
-    ])('different phases can have different severities ($phase)', ({ phase, expectedSeverity }) => {
-      const control = DiagnosticControl.make({
-        enabled: true,
-        dev: { severity: 'info' },
-        build: { severity: 'error' },
-      })
-      const result = getPhaseSettings(control, phase, defaults)
-      expect(result).toEqual({ enabled: true, severity: expectedSeverity })
-    })
+  test.for([
+    { control: undefined, expected: defaults, name: 'undefined returns defaults' },
+    { control: true, expected: { enabled: true, severity: 'warning' }, name: 'true enables with default severity' },
+    { control: false, expected: { enabled: false, severity: 'warning' }, name: 'false disables' },
+  ])('$name', ({ control, expected }) => {
+    expect(getPhaseSettings(control, 'dev', defaults)).toEqual(expected)
   })
 
-  describe('schema validation', () => {
-    test('accepts valid DiagnosticControl', () => {
-      const control = {
-        enabled: true,
-        dev: { enabled: false, severity: 'warning' as const },
-        build: { severity: 'error' as const },
-      }
-      expect(() => DiagnosticControl.make(control)).not.toThrow()
-    })
+  test.for([
+    { 
+      control: { enabled: false }, 
+      phase: 'dev' as const,
+      expected: { enabled: false, severity: 'warning' },
+      name: 'uses global enabled when phase not specified'
+    },
+    {
+      control: { enabled: false, dev: { enabled: true } },
+      phase: 'dev' as const,
+      expected: { enabled: true, severity: 'warning' },
+      name: 'phase settings override global enabled'
+    },
+    {
+      control: { enabled: true, dev: { severity: 'error' } },
+      phase: 'dev' as const,
+      expected: { enabled: true, severity: 'error' },
+      name: 'phase severity overrides default'
+    },
+    {
+      control: { enabled: true, dev: { enabled: false } },
+      phase: 'dev' as const,
+      expected: { enabled: false, severity: 'warning' },
+      name: 'phase enabled false overrides global true'
+    },
+    {
+      control: { enabled: true, dev: { enabled: false }, build: { enabled: true, severity: 'error' } },
+      phase: 'build' as const,
+      expected: { enabled: true, severity: 'error' },
+      name: 'build phase uses build settings'
+    },
+  ])('$name', ({ control, phase, expected }) => {
+    expect(getPhaseSettings(Control.make(control), phase, defaults)).toEqual(expected)
+  })
 
-    test('accepts minimal DiagnosticControl', () => {
-      const control = { enabled: false }
-      expect(() => DiagnosticControl.make(control)).not.toThrow()
+  test('different phases can have different severities', () => {
+    const control = Control.make({
+      enabled: true,
+      dev: { severity: 'info' },
+      build: { severity: 'error' },
     })
+    expect(getPhaseSettings(control, 'dev', defaults)).toEqual({ enabled: true, severity: 'info' })
+    expect(getPhaseSettings(control, 'build', defaults)).toEqual({ enabled: true, severity: 'error' })
+  })
+})
+
+describe('Control.make', () => {
+  test.for([
+    { control: { enabled: true, dev: { enabled: false, severity: 'warning' as const }, build: { severity: 'error' as const } }, name: 'accepts valid control' },
+    { control: { enabled: false }, name: 'accepts minimal control' },
+  ])('$name', ({ control }) => {
+    expect(() => Control.make(control)).not.toThrow()
   })
 })

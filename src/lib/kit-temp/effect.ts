@@ -60,9 +60,17 @@ export namespace EffectKit {
       fields: ConstructorFieldsUsingOmitLiteral1Algo<$Schema>,
     ) => S.Schema.Type<$Schema>
 
-    export const getLiteral1Fields = <schema extends Struct.$any>(
+    export const pickLiteral1FieldsAsLiterals = <schema extends Struct.$any>(
       schema: schema,
-    ): Pick<Struct.ExtractFields<schema>, GetLiteral1FieldsNames<schema>> => {
+    ): { [k in keyof PickLiteral1Fields<schema>]: S.Schema.Type<PickLiteral1Fields<schema>[k]> } => {
+      const fields = pickLiteral1Fields(schema)
+      const fieldsAsLiterals = Ob.mapValues(fields, (v) => S.Literal(v))
+      return fieldsAsLiterals as any
+    }
+
+    export const pickLiteral1Fields = <schema extends Struct.$any>(
+      schema: schema,
+    ): PickLiteral1Fields<schema> => {
       const picked = {}
       const ast = schema.ast
       if (isTypeLiteral(ast)) {
@@ -76,13 +84,20 @@ export namespace EffectKit {
       return picked as any
     }
 
-    export type GetLiteral1FieldsNames<$Schema extends Struct.$any> = Ob.Values<
-      {
-        [k in keyof Struct.ExtractFields<$Schema>]: Struct.ExtractFields<$Schema>[k] extends
-          S.Literal<infer __literals__ extends [string]> ? k
-          : never
-      }
-    >
+    // todo: omit _tag to alig with runtime
+    export type PickLiteral1Fields<$Schema extends Struct.$any> = {
+      [k in keyof Struct.ExtractFields<$Schema>]: Struct.ExtractFields<$Schema>[k] extends
+        S.Literal<infer __literals__ extends [string]> ? Struct.ExtractFields<$Schema>[k]
+        : never
+    }
+
+    // todo: omit _tag to alig with runtime
+    export type OmitLiteral1Fields<$Schema extends Struct.$any> = {
+      [k in keyof Struct.ExtractFields<$Schema>]: Struct.ExtractFields<$Schema>[k] extends
+        S.Literal<infer __literals__ extends [string]> ? never : Struct.ExtractFields<$Schema>[k]
+    }
+
+    export type GetLiteral1FieldsNames<$Schema extends Struct.$any> = keyof PickLiteral1Fields<$Schema>
 
     export type ConstructorFieldsUsingOmitLiteral1Algo<$Schema extends Struct.$any> = $Schema extends
       S.Struct<infer __fields__> ? S.Struct.Constructor<Omit<__fields__, GetLiteral1FieldsNames<$Schema>>>
