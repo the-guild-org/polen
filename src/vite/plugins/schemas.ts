@@ -1,11 +1,8 @@
 import { Api } from '#api/index'
 import { Schema } from '#api/schema/$'
-import type { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
-import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
-import { debugPolen } from '#singletons/debug'
-import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { Effect } from 'effect'
 import * as NodePath from 'node:path'
 
@@ -28,9 +25,6 @@ import * as NodePath from 'node:path'
 export const Schemas = (
   config: Api.Config.Config,
 ) => {
-  const debug = debugPolen.sub(`vite-plugin:schema-assets`)
-  let viteServer: Vite.ViteDevServer | null = null
-
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // Self-contained Schema Reader
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -73,17 +67,6 @@ export const Schemas = (
     return false
   }
 
-  const sendSchemaInvalidation = (server: Vite.ViteDevServer) => {
-    server.ws.send({
-      type: 'custom',
-      event: 'polen:schema-invalidate',
-      data: { timestamp: Date.now() },
-    })
-    debug(`hmr:schemaInvalidationSent`, {})
-  }
-
-  // Helper to send HMR invalidation signal for schema changes
-
   // Gather watch paths for schema files
   const getWatchPaths = (): string[] => {
     const paths: string[] = []
@@ -104,34 +87,23 @@ export const Schemas = (
   const plugins = [
     ViteReactive.ReactiveAssetPlugin({
       name: 'schemas',
-      config,
-      assetReader: reader,
+      reader,
       emit: {
-        serializer: (data) => Effect.gen(function* () {
-          if (!data?.data) throw new Error('No schema data to serialize')
-          const encoded = yield* Catalog.encode(data.data)
-          return JSON.stringify(encoded, null, 2)
-        }),
-        path: 'schemas/catalog.json'
+        // @claude in what case can data be null?
+        serializer: (loadedCatalog) =>
+          Effect.gen(function*() {
+            if (!loadedCatalog.data) throw new Error('No schema data to serialize')
+            const encoded = yield* Catalog.encode(loadedCatalog.data)
+            return JSON.stringify(encoded, null, 2)
+          }),
+        path: 'schemas/catalog.json',
       },
       filePatterns: {
         watch: getWatchPaths,
         isRelevant: isSchemaFile,
       },
       dependentVirtualModules: [], // Schema assets doesn't have virtual modules
-      hooks: {
-        async shouldFullReload(oldData, newData) {
-          // Always trigger custom HMR event for schema changes
-          return false // Don't trigger full reload, use custom HMR
-        },
-        async afterRead(data, server) {
-          viteServer = server
-          // Send custom HMR signal
-          sendSchemaInvalidation(server)
-        },
-      },
-    })
-
+    }),
   ]
 
   return { plugins, reader }

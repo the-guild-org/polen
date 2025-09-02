@@ -15,17 +15,25 @@
 
 import { Examples as ExamplesModule } from '#api/examples/$'
 import { generateExampleTypes } from '#api/examples/type-generator'
+import { validateExamples } from '#api/examples/validator'
 import type { Api } from '#api/index'
-import type { Vite } from '#dep/vite/index'
+import { Schema } from '#api/schema/$'
+import { Catalog } from '#lib/catalog/$'
 import { Diagnostic } from '#lib/diagnostic/$'
+import { Version } from '#lib/version/$'
+import { ViteReactive } from '#lib/vite-reactive/$'
+import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
+import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Cache } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import * as Path from 'node:path'
 import { polenVirtual } from '../vi.js'
 
 const debug = debugPolen.sub(`vite-examples`)
+
+// Virtual modules provided by this plugin
+export const viProjectExamples = polenVirtual([`project`, `examples`])
 
 // Using .js extension as a workaround for Rolldown's requirement that virtual modules
 // return JavaScript code (export default) rather than pure JSON
@@ -35,7 +43,8 @@ export const viProjectExamplesCatalog = polenVirtual([`project`, `data`, `exampl
 
 export interface Options {
   config: Api.Config.Config
-  schemaVersions: string[]
+  // todo: get type ref via import from SOT
+  schemaReader?: AssetReader<Api.Schema.InputSource.LoadedCatalog | null, any, any>
 }
 
 export interface ProjectExamplesCatalog {
@@ -92,10 +101,51 @@ export const Examples = ({
       debug(`Invalidated examples catalog virtual module`)
     }
 
-    const examplesModule = server.moduleGraph.getModuleById(viProjectExamples.id)
-    if (examplesModule) {
-      server.moduleGraph.invalidateModule(examplesModule)
-      debug(`Invalidated examples virtual module`)
+  // Apply DiagnosticControl filtering and report diagnostics
+  const reportDiagnostics = (
+    diagnostics: ExamplesModule.Diagnostic[],
+    phase: 'dev' | 'build' = 'dev',
+  ) => {
+    // Filter diagnostics based on DiagnosticControl settings
+    const filteredDiagnostics = diagnostics.filter(diagnostic => {
+      // Get the diagnostic control for this diagnostic type
+      let control: any = undefined
+
+      if (diagnostic.source === 'examples-scanner') {
+        switch (diagnostic.name) {
+          case 'unused-default':
+            control = config.examples.diagnostics?.unusedVersions
+            break
+          case 'duplicate-content':
+            control = config.examples.diagnostics?.duplicateContent
+            break
+          case 'missing-versions':
+            control = config.examples.diagnostics?.missingVersions
+            break
+        }
+      } else if (diagnostic.source === 'examples-validation') {
+        control = config.examples.diagnostics?.validation
+      }
+
+      // Get effective settings for this phase
+      const settings = Diagnostic.getPhaseSettings(
+        control,
+        phase,
+        { enabled: true, severity: diagnostic.severity }, // Use diagnostic's default severity
+      )
+
+      if (!settings.enabled) {
+        return false // Filter out disabled diagnostics
+      } // Override severity based on control settings
+
+      ;(diagnostic as any).severity = settings.severity
+
+      return true
+    })
+
+    // Report the filtered diagnostics
+    if (filteredDiagnostics.length > 0) {
+      Diagnostic.report(filteredDiagnostics)
     }
   }
 
@@ -133,27 +183,6 @@ export const Examples = ({
         server.watcher.on(`add`, (file) => handleFileStructureChange(file, `add`))
         server.watcher.on(`unlink`, (file) => handleFileStructureChange(file, `unlink`))
       }
-    },
-
-    // Hot update handling for existing files
-    async handleHotUpdate({ file, server }) {
-      debug(`handleHotUpdate`, file)
-      if (!examplesDir) return
-      if (!file.includes(examplesDir)) return
-      if (!file.endsWith('.graphql') && !file.endsWith('.gql')) return
-
-      debug(`Example file changed:`, file)
-
-      // Clear cache and rescan
-      scanExamples.clear()
-      const newScanResult = await scanExamples()
-
-      // Invalidate virtual modules and trigger reload
-      invalidateVirtualModules(server)
-      Diagnostic.report(newScanResult.diagnostics)
-      server.ws.send({ type: `full-reload` })
-      return []
-    },
 
     resolveId(id) {
       if (id === viProjectExamplesCatalog.id) {

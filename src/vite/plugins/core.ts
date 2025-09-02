@@ -1,8 +1,5 @@
-import { Content } from '#api/content/$'
 import { createNavbar, type NavbarItem } from '#api/content/navbar'
-import { Examples } from '#api/examples/$'
 import { Api } from '#api/index'
-import { Schema } from '#api/schema/$'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
@@ -13,17 +10,15 @@ import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Json, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import * as FS from 'node:fs/promises'
-import * as Path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
+import { Examples } from './examples.js'
 import { Pages } from './pages.js'
-import { SchemaAssets } from './schema-assets.js'
+import { Schemas } from './schemas.js'
 
 const viTemplateVariables = polenVirtual([`template`, `variables`])
 const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
 const viTemplateHomeConfig = polenVirtual([`template`, `home-config`])
-const viProjectExamples = polenVirtual([`project`, `examples`])
 export const viProjectData = polenVirtual([`project`, `data.json`], { allowPluginProcessing: true })
 export const viProjectSchema = polenVirtual([`project`, `schema.json`], { allowPluginProcessing: true })
 export const viProjectHooks = polenVirtual([`project`, `hooks`], { allowPluginProcessing: true })
@@ -33,11 +28,6 @@ export interface ProjectRoutesModule {
 }
 
 export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
-  // Create all plugins with their self-contained readers
-  const schemasArea = Schemas(config)
-  const pagesArea = Pages({ config })
-  const examplesArea = Examples({ config, schemaReader: schemasArea.reader })
-
   const plugins: Vite.Plugin[] = []
 
   // Note: The main use for this right now is to resolve the react imports
@@ -51,10 +41,15 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
     }))
   }
 
+  // Create all plugins with their self-contained readers
+  const schemasArea = Schemas(config)
+  const pagesArea = Pages({ config })
+  const examplesArea = Examples({ config, schemaReader: schemasArea.reader })
+
   return [
     ...plugins,
-    examples.plugin,
-    schemaAssets.plugin,
+    ...examplesArea.plugins,
+    ...schemasArea.plugins,
     /**
      * If a `polen*` import is encountered from the user's project, resolve it to the currently
      * running source code of Polen rather than the user's node_modules.
@@ -100,7 +95,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
         }
       },
     },
-    ...Pages({ config }),
+    ...pagesArea.plugins,
     {
       name: `polen:core`,
       config(_, { command }) {
@@ -149,13 +144,14 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
             const debug = debugPolen.sub(`module-project-schema`)
             debug(`load`, { id: viProjectSchema.id })
 
-            const schemaResult = await readSchema()
-            if (!schemaResult || !schemaResult.data) {
+            const schemaResult = await Effect.runPromise(
+              schemasArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+            )
+            if (!schemaResult?.data) {
               return `export default null`
             }
 
             // Encode the catalog to convert GraphQLSchema to AST before serializing
-
             const encodedCatalog = await Effect.runPromise(Catalog.encode(schemaResult.data))
 
             return `export default ${JSON.stringify(encodedCatalog)}`
@@ -190,9 +186,19 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
 
             debug(`load`, { id: viProjectData.id })
 
-            const loadedCatalog = await readSchema()
+            const loadedCatalog = await Effect.runPromise(
+              schemasArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+            )
 
             const navbar: NavbarItem[] = []
+
+            // ━ Examples presence causes adding navbar item
+            const examplesData = await Effect.runPromise(
+              examplesArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+            )
+            if (examplesData?.examples && examplesData.examples.length > 0) {
+              navbar.push({ pathExp: '/examples', title: 'Examples', position: 'left' })
+            }
 
             // ━ Schema presence causes adding some navbar items
             if (loadedCatalog?.data) {
@@ -225,11 +231,8 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
             // ━━ Scan pages and add to navbar
             //
 
-            const pagesDir = config.paths.project.absolute.pages
             const scanResult = await Effect.runPromise(
-              Content.scan({ dir: pagesDir }).pipe(
-                Effect.provide(NodeFileSystem.layer),
-              ),
+              pagesArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
             )
             const data = createNavbar(scanResult.list)
             navbar.push(...data)
