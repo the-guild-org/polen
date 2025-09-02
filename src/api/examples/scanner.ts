@@ -1,9 +1,10 @@
-import { Catalog } from '#lib/catalog/$'
+import { Catalog as SchemaCatalog } from '#lib/catalog/$'
 import { EffectGlob } from '#lib/effect-glob/$'
 import { Version } from '#lib/version/$'
 import { FileSystem } from '@effect/platform'
 import { Path } from '@wollybeard/kit'
 import { Effect, Match } from 'effect'
+import { Catalog } from './catalog.js'
 import type { Diagnostic } from './diagnostics.js'
 import {
   makeDiagnosticDuplicateContent,
@@ -20,14 +21,14 @@ import * as VersionedExample from './versioned.js'
 // ============================================================================
 
 export interface ScanResult {
-  examples: Example[]
+  catalog: Catalog
   diagnostics: Diagnostic[]
 }
 
 export interface ScanOptions {
   dir: string
   extensions?: string[]
-  catalog?: Catalog.Catalog
+  schemaCatalog?: SchemaCatalog.Catalog
 }
 
 // ============================================================================
@@ -86,9 +87,9 @@ const groupExampleFiles = (files: string[]): Map<string, Map<string | null, stri
  */
 const lintExamplesContent = (
   examples: Example[],
-  catalog: Catalog.Catalog,
+  schemaCatalog: SchemaCatalog.Catalog,
 ): Diagnostic[] => {
-  return Match.value(catalog).pipe(
+  return Match.value(schemaCatalog).pipe(
     Match.tagsExhaustive({
       CatalogVersioned: (versioned) => {
         // For versioned catalog, validate each example appropriately
@@ -148,14 +149,14 @@ const lintExamplesContent = (
 
 const lintFileLayout = (
   example: Example,
-  catalog?: Catalog.Catalog,
+  schemaCatalog?: SchemaCatalog.Catalog,
 ): Diagnostic[] => {
   // Extract schema versions from catalog if provided
-  const schemaVersions: string[] = catalog
-    ? Catalog.fold(
+  const schemaVersions: string[] = schemaCatalog
+    ? SchemaCatalog.fold(
       (versioned) => versioned.entries.map(entry => Version.toString(entry.version)),
       (unversioned) => unversioned.schema.revisions?.map(r => r.date) ?? [],
-    )(catalog)
+    )(schemaCatalog)
     : []
 
   const diagnostics: Diagnostic[] = []
@@ -320,13 +321,14 @@ export const scan = (
       examples.push(example)
 
       // Generate diagnostics for this example
-      diagnostics.push(...lintFileLayout(example, options.catalog))
+      diagnostics.push(...lintFileLayout(example, options.schemaCatalog))
     }
 
     // Perform validation if catalog is provided
-    if (options.catalog) {
-      diagnostics.push(...lintExamplesContent(examples, options.catalog))
+    if (options.schemaCatalog) {
+      diagnostics.push(...lintExamplesContent(examples, options.schemaCatalog))
     }
 
-    return { examples, diagnostics }
+    const catalog = Catalog.make({ examples })
+    return { catalog, diagnostics }
   })

@@ -1,3 +1,4 @@
+export * as Catalog from './catalog.js'
 export * from './config.js'
 export * from './diagnostics.js'
 export * from './example.js'

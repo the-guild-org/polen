@@ -1,5 +1,3 @@
-import type { Example } from '#api/examples/example'
-
 declare module 'virtual:polen/vite/client/manifest' {
   const manifest: import('vite').Manifest
   export default manifest
@@ -45,7 +43,7 @@ declare module 'virtual:polen/template/home-config' {
 }
 
 declare module 'virtual:polen/project/examples' {
-  export const examples: readonly import('#api/examples/$').Examples[]
+  export const examplesCatalog: import('#api/examples/$').Examples.Catalog.Catalog
 }
 
 declare module 'virtual:polen/project/hooks' {

@@ -1,16 +1,16 @@
 import { Typings } from '#api/typings/$'
 import { FileSystem } from '@effect/platform'
 import { Effect } from 'effect'
-import { type Example } from './example.js'
+import type { Catalog } from './catalog.js'
 
 /**
  * Generate TypeScript type definitions for discovered examples.
  */
 export const generateExampleTypes = (
-  examples: Example[],
+  catalog: Catalog,
   projectRoot: string,
 ): Effect.Effect<void, Error, FileSystem.FileSystem> => {
-  const exampleNames = examples.map(e => e.name)
+  const exampleNames = catalog.examples.map(e => e.name)
   const typeDefinition = generateTypeDefinition(exampleNames)
   return Typings.write(
     {

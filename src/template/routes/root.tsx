@@ -4,13 +4,12 @@ import { S } from '#lib/kit-temp/effect'
 import { route } from '#lib/react-router-effect/route'
 import type { Stores } from '#template/stores/$'
 import { Box, Flex, Theme } from '@radix-ui/themes'
-
 const schema = S.Struct({})
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import PROJECT_DATA from 'virtual:polen/project/data.json'
-import { examples } from 'virtual:polen/project/examples'
+import { examplesCatalog } from 'virtual:polen/project/examples'
 import * as projectHooks from 'virtual:polen/project/hooks'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { templateVariables } from 'virtual:polen/template/variables'
@@ -110,7 +109,7 @@ const children: ReactRouter.RouteObject[] = [
 //
 //
 
-if (examples.length > 0) {
+if (examplesCatalog.examples.length > 0) {
   children.push(examplesRoute)
 }
 
