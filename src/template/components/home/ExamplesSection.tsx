@@ -9,21 +9,21 @@ interface ExamplesSectionProps {
   title?: string
   description?: string
   maxExamples?: number
-  catalog: Api.Examples.Catalog.Catalog
+  examples: readonly Api.Examples.Example[]
 }
 
 export const ExamplesSection: React.FC<ExamplesSectionProps> = ({
-  catalog,
+  examples,
   schema,
   title = 'API Examples',
   maxExamples = 3,
 }) => {
-  if (catalog.examples.length === 0) {
+  if (examples.length === 0) {
     return null
   }
 
   // Limit examples to maxExamples
-  const displayExamples = catalog.examples.slice(0, maxExamples)
+  const displayExamples = examples.slice(0, maxExamples)
 
   return (
     <Section size='3' id='examples'>

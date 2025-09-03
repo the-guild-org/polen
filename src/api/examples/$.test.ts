@@ -1,5 +1,6 @@
 import { Diagnostic } from '#lib/diagnostic/$'
-import { Effect } from 'effect'
+import { Version } from '#lib/version/$'
+import { Effect, HashMap } from 'effect'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Examples } from './$.js'
 
@@ -7,7 +8,7 @@ describe('Example', () => {
   test.for([
     {
       name: 'validates unversioned example',
-      example: Examples.UnversionedExample.make({
+      example: Examples.Example.Unversioned.make({
         name: 'list-users',
         path: 'examples/list-users.graphql',
         document: 'query ListUsers { users { id name } }',
@@ -16,18 +17,18 @@ describe('Example', () => {
     },
     {
       name: 'validates versioned example',
-      example: Examples.VersionedExample.make({
+      example: Examples.Example.Versioned.make({
         name: 'list-users',
         path: 'examples',
-        versionDocuments: {
-          v1: 'query ListUsers { users { id name } }',
-          v2: 'query ListUsers { users { id email name } }',
-        },
+        versionDocuments: HashMap.make(
+          [Version.fromString('v1'), 'query ListUsers { users { id name } }'],
+          [Version.fromString('v2'), 'query ListUsers { users { id email name } }'],
+        ),
       }),
       expected: true,
     },
   ])('$name', ({ example, expected }) => {
-    expect(Examples.is(example)).toBe(expected)
+    expect(Examples.Example.is(example)).toBe(expected)
   })
 })
 
@@ -98,7 +99,7 @@ describe('ExampleValidator', () => {
     {
       name: 'validates unversioned example',
       examples: [
-        Examples.UnversionedExample.make({
+        Examples.Example.Unversioned.make({
           name: 'test',
           path: 'test.graphql',
           document: 'query Test { test }',
@@ -109,13 +110,13 @@ describe('ExampleValidator', () => {
     {
       name: 'validates versioned example',
       examples: [
-        Examples.VersionedExample.make({
+        Examples.Example.Versioned.make({
           name: 'test',
           path: 'test',
-          versionDocuments: {
-            v1: 'query Test { test }',
-            v2: 'query Test { test { id } }',
-          },
+          versionDocuments: HashMap.make(
+            [Version.fromString('v1'), 'query Test { test }'],
+            [Version.fromString('v2'), 'query Test { test { id } }'],
+          ),
         }),
       ],
       expectedErrors: 0,
@@ -130,9 +131,9 @@ describe('ExampleValidator', () => {
 
 describe('filterExamplesBySelection', () => {
   const examples = [
-    Examples.UnversionedExample.make({ name: 'a', path: 'a.graphql', document: 'a' }),
-    Examples.UnversionedExample.make({ name: 'b', path: 'b.graphql', document: 'b' }),
-    Examples.UnversionedExample.make({ name: 'c', path: 'c.graphql', document: 'c' }),
+    Examples.Example.Unversioned.make({ name: 'a', path: 'a.graphql', document: 'a' }),
+    Examples.Example.Unversioned.make({ name: 'b', path: 'b.graphql', document: 'b' }),
+    Examples.Example.Unversioned.make({ name: 'c', path: 'c.graphql', document: 'c' }),
   ]
 
   test.for([
@@ -148,10 +149,12 @@ describe('filterExamplesBySelection', () => {
 
 describe('ExampleDiagnostics', () => {
   const examples = [
-    Examples.VersionedExample.make({
+    Examples.Example.Versioned.make({
       name: 'test',
       path: 'test',
-      versionDocuments: { v1: 'content' },
+      versionDocuments: HashMap.make(
+        [Version.fromString('v1'), 'content'],
+      ),
     }),
   ]
 

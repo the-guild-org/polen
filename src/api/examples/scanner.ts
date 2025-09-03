@@ -1,20 +1,21 @@
 import { Catalog as SchemaCatalog } from '#lib/catalog/$'
+import { Document } from '#lib/document/$'
 import { EffectGlob } from '#lib/effect-glob/$'
 import { Version } from '#lib/version/$'
 import { FileSystem } from '@effect/platform'
-import { Path } from '@wollybeard/kit'
-import { Effect, Match } from 'effect'
-import { Catalog } from './catalog.js'
-import type { Diagnostic } from './diagnostics.js'
+import { Str } from '@wollybeard/kit'
+import { Effect, HashMap, Match } from 'effect'
+import * as Path from 'node:path'
+import type { Diagnostic } from './diagnostic/diagnostic.js'
 import {
   makeDiagnosticDuplicateContent,
   makeDiagnosticMissingVersions,
+  makeDiagnosticUnknownVersion,
   makeDiagnosticUnusedDefault,
-} from './diagnostics.js'
-import type { Example } from './example.js'
-import * as UnversionedExample from './unversioned.js'
-import { validateExamples } from './validator.js'
-import * as VersionedExample from './versioned.js'
+} from './diagnostic/diagnostic.js'
+import { validateExamples } from './diagnostic/validator.js'
+import { Catalog } from './schemas/catalog.js'
+import { Example } from './schemas/example/$.js'
 
 // ============================================================================
 // Types
@@ -36,34 +37,36 @@ export interface ScanOptions {
 // ============================================================================
 
 const DEFAULT_EXTENSIONS = ['graphql', 'gql']
-const VERSION_PATTERN = /^v\d+$/
+
+// Pattern for versioned files: <name>.<version>.graphql
+const VERSIONED_FILE_PATTERN = Str.pattern<{ groups: ['name', 'version'] }>(
+  /^(?<name>.+?)\.(?<version>.+)$/,
+)
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
 const parseExampleFilename = (filename: string): { name: string; version: string | null } => {
-  const base = Path.parse(filename).name
+  const parsed = Path.parse(filename)
+  const base = parsed.name
 
-  // Check if it's a versioned file (e.g., example.v1.graphql)
-  const parts = base.split('.')
-  if (parts.length === 2 && parts[1] && VERSION_PATTERN.test(parts[1])) {
-    return { name: parts[0]!, version: parts[1] }
+  // Try to match versioned pattern: <name>.<version>
+  const match = Str.match(base, VERSIONED_FILE_PATTERN)
+
+  if (match) {
+    const { name, version: versionStr } = match.groups
+
+    // Handle special 'default' keyword
+    if (versionStr === 'default') {
+      return { name, version: 'default' }
+    }
+    const decoded = Version.decodeSync(versionStr)
+    // Return canonical version string
+    return { name, version: Version.toString(decoded) }
   }
 
-  // Check if it's a default file
-  if (base === 'default') {
-    const dirName = Path.parse(Path.dirname(filename)).name
-    return { name: dirName || 'unknown', version: 'default' }
-  }
-
-  // Check if it's a versioned file in a directory (e.g., example/v1.graphql)
-  if (VERSION_PATTERN.test(base)) {
-    const dirName = Path.parse(Path.dirname(filename)).name
-    return { name: dirName || 'unknown', version: base }
-  }
-
-  // It's a simple file (e.g., example.graphql) - unversioned
+  // No version found - this is an unversioned example
   return { name: base, version: null }
 }
 
@@ -82,73 +85,8 @@ const groupExampleFiles = (files: string[]): Map<string, Map<string | null, stri
   return grouped
 }
 
-/**
- * Validates examples against a catalog with version-aware logic
- */
-const lintExamplesContent = (
-  examples: Example[],
-  schemaCatalog: SchemaCatalog.Catalog,
-): Diagnostic[] => {
-  return Match.value(schemaCatalog).pipe(
-    Match.tagsExhaustive({
-      CatalogVersioned: (versioned) => {
-        // For versioned catalog, validate each example appropriately
-        const diagnostics: Diagnostic[] = []
-
-        for (const example of examples) {
-          if (example._tag === 'ExampleVersioned') {
-            // For each schema version, validate the matching example version
-            for (const entry of versioned.entries) {
-              const versionStr = Version.toString(entry.version)
-              const exampleDoc = example.versionDocuments[versionStr] ?? example.defaultDocument
-
-              if (exampleDoc) {
-                // Validate this version
-                const validationDiags = validateExamples(
-                  [{
-                    ...example,
-                    // Create a temporary unversioned example for validation
-                    _tag: 'ExampleUnversioned' as const,
-                    document: exampleDoc,
-                  }],
-                  entry.definition,
-                )
-                diagnostics.push(...validationDiags)
-              }
-            }
-          } else {
-            // Unversioned example with versioned catalog - use latest schema
-            const latestEntry = versioned.entries[0]!
-            const validationDiags = validateExamples([example], latestEntry.definition)
-            diagnostics.push(...validationDiags)
-          }
-        }
-
-        return diagnostics
-      },
-      CatalogUnversioned: (unversioned) => {
-        // For unversioned catalog, only unversioned examples are valid
-        const diagnostics: Diagnostic[] = []
-
-        for (const example of examples) {
-          if (example._tag === 'ExampleUnversioned') {
-            // Validate unversioned example against unversioned schema
-            const validationDiags = validateExamples([example], unversioned.schema.definition)
-            diagnostics.push(...validationDiags)
-          } else {
-            // Versioned example with unversioned catalog is an error
-            // todo: This should be caught by other diagnostics
-          }
-        }
-
-        return diagnostics
-      },
-    }),
-  )
-}
-
 const lintFileLayout = (
-  example: Example,
+  example: Example.Example,
   schemaCatalog?: SchemaCatalog.Catalog,
 ): Diagnostic[] => {
   // Extract schema versions from catalog if provided
@@ -161,80 +99,75 @@ const lintFileLayout = (
 
   const diagnostics: Diagnostic[] = []
 
-  if (example._tag === 'ExampleVersioned') {
-    const versionKeys = Object.keys(example.versionDocuments)
+  Match.value(example.document).pipe(
+    Match.tagsExhaustive({
+      DocumentVersioned: (doc) => {
+        // Fully versioned - must have all schema versions
+        const versionKeys = Array.from(HashMap.keys(doc.versionDocuments)).map(Version.toString)
+        const missingVersions = schemaVersions.filter(sv => !versionKeys.includes(sv))
 
-    // Check for unused default versions
-    if (example.defaultDocument && versionKeys.length > 0) {
-      const allVersionsCovered = schemaVersions.every(sv => versionKeys.includes(sv))
-
-      if (allVersionsCovered) {
-        const diagnostic = makeDiagnosticUnusedDefault({
-          message:
-            `Default example document will never be used because explicit versions exist for all schema versions`,
-          example: {
-            name: example.name,
-            path: example.path,
-          },
-          versions: versionKeys,
-        })
-        diagnostics.push(diagnostic)
-      }
-    }
-
-    // Check for duplicate content
-    const duplicates: Array<{ version1: string; version2: string }> = []
-    const versionEntries = Object.entries(example.versionDocuments)
-    for (let i = 0; i < versionEntries.length; i++) {
-      for (let j = i + 1; j < versionEntries.length; j++) {
-        const [v1, content1] = versionEntries[i]!
-        const [v2, content2] = versionEntries[j]!
-        if (content1 === content2) {
-          duplicates.push({ version1: v1, version2: v2 })
+        if (missingVersions.length > 0) {
+          diagnostics.push(makeDiagnosticMissingVersions({
+            message: `Fully versioned example must provide documents for all schema versions`,
+            example: { name: example.name, path: example.path },
+            providedVersions: versionKeys,
+            missingVersions,
+          }))
         }
-      }
-    }
 
-    // Also check if default document duplicates any version
-    if (example.defaultDocument) {
-      for (const [version, content] of versionEntries) {
-        if (example.defaultDocument === content) {
-          duplicates.push({ version1: 'default', version2: version })
+        // Check for duplicate content between versions
+        const versionEntries = Array.from(HashMap.entries(doc.versionDocuments))
+        const duplicates: Array<{ version1: string; version2: string }> = []
+        for (let i = 0; i < versionEntries.length; i++) {
+          for (let j = i + 1; j < versionEntries.length; j++) {
+            const [v1, content1] = versionEntries[i]!
+            const [v2, content2] = versionEntries[j]!
+            if (content1 === content2) {
+              duplicates.push({ version1: Version.toString(v1), version2: Version.toString(v2) })
+            }
+          }
         }
-      }
-    }
+        if (duplicates.length > 0) {
+          diagnostics.push(makeDiagnosticDuplicateContent({
+            message: `Multiple versions have identical content, consider using a partially versioned example`,
+            example: { name: example.name, path: example.path },
+            duplicates,
+          }))
+        }
+      },
+      DocumentPartiallyVersioned: (doc) => {
+        // Partially versioned - check for unused default
+        const versionKeys = Array.from(HashMap.keys(doc.versionDocuments)).map(Version.toString)
+        const allVersionsCovered = schemaVersions.every(sv => versionKeys.includes(sv))
 
-    if (duplicates.length > 0) {
-      const diagnostic = makeDiagnosticDuplicateContent({
-        message: `Multiple versions of example have identical content, consider consolidating`,
-        example: {
-          name: example.name,
-          path: example.path,
-        },
-        duplicates,
-      })
-      diagnostics.push(diagnostic)
-    }
+        if (allVersionsCovered) {
+          diagnostics.push(makeDiagnosticUnusedDefault({
+            message: `Default document will never be used because all schema versions have explicit documents`,
+            example: { name: example.name, path: example.path },
+            versions: versionKeys,
+          }))
+        }
 
-    // Check for missing versions
-    if (!example.defaultDocument) {
-      const missingVersions = schemaVersions.filter(sv => !versionKeys.includes(sv))
-
-      if (missingVersions.length > 0) {
-        const diagnostic = makeDiagnosticMissingVersions({
-          message: `Example does not provide content for all schema versions`,
-          example: {
-            name: example.name,
-            path: example.path,
-          },
-          providedVersions: versionKeys,
-          missingVersions,
-        })
-        diagnostics.push(diagnostic)
-      }
-    }
-  }
-  // Unversioned examples don't have version-related diagnostics
+        // Check for duplicate content between versions and default
+        const duplicates: Array<{ version1: string; version2: string }> = []
+        for (const [version, content] of HashMap.entries(doc.versionDocuments)) {
+          if (doc.defaultDocument === content) {
+            duplicates.push({ version1: 'default', version2: Version.toString(version) })
+          }
+        }
+        if (duplicates.length > 0) {
+          diagnostics.push(makeDiagnosticDuplicateContent({
+            message: `Version duplicates default content, consider removing the duplicate`,
+            example: { name: example.name, path: example.path },
+            duplicates,
+          }))
+        }
+      },
+      DocumentUnversioned: () => {
+        // DocumentUnversioned doesn't have version-related diagnostics
+      },
+    }),
+  )
 
   return diagnostics
 }
@@ -256,7 +189,7 @@ export const scan = (
     const groupedFiles = groupExampleFiles(files)
 
     // Process each example group
-    const examples: Example[] = []
+    const examples: Example.Example[] = []
     const diagnostics: Diagnostic[] = []
 
     for (const [name, versions] of groupedFiles) {
@@ -264,6 +197,7 @@ export const scan = (
       const hasMultipleVersions = versions.size > 1
       const hasUnversionedFile = versions.has(null)
       const hasDefaultFile = versions.has('default')
+      const hasOnlyDefaultFile = hasDefaultFile && versions.size === 1
 
       // Determine the base path for this example
       const firstFilePath = Array.from(versions.values())[0]!
@@ -271,7 +205,7 @@ export const scan = (
         ? firstFilePath
         : Path.dirname(firstFilePath)
 
-      let example: Example
+      let example: Example.Example
 
       if (hasUnversionedFile && versions.size === 1) {
         // Unversioned example - single file with no version
@@ -279,15 +213,40 @@ export const scan = (
         const fullPath = Path.join(options.dir, filePath)
         const document = yield* fs.readFileString(fullPath)
 
-        example = UnversionedExample.make({
+        example = Example.make({
           name,
           path: basePath,
-          document,
+          document: Document.Unversioned.make({
+            document,
+          }),
+        })
+      } else if (hasOnlyDefaultFile) {
+        // Partially versioned example with only default - no explicit versions
+        const filePath = versions.get('default')!
+        const fullPath = Path.join(options.dir, filePath)
+        const document = yield* fs.readFileString(fullPath)
+
+        example = Example.make({
+          name,
+          path: basePath,
+          document: Document.PartiallyVersioned.make({
+            versionDocuments: HashMap.empty(),
+            defaultDocument: document,
+          }),
         })
       } else {
         // Versioned example - multiple files or versioned files
-        const versionDocuments: Record<string, string> = {}
+        let versionDocuments = HashMap.empty<Version.Version, string>()
         let defaultDocument: string | undefined
+        const unknownVersions: string[] = []
+
+        // Get available schema versions if catalog is provided
+        const schemaVersions: string[] = options.schemaCatalog
+          ? SchemaCatalog.fold(
+            (versioned) => versioned.entries.map(entry => Version.toString(entry.version)),
+            () => [], // Unversioned schemas don't have version-specific examples
+          )(options.schemaCatalog)
+          : []
 
         // Read content for each version
         for (const [version, filePath] of versions) {
@@ -297,38 +256,98 @@ export const scan = (
           if (version === 'default') {
             defaultDocument = fileContent
           } else if (version !== null) {
-            // Convert version string to standardized format
-            let versionKey: string
-            if (version.startsWith('v') && /^v\d+$/.test(version)) {
-              // Keep as v1, v2, etc for integer versions
-              versionKey = version
-            } else {
-              // Use as-is for other version formats
-              versionKey = version
+            // Check if this version exists in the schema
+            if (options.schemaCatalog && schemaVersions.length > 0 && !schemaVersions.includes(version)) {
+              unknownVersions.push(version)
+              // Create diagnostic for unknown version
+              diagnostics.push(makeDiagnosticUnknownVersion({
+                message: `Example "${name}" specifies version "${version}" which does not exist in the schema`,
+                example: { name, path: basePath },
+                version,
+                availableVersions: schemaVersions,
+              }))
+              // Skip this version - don't include it in the example
+              continue
             }
-            versionDocuments[versionKey] = fileContent
+
+            const versionObj = Version.decodeSync(version)
+            versionDocuments = HashMap.set(versionDocuments, versionObj, fileContent)
           }
         }
 
-        example = VersionedExample.make({
-          name,
-          path: basePath,
-          versionDocuments,
-          defaultDocument,
-        })
+        // Determine which type of example to create
+        const hasVersions = HashMap.size(versionDocuments) > 0
+
+        if (hasVersions && defaultDocument) {
+          // Has both versions and default = PartiallyVersioned
+          example = Example.make({
+            name,
+            path: basePath,
+            document: Document.PartiallyVersioned.make({
+              versionDocuments,
+              defaultDocument,
+            }),
+          })
+        } else if (hasVersions && !defaultDocument) {
+          // Has only versions = Versioned (must cover all schema versions)
+          example = Example.make({
+            name,
+            path: basePath,
+            document: Document.Versioned.make({
+              versionDocuments,
+            }),
+          })
+        } else if (!hasVersions && defaultDocument) {
+          // Has only default = PartiallyVersioned
+          example = Example.make({
+            name,
+            path: basePath,
+            document: Document.PartiallyVersioned.make({
+              versionDocuments: HashMap.empty(),
+              defaultDocument,
+            }),
+          })
+        } else if (unknownVersions.length > 0) {
+          // All versions were unknown, skip this example entirely
+          continue
+        } else {
+          // No versions and no default - shouldn't happen
+          continue
+        }
       }
 
-      examples.push(example)
-
-      // Generate diagnostics for this example
-      diagnostics.push(...lintFileLayout(example, options.schemaCatalog))
+      if (example) {
+        examples.push(example)
+        // Generate diagnostics for this example
+        diagnostics.push(...lintFileLayout(example, options.schemaCatalog))
+      }
     }
 
     // Perform validation if catalog is provided
     if (options.schemaCatalog) {
-      diagnostics.push(...lintExamplesContent(examples, options.schemaCatalog))
+      diagnostics.push(...validateExamples(examples, options.schemaCatalog))
     }
 
-    const catalog = Catalog.make({ examples })
+    // @claude create a utility for reading a file at variable paths
+    // Check for index.md or index.mdx file
+    let indexContent: string | undefined
+    const indexMdPath = Path.join(options.dir, 'index.md')
+    const indexMdxPath = Path.join(options.dir, 'index.mdx')
+
+    // Try index.md first, then index.mdx
+    const indexPath = (yield* fs.exists(indexMdPath))
+      ? indexMdPath
+      : (yield* fs.exists(indexMdxPath))
+      ? indexMdxPath
+      : null
+
+    if (indexPath) {
+      indexContent = yield* fs.readFileString(indexPath)
+    }
+
+    const catalog = Catalog.make({
+      examples,
+      index: indexContent,
+    })
     return { catalog, diagnostics }
   })

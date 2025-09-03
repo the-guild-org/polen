@@ -1,15 +1,18 @@
 import { S } from '#lib/kit-temp/effect'
-import { Example } from './example.js'
+import { Example } from './example/$.js'
 
 // ============================================================================
 // Schema and Type
 // ============================================================================
 
 export const Catalog = S.Struct({
-  examples: S.Array(Example),
+  // @claude add JSdoc to this
+  examples: S.Array(Example.Example),
+  // @claude add JSdoc to this
+  index: S.optional(S.String),
 }).annotations({
   identifier: 'ExamplesCatalog',
-  description: 'A catalog of GraphQL examples',
+  description: 'A catalog of GraphQL examples with optional index content',
 })
 
 export type Catalog = S.Schema.Type<typeof Catalog>

@@ -1,3 +1,4 @@
+import type { HeroCallToAction, HeroConfig } from '#api/config/home'
 import { CatalogStatistics } from '#lib/catalog-statistics/$'
 import { Box, Button, Flex, Heading, Section, Text } from '@radix-ui/themes'
 import { buildSchema } from 'graphql'
@@ -7,38 +8,13 @@ import { examplesCatalog } from 'virtual:polen/project/examples'
 import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { templateVariables } from 'virtual:polen/template/variables'
 
-interface HeroProps {
-  title?: string
-  tagline?: string
-  callToActions?:
-    | Array<{
-      label: string
-      href: string
-      variant?: 'primary' | 'secondary'
-    }>
-    | {
-      before?: Array<{ label: string; href: string; variant?: 'primary' | 'secondary' }>
-      after?: Array<{ label: string; href: string; variant?: 'primary' | 'secondary' }>
-      over?: Array<{ label: string; href: string; variant?: 'primary' | 'secondary' }>
-    }
-  // Legacy support
-  primaryCTA?: {
-    label: string
-    href: string
-  }
-  secondaryCTA?: {
-    label: string
-    href: string
-  }
-  heroImage?: string // Allow passing hero image path
+interface HeroProps extends HeroConfig {
 }
 
 export const Hero: React.FC<HeroProps> = ({
   title = templateVariables.title || 'GraphQL Developer Portal',
   tagline = 'Explore and integrate with our GraphQL API',
   callToActions,
-  primaryCTA,
-  secondaryCTA,
   heroImage,
 }) => {
   // Build smart default CTAs based on conventions
@@ -72,29 +48,29 @@ export const Hero: React.FC<HeroProps> = ({
   }
 
   // Process callToActions configuration
-  let ctaButtons
+  let ctaButtons: HeroCallToAction[]
   if (callToActions) {
     if (Array.isArray(callToActions)) {
       // Simple array - use as-is (replaces defaults)
-      ctaButtons = callToActions
+      ctaButtons = [...callToActions]
     } else {
-      // Object with before/after/over
-      if (callToActions.over) {
-        ctaButtons = callToActions.over
+      // Object with before/after/over - TypeScript needs help here
+      const ctaConfig = callToActions as {
+        before?: readonly HeroCallToAction[]
+        after?: readonly HeroCallToAction[]
+        over?: readonly HeroCallToAction[]
+      }
+      if (ctaConfig.over) {
+        ctaButtons = [...ctaConfig.over]
       } else {
         const defaults = getDefaultCTAs()
         ctaButtons = [
-          ...(callToActions.before || []),
+          ...(ctaConfig.before || []),
           ...defaults,
-          ...(callToActions.after || []),
+          ...(ctaConfig.after || []),
         ]
       }
     }
-  } else if (primaryCTA || secondaryCTA) {
-    // Legacy support
-    ctaButtons = []
-    if (primaryCTA) ctaButtons.push({ ...primaryCTA, variant: 'primary' as const })
-    if (secondaryCTA) ctaButtons.push({ ...secondaryCTA, variant: 'secondary' as const })
   } else {
     // Use smart defaults
     ctaButtons = getDefaultCTAs()

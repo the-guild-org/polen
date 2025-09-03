@@ -1,7 +1,7 @@
 import { Typings } from '#api/typings/$'
 import { FileSystem } from '@effect/platform'
 import { Effect } from 'effect'
-import type { Catalog } from './catalog.js'
+import type { Catalog } from './schemas/catalog.js'
 
 /**
  * Generate TypeScript type definitions for discovered examples.

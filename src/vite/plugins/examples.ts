@@ -1,6 +1,5 @@
 import { Examples as ExamplesModule } from '#api/examples/$'
 import { generateExampleTypes } from '#api/examples/type-generator'
-import type { Api } from '#api/index'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -8,8 +7,12 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { compile } from '@mdx-js/mdx'
+import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
 import { Effect } from 'effect'
 import * as Path from 'node:path'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
 import { polenVirtual } from '../vi.js'
 
 const debug = debugPolen.sub(`vite-examples`)
@@ -24,7 +27,7 @@ export interface Options {
 }
 
 export interface ProjectExamplesCatalog {
-  examples: ExamplesModule.Example[]
+  examples: ExamplesModule.Example.Example[]
 }
 
 /**
@@ -82,6 +85,13 @@ export const Examples = ({
           return config.examples.diagnostics?.duplicateContent
         case 'missing-versions':
           return config.examples.diagnostics?.missingVersions
+        case 'unknown-version':
+          // Always show errors for unknown versions (they are discarded from catalog)
+          return {
+            enabled: true,
+            dev: { severity: 'error' as const },
+            build: { severity: 'error' as const },
+          }
       }
     } else if (diagnostic.source === 'examples-validation') {
       return config.examples.diagnostics?.validation
@@ -104,7 +114,12 @@ export const Examples = ({
       filePatterns: {
         watch: [examplesDir],
         isRelevant: (file) => {
-          return file.includes(examplesDir) && (file.endsWith('.graphql') || file.endsWith('.gql'))
+          return file.includes(examplesDir) && (
+            file.endsWith('.graphql')
+            || file.endsWith('.gql')
+            || file.endsWith('index.md')
+            || file.endsWith('index.mdx')
+          )
         },
       },
       dependentVirtualModules: [viProjectExamples],

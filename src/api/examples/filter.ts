@@ -1,5 +1,5 @@
 import type { ExampleName, ExampleSelection } from './config.js'
-import type { Example } from './example.js'
+import { Example } from './schemas/example/$.js'
 
 /**
  * Filter examples based on the display configuration.
@@ -9,9 +9,9 @@ import type { Example } from './example.js'
  * @returns Filtered examples based on the selection criteria
  */
 export const filterExamplesBySelection = (
-  examples: Example[],
+  examples: Example.Example[],
   selection: ExampleSelection | undefined,
-): Example[] => {
+): Example.Example[] => {
   // If no selection config, default to all
   if (selection === undefined) {
     return examples

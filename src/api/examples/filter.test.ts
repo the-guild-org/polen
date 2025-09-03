@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import type { ExampleName, ExampleSelection } from './config.js'
 import { filterExamplesBySelection, shouldDisplayExample } from './filter.js'
-import { UnversionedExample } from './unversioned.js'
+import { Unversioned } from './schemas/example/unversioned.js'
 
 describe('filterExamplesBySelection', () => {
   const examples = [
-    UnversionedExample.make({ name: 'a', path: 'a.graphql', document: 'a' }),
-    UnversionedExample.make({ name: 'b', path: 'b.graphql', document: 'b' }),
-    UnversionedExample.make({ name: 'c', path: 'c.graphql', document: 'c' }),
+    Unversioned.make({ name: 'a', path: 'a.graphql', document: 'a' }),
+    Unversioned.make({ name: 'b', path: 'b.graphql', document: 'b' }),
+    Unversioned.make({ name: 'c', path: 'c.graphql', document: 'c' }),
   ]
 
   test.for([

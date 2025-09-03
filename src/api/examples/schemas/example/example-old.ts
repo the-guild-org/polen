@@ -1,6 +1,6 @@
 import { S } from '#lib/kit-temp/effect'
-import { Version } from '#lib/version/$'
-import { Match, Order } from 'effect'
+import { Order } from 'effect'
+import * as PartiallyVersionedExample from './partially-versioned.js'
 import * as UnversionedExample from './unversioned.js'
 import * as VersionedExample from './versioned.js'
 
@@ -8,18 +8,16 @@ import * as VersionedExample from './versioned.js'
 // Schema - Example
 // ============================================================================
 
-export const Example = S.Union(VersionedExample.VersionedExample, UnversionedExample.UnversionedExample).annotations({
+export const Example = S.Union(
+  VersionedExample.Versioned,
+  PartiallyVersionedExample.PartiallyVersioned,
+  UnversionedExample.Unversioned,
+).annotations({
   identifier: 'Example',
-  description: 'A GraphQL example that can be either versioned or unversioned',
+  description: 'A GraphQL example that can be fully versioned, partially versioned, or unversioned',
 })
 
 export type Example = S.Schema.Type<typeof Example>
-
-// ============================================================================
-// Constructors
-// ============================================================================
-
-// Note: No make constructor for union types - use member constructors
 
 // ============================================================================
 // Ordering
@@ -49,20 +47,3 @@ export const is = S.is(Example)
 export const decode = S.decode(Example)
 export const decodeSync = S.decodeSync(Example)
 export const encode = S.encode(Example)
-
-// ============================================================================
-// Domain Logic
-// ============================================================================
-
-/**
- * Get the best available document content for an example.
- * For versioned examples, prefers default document if present.
- * For unversioned examples, returns the single document.
- */
-export const getBestDocument = (example: Example): string | undefined =>
-  Match.value(example).pipe(
-    Match.tagsExhaustive({
-      ExampleUnversioned: (e) => e.document,
-      ExampleVersioned: VersionedExample.getBestDocument,
-    }),
-  )

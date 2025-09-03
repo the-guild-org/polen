@@ -1,7 +1,7 @@
 query GetPokemonV1 {
-  pokemon(name: "pikachu") {
-    id
-    name
-    types
-  }
+    pokemon(id: "025") {
+        id
+        name
+        types
+    }
 }
