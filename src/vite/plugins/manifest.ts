@@ -1,4 +1,4 @@
-import type { Api } from '#api/index'
+import type { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { Path } from '@wollybeard/kit'

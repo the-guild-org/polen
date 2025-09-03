@@ -1,5 +1,5 @@
+import type { Api } from '#api/$'
 import { Content } from '#api/content/$'
-import type { Api } from '#api/index'
 import type { Vite } from '#dep/vite/index'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { FileRouter } from '#lib/file-router'

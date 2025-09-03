@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Schema } from '#api/schema/$'
 import { Catalog } from '#lib/catalog/$'
 import { ViteReactive } from '#lib/vite-reactive/$'

@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
 import { FileRouter } from '#lib/file-router/$'
