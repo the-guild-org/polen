@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Args, Command, Options } from '@effect/cli'
 import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
 import * as Ansis from 'ansis'

@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
 import { allowGlobalParameter } from '../../_/parameters.js'

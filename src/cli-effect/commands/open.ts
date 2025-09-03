@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid'
 import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'

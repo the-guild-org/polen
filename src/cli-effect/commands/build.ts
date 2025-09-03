@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'

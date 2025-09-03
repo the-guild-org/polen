@@ -11,4 +11,12 @@ export default defineConfig({
       },
     },
   },
+  home: {
+    examples: {
+      title: 'API Examples',
+      description: 'Explore common queries with version-specific variations',
+      only: ['get-pokemon', 'list-pokemons', 'search-pokemon'],
+      maxExamples: 3,
+    },
+  },
 })

@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command } from '@effect/cli'
 import { Fs, Path } from '@wollybeard/kit'

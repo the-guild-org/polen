@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { toViteUserConfig } from '#vite/config'
