@@ -1,12 +1,12 @@
 import type { HeroCallToAction, HeroConfig } from '#api/config/home'
 import { CatalogStatistics } from '#lib/catalog-statistics/$'
+import { schemaCatalog } from '#template/data/schema-catalog'
 import { Box, Button, Flex, Heading, Section, Text } from '@radix-ui/themes'
 import { buildSchema } from 'graphql'
 import * as React from 'react'
 import { Link } from 'react-router'
-import { examplesCatalog } from 'virtual:polen/project/examples'
-import PROJECT_SCHEMA from 'virtual:polen/project/schema.json'
 import { templateVariables } from 'virtual:polen/template/variables'
+import { examplesCatalog } from '../../data/examples-catalog.js'
 
 interface HeroProps extends HeroConfig {
 }

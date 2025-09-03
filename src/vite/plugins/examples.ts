@@ -1,5 +1,7 @@
 import type { Api } from '#api/$'
+import { Content } from '#api/content/$'
 import { Examples as ExamplesModule } from '#api/examples/$'
+import * as Catalog from '#api/examples/schemas/catalog'
 import { generateExampleTypes } from '#api/examples/type-generator'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
@@ -8,12 +10,8 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { compile } from '@mdx-js/mdx'
-import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
 import { Effect } from 'effect'
 import * as Path from 'node:path'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
 import { polenVirtual } from '../vi.js'
 
 // Virtual modules provided by this plugin
@@ -146,8 +144,22 @@ export const Examples = ({
             // Report diagnostics with DiagnosticControl filtering
             reportDiagnostics(scanExamplesResult.diagnostics, 'dev')
 
-            // Catalog is now returned directly from scan
-            return `export const examplesCatalog = ${JSON.stringify(scanExamplesResult.catalog)}`
+            // Process index content if present
+            let processedCatalog = scanExamplesResult.catalog
+            if (processedCatalog.index) {
+              // Compile MDX to JavaScript using centralized compiler
+              const compiled = await Content.compileMdxToFunctionBody(processedCatalog.index)
+
+              // Store the compiled code instead of raw markdown
+              processedCatalog = {
+                ...processedCatalog,
+                index: String(compiled.value),
+              }
+            }
+
+            // Encode the catalog to ensure HashMap and other Effect types are properly serialized
+            const encodedCatalog = Catalog.encodeSync(processedCatalog)
+            return `export const examplesCatalog = ${JSON.stringify(encodedCatalog)}`
           },
         },
       ),

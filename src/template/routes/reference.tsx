@@ -7,7 +7,7 @@ import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { catalog } from '#template/data/catalog'
+import { schemaCatalog } from '#template/data/schema-catalog'
 import { neverCase } from '@wollybeard/kit/language'
 import { Effect, Match } from 'effect'
 import React from 'react'
@@ -192,7 +192,7 @@ export const reference = !hasCatalog()
     children: [
       ...typeAndFieldRoutes,
       // Only add version routes if versioned
-      ...(Catalog.Versioned.is(catalog)
+      ...(Catalog.Versioned.is(schemaCatalog)
         ? [route({
           path: `version/:version`,
           children: typeAndFieldRoutes,

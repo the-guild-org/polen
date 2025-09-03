@@ -9,10 +9,7 @@ import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import mdx from '@mdx-js/rollup'
 import { Arr, Path, Str } from '@wollybeard/kit'
-import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
 import { Effect } from 'effect'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
 import { polenVirtual } from '../vi.js'
 import { viProjectData } from './core.js'
 
@@ -74,31 +71,11 @@ export const Pages = ({
     return s.render()
   }
 
-  const chConfig = {
-    components: { code: 'CodeBlock' },
-    syntaxHighlighting: {
-      theme: `github-light`,
-    },
-  }
-
   const plugins: Vite.Plugin[] = [
     // Plugin 1: MDX Processing
     {
       enforce: `pre` as const,
-      ...mdx({
-        jsxImportSource: `polen/react`,
-        providerImportSource: `polen/mdx`,
-        remarkPlugins: [
-          // Parse frontmatter blocks so they're removed from content
-          remarkFrontmatter,
-          remarkGfm,
-          [remarkCodeHike, chConfig],
-        ],
-        recmaPlugins: [
-          [recmaCodeHike, chConfig],
-        ],
-        rehypePlugins: [],
-      }),
+      ...mdx(Content.getMdxRollupConfig()),
     },
 
     // Plugin 2: Reactive Pages Management
