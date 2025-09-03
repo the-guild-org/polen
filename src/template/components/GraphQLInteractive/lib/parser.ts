@@ -151,7 +151,7 @@ class UnifiedToken implements GraphQLToken {
     const nodeType = this._nodeType
 
     // Development-only validation
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       // Validate that the node type is actually a valid TreeSitterGraphQLNodeType
       const validTypes = new Set([
         // Add a few common types for validation

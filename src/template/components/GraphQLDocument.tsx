@@ -5,6 +5,7 @@ import { Box } from '@radix-ui/themes'
 import { HashMap, Match, Option } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 import * as React from 'react'
+import { useHighlighted } from '../hooks/use-highlighted.js'
 import { GraphQLInteractive } from './GraphQLInteractive/GraphQLInteractive.js'
 import { SimpleVersionPicker } from './SimpleVersionPicker.js'
 
@@ -17,9 +18,6 @@ interface GraphQLDocumentProps {
 
   /** Whether to show version picker for versioned examples */
   showVersionPicker?: boolean
-
-  /** Whether to enable interactive features (tooltips, navigation) */
-  interactive?: boolean
 
   /** Callback when version changes */
   onVersionChange?: (version: Version.Version) => void
@@ -36,40 +34,38 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   document,
   schemaCatalog,
   showVersionPicker = true,
-  interactive = true,
   onVersionChange,
   selectedVersion: controlledVersion,
 }) => {
-  // Determine if this is a controlled or uncontrolled component
+  /// ━ VERSION MANAGEMENT
   const isControlled = controlledVersion !== undefined
-
-  // State for uncontrolled mode
-  const [internalVersion, setInternalVersion] = React.useState<Version.Version | null>(null)
-
-  // Use controlled version if provided, otherwise use internal state
+  const [internalVersion, setInternalVersion] = React.useState<Version.Version | null>(
+    Catalog.getLatestVersionIdentifier(schemaCatalog),
+  )
   const selectedVersion = isControlled ? controlledVersion : internalVersion
-
-  // Get document content, schema, and available versions together
-  const result = resolveVersion(document, selectedVersion, schemaCatalog)
-  const content = result.document
-  const schema = result.schema
-  const availableVersions = result.availableVersions
-
-  // Check if this document has versions
-  const hasVersions = availableVersions.length > 0
-
-  // Handle version change
-  const handleVersionChange = (version: Version.Version) => {
+  const internalOnVersionChange = (version: Version.Version) => {
     if (!isControlled) {
       setInternalVersion(version)
     }
-    // Keep callback signature as Version.Version for compatibility
     onVersionChange?.(version)
+  }
+
+  /// ━ DATA RESOLUTION
+  const {
+    availableVersions,
+    schema,
+    document: content,
+  } = resolveVersion(document, selectedVersion, schemaCatalog)
+
+  const highlightedCode = useHighlighted(content, { interactive: true })
+
+  if (!highlightedCode) {
+    return null
   }
 
   return (
     <Box style={{ position: 'relative' }}>
-      {showVersionPicker && hasVersions && (
+      {showVersionPicker && selectedVersion && (
         <Box
           style={{
             position: 'absolute',
@@ -80,28 +76,16 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         >
           <SimpleVersionPicker
             versions={availableVersions}
-            currentVersion={selectedVersion!}
-            onVersionChange={handleVersionChange}
+            currentVersion={selectedVersion}
+            onVersionChange={internalOnVersionChange}
             label='Version'
           />
         </Box>
       )}
-
-      {/* GraphQL document with interactivity */}
-      {interactive && schema
-        ? (
-          <GraphQLInteractive
-            codeblock={content}
-            schema={schema}
-            showWarningIfNoSchema={false}
-          />
-        )
-        : (
-          <GraphQLInteractive
-            codeblock={content}
-            showWarningIfNoSchema={false}
-          />
-        )}
+      <GraphQLInteractive
+        codeblock={highlightedCode}
+        schema={schema}
+      />
     </Box>
   )
 }
@@ -139,7 +123,7 @@ const resolveVersion = (
 
       DocumentPartiallyVersioned: (doc) => {
         // If a specific version is selected and available, use it
-        if (selectedVersion && selectedVersion !== 'default' && selectedVersion !== null) {
+        if (selectedVersion && selectedVersion !== null) {
           const versionDocument = HashMap.get(doc.versionDocuments, selectedVersion)
           if (Option.isSome(versionDocument)) {
             return versionDocument.value
@@ -151,7 +135,7 @@ const resolveVersion = (
 
       DocumentVersioned: (doc) => {
         // Fully versioned, no default fallback
-        if (selectedVersion && selectedVersion !== 'default' && selectedVersion !== null) {
+        if (selectedVersion && selectedVersion !== null) {
           const versionDoc = HashMap.get(doc.versionDocuments, selectedVersion)
           if (Option.isSome(versionDoc)) {
             return versionDoc.value
@@ -202,7 +186,7 @@ const resolveVersion = (
         }
 
         // For versioned catalog with versioned/partially versioned document
-        const effectiveVersion = selectedVersion && selectedVersion !== 'default' && selectedVersion !== null
+        const effectiveVersion = selectedVersion && selectedVersion !== null
           ? selectedVersion
           : null
 
@@ -227,7 +211,7 @@ const resolveVersion = (
             }
           } else if (document._tag === 'DocumentPartiallyVersioned') {
             const hasVersion = Option.isSome(HashMap.get(document.versionDocuments, effectiveVersion))
-            // For partially versioned, it's ok if version doesn't exist (falls back to default)
+            // For partially versioned, it's ok if version doesn't exist (falls back to defaultDocument)
             if (hasVersion) {
               throw new Error(`Version ${Version.toString(effectiveVersion)} exists in document but not in catalog`)
             }

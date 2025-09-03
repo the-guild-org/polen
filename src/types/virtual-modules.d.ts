@@ -26,7 +26,7 @@ declare module 'virtual:polen/project/examples' {
 }
 
 declare module 'virtual:polen/project/config' {
-  export const templateConfig: import('#api/config/template').TemplateConfig
+  export const templateConfig: import('#api/config-template/template').TemplateConfig
 }
 
 declare module 'virtual:polen/project/navbar' {

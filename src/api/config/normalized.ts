@@ -1,6 +1,7 @@
 import { ExamplesConfig } from '#api/examples/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Typings } from '#api/typings/$'
+import { DirectedFilter } from '#lib/directed-filter/$'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import { packagePaths } from '#package-paths'
@@ -8,6 +9,12 @@ import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
 import { BuildArchitecture, ConfigInput } from './input.js'
+
+// ============================================================================
+// DirectedFilter for Strings
+// ============================================================================
+
+const StringDirectedFilter = DirectedFilter.create(S.String)
 
 // ============================================================================
 // Normalized Home Config
@@ -60,19 +67,17 @@ const HomeConfig = S.Struct({
   ),
 
   /**
-   * Examples section - false to disable, object with configuration.
-   * After normalization, `true` is expanded to object with defaults.
+   * Examples section configuration.
+   * After normalization, always an object with enabled flag.
+   * Uses DirectedFilter for include/exclude logic (never optional, uses AllowAll as default).
    */
-  examples: S.Union(
-    S.Literal(false),
-    S.Struct({
-      title: S.optional(S.String),
-      description: S.optional(S.String),
-      maxExamples: S.Number,
-      only: S.optional(S.Array(S.String)),
-      exclude: S.optional(S.Array(S.String)),
-    }),
-  ),
+  examples: S.Struct({
+    enabled: S.Boolean,
+    title: S.optional(S.String),
+    description: S.optional(S.String),
+    maxExamples: S.Number,
+    filter: StringDirectedFilter.Union,
+  }),
 
   /**
    * Quick start section - false to disable, object with configuration.
@@ -485,11 +490,11 @@ const getConfigInputDefaults = (): Config => ({
     socialProof: false,
     socialMedia: false,
     examples: {
+      enabled: true,
       title: undefined,
       description: undefined,
       maxExamples: 3,
-      only: undefined,
-      exclude: undefined,
+      filter: DirectedFilter.AllowAll,
     },
     quickStart: false,
     stats: false,
@@ -712,25 +717,36 @@ export const normalizeInput = (
         }
       }
 
-      // Examples section
+      // Examples section - always normalize to object with enabled flag and filter
       if (homeInput.examples !== undefined) {
         if (homeInput.examples === false) {
-          config.home.examples = false
-        } else if (homeInput.examples === true) {
           config.home.examples = {
+            enabled: false,
             title: undefined,
             description: undefined,
             maxExamples: 3,
-            only: undefined,
-            exclude: undefined,
+            filter: DirectedFilter.AllowAll,
+          }
+        } else if (homeInput.examples === true) {
+          config.home.examples = {
+            enabled: true,
+            title: undefined,
+            description: undefined,
+            maxExamples: 3,
+            filter: DirectedFilter.AllowAll,
           }
         } else {
+          // Create DirectedFilter from only/exclude pattern (never returns null now)
+          const filter = DirectedFilter.fromOnlyExclude(
+            homeInput.examples.only,
+            homeInput.examples.exclude,
+          )
           config.home.examples = {
+            enabled: true,
             title: homeInput.examples.title,
             description: homeInput.examples.description,
             maxExamples: homeInput.examples.maxExamples ?? 3,
-            only: homeInput.examples.only,
-            exclude: homeInput.examples.exclude,
+            filter: filter as any,
           }
         }
       }

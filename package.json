@@ -94,6 +94,12 @@
     "#lib/diagnostic": {
       "default": "./build/lib/diagnostic/$.js"
     },
+    "#lib/directed-filter": {
+      "default": "./build/lib/directed-filter/$.js"
+    },
+    "#lib/directed-filter/$$": {
+      "default": "./build/lib/directed-filter/$$.js"
+    },
     "#lib/diagnostic/diagnostic": {
       "default": "./build/lib/diagnostic/$$.js"
     },

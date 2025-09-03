@@ -1,6 +1,5 @@
-import { S } from '#lib/kit-temp/effect'
 import { FileSystem } from '@effect/platform'
-import { Effect, Equivalence } from 'effect'
+import { Effect, Equivalence, Schema as S } from 'effect'
 import * as Path from 'node:path'
 
 // ============================================================================

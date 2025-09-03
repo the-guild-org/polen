@@ -24,10 +24,10 @@ interface GraphQLInteractiveProps {
   codeblock: HighlightedCode
 
   /** The GraphQL schema for providing type information and validation */
-  schema?: GraphQLSchema
+  schema?: GraphQLSchema | undefined
 
   /** Whether to show a warning indicator when schema is missing */
-  showWarningIfNoSchema?: boolean
+  showWarningIfNoSchema?: boolean | undefined
 }
 
 /**
@@ -453,7 +453,7 @@ export const GraphQLInteractive: React.FC<GraphQLInteractiveProps> = (props) => 
       fallbackCode={props.codeblock.code}
       onError={(error, errorInfo) => {
         // Log error for debugging (only in development)
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env['NODE_ENV'] === 'development') {
           console.error('GraphQL Interactive Error Boundary:', error, errorInfo)
         }
       }}
