@@ -2,7 +2,7 @@
  * Integration tests for GraphQL document interactive tooltips
  */
 
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
 import type { FsLayout } from '@wollybeard/kit'
 import { Effect } from 'effect'
@@ -31,9 +31,9 @@ query GetOrganization {
 
 <GraphQLDocumentWithSchema>
 mutation CreateProject {
-  createProject(input: { 
+  createProject(input: {
     organizationId: "org-123"
-    name: "My Project" 
+    name: "My Project"
   }) {
     id
     name
@@ -92,24 +92,24 @@ export default defineConfig({
               name: 'Organization',
               description: 'A GraphQL organization entity',
               fields: [
-                { 
-                  name: 'id', 
+                {
+                  name: 'id',
                   type: { kind: 'SCALAR', name: 'ID' },
                   description: 'Unique identifier for the organization'
                 },
-                { 
-                  name: 'name', 
+                {
+                  name: 'name',
                   type: { kind: 'SCALAR', name: 'String' },
                   description: 'Display name of the organization'
                 },
-                { 
-                  name: 'slug', 
+                {
+                  name: 'slug',
                   type: { kind: 'SCALAR', name: 'String' },
                   description: 'URL-friendly identifier'
                 },
                 {
                   name: 'projects',
-                  type: { 
+                  type: {
                     kind: 'LIST',
                     ofType: { kind: 'OBJECT', name: 'Project' }
                   },
@@ -122,13 +122,13 @@ export default defineConfig({
               name: 'Project',
               description: 'A project within an organization',
               fields: [
-                { 
-                  name: 'id', 
+                {
+                  name: 'id',
                   type: { kind: 'SCALAR', name: 'ID' },
                   description: 'Unique identifier for the project'
                 },
-                { 
-                  name: 'name', 
+                {
+                  name: 'name',
                   type: { kind: 'SCALAR', name: 'String' },
                   description: 'Display name of the project'
                 },
@@ -144,8 +144,8 @@ export default defineConfig({
               name: 'OrganizationReference',
               description: 'Input for referencing an organization',
               inputFields: [
-                { 
-                  name: 'slug', 
+                {
+                  name: 'slug',
                   type: { kind: 'SCALAR', name: 'String' },
                   description: 'Slug of the organization'
                 }
@@ -156,13 +156,13 @@ export default defineConfig({
               name: 'CreateProjectInput',
               description: 'Input for creating a new project',
               inputFields: [
-                { 
-                  name: 'organizationId', 
+                {
+                  name: 'organizationId',
                   type: { kind: 'SCALAR', name: 'ID' },
                   description: 'ID of the organization to create project in'
                 },
-                { 
-                  name: 'name', 
+                {
+                  name: 'name',
                   type: { kind: 'SCALAR', name: 'String' },
                   description: 'Name of the new project'
                 }

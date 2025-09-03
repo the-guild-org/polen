@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
 import type { FsLayout } from '@wollybeard/kit'
 import { Effect } from 'effect'

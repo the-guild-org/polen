@@ -1,3 +1,4 @@
+import type { Api } from '#api/$'
 import { Examples as ExamplesModule } from '#api/examples/$'
 import { generateExampleTypes } from '#api/examples/type-generator'
 import { Diagnostic } from '#lib/diagnostic/$'
@@ -14,8 +15,6 @@ import * as Path from 'node:path'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import { polenVirtual } from '../vi.js'
-
-const debug = debugPolen.sub(`vite-examples`)
 
 // Virtual modules provided by this plugin
 export const viProjectExamples = polenVirtual([`project`, `examples`])

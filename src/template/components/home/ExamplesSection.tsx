@@ -1,15 +1,15 @@
 import type { Api } from '#api/index'
-import { Box, Heading, Section, Text } from '@radix-ui/themes'
+import { Box, Heading, Section } from '@radix-ui/themes'
 import type { GraphQLSchema } from 'graphql'
 import * as React from 'react'
 import { InteractiveExamples } from './InteractiveExamples.js'
 
 interface ExamplesSectionProps {
-  schema?: GraphQLSchema
-  title?: string
-  description?: string
-  maxExamples?: number
-  examples: readonly Api.Examples.Example[]
+  schema?: GraphQLSchema | undefined
+  title?: string | undefined
+  description?: string | undefined
+  maxExamples?: number | undefined
+  examples: readonly Api.Examples.Example.Example[]
 }
 
 export const ExamplesSection: React.FC<ExamplesSectionProps> = ({

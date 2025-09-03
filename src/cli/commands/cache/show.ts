@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { allowGlobalParameter } from '#cli/_/parameters'
 import { Command } from '@molt/command'
 import { z } from 'zod'

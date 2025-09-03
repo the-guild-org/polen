@@ -7,7 +7,7 @@
  * polen open --sdl https://docs.github.com/public/fpt/schema.docs.graphql
  */
 
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { allowGlobalParameter } from '#cli/_/parameters'
 import { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid'

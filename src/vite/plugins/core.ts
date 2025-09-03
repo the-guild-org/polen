@@ -1,5 +1,5 @@
+import { Api } from '#api/$'
 import { createNavbar, type NavbarItem } from '#api/content/navbar'
-import { Api } from '#api/index'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'

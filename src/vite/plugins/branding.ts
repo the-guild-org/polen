@@ -1,4 +1,4 @@
-import type { Config } from '#api/api'
+import type { Api } from '#api/$'
 import type { Vite } from '#dep/vite/index'
 import { type ExistenceDiff, getMutationType, MutationType } from '#lib/mutation-type'
 import { debugPolen } from '#singletons/debug'
@@ -14,7 +14,7 @@ const generateDefaultLogo = async () => {
 </svg>`
 }
 
-export function Branding(config: Config.Config): Plugin {
+export function Branding(config: Api.Config.Config): Plugin {
   const debug = debugPolen.sub(`vite-plugin:branding`)
   debug(`initialized`)
 

@@ -1,4 +1,5 @@
 import { Catalog as SchemaCatalog } from '#lib/catalog/$'
+import { Document } from '#lib/document/$'
 import { Version } from '#lib/version/$'
 import { HashMap, Match, Option } from 'effect'
 import { Array } from 'effect'
@@ -37,41 +38,41 @@ export const validateExamples = (
         const schemaVersions = versioned.entries.map(e => e.version)
 
         for (const example of examples) {
-          Match.value(example).pipe(
+          Match.value(example.document).pipe(
             Match.tagsExhaustive({
-              ExampleVersioned: (e) => {
+              DocumentVersioned: (doc) => {
                 // Fully versioned - validate each version against its corresponding schema
                 for (const entry of versioned.entries) {
-                  const content = HashMap.get(e.versionDocuments, entry.version)
+                  const content = HashMap.get(doc.versionDocuments, entry.version)
                   if (Option.isSome(content)) {
                     const versionStr = Version.toString(entry.version)
-                    validateDocument(e.name, e.path, versionStr, content.value, entry.definition, diagnostics)
+                    validateDocument(example.name, example.path, versionStr, content.value, entry.definition, diagnostics)
                   }
                 }
               },
-              ExamplePartiallyVersioned: (e) => {
+              DocumentPartiallyVersioned: (doc) => {
                 // Validate explicit versions against their corresponding schemas
                 for (const entry of versioned.entries) {
-                  const content = HashMap.get(e.versionDocuments, entry.version)
+                  const content = HashMap.get(doc.versionDocuments, entry.version)
                   if (Option.isSome(content)) {
                     const versionStr = Version.toString(entry.version)
-                    validateDocument(e.name, e.path, versionStr, content.value, entry.definition, diagnostics)
+                    validateDocument(example.name, example.path, versionStr, content.value, entry.definition, diagnostics)
                   }
                 }
 
-                const uncoveredVersions = Array.filter(schemaVersions, (v) => !HashMap.has(e.versionDocuments, v))
+                const uncoveredVersions = Array.filter(schemaVersions, (v) => !HashMap.has(doc.versionDocuments, v))
 
                 for (const uncoveredVersion of uncoveredVersions) {
                   const entry = versioned.entries.find(
                     e => Version.equivalence(e.version, uncoveredVersion),
                   )
                   if (!entry) throw new Error('Uncovered version not found in catalog entries')
-                  validateDocument(e.name, e.path, 'default', e.defaultDocument, entry.definition, diagnostics)
+                  validateDocument(example.name, example.path, 'default', doc.defaultDocument, entry.definition, diagnostics)
                 }
               },
-              ExampleUnversioned: (e) => {
+              DocumentUnversioned: (doc) => {
                 const latestEntry = versioned.entries[0]!
-                validateDocument(e.name, e.path, 'default', e.document, latestEntry.definition, diagnostics)
+                validateDocument(example.name, example.path, 'default', doc.document, latestEntry.definition, diagnostics)
               },
             }),
           )
@@ -80,19 +81,19 @@ export const validateExamples = (
         return diagnostics
       },
       CatalogUnversioned: (unversioned) => {
-        // For unversioned catalog, only unversioned examples make sense
+        // For unversioned catalog, only unversioned documents make sense
         for (const example of examples) {
-          if (example._tag === 'ExampleUnversioned') {
+          if (example.document._tag === 'DocumentUnversioned') {
             validateDocument(
               example.name,
               example.path,
               'default',
-              example.document,
+              example.document.document,
               unversioned.schema.definition,
               diagnostics,
             )
           }
-          // Versioned/PartiallyVersioned examples with unversioned catalog don't make sense
+          // Versioned/PartiallyVersioned documents with unversioned catalog don't make sense
           // These should be caught by other diagnostics
         }
 

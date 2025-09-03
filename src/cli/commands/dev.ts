@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { allowGlobalParameter, projectParameter } from '#cli/_/parameters'
 import { Vite } from '#dep/vite/index'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'

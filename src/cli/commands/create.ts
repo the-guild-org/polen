@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Command } from '@molt/command'
 import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
 import * as Ansis from 'ansis'

@@ -1,4 +1,5 @@
 import { Diagnostic } from '#lib/diagnostic/$'
+import { Document } from '#lib/document/$'
 import { Version } from '#lib/version/$'
 import { Effect, HashMap } from 'effect'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
@@ -8,22 +9,26 @@ describe('Example', () => {
   test.for([
     {
       name: 'validates unversioned example',
-      example: Examples.Example.Unversioned.make({
+      example: Examples.Example.Example.make({
         name: 'list-users',
         path: 'examples/list-users.graphql',
-        document: 'query ListUsers { users { id name } }',
+        document: Document.Unversioned.make({
+          document: 'query ListUsers { users { id name } }',
+        }),
       }),
       expected: true,
     },
     {
       name: 'validates versioned example',
-      example: Examples.Example.Versioned.make({
+      example: Examples.Example.Example.make({
         name: 'list-users',
         path: 'examples',
-        versionDocuments: HashMap.make(
-          [Version.fromString('v1'), 'query ListUsers { users { id name } }'],
-          [Version.fromString('v2'), 'query ListUsers { users { id email name } }'],
-        ),
+        document: Document.Versioned.make({
+          versionDocuments: HashMap.make(
+            [Version.fromString('v1'), 'query ListUsers { users { id name } }'],
+            [Version.fromString('v2'), 'query ListUsers { users { id email name } }'],
+          ),
+        }),
       }),
       expected: true,
     },
@@ -99,10 +104,12 @@ describe('ExampleValidator', () => {
     {
       name: 'validates unversioned example',
       examples: [
-        Examples.Example.Unversioned.make({
+        Examples.Example.Example.make({
           name: 'test',
           path: 'test.graphql',
-          document: 'query Test { test }',
+          document: Document.Unversioned.make({
+            document: 'query Test { test }',
+          }),
         }),
       ],
       expectedErrors: 0,
@@ -110,13 +117,15 @@ describe('ExampleValidator', () => {
     {
       name: 'validates versioned example',
       examples: [
-        Examples.Example.Versioned.make({
+        Examples.Example.Example.make({
           name: 'test',
           path: 'test',
-          versionDocuments: HashMap.make(
-            [Version.fromString('v1'), 'query Test { test }'],
-            [Version.fromString('v2'), 'query Test { test { id } }'],
-          ),
+          document: Document.Versioned.make({
+            versionDocuments: HashMap.make(
+              [Version.fromString('v1'), 'query Test { test }'],
+              [Version.fromString('v2'), 'query Test { test { id } }'],
+            ),
+          }),
         }),
       ],
       expectedErrors: 0,
@@ -131,9 +140,21 @@ describe('ExampleValidator', () => {
 
 describe('filterExamplesBySelection', () => {
   const examples = [
-    Examples.Example.Unversioned.make({ name: 'a', path: 'a.graphql', document: 'a' }),
-    Examples.Example.Unversioned.make({ name: 'b', path: 'b.graphql', document: 'b' }),
-    Examples.Example.Unversioned.make({ name: 'c', path: 'c.graphql', document: 'c' }),
+    Examples.Example.Example.make({
+      name: 'a',
+      path: 'a.graphql',
+      document: Document.Unversioned.make({ document: 'a' }),
+    }),
+    Examples.Example.Example.make({
+      name: 'b',
+      path: 'b.graphql',
+      document: Document.Unversioned.make({ document: 'b' }),
+    }),
+    Examples.Example.Example.make({
+      name: 'c',
+      path: 'c.graphql',
+      document: Document.Unversioned.make({ document: 'c' }),
+    }),
   ]
 
   test.for([
@@ -149,12 +170,14 @@ describe('filterExamplesBySelection', () => {
 
 describe('ExampleDiagnostics', () => {
   const examples = [
-    Examples.Example.Versioned.make({
+    Examples.Example.Example.make({
       name: 'test',
       path: 'test',
-      versionDocuments: HashMap.make(
-        [Version.fromString('v1'), 'content'],
-      ),
+      document: Document.Versioned.make({
+        versionDocuments: HashMap.make(
+          [Version.fromString('v1'), 'content'],
+        ),
+      }),
     }),
   ]
 

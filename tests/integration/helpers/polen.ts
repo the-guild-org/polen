@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import type { Vite } from '#dep/vite/index'
 import type { Polen } from '#exports/index'
 import { toViteUserConfig } from '#vite/config'

@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
 import { Effect } from 'effect'
 import { expect } from 'playwright/test'

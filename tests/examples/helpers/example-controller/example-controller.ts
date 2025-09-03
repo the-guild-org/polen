@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import type { PackageManager } from '@wollybeard/kit'
 import { Debug, Path } from '@wollybeard/kit'

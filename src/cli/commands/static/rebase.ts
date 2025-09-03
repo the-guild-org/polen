@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { allowGlobalParameter } from '#cli/_/parameters'
 import { Task } from '#lib/task'
 import { Command } from '@molt/command'

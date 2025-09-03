@@ -1,4 +1,4 @@
-import type { Api } from '#api/index'
+import type { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { Main } from './plugins/main.js'
 
