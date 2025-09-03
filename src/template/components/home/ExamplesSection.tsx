@@ -113,8 +113,6 @@ export const ExamplesSection: React.FC<ExamplesSectionProps> = ({
                 <GraphQLDocument
                   document={example.document}
                   schemaCatalog={schemaCatalog}
-                  showVersionPicker={true}
-                  interactive={true}
                 />
               </Box>
             ))}

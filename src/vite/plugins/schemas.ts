@@ -136,7 +136,7 @@ export const Schemas = ({
               export const schemasCatalog = Catalog.decodeSync(encoded)
             `
           },
-        }
+        },
       ),
     },
   ]

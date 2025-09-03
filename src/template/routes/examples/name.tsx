@@ -1,5 +1,4 @@
 import { Example } from '#api/examples/schemas/example/example'
-import { Catalog } from '#lib/catalog'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
 import { Heading } from '@radix-ui/themes'
@@ -43,8 +42,6 @@ const Component = () => {
       <GraphQLDocument
         document={example.document}
         schemaCatalog={schemasCatalog || undefined}
-        showVersionPicker={true}
-        interactive={true}
       />
     </>
   )

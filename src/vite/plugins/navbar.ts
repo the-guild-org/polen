@@ -40,7 +40,10 @@ export const Navbar = ({
 
           // ━ Schema presence causes adding some navbar items
           const loadedSchemaCatalog = await Effect.runPromise(
-            schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as Effect.Effect<Api.Schema.InputSource.LoadedCatalog | null, never>,
+            schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as Effect.Effect<
+              Api.Schema.InputSource.LoadedCatalog | null,
+              never
+            >,
           )
 
           if (loadedSchemaCatalog?.data) {
@@ -50,7 +53,7 @@ export const Navbar = ({
             // (where basename is configured). This ensures consistent behavior.
             const referencePath = Api.Schema.Routing.createReferenceBasePath()
             navbar.push({ pathExp: referencePath, title: `Reference`, position: 'left' })
-            
+
             // Check if we have revisions to show changelog
             const catalog = loadedSchemaCatalog.data
             const hasMultipleRevisions = Catalog.fold(
@@ -74,7 +77,7 @@ export const Navbar = ({
           const loadedExamplesCatalog = await Effect.runPromise(
             examplesReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as Effect.Effect<any, never>,
           )
-          
+
           // Use config.examples.enabled if explicitly set, otherwise auto-detect
           const examplesEnabled = config.examples.enabled
             ?? (loadedExamplesCatalog.catalog.examples.length > 0)
@@ -93,7 +96,7 @@ export const Navbar = ({
           // Return a JavaScript module that exports the navbar
           return `export const navbar = ${JSON.stringify(navbar)}`
         },
-      }
+      },
     ),
   }
 }

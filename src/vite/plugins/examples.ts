@@ -163,7 +163,6 @@ export const Examples = ({
               s`export const IndexComponent = null`
             }
 
-
             // Encode the catalog to ensure HashMap and other Effect types are properly serialized
             const encodedCatalog = Catalog.encodeSync(scanExamplesResult.catalog)
 
