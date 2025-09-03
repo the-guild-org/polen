@@ -2,7 +2,7 @@ import '@radix-ui/themes/styles.css'
 import { ReactDomClient } from '#dep/react-dom-client/index'
 import { StrictMode } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router'
-import PROJECT_DATA from 'virtual:polen/project/data.json'
+import { templateConfig } from 'virtual:polen/project/config'
 import { routes } from './routes.js'
 
 // SPA
@@ -19,8 +19,8 @@ const router = createBrowserRouter(routes, {
   ...(window.__staticRouterHydrationData && {
     hydrationData: window.__staticRouterHydrationData,
   }),
-  ...(PROJECT_DATA.basePath !== '/' && {
-    basename: PROJECT_DATA.basePath.slice(0, -1), // Remove trailing slash for React Router
+  ...(templateConfig.build.base !== '/' && {
+    basename: templateConfig.build.base.slice(0, -1), // Remove trailing slash for React Router
   }),
 })
 

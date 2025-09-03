@@ -7,12 +7,11 @@ import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { schemaCatalog } from '#template/data/schema-catalog'
 import { neverCase } from '@wollybeard/kit/language'
 import { Effect, Match } from 'effect'
 import React from 'react'
 import { useParams } from 'react-router'
-import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
+import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { Field } from '../components/Field.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
@@ -25,8 +24,14 @@ const routeSchema = S.Struct({
   schema: Schema.Schema,
 })
 
-const referenceLoader = ({ params }: any) =>
-  catalogBridge.view().pipe(
+const referenceLoader = ({ params }: any) => {
+  if (!schemasCatalog) {
+    throw new Error(
+      'No schema catalog available. This page requires a GraphQL schema to be configured. '
+        + 'Please ensure your Polen configuration includes a valid schema source.',
+    )
+  }
+  return Effect.succeed(schemasCatalog).pipe(
     Effect.map(catalog => {
       // Resolve the actual schema based on catalog type and params
       const schema = Match.value(catalog).pipe(
@@ -59,6 +64,7 @@ const referenceLoader = ({ params }: any) =>
       }
     }),
   )
+}
 
 // Single component that handles all reference route variations
 const ReferenceView = () => {
@@ -67,7 +73,7 @@ const ReferenceView = () => {
   const { catalog, schema } = loaderData
 
   // Create lifecycles from schema
-  const lifecycle = React.useMemo(() => Lifecycles.createFromSchema(schema), [schema])
+  const lifecycle = Lifecycles.createFromSchema(schema)
 
   if (!schema) {
     // this would be some sort of internal error, make issue more clear.
@@ -185,14 +191,14 @@ const typeAndFieldRoutes = [
  * - Single ReferenceView component handles all variations
  */
 
-export const reference = !hasCatalog()
+export const reference = !schemasCatalog
   ? null
   : route({
     path: `reference`,
     children: [
       ...typeAndFieldRoutes,
       // Only add version routes if versioned
-      ...(Catalog.Versioned.is(schemaCatalog)
+      ...(Catalog.Versioned.is(schemasCatalog)
         ? [route({
           path: `version/:version`,
           children: typeAndFieldRoutes,

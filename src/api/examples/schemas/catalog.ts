@@ -9,10 +9,12 @@ export const Catalog = S.Struct({
   // @claude add JSdoc to this
   examples: S.Array(Example.Example),
   // @claude add JSdoc to this
-  index: S.optional(S.String),
+  index: S.optional(S.Struct({
+    path: S.String,
+  })),
 }).annotations({
   identifier: 'ExamplesCatalog',
-  description: 'A catalog of GraphQL examples with optional index content',
+  description: 'A catalog of GraphQL examples with optional index file',
 })
 
 export type Catalog = S.Schema.Type<typeof Catalog>

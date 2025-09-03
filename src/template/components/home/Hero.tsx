@@ -1,18 +1,18 @@
 import type { HeroCallToAction, HeroConfig } from '#api/config/home'
 import { CatalogStatistics } from '#lib/catalog-statistics/$'
-import { schemaCatalog } from '#template/data/schema-catalog'
+import { Catalog } from '#lib/catalog/$'
 import { Box, Button, Flex, Heading, Section, Text } from '@radix-ui/themes'
-import { buildSchema } from 'graphql'
 import * as React from 'react'
 import { Link } from 'react-router'
-import { templateVariables } from 'virtual:polen/template/variables'
-import { examplesCatalog } from '../../data/examples-catalog.js'
+import { templateConfig } from 'virtual:polen/project/config'
+import { examplesCatalog } from 'virtual:polen/project/examples'
+import { schemasCatalog } from 'virtual:polen/project/schemas'
 
 interface HeroProps extends HeroConfig {
 }
 
 export const Hero: React.FC<HeroProps> = ({
-  title = templateVariables.title || 'GraphQL Developer Portal',
+  title = templateConfig.templateVariables.title || 'GraphQL Developer Portal',
   tagline = 'Explore and integrate with our GraphQL API',
   callToActions,
   heroImage,
@@ -76,57 +76,28 @@ export const Hero: React.FC<HeroProps> = ({
     ctaButtons = getDefaultCTAs()
   }
   // Calculate schema stats if available
-  const schemaStats = React.useMemo(() => {
-    if (!PROJECT_SCHEMA) return null
-
+  let schemaStats = null
+  if (schemasCatalog) {
     try {
-      // Get the first schema version
-      const schemaKeys = Object.keys(PROJECT_SCHEMA)
-      if (schemaKeys.length === 0) return null
+      // Get the latest schema from the catalog
+      const latestSchema = Catalog.getLatestSchema(schemasCatalog)
 
-      const firstKey = schemaKeys[0]
-      if (!firstKey) return null
-
-      const schemaData = PROJECT_SCHEMA[firstKey]
-      if (!schemaData || typeof schemaData !== 'string') return null
-
-      // Skip if this is just a catalog type indicator
-      if (!schemaData.startsWith('{')) return null
-
-      // Parse the schema JSON and build GraphQL schema
-      const schemaJson = JSON.parse(schemaData)
-
-      // Build SDL from the JSON (assuming it contains SDL string)
-      if (schemaJson.sdl) {
-        const schema = buildSchema(schemaJson.sdl)
-        const versionStats = CatalogStatistics.analyzeSchema(schema, 'current')
+      if (latestSchema && latestSchema.definition) {
+        // Build GraphQL schema from the definition
+        const versionStats = CatalogStatistics.analyzeSchema(latestSchema.definition, 'current')
 
         // Application-level summarization for hero display
-        return {
+        schemaStats = {
           types: versionStats.totalTypes,
           queries: versionStats.queries,
           mutations: versionStats.mutations,
           subscriptions: versionStats.subscriptions,
         }
       }
-
-      // Fallback to simple counting if no SDL
-      const types = schemaJson.types || []
-      const queryType = types.find((t: any) => t.name === 'Query')
-      const mutationType = types.find((t: any) => t.name === 'Mutation')
-      const subscriptionType = types.find((t: any) => t.name === 'Subscription')
-
-      return {
-        types: types.filter((t: any) => !t.name.startsWith('__')).length,
-        queries: queryType?.fields?.length || 0,
-        mutations: mutationType?.fields?.length || 0,
-        subscriptions: subscriptionType?.fields?.length || 0,
-      }
     } catch (error) {
       console.warn('Failed to calculate schema stats:', error)
-      return null
     }
-  }, [])
+  }
 
   // Try to load hero image dynamically from public folder
   // Start with prop value or common default paths

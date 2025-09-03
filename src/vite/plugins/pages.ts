@@ -5,21 +5,23 @@ import { Diagnostic } from '#lib/diagnostic/$'
 import { FileRouter } from '#lib/file-router'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
+import type { ViteVirtual } from '#lib/vite-virtual/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import mdx from '@mdx-js/rollup'
 import { Arr, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { polenVirtual } from '../vi.js'
-import { viProjectData } from './core.js'
 
 export const viProjectRoutes = polenVirtual([`project`, `routes.jsx`], { allowPluginProcessing: true })
-export const viProjectPagesCatalog = polenVirtual([`project`, `data`, `pages-catalog.js`], {
+
+export const viProjectPages = polenVirtual([`project`, `pages`], {
   allowPluginProcessing: true,
 })
 
 export interface Options {
   config: Api.Config.Config
+  dependentVirtualModules?: ViteVirtual.Identifier.Identifier[]
 }
 
 export interface ProjectPagesCatalog {
@@ -32,6 +34,7 @@ export interface ProjectPagesCatalog {
  */
 export const Pages = ({
   config,
+  dependentVirtualModules = [],
 }: Options) => {
   const debug = debugPolen.sub(`vite-pages`)
   const reader = createAssetReader(() =>
@@ -86,7 +89,10 @@ export const Pages = ({
         watch: [config.paths.project.absolute.pages],
         isRelevant: (file) => Content.isPageFile(file, config.paths.project.absolute.pages),
       },
-      dependentVirtualModules: [viProjectRoutes, viProjectPagesCatalog, viProjectData],
+      dependentVirtualModules: [
+        viProjectPages,
+        ...dependentVirtualModules,
+      ],
       hooks: {
         async shouldFullReload(oldData, newData) {
           // Check if the visible pages list changed
@@ -107,13 +113,13 @@ export const Pages = ({
     {
       name: `polen:pages-virtual`,
       resolveId(id: string) {
-        if (id === viProjectPagesCatalog.id) {
-          return viProjectPagesCatalog.resolved
+        if (id === viProjectPages.id) {
+          return viProjectPages.resolved
         }
       },
       load: {
         async handler(id: string) {
-          if (id !== viProjectPagesCatalog.resolved) return
+          if (id !== viProjectPages.resolved) return
           debug(`hook load`)
 
           const loadedPages = await Effect.runPromise(
@@ -137,7 +143,7 @@ export const Pages = ({
             pages: loadedPages.list,
           }
 
-          return `export default ${JSON.stringify(projectPagesCatalog)}`
+          return `export const pagesCatalog = ${JSON.stringify(projectPagesCatalog)}`
         },
       },
     },

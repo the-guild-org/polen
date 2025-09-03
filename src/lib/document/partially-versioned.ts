@@ -52,5 +52,5 @@ export const getDocumentForVersion = (
   version: Version.Version,
 ): string =>
   HashMap.get(document.versionDocuments, version).pipe(
-    Option.getOrElse(() => document.defaultDocument)
+    Option.getOrElse(() => document.defaultDocument),
   )

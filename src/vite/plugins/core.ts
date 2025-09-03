@@ -1,34 +1,23 @@
 import { Api } from '#api/$'
-import { createNavbar, type NavbarItem } from '#api/content/navbar'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
-import { Catalog } from '#lib/catalog/$'
-import { ViteVirtual } from '#lib/vite-virtual'
-import type { ProjectData } from '#project-data'
-import { debugPolen } from '#singletons/debug'
-import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Json, Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
+import { Config as ConfigPlugin, viProjectConfig } from './config.js'
 import { Examples } from './examples.js'
-import { Pages } from './pages.js'
-import { Schemas } from './schemas.js'
-
-const viTemplateVariables = polenVirtual([`template`, `variables`])
-const viTemplateSchemaAugmentations = polenVirtual([`template`, `schema-augmentations`])
-const viTemplateHomeConfig = polenVirtual([`template`, `home-config`])
-export const viProjectData = polenVirtual([`project`, `data.json`], { allowPluginProcessing: true })
-export const viProjectSchema = polenVirtual([`project`, `schema.json`], { allowPluginProcessing: true })
-export const viProjectHooks = polenVirtual([`project`, `hooks`], { allowPluginProcessing: true })
+import { Hooks, viProjectHooks } from './hooks.js'
+import { Navbar, viProjectNavbar } from './navbar.js'
+import { Pages, viProjectRoutes } from './pages.js'
+import { Schemas, viProjectSchema } from './schemas.js'
 
 export interface ProjectRoutesModule {
   routes: ReactRouter.RouteObject[]
 }
 
 export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
-  const plugins: Vite.Plugin[] = []
+  const conditionalPlugins: Vite.Plugin[] = []
 
   // Note: The main use for this right now is to resolve the react imports
   // from the mdx vite plugin which have to go through the Polen exports since Polen keeps those deps bundled.
@@ -36,20 +25,47 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
   // If we manage to get the mdx vite plugin that defers JSX transform to Rolldown then we can remove this!
   //
   if (config.advanced.isSelfContainedMode) {
-    plugins.push(VitePluginSelfContainedMode({
+    conditionalPlugins.push(VitePluginSelfContainedMode({
       projectDirPathExp: config.paths.project.rootDir,
     }))
   }
 
   // Create all plugins with their self-contained readers
-  const schemasArea = Schemas(config)
-  const pagesArea = Pages({ config })
-  const examplesArea = Examples({ config, schemaReader: schemasArea.reader })
+  const schemasArea = Schemas({
+    config,
+    dependentVirtualModules: [viProjectConfig, viProjectNavbar],
+  })
+  const pagesArea = Pages({
+    config,
+    dependentVirtualModules: [viProjectNavbar, viProjectConfig, viProjectRoutes],
+  })
+  const examplesArea = Examples({
+    config,
+    schemaReader: schemasArea.reader,
+    dependentVirtualModules: [viProjectConfig, viProjectNavbar],
+  })
+  const configPlugin = ConfigPlugin({
+    config,
+    schemaReader: schemasArea.reader,
+    examplesReader: examplesArea.reader,
+  })
+  const navbarPlugin = Navbar({
+    config,
+    schemaReader: schemasArea.reader,
+    examplesReader: examplesArea.reader,
+    pagesReader: pagesArea.reader,
+  })
+
+  const hooksPlugin = Hooks({ config })
 
   return [
-    ...plugins,
+    ...conditionalPlugins,
     ...examplesArea.plugins,
     ...schemasArea.plugins,
+    ...pagesArea.plugins,
+    configPlugin,
+    navbarPlugin,
+    hooksPlugin,
     /**
      * If a `polen*` import is encountered from the user's project, resolve it to the currently
      * running source code of Polen rather than the user's node_modules.
@@ -95,7 +111,6 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
         }
       },
     },
-    ...pagesArea.plugins,
     {
       name: `polen:core`,
       config(_, { command }) {
@@ -137,152 +152,6 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
           },
         }
       },
-      ...ViteVirtual.IdentifiedLoader.toHooks(
-        {
-          identifier: viProjectSchema,
-          async loader() {
-            const debug = debugPolen.sub(`module-project-schema`)
-            debug(`load`, { id: viProjectSchema.id })
-
-            const schemaResult = await Effect.runPromise(
-              schemasArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
-            )
-            if (!schemaResult?.data) {
-              return `export default null`
-            }
-
-            // Encode the catalog to convert GraphQLSchema to AST before serializing
-            const encodedCatalog = await Effect.runPromise(Catalog.encode(schemaResult.data))
-
-            return `export default ${JSON.stringify(encodedCatalog)}`
-          },
-        },
-        {
-          identifier: viTemplateVariables,
-          loader() {
-            const s = `export const templateVariables = ${JSON.stringify(config.templateVariables)}`
-            return s
-          },
-        },
-        {
-          identifier: viTemplateSchemaAugmentations,
-          loader() {
-            const s = `export const schemaAugmentations = ${JSON.stringify(config.schema?.augmentations ?? [])}`
-            return s
-          },
-        },
-        {
-          identifier: viTemplateHomeConfig,
-          loader() {
-            // Home config should already be normalized in the config layer
-            const s = `export const homeConfig = ${JSON.stringify(config.home)}`
-            return s
-          },
-        },
-        {
-          identifier: viProjectData,
-          async loader() {
-            const debug = debugPolen.sub(`module-project-data`)
-
-            debug(`load`, { id: viProjectData.id })
-
-            const loadedSchemaCatalog = await Effect.runPromise(
-              schemasArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
-            )
-
-            const navbar: NavbarItem[] = []
-
-            // ━ Examples presence causes adding navbar item
-            const loadedExamplesCatalog = await Effect.runPromise(
-              examplesArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
-            )
-            if (loadedExamplesCatalog.catalog.examples.length > 0) {
-              navbar.push({ pathExp: '/examples', title: 'Examples', position: 'left' })
-            }
-
-            // ━ Schema presence causes adding some navbar items
-            if (loadedSchemaCatalog?.data) {
-              // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
-              // Without the leading slash, React Router treats paths as relative, which causes
-              // hydration mismatches between SSR (where base path is prepended) and client
-              // (where basename is configured). This ensures consistent behavior.
-              const referencePath = Api.Schema.Routing.createReferenceBasePath()
-              navbar.push({ pathExp: referencePath, title: `Reference`, position: 'left' })
-              // Check if we have revisions to show changelog
-              const catalog = loadedSchemaCatalog.data as Catalog.Catalog
-              const hasMultipleRevisions = Catalog.fold(
-                (versioned) => {
-                  // For versioned catalogs, count total revisions across all entries
-                  const totalRevisions = versioned.entries.reduce(
-                    (sum: number, entry) => sum + entry.revisions.length,
-                    0,
-                  )
-                  return totalRevisions > 1
-                },
-                (unversioned) => unversioned.schema.revisions?.length > 1,
-              )(catalog)
-
-              if (hasMultipleRevisions) {
-                navbar.push({ pathExp: `/changelog`, title: `Changelog`, position: 'right' })
-              }
-            }
-
-            //
-            // ━━ Scan pages and add to navbar
-            //
-
-            const scanResult = await Effect.runPromise(
-              pagesArea.reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
-            )
-            const data = createNavbar(scanResult.list)
-            navbar.push(...data)
-
-            //
-            // ━━ Put It All together
-            //
-
-            const projectData: ProjectData = {
-              basePath: config.build.base,
-              paths: config.paths,
-              navbar, // Complete navbar with schema and pages
-              server: config.server,
-              warnings: config.warnings,
-            }
-
-            // Return a JavaScript module that exports the data
-            return `export default ${JSON.stringify(projectData)}`
-          },
-        },
-        {
-          identifier: viProjectHooks,
-          async loader() {
-            const fs = await import('node:fs/promises')
-            const path = await import('node:path')
-
-            const hooksPathTs = path.join(config.paths.project.rootDir, 'hooks.ts')
-            const hooksPathTsx = path.join(config.paths.project.rootDir, 'hooks.tsx')
-
-            let hooksPath = null
-            try {
-              await fs.access(hooksPathTsx)
-              hooksPath = hooksPathTsx
-            } catch {
-              try {
-                await fs.access(hooksPathTs)
-                hooksPath = hooksPathTs
-              } catch {
-                // No hooks file found
-              }
-            }
-
-            if (!hooksPath) {
-              return `export const navbar = null`
-            }
-
-            return `export * from '${hooksPath}'`
-          },
-        },
-      ),
     },
   ]
 }

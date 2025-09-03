@@ -8,7 +8,7 @@ import * as Theme from '#lib/theme/theme'
 import { Arr } from '@wollybeard/kit'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
-import { templateVariables } from 'virtual:polen/template/variables'
+import { templateConfig } from 'virtual:polen/project/config'
 import type { PolenGlobalData } from '../constants.js'
 import { view } from './view.js'
 
@@ -65,7 +65,7 @@ export const createPageHtmlResponse = async (
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${templateVariables.title}</title>
+    <title>${templateConfig.templateVariables.title}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   </head>
   <body>

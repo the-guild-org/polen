@@ -4,20 +4,9 @@ import { S } from '#lib/kit-temp/effect'
 // Schema
 // ============================================================================
 
-export const Semver = S.TaggedStruct('VersionSemver', {
+export class Semver extends S.TaggedClass<Semver>()('VersionSemver', {
   value: S.String,
-}).annotations({
-  identifier: 'Semver',
-  title: 'Semver',
-  description: 'A semantic version following SemVer specification',
-  adt: { name: 'Version' },
-})
-
-// ============================================================================
-// Type
-// ============================================================================
-
-export type Semver = S.Schema.Type<typeof Semver>
+}) {}
 
 // ============================================================================
 // Constructors

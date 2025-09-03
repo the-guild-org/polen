@@ -1,5 +1,5 @@
 import { ExamplesConfig } from '#api/examples/config'
-import { ConfigSchema as ConfigSchemaOriginal } from '#api/schema/config-schema'
+import { ConfigSchema } from '#api/schema/config-schema'
 import { Typings } from '#api/typings/$'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
@@ -309,7 +309,7 @@ export const Config = S.Struct({
   /**
    * Schema configuration or null if disabled.
    */
-  schema: S.Union(S.Null, ConfigSchemaOriginal),
+  schema: ConfigSchema,
 
   /**
    * Examples configuration with resolved defaults.
@@ -470,7 +470,7 @@ const getConfigInputDefaults = (): Config => ({
       assets: '/assets',
     },
   },
-  schema: null,
+  schema: {},
   examples: {
     display: 'all',
   },

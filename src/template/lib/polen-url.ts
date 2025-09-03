@@ -1,4 +1,4 @@
-import PROJECT_DATA from 'virtual:polen/project/data.json'
+import { templateConfig } from 'virtual:polen/project/config'
 
 /**
  * Create a Polen URL path that respects the configured base path for UI navigation.
@@ -23,7 +23,7 @@ import PROJECT_DATA from 'virtual:polen/project/data.json'
  * polenUrlPath('reference/Pokemon#field') // '/demos/pokemon/reference/Pokemon#field'
  */
 export const polenUrlPath = (...segments: string[]): string => {
-  const basePath = PROJECT_DATA.basePath // e.g., '/demos/pokemon/'
+  const basePath = templateConfig.build.base // e.g., '/demos/pokemon/'
 
   // Join segments and normalize slashes
   const path = segments
@@ -49,7 +49,7 @@ export const polenUrlPath = (...segments: string[]): string => {
  */
 export const polenUrlPathAssets = (...segments: string[]): string => {
   return polenUrlPath(
-    PROJECT_DATA.server.routes.assets,
+    templateConfig.server.routes.assets,
     ...segments,
   )
 }

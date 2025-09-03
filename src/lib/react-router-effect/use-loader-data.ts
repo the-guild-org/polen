@@ -1,6 +1,6 @@
 import { Schema } from 'effect'
 import { useLoaderData as useLoaderDataRR, useMatches } from 'react-router'
-import type { GetRouteSchema, RouteSchemaRegistry } from './types.js'
+import type { GetRouteSchema } from './types.js'
 
 /**
  * Hook that retrieves and automatically decodes loader data based on a provided Effect schema.
@@ -60,7 +60,7 @@ export function useLoaderData<TSchema extends Schema.Schema.Any>(
  * const catalog = useRouteDataById('catalog') // Type-safe!
  * ```
  */
-export function useRouteDataById<TRouteId extends keyof RouteSchemaRegistry>(
+export function useRouteData<TRouteId extends keyof RouteSchemaRegistry>(
   routeId: TRouteId,
 ): Schema.Schema.Type<GetRouteSchema<TRouteId>> {
   const matches = useMatches()
@@ -99,7 +99,7 @@ export function useRouteDataById<TRouteId extends keyof RouteSchemaRegistry>(
  * }
  * ```
  */
-export function useRouteData(): Record<string, unknown> {
+export function useRoutesData(): Record<string, unknown> {
   const matches = useMatches()
 
   return matches.reduce((acc, match) => {

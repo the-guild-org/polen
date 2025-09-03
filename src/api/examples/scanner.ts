@@ -330,7 +330,6 @@ export const scan = (
 
     // @claude create a utility for reading a file at variable paths
     // Check for index.md or index.mdx file
-    let indexContent: string | undefined
     const indexMdPath = Path.join(options.dir, 'index.md')
     const indexMdxPath = Path.join(options.dir, 'index.mdx')
 
@@ -341,13 +340,9 @@ export const scan = (
       ? indexMdxPath
       : null
 
-    if (indexPath) {
-      indexContent = yield* fs.readFileString(indexPath)
-    }
-
     const catalog = Catalog.make({
       examples,
-      index: indexContent,
+      index: indexPath ? { path: indexPath } : undefined,
     })
     return { catalog, diagnostics }
   })

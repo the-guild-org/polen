@@ -46,7 +46,14 @@ export const validateExamples = (
                   const content = HashMap.get(doc.versionDocuments, entry.version)
                   if (Option.isSome(content)) {
                     const versionStr = Version.toString(entry.version)
-                    validateDocument(example.name, example.path, versionStr, content.value, entry.definition, diagnostics)
+                    validateDocument(
+                      example.name,
+                      example.path,
+                      versionStr,
+                      content.value,
+                      entry.definition,
+                      diagnostics,
+                    )
                   }
                 }
               },
@@ -56,7 +63,14 @@ export const validateExamples = (
                   const content = HashMap.get(doc.versionDocuments, entry.version)
                   if (Option.isSome(content)) {
                     const versionStr = Version.toString(entry.version)
-                    validateDocument(example.name, example.path, versionStr, content.value, entry.definition, diagnostics)
+                    validateDocument(
+                      example.name,
+                      example.path,
+                      versionStr,
+                      content.value,
+                      entry.definition,
+                      diagnostics,
+                    )
                   }
                 }
 
@@ -67,12 +81,26 @@ export const validateExamples = (
                     e => Version.equivalence(e.version, uncoveredVersion),
                   )
                   if (!entry) throw new Error('Uncovered version not found in catalog entries')
-                  validateDocument(example.name, example.path, 'default', doc.defaultDocument, entry.definition, diagnostics)
+                  validateDocument(
+                    example.name,
+                    example.path,
+                    'default',
+                    doc.defaultDocument,
+                    entry.definition,
+                    diagnostics,
+                  )
                 }
               },
               DocumentUnversioned: (doc) => {
                 const latestEntry = versioned.entries[0]!
-                validateDocument(example.name, example.path, 'default', doc.document, latestEntry.definition, diagnostics)
+                validateDocument(
+                  example.name,
+                  example.path,
+                  'default',
+                  doc.document,
+                  latestEntry.definition,
+                  diagnostics,
+                )
               },
             }),
           )

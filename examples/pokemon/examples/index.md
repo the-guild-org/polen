@@ -38,7 +38,7 @@ query GetPikachu {
 ```
 
 {/* once they are runnable and editable ... */}
-{/*Feel free to modify the query above and explore the API!*/}
+{/_Feel free to modify the query above and explore the API!_/}
 
 ## Learn More
 

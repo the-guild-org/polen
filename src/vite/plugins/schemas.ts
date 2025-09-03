@@ -3,8 +3,15 @@ import { Schema } from '#api/schema/$'
 import { Catalog } from '#lib/catalog/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
+import { ViteVirtual } from '#lib/vite-virtual/$'
+import { debugPolen } from '#singletons/debug'
+import { polenVirtual } from '#vite/vi'
+import { FileSystem } from '@effect/platform'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Effect } from 'effect'
 import * as NodePath from 'node:path'
+
+export const viProjectSchema = polenVirtual([`project`, `schemas`])
 
 /**
  * Vite plugin that generates JSON assets for GraphQL schemas at build time.
@@ -22,9 +29,13 @@ import * as NodePath from 'node:path'
  * @param config - Polen configuration object
  * @returns Object with Vite plugin instance and reader
  */
-export const Schemas = (
-  config: Api.Config.Config,
-) => {
+export const Schemas = ({
+  config,
+  dependentVirtualModules = [],
+}: {
+  config: Api.Config.Config
+  dependentVirtualModules: ViteVirtual.Identifier.Identifier[]
+}) => {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // Self-contained Schema Reader
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -102,8 +113,32 @@ export const Schemas = (
         watch: getWatchPaths,
         isRelevant: isSchemaFile,
       },
-      dependentVirtualModules: [], // Schema assets doesn't have virtual modules
+      dependentVirtualModules,
     }),
+    {
+      name: 'polen:schemas-virtual',
+      ...ViteVirtual.IdentifiedLoader.toHooks(
+        {
+          identifier: viProjectSchema,
+          async loader() {
+            const debug = debugPolen.sub(`module-project-schema`)
+            debug(`load`, { id: viProjectSchema.id })
+
+            const schemaResult = await Effect.runPromise(
+              reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+            )
+            if (!schemaResult?.data) {
+              return `export const schemasCatalog = null`
+            }
+            return `
+              import { Catalog } from '#lib/catalog/$'
+              const encoded = ${JSON.stringify(Catalog.encodeSync(schemaResult.data))}
+              export const schemasCatalog = Catalog.decodeSync(encoded)
+            `
+          },
+        }
+      ),
+    },
   ]
 
   return { plugins, reader }

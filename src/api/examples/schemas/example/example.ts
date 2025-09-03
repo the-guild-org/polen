@@ -15,13 +15,13 @@ export const Example = S.Struct({
    * The name/identifier of the example (e.g., "get-pokemon", "list-users")
    */
   name: S.String,
-  
+
   /**
    * The file system path where this example was found.
    * Used for diagnostic reporting and error messages.
    */
   path: S.String,
-  
+
   /**
    * The document content, which can be unversioned, versioned, or partially versioned.
    */

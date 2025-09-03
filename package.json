@@ -284,6 +284,7 @@
     "consola": "^3.4.2",
     "defu": "^6.1.4",
     "effect": "^3.17.0",
+    "embla-carousel-react": "^8.6.0",
     "es-toolkit": "^1.39.7",
     "fuse.js": "^7.1.0",
     "get-port": "^7.1.0",

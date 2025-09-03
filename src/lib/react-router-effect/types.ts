@@ -18,8 +18,10 @@ export interface RouteHandle {
  * Global registry of route schemas that can be augmented by route definitions.
  * This enables type-safe access to route data by ID.
  */
-export interface RouteSchemaRegistry {
-  // Routes will augment this interface
+declare global {
+  interface RouteSchemaRegistry {
+    // Routes will augment this interface
+  }
 }
 
 /**
@@ -72,7 +74,13 @@ export interface SchemaRouteConfig<TSchema extends Schema.Schema.Any> {
   handle?: Omit<SchemaRouteHandle<TSchema>, 'schema'>
 
   // Route properties
-  id?: string
+  /**
+   * Route ID for accessing data via useRouteDataById.
+   * - If string: Use this explicit ID
+   * - If false: Disable auto-generation from path
+   * - If undefined/omitted: Auto-generate from path if path exists
+   */
+  id?: string | false
   path?: string
   index?: boolean
   children?: RouteObject[]

@@ -143,6 +143,27 @@ export type ExampleDiagnostics = S.Schema.Type<typeof ExampleDiagnostics>
 
 export const ExamplesConfig = S.Struct({
   /**
+   * Control whether the examples feature is enabled.
+   * - true: Always enabled (show in nav even if no examples exist)
+   * - false: Always disabled (hide even if examples files exist)
+   * - undefined: Auto-detect based on file presence (default behavior)
+   *
+   * @default undefined (auto-detect)
+   * @example
+   * ```ts
+   * // Always show examples section
+   * examples: { enabled: true }
+   *
+   * // Never show examples
+   * examples: { enabled: false }
+   *
+   * // Auto-detect (default)
+   * examples: { /* enabled not specified *\/ }
+   * ```
+   */
+  enabled: S.optional(S.Boolean),
+
+  /**
    * Control which examples are available in the application.
    *
    * @default 'all'

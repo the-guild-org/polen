@@ -1,7 +1,7 @@
 import { type HighlightedCode, Pre } from 'codehike/code'
 import type { GraphQLSchema } from 'graphql'
 import React from 'react'
-import PROJECT_DATA from 'virtual:polen/project/data.json'
+import { templateConfig } from 'virtual:polen/project/config'
 import { GraphQLInteractive } from './GraphQLInteractive/index.js'
 
 interface CodeBlockProps {
@@ -24,7 +24,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ codeblock, schema }) => {
       <GraphQLInteractive
         codeblock={codeblock}
         schema={schema}
-        showWarningIfNoSchema={PROJECT_DATA?.warnings?.interactiveWithoutSchema?.enabled ?? false}
+        showWarningIfNoSchema={templateConfig.warnings.interactiveWithoutSchema.enabled}
       />
     )
   }

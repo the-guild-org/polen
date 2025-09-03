@@ -1,5 +1,4 @@
 import type { Api } from '#api/$'
-import { Content } from '#api/content/$'
 import { Examples as ExamplesModule } from '#api/examples/$'
 import * as Catalog from '#api/examples/schemas/catalog'
 import { generateExampleTypes } from '#api/examples/type-generator'
@@ -10,8 +9,10 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import * as Path from 'node:path'
+import type * as Vite from 'vite'
 import { polenVirtual } from '../vi.js'
 
 // Virtual modules provided by this plugin
@@ -21,6 +22,7 @@ export interface Options {
   config: Api.Config.Config
   // todo: get type ref via import from SOT
   schemaReader: AssetReader<Api.Schema.InputSource.LoadedCatalog | null, any, any>
+  dependentVirtualModules?: ViteVirtual.Identifier.Identifier[]
 }
 
 export interface ProjectExamplesCatalog {
@@ -33,7 +35,11 @@ export interface ProjectExamplesCatalog {
 export const Examples = ({
   config,
   schemaReader,
-}: Options) => {
+  dependentVirtualModules = [],
+}: Options): {
+  plugins: Vite.Plugin[]
+  reader: AssetReader<ExamplesModule.ScanResult, Error, FileSystem.FileSystem>
+} => {
   const debug = debugPolen.sub(`vite-examples`)
   const examplesDir = Path.join(config.paths.project.rootDir, 'examples')
 
@@ -119,7 +125,7 @@ export const Examples = ({
           )
         },
       },
-      dependentVirtualModules: [viProjectExamples],
+      dependentVirtualModules: [viProjectExamples, ...dependentVirtualModules],
       hooks: {
         async shouldFullReload() {
           // Always trigger full reload for examples changes
@@ -141,25 +147,32 @@ export const Examples = ({
 
             const scanExamplesResult = await scanExamples()
 
-            // Report diagnostics with DiagnosticControl filtering
             reportDiagnostics(scanExamplesResult.diagnostics, 'dev')
 
-            // Process index content if present
-            let processedCatalog = scanExamplesResult.catalog
-            if (processedCatalog.index) {
-              // Compile MDX to JavaScript using centralized compiler
-              const compiled = await Content.compileMdxToFunctionBody(processedCatalog.index)
+            // Generate the module code with both catalog and component exports
+            const s = Str.Builder()
+            s`import { Effect } from 'effect'`
+            s`import * as Catalog from '#api/examples/schemas/catalog'`
 
-              // Store the compiled code instead of raw markdown
-              processedCatalog = {
-                ...processedCatalog,
-                index: String(compiled.value),
-              }
+            const indexFilePath = scanExamplesResult.catalog.index?.path
+            if (indexFilePath) {
+              s``
+              s`export { default as IndexComponent } from '${indexFilePath}'`
+            } else {
+              s``
+              s`export const IndexComponent = null`
             }
 
+
             // Encode the catalog to ensure HashMap and other Effect types are properly serialized
-            const encodedCatalog = Catalog.encodeSync(processedCatalog)
-            return `export const examplesCatalog = ${JSON.stringify(encodedCatalog)}`
+            const encodedCatalog = Catalog.encodeSync(scanExamplesResult.catalog)
+
+            s``
+            s`const catalogData = ${JSON.stringify(encodedCatalog)}`
+            s``
+            s`export const examplesCatalog = Effect.runSync(Catalog.decode(catalogData))`
+
+            return s.render()
           },
         },
       ),

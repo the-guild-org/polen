@@ -1,7 +1,7 @@
 import { S } from '#lib/kit-temp/effect'
+import { DocumentPartiallyVersioned } from './partially-versioned.js'
 import { DocumentUnversioned } from './unversioned.js'
 import { DocumentVersioned } from './versioned.js'
-import { DocumentPartiallyVersioned } from './partially-versioned.js'
 
 // ============================================================================
 // Schema

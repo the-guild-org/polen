@@ -41,7 +41,9 @@ export const fold = <$A>(
 // ============================================================================
 
 export const decode = S.decode(Catalog)
+export const decodeSync = S.decodeSync(Catalog)
 export const encode = S.encode(Catalog)
+export const encodeSync = S.encodeSync(Catalog)
 
 // ============================================================================
 // Equivalence
@@ -88,3 +90,17 @@ export const getLatestSchema = (catalog: Catalog): Schema.Schema =>
       return unversioned.schema
     },
   }))
+
+/**
+ * Get the latest version identifier from a catalog.
+ * Returns the version for versioned catalogs, or null for unversioned catalogs.
+ */
+export const getLatestVersionIdentifier = (catalog?: Catalog): Version.Version | null => {
+  if (!catalog) return null
+  return Match.value(catalog).pipe(
+    Match.tagsExhaustive({
+      CatalogUnversioned: () => null,
+      CatalogVersioned: (cat) => cat.entries[0]?.version ?? null,
+    }),
+  )
+}

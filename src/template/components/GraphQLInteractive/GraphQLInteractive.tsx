@@ -453,7 +453,7 @@ export const GraphQLInteractive: React.FC<GraphQLInteractiveProps> = (props) => 
       fallbackCode={props.codeblock.code}
       onError={(error, errorInfo) => {
         // Log error for debugging (only in development)
-        if (process.env['NODE_ENV'] === 'development') {
+        if (process.env.NODE_ENV === 'development') {
           console.error('GraphQL Interactive Error Boundary:', error, errorInfo)
         }
       }}

@@ -1,14 +1,23 @@
 import { Catalog } from '#lib/catalog/$'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
-import { catalogBridge } from '../catalog-bridge.js'
+import { Effect } from 'effect'
+import { schemasCatalog } from 'virtual:polen/project/schemas'
 
 import { ChangelogLayout } from '#template/layouts/index'
 import { Changelog } from '../components/Changelog/Changelog.js'
 
 const schema = Catalog.Catalog
 
-const changelogLoader = () => catalogBridge.view()
+const changelogLoader = () => {
+  if (!schemasCatalog) {
+    throw new Error(
+      'No schema catalog available. This page requires a GraphQL schema to be configured. '
+        + 'Please ensure your Polen configuration includes a valid schema source.',
+    )
+  }
+  return Effect.succeed(schemasCatalog)
+}
 
 const Component = () => {
   const catalog = useLoaderData(schema)

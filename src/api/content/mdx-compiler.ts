@@ -48,7 +48,7 @@ export const createMdxPlugins = () => ({
 /**
  * Compile MDX content to function body format.
  * Used for runtime compilation of MDX content (e.g., example index files).
- * 
+ *
  * @param content - The MDX content to compile
  * @returns Compiled MDX as a function body string
  */
@@ -64,7 +64,7 @@ export const compileMdxToFunctionBody = async (content: string) => {
 /**
  * Get configuration for @mdx-js/rollup plugin.
  * Used for build-time compilation of MDX pages.
- * 
+ *
  * @returns Configuration object for mdx rollup plugin
  */
 export const getMdxRollupConfig = () => ({

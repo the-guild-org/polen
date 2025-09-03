@@ -1,9 +1,8 @@
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { Version } from '#lib/version/$'
-import { Effect } from 'effect'
 import { useNavigate } from 'react-router'
-import { catalogBridge } from '../catalog-bridge.js'
+import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { useReferencePath } from '../hooks/useReferencePath.js'
 import { Stores } from '../stores/$.js'
 import { tryWithToast } from '../utils/try-with-toast.js'
@@ -22,11 +21,10 @@ export const VersionPicker: React.FC<Props> = ({ data, current }) => {
     const newVersion = Version.toString(version)
     const error = await tryWithToast(async () => {
       // Get the full catalog to find the target schema
-      const catalog = await Effect.runPromise(catalogBridge.view())
-
-      if (!catalog) {
+      if (!schemasCatalog) {
         throw new Error('No catalog available')
       }
+      const catalog = schemasCatalog
 
       // This component is only used for versioned catalogs
       if (catalog._tag !== 'CatalogVersioned') {

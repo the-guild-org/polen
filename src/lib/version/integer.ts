@@ -4,20 +4,9 @@ import { S } from '#lib/kit-temp/effect'
 // Schema
 // ============================================================================
 
-export const Integer = S.TaggedStruct('VersionInteger', {
+export class Integer extends S.TaggedClass<Integer>()('VersionInteger', {
   value: S.Number,
-}).annotations({
-  identifier: 'Integer',
-  title: 'Integer',
-  description: 'An integer-based version number (e.g., 1, 2, 3)',
-  adt: { name: 'Version' },
-})
-
-// ============================================================================
-// Type
-// ============================================================================
-
-export type Integer = S.Schema.Type<typeof Integer>
+}) {}
 
 // ============================================================================
 // Constructors
