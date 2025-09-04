@@ -2,6 +2,7 @@ import { Catalog } from '#lib/catalog/$'
 import { DateOnly } from '#lib/date-only/$'
 import { buildSchema, type GraphQLSchema } from 'graphql'
 import { describe, expect, test } from 'vitest'
+import { Version } from '#lib/version/$'
 import { CatalogStatistics } from './$.js'
 
 describe('analyzeSchema', () => {
@@ -79,7 +80,7 @@ describe('analyzeSchema', () => {
 describe('analyzeCatalog', () => {
   const makeVersionedEntry = (version: number, schema: GraphQLSchema, dates: string[]) => ({
     _tag: 'SchemaVersioned' as const,
-    version: { _tag: 'VersionInteger' as const, value: version },
+    version: Version.fromInteger(version),
     branchPoint: null,
     revisions: dates.map(date => ({ _tag: 'Revision' as const, date: DateOnly.make(date), changes: [] })),
     definition: schema,

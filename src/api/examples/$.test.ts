@@ -1,7 +1,9 @@
+import { Catalog } from '#lib/catalog/$'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { Document } from '#lib/document/$'
 import { Version } from '#lib/version/$'
 import { Effect, HashMap } from 'effect'
+import { buildSchema } from 'graphql'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Examples } from './$.js'
 
@@ -96,9 +98,13 @@ describe('ExampleScanner', () => {
 })
 
 describe('ExampleValidator', () => {
-  const mockSchema = {
-    // Mock GraphQL schema for testing
-  } as any
+  const mockCatalog = Catalog.Unversioned.make({
+    schema: {
+      _tag: 'SchemaUnversioned' as const,
+      revisions: [],
+      definition: buildSchema('type Query { test: String }'),
+    },
+  })
 
   test.for([
     {
@@ -133,7 +139,7 @@ describe('ExampleValidator', () => {
   ])('$name', ({ examples, expectedErrors }) => {
     // Note: This would need a real GraphQL schema to test properly
     // For now just ensure the function accepts the new Example types
-    const diagnostics = Examples.validateExamples(examples, mockSchema)
+    const diagnostics = Examples.validateExamples(examples, mockCatalog)
     expect(diagnostics).toBeDefined()
   })
 })

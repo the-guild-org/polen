@@ -56,6 +56,7 @@ export const validateExamples = (
                     )
                   }
                 }
+                return undefined
               },
               DocumentPartiallyVersioned: (doc) => {
                 // Validate explicit versions against their corresponding schemas
@@ -90,6 +91,7 @@ export const validateExamples = (
                     diagnostics,
                   )
                 }
+                return undefined
               },
               DocumentUnversioned: (doc) => {
                 const latestEntry = versioned.entries[0]!
@@ -101,6 +103,7 @@ export const validateExamples = (
                   latestEntry.definition,
                   diagnostics,
                 )
+                return undefined
               },
             }),
           )
