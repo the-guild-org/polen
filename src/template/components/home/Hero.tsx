@@ -37,12 +37,14 @@ export const Hero: React.FC<HeroProps> = ({
     //   variant: defaults.length === 0 ? 'primary' as const : 'secondary' as const,
     // })
 
-    // Always add schema reference as last button
-    defaults.push({
-      label: 'View Reference',
-      href: '/reference',
-      variant: 'secondary' as const,
-    })
+    // Add schema reference button if schema catalog exists
+    if (schemasCatalog) {
+      defaults.push({
+        label: 'View Reference',
+        href: '/reference',
+        variant: 'secondary' as const,
+      })
+    }
 
     return defaults
   }

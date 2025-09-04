@@ -26,7 +26,8 @@ test('schema pressence causes navbar with reference link', async ({ page, vite, 
   })
   const svr = await vite.devPolen()
   await page.goto(svr.url('/').href, { timeout: 1000_0 })
-  expect(await page.getByRole('link').allInnerTexts()).toEqual(['Project', 'Reference'])
+  // With the new home page, we have both navbar links and Hero CTA buttons
+  expect(await page.getByRole('link').allInnerTexts()).toEqual(['Project', 'Reference', 'View Reference'])
 })
 
 test('/reference loads unversioned schema without error', async ({ page, vite, project }) => {
