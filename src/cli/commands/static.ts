@@ -1,9 +1,39 @@
-#!/usr/bin/env node
+import { Command } from '@effect/cli'
+import $ from 'ansis'
+import { Console, Effect } from 'effect'
 
-import { Cli, Path } from '@wollybeard/kit'
+// Import subcommands
+import { staticRebase } from './static/rebase.js'
 
-// Remove the "static" argument before dispatching to subcommands
-process.argv = process.argv.slice(0, 2).concat(process.argv.slice(3))
+const h2 = (str: string) => {
+  return $.bold.black.bgWhiteBright(` ${str.toUpperCase()} `)
+}
 
-const commandsDir = Path.join(import.meta.dirname, `static`)
-await Cli.dispatch(commandsDir)
+const code = (str: string) => {
+  if (!$.isSupported()) return `\`${str}\``
+  return $.magenta(str)
+}
+
+// Default static command that shows usage
+const staticDefault = Command.make(
+  'static',
+  {},
+  () =>
+    Effect.gen(function*() {
+      yield* Console.log(`${$.bold.redBright`POLEN 🌺`} ${$.dim(`static commands`)}`)
+      yield* Console.log('Manage static builds and deployments.')
+      yield* Console.log('')
+      yield* Console.log('')
+      yield* Console.log(`${h2('commands')}`)
+      yield* Console.log('')
+      yield* Console.log(`${$.dim`$ polen static`} ${$.cyanBright('rebase')}`)
+      yield* Console.log('')
+      yield* Console.log(`${$.dim`Get help for a command with ${code('polen static <command> --help')}`}`)
+      yield* Console.log('')
+    }),
+)
+
+// Export the static command with subcommands
+export const staticCommand = staticDefault.pipe(
+  Command.withSubcommands([staticRebase]),
+)

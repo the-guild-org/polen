@@ -46,7 +46,7 @@ export const SchemaDefinition = S.transformOrFail(
 // Types
 // ============================================================================
 
-export type SchemaDefinition = S.Schema.Type<typeof SchemaDefinition>
+export type SchemaDefinition = typeof SchemaDefinition.Type
 
 // ============================================================================
 // SDL Codec

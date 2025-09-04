@@ -1,9 +1,27 @@
-#!/usr/bin/env node
+import { Command } from '@effect/cli'
+import { Console, Effect } from 'effect'
 
-import { Cli, Path } from '@wollybeard/kit'
+// Import subcommands
+import { cacheDelete } from './cache/delete.js'
+import { cacheShow } from './cache/show.js'
 
-// Remove the "cache" argument before dispatching to subcommands
-process.argv = process.argv.slice(0, 2).concat(process.argv.slice(3))
+// Default cache command that shows usage
+const cacheDefault = Command.make(
+  'cache',
+  {},
+  () =>
+    Effect.gen(function*() {
+      yield* Console.error(`Usage: polen cache <command>
 
-const commandsDir = Path.join(import.meta.dirname, `cache`)
-await Cli.dispatch(commandsDir)
+Commands:
+  delete    Delete all Polen-generated caches
+  show      Display information about Polen caches
+`)
+      return yield* Effect.fail(new Error('No cache subcommand specified'))
+    }),
+)
+
+// Export the cache command with subcommands
+export const cache = cacheDefault.pipe(
+  Command.withSubcommands([cacheDelete, cacheShow]),
+)

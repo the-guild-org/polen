@@ -20,6 +20,7 @@ export default defineConfig({
     nav: [
       { text: 'Why', link: '/guides/why' },
       { text: 'Guides', link: '/guides/get-started' },
+      { text: 'Reference', link: '/reference/' },
       { text: 'Examples', link: '/examples/overview' },
       {
         text: 'Changelog',
@@ -87,11 +88,14 @@ export default defineConfig({
             { text: 'Overview', link: '/guides/deployment-ssr/overview' },
           ],
         },
+      ],
+      '/reference/': [
         {
           text: 'Reference',
           items: [
-            { text: 'CLI', link: '/guides/reference/cli' },
-            { text: 'API', link: '/guides/reference/api' },
+            { text: 'Overview', link: '/reference/' },
+            { text: 'CLI', link: '/reference/cli' },
+            { text: 'API', link: '/reference/api' },
           ],
         },
       ],

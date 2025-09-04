@@ -1,0 +1,213 @@
+/**
+ * Swiss Sharp Theme - CSS Variable Overrides
+ * 
+ * Implements a sharp, minimal design system inspired by Swiss International Style.
+ * Features: extreme typography contrast, monochromatic palette, mathematical spacing.
+ */
+
+.radix-themes {
+  /* ============================================================================
+   * Typography - Sharp & Extreme Contrast
+   * ============================================================================ */
+  
+  /* Font families - clean sans-serif */
+  --default-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --heading-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --code-font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  
+  /* Font adjustments for impact */
+  --heading-font-size-adjust: 1.05;
+  --heading-letter-spacing: -0.04em;
+  --heading-line-height: 0.9;
+  
+  /* Weight system - extreme contrast */
+  --font-weight-light: 200;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 900;
+  
+  /* Letter spacing - tighter for sharpness */
+  --letter-spacing-1: 0.04em;
+  --letter-spacing-2: 0.02em;
+  --letter-spacing-3: 0em;
+  --letter-spacing-4: -0.01em;
+  --letter-spacing-5: -0.02em;
+  --letter-spacing-6: -0.025em;
+  --letter-spacing-7: -0.03em;
+  --letter-spacing-8: -0.035em;
+  --letter-spacing-9: -0.04em;
+  
+  /* ============================================================================
+   * Colors - Monochromatic + Single Accent
+   * ============================================================================ */
+  
+  /* Grayscale - pure monochrome */
+  --gray-1: #FAFAFA;
+  --gray-2: #F5F5F5;
+  --gray-3: #EEEEEE;
+  --gray-4: #E0E0E0;
+  --gray-5: #C6C6C6;
+  --gray-6: #8B8B8B;
+  --gray-7: #646464;
+  --gray-8: #454545;
+  --gray-9: #282828;
+  --gray-10: #1F1F1F;
+  --gray-11: #141414;
+  --gray-12: #000000;
+  
+  /* Alpha variants */
+  --gray-a1: rgba(0, 0, 0, 0.012);
+  --gray-a2: rgba(0, 0, 0, 0.024);
+  --gray-a3: rgba(0, 0, 0, 0.055);
+  --gray-a4: rgba(0, 0, 0, 0.095);
+  --gray-a5: rgba(0, 0, 0, 0.16);
+  --gray-a6: rgba(0, 0, 0, 0.24);
+  --gray-a7: rgba(0, 0, 0, 0.34);
+  --gray-a8: rgba(0, 0, 0, 0.48);
+  --gray-a9: rgba(0, 0, 0, 0.62);
+  --gray-a10: rgba(0, 0, 0, 0.74);
+  --gray-a11: rgba(0, 0, 0, 0.86);
+  --gray-a12: rgba(0, 0, 0, 0.95);
+  
+  /* Sharp blue accent */
+  --blue-1: #F0F6FF;
+  --blue-2: #E1EDFF;
+  --blue-3: #C3DAFF;
+  --blue-4: #96BFFF;
+  --blue-5: #5E9EFF;
+  --blue-6: #2B7FFF;
+  --blue-7: #0066FF;
+  --blue-8: #0055DD;
+  --blue-9: #0055FF;
+  --blue-10: #0044DD;
+  --blue-11: #0033BB;
+  --blue-12: #001D66;
+  
+  /* Accent overrides */
+  --accent-9: #0055FF;
+  --accent-10: #0044DD;
+  --accent-11: #0033BB;
+  
+  /* Background colors */
+  --color-background: #FAFAFA;
+  --color-panel-solid: #FFFFFF;
+  --color-panel-translucent: rgba(255, 255, 255, 0.95);
+  --color-surface: #FFFFFF;
+  
+  /* ============================================================================
+   * Spacing - Mathematical Progression
+   * ============================================================================ */
+  
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 20px;
+  --space-5: 28px;
+  --space-6: 40px;
+  --space-7: 56px;
+  --space-8: 72px;
+  --space-9: 96px;
+  
+  /* ============================================================================
+   * Radius - All Sharp (Zero Radius)
+   * ============================================================================ */
+  
+  --radius-1: 0px;
+  --radius-2: 0px;
+  --radius-3: 0px;
+  --radius-4: 0px;
+  --radius-5: 0px;
+  --radius-6: 0px;
+  --radius-full: 0px;
+  
+  /* ============================================================================
+   * Shadows - Minimal & Sharp
+   * ============================================================================ */
+  
+  /* Subtle shadows */
+  --shadow-1: 0 1px 0 0 var(--gray-a3);
+  --shadow-2: 0 2px 0 0 var(--gray-a3);
+  
+  /* Brutal shadows (offset solid blocks) */
+  --shadow-3: 4px 4px 0 0 var(--gray-12);
+  --shadow-4: 8px 8px 0 0 var(--gray-12);
+  --shadow-5: 12px 12px 0 0 var(--gray-12);
+  --shadow-6: 16px 16px 0 0 var(--gray-12);
+  
+  /* ============================================================================
+   * Cursors - Minimal
+   * ============================================================================ */
+  
+  --cursor-button: pointer;
+  --cursor-checkbox: pointer;
+  --cursor-disabled: not-allowed;
+  --cursor-link: pointer;
+  --cursor-menu-item: pointer;
+  --cursor-radio: pointer;
+  --cursor-slider-thumb: grab;
+  --cursor-slider-thumb-active: grabbing;
+  --cursor-switch: pointer;
+}
+
+/* ============================================================================
+ * Utility Classes
+ * ============================================================================ */
+
+/* Swiss Grid System */
+.swiss-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: var(--space-3);
+  row-gap: var(--space-6);
+}
+
+/* Grid column utilities */
+.col-span-1 { grid-column: span 1; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-4 { grid-column: span 4; }
+.col-span-5 { grid-column: span 5; }
+.col-span-6 { grid-column: span 6; }
+.col-span-7 { grid-column: span 7; }
+.col-span-8 { grid-column: span 8; }
+.col-span-9 { grid-column: span 9; }
+.col-span-10 { grid-column: span 10; }
+.col-span-11 { grid-column: span 11; }
+.col-span-12 { grid-column: span 12; }
+
+/* Grid start positions */
+.col-start-1 { grid-column-start: 1; }
+.col-start-2 { grid-column-start: 2; }
+.col-start-3 { grid-column-start: 3; }
+.col-start-4 { grid-column-start: 4; }
+.col-start-5 { grid-column-start: 5; }
+.col-start-6 { grid-column-start: 6; }
+.col-start-7 { grid-column-start: 7; }
+.col-start-8 { grid-column-start: 8; }
+.col-start-9 { grid-column-start: 9; }
+.col-start-10 { grid-column-start: 10; }
+.col-start-11 { grid-column-start: 11; }
+.col-start-12 { grid-column-start: 12; }
+
+/* Typography utilities */
+.text-uppercase {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.text-stacked > * {
+  display: block;
+}
+
+/* Accent line */
+.accent-line-vertical {
+  width: 2px;
+  height: 100%;
+  background: var(--accent-9);
+}
+
+.accent-line-horizontal {
+  height: 2px;
+  width: 100%;
+  background: var(--accent-9);
+}

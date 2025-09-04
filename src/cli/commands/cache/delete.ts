@@ -1,28 +1,21 @@
 import { Api } from '#api/$'
-import { allowGlobalParameter, projectParameter } from '#cli/_/parameters'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
-import { Command } from '@molt/command'
+import { Command } from '@effect/cli'
 import consola from 'consola'
+import { Effect, Option } from 'effect'
+import { allowGlobalParameter, projectParameter } from '../../_/parameters.js'
 
-const args = Command.create()
-  .parameter(
-    `--project -p`,
-    projectParameter,
-  )
-  .parameter(`--allow-global`, allowGlobalParameter)
-  .settings({
-    parameters: {
-      environment: {
-        $default: {
-          prefix: `POLEN_CACHE_`,
-          enabled: false,
-        },
-      },
-    },
-  })
-  .parse()
+export const cacheDelete = Command.make(
+  'delete',
+  {
+    project: projectParameter,
+    allowGlobal: allowGlobalParameter,
+  },
+  ({ project, allowGlobal }) =>
+    Effect.gen(function*() {
+      const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
 
-const dir = ensureOptionalAbsoluteWithCwd(args.project)
-
-await Api.Cache.deleteAll(dir)
-consola.success(`Polen caches deleted`)
+      yield* Effect.promise(() => Api.Cache.deleteAll(dir))
+      consola.success('Polen caches deleted')
+    }),
+)

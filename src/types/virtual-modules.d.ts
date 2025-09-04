@@ -12,6 +12,11 @@ declare module 'virtual:polen/project/assets/logo.svg' {
   export default src
 }
 
+declare module 'virtual:polen/project/assets/hero' {
+  const src: string | null
+  export default src
+}
+
 declare module 'virtual:polen/project/schemas' {
   export const schemasCatalog: import('#lib/catalog/$').Catalog.Catalog | null
 }

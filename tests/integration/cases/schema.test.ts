@@ -5,16 +5,22 @@ import type { ViteController } from '../helpers/vite-controller/index.js'
 
 const sdl = 'type Query { hello: String }\ntype Mutation { hello: String }'
 
-test('no reference or changelog when schema is omitted or disabled', async ({ page, vite }) => {
+test('no reference or changelog when schema is omitted or disabled', async ({ page, vite, project }) => {
   let viteDevServer: ViteController.ViteDevServerPlus
   const tests = async () => {
     {
-      const response = await page.goto(viteDevServer!.url('/reference').href)
+      // When navigating to a route that doesn't exist, we expect a 404 status
+      // Use waitUntil: 'domcontentloaded' to avoid waiting for all resources
+      const response = await page.goto(viteDevServer!.url('/reference').href, {
+        waitUntil: 'domcontentloaded'
+      })
       expect(response?.status()).toBe(404)
     }
 
     {
-      const response = await page.goto(viteDevServer!.url('/changelog').href)
+      const response = await page.goto(viteDevServer!.url('/changelog').href, {
+        waitUntil: 'domcontentloaded'
+      })
       expect(response?.status()).toBe(404)
     }
 
@@ -23,18 +29,20 @@ test('no reference or changelog when schema is omitted or disabled', async ({ pa
     await expect(page.getByText('changelog')).not.toBeVisible()
   }
   {
-    const viteUserConfig = await pc()
+    // Use isolated project directory - no schema at all
+    const viteUserConfig = await pc({}, project.layout.cwd)
     viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await tests()
     await vite.stopDevelopmentServer()
   }
   {
+    // Use isolated project directory - schema disabled
     const viteUserConfig = await pc({
       schema: {
         ...configMemorySchema(sdl),
         enabled: false,
       },
-    })
+    }, project.layout.cwd)
     viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await tests()
     await vite.stopDevelopmentServer()
@@ -47,7 +55,7 @@ test('can loads schema from memory data source', async ({ page, vite }) => {
   })
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
-  await page.getByText('reference').click()
+  await page.getByRole('link', { name: 'Reference', exact: true }).click()
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
 
@@ -58,7 +66,7 @@ test('can loads schema from schema data source', async ({ page, vite, project })
   const viteUserConfig = await pc({}, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
-  await page.getByText('reference').click()
+  await page.getByRole('link', { name: 'Reference', exact: true }).click()
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
 
@@ -69,7 +77,7 @@ test('can loads schema from directory data source', async ({ page, vite, project
   const viteUserConfig = await pc({}, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
-  await page.getByText('reference').click()
+  await page.getByRole('link', { name: 'Reference', exact: true }).click()
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
 
@@ -80,7 +88,7 @@ test('can loads schema from directory data source with single schema.graphql', a
   const viteUserConfig = await pc({}, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
-  await page.getByText('reference').click()
+  await page.getByRole('link', { name: 'Reference', exact: true }).click()
   await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
 })
 

@@ -96,10 +96,125 @@ const HeroSection = S.Struct({
    */
   callToActions: S.optional(HeroCallToActionsConfigSchema),
   /**
-   * Path to hero image. Can be relative to public directory or absolute URL.
-   * If not specified, Polen will auto-detect common hero image files in public/.
+   * Layout style for the hero section.
+   * 
+   * - `asymmetric`: Text on left, image on right (best for square/portrait images ~1:1 or 4:3)
+   * - `cinematic`: Full-viewport image with text overlay (best for wide/landscape images ~16:9)
+   * - `auto`: Automatically choose based on image aspect ratio
+   * 
+   * @default 'asymmetric'
+   * @example
+   * ```ts
+   * layout: 'asymmetric'  // Force side-by-side layout
+   * layout: 'cinematic'    // Force full-viewport hero image with overlay
+   * ```
    */
-  heroImage: S.optional(S.String),
+  layout: S.optional(S.Union(
+    S.Literal('asymmetric'),
+    S.Literal('cinematic'),
+    S.Literal('auto')
+  )),
+  /**
+   * Custom prompt for AI hero image generation.
+   * Shortcut for heroImage.ai.prompt
+   * 
+   * @example
+   * ```ts
+   * defineConfig({
+   *   home: {
+   *     hero: {
+   *       prompt: 'hero image for pokemon platform allowing exploration and capture of wild pokemon.'
+   *     }
+   *   }
+   * })
+   * ```
+   */
+  prompt: S.optional(S.String),
+  /**
+   * Hero image configuration.
+   * Can be a string path or an object with AI generation settings.
+   *
+   * @example
+   * ```ts
+   * // Use existing image
+   * heroImage: '/hero.png'
+   *
+   * // Enable AI generation with defaults
+   * heroImage: { ai: { enabled: true } }
+   *
+   * // AI generation with custom prompt
+   * heroImage: {
+   *   ai: {
+   *     enabled: true,
+   *     prompt: 'Abstract data visualization with flowing connections',
+   *     style: 'futuristic'
+   *   }
+   * }
+   * ```
+   */
+  heroImage: S.optional(S.Union(
+    S.String,
+    S.Struct({
+      /**
+       * Path to existing image (takes precedence over AI generation)
+       */
+      src: S.optional(S.String),
+      /**
+       * AI generation configuration
+       */
+      ai: S.optional(S.Struct({
+        /**
+         * Enable AI hero image generation using Pollinations.ai
+         * @default false
+         */
+        enabled: S.Boolean,
+        /**
+         * Custom prompt override (if not provided, will generate from schema)
+         */
+        prompt: S.optional(S.String),
+        /**
+         * Art style for the generated image
+         * @default 'modern'
+         */
+        style: S.optional(S.Literal(
+          'modern',
+          'minimalist',
+          'abstract',
+          'technical',
+          'vibrant',
+          'professional',
+          'futuristic',
+          'gradient',
+          'geometric',
+          'illustration',
+        )),
+        /**
+         * Image width in pixels
+         * @default 1200
+         */
+        width: S.optional(S.Number),
+        /**
+         * Image height in pixels
+         * @default 400
+         */
+        height: S.optional(S.Number),
+        /**
+         * Random seed for reproducible generation
+         */
+        seed: S.optional(S.Number),
+        /**
+         * Whether to include Pollinations logo
+         * @default false
+         */
+        nologo: S.optional(S.Boolean),
+        /**
+         * Whether to cache generated images
+         * @default true
+         */
+        cache: S.optional(S.Boolean),
+      })),
+    }),
+  )),
 }).annotations({
   identifier: 'HeroConfig',
   description: 'Configuration for the hero section of the home page.',
@@ -374,6 +489,15 @@ export const HomeConfig = S.Struct({
    * @default true
    */
   enabled: S.optional(S.Boolean),
+  /**
+   * Topics that describe your API's domain.
+   * Used for AI-generated images and other contextual content.
+   * When not provided, topics are inferred from your GraphQL schema.
+   * 
+   * @example ['adventure', 'pokemon', 'wilderness', 'battles']
+   * @example ['e-commerce', 'payments', 'inventory']
+   */
+  topics: S.optional(S.Array(S.String)),
   /**
    * Hero section configuration.
    */

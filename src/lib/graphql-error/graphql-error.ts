@@ -45,9 +45,9 @@ export const ValidationContext = S.Struct({
 // Type exports
 // ============================================================================
 
-export type Location = S.Schema.Type<typeof Location>
-export type GraphQLError = S.Schema.Type<typeof GraphQLError>
-export type ValidationContext = S.Schema.Type<typeof ValidationContext>
+export type Location = typeof Location.Type
+export type GraphQLError = typeof GraphQLError.Type
+export type ValidationContext = typeof ValidationContext.Type
 
 // ============================================================================
 // Constructors

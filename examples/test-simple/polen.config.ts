@@ -18,6 +18,8 @@ export default defineConfig({
         { label: 'Try Playground', href: '/playground', variant: 'primary' },
         { label: 'View Docs', href: '/reference', variant: 'secondary' },
       ],
+      // Hero image can be specified as a path
+      // heroImage: '/hero.png',
     },
     socialProof: {
       title: 'Used By Leading Teams',

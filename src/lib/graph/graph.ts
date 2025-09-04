@@ -21,7 +21,7 @@ export const DependencyGraph = S.Struct({
   description: 'A directed graph tracking dependencies between nodes',
 })
 
-export type DependencyGraph = S.Schema.Type<typeof DependencyGraph>
+export type DependencyGraph = typeof DependencyGraph.Type
 
 // ─── Constructors ────────────────────────────────────────────────────────────
 

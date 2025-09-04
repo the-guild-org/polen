@@ -1,62 +1,55 @@
-// @ts-nocheck
 import { Api } from '#api/$'
-import { Command } from '@molt/command'
+import { Args, Command, Options } from '@effect/cli'
 import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
 import * as Ansis from 'ansis'
 import consola from 'consola'
-import { z } from 'zod'
+import { Console, Effect, Option } from 'effect'
 import { $ } from 'zx'
 
-const Examples = z.enum([`hive`])
+// Define all the options and arguments exactly matching the original
+const nameArg = Args.text({ name: 'name' }).pipe(
+  Args.optional,
+  Args.withDescription(
+    'The name of your project. Used by the package name and the default path. Defaults to a random name.',
+  ),
+)
 
-const args = Command
-  .create()
-  .parameter(
-    `name`,
-    z.string().optional().describe(
-      `The name of your project. Used by the package name and the default path. Defaults to a random name.`,
-    ),
-  )
-  .parameter(
-    `path`,
-    z.string().optional().describe(
-      `The path to a directory to create your project. Must point to an empty or non-existing directory. Defaults to a new directory named after your project in your cwd (current working directory).`,
-    ),
-  )
-  .parameter(
-    `link`,
-    z.boolean().default(false).describe(
-      `When installing polen, do so as a link. You must have Polen globally linked on your machine.`,
-    ),
-  )
-  .parameter(
-    `version`,
-    z.string().optional().describe(`Version of Polen to use. Defaults to latest release. Ignored if --link is used.`),
-  )
-  .parameter(`example`, Examples.default(`hive`).describe(`The example to use to scaffold your project.`))
-  .settings({
-    parameters: {
-      environment: {
-        $default: {
-          // todo prfix seting doesn't seem to work with Molt!
-          prefix: `POLEN_CREATE_`,
-          enabled: false,
-        },
-      },
-    },
-  })
-  .parse()
+const pathArg = Args.text({ name: 'path' }).pipe(
+  Args.optional,
+  Args.withDescription(
+    'The path to a directory to create your project. Must point to an empty or non-existing directory. Defaults to a new directory named after your project in your cwd (current working directory).',
+  ),
+)
 
-const getProjectRoot = async (): Promise<string> => {
+const link = Options.boolean('link').pipe(
+  Options.withDefault(false),
+  Options.withDescription(
+    'When installing polen, do so as a link. You must have Polen globally linked on your machine.',
+  ),
+)
+
+const version = Options.text('version').pipe(
+  Options.optional,
+  Options.withDescription('Version of Polen to use. Defaults to latest release. Ignored if --link is used.'),
+)
+
+const example = Options.choice('example', ['hive']).pipe(
+  Options.withDefault('hive' as const),
+  Options.withDescription('The example to use to scaffold your project.'),
+)
+
+const getProjectRoot = async (args: { name?: string; path?: string }): Promise<string> => {
   if (args.path) {
     if (await Api.Project.validateProjectDirectory(args.path, { mustExist: false, mustBeEmpty: true })) {
       return args.path
     }
-    process.exit(1)
+    throw new Error('Invalid project directory')
   }
 
+  const name = Str.Case.kebab(args.name ?? Name.generate())
+
   const findUsableName = async (isRetry?: true): Promise<string> => {
-    const projectRoot = Path.join(process.cwd(), name + (isRetry ? `-${Date.now().toString(36).substring(2, 8)}` : ``))
+    const projectRoot = Path.join(process.cwd(), name + (isRetry ? `-${Date.now().toString(36).substring(2, 8)}` : ''))
     const stat = await Fs.stat(projectRoot)
     if (Fs.isNotFoundError(stat)) return projectRoot
     if (stat.isDirectory() && await Fs.isEmptyDir(projectRoot)) return projectRoot
@@ -72,6 +65,7 @@ const copyGitRepositoryTemplate = async (input: {
     templatePath: string
   }
   destinationPath: string
+  exampleName: string
 }): Promise<void> => {
   try {
     const tmpDirPath = await Fs.makeTemporaryDirectory()
@@ -89,10 +83,10 @@ const copyGitRepositoryTemplate = async (input: {
       // Verify the example exists
       if (!await Fs.exists(templatePath)) {
         consola.error(
-          `Example "${args.example}" not found in the Polen repository. Are you using the latest version of the CLI?`,
+          `Example "${input.exampleName}" not found in the Polen repository. Are you using the latest version of the CLI?`,
         )
         await cleanup()
-        process.exit(1)
+        throw new Error(`Example not found`)
       }
 
       await Fs.copyDir({
@@ -105,43 +99,69 @@ const copyGitRepositoryTemplate = async (input: {
   } catch (error) {
     consola.error(`Failed to scaffold example`)
     Err.log(Err.ensure(error))
-    process.exit(1)
+    throw error
   }
 }
 
-// -- main
-
-const name = Str.Case.kebab(args.name ?? Name.generate())
-const projectRoot = await getProjectRoot()
-const project$ = $({ cwd: projectRoot })
-
-console.log(``)
-consola.info(`Creating your Polen project "${Ansis.green(Str.Case.title(name))}"`)
-
-consola.info(`Initializing with example "${Ansis.green(Str.Case.title(args.example))}"`)
-await copyGitRepositoryTemplate({
-  repository: {
-    url: new URL(`https://github.com/the-guild-org/polen`),
-    templatePath: Path.join(`examples`, args.example),
+export const create = Command.make(
+  'create',
+  {
+    name: nameArg,
+    path: pathArg,
+    link,
+    version,
+    example,
   },
-  destinationPath: projectRoot,
-})
+  ({ name, path, link, version, example }) =>
+    Effect.gen(function*() {
+      const finalName = Str.Case.kebab(Option.getOrUndefined(name) ?? Name.generate())
+      const nameValue = Option.getOrUndefined(name)
+      const pathValue = Option.getOrUndefined(path)
+      const projectRoot = yield* Effect.promise(() =>
+        getProjectRoot({
+          ...(nameValue && { name: nameValue }),
+          ...(pathValue && { path: pathValue }),
+        })
+      )
+      const project$ = $({ cwd: projectRoot })
 
-await Manifest.resource.update((manifest) => {
-  manifest.name = name
-  manifest.description = `A new project`
-  manifest.packageManager = `pnpm@10.11.0`
-  delete manifest.dependencies.polen // Repo uses links, we will install polen next.
-}, projectRoot)
+      console.log('')
+      consola.info(`Creating your Polen project "${Ansis.green(Str.Case.title(finalName))}"`)
 
-if (args.link) {
-  await project$`pnpm link polen`
-} else {
-  const fqpn = `polen${args.ver ? `@${args.ver}` : ''}`
-  consola.info(`Installing ${Ansis.magenta(fqpn)}`)
-  await project$`pnpm add ${fqpn}`
-}
+      consola.info(`Initializing with example "${Ansis.green(Str.Case.title(example))}"`)
+      yield* Effect.promise(() =>
+        copyGitRepositoryTemplate({
+          repository: {
+            url: new URL('https://github.com/the-guild-org/polen'),
+            templatePath: Path.join('examples', example),
+          },
+          destinationPath: projectRoot,
+          exampleName: example,
+        })
+      )
 
-consola.success(`Your project is ready! Get Started:`)
-console.log(``)
-console.log(Ansis.magenta(`  cd ${Path.relative(process.cwd(), projectRoot)} && pnpm dev`))
+      yield* Effect.promise(() =>
+        Manifest.resource.update((manifest) => {
+          manifest.name = finalName
+          manifest.description = 'A new project'
+          manifest.packageManager = 'pnpm@10.11.0'
+          if (manifest.dependencies) {
+            delete manifest.dependencies['polen'] // Repo uses links, we will install polen next.
+          }
+        }, projectRoot)
+      )
+
+      if (link) {
+        yield* Effect.promise(() => project$`pnpm link polen`)
+      } else {
+        const versionStr = Option.getOrUndefined(version)
+        const fqpn = `polen${versionStr ? `@${versionStr}` : ''}`
+        consola.info(`Installing ${Ansis.magenta(fqpn)}`)
+        yield* Effect.promise(() => project$`pnpm add ${fqpn}`)
+      }
+
+      consola.success('Your project is ready! Get Started:')
+      console.log('')
+      console.log(Ansis.magenta(`  cd ${Path.relative(process.cwd(), projectRoot)} && pnpm dev`))
+    }),
+)

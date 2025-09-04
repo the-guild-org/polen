@@ -28,6 +28,12 @@ interface GraphQLInteractiveProps {
 
   /** Whether to show a warning indicator when schema is missing */
   showWarningIfNoSchema?: boolean | undefined
+
+  /** Optional toolbar component to render (e.g., version picker) */
+  toolbar?: () => React.ReactNode
+
+  /** Optional custom styles */
+  style?: React.CSSProperties | undefined
 }
 
 /**

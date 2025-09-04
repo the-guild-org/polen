@@ -90,7 +90,7 @@ export const Version = S.transformOrFail(
   },
 )
 
-export type Version = S.Schema.Type<typeof Version>
+export type Version = typeof Version.Type
 
 // ============================================================================
 // Constructors

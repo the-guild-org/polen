@@ -12,6 +12,11 @@ export default defineConfig({
     },
   },
   home: {
+    topics: ['adventure', 'pokemon', 'wilderness', 'battles'],
+    hero: {
+      prompt: 'hero image for pokemon platform allowing exploration and capture of wild pokemon.',
+      layout: 'cinematic',
+    },
     examples: {
       title: 'API Examples',
       description: 'Explore common queries with version-specific variations',

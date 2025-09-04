@@ -1,0 +1,261 @@
+/**
+ * Swiss Grid System
+ * 
+ * A document-level layout system with semantic zones:
+ * - Viewport: Full viewport width
+ * - Extended: Subtly breaks out of body
+ * - Body: Main 12-column content area
+ */
+
+/* ============================================================================
+ * Grid Container
+ * ============================================================================ */
+
+.swiss-grid {
+  display: grid;
+  width: 100%;
+  
+  /* Dynamic margin calculation for centering */
+  --swiss-margin: max(
+    var(--swiss-margins, var(--space-5, 2rem)),
+    calc((100vw - var(--swiss-max, 1440px)) / 2)
+  );
+  
+  /* Named grid lines create semantic zones */
+  grid-template-columns:
+    [viewport-start]
+    minmax(calc(var(--swiss-margin) * 0.5), 0.5fr)
+    [extended-start]
+    minmax(calc(var(--swiss-margin) * 0.5), 0.5fr)
+    [body-start]
+    repeat(var(--swiss-columns, 12), [col] minmax(0, 1fr))
+    [body-end]
+    minmax(calc(var(--swiss-margin) * 0.5), 0.5fr)
+    [extended-end]
+    minmax(calc(var(--swiss-margin) * 0.5), 0.5fr)
+    [viewport-end];
+    
+  /* Spacing using Radix space scale or fallbacks */
+  column-gap: var(--swiss-gutter, var(--space-4, 1.5rem));
+  row-gap: calc(var(--swiss-gutter, var(--space-4, 1.5rem)) * 2);
+}
+
+/* ============================================================================
+ * Grid Items
+ * ============================================================================ */
+
+.swiss-item {
+  /* Default to body zone */
+  grid-column: body-start / body-end;
+}
+
+/* Semantic zone mappings */
+[data-span="body"] {
+  grid-column: body-start / body-end;
+}
+
+[data-span="extended"] {
+  grid-column: extended-start / extended-end;
+}
+
+[data-span="viewport"] {
+  grid-column: viewport-start / viewport-end;
+}
+
+/* Column spans within body */
+[data-cols="1"] { grid-column: span 1; }
+[data-cols="2"] { grid-column: span 2; }
+[data-cols="3"] { grid-column: span 3; }
+[data-cols="4"] { grid-column: span 4; }
+[data-cols="5"] { grid-column: span 5; }
+[data-cols="6"] { grid-column: span 6; }
+[data-cols="7"] { grid-column: span 7; }
+[data-cols="8"] { grid-column: span 8; }
+[data-cols="9"] { grid-column: span 9; }
+[data-cols="10"] { grid-column: span 10; }
+[data-cols="11"] { grid-column: span 11; }
+[data-cols="12"] { grid-column: span 12; }
+
+/* ============================================================================
+ * Responsive Behavior - Aligned with Radix Breakpoints
+ * ============================================================================ */
+
+/* xs: 520px */
+@media (min-width: 520px) {
+  .swiss-grid {
+    --swiss-max: var(--swiss-max-xs, var(--swiss-max));
+    --swiss-gutter: var(--swiss-gutter-xs, var(--swiss-gutter));
+    --swiss-margins: var(--swiss-margins-xs, var(--swiss-margins));
+    --swiss-columns: var(--swiss-columns-xs, var(--swiss-columns));
+  }
+  
+  [data-span-xs="body"] { grid-column: body-start / body-end; }
+  [data-span-xs="extended"] { grid-column: extended-start / extended-end; }
+  [data-span-xs="viewport"] { grid-column: viewport-start / viewport-end; }
+  
+  [data-cols-xs="1"] { grid-column: span 1; }
+  [data-cols-xs="2"] { grid-column: span 2; }
+  [data-cols-xs="3"] { grid-column: span 3; }
+  [data-cols-xs="4"] { grid-column: span 4; }
+  [data-cols-xs="5"] { grid-column: span 5; }
+  [data-cols-xs="6"] { grid-column: span 6; }
+  [data-cols-xs="7"] { grid-column: span 7; }
+  [data-cols-xs="8"] { grid-column: span 8; }
+  [data-cols-xs="9"] { grid-column: span 9; }
+  [data-cols-xs="10"] { grid-column: span 10; }
+  [data-cols-xs="11"] { grid-column: span 11; }
+  [data-cols-xs="12"] { grid-column: span 12; }
+}
+
+/* sm: 768px */
+@media (min-width: 768px) {
+  .swiss-grid {
+    --swiss-max: var(--swiss-max-sm, var(--swiss-max));
+    --swiss-gutter: var(--swiss-gutter-sm, var(--swiss-gutter));
+    --swiss-margins: var(--swiss-margins-sm, var(--swiss-margins));
+    --swiss-columns: var(--swiss-columns-sm, var(--swiss-columns));
+  }
+  
+  [data-span-sm="body"] { grid-column: body-start / body-end; }
+  [data-span-sm="extended"] { grid-column: extended-start / extended-end; }
+  [data-span-sm="viewport"] { grid-column: viewport-start / viewport-end; }
+  
+  [data-cols-sm="1"] { grid-column: span 1; }
+  [data-cols-sm="2"] { grid-column: span 2; }
+  [data-cols-sm="3"] { grid-column: span 3; }
+  [data-cols-sm="4"] { grid-column: span 4; }
+  [data-cols-sm="5"] { grid-column: span 5; }
+  [data-cols-sm="6"] { grid-column: span 6; }
+  [data-cols-sm="7"] { grid-column: span 7; }
+  [data-cols-sm="8"] { grid-column: span 8; }
+  [data-cols-sm="9"] { grid-column: span 9; }
+  [data-cols-sm="10"] { grid-column: span 10; }
+  [data-cols-sm="11"] { grid-column: span 11; }
+  [data-cols-sm="12"] { grid-column: span 12; }
+}
+
+/* md: 1024px */
+@media (min-width: 1024px) {
+  .swiss-grid {
+    --swiss-max: var(--swiss-max-md, var(--swiss-max));
+    --swiss-gutter: var(--swiss-gutter-md, var(--swiss-gutter));
+    --swiss-margins: var(--swiss-margins-md, var(--swiss-margins));
+    --swiss-columns: var(--swiss-columns-md, var(--swiss-columns));
+  }
+  
+  [data-span-md="body"] { grid-column: body-start / body-end; }
+  [data-span-md="extended"] { grid-column: extended-start / extended-end; }
+  [data-span-md="viewport"] { grid-column: viewport-start / viewport-end; }
+  
+  [data-cols-md="1"] { grid-column: span 1; }
+  [data-cols-md="2"] { grid-column: span 2; }
+  [data-cols-md="3"] { grid-column: span 3; }
+  [data-cols-md="4"] { grid-column: span 4; }
+  [data-cols-md="5"] { grid-column: span 5; }
+  [data-cols-md="6"] { grid-column: span 6; }
+  [data-cols-md="7"] { grid-column: span 7; }
+  [data-cols-md="8"] { grid-column: span 8; }
+  [data-cols-md="9"] { grid-column: span 9; }
+  [data-cols-md="10"] { grid-column: span 10; }
+  [data-cols-md="11"] { grid-column: span 11; }
+  [data-cols-md="12"] { grid-column: span 12; }
+}
+
+/* lg: 1280px */
+@media (min-width: 1280px) {
+  .swiss-grid {
+    --swiss-max: var(--swiss-max-lg, var(--swiss-max));
+    --swiss-gutter: var(--swiss-gutter-lg, var(--swiss-gutter));
+    --swiss-margins: var(--swiss-margins-lg, var(--swiss-margins));
+    --swiss-columns: var(--swiss-columns-lg, var(--swiss-columns));
+  }
+  
+  [data-span-lg="body"] { grid-column: body-start / body-end; }
+  [data-span-lg="extended"] { grid-column: extended-start / extended-end; }
+  [data-span-lg="viewport"] { grid-column: viewport-start / viewport-end; }
+  
+  [data-cols-lg="1"] { grid-column: span 1; }
+  [data-cols-lg="2"] { grid-column: span 2; }
+  [data-cols-lg="3"] { grid-column: span 3; }
+  [data-cols-lg="4"] { grid-column: span 4; }
+  [data-cols-lg="5"] { grid-column: span 5; }
+  [data-cols-lg="6"] { grid-column: span 6; }
+  [data-cols-lg="7"] { grid-column: span 7; }
+  [data-cols-lg="8"] { grid-column: span 8; }
+  [data-cols-lg="9"] { grid-column: span 9; }
+  [data-cols-lg="10"] { grid-column: span 10; }
+  [data-cols-lg="11"] { grid-column: span 11; }
+  [data-cols-lg="12"] { grid-column: span 12; }
+}
+
+/* xl: 1640px */
+@media (min-width: 1640px) {
+  .swiss-grid {
+    --swiss-max: var(--swiss-max-xl, var(--swiss-max));
+    --swiss-gutter: var(--swiss-gutter-xl, var(--swiss-gutter));
+    --swiss-margins: var(--swiss-margins-xl, var(--swiss-margins));
+    --swiss-columns: var(--swiss-columns-xl, var(--swiss-columns));
+  }
+  
+  [data-span-xl="body"] { grid-column: body-start / body-end; }
+  [data-span-xl="extended"] { grid-column: extended-start / extended-end; }
+  [data-span-xl="viewport"] { grid-column: viewport-start / viewport-end; }
+  
+  [data-cols-xl="1"] { grid-column: span 1; }
+  [data-cols-xl="2"] { grid-column: span 2; }
+  [data-cols-xl="3"] { grid-column: span 3; }
+  [data-cols-xl="4"] { grid-column: span 4; }
+  [data-cols-xl="5"] { grid-column: span 5; }
+  [data-cols-xl="6"] { grid-column: span 6; }
+  [data-cols-xl="7"] { grid-column: span 7; }
+  [data-cols-xl="8"] { grid-column: span 8; }
+  [data-cols-xl="9"] { grid-column: span 9; }
+  [data-cols-xl="10"] { grid-column: span 10; }
+  [data-cols-xl="11"] { grid-column: span 11; }
+  [data-cols-xl="12"] { grid-column: span 12; }
+}
+
+/* ============================================================================
+ * Debug Mode
+ * ============================================================================ */
+
+.swiss-grid--debug {
+  position: relative;
+}
+
+.swiss-grid--debug::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(255, 0, 0, 0.1) 0,
+    rgba(255, 0, 0, 0.1) calc((100% - var(--swiss-margin) * 2) / var(--swiss-columns, 12) - var(--swiss-gutter)),
+    transparent calc((100% - var(--swiss-margin) * 2) / var(--swiss-columns, 12) - var(--swiss-gutter)),
+    transparent calc((100% - var(--swiss-margin) * 2) / var(--swiss-columns, 12))
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================================================
+ * Responsive Grid Adjustments
+ * ============================================================================ */
+
+/* Tablet - 8 columns default */
+@media (max-width: 1023px) {
+  .swiss-grid {
+    --swiss-columns: 8;
+  }
+}
+
+/* Mobile - 4 columns default */
+@media (max-width: 767px) {
+  .swiss-grid {
+    --swiss-columns: 4;
+    --swiss-margins: var(--space-3, 1rem);
+  }
+}

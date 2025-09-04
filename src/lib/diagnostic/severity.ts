@@ -18,7 +18,7 @@ export const Severity = S.Enums(
 
 Severity.enums.error
 
-export type Severity = S.Schema.Type<typeof Severity>
+export type Severity = typeof Severity.Type
 
 // ============================================================================
 // Severity Literals

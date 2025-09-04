@@ -60,7 +60,7 @@ export const Diagnostic = S.Struct({
   description: 'Base diagnostic structure with three-level hierarchy',
 })
 
-export type Diagnostic = S.Schema.Type<typeof Diagnostic>
+export type Diagnostic = typeof Diagnostic.Type
 
 // ============================================================================
 // Helpers

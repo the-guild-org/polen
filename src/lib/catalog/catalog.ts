@@ -18,7 +18,7 @@ export const Catalog = S.Union(Versioned.Versioned, Unversioned.Unversioned).ann
   description: 'A catalog of GraphQL schemas and their revision history',
 })
 
-export type Catalog = S.Schema.Type<typeof Catalog>
+export type Catalog = typeof Catalog.Type
 
 // ============================================================================
 // Type Guard

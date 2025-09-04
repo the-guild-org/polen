@@ -18,7 +18,7 @@ export const DocumentPartiallyVersioned = S.TaggedStruct('DocumentPartiallyVersi
 // Types
 // ============================================================================
 
-export type DocumentPartiallyVersioned = S.Schema.Type<typeof DocumentPartiallyVersioned>
+export type DocumentPartiallyVersioned = typeof DocumentPartiallyVersioned.Type
 
 // ============================================================================
 // Constructors

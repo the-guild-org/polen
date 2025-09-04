@@ -29,7 +29,7 @@ export const TypeKindBreakdown = S.Struct({
   description: 'Breakdown of types by kind with percentages',
 })
 
-export type TypeKindBreakdown = S.Schema.Type<typeof TypeKindBreakdown>
+export type TypeKindBreakdown = typeof TypeKindBreakdown.Type
 
 // ============================================================================
 // Schema - Description Coverage
@@ -60,7 +60,7 @@ export const DescriptionCoverage = S.Struct({
   description: 'Coverage statistics for descriptions',
 })
 
-export type DescriptionCoverage = S.Schema.Type<typeof DescriptionCoverage>
+export type DescriptionCoverage = typeof DescriptionCoverage.Type
 
 // ============================================================================
 // Schema - Deprecation Metrics
@@ -91,7 +91,7 @@ export const DeprecationMetrics = S.Struct({
   description: 'Metrics about deprecated schema elements',
 })
 
-export type DeprecationMetrics = S.Schema.Type<typeof DeprecationMetrics>
+export type DeprecationMetrics = typeof DeprecationMetrics.Type
 
 // ============================================================================
 // Schema - Version Statistics
@@ -150,7 +150,7 @@ export const VersionStatistics = S.Struct({
   description: 'Statistics for a single schema version',
 })
 
-export type VersionStatistics = S.Schema.Type<typeof VersionStatistics>
+export type VersionStatistics = typeof VersionStatistics.Type
 
 // ============================================================================
 // Schema - Stability Metrics
@@ -193,4 +193,4 @@ export const StabilityMetrics = S.Struct({
   description: 'Stability metrics calculated across schema history',
 })
 
-export type StabilityMetrics = S.Schema.Type<typeof StabilityMetrics>
+export type StabilityMetrics = typeof StabilityMetrics.Type

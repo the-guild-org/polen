@@ -22,7 +22,7 @@ export const PreRelease = S.TaggedStruct('SemverPreRelease', {
 // Type
 // ============================================================================
 
-export type PreRelease = S.Schema.Type<typeof PreRelease>
+export type PreRelease = typeof PreRelease.Type
 
 // ============================================================================
 // Constructors

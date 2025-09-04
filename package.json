@@ -100,6 +100,15 @@
     "#lib/directed-filter/$$": {
       "default": "./build/lib/directed-filter/$$.js"
     },
+    "#lib/swiss": {
+      "default": "./build/lib/swiss/$.js"
+    },
+    "#lib/swiss/swiss": {
+      "default": "./build/lib/swiss/$$.js"
+    },
+    "#lib/swiss/styles.css": {
+      "default": "./build/lib/swiss/styles.css"
+    },
     "#lib/diagnostic/diagnostic": {
       "default": "./build/lib/diagnostic/$$.js"
     },
@@ -165,6 +174,12 @@
     },
     "#lib/kit-temp": {
       "default": "./build/lib/kit-temp/$.js"
+    },
+    "#lib/effect-cli-help-markdown": {
+      "default": "./build/lib/effect-cli-help-markdown/$.js"
+    },
+    "#lib/effect-cli-help-markdown/effect-cli-help-markdown": {
+      "default": "./build/lib/effect-cli-help-markdown/$$.js"
     },
     "#lib/file-path": {
       "default": "./build/lib/file-path/$.js"
@@ -266,6 +281,7 @@
     "@effect/cli": "^0.63.0",
     "@effect/platform": "^0.90.0",
     "@effect/platform-node": "^0.94.0",
+    "@effect/printer-ansi": "^0.45.0",
     "@graphql-inspector/core": "^6.2.1",
     "@graphql-tools/load": "^8.1.2",
     "@hiogawa/vite-plugin-ssr-css": "^0.0.1",
@@ -373,7 +389,6 @@
     "sb": "pnpm sandbox",
     "sb:w": "pnpm sandbox:watch",
     "polen": "tsx ./src/cli/index.ts",
-    "polen-effect": "tsx ./src/cli-effect/index.ts",
     "test:examples": "playwright test --config 'tests/playwright.config.ts' --project=examples",
     "test:integration": "playwright test --config 'tests/playwright.config.ts' --project=integration",
     "test:unit": "vitest",
@@ -395,7 +410,8 @@
     "prepublishOnly": "pnpm build",
     "prepack": "pnpm build",
     "build:cli:chmodx": "chmod +x ./build/cli/index.js",
-    "postbuild": "pnpm run build:cli:chmodx",
+    "build:css": "find src/template -name '*.css' | while read f; do mkdir -p build/$(dirname \"$f\" | cut -c5-) && cp \"$f\" build/$(echo \"$f\" | cut -c5-); done",
+    "postbuild": "pnpm run build:cli:chmodx && pnpm run build:css",
     "test": "vitest",
     "check": "pnpm run '/^check:(?!pedantic:).+/'",
     "checkAll": "pnpm run '/^check:.+/'",
@@ -403,7 +419,10 @@
     "f": "pnpm run '/^fix:.+/'",
     "fc": "pnpm run '/^fix:.+/' && pnpm run '/^check:(?!pedantic:).+/'",
     "release": "dripip stable",
-    "refresh:serena-prompt": "serena print-system-prompt > .claude/prompt.md"
+    "refresh:serena-prompt": "serena print-system-prompt > .claude/prompt.md",
+    "website:cli-docs": "tsx website/scripts/generate-cli-docs.ts"
   },
-  "bin": "./build/cli/index.js"
+  "bin": {
+    "polen": "./build/cli/index.js"
+  }
 }

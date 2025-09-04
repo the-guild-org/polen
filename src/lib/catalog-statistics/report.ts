@@ -22,7 +22,7 @@ export const Report = S.Struct({
   description: 'Complete statistics report for a GraphQL catalog',
 })
 
-export type Report = S.Schema.Type<typeof Report>
+export type Report = typeof Report.Type
 
 // ============================================================================
 // Constructors

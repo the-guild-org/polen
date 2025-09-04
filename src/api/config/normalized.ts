@@ -2,6 +2,7 @@ import { ExamplesConfig } from '#api/examples/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Typings } from '#api/typings/$'
 import { DirectedFilter } from '#lib/directed-filter/$'
+import { FilePath } from '#lib/file-path/$'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import { packagePaths } from '#package-paths'
@@ -31,18 +32,21 @@ const HomeConfig = S.Struct({
   enabled: S.Boolean,
 
   /**
-   * Hero section - false to disable, object with configuration.
-   * After normalization, `true` is expanded to object with defaults.
+   * Hero section configuration.
+   * After normalization, always an object with enabled field.
    */
-  hero: S.Union(
-    S.Literal(false),
-    S.Struct({
-      title: S.optional(S.String),
-      tagline: S.optional(S.String),
-      callToActions: S.optional(S.Unknown), // Complex type, using Unknown for now
-      heroImage: S.optional(S.String),
-    }),
-  ),
+  hero: S.Struct({
+    enabled: S.Boolean,
+    title: S.optional(S.String),
+    tagline: S.optional(S.String),
+    callToActions: S.optional(S.Unknown), // Complex type, using Unknown for now
+    layout: S.optional(S.Union(
+      S.Literal('asymmetric'),
+      S.Literal('cinematic'),
+      S.Literal('auto'),
+    )),
+    heroImage: S.optional(FilePath.FilePath),
+  }),
 
   /**
    * Social proof section - false to disable, object with configuration.
@@ -482,9 +486,11 @@ const getConfigInputDefaults = (): Config => ({
   home: {
     enabled: true,
     hero: {
+      enabled: true,
       title: undefined,
       tagline: undefined,
       callToActions: undefined,
+      layout: 'asymmetric',
       heroImage: undefined,
     },
     socialProof: false,
@@ -663,30 +669,60 @@ export const normalizeInput = (
       // Hero section
       if (homeInput.hero !== undefined) {
         if (homeInput.hero === false) {
-          config.home.hero = false
+          config.home.hero = {
+            enabled: false,
+            title: undefined,
+            tagline: undefined,
+            callToActions: undefined,
+            layout: undefined,
+            heroImage: undefined,
+          }
         } else if (homeInput.hero === true) {
           config.home.hero = {
+            enabled: true,
             // Use name and description from top-level config as defaults
             title: config.name,
             tagline: config.description,
             callToActions: undefined,
+            layout: 'asymmetric',
             heroImage: undefined,
           }
         } else {
           // It's an object with custom configuration
+          // Extract heroImage - parse string to FilePath or extract from object
+          let heroImageValue: any = undefined
+          if (homeInput.hero.heroImage) {
+            if (typeof homeInput.hero.heroImage === 'string') {
+              // Parse string to FilePath, validating against data URLs
+              heroImageValue = FilePath.decodeSync(homeInput.hero.heroImage)
+            } else if (
+              typeof homeInput.hero.heroImage === 'object' && 'src' in homeInput.hero.heroImage
+              && homeInput.hero.heroImage.src
+            ) {
+              // Parse src string to FilePath
+              heroImageValue = FilePath.decodeSync(homeInput.hero.heroImage.src)
+            }
+            // If it's an object with AI config but no src, leave as undefined for now
+            // (future: generate during build process)
+          }
+
           config.home.hero = {
+            enabled: true,
             title: homeInput.hero.title ?? config.name,
             tagline: homeInput.hero.tagline ?? config.description,
             callToActions: homeInput.hero.callToActions,
-            heroImage: homeInput.hero.heroImage,
+            layout: homeInput.hero.layout ?? 'asymmetric',
+            heroImage: heroImageValue as any,
           }
         }
       } else {
         // Default: hero is enabled with smart defaults
         config.home.hero = {
+          enabled: true,
           title: config.name,
           tagline: config.description,
           callToActions: undefined,
+          layout: 'asymmetric',
           heroImage: undefined,
         }
       }
@@ -813,9 +849,11 @@ export const normalizeInput = (
     } else {
       // No home config provided, apply smart defaults for hero
       config.home.hero = {
+        enabled: true,
         title: config.name,
         tagline: config.description,
         callToActions: undefined,
+        layout: 'asymmetric',
         heroImage: undefined,
       }
     }

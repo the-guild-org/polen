@@ -16,7 +16,7 @@ export const DocumentVersioned = S.TaggedStruct('DocumentVersioned', {
 // Types
 // ============================================================================
 
-export type DocumentVersioned = S.Schema.Type<typeof DocumentVersioned>
+export type DocumentVersioned = typeof DocumentVersioned.Type
 
 // ============================================================================
 // Constructors

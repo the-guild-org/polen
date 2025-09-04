@@ -23,7 +23,7 @@ export const Document = S.Union(
 // Types
 // ============================================================================
 
-export type Document = S.Schema.Type<typeof Document>
+export type Document = typeof Document.Type
 
 // ============================================================================
 // Type Guards

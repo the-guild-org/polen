@@ -491,7 +491,7 @@ export const Change = S.Union(
   description: 'A change detected between two schemas',
 })
 
-export type Change = S.Schema.Type<typeof Change>
+export type Change = typeof Change.Type
 
 // ============================================================================
 // Constructors

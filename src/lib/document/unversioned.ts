@@ -12,7 +12,7 @@ export const DocumentUnversioned = S.TaggedStruct('DocumentUnversioned', {
 // Types
 // ============================================================================
 
-export type DocumentUnversioned = S.Schema.Type<typeof DocumentUnversioned>
+export type DocumentUnversioned = typeof DocumentUnversioned.Type
 
 // ============================================================================
 // Constructors

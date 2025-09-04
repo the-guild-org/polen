@@ -24,6 +24,9 @@ interface GraphQLDocumentProps {
 
   /** Override the initial/selected version */
   selectedVersion?: Version.Version
+
+  /** Optional custom styles */
+  style?: React.CSSProperties
 }
 
 /**
@@ -36,6 +39,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   showVersionPicker = true,
   onVersionChange,
   selectedVersion: controlledVersion,
+  style,
 }) => {
   /// ━ VERSION MANAGEMENT
   const isControlled = controlledVersion !== undefined
@@ -64,29 +68,21 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   }
 
   return (
-    <Box style={{ position: 'relative' }}>
-      {showVersionPicker && selectedVersion && (
-        <Box
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            zIndex: 10,
-          }}
-        >
+    <GraphQLInteractive
+      codeblock={highlightedCode}
+      schema={schema}
+      style={style}
+      toolbar={() => (
+        showVersionPicker && selectedVersion && (
           <SimpleVersionPicker
             versions={availableVersions}
             currentVersion={selectedVersion}
             onVersionChange={internalOnVersionChange}
             label='Version'
           />
-        </Box>
+        )
       )}
-      <GraphQLInteractive
-        codeblock={highlightedCode}
-        schema={schema}
-      />
-    </Box>
+    />
   )
 }
 

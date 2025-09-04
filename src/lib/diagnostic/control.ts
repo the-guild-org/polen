@@ -47,7 +47,7 @@ export const Control = S.Struct({
   description: 'Fine-grained control over diagnostic behavior',
 })
 
-export type Control = S.Schema.Type<typeof Control>
+export type Control = typeof Control.Type
 
 // ============================================================================
 // Helpers

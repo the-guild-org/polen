@@ -28,19 +28,6 @@ export const Logo: React.FC<Props> = ({ src, title, height = 30, showTitle = tru
           {title}
         </Text>
       )}
-      <style>
-        {`
-          .polen-logo {
-            filter: none;
-          }
-          
-          @media (prefers-color-scheme: dark) {
-            .polen-logo {
-              filter: invert(1);
-            }
-          }
-        `}
-      </style>
     </Flex>
   )
 }

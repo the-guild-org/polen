@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
-    "preview": "vitepress preview"
+    "preview": "vitepress preview",
+    "generate": "tsx ./scripts/generate-cli-docs.ts"
   },
   "devDependencies": {
     "vitepress": "^1.6.3"
