@@ -102,6 +102,8 @@
       "#lib/superjson-codec/*": ["./src/lib/superjson-codec/*.ts"],
       "#lib/swiss": ["./src/lib/swiss/$.ts"],
       "#lib/swiss/swiss": ["./src/lib/swiss/$$.ts"],
+      "#lib/version": ["./src/lib/version/$.ts"],
+      "#lib/version/version": ["./src/lib/version/$$.ts"],
       "#lib/swiss/*": ["./src/lib/swiss/*"],
       "#lib/vite-reactive": ["./src/lib/vite-reactive/$.ts"],
       "#lib/vite-reactive/vite-reactive": ["./src/lib/vite-reactive/$$.ts"],

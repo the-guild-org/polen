@@ -1,6 +1,6 @@
-import { DirectedFilter } from '#lib/directed-filter/$'
+import { DirectedFilter } from '#lib/directed-filter'
 import { routeIndex } from '#lib/react-router-effect/react-router-effect'
-import { Swiss } from '#lib/swiss/$'
+import { Swiss } from '#lib/swiss'
 import { redirect } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
 import { examplesCatalog } from 'virtual:polen/project/examples'

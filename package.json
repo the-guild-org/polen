@@ -43,6 +43,12 @@
     "#lib/errors/errors": {
       "default": "./build/lib/errors/$$.js"
     },
+    "#lib/version": {
+      "default": "./build/lib/version/$.js"
+    },
+    "#lib/version/version": {
+      "default": "./build/lib/version/$$.js"
+    },
     "#lib/extensible-data": {
       "default": "./build/lib/extensible-data/$.js"
     },
