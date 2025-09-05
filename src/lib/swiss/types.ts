@@ -66,22 +66,6 @@ export type GridColumnString =
 export interface GridProps extends LayoutProps, MarginProps {
   children: ReactNode
   /**
-   * Maximum width of the body content area.
-   * Can be a number (pixels), string (CSS value), or responsive object.
-   *
-   * @default 1440
-   *
-   * @example
-   * ```tsx
-   * // Fixed width
-   * <Swiss.Grid maxWidth={1200}>
-   *
-   * // Responsive width
-   * <Swiss.Grid maxWidth={{ initial: 768, md: 1024, lg: 1440 }}>
-   * ```
-   */
-  maxWidth?: ResponsiveValue<number | string>
-  /**
    * Gap between grid columns.
    * Typically uses Radix space variables for consistent spacing.
    *

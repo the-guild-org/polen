@@ -1,20 +1,23 @@
 import { S } from '#lib/kit-temp/effect'
 import { Version } from '#lib/version/$'
-import { HashSet } from 'effect'
+import { Array, HashSet, pipe } from 'effect'
 
 // ============================================================================
 // Schema
 // ============================================================================
 
+export const VersionCoverageOne = Version.Version
+export const VersionCoverageSet = S.HashSet(Version.Version)
+
 /**
  * A selection of versions - either a single version or a set of versions.
  * Used as keys in versioned documents to map version(s) to document content.
  */
-export const VersionSelection = S.Union(
-  Version.Version,
-  S.HashSet(Version.Version),
+export const VersionCoverage = S.Union(
+  VersionCoverageOne,
+  VersionCoverageSet,
 ).annotations({
-  identifier: 'VersionSelection',
+  identifier: 'VersionCoverage',
   description: 'A single version or set of versions',
 })
 
@@ -22,39 +25,37 @@ export const VersionSelection = S.Union(
 // Types
 // ============================================================================
 
-export type VersionSelection = S.Schema.Type<typeof VersionSelection>
+export type VersionCoverage = S.Schema.Type<typeof VersionCoverage>
 
 // ============================================================================
 // Constructors
 // ============================================================================
 
-export const make = VersionSelection.make
-
 // ============================================================================
 // Type Guards
 // ============================================================================
 
-export const is = S.is(VersionSelection)
+export const is = S.is(VersionCoverage)
 
 export const isSingle = Version.is
 
-export const isSet = (selection: VersionSelection): selection is HashSet.HashSet<Version.Version> =>
+export const isSet = (selection: VersionCoverage): selection is HashSet.HashSet<Version.Version> =>
   !Version.is(selection)
 
 // ============================================================================
 // Codec
 // ============================================================================
 
-export const decode = S.decode(VersionSelection)
-export const decodeSync = S.decodeSync(VersionSelection)
-export const encode = S.encode(VersionSelection)
-export const encodeSync = S.encodeSync(VersionSelection)
+export const decode = S.decode(VersionCoverage)
+export const decodeSync = S.decodeSync(VersionCoverage)
+export const encode = S.encode(VersionCoverage)
+export const encodeSync = S.encodeSync(VersionCoverage)
 
 // ============================================================================
 // Equivalence
 // ============================================================================
 
-export const equivalence = S.equivalence(VersionSelection)
+export const equivalence = S.equivalence(VersionCoverage)
 
 // ============================================================================
 // Domain Logic
@@ -64,43 +65,53 @@ export const equivalence = S.equivalence(VersionSelection)
  * Check if a version is contained in a selection
  */
 export const contains = (
-  selection: VersionSelection,
+  versionCoverage: VersionCoverage,
   version: Version.Version,
 ): boolean => {
-  if (Version.is(selection)) {
-    return Version.equivalence(selection, version)
+  if (Version.is(versionCoverage)) {
+    return Version.equivalence(versionCoverage, version)
   }
-  return HashSet.has(selection, version)
+  return HashSet.has(versionCoverage, version)
 }
 
 /**
  * Get display label for UI
  */
-export const toLabel = (selection: VersionSelection): string => {
-  if (Version.is(selection)) {
-    return Version.encodeSync(selection)
-  }
-  const versions = Array.from(selection)
-    .sort((a, b) => Version.encodeSync(a).localeCompare(Version.encodeSync(b)))
-  return versions.map(Version.encodeSync).join(', ')
+export const toLabel = (versionCoverage: VersionCoverage): string => {
+  return pipe(versionCoverage, encodeSync, Array.ensure, Array.map(_ => _.toString()), Array.join(', '))
 }
 
 /**
  * Get all versions from a selection
  */
-export const toVersions = (selection: VersionSelection): Version.Version[] => {
-  if (Version.is(selection)) {
-    return [selection]
+export const toVersions = (versionCoverage: VersionCoverage): Version.Version[] => {
+  if (Version.is(versionCoverage)) {
+    return [versionCoverage]
   }
-  return Array.from(selection)
+  return HashSet.toValues(versionCoverage)
 }
 
 /**
- * Create a selection from a list of versions.
- * Returns a single version if list has one item, otherwise a HashSet.
+ * Get the latest (highest) version from a version coverage.
+ * For single versions, returns the version itself.
+ * For version sets, returns the maximum version according to Version ordering.
+ *
+ * @param versionCoverage - The version coverage to get the latest version from
+ * @returns The latest version
+ * @throws {Error} If the version set is empty
  */
-export const fromVersions = (versions: Version.Version[]): VersionSelection | null => {
-  if (versions.length === 0) return null
-  if (versions.length === 1) return versions[0]!
-  return HashSet.fromIterable(versions)
+export const getLatest = (versionCoverage: VersionCoverage): Version.Version => {
+  if (Version.is(versionCoverage)) {
+    return versionCoverage
+  }
+
+  // For HashSet, convert to array and find max
+  const versions = HashSet.toValues(versionCoverage)
+  if (versions.length === 0) {
+    throw new Error('Cannot get latest version from empty version set')
+  }
+
+  // Use Version.max which takes exactly 2 arguments
+  // Reduce the array to find the maximum
+  return versions.reduce((latest, current) => Version.max(latest, current))
 }

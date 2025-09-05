@@ -16,10 +16,7 @@ export const TypeOperation: React.FC<{ change: any; schema?: Schema.Schema }> = 
       return <Code>{name}</Code>
     }
 
-    // Try to find the type in the schema
-    // Handle both versioned and unversioned schemas
-    const graphqlSchema = Schema.Versioned.is(schema) ? schema.definition : schema.schema
-    const type = graphqlSchema.getType(name)
+    const type = schema.definition.getType(name)
 
     if (type && isNamedType(type)) {
       // Use the actual type kind from the schema if available

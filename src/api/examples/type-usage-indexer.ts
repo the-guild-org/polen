@@ -222,7 +222,7 @@ export const createTypeUsageIndex = (
         const schema = getSchemaByVersion(schemasCatalog, version)
         if (!schema) continue
 
-        const documentString = Document.Versioned.getDocumentForVersion(example.document, version)
+        const documentString = Document.Versioned.getContentForVersion(example.document, version)
         if (!documentString) continue
 
         const types = extractTypesFromQuery(documentString, schema.definition)

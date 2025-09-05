@@ -1,1 +1,1 @@
-export * as VersionSelection from './$$.js'
+export * as VersionCoverage from './$$.js'

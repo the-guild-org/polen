@@ -77,7 +77,7 @@ const Layout = () => {
       {...swissSharpTheme}
     >
       <Swiss.Grid
-        maxWidth={1440}
+        maxWidth='1440px'
         gutter='var(--space-4)'
         margins='var(--space-5)'
       >

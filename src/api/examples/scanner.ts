@@ -1,7 +1,7 @@
 import { Catalog as SchemaCatalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { EffectGlob } from '#lib/effect-glob/$'
-import { VersionSelection } from '#lib/version-selection/$'
+import { VersionCoverage } from '#lib/version-selection/$'
 import { Version } from '#lib/version/$'
 import { FileSystem } from '@effect/platform'
 import { Str } from '@wollybeard/kit'
@@ -126,8 +126,8 @@ const lintFileLayout = (
             const [sel2, content2] = entries[j]!
             if (content1 === content2) {
               duplicates.push({
-                version1: VersionSelection.toLabel(sel1),
-                version2: VersionSelection.toLabel(sel2),
+                version1: VersionCoverage.toLabel(sel1),
+                version2: VersionCoverage.toLabel(sel2),
               })
             }
           }
@@ -214,7 +214,7 @@ export const scan = (
         if (schemaVersions.length > 0) {
           // Create a version set for all schema versions
           const versionSet = HashSet.fromIterable(schemaVersions)
-          let versionDocuments = HashMap.empty<VersionSelection.VersionSelection, string>()
+          let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, string>()
           versionDocuments = HashMap.set(versionDocuments, versionSet, documentContent)
 
           example = Example.make({
@@ -236,7 +236,7 @@ export const scan = (
         }
       } else {
         // Versioned example - multiple files or versioned files
-        let versionDocuments = HashMap.empty<VersionSelection.VersionSelection, string>()
+        let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, string>()
         let defaultDocument: string | undefined
         const explicitVersions = new Set<string>() // Track which versions have explicit files
         const unknownVersions: string[] = []
@@ -277,9 +277,6 @@ export const scan = (
           }
         }
 
-        // Determine which type of example to create
-        const hasVersions = HashMap.size(versionDocuments) > 0
-
         if (defaultDocument) {
           // If we have a default, determine which versions it applies to
           const defaultVersions = schemaVersions.filter(v => !explicitVersions.has(v))
@@ -288,7 +285,7 @@ export const scan = (
             // Create a version set for the default document
             const defaultVersionSet = defaultVersions.length === 1
               ? Version.decodeSync(defaultVersions[0]!) // Single version
-              : HashSet.fromIterable(defaultVersions.map(Version.decodeSync)) // Version set
+              : HashSet.fromIterable(defaultVersions.map(_ => Version.decodeSync(_))) // Version set
 
             versionDocuments = HashMap.set(versionDocuments, defaultVersionSet, defaultDocument)
           }

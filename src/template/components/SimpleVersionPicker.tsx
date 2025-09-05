@@ -1,6 +1,6 @@
-import type { React } from '#dep/react/index'
 import { Version } from '#lib/version/$'
 import { Select } from '@radix-ui/themes'
+import type * as React from 'react'
 
 interface Props {
   versions: readonly Version.Version[]

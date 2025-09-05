@@ -43,7 +43,7 @@ export const validateExamples = (
               DocumentVersioned: (doc) => {
                 // Validate each version against its corresponding schema
                 for (const entry of versioned.entries) {
-                  const content = Document.Versioned.getDocumentForVersion(doc, entry.version)
+                  const content = Document.Versioned.getContentForVersion(doc, entry.version)
                   if (content) {
                     const versionStr = Version.encodeSync(entry.version)
                     validateDocument(

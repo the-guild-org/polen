@@ -1,5 +1,5 @@
 import { S } from '#lib/kit-temp/effect'
-import { VersionSelection } from '#lib/version-selection/$'
+import { VersionCoverage } from '#lib/version-selection/$'
 import { Version } from '#lib/version/$'
 import { HashMap, Option } from 'effect'
 
@@ -15,7 +15,7 @@ export const DocumentVersioned = S.TaggedStruct('DocumentVersioned', {
    * - Version set → document (e.g., {v2,v3} → "shared query")
    */
   versionDocuments: S.HashMap({
-    key: VersionSelection.VersionSelection,
+    key: VersionCoverage.VersionCoverage,
     value: S.String,
   }),
 })
@@ -53,7 +53,7 @@ export const encode = S.encode(DocumentVersioned)
 /**
  * Get document for a specific version
  */
-export const getDocumentForVersion = (
+export const getContentForVersion = (
   doc: DocumentVersioned,
   version: Version.Version,
 ): string | null => {
@@ -65,7 +65,7 @@ export const getDocumentForVersion = (
 
   // Check version sets
   for (const [selection, content] of HashMap.entries(doc.versionDocuments)) {
-    if (VersionSelection.isSet(selection) && VersionSelection.contains(selection, version)) {
+    if (VersionCoverage.isSet(selection) && VersionCoverage.contains(selection, version)) {
       return content
     }
   }
@@ -74,20 +74,33 @@ export const getDocumentForVersion = (
 }
 
 /**
- * Get all version selections (for picker UI)
- */
-export const getSelections = (doc: DocumentVersioned): VersionSelection.VersionSelection[] =>
-  Array.from(HashMap.keys(doc.versionDocuments))
-
-/**
  * Get all individual versions covered by this document
  */
 export const getAllVersions = (doc: DocumentVersioned): Version.Version[] => {
   const versions = new Set<Version.Version>()
   for (const selection of HashMap.keys(doc.versionDocuments)) {
-    for (const v of VersionSelection.toVersions(selection)) {
+    for (const v of VersionCoverage.toVersions(selection)) {
       versions.add(v)
     }
   }
   return Array.from(versions)
+}
+/**
+ * Get document content for the latest version available in the document
+ */
+export const getContentForLatestVersionOrThrow = (doc: DocumentVersioned): string => {
+  const versions = getAllVersions(doc)
+
+  if (versions.length === 0) {
+    throw new Error('No versions found in document')
+  }
+
+  // Use Version.max with reduce to find the latest version
+  const latestVersion = versions.reduce(Version.max)
+
+  const content = getContentForVersion(doc, latestVersion)
+  if (!content) {
+    throw new Error('Latest version not found in document')
+  }
+  return content
 }

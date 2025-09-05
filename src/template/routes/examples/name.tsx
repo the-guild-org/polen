@@ -51,7 +51,7 @@ const Component = () => {
       <GraphQLDocument
         document={example.document}
         schemaCatalog={schemasCatalog ?? undefined}
-        selectedVersion={selectedVersion}
+        selectedVersionCoverage={selectedVersion}
       />
     </>
   )
