@@ -119,7 +119,7 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
   Catalog.fold(
     // Versioned catalog - process each versioned schema
     (versioned) => {
-      for (const schema of versioned.entries) {
+      for (const schema of Catalog.Versioned.getAll(versioned)) {
         processSchema(schema)
       }
     },

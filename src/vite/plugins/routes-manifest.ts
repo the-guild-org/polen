@@ -100,7 +100,7 @@ function processVersionedCatalog(
   catalog: Catalog.Versioned.Versioned,
   routes: string[],
 ): void {
-  for (const schema of catalog.entries) {
+  for (const schema of Catalog.Versioned.getAll(catalog)) {
     const version = schema.version
     routes.push(`/reference/version/${version}`)
 

@@ -80,7 +80,7 @@ function getDefaultFeatures(): Feature[] {
   if (schemasCatalog) {
     try {
       // Get the latest schema from the catalog
-      const latestSchema = Catalog.getLatestSchema(schemasCatalog)
+      const latestSchema = Catalog.getLatest(schemasCatalog)
 
       if (latestSchema && latestSchema.definition) {
         // Build stats from the schema definition

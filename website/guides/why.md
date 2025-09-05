@@ -76,28 +76,21 @@ Currently an integrated framework, Polen is evolving toward a modular architectu
 
 ## The Serverful Future
 
-While Polen excels at static documentation today, we're building toward a serverful future that transforms how teams work with GraphQL APIs:
+While Polen excels at static documentation today, we're building toward a serverful future that transforms how your customers interact with your API. Imaagine:
 
-### User Context Awareness
+- Make your documentation adapt to the viewer, showing relevant examples and permissions based on their authenticated session.
+- Allow your users to see their application traffic statistics along side elements of reference documentation.
+- Allow your users to filter reference documentation to only those elements used by a particular app in some configurable time range.
+- Playgrounds with instant API tokens, team sharing capabilities, and saved query libraries.
+- Subscribe to feeds that alert you when schema changes affect your applications based on their actual traffic patterns. Never be surprised by a breaking change again.
 
-Documentation that adapts to who's viewing it, showing relevant examples and permissions based on the authenticated user.
+## Inspiration
 
-### App & Environment Selection
+Finally, here is a list of some developers we like and hope that Polen can one day lower the bar to making for everyone.
 
-Switch between development, staging, and production schemas. View documentation specific to different applications or services in your ecosystem.
+- https://highnote.com/docs
+- https://platform.openai.com/docs/overview
+- https://docs.anthropic.com/en/api/overview
+- https://stripe.com/docs/api
 
-### Inline Traffic Intelligence
-
-See real-time API usage directly in your documentation. Understand which fields are hot, which are dormant, and how your API is actually being used.
-
-### Smart Filtering
-
-Filter documentation to show only the schema elements that a specific app has actually used in a configurable time range. Hide the noise, focus on what matters.
-
-### Collaborative Playgrounds
-
-GraphQL playgrounds with instant API tokens, team sharing capabilities, and saved query libraries. Make API exploration a team sport.
-
-### Proactive Notifications
-
-Subscribe to feeds that alert you when schema changes affect your applications based on their actual traffic patterns. Never be surprised by a breaking change again.
+Know of a developer portal you love? Let us know on [GitHub Discussions](https://github.com/the-guild-org/polen/discussions)!

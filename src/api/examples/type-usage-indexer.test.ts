@@ -1,6 +1,5 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
-import { Revision } from '#lib/revision/$'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { HashMap, HashSet, Schema as S } from 'effect'
@@ -17,23 +16,23 @@ describe('type-usage-indexer', () => {
       users: [User!]!
       product(id: ID!): Product
     }
-    
+
     type User {
       id: ID!
       name: String!
       email: String!
     }
-    
+
     type Product {
       id: ID!
       name: String!
       price: Float!
     }
-    
+
     interface Node {
       id: ID!
     }
-    
+
     union SearchResult = User | Product
   `
 
@@ -91,20 +90,26 @@ describe('type-usage-indexer', () => {
       })
 
       const catalog = Catalog.Versioned.make({
-        entries: [
-          Schema.Versioned.make({
-            version: version1,
-            definition: schemaDef,
-            branchPoint: null,
-            revisions: [],
-          }),
-          Schema.Versioned.make({
-            version: version2,
-            definition: schemaDef,
-            branchPoint: null,
-            revisions: [],
-          }),
-        ],
+        entries: HashMap.make(
+          [
+            version1,
+            Schema.Versioned.make({
+              version: version1,
+              definition: schemaDef,
+              branchPoint: null,
+              revisions: [],
+            }),
+          ],
+          [
+            version2,
+            Schema.Versioned.make({
+              version: version2,
+              definition: schemaDef,
+              branchPoint: null,
+              revisions: [],
+            }),
+          ],
+        ),
       })
 
       const index = createTypeUsageIndex([example], catalog)
@@ -212,20 +217,26 @@ describe('type-usage-indexer', () => {
       })
 
       const catalog = Catalog.Versioned.make({
-        entries: [
-          Schema.Versioned.make({
-            version: version1,
-            definition: schemaDef,
-            branchPoint: null,
-            revisions: [],
-          }),
-          Schema.Versioned.make({
-            version: version2,
-            definition: schemaDef,
-            branchPoint: null,
-            revisions: [],
-          }),
-        ],
+        entries: HashMap.make(
+          [
+            version1,
+            Schema.Versioned.make({
+              version: version1,
+              definition: schemaDef,
+              branchPoint: null,
+              revisions: [],
+            }),
+          ],
+          [
+            version2,
+            Schema.Versioned.make({
+              version: version2,
+              definition: schemaDef,
+              branchPoint: null,
+              revisions: [],
+            }),
+          ],
+        ),
       })
 
       const index = createTypeUsageIndex([example], catalog)

@@ -1,7 +1,7 @@
 import { S } from '#lib/kit-temp/effect'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { Match } from 'effect'
+import { HashMap, Match } from 'effect'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
 
@@ -62,7 +62,7 @@ export const equivalence = S.equivalence(Catalog)
  */
 export const getVersionCount = (catalog: Catalog): number =>
   fold(
-    (versioned) => versioned.entries.length,
+    (versioned) => HashMap.size(versioned.entries),
     (_unversioned) => 1, // Unversioned catalog is effectively one version
   )(catalog)
 
@@ -79,28 +79,22 @@ export const getSchemaVersionString = (schema: Schema.Schema): string => {
  * Get the version string from a schema.
  * Returns the stringified version for versioned schemas, or '__UNVERSIONED__' for unversioned schemas.
  */
-export const getLatestSchema = (catalog: Catalog): Schema.Schema =>
+export const getLatest = (catalog: Catalog): Schema.Schema =>
   Match.value(catalog).pipe(Match.tagsExhaustive({
-    CatalogVersioned: (versioned) => {
-      // Entries are sorted newest first, so get the first entry
-      const latestEntry = versioned.entries[0]!
-      return latestEntry
-    },
-    CatalogUnversioned: (unversioned) => {
-      return unversioned.schema
-    },
+    CatalogVersioned: Versioned.getLatestOrThrow,
+    CatalogUnversioned: (unversioned) => unversioned.schema,
   }))
 
 /**
  * Get the latest version identifier from a catalog.
  * Returns the version for versioned catalogs, or null for unversioned catalogs.
  */
-export const getLatestVersionIdentifier = (catalog?: Catalog): Version.Version | null => {
+export const getLatestVersion = (catalog?: Catalog): Version.Version | null => {
   if (!catalog) return null
   return Match.value(catalog).pipe(
     Match.tagsExhaustive({
       CatalogUnversioned: () => null,
-      CatalogVersioned: (cat) => cat.entries[0]?.version ?? null,
+      CatalogVersioned: (cat) => Versioned.getVersions(cat)[0] ?? null,
     }),
   )
 }

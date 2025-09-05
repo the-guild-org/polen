@@ -59,7 +59,7 @@ export const Navbar = ({
             const hasMultipleRevisions = Catalog.fold(
               (versioned) => {
                 // For versioned catalogs, count total revisions across all entries
-                const totalRevisions = versioned.entries.reduce(
+                const totalRevisions = Catalog.Versioned.getAll(versioned).reduce(
                   (sum: number, entry) => sum + entry.revisions.length,
                   0,
                 )

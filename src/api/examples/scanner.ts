@@ -91,10 +91,10 @@ const lintFileLayout = (
   schemaCatalog?: SchemaCatalog.Catalog,
 ): Diagnostic[] => {
   // Extract schema versions from catalog if provided
-  const schemaVersions: string[] = schemaCatalog
+  const schemaVersions: Version.Version[] = schemaCatalog
     ? SchemaCatalog.fold(
-      (versioned) => versioned.entries.map(entry => Version.encodeSync(entry.version)),
-      (unversioned) => unversioned.schema.revisions?.map(r => r.date) ?? [],
+      (versioned) => SchemaCatalog.Versioned.getVersions(versioned),
+      (unversioned) => [], // Unversioned doesn't have Version objects, just dates
     )(schemaCatalog)
     : []
 
@@ -105,14 +105,13 @@ const lintFileLayout = (
       DocumentVersioned: (doc) => {
         // Get all versions covered by this document
         const coveredVersions = Document.Versioned.getAllVersions(doc)
-        const coveredVersionStrings = coveredVersions.map(Version.encodeSync)
-        const missingVersions = schemaVersions.filter(sv => !coveredVersionStrings.includes(sv))
+        const missingVersions = schemaVersions.filter(sv => !coveredVersions.some(cv => Version.equivalence(sv, cv)))
 
         if (missingVersions.length > 0) {
           diagnostics.push(makeDiagnosticMissingVersions({
             message: `Versioned example must provide documents for all schema versions`,
             example: { name: example.name, path: example.path },
-            providedVersions: coveredVersionStrings,
+            providedVersions: coveredVersions,
             missingVersions,
           }))
         }
@@ -206,7 +205,7 @@ export const scan = (
         // Get all schema versions to map to this default document
         const schemaVersions: Version.Version[] = options.schemaCatalog
           ? SchemaCatalog.fold(
-            (versioned) => versioned.entries.map(entry => entry.version),
+            (versioned) => SchemaCatalog.Versioned.getVersions(versioned),
             () => [], // Unversioned schemas don't have version-specific examples
           )(options.schemaCatalog)
           : []
@@ -238,16 +237,19 @@ export const scan = (
         // Versioned example - multiple files or versioned files
         let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, string>()
         let defaultDocument: string | undefined
-        const explicitVersions = new Set<string>() // Track which versions have explicit files
-        const unknownVersions: string[] = []
+        let explicitVersions = HashSet.empty<Version.Version>() // Track which versions have explicit files
+        const unknownVersions: Version.Version[] = []
 
         // Get available schema versions if catalog is provided
-        const schemaVersions: string[] = options.schemaCatalog
+        const schemaVersions: Version.Version[] = options.schemaCatalog
           ? SchemaCatalog.fold(
-            (versioned) => versioned.entries.map(entry => Version.encodeSync(entry.version)),
+            (versioned) => SchemaCatalog.Versioned.getVersions(versioned),
             () => [], // Unversioned schemas don't have version-specific examples
           )(options.schemaCatalog)
           : []
+        
+        // Create HashSet for O(1) lookups
+        const schemaVersionsSet = HashSet.fromIterable(schemaVersions)
 
         // Read content for each version
         for (const [version, filePath] of versions) {
@@ -257,35 +259,38 @@ export const scan = (
           if (version === 'default') {
             defaultDocument = fileContent
           } else if (version !== null) {
+            // Parse the version string
+            const parsedVersion = Version.decodeSync(version)
             // Check if this version exists in the schema
-            if (options.schemaCatalog && schemaVersions.length > 0 && !schemaVersions.includes(version)) {
-              unknownVersions.push(version)
+            const versionExists = HashSet.has(schemaVersionsSet, parsedVersion)
+            if (options.schemaCatalog && schemaVersions.length > 0 && !versionExists) {
+              unknownVersions.push(parsedVersion)
               // Create diagnostic for unknown version
               diagnostics.push(makeDiagnosticUnknownVersion({
                 message: `Example "${name}" specifies version "${version}" which does not exist in the schema`,
                 example: { name, path: basePath },
-                version,
+                version: parsedVersion,
                 availableVersions: schemaVersions,
               }))
               // Skip this version - don't include it in the example
               continue
             }
 
-            const versionObj = Version.decodeSync(version)
-            versionDocuments = HashMap.set(versionDocuments, versionObj, fileContent)
-            explicitVersions.add(version)
+            // We already have parsedVersion from above
+            versionDocuments = HashMap.set(versionDocuments, parsedVersion, fileContent)
+            explicitVersions = HashSet.add(explicitVersions, parsedVersion)
           }
         }
 
         if (defaultDocument) {
           // If we have a default, determine which versions it applies to
-          const defaultVersions = schemaVersions.filter(v => !explicitVersions.has(v))
+          const defaultVersions = schemaVersions.filter(v => !HashSet.has(explicitVersions, v))
 
           if (defaultVersions.length > 0) {
             // Create a version set for the default document
             const defaultVersionSet = defaultVersions.length === 1
-              ? Version.decodeSync(defaultVersions[0]!) // Single version
-              : HashSet.fromIterable(defaultVersions.map(_ => Version.decodeSync(_))) // Version set
+              ? defaultVersions[0]! // Single version
+              : HashSet.fromIterable(defaultVersions) // Version set
 
             versionDocuments = HashMap.set(versionDocuments, defaultVersionSet, defaultDocument)
           }

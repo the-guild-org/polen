@@ -5,7 +5,7 @@ import type { Schema } from '#lib/schema/$'
 import { VersionCoverage } from '#lib/version-selection/$'
 import { VersionCoverageSet } from '#lib/version-selection/version-selection'
 import { Version } from '#lib/version/$'
-import { Array, HashMap, Match } from 'effect'
+import { Array, HashMap, Match, Option } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 import * as React from 'react'
 import { useHighlighted } from '../hooks/use-highlighted.js'
@@ -47,7 +47,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   /// ━ VERSION MANAGEMENT
   const isControlled = controlledVersionCoverage !== undefined
   const [internalVersionCoverage, setInternalVersionCoverage] = React.useState<VersionCoverage.VersionCoverage | null>(
-    Catalog.getLatestVersionIdentifier(schemaCatalog),
+    Catalog.getLatestVersion(schemaCatalog),
   )
   const selectedVersionCoverage = isControlled ? controlledVersionCoverage : internalVersionCoverage
   const internalOnVersionChange = (version: VersionCoverage.VersionCoverage) => {
@@ -110,7 +110,7 @@ const resolveSelectedVerCov = (
       schema: Match.value(schemaCatalog).pipe(
         Match.tagsExhaustive({
           CatalogUnversioned: (catalog) => catalog.schema,
-          CatalogVersioned: (catalog) => Catalog.Versioned.getLatest(catalog),
+          CatalogVersioned: (catalog) => Catalog.Versioned.getLatestOrThrow(catalog),
         }),
       ),
     }
@@ -134,10 +134,11 @@ const resolveSelectedVerCov = (
       if (Catalog.Unversioned.is(schemaCatalog)) {
         throw new Error('Cannot use a set of versions with an unversioned catalog')
       }
-      const schema = schemaCatalog.entries.find(e => Version.equivalence(e.version, version))
-      if (!schema) {
+      const schemaOption = HashMap.get(schemaCatalog.entries, version)
+      if (Option.isNone(schemaOption)) {
         throw new Error(`Version ${Version.encodeSync(version)} not found in catalog`)
       }
+      const schema = Option.getOrThrow(schemaOption)
 
       return { content, schema: schema }
     }),
