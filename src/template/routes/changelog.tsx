@@ -148,9 +148,10 @@ const Component = () => {
     } else {
       // For versioned catalogs, show only current version's revisions
       if (urlVersion) {
-        const versions = Catalog.Versioned.getVersions(catalog)
-        const matchedVersion = versions.find(v => Version.encodeSync(v) === urlVersion)
-        const entryOption = matchedVersion ? HashMap.get(catalog.entries, matchedVersion) : Option.none()
+        const entryOption = Option.map(
+          HashMap.findFirst(catalog.entries, (_, key) => Version.encodeSync(key) === urlVersion),
+          ([, value]) => value,
+        )
         return Option.match(entryOption, {
           onNone: () => [],
           onSome: (entry) => entry.revisions,

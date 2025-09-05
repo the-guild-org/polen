@@ -172,11 +172,8 @@ const getSchemaByVersion = (
   version: Version.Version,
 ): Schema.Schema | undefined => {
   if (Catalog.Versioned.is(catalog)) {
-    // Find the schema with matching version
-    return Catalog.Versioned.getAll(catalog).find(entry =>
-      Schema.Versioned.is(entry)
-      && Version.equivalence(entry.version, version)
-    )
+    // Use HashMap.get for O(1) lookup
+    return HashMap.get(catalog.entries, version).pipe(Option.getOrElse(() => undefined))
   }
   // For unversioned catalog, return the single schema if version matches
   if (Catalog.Unversioned.is(catalog)) {

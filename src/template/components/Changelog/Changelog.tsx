@@ -51,9 +51,10 @@ export const Changelog: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) =
     } else {
       // For versioned catalogs, always show specific version (never all)
       if (urlVersion) {
-        const versions = Catalog.Versioned.getVersions(catalog)
-        const matchedVersion = versions.find(v => Version.encodeSync(v) === urlVersion)
-        const entryOption = matchedVersion ? HashMap.get(catalog.entries, matchedVersion) : Option.none()
+        const entryOption = Option.map(
+          HashMap.findFirst(catalog.entries, (_, key) => Version.encodeSync(key) === urlVersion),
+          ([, value]) => value,
+        )
         return Option.match(entryOption, {
           onNone: () => ({ revisions: [], schema: null }),
           onSome: (entry) => ({ revisions: entry.revisions, schema: entry }),

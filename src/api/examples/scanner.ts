@@ -247,6 +247,9 @@ export const scan = (
             () => [], // Unversioned schemas don't have version-specific examples
           )(options.schemaCatalog)
           : []
+        
+        // Create HashSet for O(1) lookups
+        const schemaVersionsSet = HashSet.fromIterable(schemaVersions)
 
         // Read content for each version
         for (const [version, filePath] of versions) {
@@ -259,7 +262,7 @@ export const scan = (
             // Parse the version string
             const parsedVersion = Version.decodeSync(version)
             // Check if this version exists in the schema
-            const versionExists = schemaVersions.some(sv => Version.equivalence(sv, parsedVersion))
+            const versionExists = HashSet.has(schemaVersionsSet, parsedVersion)
             if (options.schemaCatalog && schemaVersions.length > 0 && !versionExists) {
               unknownVersions.push(parsedVersion)
               // Create diagnostic for unknown version

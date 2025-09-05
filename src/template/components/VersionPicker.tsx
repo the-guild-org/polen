@@ -35,9 +35,10 @@ export const VersionPicker: React.FC<Props> = ({ data, current }) => {
 
       // Find the schema for the target version
       // Note: newVersion is a string that we need to parse
-      const versions = Catalog.Versioned.getVersions(catalog)
-      const matchedVersion = versions.find(v => Version.encodeSync(v) === newVersion)
-      const targetSchemaOption = matchedVersion ? HashMap.get(catalog.entries, matchedVersion) : Option.none()
+      const targetSchemaOption = Option.map(
+        HashMap.findFirst(catalog.entries, (_, key) => Version.encodeSync(key) === newVersion),
+        ([, value]) => value,
+      )
 
       if (Option.isNone(targetSchemaOption)) {
         throw new Error(`Version ${newVersion} not found`)
