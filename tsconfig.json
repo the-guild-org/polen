@@ -108,8 +108,6 @@
       "#lib/vite-reactive": ["./src/lib/vite-reactive/$.ts"],
       "#lib/vite-reactive/vite-reactive": ["./src/lib/vite-reactive/$$.ts"],
       "#lib/vite-reactive/*": ["./src/lib/vite-reactive/*.ts"],
-      "#lib/task": ["./src/lib/task/$.ts"],
-      "#lib/task/*": ["./src/lib/task/*.ts"],
       "#lib/theme": ["./src/lib/theme/$.ts"],
       "#lib/theme/*": ["./src/lib/theme/*.ts"],
       "#lib/vite-plugin-config": ["./src/lib/vite-plugin-config/$.ts"],

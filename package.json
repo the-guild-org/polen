@@ -196,12 +196,6 @@
     "#lib/stack-processor": {
       "default": "./build/lib/stack-processor/$.js"
     },
-    "#lib/task": {
-      "default": "./build/lib/task/$.js"
-    },
-    "#lib/task/task": {
-      "default": "./build/lib/task/$$.js"
-    },
     "#lib/theme": {
       "default": "./build/lib/theme/$.js"
     },
