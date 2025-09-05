@@ -1,5 +1,6 @@
 import { Diagnostic } from '#lib/diagnostic/$'
 import { S } from '#lib/kit-temp/effect'
+import { Version } from '#lib/version/$'
 
 export const DiagnosticMissingVersions = Diagnostic.create({
   source: 'examples-scanner',
@@ -10,8 +11,8 @@ export const DiagnosticMissingVersions = Diagnostic.create({
       name: S.String,
       path: S.String,
     }),
-    providedVersions: S.Array(S.String),
-    missingVersions: S.Array(S.String),
+    providedVersions: S.Array(Version.Version),
+    missingVersions: S.Array(Version.Version),
   },
 }).annotations({
   identifier: 'DiagnosticMissingVersions',

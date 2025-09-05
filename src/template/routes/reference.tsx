@@ -6,10 +6,10 @@ import { S } from '#lib/kit-temp/effect'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Schema } from '#lib/schema/$'
-import { Swiss } from '#lib/swiss'
 import { Version } from '#lib/version/$'
 import { Flex } from '@radix-ui/themes'
 import { neverCase } from '@wollybeard/kit/language'
+import { HashMap, Option } from 'effect'
 import { Effect, Match } from 'effect'
 import React from 'react'
 import { useParams } from 'react-router'
@@ -49,15 +49,15 @@ const referenceLoader = ({ params }: any) => {
             // If version param provided, find that specific version
             if (params.version) {
               const requestedVersion = Version.decodeSync(params.version)
-              const found = c.entries.find(s => Version.equivalence(requestedVersion, s.version))
-              if (!found) {
+              const foundOption = HashMap.get(c.entries, requestedVersion)
+              if (Option.isNone(foundOption)) {
                 // TODO: Return 404 error
                 throw new Error(`Version ${params.version} not found`)
               }
-              return found
+              return Option.getOrThrow(foundOption)
             }
             // No version param means "latest" - use the last entry
-            const latest = c.entries[c.entries.length - 1]
+            const latest = Catalog.Versioned.getLatestOrThrow(c)
             if (!latest) {
               throw new Error('No schemas available in versioned catalog')
             }
@@ -161,7 +161,7 @@ const ReferenceView = () => {
           return catalog._tag === 'CatalogVersioned' && version
             ? (
               <VersionPicker
-                data={catalog.entries.map(entry => entry.version)}
+                data={Catalog.Versioned.getVersions(catalog)}
                 current={version}
               />
             )

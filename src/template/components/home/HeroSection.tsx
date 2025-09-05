@@ -84,7 +84,7 @@ export const Hero: React.FC<HeroProps> = ({
   let schemaStats = null
   if (schemasCatalog) {
     try {
-      const latestSchema = Catalog.getLatestSchema(schemasCatalog)
+      const latestSchema = Catalog.getLatest(schemasCatalog)
       if (latestSchema && latestSchema.definition) {
         const versionStats = CatalogStatistics.analyzeSchema(latestSchema.definition, 'current')
         schemaStats = {

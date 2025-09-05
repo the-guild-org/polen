@@ -36,7 +36,7 @@ export const loader = async () => {
 
 const Component = () => {
   const examplesCatalog = useLoaderData(IndexSchema)
-  const schema = schemasCatalog && Catalog.getLatestSchema(schemasCatalog).definition
+  const schema = schemasCatalog && Catalog.getLatest(schemasCatalog).definition
   const hasExamples = examplesCatalog && examplesCatalog.examples.length > 0
 
   // TODO: This should become a proper diagnostic viewer component that displays

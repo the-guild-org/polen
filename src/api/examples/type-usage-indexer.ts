@@ -173,7 +173,7 @@ const getSchemaByVersion = (
 ): Schema.Schema | undefined => {
   if (Catalog.Versioned.is(catalog)) {
     // Find the schema with matching version
-    return catalog.entries.find(entry =>
+    return Catalog.Versioned.getAll(catalog).find(entry =>
       Schema.Versioned.is(entry)
       && Version.equivalence(entry.version, version)
     )
@@ -206,12 +206,12 @@ export const createTypeUsageIndex = (
     // Process based on document type
     if (Document.Unversioned.is(example.document)) {
       // Unversioned document
-      const schema = Catalog.getLatestSchema(schemasCatalog)
+      const schema = Catalog.getLatest(schemasCatalog)
       const types = extractTypesFromQuery(example.document.document, schema.definition)
 
       for (const typeName of types) {
         // For unversioned, use the latest version from the catalog
-        const latestVersion = Catalog.getLatestVersionIdentifier(schemasCatalog) ?? Version.fromString('1.0.0')
+        const latestVersion = Catalog.getLatestVersion(schemasCatalog) ?? Version.fromString('1.0.0')
         index = addExampleToIndex(index, UNVERSIONED_KEY, typeName, example, latestVersion)
       }
     } else if (Document.Versioned.is(example.document)) {

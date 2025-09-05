@@ -3,6 +3,8 @@ import * as React from 'react'
 import { Link } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 
+import { Catalog } from '#lib/catalog'
+
 interface RecentChangesProps {
   limit?: number
   showVersions?: boolean
@@ -30,7 +32,7 @@ export const RecentChangesSection: React.FC<RecentChangesProps> = ({
 
     // For versioned catalogs, we look at entries
     if (schemasCatalog._tag === 'CatalogVersioned') {
-      const entries = schemasCatalog.entries || []
+      const entries = Catalog.Versioned.getAll(schemasCatalog)
       const recentEntries = entries.slice(0, limit)
 
       return recentEntries.flatMap(entry =>

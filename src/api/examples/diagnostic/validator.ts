@@ -1,8 +1,8 @@
 import { Catalog as SchemaCatalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { Version } from '#lib/version/$'
-import { HashMap, Match, Option } from 'effect'
-import { Array } from 'effect'
+import { Match } from 'effect'
+import { HashMap } from 'effect/Schema'
 import type { GraphQLError, GraphQLSchema } from 'graphql'
 import { parse, specifiedRules, validate } from 'graphql'
 import { Example } from '../schemas/example/$.js'
@@ -35,23 +35,21 @@ export const validateExamples = (
   return Match.value(catalog).pipe(
     Match.tagsExhaustive({
       CatalogVersioned: (versioned) => {
-        const schemaVersions = versioned.entries.map(e => e.version)
-
         for (const example of examples) {
           Match.value(example.document).pipe(
             Match.tagsExhaustive({
               DocumentVersioned: (doc) => {
                 // Validate each version against its corresponding schema
-                for (const entry of versioned.entries) {
-                  const content = Document.Versioned.getContentForVersion(doc, entry.version)
+                for (const schema of SchemaCatalog.Versioned.getAll(versioned)) {
+                  const content = Document.Versioned.getContentForVersion(doc, schema.version)
                   if (content) {
-                    const versionStr = Version.encodeSync(entry.version)
+                    const versionStr = Version.encodeSync(schema.version)
                     validateDocument(
                       example.name,
                       example.path,
                       versionStr,
                       content,
-                      entry.definition,
+                      schema.definition,
                       diagnostics,
                     )
                   }
@@ -59,7 +57,7 @@ export const validateExamples = (
                 return undefined
               },
               DocumentUnversioned: (doc) => {
-                const latestEntry = versioned.entries[0]!
+                const latestEntry = SchemaCatalog.Versioned.getLatestOrThrow(versioned)
                 validateDocument(
                   example.name,
                   example.path,

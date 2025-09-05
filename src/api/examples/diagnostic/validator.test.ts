@@ -1,5 +1,6 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { HashMap, HashSet } from 'effect'
 import { buildSchema } from 'graphql'
@@ -30,22 +31,26 @@ const catalog = Catalog.Unversioned.make({
 
 // Create a versioned catalog for versioned tests
 const versionedCatalogForTests = Catalog.Versioned.make({
-  entries: [
-    {
-      _tag: 'SchemaVersioned',
-      version: Version.fromString('v1'),
-      definition: schema,
-      branchPoint: null,
-      revisions: [],
-    },
-    {
-      _tag: 'SchemaVersioned',
-      version: Version.fromString('v2'),
-      definition: schema,
-      branchPoint: null,
-      revisions: [],
-    },
-  ],
+  entries: HashMap.make(
+    [
+      Version.fromString('v1'),
+      Schema.Versioned.make({
+        version: Version.fromString('v1'),
+        definition: schema,
+        branchPoint: null,
+        revisions: [],
+      }),
+    ],
+    [
+      Version.fromString('v2'),
+      Schema.Versioned.make({
+        version: Version.fromString('v2'),
+        definition: schema,
+        branchPoint: null,
+        revisions: [],
+      }),
+    ],
+  ),
 })
 
 test.for([
@@ -173,22 +178,26 @@ test('validates versioned catalog with multiple schemas', () => {
   `)
 
   const versionedCatalog = Catalog.Versioned.make({
-    entries: [
-      {
-        _tag: 'SchemaVersioned',
-        version: Version.fromString('1.0.0'),
-        revisions: [],
-        definition: v1Schema,
-        branchPoint: null,
-      },
-      {
-        _tag: 'SchemaVersioned',
-        version: Version.fromString('2.0.0'),
-        revisions: [],
-        definition: v2Schema,
-        branchPoint: null,
-      },
-    ],
+    entries: HashMap.make(
+      [
+        Version.fromString('1.0.0'),
+        Schema.Versioned.make({
+          version: Version.fromString('1.0.0'),
+          revisions: [],
+          definition: v1Schema,
+          branchPoint: null,
+        }),
+      ],
+      [
+        Version.fromString('2.0.0'),
+        Schema.Versioned.make({
+          version: Version.fromString('2.0.0'),
+          revisions: [],
+          definition: v2Schema,
+          branchPoint: null,
+        }),
+      ],
+    ),
   })
 
   const v1 = Version.fromString('1.0.0')
@@ -247,29 +256,35 @@ test('validates examples with version sets', () => {
 
   // Create catalog with v1, v2, v3 versions
   const versionedCatalogWithV3 = Catalog.Versioned.make({
-    entries: [
-      {
-        _tag: 'SchemaVersioned',
-        version: v1,
-        definition: schema,
-        branchPoint: null,
-        revisions: [],
-      },
-      {
-        _tag: 'SchemaVersioned',
-        version: v2,
-        definition: schema,
-        branchPoint: null,
-        revisions: [],
-      },
-      {
-        _tag: 'SchemaVersioned',
-        version: Version.fromString('v3'),
-        definition: schema,
-        branchPoint: null,
-        revisions: [],
-      },
-    ],
+    entries: HashMap.make(
+      [
+        v1,
+        Schema.Versioned.make({
+          version: v1,
+          definition: schema,
+          branchPoint: null,
+          revisions: [],
+        }),
+      ],
+      [
+        v2,
+        Schema.Versioned.make({
+          version: v2,
+          definition: schema,
+          branchPoint: null,
+          revisions: [],
+        }),
+      ],
+      [
+        Version.fromString('v3'),
+        Schema.Versioned.make({
+          version: Version.fromString('v3'),
+          definition: schema,
+          branchPoint: null,
+          revisions: [],
+        }),
+      ],
+    ),
   })
 
   const diagnostics = validateExamples(examples, versionedCatalogWithV3)

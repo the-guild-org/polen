@@ -10,7 +10,7 @@ import { debugPolen } from '#singletons/debug'
 import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Arr, Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Effect, HashMap } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 
 const debug = debugPolen.sub(`schema:data-source-versioned-schema-directory`)
@@ -393,9 +393,14 @@ export const readOrThrow = (
     // Reverse to have newest first
     catalogEntries.reverse()
 
+    // Convert array to HashMap with version as key
+    const entriesMap = HashMap.fromIterable(
+      catalogEntries.map(entry => [entry.version, entry] as const),
+    )
+
     debug(`computed ${catalogEntries.length} entries`)
     return Catalog.Versioned.make({
-      entries: catalogEntries,
+      entries: entriesMap,
     })
   })
 

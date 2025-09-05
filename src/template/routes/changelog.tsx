@@ -6,7 +6,7 @@ import { Revision } from '#lib/revision'
 import { Swiss } from '#lib/swiss'
 import { Version } from '#lib/version'
 import { Box, Flex, Text } from '@radix-ui/themes'
-import { Effect } from 'effect'
+import { Effect, HashMap, Option } from 'effect'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
@@ -136,7 +136,7 @@ const Component = () => {
   // Get available versions if catalog is versioned
   const availableVersions = useMemo(() => {
     if (Catalog.Versioned.is(catalog)) {
-      return catalog.entries.map(entry => Version.encodeSync(entry.version))
+      return Catalog.Versioned.getVersions(catalog).map(Version.encodeSync)
     }
     return []
   }, [catalog])
@@ -148,8 +148,13 @@ const Component = () => {
     } else {
       // For versioned catalogs, show only current version's revisions
       if (urlVersion) {
-        const entry = catalog.entries.find(e => Version.encodeSync(e.version) === urlVersion)
-        return entry ? entry.revisions : []
+        const versions = Catalog.Versioned.getVersions(catalog)
+        const matchedVersion = versions.find(v => Version.encodeSync(v) === urlVersion)
+        const entryOption = matchedVersion ? HashMap.get(catalog.entries, matchedVersion) : Option.none()
+        return Option.match(entryOption, {
+          onNone: () => [],
+          onSome: (entry) => entry.revisions,
+        })
       }
       // No revisions if no version selected (will redirect)
       return []

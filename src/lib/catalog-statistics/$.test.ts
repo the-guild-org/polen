@@ -1,6 +1,7 @@
 import { Catalog } from '#lib/catalog/$'
 import { DateOnly } from '#lib/date-only/$'
 import { Version } from '#lib/version/$'
+import { HashMap } from 'effect'
 import { buildSchema, type GraphQLSchema } from 'graphql'
 import { describe, expect, test } from 'vitest'
 import { CatalogStatistics } from './$.js'
@@ -91,14 +92,20 @@ describe('analyzeCatalog', () => {
       name: 'versioned catalog',
       catalog: () =>
         Catalog.Versioned.make({
-          entries: [
-            makeVersionedEntry(1, buildSchema('type Query { hello: String }'), ['2024-01-01', '2024-01-15']),
-            makeVersionedEntry(
-              2,
-              buildSchema('type Query { hello: String, world: String } type User { id: ID!, name: String }'),
-              ['2024-02-01'],
-            ),
-          ],
+          entries: HashMap.make(
+            [
+              Version.fromInteger(1),
+              makeVersionedEntry(1, buildSchema('type Query { hello: String }'), ['2024-01-01', '2024-01-15']),
+            ],
+            [
+              Version.fromInteger(2),
+              makeVersionedEntry(
+                2,
+                buildSchema('type Query { hello: String, world: String } type User { id: ID!, name: String }'),
+                ['2024-02-01'],
+              ),
+            ],
+          ),
         }),
       expectedVersions: 2,
       expectedCurrentVersion: '2',
@@ -132,10 +139,13 @@ describe('analyzeCatalog', () => {
 
   test('calculates stability metrics', () => {
     const catalog = Catalog.Versioned.make({
-      entries: [
-        makeVersionedEntry(1, buildSchema('type Query { test: String }'), ['2024-01-01', '2024-01-05']),
-        makeVersionedEntry(2, buildSchema('type Query { test: String }'), ['2024-01-10']),
-      ],
+      entries: HashMap.make(
+        [
+          Version.fromInteger(1),
+          makeVersionedEntry(1, buildSchema('type Query { test: String }'), ['2024-01-01', '2024-01-05']),
+        ],
+        [Version.fromInteger(2), makeVersionedEntry(2, buildSchema('type Query { test: String }'), ['2024-01-10'])],
+      ),
     })
 
     const report = CatalogStatistics.analyzeCatalog(catalog)

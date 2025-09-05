@@ -3,7 +3,7 @@ import { Catalog } from '#lib/catalog/$'
 import { Grafaid } from '#lib/grafaid'
 import { MemoryFilesystem } from '#lib/memory-filesystem/$'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Effect } from 'effect'
+import { Effect, HashMap } from 'effect'
 import { expect } from 'vitest'
 import { Test } from '../../../tests/unit/helpers/test.js'
 import { Schema } from './$.js'
@@ -421,7 +421,7 @@ testWithFileSystem<BaseTestCase & {
         expect(result!._tag).toBe('CatalogVersioned')
         if (expected.versionCount !== undefined) {
           const versioned = result as Catalog.Versioned.Versioned
-          expect(versioned.entries.length).toBe(expected.versionCount)
+          expect(HashMap.size(versioned.entries)).toBe(expected.versionCount)
         }
       } else {
         expect(result!._tag).toBe('CatalogUnversioned')

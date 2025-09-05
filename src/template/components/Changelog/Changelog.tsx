@@ -4,6 +4,7 @@ import { DateOnly } from '#lib/date-only/$'
 import { Revision } from '#lib/revision/$'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
+import { HashMap, Option } from 'effect'
 const CRITICALITY_LEVELS = ['BREAKING', 'DANGEROUS', 'NON_BREAKING'] as const
 import type { CriticalityLevel } from '@graphql-inspector/core'
 import { Box, Heading } from '@radix-ui/themes'
@@ -35,8 +36,7 @@ export const Changelog: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) =
   useEffect(() => {
     if (urlVersion) return
     if (Catalog.Unversioned.is(catalog)) return
-    const latestSchema = catalog.entries[0]
-    if (!latestSchema) return
+    const latestSchema = Catalog.Versioned.getLatestOrThrow(catalog)
     const latestVersion = Version.encodeSync(latestSchema.version)
     navigate(`/changelog/version/${latestVersion}`, { replace: true })
   }, [catalog, urlVersion, navigate])
@@ -51,10 +51,13 @@ export const Changelog: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) =
     } else {
       // For versioned catalogs, always show specific version (never all)
       if (urlVersion) {
-        const entry = catalog.entries.find(e => Version.encodeSync(e.version) === urlVersion)
-        return entry
-          ? { revisions: entry.revisions, schema: entry }
-          : { revisions: [], schema: null }
+        const versions = Catalog.Versioned.getVersions(catalog)
+        const matchedVersion = versions.find(v => Version.encodeSync(v) === urlVersion)
+        const entryOption = matchedVersion ? HashMap.get(catalog.entries, matchedVersion) : Option.none()
+        return Option.match(entryOption, {
+          onNone: () => ({ revisions: [], schema: null }),
+          onSome: (entry) => ({ revisions: entry.revisions, schema: entry }),
+        })
       }
       // This shouldn't happen due to redirect above, but return empty as fallback
       return { revisions: [], schema: null }

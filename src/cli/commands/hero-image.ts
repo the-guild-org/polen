@@ -133,7 +133,7 @@ export const heroImage = Command.make(
       const schemaResult = yield* Api.Schema.loadOrNull(config)
       if (schemaResult?.data) {
         try {
-          const latestSchema = Catalog.getLatestSchema(schemaResult.data)
+          const latestSchema = Catalog.getLatest(schemaResult.data)
           if (latestSchema?.definition) {
             schema = latestSchema.definition
             const context = AiImageGeneration.analyzeSchema(schema)

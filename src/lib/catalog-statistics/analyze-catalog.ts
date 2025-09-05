@@ -16,7 +16,7 @@ export const analyzeCatalog = (catalog: Catalog.Catalog, options: AnalyzeOptions
   const processResult = Catalog.fold(
     // Versioned catalog
     (versioned) => {
-      for (const entry of versioned.entries) {
+      for (const entry of Catalog.Versioned.getAll(versioned)) {
         const versionId = Version.encodeSync(entry.version)
         // Analyze the schema definition for this version
         // Use the first revision date if available
@@ -55,8 +55,8 @@ export const analyzeCatalog = (catalog: Catalog.Catalog, options: AnalyzeOptions
   // Calculate stability metrics
   const stability = calculateStabilityMetrics(versions, revisionDates)
 
-  // Get current version (last in array)
-  const current = versions[versions.length - 1]
+  // Get current version (first in array since sorted newest first)
+  const current = versions[0]
 
   return {
     stability,
