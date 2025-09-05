@@ -1,4 +1,4 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig, type ViteUserConfigWithPolen } from '#vite/config'
 import { ViteMemoryLogger } from '#vite/logger'

@@ -3,37 +3,44 @@ declare module 'virtual:polen/vite/client/manifest' {
   export default manifest
 }
 
-declare module 'virtual:polen/template/variables' {
-  export const templateVariables: import('#api/config/configurator').TemplateVariables
-}
-
 declare module 'virtual:polen/project/routes.jsx' {
   export const routes: import('#vite/plugins/core').ProjectRoutesModule['routes']
 }
 
-declare module 'virtual:polen/template/schema-augmentations' {
-  export const schemaAugmentations: import('#api/schema/augmentations/schema-augmentation').Augmentation[]
-}
-
-declare module 'virtual:polen/project/data.json' {
-  const data: import('#project-data').ProjectData
-  export { data as default }
-}
-
-declare module 'virtual:polen/project/schema.json' {
-  // Object mapping filenames to JSON content for the catalog bridge
-  const schema: Record<string, string> | null
-  export { schema as default }
-}
-
-declare module 'virtual:polen/project/data/pages-catalog.json' {
-  const data: import('#vite/plugins/pages').ProjectPagesCatalog
-  export { data as default }
-}
-
 declare module 'virtual:polen/project/assets/logo.svg' {
-  const src: string
+  const logo: {
+    light: string
+    dark: string
+    mode: 'single' | 'dual'
+    designedFor: 'light' | 'dark'
+  }
+  export default logo
+}
+
+declare module 'virtual:polen/project/assets/hero' {
+  const src: string | null
   export default src
+}
+
+declare module 'virtual:polen/project/schemas' {
+  export const schemasCatalog: import('#lib/catalog/$').Catalog.Catalog | null
+}
+
+declare module 'virtual:polen/project/pages' {
+  export const pagesCatalog: import('#vite/plugins/pages').ProjectPagesCatalog
+}
+
+declare module 'virtual:polen/project/examples' {
+  export const examplesCatalog: import('#api/examples/$').Examples.Catalog.Catalog
+  export const IndexComponent: React.ComponentType | null
+}
+
+declare module 'virtual:polen/project/config' {
+  export const templateConfig: import('#api/config-template/template').TemplateConfig
+}
+
+declare module 'virtual:polen/project/navbar' {
+  export const navbar: import('#api/content/navbar').NavbarItem[]
 }
 
 declare module 'virtual:polen/project/hooks' {

@@ -14,7 +14,7 @@ export const Unversioned = S.TaggedStruct('CatalogUnversioned', {
   adt: { name: 'Catalog' },
 })
 
-export type Unversioned = S.Schema.Type<typeof Unversioned>
+export type Unversioned = typeof Unversioned.Type
 
 // ============================================================================
 // Constructors

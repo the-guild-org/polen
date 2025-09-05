@@ -1,19 +1,21 @@
-import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
 import { Catalog } from '#lib/catalog/$'
 import { GrafaidOld } from '#lib/grafaid-old'
+import { Grafaid } from '#lib/grafaid/$'
 import { S } from '#lib/kit-temp/effect'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Schema } from '#lib/schema/$'
+import { Swiss } from '#lib/swiss'
 import { Version } from '#lib/version/$'
-import { catalog } from '#template/data/catalog'
+import { Flex } from '@radix-ui/themes'
 import { neverCase } from '@wollybeard/kit/language'
 import { Effect, Match } from 'effect'
 import React from 'react'
 import { useParams } from 'react-router'
-import { catalogBridge, hasCatalog } from '../catalog-bridge.js'
+import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { Field } from '../components/Field.js'
+import { TypeKindIcon } from '../components/graphql/graphql.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import { VersionPicker } from '../components/VersionPicker.js'
@@ -25,8 +27,19 @@ const routeSchema = S.Struct({
   schema: Schema.Schema,
 })
 
-const referenceLoader = ({ params }: any) =>
-  catalogBridge.view().pipe(
+const referenceLoader = ({ params }: any) => {
+  // This should never be called when schemasCatalog is null
+  // because the route won't be added to the router
+  // But we return an Effect.fail for safety
+  if (!schemasCatalog) {
+    return Effect.fail(
+      new Error(
+        'No schema catalog available. This page requires a GraphQL schema to be configured. '
+          + 'Please ensure your Polen configuration includes a valid schema source.',
+      ),
+    )
+  }
+  return Effect.succeed(schemasCatalog).pipe(
     Effect.map(catalog => {
       // Resolve the actual schema based on catalog type and params
       const schema = Match.value(catalog).pipe(
@@ -59,6 +72,7 @@ const referenceLoader = ({ params }: any) =>
       }
     }),
   )
+}
 
 // Single component that handles all reference route variations
 const ReferenceView = () => {
@@ -67,7 +81,7 @@ const ReferenceView = () => {
   const { catalog, schema } = loaderData
 
   // Create lifecycles from schema
-  const lifecycle = React.useMemo(() => Lifecycles.createFromSchema(schema), [schema])
+  const lifecycle = Lifecycles.createFromSchema(schema)
 
   if (!schema) {
     // this would be some sort of internal error, make issue more clear.
@@ -77,7 +91,7 @@ const ReferenceView = () => {
   // Build reference sidebar from schema types
   const kindMap = GrafaidOld.getKindMap(schema.definition)
 
-  const sidebarItems: Content.Item[] = []
+  const sidebarItems: any[] = [] // Will be cast to template types in SidebarLayout
   const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
 
   for (const [title, types] of kindEntries) {
@@ -86,11 +100,19 @@ const ReferenceView = () => {
       title,
       pathExp: `reference-${title.toLowerCase()}`,
       isLinkToo: false,
-      links: types.map(type => ({
-        type: `ItemLink` as const,
-        title: type.name,
-        pathExp: type.name, // Just the type name, basePath will be prepended
-      })),
+      links: types.map(type => {
+        const kind = Grafaid.Schema.typeKindFromClass(type)
+        return {
+          type: `ItemLink` as const,
+          title: (
+            <Flex align='center' gap='1' display='inline-flex'>
+              <TypeKindIcon kind={kind} />
+              {type.name}
+            </Flex>
+          ),
+          pathExp: type.name, // Just the type name, basePath will be prepended
+        }
+      }),
     })
   }
 
@@ -185,14 +207,14 @@ const typeAndFieldRoutes = [
  * - Single ReferenceView component handles all variations
  */
 
-export const reference = !hasCatalog()
+export const reference = !schemasCatalog
   ? null
   : route({
     path: `reference`,
     children: [
       ...typeAndFieldRoutes,
       // Only add version routes if versioned
-      ...(Catalog.Versioned.is(catalog)
+      ...(Catalog.Versioned.is(schemasCatalog)
         ? [route({
           path: `version/:version`,
           children: typeAndFieldRoutes,

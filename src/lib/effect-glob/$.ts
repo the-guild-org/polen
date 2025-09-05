@@ -1,0 +1,1 @@
+export * as EffectGlob from './$$.js'

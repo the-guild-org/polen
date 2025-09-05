@@ -1,30 +1,160 @@
-import { ConfigSchema as ConfigSchemaOriginal } from '#api/schema/config-schema'
+import { ExamplesConfig } from '#api/examples/config'
+import { ConfigSchema } from '#api/schema/config-schema'
+import { Typings } from '#api/typings/$'
+import { DirectedFilter } from '#lib/directed-filter/$'
+import { FilePath } from '#lib/file-path/$'
 import { assertPathAbsolute } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import { packagePaths } from '#package-paths'
 import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
-import { BuildArchitecture, type ConfigInput, ConfigInputSchema } from './input.js'
+import { BuildArchitecture, ConfigInput } from './input.js'
 
 // ============================================================================
-// Schema - Template Variables
+// DirectedFilter for Strings
 // ============================================================================
 
-const TemplateVariablesSchema = S.Struct({
+const StringDirectedFilter = DirectedFilter.create(S.String)
+
+// ============================================================================
+// Normalized Home Config
+// ============================================================================
+
+/**
+ * Normalized home configuration where all `true` values are expanded to their object forms.
+ * This is the shape after normalization, not the input shape.
+ */
+const HomeConfig = S.Struct({
+  /**
+   * Whether the home page is enabled.
+   */
+  enabled: S.Boolean,
+
+  /**
+   * Hero section configuration.
+   * After normalization, always an object with enabled field.
+   */
+  hero: S.Struct({
+    enabled: S.Boolean,
+    title: S.optional(S.String),
+    tagline: S.optional(S.String),
+    callToActions: S.optional(S.Unknown), // Complex type, using Unknown for now
+    layout: S.optional(S.Union(
+      S.Literal('asymmetric'),
+      S.Literal('cinematic'),
+      S.Literal('auto'),
+    )),
+    heroImage: S.optional(FilePath.FilePath),
+  }),
+
+  /**
+   * Social proof section - false to disable, object with configuration.
+   */
+  socialProof: S.Union(
+    S.Literal(false),
+    S.Struct({
+      title: S.optional(S.String),
+      logos: S.Array(S.Unknown), // Complex type
+    }),
+  ),
+
+  /**
+   * Social media section - false to disable, object with configuration.
+   */
+  socialMedia: S.Union(
+    S.Literal(false),
+    S.Struct({
+      posts: S.Array(S.Unknown), // Complex type
+      displayMode: S.optional(S.Literal('embed', 'screenshot')),
+    }),
+  ),
+
+  /**
+   * Examples section configuration.
+   * After normalization, always an object with enabled flag.
+   * Uses DirectedFilter for include/exclude logic (never optional, uses AllowAll as default).
+   */
+  examples: S.Struct({
+    enabled: S.Boolean,
+    title: S.optional(S.String),
+    description: S.optional(S.String),
+    maxExamples: S.Number,
+    filter: StringDirectedFilter.Union,
+  }),
+
+  /**
+   * Quick start section - false to disable, object with configuration.
+   */
+  quickStart: S.Union(
+    S.Literal(false),
+    S.Struct({
+      tabs: S.optional(S.Array(S.Literal('setup', 'examples', 'playground'))),
+      steps: S.optional(S.Array(S.Unknown)), // Complex type
+      languages: S.optional(S.Array(S.String)),
+      playground: S.optional(S.Unknown), // Complex type
+    }),
+  ),
+
+  /**
+   * Stats section - false to disable, object with configuration.
+   */
+  stats: S.Union(
+    S.Literal(false),
+    S.Struct({
+      showSchemaStats: S.optional(S.Boolean),
+      statusEndpoint: S.optional(S.String),
+      customMetrics: S.optional(S.Array(S.Unknown)), // Complex type
+    }),
+  ),
+
+  /**
+   * Changelog section - false to disable, object with configuration.
+   */
+  changelog: S.Union(
+    S.Literal(false),
+    S.Struct({
+      limit: S.optional(S.Number),
+      showVersions: S.optional(S.Boolean),
+    }),
+  ),
+
+  /**
+   * Resources section - false to disable, object with configuration.
+   */
+  resources: S.Union(
+    S.Literal(false),
+    S.Struct({
+      links: S.optional(S.Array(S.Unknown)), // Complex type
+      communityLinks: S.optional(S.Array(S.Unknown)), // Complex type
+      supportContact: S.optional(S.Unknown), // Complex type
+    }),
+  ),
+}).annotations({
+  identifier: 'HomeConfigNormalized',
+  description: 'Normalized home configuration with all boolean shortcuts expanded to their object forms.',
+})
+
+export type HomeConfig = S.Schema.Type<typeof HomeConfig>
+
+// ============================================================================
+// Template Variables
+// ============================================================================
+
+const TemplateVariables = S.Struct({
   title: S.String,
 }).annotations({
   identifier: 'TemplateVariablesNormalized',
   description: 'Normalized template variables with resolved defaults.',
 })
 
-export type TemplateVariables = S.Schema.Type<typeof TemplateVariablesSchema>
+export type TemplateVariables = S.Schema.Type<typeof TemplateVariables>
 
 // ============================================================================
-// Schema - Package Paths
+// Package Paths
 // ============================================================================
 
-const PackagePathsSchema = S.Struct({
+const PackagePaths = S.Struct({
   name: S.String,
   isRunningFromSource: S.Boolean,
   static: S.Struct({
@@ -62,10 +192,10 @@ const PackagePathsSchema = S.Struct({
 })
 
 // ============================================================================
-// Schema - Paths
+// Paths
 // ============================================================================
 
-const ProjectPathsSchema = S.Struct({
+const ProjectPaths = S.Struct({
   rootDir: S.String,
   relative: S.Struct({
     build: S.Struct({
@@ -106,30 +236,34 @@ const ProjectPathsSchema = S.Struct({
   description: 'Project paths for build, pages, and public assets.',
 })
 
-const FrameworkPathsSchema = S.extend(
-  PackagePathsSchema,
+const FrameworkPaths = S.extend(
+  PackagePaths,
   S.Struct({
     devAssets: S.Struct({
       relative: S.String,
       absolute: S.String,
       schemas: S.String,
     }),
+    generatedTypes: S.Struct({
+      relative: S.String,
+      absolute: S.String,
+    }),
   }),
 ).annotations({
   identifier: 'FrameworkPaths',
-  description: 'Framework paths including dev assets.',
+  description: 'Framework paths including dev assets and generated types.',
 })
 
-const PathsSchema = S.Struct({
-  project: ProjectPathsSchema,
-  framework: FrameworkPathsSchema,
+const Paths = S.Struct({
+  project: ProjectPaths,
+  framework: FrameworkPaths,
 }).annotations({
   identifier: 'Paths',
   description: 'Complete paths configuration for project and framework.',
 })
 
 // ============================================================================
-// Schema - Main Config
+// Config
 // ============================================================================
 
 /**
@@ -140,11 +274,23 @@ const PathsSchema = S.Struct({
  * - Computing derived paths
  * - Resolving package.json fallbacks
  */
-export const ConfigSchema = S.Struct({
+export const Config = S.Struct({
   /**
    * The original user input configuration.
    */
-  _input: S.suspend(() => ConfigInputSchema),
+  _input: S.suspend(() => ConfigInput),
+
+  /**
+   * Name of the API/project.
+   * Falls back to package.json name or 'My Developer Portal'.
+   */
+  name: S.String,
+
+  /**
+   * Description of the API/project.
+   * Falls back to a generic description.
+   */
+  description: S.String,
 
   /**
    * Build configuration with resolved defaults.
@@ -167,12 +313,29 @@ export const ConfigSchema = S.Struct({
   /**
    * Template variables with resolved defaults.
    */
-  templateVariables: TemplateVariablesSchema,
+  templateVariables: TemplateVariables,
 
   /**
    * Schema configuration or null if disabled.
    */
-  schema: S.Union(S.Null, ConfigSchemaOriginal),
+  schema: ConfigSchema,
+
+  /**
+   * Examples configuration with resolved defaults.
+   */
+  examples: ExamplesConfig,
+
+  /**
+   * Home page configuration with resolved defaults.
+   */
+  home: HomeConfig,
+
+  /**
+   * Branding configuration with resolved defaults.
+   */
+  branding: S.Struct({
+    logoDesignedFor: S.Literal('light', 'dark'),
+  }),
 
   /**
    * SSR configuration.
@@ -193,7 +356,7 @@ export const ConfigSchema = S.Struct({
   /**
    * Computed paths for project and framework.
    */
-  paths: PathsSchema,
+  paths: Paths,
 
   /**
    * Advanced configuration with resolved defaults.
@@ -217,15 +380,15 @@ export const ConfigSchema = S.Struct({
 /**
  * The normalized configuration type derived from the schema.
  */
-export type Config = S.Schema.Type<typeof ConfigSchema>
+export type Config = S.Schema.Type<typeof Config>
 
 // ============================================================================
 // Codecs
 // ============================================================================
 
-export const decode = S.decode(ConfigSchema)
-export const encode = S.encode(ConfigSchema)
-export const validate = S.validate(ConfigSchema)
+export const decode = S.decode(Config)
+export const encode = S.encode(Config)
+export const validate = S.validate(Config)
 
 // -------------
 
@@ -298,12 +461,18 @@ const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | unde
         absolute: devAssetsAbsolute,
         schemas: Path.join(devAssetsAbsolute, 'schemas'),
       },
+      generatedTypes: {
+        relative: Typings.relativePathGeneratedTypesDir,
+        absolute: rootAbsolute(Typings.relativePathGeneratedTypesDir),
+      },
     },
   }
 }
 
 const getConfigInputDefaults = (): Config => ({
   _input: {},
+  name: `My Developer Portal`,
+  description: `Explore and integrate with our GraphQL API`,
   templateVariables: {
     title: `My Developer Portal`,
   },
@@ -317,7 +486,37 @@ const getConfigInputDefaults = (): Config => ({
       assets: '/assets',
     },
   },
-  schema: null,
+  schema: {},
+  examples: {
+    display: 'all',
+  },
+  home: {
+    enabled: true,
+    hero: {
+      enabled: true,
+      title: undefined,
+      tagline: undefined,
+      callToActions: undefined,
+      layout: 'asymmetric',
+      heroImage: undefined,
+    },
+    socialProof: false,
+    socialMedia: false,
+    examples: {
+      enabled: true,
+      title: undefined,
+      description: undefined,
+      maxExamples: 3,
+      filter: DirectedFilter.AllowAll,
+    },
+    quickStart: false,
+    stats: false,
+    changelog: false,
+    resources: false,
+  },
+  branding: {
+    logoDesignedFor: 'light' as const,
+  },
   ssr: {
     enabled: true,
   },
@@ -380,8 +579,22 @@ export const normalizeInput = (
     // This is either the --project directory or the config file directory
     config.paths = buildPaths(baseRootDirPath, configInput_as_writeable?.advanced?.paths)
 
-    // Try to read package.json name as fallback for title
-    if (!configInput_as_writeable?.templateVariables?.title) {
+    // Handle the top-level name property
+    if (configInput_as_writeable?.name !== undefined) {
+      config.name = configInput_as_writeable.name
+      // Also use it as the default for templateVariables.title if not set
+      if (!configInput_as_writeable?.templateVariables?.title) {
+        config.templateVariables.title = configInput_as_writeable.name
+      }
+    }
+
+    // Handle the top-level description property
+    if (configInput_as_writeable?.description !== undefined) {
+      config.description = configInput_as_writeable.description
+    }
+
+    // Try to read package.json name as fallback for title and name
+    if (!configInput_as_writeable?.templateVariables?.title || !configInput_as_writeable?.name) {
       const packageJsonResult = yield* Effect.tryPromise({
         try: () => Manifest.resource.read(config.paths.project.rootDir),
         catch: (error) => new Error(`Failed to read package.json: ${error}`),
@@ -391,9 +604,19 @@ export const normalizeInput = (
 
       // If we successfully read package.json and it has a name, use it
       if (packageJsonResult._tag === 'Right' && packageJsonResult.right.name) {
-        config.templateVariables.title = Str.Case.title(packageJsonResult.right.name)
+        const titleCasedName = Str.Case.title(packageJsonResult.right.name)
+
+        // Use for title if not already set
+        if (!configInput_as_writeable?.templateVariables?.title) {
+          config.templateVariables.title = titleCasedName
+        }
+
+        // Use for name if not already set
+        if (!configInput_as_writeable?.name) {
+          config.name = titleCasedName
+        }
       }
-      // Otherwise, the default title from getConfigInputDefaults() will be used
+      // Otherwise, the defaults from getConfigInputDefaults() will be used
     }
 
     if (configInput_as_writeable?.advanced?.vite) {
@@ -427,6 +650,227 @@ export const normalizeInput = (
     if (configInput_as_writeable?.warnings?.interactiveWithoutSchema?.enabled !== undefined) {
       config.warnings.interactiveWithoutSchema.enabled =
         configInput_as_writeable.warnings.interactiveWithoutSchema.enabled
+    }
+
+    // Process examples configuration
+    if (configInput_as_writeable?.examples) {
+      const examplesInput = configInput_as_writeable.examples
+
+      if (examplesInput.display !== undefined) {
+        config.examples.display = examplesInput.display
+      }
+
+      if (examplesInput.diagnostics !== undefined) {
+        config.examples.diagnostics = examplesInput.diagnostics
+      }
+    }
+
+    // Process branding configuration
+    if (configInput_as_writeable?.branding?.logoDesignedFor !== undefined) {
+      config.branding.logoDesignedFor = configInput_as_writeable.branding.logoDesignedFor
+    }
+
+    // Process home configuration
+    if (configInput_as_writeable?.home) {
+      const homeInput = configInput_as_writeable.home
+
+      // Handle enabled state
+      if (homeInput.enabled !== undefined) {
+        config.home.enabled = homeInput.enabled
+      }
+
+      // Process each section - false means disabled, true means use defaults, object means custom config
+
+      // Hero section
+      if (homeInput.hero !== undefined) {
+        if (homeInput.hero === false) {
+          config.home.hero = {
+            enabled: false,
+            title: undefined,
+            tagline: undefined,
+            callToActions: undefined,
+            layout: undefined,
+            heroImage: undefined,
+          }
+        } else if (homeInput.hero === true) {
+          config.home.hero = {
+            enabled: true,
+            // Use name and description from top-level config as defaults
+            title: config.name,
+            tagline: config.description,
+            callToActions: undefined,
+            layout: 'asymmetric',
+            heroImage: undefined,
+          }
+        } else {
+          // It's an object with custom configuration
+          // Extract heroImage - parse string to FilePath or extract from object
+          let heroImageValue: any = undefined
+          if (homeInput.hero.heroImage) {
+            if (typeof homeInput.hero.heroImage === 'string') {
+              // Parse string to FilePath, validating against data URLs
+              heroImageValue = FilePath.decodeSync(homeInput.hero.heroImage)
+            } else if (
+              typeof homeInput.hero.heroImage === 'object' && 'src' in homeInput.hero.heroImage
+              && homeInput.hero.heroImage.src
+            ) {
+              // Parse src string to FilePath
+              heroImageValue = FilePath.decodeSync(homeInput.hero.heroImage.src)
+            }
+            // If it's an object with AI config but no src, leave as undefined for now
+            // (future: generate during build process)
+          }
+
+          config.home.hero = {
+            enabled: true,
+            title: homeInput.hero.title ?? config.name,
+            tagline: homeInput.hero.tagline ?? config.description,
+            callToActions: homeInput.hero.callToActions,
+            layout: homeInput.hero.layout ?? 'asymmetric',
+            heroImage: heroImageValue as any,
+          }
+        }
+      } else {
+        // Default: hero is enabled with smart defaults
+        config.home.hero = {
+          enabled: true,
+          title: config.name,
+          tagline: config.description,
+          callToActions: undefined,
+          layout: 'asymmetric',
+          heroImage: undefined,
+        }
+      }
+
+      // Social proof section
+      if (homeInput.socialProof !== undefined) {
+        if (homeInput.socialProof === false) {
+          config.home.socialProof = false
+        } else if (homeInput.socialProof === true) {
+          // When true, we need actual logos data - can't use defaults
+          // So we treat true as false (disabled) since we don't have logos
+          config.home.socialProof = false
+        } else {
+          config.home.socialProof = homeInput.socialProof
+        }
+      }
+
+      // Social media section
+      if (homeInput.socialMedia !== undefined) {
+        if (homeInput.socialMedia === false) {
+          config.home.socialMedia = false
+        } else if (homeInput.socialMedia === true) {
+          // When true, we need actual posts data - can't use defaults
+          // So we treat true as false (disabled) since we don't have posts
+          config.home.socialMedia = false
+        } else {
+          config.home.socialMedia = homeInput.socialMedia
+        }
+      }
+
+      // Examples section - always normalize to object with enabled flag and filter
+      if (homeInput.examples !== undefined) {
+        if (homeInput.examples === false) {
+          config.home.examples = {
+            enabled: false,
+            title: undefined,
+            description: undefined,
+            maxExamples: 3,
+            filter: DirectedFilter.AllowAll,
+          }
+        } else if (homeInput.examples === true) {
+          config.home.examples = {
+            enabled: true,
+            title: undefined,
+            description: undefined,
+            maxExamples: 3,
+            filter: DirectedFilter.AllowAll,
+          }
+        } else {
+          // Create DirectedFilter from only/exclude pattern (never returns null now)
+          const filter = DirectedFilter.fromOnlyExclude(
+            homeInput.examples.only,
+            homeInput.examples.exclude,
+          )
+          config.home.examples = {
+            enabled: true,
+            title: homeInput.examples.title,
+            description: homeInput.examples.description,
+            maxExamples: homeInput.examples.maxExamples ?? 3,
+            filter: filter as any,
+          }
+        }
+      }
+
+      // Quick start section
+      if (homeInput.quickStart !== undefined) {
+        if (homeInput.quickStart === false) {
+          config.home.quickStart = false
+        } else if (homeInput.quickStart === true) {
+          config.home.quickStart = {
+            tabs: ['setup', 'examples', 'playground'],
+            steps: undefined,
+            languages: ['javascript', 'typescript', 'python', 'curl'],
+            playground: undefined,
+          }
+        } else {
+          config.home.quickStart = homeInput.quickStart
+        }
+      }
+
+      // Stats section
+      if (homeInput.stats !== undefined) {
+        if (homeInput.stats === false) {
+          config.home.stats = false
+        } else if (homeInput.stats === true) {
+          config.home.stats = {
+            showSchemaStats: true,
+            statusEndpoint: undefined,
+            customMetrics: undefined,
+          }
+        } else {
+          config.home.stats = homeInput.stats
+        }
+      }
+
+      // Changelog section
+      if (homeInput.changelog !== undefined) {
+        if (homeInput.changelog === false) {
+          config.home.changelog = false
+        } else if (homeInput.changelog === true) {
+          config.home.changelog = {
+            limit: 5,
+            showVersions: true,
+          }
+        } else {
+          config.home.changelog = homeInput.changelog
+        }
+      }
+
+      // Resources section
+      if (homeInput.resources !== undefined) {
+        if (homeInput.resources === false) {
+          config.home.resources = false
+        } else if (homeInput.resources === true) {
+          config.home.resources = {
+            links: undefined,
+            communityLinks: undefined,
+            supportContact: undefined,
+          }
+        } else {
+          config.home.resources = homeInput.resources
+        }
+      }
+    } else {
+      // No home config provided, apply smart defaults for hero
+      config.home.hero = {
+        enabled: true,
+        title: config.name,
+        tagline: config.description,
+        callToActions: undefined,
+        layout: 'asymmetric',
+        heroImage: undefined,
+      }
     }
 
     return config

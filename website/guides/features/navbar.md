@@ -44,7 +44,7 @@ export const navbar = Polen.Hooks.navbar(
 
 ## Props
 
-Your navbar component receives these props:
+Your navbar component receives the following props. This is a general overview, refer to JSDoc for full details.
 
 ### `items`
 

@@ -1,24 +1,24 @@
 import { serve } from '@hono/node-server' // TODO: support non-node platforms.
 import { Path } from '@wollybeard/kit'
 import { neverCase } from '@wollybeard/kit/language'
-import PROJECT_DATA from 'virtual:polen/project/data.json'
+import { templateConfig } from 'virtual:polen/project/config'
 import { createApp } from './app.js'
 
 if (__BUILDING__) {
   switch (__BUILD_ARCHITECTURE__) {
     case `ssg`:
     case `ssr`:
-      const port = process.env[`PORT`] ? parseInt(process.env[`PORT`]) : PROJECT_DATA.server.port
+      const port = process.env[`PORT`] ? parseInt(process.env[`PORT`]) : templateConfig.server.port
       const app = createApp({
         paths: {
           assets: {
             directory: Path.join(
-              PROJECT_DATA.paths.project.relative.build.root,
-              PROJECT_DATA.paths.project.relative.build.relative.assets.root,
+              templateConfig.paths.project.relative.build.root,
+              templateConfig.paths.project.relative.build.relative.assets.root,
             ),
-            route: PROJECT_DATA.server.routes.assets,
+            route: templateConfig.server.routes.assets,
           },
-          base: PROJECT_DATA.basePath,
+          base: templateConfig.build.base,
         },
       })
       serve({ fetch: app.fetch, port })

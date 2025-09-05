@@ -1,4 +1,4 @@
-import type { Api } from '#api/index'
+import type { Api } from '#api/$'
 import { reportError } from '#api/server/report-error'
 import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'

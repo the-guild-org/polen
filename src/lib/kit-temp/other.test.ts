@@ -216,7 +216,7 @@ describe('mergeShallow', () => {
       fc.property(
         fc.object(),
         fc.object(),
-        fc.string(),
+        fc.string().filter(k => k !== '__proto__' && k !== 'constructor' && k !== 'prototype'),
         fc.anything().filter(v => v !== undefined),
         (obj1, obj2, key, value) => {
           // Set the same key in both objects

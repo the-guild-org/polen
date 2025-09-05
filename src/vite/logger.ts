@@ -1,12 +1,11 @@
-import type { Config } from '#api/api'
+import type { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { Err, Str } from '@wollybeard/kit'
 import { stripAnsi } from 'consola/utils'
-import { onError } from 'effect/Stream'
 
 const baseLogger = Vite.createLogger(undefined)
 
-export const createLogger = (config: Config.Config): Vite.Logger => {
+export const createLogger = (config: Api.Config.Config): Vite.Logger => {
   return {
     ...baseLogger,
     info(msg, options) {

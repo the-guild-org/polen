@@ -1,14 +1,27 @@
 import type { Content } from '#api/content/$'
+import type { React } from '#dep/react/index'
 import { Cross2Icon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { Box, Flex, IconButton, Text } from '@radix-ui/themes'
 import { useEffect } from 'react'
 import { Sidebar } from '../components/sidebar/Sidebar.js'
 
+// Template layer extension: Allow React elements in title
+interface TemplateItemLink extends Omit<Content.ItemLink, 'title'> {
+  title: string | React.ReactNode
+}
+
+interface TemplateItemSection extends Omit<Content.ItemSection, 'title' | 'links'> {
+  title: string | React.ReactNode
+  links: TemplateItemLink[]
+}
+
+type TemplateItem = TemplateItemLink | TemplateItemSection
+
 export interface HamburgerMenuProps {
   isOpen: boolean
   onToggle: () => void
   onClose: () => void
-  sidebarData: Content.Item[]
+  sidebarData: TemplateItem[]
   basePath?: string
   topContent?: React.ReactNode
 }

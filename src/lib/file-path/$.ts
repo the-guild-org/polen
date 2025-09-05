@@ -2,4 +2,4 @@
 // File Path Namespace Export
 // ============================================================================
 
-export * as FilePathSegment from './$$.js'
+export * as FilePath from './$$.js'

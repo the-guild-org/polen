@@ -1,4 +1,4 @@
-import type { Api } from '#api/index'
+import type { Api } from '#api/$'
 import type { PolenBuildManifest } from '#api/static/manifest'
 import { Vite } from '#dep/vite/index'
 import { debugPolen } from '#singletons/debug'

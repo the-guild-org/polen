@@ -15,7 +15,7 @@ describe('Version', () => {
   ], ({ input, expectedTag, expectedString }) => {
     const version = Version.decodeSync(input)
     expect(version._tag).toBe(expectedTag)
-    expect(Version.toString(version)).toBe(expectedString)
+    expect(Version.encodeSync(version)).toBe(expectedString)
   })
 
   // dprint-ignore
@@ -96,6 +96,6 @@ describe('Version', () => {
     }
     
     expect(version._tag).toBe(expectedTag)
-    expect(Version.toString(version)).toBe(expectedString)
+    expect(Version.encodeSync(version)).toBe(expectedString)
   })
 })

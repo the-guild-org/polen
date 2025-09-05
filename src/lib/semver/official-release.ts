@@ -21,7 +21,7 @@ export const OfficialRelease = S.TaggedStruct('SemverOfficialRelease', {
 // Type
 // ============================================================================
 
-export type OfficialRelease = S.Schema.Type<typeof OfficialRelease>
+export type OfficialRelease = typeof OfficialRelease.Type
 
 // ============================================================================
 // Constructors

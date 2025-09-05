@@ -1,0 +1,23 @@
+# Level up a Pokemon
+mutation LevelUpPokemon($id: ID!) {
+  levelUpPokemon(id: $id) {
+    id
+    name
+    level
+    stats {
+      hp
+      attack
+      defense
+      speed
+      specialAttack
+      specialDefense
+    }
+    # Check if any new moves were learned
+    moves {
+      id
+      name
+      type
+      power
+    }
+  }
+}

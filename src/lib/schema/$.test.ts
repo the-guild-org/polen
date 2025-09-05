@@ -19,7 +19,7 @@ describe('Schema', () => {
     })
 
     expect(versionedSchema._tag).toBe('SchemaVersioned')
-    expect(Version.toString(versionedSchema.version)).toBe('1.0.0')
+    expect(Version.encodeSync(versionedSchema.version)).toBe('1.0.0')
   })
 
   test('creates unversioned schema', () => {

@@ -33,10 +33,22 @@ export const route = <TSchema extends Schema.Schema.Any = never>(
 ): TSchema extends never ? ReactRouter.RouteObject : SchemaRoute<TSchema> => {
   const { schema, loader, handle, ...routeConfig } = config as any
 
+  // Determine route ID
+  let routeId: string | undefined = undefined
+  const routeIdIndexPart = config.index ? '@index' : ''
+
+  if (typeof routeConfig.id === 'string') {
+    routeId = routeConfig.id
+  } else if (routeConfig.id === true && routeConfig.path) {
+    routeId = routeConfig.path === '/' ? routeConfig.path : routeConfig.path.replace(/\/$/, '')
+    routeId += routeIdIndexPart
+  }
+
   // If no schema provided, return a regular route
   if (!schema) {
     return {
       ...routeConfig,
+      ...(routeId && { id: routeId }), // Only add id if it exists
       handle,
       loader,
     } as any
@@ -45,10 +57,11 @@ export const route = <TSchema extends Schema.Schema.Any = never>(
   // Schema provided - add schema handling
   const route: any = {
     ...routeConfig,
+    ...(routeId && { id: routeId }), // Only add id if it exists
     handle: {
       ...handle,
       schema,
-      schemaId: routeConfig.id || undefined,
+      schemaId: routeId, // Can be undefined, that's ok
     },
   }
 

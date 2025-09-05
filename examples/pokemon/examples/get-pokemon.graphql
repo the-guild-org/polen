@@ -1,0 +1,22 @@
+# Get a specific Pokemon by ID with all details
+query GetPokemon($id: ID!) {
+  pokemon(id: $id) {
+    id
+    name
+    level
+    types
+    stats {
+      hp
+      attack
+      defense
+      speed
+    }
+    moves {
+      id
+      name
+      type
+      power
+      accuracy
+    }
+  }
+}

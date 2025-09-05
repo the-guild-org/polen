@@ -1,0 +1,13 @@
+query GetPokemonV2 {
+    pokemon(id: "025") {
+        id
+        name
+        types
+        stats {
+            hp
+            attack
+            defense
+            speed
+        }
+    }
+}

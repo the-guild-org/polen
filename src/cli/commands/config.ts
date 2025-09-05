@@ -1,9 +1,25 @@
-#!/usr/bin/env node
+import { Command } from '@effect/cli'
+import { consola } from 'consola'
+import { Effect } from 'effect'
 
-import { Cli, Path } from '@wollybeard/kit'
+// Import subcommands
+import { configCreate } from './config/create.js'
 
-// Remove the "config" argument before dispatching to subcommands
-process.argv = process.argv.slice(0, 2).concat(process.argv.slice(3))
+// Default config command that shows usage
+const configDefault = Command.make(
+  'config',
+  {},
+  () =>
+    Effect.gen(function*() {
+      consola.info('Available config commands:')
+      console.log('')
+      console.log('  polen config create    Create a Polen configuration file')
+      console.log('')
+      consola.info('Run a command to see its help.')
+    }),
+)
 
-const commandsDir = Path.join(import.meta.dirname, `config`)
-await Cli.dispatch(commandsDir)
+// Export the config command with subcommands
+export const config = configDefault.pipe(
+  Command.withSubcommands([configCreate]),
+)

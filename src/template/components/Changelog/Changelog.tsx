@@ -2,6 +2,7 @@ import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { DateOnly } from '#lib/date-only/$'
 import { Revision } from '#lib/revision/$'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 const CRITICALITY_LEVELS = ['BREAKING', 'DANGEROUS', 'NON_BREAKING'] as const
 import type { CriticalityLevel } from '@graphql-inspector/core'
@@ -36,22 +37,27 @@ export const Changelog: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) =
     if (Catalog.Unversioned.is(catalog)) return
     const latestSchema = catalog.entries[0]
     if (!latestSchema) return
-    const latestVersion = Version.toString(latestSchema.version)
+    const latestVersion = Version.encodeSync(latestSchema.version)
     navigate(`/changelog/version/${latestVersion}`, { replace: true })
   }, [catalog, urlVersion, navigate])
 
-  // Get revisions based on catalog type and URL params
-  const revisions = useMemo(() => {
+  // Get revisions and corresponding schema based on catalog type and URL params
+  const { revisions, schema } = useMemo(() => {
     if (Catalog.Unversioned.is(catalog)) {
-      return catalog.schema.revisions
+      return {
+        revisions: catalog.schema.revisions,
+        schema: catalog.schema,
+      }
     } else {
       // For versioned catalogs, always show specific version (never all)
       if (urlVersion) {
-        const entry = catalog.entries.find(e => Version.toString(e.version) === urlVersion)
-        return entry ? entry.revisions : []
+        const entry = catalog.entries.find(e => Version.encodeSync(e.version) === urlVersion)
+        return entry
+          ? { revisions: entry.revisions, schema: entry }
+          : { revisions: [], schema: null }
       }
       // This shouldn't happen due to redirect above, but return empty as fallback
-      return []
+      return { revisions: [], schema: null }
     }
   }, [catalog, urlVersion])
 
@@ -67,12 +73,12 @@ export const Changelog: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) =
         Changelog
       </Heading>
 
-      {revisions.map(revision => <Changeset key={revision.date} revision={revision} />)}
+      {revisions.map(revision => <Changeset key={revision.date} revision={revision} schema={schema} />)}
     </Box>
   )
 }
 
-const Changeset: React.FC<{ revision: Revision.Revision }> = ({ revision }) => {
+const Changeset: React.FC<{ revision: Revision.Revision; schema: Schema.Schema | null }> = ({ revision, schema }) => {
   // Group changes by criticality level
   const groupedChanges = useMemo(() => {
     const groups = {} as Record<CriticalityLevel, Change.Change[]>
@@ -137,7 +143,7 @@ const Changeset: React.FC<{ revision: Revision.Revision }> = ({ revision }) => {
                 key={`${change._tag}-${change.path || change.message}-${index}`}
                 components={Group}
                 name={type}
-                props={{ change }}
+                props={{ change, schema }}
               />
             )
           })}

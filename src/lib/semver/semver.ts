@@ -62,7 +62,7 @@ export const Semver = S.transformOrFail(
 // Type
 // ============================================================================
 
-export type Semver = S.Schema.Type<typeof Semver>
+export type Semver = typeof Semver.Type
 
 // ============================================================================
 // Constructors

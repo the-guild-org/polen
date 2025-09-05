@@ -8,7 +8,19 @@ import { useLocation } from 'react-router'
 import { getPathActiveReport, Link } from '../Link.js'
 import { SidebarContext } from './SidebarContext.js'
 
-export const Items: React.FC<{ items: Content.Item[] }> = ({ items }) => {
+// Template layer extension: Allow React elements in title
+interface TemplateItemLink extends Omit<Content.ItemLink, 'title'> {
+  title: string | React.ReactNode
+}
+
+interface TemplateItemSection extends Omit<Content.ItemSection, 'title' | 'links'> {
+  title: string | React.ReactNode
+  links: TemplateItemLink[]
+}
+
+type TemplateItem = TemplateItemLink | TemplateItemSection
+
+export const Items: React.FC<{ items: TemplateItem[] }> = ({ items }) => {
   return (
     <Flex direction='column' gap='2px'>
       {items.map((item, index) => (
@@ -29,7 +41,7 @@ export const Items: React.FC<{ items: Content.Item[] }> = ({ items }) => {
 //
 //
 
-export const Item: React.FC<{ item: Content.Item }> = ({ item }) => {
+export const Item: React.FC<{ item: TemplateItem }> = ({ item }) => {
   if (item.type === `ItemLink`) {
     return <SBLink link={item} />
   }
@@ -50,7 +62,7 @@ export const Item: React.FC<{ item: Content.Item }> = ({ item }) => {
 //
 
 const SBLink: React.FC<{
-  link: Content.ItemLink | Content.ItemSection
+  link: TemplateItemLink | TemplateItemSection
 }> = ({ link }) => {
   const location = useLocation()
   const { basePath } = useContext(SidebarContext)
@@ -86,7 +98,7 @@ const SBLink: React.FC<{
 //
 
 const Section: React.FC<{
-  section: Content.ItemSection
+  section: TemplateItemSection
 }> = ({ section }) => {
   return (
     <Box mt='8'>
@@ -109,7 +121,7 @@ const Section: React.FC<{
 //
 
 const LinkedSection: React.FC<{
-  section: Content.ItemSection
+  section: TemplateItemSection
 }> = ({ section }) => {
   return (
     <Box>
@@ -138,7 +150,7 @@ const LinkedSection: React.FC<{
   )
 }
 
-const SectionLink: React.FC<{ link: Content.ItemLink }> = ({ link }) => {
+const SectionLink: React.FC<{ link: TemplateItemLink }> = ({ link }) => {
   const location = useLocation()
   const { basePath } = useContext(SidebarContext)
   const href = Api.Schema.Routing.joinSegmentsAndPaths(basePath, link.pathExp)

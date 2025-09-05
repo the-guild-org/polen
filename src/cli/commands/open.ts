@@ -1,184 +1,183 @@
-// @ts-nocheck
-/*
- * Examples
- *
- * polen open --introspect https://api.graphql-hive.com/graphql
- * polen open --introspect https://api.github.com/graphql --introspection-headers '{"Authorization": "Bearer $GITHUB_TOKEN"}'
- * polen open --sdl https://docs.github.com/public/fpt/schema.docs.graphql
- */
-
-import { Api } from '#api/index'
-import { allowGlobalParameter } from '#cli/_/parameters'
+import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { Grafaid } from '#lib/grafaid'
 import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'
 import { toViteUserConfig } from '#vite/config'
-import { Command } from '@molt/command'
-import type { Fn } from '@wollybeard/kit'
+import { Command, Options } from '@effect/cli'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'
+import { Effect, Option } from 'effect'
 import { homedir } from 'node:os'
-import { z } from 'zod'
+import { allowGlobalParameter } from '../_/parameters.js'
 
-const args = Command.create()
-  .parameter(
-    `--introspection-headers --inh`,
-    z
-      .string()
-      .optional()
-      .describe(
-        `Include headers in the introspection query request sent when using --introspection-url. Format is JSON Object.`,
-      ),
-  )
-  .parametersExclusive(`source`, ($) =>
-    $.parameter(`--introspect --in -i`, {
-      schema: z
-        .string()
-        .url()
-        .describe(
-          `Get the schema by sending a GraphQL introspection query to this URL.`,
-        ),
-    })
-      .parameter(`--sdl -s`, {
-        schema: z
-          .string()
-          .describe(
-            `Get the schema from a GraphQL Schema Definition Language file. Can be a path to a local file or an HTTP URL to a remote one.`,
-          ),
-      })
-      .parameter(`--name -n`, {
-        schema: z
-          .enum([`github`, `hive`])
-          .describe(
-            `Pick from a well known public API. Polen already knows how to fetch the schema for these APIs.`,
-          ),
-      }))
-  .parameter(
-    `--cache`,
-    z
-      .boolean()
-      .default(true)
-      .describe(
-        `Enable or disable caching. By default this command caches fetched schemas for re-use.`,
-      ),
-  )
-  .parameter(`--allow-global`, allowGlobalParameter)
-  .settings({
-    parameters: {
-      environment: {
-        $default: {
-          // todo prfix seting doesn't seem to work with Molt!
-          prefix: `POLEN_CREATE_`,
-          enabled: false,
-        },
-      },
-    },
-  })
-  .parse()
+// Define introspection headers option
+const introspectionHeaders = Options.text('introspection-headers').pipe(
+  Options.withAlias('inh'),
+  Options.optional,
+  Options.withDescription(
+    'Include headers in the introspection query request sent when using --introspection-url. Format is JSON Object.',
+  ),
+)
 
-// cache
+// Define mutually exclusive source options
+const introspectUrl = Options.text('introspect').pipe(
+  Options.withAlias('in'),
+  Options.withAlias('i'),
+  Options.optional,
+  Options.withDescription('Get the schema by sending a GraphQL introspection query to this URL.'),
+)
 
-const cacheDir = Path.join(homedir(), `.polen`, `cache`, `cli`, `open`)
+const sdlPath = Options.text('sdl').pipe(
+  Options.withAlias('s'),
+  Options.optional,
+  Options.withDescription(
+    'Get the schema from a GraphQL Schema Definition Language file. Can be a path to a local file or an HTTP URL to a remote one.',
+  ),
+)
 
-const bsae64Codec = {
-  encode: (str: string) => Buffer.from(str).toString(`base64`),
-  decode: (str: string) => Buffer.from(str, `base64`).toString(`utf-8`),
+const namedSchema = Options.choice('name', ['github', 'hive']).pipe(
+  Options.withAlias('n'),
+  Options.optional,
+  Options.withDescription(
+    'Pick from a well known public API. Polen already knows how to fetch the schema for these APIs.',
+  ),
+)
+
+const cache = Options.boolean('cache').pipe(
+  Options.withDefault(true),
+  Options.withDescription('Enable or disable caching. By default this command caches fetched schemas for re-use.'),
+)
+
+// Cache implementation
+const cacheDir = Path.join(homedir(), '.polen', 'cache', 'cli', 'open')
+
+const base64Codec = {
+  encode: (str: string) => Buffer.from(str).toString('base64'),
+  decode: (str: string) => Buffer.from(str, 'base64').toString('utf-8'),
 }
 
-const cacheWrite = async (source: string, schema: Grafaid.Schema.Schema) => {
-  if (!args.cache) return
+const cacheWrite = async (source: string, schema: Grafaid.Schema.Schema, useCache: boolean) => {
+  if (!useCache) return
 
   await Err.tryCatchIgnore(async () => {
-    const fileName = bsae64Codec.encode(source)
+    const fileName = base64Codec.encode(source)
     const filePath = Path.join(cacheDir, fileName)
     const sdl = Grafaid.Schema.print(schema)
     await Fs.write({ path: filePath, content: sdl })
   })
 }
 
-const cacheRead = async (source: string) => {
-  if (!args.cache) return null
+const cacheRead = async (source: string, useCache: boolean) => {
+  if (!useCache) return null
 
   return Err.tryCatchIgnore(async () => {
-    const fileName = bsae64Codec.encode(source)
+    const fileName = base64Codec.encode(source)
     const filePath = Path.join(cacheDir, fileName)
     const sdl = await Fs.read(filePath)
     if (!sdl) return null
-    return Grafaid.Schema.fromAST(Grafaid.Schema.AST.parse(sdl))
+    const documentNode = await Effect.runPromise(Grafaid.Schema.AST.parse(sdl))
+    return await Effect.runPromise(Grafaid.Schema.fromAST(documentNode))
   })
 }
 
-const cache = {
-  read: cacheRead,
-  write: cacheWrite,
+const wrapCache = (fn: typeof GraphqlSchemaLoader.load, useCache: boolean) => {
+  const wrapped = (...args: Parameters<typeof GraphqlSchemaLoader.load>) =>
+    Effect.gen(function*() {
+      const cacheKey = JSON.stringify(args)
+      const cachedSchema = yield* Effect.promise(() => cacheRead(cacheKey, useCache))
+
+      if (cachedSchema) {
+        return cachedSchema
+      }
+
+      // GraphqlSchemaLoader.load returns Effect<GraphQLSchema, Error, FileSystem>
+      const value = yield* fn(...args)
+
+      yield* Effect.promise(() => cacheWrite(cacheKey, value, useCache))
+
+      return value
+    })
+
+  return wrapped
 }
 
-const wrapCache = <fn extends Fn.AnyAnyAsync>(fn: fn): fn => {
-  const wrapped = async (...args: Parameters<fn>) => {
-    const cacheKey = JSON.stringify(args)
-    const cachedSchema = await cache.read(cacheKey)
-
-    if (cachedSchema) {
-      return cachedSchema
-    }
-
-    const value = await fn(...args)
-
-    await cache.write(cacheKey, value)
-
-    return value
-  }
-
-  return wrapped as any
-}
-
-// cache end
-
-// todo: use a proper validation, e.g. zod, better yet: allow to specify the validation in molt itself
 const parseHeaders = (headersJsonEncoded: string): Record<string, string> => {
   const headersJson = Json.codec.decode(headersJsonEncoded)
   if (!Rec.is(headersJson)) {
-    console.log(`--introspection-headers must be a JSON object.`)
-    process.exit(1)
+    throw new Error('--introspection-headers must be a JSON object.')
   }
   return headersJson as any
 }
 
-const load = wrapCache(GraphqlSchemaLoader.load)
-const schema = await load(
-  args.source._tag === `name`
-    ? { type: `name`, name: args.source.value }
-    : args.source._tag === `sdl`
-    ? { type: `sdl`, pathOrUrl: args.source.value }
-    : {
-      type: `introspect`,
-      url: args.source.value,
-      headers: args.introspectionHeaders
-        ? parseHeaders(args.introspectionHeaders)
-        : undefined,
-    },
-)
-
-const config = await Api.ConfigResolver.fromMemory({
-  root: await Fs.makeTemporaryDirectory(),
-  schema: {
-    sources: {
-      data: {
-        versions: [
-          {
-            before: Grafaid.Schema.empty,
-            after: schema,
-            changes: [],
-            date: new Date(),
-          },
-        ],
-      },
-    },
+export const open = Command.make(
+  'open',
+  {
+    introspectionHeaders,
+    introspectUrl,
+    sdlPath,
+    namedSchema,
+    cache,
+    allowGlobal: allowGlobalParameter,
   },
-})
+  ({ introspectionHeaders, introspectUrl, sdlPath, namedSchema, cache, allowGlobal }) =>
+    Effect.gen(function*() {
+      // Validate that exactly one source option is provided
+      const introspectValue = Option.getOrUndefined(introspectUrl)
+      const sdlValue = Option.getOrUndefined(sdlPath)
+      const namedValue = Option.getOrUndefined(namedSchema)
+      const headersValue = Option.getOrUndefined(introspectionHeaders)
 
-const viteConfig = toViteUserConfig(config)
-const viteDevServer = await Vite.createServer(viteConfig)
+      const sources = [introspectValue, sdlValue, namedValue].filter(Boolean)
+      if (sources.length === 0) {
+        return yield* Effect.fail(new Error('Must specify one of: --introspect, --sdl, or --name'))
+      }
+      if (sources.length > 1) {
+        return yield* Effect.fail(new Error('Cannot specify multiple source options'))
+      }
 
-await viteDevServer.listen()
+      // Determine source type and value
+      let sourceConfig: any
 
-viteDevServer.printUrls()
+      if (introspectValue) {
+        sourceConfig = {
+          type: 'introspect',
+          url: introspectValue,
+          headers: headersValue ? parseHeaders(headersValue) : undefined,
+        }
+      } else if (sdlValue) {
+        sourceConfig = {
+          type: 'sdl',
+          pathOrUrl: sdlValue,
+        }
+      } else if (namedValue) {
+        sourceConfig = {
+          type: 'name',
+          name: namedValue,
+        }
+      }
+
+      const load = wrapCache(GraphqlSchemaLoader.load, cache)
+      const schema = yield* load(sourceConfig)
+
+      const tempDir = yield* Effect.promise(() => Fs.makeTemporaryDirectory())
+      const config = yield* Api.ConfigResolver.fromMemory({
+        schema: {
+          sources: {
+            memory: {
+              revisions: [
+                {
+                  date: new Date(),
+                  value: schema,
+                },
+              ],
+            },
+          },
+        },
+      }, tempDir)
+
+      const viteConfig = toViteUserConfig(config)
+      const viteDevServer = yield* Effect.promise(() => Vite.createServer(viteConfig))
+
+      yield* Effect.promise(() => viteDevServer.listen())
+      viteDevServer.printUrls()
+    }),
+)

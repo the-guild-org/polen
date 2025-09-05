@@ -51,7 +51,7 @@ export const createNavbar = (pages: Page[]): NavbarItem[] => {
       navbarItems.push({
         pathExp,
         title,
-        position: 'left',
+        position: 'right',
       })
     }
   })

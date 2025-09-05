@@ -14,8 +14,8 @@ export const Criticality = S.Struct({
   description: 'The criticality assessment of a GraphQL schema change',
 })
 
-export type Level = S.Schema.Type<typeof Level>
-export type Criticality = S.Schema.Type<typeof Criticality>
+export type Level = typeof Level.Type
+export type Criticality = typeof Criticality.Type
 
 // ============================================================================
 // Constructors

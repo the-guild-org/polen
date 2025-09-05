@@ -1,0 +1,22 @@
+# List Pokemon with filtering by type
+query ListPokemons($type: PokemonType, $limit: Int = 10) {
+  pokemons(type: $type, limit: $limit) {
+    edges {
+      node {
+        id
+        name
+        types
+        level
+        stats {
+          hp
+          attack
+          defense
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}

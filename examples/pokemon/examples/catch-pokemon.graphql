@@ -1,0 +1,20 @@
+# Catch a wild Pokemon
+mutation CatchPokemon($pokemonId: ID!, $trainerId: ID!) {
+  catchPokemon(pokemonId: $pokemonId, trainerId: $trainerId) {
+    id
+    name
+    types
+    level
+    stats {
+      hp
+      attack
+      defense
+      speed
+    }
+    moves {
+      name
+      type
+      power
+    }
+  }
+}

@@ -13,13 +13,16 @@ importers:
         version: 1.1.2(graphql@16.11.0)
       '@effect/cli':
         specifier: ^0.63.0
-        version: 0.63.11(@effect/platform@0.90.0(effect@3.17.0))(@effect/printer-ansi@0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(@effect/printer@0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+        version: 0.63.11(@effect/platform@0.90.0(effect@3.17.0))(@effect/printer-ansi@0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(@effect/printer@0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@effect/platform':
         specifier: ^0.90.0
         version: 0.90.0(effect@3.17.0)
       '@effect/platform-node':
         specifier: ^0.94.0
         version: 0.94.0(@effect/cluster@0.46.2(@effect/platform@0.90.0(effect@3.17.0))(@effect/rpc@0.68.0(@effect/platform@0.90.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.0(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.90.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.8.1(@effect/platform@0.90.0(effect@3.17.0))(@effect/rpc@0.68.0(@effect/platform@0.90.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.90.0(effect@3.17.0))(@effect/rpc@0.68.0(@effect/platform@0.90.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.0(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.90.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/printer-ansi':
+        specifier: ^0.45.0
+        version: 0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)
       '@graphql-inspector/core':
         specifier: ^6.2.1
         version: 6.2.1(graphql@16.11.0)
@@ -44,6 +47,9 @@ importers:
       '@radix-ui/react-icons':
         specifier: ^1.3.2
         version: 1.3.2(react@19.1.0)
+      '@radix-ui/react-slot':
+        specifier: ^1.2.3
+        version: 1.2.3(@types/react@19.1.8)(react@19.1.0)
       '@radix-ui/themes':
         specifier: ^3.2.1
         version: 3.2.1(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -92,6 +98,9 @@ importers:
       effect:
         specifier: ^3.17.0
         version: 3.17.0
+      embla-carousel-react:
+        specifier: ^8.6.0
+        version: 8.6.0(react@19.1.0)
       es-toolkit:
         specifier: ^1.39.7
         version: 1.39.7
@@ -757,17 +766,17 @@ packages:
     peerDependencies:
       effect: ^3.17.0
 
-  '@effect/printer-ansi@0.44.14':
-    resolution: {integrity: sha512-/AWQ1jDLfRm/Zk/jDlE9uX02Da4A4+4VBhU+huao29CcKsO5JPkJLVWiARutThFoVBmp+m4lVLCHqND/tc2W6A==}
+  '@effect/printer-ansi@0.45.0':
+    resolution: {integrity: sha512-3MS02RP83eZaBJX98PRI4f5kyoEVyNfg2Qu/XUWQMFRp4wvmgNwEy18RjO9G6s7uB8NaYXTpQVDmtUoKARx7fA==}
     peerDependencies:
-      '@effect/typeclass': ^0.35.14
-      effect: ^3.16.14
+      '@effect/typeclass': ^0.36.0
+      effect: ^3.17.0
 
-  '@effect/printer@0.44.14':
-    resolution: {integrity: sha512-Z9YJbmRG++BJqpR+kmJIlo1XdVGtZXPcHSMKPUiZHkZNtX2dG5Ynk2PwdRiA68sz895Fr1QwdYel8zKorUij/w==}
+  '@effect/printer@0.45.0':
+    resolution: {integrity: sha512-UpFBH2JKAgakSWpue6yKkIAXMq+3md/CPb9s/NGl28vDu1P33cvDeeDL/1EOzFk8WqhIs3oKwPMDnd3jUhjzdg==}
     peerDependencies:
-      '@effect/typeclass': ^0.35.14
-      effect: ^3.16.14
+      '@effect/typeclass': ^0.36.0
+      effect: ^3.17.0
 
   '@effect/rpc@0.68.0':
     resolution: {integrity: sha512-1fFLE5MgSpu+kTy+A2SrPVNTnAIPWlLIlSeslIE9R22EvR1eCkskWxcBDvKNyfqCefXNhSRY5UafG3XpTYumaw==}
@@ -3173,6 +3182,19 @@ packages:
 
   electron-to-chromium@1.5.189:
     resolution: {integrity: sha512-y9D1ntS1ruO/pZ/V2FtLE+JXLQe28XoRpZ7QCCo0T8LdQladzdcOVQZH/IWLVJvCw12OGMb6hYOeOAjntCmJRQ==}
+
+  embla-carousel-react@8.6.0:
+    resolution: {integrity: sha512-0/PjqU7geVmo6F734pmPqpyHqiM99olvyecY7zdweCw+6tKEXnrE90pBiBbMMU8s5tICemzpQ3hi5EpxzGW+JA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.1 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+
+  embla-carousel-reactive-utils@8.6.0:
+    resolution: {integrity: sha512-fMVUDUEx0/uIEDM0Mz3dHznDhfX+znCCDCeIophYb1QGVM7YThSWX+wz11zlYwWFOr74b4QLGg0hrGPJeG2s4A==}
+    peerDependencies:
+      embla-carousel: 8.6.0
+
+  embla-carousel@8.6.0:
+    resolution: {integrity: sha512-SjWyZBHJPbqxHOzckOfo8lHisEaJWmwd23XppYFYVh10bU66/Pn5tkVkbkCMZVdbUE5eTCI2nD8OyIP4Z+uwkA==}
 
   emoji-regex-xs@1.0.0:
     resolution: {integrity: sha512-LRlerrMYoIDrT6jgpeZ2YYl/L8EulRTt5hQcYjy5AInh7HWXKimpqx68aknBFpGL2+/IcogTcaydJEgaTmOpDg==}
@@ -5711,11 +5733,11 @@ snapshots:
   '@dprint/win32-x64@0.50.1':
     optional: true
 
-  '@effect/cli@0.63.11(@effect/platform@0.90.0(effect@3.17.0))(@effect/printer-ansi@0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(@effect/printer@0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)':
+  '@effect/cli@0.63.11(@effect/platform@0.90.0(effect@3.17.0))(@effect/printer-ansi@0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(@effect/printer@0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)':
     dependencies:
       '@effect/platform': 0.90.0(effect@3.17.0)
-      '@effect/printer': 0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)
-      '@effect/printer-ansi': 0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)
+      '@effect/printer': 0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)
+      '@effect/printer-ansi': 0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)
       effect: 3.17.0
       ini: 4.1.3
       toml: 3.0.0
@@ -5772,13 +5794,13 @@ snapshots:
       msgpackr: 1.11.5
       multipasta: 0.2.7
 
-  '@effect/printer-ansi@0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)':
+  '@effect/printer-ansi@0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/printer': 0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)
+      '@effect/printer': 0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)
       '@effect/typeclass': 0.35.14(effect@3.17.0)
       effect: 3.17.0
 
-  '@effect/printer@0.44.14(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)':
+  '@effect/printer@0.45.0(@effect/typeclass@0.35.14(effect@3.17.0))(effect@3.17.0)':
     dependencies:
       '@effect/typeclass': 0.35.14(effect@3.17.0)
       effect: 3.17.0
@@ -8228,6 +8250,18 @@ snapshots:
       fast-check: 3.23.2
 
   electron-to-chromium@1.5.189: {}
+
+  embla-carousel-react@8.6.0(react@19.1.0):
+    dependencies:
+      embla-carousel: 8.6.0
+      embla-carousel-reactive-utils: 8.6.0(embla-carousel@8.6.0)
+      react: 19.1.0
+
+  embla-carousel-reactive-utils@8.6.0(embla-carousel@8.6.0):
+    dependencies:
+      embla-carousel: 8.6.0
+
+  embla-carousel@8.6.0: {}
 
   emoji-regex-xs@1.0.0: {}
 

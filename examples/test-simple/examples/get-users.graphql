@@ -1,0 +1,8 @@
+# Get all users with their basic information
+query GetUsers {
+  users {
+    id
+    name
+    email
+  }
+}

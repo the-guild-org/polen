@@ -40,14 +40,14 @@ export const Version = S.transformOrFail(
     decode: (input, _, ast) => {
       // Try parsing as integer first
       if (typeof input === 'number' && Number.isInteger(input)) {
-        return ParseResult.succeed(IntegerVersion.make({ value: input }))
+        return ParseResult.succeed(new IntegerVersion.Integer({ value: input }))
       }
 
       // Try parsing string as integer
       if (typeof input === 'string') {
         const parsed = Number(input)
         if (Number.isInteger(parsed) && parsed.toString() === input) {
-          return ParseResult.succeed(IntegerVersion.make({ value: parsed }))
+          return ParseResult.succeed(new IntegerVersion.Integer({ value: parsed }))
         }
       }
 
@@ -56,7 +56,7 @@ export const Version = S.transformOrFail(
         // Try parsing as semver
         try {
           SemverLib.decodeSync(input) // Validate it's a valid semver
-          return ParseResult.succeed(SemverVersion.make({ value: input }))
+          return ParseResult.succeed(new SemverVersion.Semver({ value: input }))
         } catch {
           // Not a semver, continue
         }
@@ -64,13 +64,13 @@ export const Version = S.transformOrFail(
         // Try parsing as ISO date
         try {
           const dateOnly = DateOnly.decodeSync(input)
-          return ParseResult.succeed(DateVersion.make({ value: dateOnly }))
+          return ParseResult.succeed(new DateVersion.Date({ value: dateOnly }))
         } catch {
           // Not an ISO date, continue
         }
 
         // Fall back to custom version
-        return ParseResult.succeed(CustomVersion.make({ value: input }))
+        return ParseResult.succeed(new CustomVersion.Custom({ value: input }))
       }
 
       return ParseResult.fail(new ParseResult.Type(ast, input))
@@ -90,7 +90,7 @@ export const Version = S.transformOrFail(
   },
 )
 
-export type Version = S.Schema.Type<typeof Version>
+export type Version = typeof Version.Type
 
 // ============================================================================
 // Constructors
@@ -184,31 +184,34 @@ export const fromString = S.decodeSync(Version)
  * Create a semver version
  */
 export const fromSemver = (semver: SemverLib.Semver): Version =>
-  SemverVersion.make({ value: semver.version.toString() })
+  S.decodeSync(SemverVersion.Semver)({ _tag: 'VersionSemver', value: semver.version.toString() })
 
 /**
  * Create a date version
  */
-export const fromDateOnly = (date: DateOnly.DateOnly): Version => DateVersion.make({ value: date })
+export const fromDateOnly = (date: DateOnly.DateOnly): Version =>
+  S.decodeSync(DateVersion.Date)({ _tag: 'VersionDate', value: date })
 
 /**
  * Create an integer version
  */
-export const fromInteger = (value: number): Version => IntegerVersion.make({ value })
+export const fromInteger = (value: number): Version =>
+  S.decodeSync(IntegerVersion.Integer)({ _tag: 'VersionInteger', value })
 
 /**
  * Create a custom version
  */
-export const fromCustom = (value: string): Version => CustomVersion.make({ value })
+export const fromCustom = (value: string): Version =>
+  S.decodeSync(CustomVersion.Custom)({ _tag: 'VersionCustom', value })
 
 // ============================================================================
 // Domain Logic
 // ============================================================================
 
 /**
- * Get the string representation of a version
+ * Synchronously encode a version to its string representation
  */
-export const toString = (version: Version): string => {
+export const encodeSync = (version: Version): string => {
   switch (version._tag) {
     case 'VersionInteger':
       return version.value.toString()

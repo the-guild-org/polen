@@ -1,3 +1,4 @@
+export * from './mdx-compiler.js'
 export * from './metadata.js'
 export * from './navbar.js'
 export * from './page.js'

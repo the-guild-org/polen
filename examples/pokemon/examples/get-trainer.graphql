@@ -1,0 +1,21 @@
+# Get a trainer with their Pokemon team
+query GetTrainer($id: ID!) {
+  trainer(id: $id) {
+    id
+    name
+    hometown
+    badges
+    pokemon {
+      id
+      name
+      types
+      level
+      stats {
+        hp
+        attack
+        defense
+        speed
+      }
+    }
+  }
+}

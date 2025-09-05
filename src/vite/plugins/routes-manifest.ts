@@ -1,13 +1,13 @@
-import { Api } from '#api/index'
+import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
+import { FileRouter } from '#lib/file-router/$'
 import { SchemaDefinition } from '#lib/schema-definition/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import consola from 'consola'
 import { Effect } from 'effect'
 import { isInterfaceType, isObjectType } from 'graphql'
-import * as fs from 'node:fs/promises'
 
 /**
  * Vite plugin that generates a routes manifest during build for SSG.
@@ -56,17 +56,19 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
         }
       }
 
-      // Add custom page routes
-      const pagesDir = config.paths.project.absolute.pages
-      try {
-        await fs.access(pagesDir)
-        // TODO: Scan pages directory and add routes
-        // For now, we'll leave this as a future enhancement
-      } catch (err: any) {
-        if (err.code === 'ENOENT') {
-          debug('Pages directory not found, skipping custom page routes:', pagesDir)
-        } else {
-          throw err // Let unexpected errors bubble up
+      // Add arbitrary page routes
+      const pagesScaleResult = await Effect.runPromise(
+        Api.Content.scan({
+          dir: config.paths.project.absolute.pages,
+        }).pipe(Effect.provide(NodeFileSystem.layer)),
+      )
+
+      if (pagesScaleResult.list.length > 0) {
+        debug('Processing arbitrary pages', { count: pagesScaleResult.list.length })
+        for (const page of pagesScaleResult.list) {
+          const pathExp = FileRouter.routeToPathExpression(page.route)
+          routes.push(pathExp)
+          debug('added page route', { path: pathExp })
         }
       }
 

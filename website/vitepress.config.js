@@ -20,6 +20,7 @@ export default defineConfig({
     nav: [
       { text: 'Why', link: '/guides/why' },
       { text: 'Guides', link: '/guides/get-started' },
+      { text: 'Reference', link: '/reference/' },
       { text: 'Examples', link: '/examples/overview' },
       {
         text: 'Changelog',
@@ -40,11 +41,31 @@ export default defineConfig({
         {
           text: 'Features',
           items: [
-            { text: 'Pages', link: '/guides/features/pages' },
-            { text: 'Schema Overview', link: '/guides/features/schema-overview' },
-            { text: 'Schema Augmentations', link: '/guides/features/schema-augmentations' },
-            { text: 'Schema Reference', link: '/guides/features/schema-reference' },
-            { text: 'Schema Changelog', link: '/guides/features/schema-changelog' },
+            { text: 'Home Page', link: '/guides/features/home-page' },
+            {
+              text: 'Arbirary Pages',
+              link: '/guides/features/arbitrary-pages',
+            },
+            {
+              text: 'Schema Overview',
+              link: '/guides/features/schema-overview',
+            },
+            {
+              text: 'Schema Augmentations',
+              link: '/guides/features/schema-augmentations',
+            },
+            {
+              text: 'Schema Reference',
+              link: '/guides/features/schema-reference',
+            },
+            {
+              text: 'Examples',
+              link: '/guides/features/examples',
+            },
+            {
+              text: 'Schema Changelog',
+              link: '/guides/features/schema-changelog',
+            },
             { text: 'Navbar', link: '/guides/features/navbar' },
             { text: 'Logo', link: '/guides/features/logo' },
             { text: 'Configuration', link: '/guides/features/configuration' },
@@ -63,13 +84,18 @@ export default defineConfig({
         },
         {
           text: 'Deployment (SSR)',
-          items: [{ text: 'Overview', link: '/guides/deployment-ssr/overview' }],
+          items: [
+            { text: 'Overview', link: '/guides/deployment-ssr/overview' },
+          ],
         },
+      ],
+      '/reference/': [
         {
           text: 'Reference',
           items: [
-            { text: 'CLI', link: '/guides/reference/cli' },
-            { text: 'API', link: '/guides/reference/api' },
+            { text: 'Overview', link: '/reference/' },
+            { text: 'CLI', link: '/reference/cli' },
+            { text: 'API', link: '/reference/api' },
           ],
         },
       ],

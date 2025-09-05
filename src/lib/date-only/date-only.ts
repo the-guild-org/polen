@@ -20,7 +20,7 @@ export const DateOnly = S.String.pipe(
 // Type
 // ============================================================================
 
-export type DateOnly = S.Schema.Type<typeof DateOnly>
+export type DateOnly = typeof DateOnly.Type
 
 // ============================================================================
 // Constructors

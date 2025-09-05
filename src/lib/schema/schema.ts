@@ -16,7 +16,7 @@ export * as Versioned from './versioned.js'
 
 export const Schema = S.Union(Versioned.Versioned, Unversioned.Unversioned)
 
-export type Schema = S.Schema.Type<typeof Schema>
+export type Schema = typeof Schema.Type
 
 // ============================================================================
 // Type Guard

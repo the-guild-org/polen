@@ -16,7 +16,7 @@ export const Revision = S.TaggedStruct('Revision', {
   description: 'A revision in the schema history',
 })
 
-export type Revision = S.Schema.Type<typeof Revision>
+export type Revision = typeof Revision.Type
 
 // ============================================================================
 // Constructors

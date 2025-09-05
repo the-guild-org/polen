@@ -1,4 +1,4 @@
-import type { Api } from '#api/index'
+import type { Api } from '#api/$'
 import type { Vite } from '#dep/vite/index'
 import { Manifest } from '#vite/plugins/manifest'
 import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'

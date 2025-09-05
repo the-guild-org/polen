@@ -5,20 +5,9 @@ import { DateOnly } from '../date-only/$.js'
 // Schema
 // ============================================================================
 
-export const Date = S.TaggedStruct('VersionDate', {
+export class Date extends S.TaggedClass<Date>()('VersionDate', {
   value: DateOnly.DateOnly,
-}).annotations({
-  identifier: 'Date',
-  title: 'Date',
-  description: 'A version represented as a date (YYYY-MM-DD)',
-  adt: { name: 'Version' },
-})
-
-// ============================================================================
-// Type
-// ============================================================================
-
-export type Date = S.Schema.Type<typeof Date>
+}) {}
 
 // ============================================================================
 // Constructors

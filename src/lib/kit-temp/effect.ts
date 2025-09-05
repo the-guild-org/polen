@@ -1,5 +1,9 @@
+import { Ob } from '#lib/kit-temp/$'
+import type { ReplaceProperty } from '#lib/kit-temp/ob'
+import { Obj } from '@wollybeard/kit'
 import { Schema as S } from 'effect'
 import type * as E from 'effect'
+import { isPropertySignature } from 'effect/Schema'
 import type * as EAST from 'effect/SchemaAST'
 import { isLiteral, isSuspend, isTransformation, isTypeLiteral } from 'effect/SchemaAST'
 
@@ -48,6 +52,71 @@ export namespace EffectKit {
   }
 
   export namespace Schema {
+    export type Constructor<$Schema extends Struct.$any, $InputFields> = (
+      fields: $InputFields,
+    ) => S.Schema.Type<$Schema>
+
+    export type ConstructorUsingOmitLiteral1Algo<$Schema extends Struct.$any> = (
+      fields: ConstructorFieldsUsingOmitLiteral1Algo<$Schema>,
+    ) => S.Schema.Type<$Schema>
+
+    export const pickLiteral1FieldsAsLiterals = <schema extends Struct.$any>(
+      schema: schema,
+    ): { [k in keyof PickLiteral1Fields<schema>]: S.Schema.Type<PickLiteral1Fields<schema>[k]> } => {
+      const picked = {}
+      const ast = schema.ast
+      if (isTypeLiteral(ast)) {
+        ast.propertySignatures.forEach(prop => {
+          if (isLiteral(prop.type) && prop.name !== '_tag') {
+            // @ts-expect-error - Extract the literal value, not the schema
+            picked[prop.name] = prop.type.literal
+          }
+        })
+      }
+      return picked as any
+    }
+
+    export const pickLiteral1Fields = <schema extends Struct.$any>(
+      schema: schema,
+    ): PickLiteral1Fields<schema> => {
+      const picked = {}
+      const ast = schema.ast
+      if (isTypeLiteral(ast)) {
+        ast.propertySignatures.forEach(prop => {
+          if (isLiteral(prop.type)) {
+            // @ts-expect-error
+            picked[prop.name] = schema.fields[prop.name]
+          }
+        })
+      }
+      return picked as any
+    }
+
+    // todo: omit _tag to alig with runtime
+    export type PickLiteral1Fields<$Schema extends Struct.$any> = {
+      [k in keyof Struct.ExtractFields<$Schema>]: Struct.ExtractFields<$Schema>[k] extends
+        S.Literal<infer __literals__ extends [string]> ? Struct.ExtractFields<$Schema>[k]
+        : never
+    }
+
+    // todo: omit _tag to alig with runtime
+    export type OmitLiteral1Fields<$Schema extends Struct.$any> = {
+      [k in keyof Struct.ExtractFields<$Schema>]: Struct.ExtractFields<$Schema>[k] extends
+        S.Literal<infer __literals__ extends [string]> ? never : Struct.ExtractFields<$Schema>[k]
+    }
+
+    export type GetLiteral1FieldsNames<$Schema extends Struct.$any> = keyof PickLiteral1Fields<$Schema>
+
+    export type ConstructorFieldsUsingOmitLiteral1Algo<$Schema extends Struct.$any> = $Schema extends
+      S.Struct<infer __fields__> ? S.Struct.Constructor<Omit<__fields__, GetLiteral1FieldsNames<$Schema>>>
+      : never
+
+    export type ConstructorFor<$Schema extends S.Struct<any>, $Input> = ReplaceProperty<
+      $Schema,
+      'make',
+      (fields: $Input) => S.Schema.Type<$Schema>
+    >
+
     // todo: any real usecase for this? should we be just using S.All?
     export type $any = S.Schema<any, any, any>
 

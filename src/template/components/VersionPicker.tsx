@@ -1,13 +1,12 @@
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { Version } from '#lib/version/$'
-import { Select } from '@radix-ui/themes'
-import { Effect } from 'effect'
 import { useNavigate } from 'react-router'
-import { catalogBridge } from '../catalog-bridge.js'
+import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { useReferencePath } from '../hooks/useReferencePath.js'
 import { Stores } from '../stores/$.js'
 import { tryWithToast } from '../utils/try-with-toast.js'
+import { SimpleVersionPicker } from './SimpleVersionPicker.js'
 
 interface Props {
   data: readonly Version.Version[]
@@ -18,19 +17,14 @@ export const VersionPicker: React.FC<Props> = ({ data, current }) => {
   const navigate = useNavigate()
   const currentPath = useReferencePath()
 
-  // Don't show selector if only one version
-  if (data.length <= 1) {
-    return null
-  }
-
-  const handleVersionChange = async (newVersion: string) => {
+  const handleVersionChange = async (version: Version.Version) => {
+    const newVersion = Version.encodeSync(version)
     const error = await tryWithToast(async () => {
       // Get the full catalog to find the target schema
-      const catalog = await Effect.runPromise(catalogBridge.view())
-
-      if (!catalog) {
+      if (!schemasCatalog) {
         throw new Error('No catalog available')
       }
+      const catalog = schemasCatalog
 
       // This component is only used for versioned catalogs
       if (catalog._tag !== 'CatalogVersioned') {
@@ -39,7 +33,7 @@ export const VersionPicker: React.FC<Props> = ({ data, current }) => {
 
       // Find the schema for the target version
       // Note: newVersion is a string that we need to parse
-      const targetSchema = catalog.entries.find(schema => Version.toString(schema.version) === newVersion)
+      const targetSchema = catalog.entries.find(schema => Version.encodeSync(schema.version) === newVersion)
 
       if (!targetSchema) {
         throw new Error(`Version ${newVersion} not found`)
@@ -97,23 +91,11 @@ export const VersionPicker: React.FC<Props> = ({ data, current }) => {
     }
   }
 
-  const currentStr = Version.toString(current)
-
   return (
-    <Select.Root value={currentStr} onValueChange={handleVersionChange}>
-      <Select.Trigger>
-        {currentStr}
-      </Select.Trigger>
-      <Select.Content>
-        {data.map(version => {
-          const versionStr = Version.toString(version)
-          return (
-            <Select.Item key={versionStr} value={versionStr}>
-              {versionStr}
-            </Select.Item>
-          )
-        })}
-      </Select.Content>
-    </Select.Root>
+    <SimpleVersionPicker
+      versions={data}
+      currentVersion={current}
+      onVersionChange={handleVersionChange}
+    />
   )
 }

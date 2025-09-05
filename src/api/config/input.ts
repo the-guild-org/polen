@@ -1,11 +1,13 @@
+import { ExamplesConfig } from '#api/examples/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Vite } from '#dep/vite/index'
 import { spreadShallow } from '#lib/kit-temp'
 import { S } from '#lib/kit-temp/effect'
 import type { WritableDeep } from 'type-fest'
+import { HomeConfig } from './home.js'
 
 // ============================================================================
-// Schema - Build
+// Build
 // ============================================================================
 
 export const BuildArchitecture = S.Enums(
@@ -18,10 +20,10 @@ export const BuildArchitecture = S.Enums(
 export type BuildArchitecture = S.Schema.Type<typeof BuildArchitecture>
 
 // ============================================================================
-// Schema - Template Variables
+// Template Variables
 // ============================================================================
 
-const TemplateVariablesSchema = S.Struct({
+const TemplateVariables = S.Struct({
   /**
    * Title of the app.
    *
@@ -46,13 +48,13 @@ const TemplateVariablesSchema = S.Struct({
   identifier: 'TemplateVariables',
   description: 'Template variables for customizing the developer portal.',
 })
-export type TemplateVariables = S.Schema.Type<typeof TemplateVariablesSchema>
+export type TemplateVariables = S.Schema.Type<typeof TemplateVariables>
 
 // ============================================================================
-// Schema - Build Config
+// Build Config
 // ============================================================================
 
-const BuildConfigSchema = S.Struct({
+const BuildConfig = S.Struct({
   /**
    * The build architecture for your developer portal.
    *
@@ -91,10 +93,10 @@ const BuildConfigSchema = S.Struct({
 })
 
 // ============================================================================
-// Schema - Server Config
+// Server Config
 // ============================================================================
 
-const ServerConfigSchema = S.Struct({
+const ServerConfig = S.Struct({
   /**
    * Port for the server to listen on.
    *
@@ -124,10 +126,10 @@ const ServerConfigSchema = S.Struct({
 })
 
 // ============================================================================
-// Schema - Warnings Config
+// Warnings Config
 // ============================================================================
 
-const WarningsConfigSchema = S.Struct({
+const WarningsConfig = S.Struct({
   /**
    * Warning shown when GraphQL code blocks have the `interactive` flag
    * but no schema is configured.
@@ -163,14 +165,50 @@ warnings: {
 })
 
 // ============================================================================
-// Schema - Advanced Config
+// Branding Config
 // ============================================================================
 
-const AdvancedPathsSchema = S.Struct({
+const BrandingConfig = S.Struct({
+  /**
+   * Specifies which theme mode the single logo.* file is designed for.
+   *
+   * This setting only applies when you provide a single logo file (e.g., `logo.svg`).
+   * It tells Polen whether your logo was designed for light or dark backgrounds,
+   * so it can automatically invert the logo colors when needed.
+   *
+   * When you provide theme-specific logos (`logo-light.svg` and `logo-dark.svg`),
+   * this setting is ignored as each logo is used directly for its respective theme.
+   *
+   * @default 'light'
+   *
+   * @example
+   * ```ts
+   * // Default: Your logo.svg has dark graphics for light backgrounds
+   * branding: {
+   *   // logoDesignedFor: 'light' // This is the default
+   * }
+   *
+   * // Your logo.svg has light/white graphics for dark backgrounds
+   * branding: {
+   *   logoDesignedFor: 'dark'
+   * }
+   * ```
+   */
+  logoDesignedFor: S.optional(S.Literal('light', 'dark')),
+}).annotations({
+  identifier: 'BrandingConfig',
+  description: 'Branding configuration for customizing visual identity elements.',
+})
+
+// ============================================================================
+// Advanced Config
+// ============================================================================
+
+const AdvancedPaths = S.Struct({
   devAssets: S.optional(S.String),
 })
 
-const AdvancedConfigSchema = S.Struct({
+const AdvancedConfig = S.Struct({
   /**
    * Enable a special module explorer for the source code that Polen assembles for your app.
    *
@@ -224,14 +262,14 @@ const AdvancedConfigSchema = S.Struct({
       encode: (value) => value,
     },
   )),
-  paths: S.optional(AdvancedPathsSchema),
+  paths: S.optional(AdvancedPaths),
 }).annotations({
   identifier: 'AdvancedConfig',
   description: 'Advanced configuration options. These settings are for advanced use cases and debugging.',
 })
 
 // ============================================================================
-// Schema - Main Config Input
+// ConfigInput
 // ============================================================================
 
 /**
@@ -239,28 +277,58 @@ const AdvancedConfigSchema = S.Struct({
  *
  * All options are optional. Polen provides sensible defaults for a great developer experience out of the box.
  */
-export const ConfigInputSchema = S.Struct({
+export const ConfigInput = S.Struct({
+  /**
+   * Name of your API/project.
+   *
+   * This is used as the default for:
+   * - Hero section title (unless overridden in home.hero.title)
+   * - Navigation bar title (unless overridden in templateVariables.title)
+   * - Page title suffix
+   *
+   * @example
+   * ```ts
+   * name: 'Pokemon API'
+   * ```
+   */
+  name: S.optional(S.String),
+  /**
+   * Description of your API/project.
+   *
+   * This is used as the default for:
+   * - Hero section description (unless overridden in home.hero.description)
+   * - Meta description tags for SEO
+   *
+   * @example
+   * ```ts
+   * description: 'Catch, train, and battle with Pokemon through our comprehensive GraphQL API'
+   * ```
+   */
+  description: S.optional(S.String),
   schema: S.optional(ConfigSchema),
-  templateVariables: S.optional(TemplateVariablesSchema),
-  build: S.optional(BuildConfigSchema),
-  server: S.optional(ServerConfigSchema),
-  warnings: S.optional(WarningsConfigSchema),
-  advanced: S.optional(AdvancedConfigSchema),
+  examples: S.optional(ExamplesConfig),
+  templateVariables: S.optional(TemplateVariables),
+  home: S.optional(HomeConfig),
+  branding: S.optional(BrandingConfig),
+  build: S.optional(BuildConfig),
+  server: S.optional(ServerConfig),
+  warnings: S.optional(WarningsConfig),
+  advanced: S.optional(AdvancedConfig),
 }).annotations({
   identifier: 'ConfigInput',
   title: 'Polen Configuration',
   description: 'Configuration for your Polen developer portal. All options are optional with sensible defaults.',
 })
 
-export type ConfigInput = S.Schema.Type<typeof ConfigInputSchema>
+export type ConfigInput = S.Schema.Type<typeof ConfigInput>
 
 // ============================================================================
 // Codecs
 // ============================================================================
 
-export const decodeConfigInput = S.decodeSync(ConfigInputSchema)
-export const validateConfigInput = S.validateSync(ConfigInputSchema)
-export const validateConfigInputEffect = S.validate(ConfigInputSchema)
+export const decodeConfigInput = S.decodeSync(ConfigInput)
+export const validateConfigInput = S.validateSync(ConfigInput)
+export const validateConfigInputEffect = S.validate(ConfigInput)
 
 // -- merge
 //
@@ -290,6 +358,21 @@ export const mergeInputs = (
   // Merge schema if both have it
   if (base_as_writable.schema ?? overrides_as_writable.schema) {
     merged.schema = overrides_as_writable.schema ?? base_as_writable.schema
+  }
+
+  // Merge examples config
+  if (base_as_writable.examples ?? overrides_as_writable.examples) {
+    merged.examples = spreadShallow(base_as_writable.examples, overrides_as_writable.examples)
+  }
+
+  // Merge home config
+  if (base_as_writable.home ?? overrides_as_writable.home) {
+    merged.home = spreadShallow(base_as_writable.home, overrides_as_writable.home)
+  }
+
+  // Merge branding config
+  if (base_as_writable.branding ?? overrides_as_writable.branding) {
+    merged.branding = spreadShallow(base_as_writable.branding, overrides_as_writable.branding)
   }
 
   // Merge build config
@@ -337,4 +420,4 @@ export const mergeInputs = (
   return merged
 }
 
-export const defineConfig = ConfigInputSchema.make
+export const defineConfig = ConfigInput.make

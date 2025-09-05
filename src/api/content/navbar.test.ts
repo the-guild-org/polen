@@ -25,13 +25,13 @@ describe('createNavbar', () => {
   it('excludes hidden pages', () => {
     const pages = [createPage(['visible'], 'index', false), createPage(['hidden'], 'index', true)]
     const result = createNavbar(pages)
-    expect(result).toEqual([{ pathExp: '/visible', title: 'Visible', position: 'left' }])
+    expect(result).toEqual([{ pathExp: '/visible', title: 'Visible', position: 'right' }])
   })
 
   it('includes directories with index pages', () => {
     const pages = [createPage(['guide'], 'index'), createPage(['guide', 'intro'], 'intro')]
     const result = createNavbar(pages)
-    expect(result).toEqual([{ pathExp: '/guide', title: 'Guide', position: 'left' }])
+    expect(result).toEqual([{ pathExp: '/guide', title: 'Guide', position: 'right' }])
   })
 
   it('excludes directories without index pages', () => {
@@ -43,7 +43,7 @@ describe('createNavbar', () => {
   it('includes single top-level pages', () => {
     const pages = [createPage(['about'], 'about')]
     const result = createNavbar(pages)
-    expect(result).toEqual([{ pathExp: '/about', title: 'About', position: 'left' }])
+    expect(result).toEqual([{ pathExp: '/about', title: 'About', position: 'right' }])
   })
 
   it('sorts results alphabetically', () => {

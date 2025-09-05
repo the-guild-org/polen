@@ -1,0 +1,60 @@
+---
+hidden: true
+---
+
+# Interactive GraphQL Examples
+
+Welcome to the interactive GraphQL examples! These pages demonstrate Polen's interactive code blocks with hover tooltips, click navigation, and inline error hints.
+
+## Schema Versions
+
+This Pokemon API has evolved through 3 major versions:
+
+- **v1.0.0** - Basic Pokemon data with simple types and stats
+- **v2.0.0** - Added trainers, battles, evolution, and mutations
+- **v3.0.0** - Full-featured with subscriptions, pagination, and advanced battle mechanics
+
+Use the version picker in the top navigation to explore different versions of the schema.
+
+## Explore by Domain
+
+Dive into different aspects of the Pokemon universe:
+
+- **[Pokemon Basics](/examples/pokemon-basics)** - Query individual Pokemon, their types, and abilities
+- **[Trainer Journeys](/examples/trainer-journeys)** - Explore trainer profiles, badges, and team compositions
+- **[Battle Mechanics](/examples/battle-mechanics)** - Understand type effectiveness, moves, and battle strategies
+- **[Evolution Chains](/examples/evolution-chains)** - Discover how Pokemon evolve and their requirements
+- **[Advanced Queries](/examples/advanced-queries)** - Learn about fragments, variables, and complex selections
+
+## Features Demonstrated
+
+### 🎯 Interactive Elements
+
+- **Hover** over any field, type, or argument to see detailed information
+- **Click** to pin tooltips and explore at your own pace
+- **Navigate** directly to schema documentation with clickable links
+
+### 🚨 Error Handling
+
+```graphql interactive
+query InvalidExample {
+  pokemon(id: "001") {
+    name
+    types
+    level         # ← This field doesn't exist!
+    abilities {
+      name
+      power       # ← Abilities don't have power!
+    }
+  }
+}
+```
+
+### 🔍 Syntax Highlighting
+
+All GraphQL syntax is properly highlighted including:
+
+- Keywords (`query`, `fragment`, `on`)
+- Types and fields with different colors
+- Arguments and variables
+- Comments and descriptions
