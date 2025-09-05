@@ -1,22 +1,33 @@
 import type { NavbarProps } from '#api/hooks/types'
+import { Swiss } from '#lib/swiss'
 import { Flex } from '@radix-ui/themes'
+import { Array } from 'effect'
 import type React from 'react'
 
 export const DefaultNavbar: React.FC<NavbarProps> = ({ items, Item, Logo, ThemeToggle }) => {
+  const [leftItems, rightItems] = Array.partition(items, item => item.position === 'right')
+
   return (
     <>
-      <Logo />
-      <Flex direction='row' gap='4' style={{ flex: 1 }}>
-        {items
-          .filter(item => item.position !== 'right')
-          .map((item, index) => <Item key={index} item={item} index={index} />)}
-      </Flex>
-      <Flex direction='row' gap='4'>
-        {items
-          .filter(item => item.position === 'right')
-          .map((item, index) => <Item key={index} item={item} index={index} />)}
-      </Flex>
-      <ThemeToggle />
+      {/* Logo */}
+      <Swiss.Item cols={2}>
+        <Logo />
+      </Swiss.Item>
+
+      {/* Center navigation */}
+      <Swiss.Item cols={4}>
+        <Flex direction='row' gap='4' justify='center' align='center'>
+          {leftItems.map((item, index) => <Item key={index} item={item} index={index} />)}
+        </Flex>
+      </Swiss.Item>
+
+      {/* Right actions */}
+      <Swiss.Item cols={6}>
+        <Flex direction='row' gap='4' justify='end' align='center'>
+          {rightItems.map((item, index) => <Item key={index} item={item} index={index} />)}
+          <ThemeToggle />
+        </Flex>
+      </Swiss.Item>
     </>
   )
 }

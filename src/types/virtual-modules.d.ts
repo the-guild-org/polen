@@ -8,8 +8,13 @@ declare module 'virtual:polen/project/routes.jsx' {
 }
 
 declare module 'virtual:polen/project/assets/logo.svg' {
-  const src: string
-  export default src
+  const logo: {
+    light: string
+    dark: string
+    mode: 'single' | 'dual'
+    designedFor: 'light' | 'dark'
+  }
+  export default logo
 }
 
 declare module 'virtual:polen/project/assets/hero' {

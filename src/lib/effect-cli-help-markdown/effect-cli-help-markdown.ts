@@ -1,4 +1,4 @@
-import type { Command, CommandDescriptor, Options, Args, Primitive, HelpDoc } from '@effect/cli'
+import type { Args, Command, CommandDescriptor, HelpDoc, Options, Primitive } from '@effect/cli'
 
 // ============================================================================
 // Types
@@ -285,7 +285,7 @@ const extractCommandInfo = <Name extends string, R, E, A>(
   if (descriptor) {
     // For subcommands within a Map structure, the actual command is nested
     const actualCommand = getActualCommand(descriptor)
-    
+
     // Extract name from descriptor
     if (actualCommand.name) {
       info.name = actualCommand.name
@@ -317,7 +317,9 @@ const extractCommandInfo = <Name extends string, R, E, A>(
 /**
  * Get the actual command descriptor from various wrapper structures
  */
-const getActualCommand = (descriptor: StandardDescriptor | SubcommandsDescriptor | MapDescriptor): StandardDescriptor => {
+const getActualCommand = (
+  descriptor: StandardDescriptor | SubcommandsDescriptor | MapDescriptor,
+): StandardDescriptor => {
   if (descriptor._tag === 'Map' && 'command' in descriptor) {
     return descriptor.command
   }
@@ -587,15 +589,18 @@ export const cliToMarkdown = <Name extends string, R, E, A>(
         // We need to wrap it to match what commandToMarkdown expects
         // Create a wrapper object that has the descriptor property
         const wrappedCommand = {
-          descriptor: subcommand.command || subcommand
+          descriptor: subcommand.command || subcommand,
         }
-        
+
         // Generate markdown for each subcommand
-        const markdown = commandToMarkdown(wrappedCommand as unknown as Command.Command<string, unknown, unknown, unknown>, {
-          ...options,
-          includeCommandName: true,
-          baseHeadingLevel: options.baseHeadingLevel || 3,
-        })
+        const markdown = commandToMarkdown(
+          wrappedCommand as unknown as Command.Command<string, unknown, unknown, unknown>,
+          {
+            ...options,
+            includeCommandName: true,
+            baseHeadingLevel: options.baseHeadingLevel || 3,
+          },
+        )
 
         if (markdown) {
           sections.push(markdown)
@@ -646,7 +651,7 @@ const extractGlobalOptions = <Name extends string, R, E, A>(
   // Based on debugging, global options are at descriptor.parent.command.options
   // for a Subcommands descriptor
   let globalOptions: OptionsStructure | undefined = undefined
-  
+
   if (descriptor._tag === 'Subcommands' && 'parent' in descriptor) {
     globalOptions = descriptor.parent.command.options
   } else if ('options' in descriptor) {

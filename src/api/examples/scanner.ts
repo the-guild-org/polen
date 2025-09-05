@@ -1,10 +1,11 @@
 import { Catalog as SchemaCatalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { EffectGlob } from '#lib/effect-glob/$'
+import { VersionSelection } from '#lib/version-selection/$'
 import { Version } from '#lib/version/$'
 import { FileSystem } from '@effect/platform'
 import { Str } from '@wollybeard/kit'
-import { Effect, HashMap, Match } from 'effect'
+import { Effect, HashMap, HashSet, Match } from 'effect'
 import * as Path from 'node:path'
 import type { Diagnostic } from './diagnostic/diagnostic.js'
 import {
@@ -63,7 +64,7 @@ const parseExampleFilename = (filename: string): { name: string; version: string
     }
     const decoded = Version.decodeSync(versionStr)
     // Return canonical version string
-    return { name, version: Version.toString(decoded) }
+    return { name, version: Version.encodeSync(decoded) }
   }
 
   // No version found - this is an unversioned example
@@ -92,7 +93,7 @@ const lintFileLayout = (
   // Extract schema versions from catalog if provided
   const schemaVersions: string[] = schemaCatalog
     ? SchemaCatalog.fold(
-      (versioned) => versioned.entries.map(entry => Version.toString(entry.version)),
+      (versioned) => versioned.entries.map(entry => Version.encodeSync(entry.version)),
       (unversioned) => unversioned.schema.revisions?.map(r => r.date) ?? [],
     )(schemaCatalog)
     : []
@@ -102,62 +103,38 @@ const lintFileLayout = (
   Match.value(example.document).pipe(
     Match.tagsExhaustive({
       DocumentVersioned: (doc) => {
-        // Fully versioned - must have all schema versions
-        const versionKeys = Array.from(HashMap.keys(doc.versionDocuments)).map(Version.toString)
-        const missingVersions = schemaVersions.filter(sv => !versionKeys.includes(sv))
+        // Get all versions covered by this document
+        const coveredVersions = Document.Versioned.getAllVersions(doc)
+        const coveredVersionStrings = coveredVersions.map(Version.encodeSync)
+        const missingVersions = schemaVersions.filter(sv => !coveredVersionStrings.includes(sv))
 
         if (missingVersions.length > 0) {
           diagnostics.push(makeDiagnosticMissingVersions({
-            message: `Fully versioned example must provide documents for all schema versions`,
+            message: `Versioned example must provide documents for all schema versions`,
             example: { name: example.name, path: example.path },
-            providedVersions: versionKeys,
+            providedVersions: coveredVersionStrings,
             missingVersions,
           }))
         }
 
-        // Check for duplicate content between versions
-        const versionEntries = Array.from(HashMap.entries(doc.versionDocuments))
+        // Check for duplicate content between selections
+        const entries = Array.from(HashMap.entries(doc.versionDocuments))
         const duplicates: Array<{ version1: string; version2: string }> = []
-        for (let i = 0; i < versionEntries.length; i++) {
-          for (let j = i + 1; j < versionEntries.length; j++) {
-            const [v1, content1] = versionEntries[i]!
-            const [v2, content2] = versionEntries[j]!
+        for (let i = 0; i < entries.length; i++) {
+          for (let j = i + 1; j < entries.length; j++) {
+            const [sel1, content1] = entries[i]!
+            const [sel2, content2] = entries[j]!
             if (content1 === content2) {
-              duplicates.push({ version1: Version.toString(v1), version2: Version.toString(v2) })
+              duplicates.push({
+                version1: VersionSelection.toLabel(sel1),
+                version2: VersionSelection.toLabel(sel2),
+              })
             }
           }
         }
         if (duplicates.length > 0) {
           diagnostics.push(makeDiagnosticDuplicateContent({
-            message: `Multiple versions have identical content, consider using a partially versioned example`,
-            example: { name: example.name, path: example.path },
-            duplicates,
-          }))
-        }
-      },
-      DocumentPartiallyVersioned: (doc) => {
-        // Partially versioned - check for unused default
-        const versionKeys = Array.from(HashMap.keys(doc.versionDocuments)).map(Version.toString)
-        const allVersionsCovered = schemaVersions.every(sv => versionKeys.includes(sv))
-
-        if (allVersionsCovered) {
-          diagnostics.push(makeDiagnosticUnusedDefault({
-            message: `Default document will never be used because all schema versions have explicit documents`,
-            example: { name: example.name, path: example.path },
-            versions: versionKeys,
-          }))
-        }
-
-        // Check for duplicate content between versions and default
-        const duplicates: Array<{ version1: string; version2: string }> = []
-        for (const [version, content] of HashMap.entries(doc.versionDocuments)) {
-          if (doc.defaultDocument === content) {
-            duplicates.push({ version1: 'default', version2: Version.toString(version) })
-          }
-        }
-        if (duplicates.length > 0) {
-          diagnostics.push(makeDiagnosticDuplicateContent({
-            message: `Version duplicates default content, consider removing the duplicate`,
+            message: `Multiple version selections have identical content, consider combining them`,
             example: { name: example.name, path: example.path },
             duplicates,
           }))
@@ -221,29 +198,53 @@ export const scan = (
           }),
         })
       } else if (hasOnlyDefaultFile) {
-        // Partially versioned example with only default - no explicit versions
+        // Only default file - create versioned document with all schema versions as a set
         const filePath = versions.get('default')!
         const fullPath = Path.join(options.dir, filePath)
-        const document = yield* fs.readFileString(fullPath)
+        const documentContent = yield* fs.readFileString(fullPath)
 
-        example = Example.make({
-          name,
-          path: basePath,
-          document: Document.PartiallyVersioned.make({
-            versionDocuments: HashMap.empty(),
-            defaultDocument: document,
-          }),
-        })
+        // Get all schema versions to map to this default document
+        const schemaVersions: Version.Version[] = options.schemaCatalog
+          ? SchemaCatalog.fold(
+            (versioned) => versioned.entries.map(entry => entry.version),
+            () => [], // Unversioned schemas don't have version-specific examples
+          )(options.schemaCatalog)
+          : []
+
+        if (schemaVersions.length > 0) {
+          // Create a version set for all schema versions
+          const versionSet = HashSet.fromIterable(schemaVersions)
+          let versionDocuments = HashMap.empty<VersionSelection.VersionSelection, string>()
+          versionDocuments = HashMap.set(versionDocuments, versionSet, documentContent)
+
+          example = Example.make({
+            name,
+            path: basePath,
+            document: Document.Versioned.make({
+              versionDocuments,
+            }),
+          })
+        } else {
+          // No schema versions, treat as unversioned
+          example = Example.make({
+            name,
+            path: basePath,
+            document: Document.Unversioned.make({
+              document: documentContent,
+            }),
+          })
+        }
       } else {
         // Versioned example - multiple files or versioned files
-        let versionDocuments = HashMap.empty<Version.Version, string>()
+        let versionDocuments = HashMap.empty<VersionSelection.VersionSelection, string>()
         let defaultDocument: string | undefined
+        const explicitVersions = new Set<string>() // Track which versions have explicit files
         const unknownVersions: string[] = []
 
         // Get available schema versions if catalog is provided
         const schemaVersions: string[] = options.schemaCatalog
           ? SchemaCatalog.fold(
-            (versioned) => versioned.entries.map(entry => Version.toString(entry.version)),
+            (versioned) => versioned.entries.map(entry => Version.encodeSync(entry.version)),
             () => [], // Unversioned schemas don't have version-specific examples
           )(options.schemaCatalog)
           : []
@@ -272,24 +273,29 @@ export const scan = (
 
             const versionObj = Version.decodeSync(version)
             versionDocuments = HashMap.set(versionDocuments, versionObj, fileContent)
+            explicitVersions.add(version)
           }
         }
 
         // Determine which type of example to create
         const hasVersions = HashMap.size(versionDocuments) > 0
 
-        if (hasVersions && defaultDocument) {
-          // Has both versions and default = PartiallyVersioned
-          example = Example.make({
-            name,
-            path: basePath,
-            document: Document.PartiallyVersioned.make({
-              versionDocuments,
-              defaultDocument,
-            }),
-          })
-        } else if (hasVersions && !defaultDocument) {
-          // Has only versions = Versioned (must cover all schema versions)
+        if (defaultDocument) {
+          // If we have a default, determine which versions it applies to
+          const defaultVersions = schemaVersions.filter(v => !explicitVersions.has(v))
+
+          if (defaultVersions.length > 0) {
+            // Create a version set for the default document
+            const defaultVersionSet = defaultVersions.length === 1
+              ? Version.decodeSync(defaultVersions[0]!) // Single version
+              : HashSet.fromIterable(defaultVersions.map(Version.decodeSync)) // Version set
+
+            versionDocuments = HashMap.set(versionDocuments, defaultVersionSet, defaultDocument)
+          }
+        }
+
+        if (HashMap.size(versionDocuments) > 0) {
+          // Create versioned document
           example = Example.make({
             name,
             path: basePath,
@@ -297,21 +303,11 @@ export const scan = (
               versionDocuments,
             }),
           })
-        } else if (!hasVersions && defaultDocument) {
-          // Has only default = PartiallyVersioned
-          example = Example.make({
-            name,
-            path: basePath,
-            document: Document.PartiallyVersioned.make({
-              versionDocuments: HashMap.empty(),
-              defaultDocument,
-            }),
-          })
         } else if (unknownVersions.length > 0) {
           // All versions were unknown, skip this example entirely
           continue
         } else {
-          // No versions and no default - shouldn't happen
+          // No versions at all - shouldn't happen
           continue
         }
       }

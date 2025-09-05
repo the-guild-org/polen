@@ -36,6 +36,7 @@ Polen offers multiple ways to add a hero image to your home page:
 Polen looks for a `hero.<format>` file in `public/` where `<format>` is one of `svg`, `png`, `jpg`, `jpeg`, or `webp`.
 
 **Dimensions:**
+
 - Recommended: **1200x400px** (3:1 aspect ratio)
 - The image will scale responsively on all screen sizes
 
@@ -62,6 +63,7 @@ px polen hero-image --variations 3
 ```
 
 The CLI will:
+
 1. Analyze your GraphQL schema
 2. Detect your API domain (e-commerce, social, analytics, etc.)
 3. Generate an appropriate image
@@ -159,6 +161,7 @@ Choose from various art styles:
 ##### Examples
 
 **E-commerce API:**
+
 ```ts
 // Schema with Product, Cart, Order types
 // Generates marketplace-themed imagery
@@ -171,6 +174,7 @@ Choose from various art styles:
 ```
 
 **Analytics Dashboard:**
+
 ```ts
 // Schema with Metric, Report, Dashboard types
 // Generates data visualization imagery
@@ -183,6 +187,7 @@ Choose from various art styles:
 ```
 
 **Custom Creative:**
+
 ```ts
 {
   ai: {
@@ -201,12 +206,14 @@ Choose from various art styles:
 ##### Troubleshooting
 
 **Image Not Generating:**
+
 1. Check that `ai.enabled` is set to `true`
 2. Verify your internet connection (required for Pollinations API)
 3. Check browser console for error messages
 
 **Custom Prompt Not Working:**
 Ensure your prompt is descriptive and includes:
+
 - Visual elements (not just concepts)
 - Style descriptors
 - "no text" to avoid text in images

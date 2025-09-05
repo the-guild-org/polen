@@ -1,6 +1,6 @@
 import { DirectedFilter } from '#lib/directed-filter/$'
 import { routeIndex } from '#lib/react-router-effect/react-router-effect'
-import { Box } from '@radix-ui/themes'
+import { Swiss } from '#lib/swiss/$'
 import { redirect } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
 import { examplesCatalog } from 'virtual:polen/project/examples'
@@ -23,7 +23,7 @@ const Component = () => {
   )
 
   return (
-    <Box>
+    <>
       {templateConfig.home.hero.enabled && (
         <Hero
           {...Object.fromEntries(
@@ -31,20 +31,22 @@ const Component = () => {
           )}
         />
       )}
-      {templateConfig.home.examples.enabled && filteredExamples.length > 0 && (
-        <ExamplesSection
-          examples={filteredExamples}
-          schemaCatalog={schemasCatalog ?? undefined}
-          {...Object.fromEntries(
-            Object.entries({
-              title: templateConfig.home.examples.title,
-              description: templateConfig.home.examples.description,
-              maxExamples: templateConfig.home.examples.maxExamples,
-            }).filter(([_, v]) => v !== undefined),
-          )}
-        />
-      )}
-    </Box>
+      <Swiss.Body>
+        {templateConfig.home.examples.enabled && filteredExamples.length > 0 && (
+          <ExamplesSection
+            examples={filteredExamples}
+            schemaCatalog={schemasCatalog ?? undefined}
+            {...Object.fromEntries(
+              Object.entries({
+                title: templateConfig.home.examples.title,
+                description: templateConfig.home.examples.description,
+                maxExamples: templateConfig.home.examples.maxExamples,
+              }).filter(([_, v]) => v !== undefined),
+            )}
+          />
+        )}
+      </Swiss.Body>
+    </>
   )
 }
 

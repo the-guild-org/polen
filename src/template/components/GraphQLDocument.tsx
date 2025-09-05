@@ -6,8 +6,8 @@ import { HashMap, Match, Option } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 import * as React from 'react'
 import { useHighlighted } from '../hooks/use-highlighted.js'
+import { ExampleVersionPicker } from './ExampleVersionPicker.js'
 import { GraphQLInteractive } from './GraphQLInteractive/GraphQLInteractive.js'
-import { SimpleVersionPicker } from './SimpleVersionPicker.js'
 
 interface GraphQLDocumentProps {
   /** The document containing the GraphQL content */
@@ -17,16 +17,16 @@ interface GraphQLDocumentProps {
   schemaCatalog?: Catalog.Catalog | undefined
 
   /** Whether to show version picker for versioned examples */
-  showVersionPicker?: boolean
+  showVersionPicker?: boolean | undefined
 
   /** Callback when version changes */
   onVersionChange?: (version: Version.Version) => void
 
   /** Override the initial/selected version */
-  selectedVersion?: Version.Version
+  selectedVersion?: Version.Version | undefined
 
   /** Optional custom styles */
-  style?: React.CSSProperties
+  style?: React.CSSProperties | undefined
 }
 
 /**
@@ -73,12 +73,12 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
       schema={schema}
       style={style}
       toolbar={() => (
-        showVersionPicker && selectedVersion && (
-          <SimpleVersionPicker
-            versions={availableVersions}
-            currentVersion={selectedVersion}
+        showVersionPicker && (
+          <ExampleVersionPicker
+            document={document}
+            schemaCatalog={schemaCatalog!}
+            selectedVersion={selectedVersion}
             onVersionChange={internalOnVersionChange}
-            label='Version'
           />
         )
       )}
@@ -105,10 +105,7 @@ const resolveVersion = (
   const availableVersions: (Version.Version)[] = Match.value(document).pipe(
     Match.tagsExhaustive({
       DocumentUnversioned: () => [],
-      DocumentVersioned: (doc) => Array.from(HashMap.keys(doc.versionDocuments)),
-      DocumentPartiallyVersioned: (doc) => [
-        ...Array.from(HashMap.keys(doc.versionDocuments)),
-      ],
+      DocumentVersioned: (doc) => Document.Versioned.getAllVersions(doc),
     }),
   )
 
@@ -117,36 +114,21 @@ const resolveVersion = (
     Match.tagsExhaustive({
       DocumentUnversioned: (doc) => doc.document,
 
-      DocumentPartiallyVersioned: (doc) => {
-        // If a specific version is selected and available, use it
-        if (selectedVersion && selectedVersion !== null) {
-          const versionDocument = HashMap.get(doc.versionDocuments, selectedVersion)
-          if (Option.isSome(versionDocument)) {
-            return versionDocument.value
-          }
-        }
-        // Otherwise use the default document (always present in PartiallyVersioned)
-        return doc.defaultDocument
-      },
-
       DocumentVersioned: (doc) => {
-        // Fully versioned, no default fallback
-        if (selectedVersion && selectedVersion !== null) {
-          const versionDoc = HashMap.get(doc.versionDocuments, selectedVersion)
-          if (Option.isSome(versionDoc)) {
-            return versionDoc.value
-          }
-          // Throw if specific version requested but not found
-          throw new Error(`Version ${Version.toString(selectedVersion)} not found in document`)
+        if (!selectedVersion) {
+          // Use first available version if none selected
+          const firstVersion = availableVersions[0]
+          if (!firstVersion) throw new Error('No versions available')
+          const content = Document.Versioned.getDocumentForVersion(doc, firstVersion)
+          if (!content) throw new Error(`No document for version ${Version.encodeSync(firstVersion)}`)
+          return content
         }
 
-        // Return the latest (first) version document if no specific version selected
-        const firstEntry = HashMap.entries(doc.versionDocuments)[Symbol.iterator]().next()
-        if (!firstEntry.done) {
-          return firstEntry.value[1]
+        const content = Document.Versioned.getDocumentForVersion(doc, selectedVersion)
+        if (!content) {
+          throw new Error(`No document for version ${Version.encodeSync(selectedVersion)}`)
         }
-
-        throw new Error('Versioned document has no versions')
+        return content
       },
     }),
   )
@@ -181,7 +163,7 @@ const resolveVersion = (
           return latestSchema
         }
 
-        // For versioned catalog with versioned/partially versioned document
+        // For versioned catalog with versioned document
         const effectiveVersion = selectedVersion && selectedVersion !== null
           ? selectedVersion
           : null
@@ -201,18 +183,12 @@ const resolveVersion = (
         if (!matchingEntry) {
           // Check if document has this version
           if (document._tag === 'DocumentVersioned') {
-            const hasVersion = Option.isSome(HashMap.get(document.versionDocuments, effectiveVersion))
-            if (hasVersion) {
-              throw new Error(`Version ${Version.toString(effectiveVersion)} exists in document but not in catalog`)
-            }
-          } else if (document._tag === 'DocumentPartiallyVersioned') {
-            const hasVersion = Option.isSome(HashMap.get(document.versionDocuments, effectiveVersion))
-            // For partially versioned, it's ok if version doesn't exist (falls back to defaultDocument)
-            if (hasVersion) {
-              throw new Error(`Version ${Version.toString(effectiveVersion)} exists in document but not in catalog`)
+            const hasDocument = Document.Versioned.getDocumentForVersion(document, effectiveVersion)
+            if (hasDocument) {
+              throw new Error(`Version ${Version.encodeSync(effectiveVersion)} exists in document but not in catalog`)
             }
           }
-          throw new Error(`Version ${Version.toString(effectiveVersion)} not found in catalog`)
+          throw new Error(`Version ${Version.encodeSync(effectiveVersion)} not found in catalog`)
         }
 
         return matchingEntry.definition

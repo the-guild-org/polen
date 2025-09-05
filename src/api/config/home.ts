@@ -97,11 +97,11 @@ const HeroSection = S.Struct({
   callToActions: S.optional(HeroCallToActionsConfigSchema),
   /**
    * Layout style for the hero section.
-   * 
+   *
    * - `asymmetric`: Text on left, image on right (best for square/portrait images ~1:1 or 4:3)
    * - `cinematic`: Full-viewport image with text overlay (best for wide/landscape images ~16:9)
    * - `auto`: Automatically choose based on image aspect ratio
-   * 
+   *
    * @default 'asymmetric'
    * @example
    * ```ts
@@ -112,12 +112,12 @@ const HeroSection = S.Struct({
   layout: S.optional(S.Union(
     S.Literal('asymmetric'),
     S.Literal('cinematic'),
-    S.Literal('auto')
+    S.Literal('auto'),
   )),
   /**
    * Custom prompt for AI hero image generation.
    * Shortcut for heroImage.ai.prompt
-   * 
+   *
    * @example
    * ```ts
    * defineConfig({
@@ -493,7 +493,7 @@ export const HomeConfig = S.Struct({
    * Topics that describe your API's domain.
    * Used for AI-generated images and other contextual content.
    * When not provided, topics are inferred from your GraphQL schema.
-   * 
+   *
    * @example ['adventure', 'pokemon', 'wilderness', 'battles']
    * @example ['e-commerce', 'payments', 'inventory']
    */

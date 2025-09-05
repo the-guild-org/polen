@@ -52,7 +52,7 @@ export const Navbar = ({
             // hydration mismatches between SSR (where base path is prepended) and client
             // (where basename is configured). This ensures consistent behavior.
             const referencePath = Api.Schema.Routing.createReferenceBasePath()
-            navbar.push({ pathExp: referencePath, title: `Reference`, position: 'left' })
+            navbar.push({ pathExp: referencePath, title: `Reference`, position: 'right' })
 
             // Check if we have revisions to show changelog
             const catalog = loadedSchemaCatalog.data
@@ -83,7 +83,7 @@ export const Navbar = ({
             ?? (loadedExamplesCatalog.catalog.examples.length > 0)
 
           if (examplesEnabled) {
-            navbar.push({ pathExp: '/examples', title: 'Examples', position: 'left' })
+            navbar.push({ pathExp: '/examples', title: 'Examples', position: 'right' })
           }
 
           // ━━ Scan pages and add to navbar

@@ -26,20 +26,20 @@ export const SimpleVersionPicker: React.FC<Props> = ({
 
   return (
     <Select.Root
-      value={Version.toString(currentVersion)}
+      value={Version.encodeSync(currentVersion)}
       onValueChange={(versionEncoded) => onVersionChange(Version.fromString(versionEncoded))}
     >
       <Select.Trigger style={{ minWidth: '120px' }}>
         {label}
         {label ? ' ' : ''}
-        {Version.toString(currentVersion)}
+        {Version.encodeSync(currentVersion)}
       </Select.Trigger>
       <Select.Content position='popper' sideOffset={5}>
         {versions.map(version => (
-          <Select.Item key={Version.toString(version)} value={Version.toString(version)}>
+          <Select.Item key={Version.encodeSync(version)} value={Version.encodeSync(version)}>
             {label}
             {label ? ' ' : ''}
-            {Version.toString(version)}
+            {Version.encodeSync(version)}
           </Select.Item>
         ))}
       </Select.Content>

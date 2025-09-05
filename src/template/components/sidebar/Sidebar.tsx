@@ -1,11 +1,24 @@
 import type { Content } from '#api/content/$'
+import type { React } from '#dep/react/index'
 import { Box } from '@radix-ui/themes'
 import type { BoxOwnProps, LayoutProps, MarginProps } from '@radix-ui/themes/props'
 import { SidebarContext } from './SidebarContext.js'
 import { Items } from './SidebarItem.js'
 
+// Template layer extension: Allow React elements in title
+interface TemplateItemLink extends Omit<Content.ItemLink, 'title'> {
+  title: string | React.ReactNode
+}
+
+interface TemplateItemSection extends Omit<Content.ItemSection, 'title' | 'links'> {
+  title: string | React.ReactNode
+  links: TemplateItemLink[]
+}
+
+type TemplateItem = TemplateItemLink | TemplateItemSection
+
 interface Props extends LayoutProps, MarginProps, BoxOwnProps {
-  data: Content.Item[]
+  data: TemplateItem[]
   basePath?: string
   style?: React.CSSProperties
   topContent?: React.ReactNode

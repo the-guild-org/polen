@@ -187,7 +187,7 @@ export const buildPrompt = (
 
   // Use topics if provided, otherwise fall back to domain defaults
   const topics = context.topics || DEFAULT_TOPICS_BY_DOMAIN[domain] || DEFAULT_TOPICS_BY_DOMAIN['technology']
-  
+
   // Add topics to the prompt
   if (topics && topics.length > 0) {
     prompt += `, all about ${topics.join(', ')}`

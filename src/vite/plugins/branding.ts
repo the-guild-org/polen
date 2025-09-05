@@ -16,6 +16,17 @@ const generateDefaultLogo = async () => {
 </svg>`
 }
 
+const findLogoPath = async (publicDir: string, filename: string): Promise<string | null> => {
+  const extensions = ['svg', 'png', 'jpg', 'jpeg', 'webp']
+  for (const ext of extensions) {
+    const path = Path.join(publicDir, `${filename}.${ext}`)
+    if (await Fs.exists(path)) {
+      return path
+    }
+  }
+  return null
+}
+
 const findHeroImagePath = async (publicDir: string): Promise<string | null> => {
   const heroImageNames = [
     'hero.svg',
@@ -24,22 +35,25 @@ const findHeroImagePath = async (publicDir: string): Promise<string | null> => {
     'hero.jpeg',
     'hero.webp',
   ]
-  
+
   for (const imageName of heroImageNames) {
     const imagePath = Path.join(publicDir, imageName)
     if (await Fs.exists(imagePath)) {
       return imagePath
     }
   }
-  
+
   return null
 }
 
 export function Branding(config: Api.Config.Config): Plugin {
   const debug = debugPolen.sub(`vite-plugin:branding`)
   debug(`initialized`)
-  
-  // Track hero image path for watch/HMR
+
+  // Track logo paths and hero image path for watch/HMR
+  let logoLightPath: string | null = null
+  let logoDarkPath: string | null = null
+  let logoSinglePath: string | null = null
   let currentHeroImagePath: string | null = null
 
   return {
@@ -47,8 +61,25 @@ export function Branding(config: Api.Config.Config): Plugin {
     enforce: `pre`,
 
     async buildStart() {
+      // Check for logo files and add to watch
+      const publicDir = config.paths.project.absolute.public.root
+
+      // Check for dual mode (logo-light and logo-dark)
+      logoLightPath = await findLogoPath(publicDir, 'logo-light')
+      logoDarkPath = await findLogoPath(publicDir, 'logo-dark')
+
+      // Check for single mode (logo)
+      if (!logoLightPath || !logoDarkPath) {
+        logoSinglePath = await findLogoPath(publicDir, 'logo')
+      }
+
+      // Add logo files to watch
+      if (logoLightPath) this.addWatchFile(logoLightPath)
+      if (logoDarkPath) this.addWatchFile(logoDarkPath)
+      if (logoSinglePath) this.addWatchFile(logoSinglePath)
+      // Also watch the default logo path for compatibility
       this.addWatchFile(config.paths.project.absolute.public.logo)
-      
+
       // Watch for hero image files
       const heroImagePath = await findHeroImagePath(config.paths.project.absolute.public.root)
       if (heroImagePath) {
@@ -58,17 +89,21 @@ export function Branding(config: Api.Config.Config): Plugin {
     },
 
     async handleHotUpdate({ file, server }) {
-      // Handle logo changes
-      const logoResult = await handleWatchedFileChange({
-        watchedFile: config.paths.project.absolute.public.logo,
-        changedFile: file,
-        moduleId: viLogo.resolved,
-        server,
-        debug: debug,
-      })
-      
-      if (logoResult) return logoResult
-      
+      // Handle logo changes - check all possible logo files
+      if (
+        (logoLightPath && file === logoLightPath)
+        || (logoDarkPath && file === logoDarkPath)
+        || (logoSinglePath && file === logoSinglePath)
+        || file === config.paths.project.absolute.public.logo
+      ) {
+        // Invalidate the logo module when any logo file changes
+        const module = server.moduleGraph.getModuleById(viLogo.resolved)
+        if (module) {
+          server.moduleGraph.invalidateModule(module)
+          return []
+        }
+      }
+
       // Handle hero image changes
       if (currentHeroImagePath && file === currentHeroImagePath) {
         return await handleWatchedFileChange({
@@ -92,18 +127,47 @@ export function Branding(config: Api.Config.Config): Plugin {
 
     async load(id) {
       if (id === viLogo.resolved) {
-        const logoExists = await Fs.exists(config.paths.project.absolute.public.logo)
-        if (logoExists) {
-          // Just return the public URL path, let Vite handle the asset
-          return `export default "/logo.svg"`
-        } else {
-          // Only use data URL for the generated default logo
-          const content = await generateDefaultLogo()
-          const dataUrl = `data:image/svg+xml;base64,${Buffer.from(content).toString(`base64`)}`
-          return `export default ${JSON.stringify(dataUrl)}`
+        const publicDir = config.paths.project.absolute.public.root
+
+        // Re-check for logos in case they changed
+        const lightPath = await findLogoPath(publicDir, 'logo-light')
+        const darkPath = await findLogoPath(publicDir, 'logo-dark')
+        const singlePath = await findLogoPath(publicDir, 'logo')
+
+        // Dual mode: both logo-light and logo-dark exist
+        if (lightPath && darkPath) {
+          const lightUrl = `/${Path.basename(lightPath)}`
+          const darkUrl = `/${Path.basename(darkPath)}`
+          return `export default {
+            light: ${JSON.stringify(lightUrl)},
+            dark: ${JSON.stringify(darkUrl)},
+            mode: 'dual',
+            designedFor: ${JSON.stringify(config.branding.logoDesignedFor)}
+          }`
         }
+
+        // Single mode: only logo.* exists
+        if (singlePath) {
+          const url = `/${Path.basename(singlePath)}`
+          return `export default {
+            light: ${JSON.stringify(url)},
+            dark: ${JSON.stringify(url)},
+            mode: 'single',
+            designedFor: ${JSON.stringify(config.branding.logoDesignedFor)}
+          }`
+        }
+
+        // No logo files - use generated default
+        const content = await generateDefaultLogo()
+        const dataUrl = `data:image/svg+xml;base64,${Buffer.from(content).toString(`base64`)}`
+        return `export default {
+          light: ${JSON.stringify(dataUrl)},
+          dark: ${JSON.stringify(dataUrl)},
+          mode: 'single',
+          designedFor: 'light'
+        }`
       }
-      
+
       if (id === viHero.resolved) {
         const heroImagePath = await findHeroImagePath(config.paths.project.absolute.public.root)
         if (heroImagePath) {

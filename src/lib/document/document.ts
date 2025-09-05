@@ -1,5 +1,4 @@
 import { S } from '#lib/kit-temp/effect'
-import { DocumentPartiallyVersioned } from './partially-versioned.js'
 import { DocumentUnversioned } from './unversioned.js'
 import { DocumentVersioned } from './versioned.js'
 
@@ -10,13 +9,11 @@ import { DocumentVersioned } from './versioned.js'
 /**
  * A Document represents versionable content that can be:
  * - Unversioned: A single document with no version support
- * - Versioned: Multiple versions with no default fallback
- * - PartiallyVersioned: Multiple versions with a default fallback
+ * - Versioned: Multiple versions mapped by version selections (single versions or version sets)
  */
 export const Document = S.Union(
   DocumentUnversioned,
   DocumentVersioned,
-  DocumentPartiallyVersioned,
 )
 
 // ============================================================================

@@ -12,14 +12,14 @@ test('no reference or changelog when schema is omitted or disabled', async ({ pa
       // When navigating to a route that doesn't exist, we expect a 404 status
       // Use waitUntil: 'domcontentloaded' to avoid waiting for all resources
       const response = await page.goto(viteDevServer!.url('/reference').href, {
-        waitUntil: 'domcontentloaded'
+        waitUntil: 'domcontentloaded',
       })
       expect(response?.status()).toBe(404)
     }
 
     {
       const response = await page.goto(viteDevServer!.url('/changelog').href, {
-        waitUntil: 'domcontentloaded'
+        waitUntil: 'domcontentloaded',
       })
       expect(response?.status()).toBe(404)
     }

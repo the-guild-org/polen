@@ -1,13 +1,13 @@
 import * as React from 'react'
 import type { GridProps } from './types.js'
-import { generateCSSVars, cx } from './utils.js'
+import { cx, extractLayoutProps, generateCSSVars } from './utils.js'
 
 /**
  * Swiss Grid container component.
- * 
+ *
  * Creates a 12-column grid with semantic zones for content placement.
  * Integrates with Radix UI Themes space scale for consistent spacing.
- * 
+ *
  * @example
  * ```tsx
  * <Grid maxWidth={1440} gutter="var(--space-4)">
@@ -24,34 +24,38 @@ export const Grid = React.forwardRef<HTMLDivElement, GridProps>(
       margins,
       columns = 12,
       debug = false,
-      className,
-      style,
+      className: userClassName,
+      style: userStyle,
       ...props
     },
-    ref
+    ref,
   ) => {
+    // Extract Radix layout props (margin, padding, position, etc.)
+    const { className: layoutClassName, style: layoutStyle, ...restProps } = extractLayoutProps(props)
+
     // Generate CSS variables from props
     const cssVars = React.useMemo(
-      () => generateCSSVars({ 
-        maxWidth,
-        ...(gutter !== undefined && { gutter }),
-        ...(margins !== undefined && { margins }),
-        columns
-      }),
-      [maxWidth, gutter, margins, columns]
+      () =>
+        generateCSSVars({
+          maxWidth,
+          ...(gutter !== undefined && { gutter }),
+          ...(margins !== undefined && { margins }),
+          columns,
+        }),
+      [maxWidth, gutter, margins, columns],
     )
 
     return (
       <div
         ref={ref}
-        className={cx('swiss-grid', debug && 'swiss-grid--debug', className)}
-        style={{ ...cssVars, ...style }}
-        {...props}
+        className={cx('swiss-grid', debug && 'swiss-grid--debug', layoutClassName, userClassName)}
+        style={{ ...cssVars, ...layoutStyle, ...userStyle }}
+        {...restProps}
       >
         {children}
       </div>
     )
-  }
+  },
 )
 
 Grid.displayName = 'Swiss.Grid'

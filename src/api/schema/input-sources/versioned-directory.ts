@@ -247,7 +247,7 @@ export const readOrThrow = (
     // Build a map of versions for parent lookups
     const versionMap = new Map<string, typeof versions[0]>()
     for (const version of versions) {
-      versionMap.set(Version.toString(version.version), version)
+      versionMap.set(Version.encodeSync(version.version), version)
     }
 
     // Create catalog entries for each version
@@ -257,7 +257,7 @@ export const readOrThrow = (
           // Get parent schema for first revision comparison if this is a branched version
           let parentSchemaForComparison: GraphQLSchema | null = null
           if (version.parentVersion && version.branchDate) {
-            const parentVersionStr = Version.toString(version.parentVersion)
+            const parentVersionStr = Version.encodeSync(version.parentVersion)
             const parentVersionData = versionMap.get(parentVersionStr)
             if (parentVersionData) {
               const matchingRevisionIndex = parentVersionData.revisions.findIndex(
@@ -308,7 +308,7 @@ export const readOrThrow = (
           // Find parent schema based on parentVersion and branchDate
           let parentSchema: Schema.Versioned.Versioned | null = null
           if (version.parentVersion) {
-            const parentVersionStr = Version.toString(version.parentVersion)
+            const parentVersionStr = Version.encodeSync(version.parentVersion)
             const parentVersionData = versionMap.get(parentVersionStr)
 
             if (parentVersionData) {

@@ -209,9 +209,9 @@ export const fromCustom = (value: string): Version =>
 // ============================================================================
 
 /**
- * Get the string representation of a version
+ * Synchronously encode a version to its string representation
  */
-export const toString = (version: Version): string => {
+export const encodeSync = (version: Version): string => {
   switch (version._tag) {
     case 'VersionInteger':
       return version.value.toString()

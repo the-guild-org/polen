@@ -57,7 +57,7 @@ export const Field: React.FC<
                 <Badge color='green' variant='soft' size='1' style={{ cursor: 'pointer' }}>
                   Added {Match.value(since.schema).pipe(
                     Match.tagsExhaustive({
-                      SchemaVersioned: (s) => `${Version.toString(s.version)}@${since.revision.date}`,
+                      SchemaVersioned: (s) => `${Version.encodeSync(s.version)}@${since.revision.date}`,
                       SchemaUnversioned: () => since.revision.date,
                     }),
                   )}

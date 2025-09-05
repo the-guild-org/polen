@@ -17,7 +17,7 @@ export const analyzeCatalog = (catalog: Catalog.Catalog, options: AnalyzeOptions
     // Versioned catalog
     (versioned) => {
       for (const entry of versioned.entries) {
-        const versionId = Version.toString(entry.version)
+        const versionId = Version.encodeSync(entry.version)
         // Analyze the schema definition for this version
         // Use the first revision date if available
         const firstRevisionDate = entry.revisions[0]?.date

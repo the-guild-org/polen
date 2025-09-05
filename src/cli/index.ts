@@ -43,7 +43,7 @@ export const polenCli = command
 
 // Create custom colorful summary
 const summary = Span.spans([
-  Span.error('POLEN 🌺'),  // Red colored text
+  Span.error('POLEN 🌺'), // Red colored text
   Span.text(' '),
   Span.weak(`v${manifest.version}`),
   Span.text('\n'),
@@ -73,7 +73,7 @@ const learnMoreContent = HelpDoc.p(
     Span.text('\n'),
     Span.text('Ecosystem    →  '),
     Span.uri('https://graphql.org'),
-  ])
+  ]),
 )
 
 const footer = HelpDoc.blocks([
@@ -83,8 +83,8 @@ const footer = HelpDoc.blocks([
   HelpDoc.p(
     Span.concat(
       Span.weak(`Get help for a command with `),
-      Span.code('polen <command> --help')
-    )
+      Span.code('polen <command> --help'),
+    ),
   ),
   HelpDoc.empty,
   HelpDoc.h2(Span.strong('LEARN MORE')),

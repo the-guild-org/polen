@@ -53,6 +53,8 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
   codeblock,
   schema,
   showWarningIfNoSchema = true,
+  toolbar,
+  style,
 }) => {
   // State to hold the parsed tokens
   const [tokens, setTokens] = ReactHooks.useState<GraphQLToken[] | null>(null)
@@ -234,6 +236,7 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
         backgroundColor: 'var(--gray-2)',
         overflowX: 'auto',
         maxWidth: '100%',
+        ...style,
       }}
     >
       {/* Render each token as a separate span with appropriate styling */}
@@ -253,7 +256,20 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
           })}
         </code>
       </pre>
-      {!schema && showWarningIfNoSchema && (
+      {/* Toolbar (e.g., version picker) */}
+      {toolbar && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            zIndex: 10,
+          }}
+        >
+          {toolbar()}
+        </div>
+      )}
+      {!schema && showWarningIfNoSchema && !toolbar && (
         <div
           style={{
             position: 'absolute',

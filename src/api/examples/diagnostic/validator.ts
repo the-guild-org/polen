@@ -41,55 +41,20 @@ export const validateExamples = (
           Match.value(example.document).pipe(
             Match.tagsExhaustive({
               DocumentVersioned: (doc) => {
-                // Fully versioned - validate each version against its corresponding schema
+                // Validate each version against its corresponding schema
                 for (const entry of versioned.entries) {
-                  const content = HashMap.get(doc.versionDocuments, entry.version)
-                  if (Option.isSome(content)) {
-                    const versionStr = Version.toString(entry.version)
+                  const content = Document.Versioned.getDocumentForVersion(doc, entry.version)
+                  if (content) {
+                    const versionStr = Version.encodeSync(entry.version)
                     validateDocument(
                       example.name,
                       example.path,
                       versionStr,
-                      content.value,
+                      content,
                       entry.definition,
                       diagnostics,
                     )
                   }
-                }
-                return undefined
-              },
-              DocumentPartiallyVersioned: (doc) => {
-                // Validate explicit versions against their corresponding schemas
-                for (const entry of versioned.entries) {
-                  const content = HashMap.get(doc.versionDocuments, entry.version)
-                  if (Option.isSome(content)) {
-                    const versionStr = Version.toString(entry.version)
-                    validateDocument(
-                      example.name,
-                      example.path,
-                      versionStr,
-                      content.value,
-                      entry.definition,
-                      diagnostics,
-                    )
-                  }
-                }
-
-                const uncoveredVersions = Array.filter(schemaVersions, (v) => !HashMap.has(doc.versionDocuments, v))
-
-                for (const uncoveredVersion of uncoveredVersions) {
-                  const entry = versioned.entries.find(
-                    e => Version.equivalence(e.version, uncoveredVersion),
-                  )
-                  if (!entry) throw new Error('Uncovered version not found in catalog entries')
-                  validateDocument(
-                    example.name,
-                    example.path,
-                    'default',
-                    doc.defaultDocument,
-                    entry.definition,
-                    diagnostics,
-                  )
                 }
                 return undefined
               },

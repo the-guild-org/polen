@@ -22,7 +22,7 @@ export type VersionState = S.Schema.Type<typeof VersionState>
  */
 export const State = S.Struct({
   // Using a plain object instead of HashMap for valtio compatibility
-  // Keys are Version.toString() results
+  // Keys are Version.encodeSync() results
   versionMemory: S.Record({
     key: S.String,
     value: VersionState,
@@ -56,7 +56,7 @@ export const store = proxy({
    * Remember the current revision for a version
    */
   rememberRevision(schema: SchemaLib.Versioned.Versioned, revision: Revision.Revision | null) {
-    const versionKey = Version.toString(schema.version)
+    const versionKey = Version.encodeSync(schema.version)
     store.versionMemory = {
       ...store.versionMemory,
       [versionKey]: { currentRevision: revision },
@@ -67,7 +67,7 @@ export const store = proxy({
    * Get the remembered revision for a version
    */
   getRememberedRevision(schema: SchemaLib.Versioned.Versioned): Revision.Revision | null {
-    const versionKey = Version.toString(schema.version)
+    const versionKey = Version.encodeSync(schema.version)
     return store.versionMemory[versionKey]?.currentRevision ?? null
   },
 

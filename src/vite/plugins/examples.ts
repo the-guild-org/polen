@@ -2,6 +2,7 @@ import type { Api } from '#api/$'
 import { Examples as ExamplesModule } from '#api/examples/$'
 import * as Catalog from '#api/examples/schemas/catalog'
 import { generateExampleTypes } from '#api/examples/type-generator'
+import { createTypeUsageIndex } from '#api/examples/type-usage-indexer'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -149,6 +150,24 @@ export const Examples = ({
 
             reportDiagnostics(scanExamplesResult.diagnostics, 'dev')
 
+            // Generate type usage index if schemas are available
+            let catalogWithIndex = scanExamplesResult.catalog
+            const schemaReaderResult = await Effect.runPromise(
+              schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as any,
+            )
+            const schemasCatalog = (schemaReaderResult as any)?.data
+            if (schemasCatalog) {
+              const typeUsageIndex = createTypeUsageIndex(
+                scanExamplesResult.catalog.examples,
+                schemasCatalog,
+              )
+              // The index will be properly encoded by the Catalog schema
+              catalogWithIndex = {
+                ...scanExamplesResult.catalog,
+                typeUsageIndex: typeUsageIndex as any, // Will be encoded by Catalog.encode
+              }
+            }
+
             // Generate the module code with both catalog and component exports
             const s = Str.Builder()
             s`import { Effect } from 'effect'`
@@ -164,7 +183,7 @@ export const Examples = ({
             }
 
             // Encode the catalog to ensure HashMap and other Effect types are properly serialized
-            const encodedCatalog = Catalog.encodeSync(scanExamplesResult.catalog)
+            const encodedCatalog = Catalog.encodeSync(catalogWithIndex)
 
             s``
             s`const catalogData = ${JSON.stringify(encodedCatalog)}`

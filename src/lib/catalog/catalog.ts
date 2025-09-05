@@ -72,7 +72,7 @@ export const getVersionCount = (catalog: Catalog): number =>
  */
 export const getSchemaVersionString = (schema: Schema.Schema): string => {
   const version = Schema.getVersion(schema)
-  return version ? Version.toString(version) : '__UNVERSIONED__'
+  return version ? Version.encodeSync(version) : '__UNVERSIONED__'
 }
 
 /**

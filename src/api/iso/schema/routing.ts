@@ -40,7 +40,7 @@ export const createReferenceVersionPath = (version?: Version.Version): string =>
   if (version === undefined) return ''
   // VERSION_LATEST is not used with the Version type anymore
   // Just use the version string directly
-  return `/${segmentLiterals.version}/${Version.toString(version)}`
+  return `/${segmentLiterals.version}/${Version.encodeSync(version)}`
 }
 
 export const joinSegmentsAndPaths = (
@@ -153,7 +153,7 @@ export const createChangelogUrl = (revisionDate: string, schema: Schema.Schema):
   // Create base changelog path with version if needed
   const version = Schema.getVersion(schema)
   const changelogBase = version
-    ? joinSegmentsAndPaths(segmentLiterals.changelog, segmentLiterals.version, Version.toString(version))
+    ? joinSegmentsAndPaths(segmentLiterals.changelog, segmentLiterals.version, Version.encodeSync(version))
     : `/${segmentLiterals.changelog}`
 
   // Add anchor for the specific date

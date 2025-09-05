@@ -15,6 +15,7 @@ Most Polen commands that operate on projects accept these common options:
 - `--allow-global` - Allow global installation (when running globally installed Polen)
 
 ## Commands
+
 ### `cache`
 
 #### Usage
@@ -55,13 +56,13 @@ polen build [options]
 
 #### Options
 
-| Option | Alias | Type | Required | Default | Description |
-|--------|-------|------|----------|---------|-------------|
-| `--debug` | `-d` | boolean | No | `true` | Enable debug mode |
-| `--architecture` | `-a` | ssg | ssr | No | - | Which kind of application architecture to output. |
-| `--base` | `-b` | string | No | - | Base public path for deployment (e.g., /my-project/) |
-| `--port` | `` | number | No | - | Default port for the SSR application |
-| `--allow-global` | `` | boolean | No | `true` | Allow using global Polen in a project with local Polen. Not recommended as it can cause version conflicts. |
+| Option           | Alias | Type    | Required | Default | Description                                                                                                |
+| ---------------- | ----- | ------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `--debug`        | `-d`  | boolean | No       | `true`  | Enable debug mode                                                                                          |
+| `--architecture` | `-a`  | ssg     | ssr      | No      | -                                                                                                          |
+| `--base`         | `-b`  | string  | No       | -       | Base public path for deployment (e.g., /my-project/)                                                       |
+| `--port`         | ``    | number  | No       | -       | Default port for the SSR application                                                                       |
+| `--allow-global` | ``    | boolean | No       | `true`  | Allow using global Polen in a project with local Polen. Not recommended as it can cause version conflicts. |
 
 ### `create`
 
@@ -82,11 +83,11 @@ polen create [options]
 
 #### Options
 
-| Option | Alias | Type | Required | Default | Description |
-|--------|-------|------|----------|---------|-------------|
-| `--link` | `` | boolean | No | `true` | When installing polen, do so as a link. You must have Polen globally linked on your machine. |
-| `--version` | `` | string | No | - | Version of Polen to use. Defaults to latest release. Ignored if --link is used. |
-| `--example` | `` | hive | No | - | The example to use to scaffold your project. |
+| Option      | Alias | Type    | Required | Default | Description                                                                                  |
+| ----------- | ----- | ------- | -------- | ------- | -------------------------------------------------------------------------------------------- |
+| `--link`    | ``    | boolean | No       | `true`  | When installing polen, do so as a link. You must have Polen globally linked on your machine. |
+| `--version` | ``    | string  | No       | -       | Version of Polen to use. Defaults to latest release. Ignored if --link is used.              |
+| `--example` | ``    | hive    | No       | -       | The example to use to scaffold your project.                                                 |
 
 ### `dev`
 
@@ -104,12 +105,12 @@ polen dev [options]
 
 #### Options
 
-| Option | Alias | Type | Required | Default | Description |
-|--------|-------|------|----------|---------|-------------|
-| `--debug` | `-d` | boolean | No | `true` | Enable debug mode |
-| `--base` | `-b` | string | No | - | Base public path for deployment (e.g., /my-project/) |
-| `--port` | `` | number | No | - | Port to run the development server on |
-| `--allow-global` | `` | boolean | No | `true` | Allow using global Polen in a project with local Polen. Not recommended as it can cause version conflicts. |
+| Option           | Alias | Type    | Required | Default | Description                                                                                                |
+| ---------------- | ----- | ------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `--debug`        | `-d`  | boolean | No       | `true`  | Enable debug mode                                                                                          |
+| `--base`         | `-b`  | string  | No       | -       | Base public path for deployment (e.g., /my-project/)                                                       |
+| `--port`         | ``    | number  | No       | -       | Port to run the development server on                                                                      |
+| `--allow-global` | ``    | boolean | No       | `true`  | Allow using global Polen in a project with local Polen. Not recommended as it can cause version conflicts. |
 
 ### `hero-image`
 
@@ -129,9 +130,9 @@ polen hero-image [options]
 
 #### Options
 
-| Option | Alias | Type | Required | Default | Description |
-|--------|-------|------|----------|---------|-------------|
-| `--overwrite` | `` | boolean | No | `true` | Skip backup and overwrite existing hero image |
+| Option        | Alias | Type    | Required | Default | Description                                   |
+| ------------- | ----- | ------- | -------- | ------- | --------------------------------------------- |
+| `--overwrite` | ``    | boolean | No       | `true`  | Skip backup and overwrite existing hero image |
 
 ### `open`
 
@@ -143,15 +144,14 @@ polen open [options]
 
 #### Options
 
-| Option | Alias | Type | Required | Default | Description |
-|--------|-------|------|----------|---------|-------------|
-| `--introspection-headers` | `-inh` | string | No | - | Include headers in the introspection query request sent when using --introspection-url. Format is JSON Object. |
-| `--introspect` | `-in` | string | No | - | Get the schema by sending a GraphQL introspection query to this URL. |
-| `--sdl` | `-s` | string | No | - | Get the schema from a GraphQL Schema Definition Language file. Can be a path to a local file or an HTTP URL to a remote one. |
-| `--name` | `-n` | github | hive | No | - | Pick from a well known public API. Polen already knows how to fetch the schema for these APIs. |
-| `--cache` | `` | boolean | No | `true` | Enable or disable caching. By default this command caches fetched schemas for re-use. |
-| `--allow-global` | `` | boolean | No | `true` | Allow using global Polen in a project with local Polen. Not recommended as it can cause version conflicts. |
-
+| Option                    | Alias  | Type    | Required | Default | Description                                                                                                                  |
+| ------------------------- | ------ | ------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `--introspection-headers` | `-inh` | string  | No       | -       | Include headers in the introspection query request sent when using --introspection-url. Format is JSON Object.               |
+| `--introspect`            | `-in`  | string  | No       | -       | Get the schema by sending a GraphQL introspection query to this URL.                                                         |
+| `--sdl`                   | `-s`   | string  | No       | -       | Get the schema from a GraphQL Schema Definition Language file. Can be a path to a local file or an HTTP URL to a remote one. |
+| `--name`                  | `-n`   | github  | hive     | No      | -                                                                                                                            |
+| `--cache`                 | ``     | boolean | No       | `true`  | Enable or disable caching. By default this command caches fetched schemas for re-use.                                        |
+| `--allow-global`          | ``     | boolean | No       | `true`  | Allow using global Polen in a project with local Polen. Not recommended as it can cause version conflicts.                   |
 
 ### Global Options
 

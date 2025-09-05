@@ -18,7 +18,7 @@ export const VersionPicker: React.FC<Props> = ({ data, current }) => {
   const currentPath = useReferencePath()
 
   const handleVersionChange = async (version: Version.Version) => {
-    const newVersion = Version.toString(version)
+    const newVersion = Version.encodeSync(version)
     const error = await tryWithToast(async () => {
       // Get the full catalog to find the target schema
       if (!schemasCatalog) {
@@ -33,7 +33,7 @@ export const VersionPicker: React.FC<Props> = ({ data, current }) => {
 
       // Find the schema for the target version
       // Note: newVersion is a string that we need to parse
-      const targetSchema = catalog.entries.find(schema => Version.toString(schema.version) === newVersion)
+      const targetSchema = catalog.entries.find(schema => Version.encodeSync(schema.version) === newVersion)
 
       if (!targetSchema) {
         throw new Error(`Version ${newVersion} not found`)

@@ -1,4 +1,6 @@
-import type { ResponsiveValue, GridSpan, GridColumns } from './types.js'
+import { extractProps } from '@radix-ui/themes/helpers'
+import { layoutPropDefs, marginPropDefs, paddingPropDefs } from '@radix-ui/themes/props'
+import type { GridColumns, GridSpan, ResponsiveValue } from './types.js'
 
 /**
  * Convert a value to pixels if it's a number, otherwise return as-is.
@@ -123,3 +125,20 @@ export const generateDataAttributes = (props: {
 export const cx = (...classes: (string | undefined | false)[]): string => {
   return classes.filter(Boolean).join(' ')
 }
+
+/**
+ * Extract layout props (margin, padding, position, etc.) from component props.
+ * Uses Radix UI Themes' extractProps to generate classNames and styles.
+ */
+export const extractLayoutProps = <T extends Record<string, any>>(props: T) => {
+  // Use Radix's extractProps with layout and margin prop definitions
+  // Note: layoutPropDefs already includes padding, width, and height internally
+  const extracted = extractProps(props, layoutPropDefs, marginPropDefs)
+
+  return extracted
+}
+
+/**
+ * @deprecated Use extractLayoutProps instead
+ */
+export const extractSpacingProps = extractLayoutProps

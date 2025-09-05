@@ -1,4 +1,5 @@
 // Barrel export - all public APIs
-export * from './types.js'
 export { Grid } from './grid.js'
-export { Body, Viewport, Extended, Item } from './items.js'
+export { Body, Extended, Item, Viewport } from './items.js'
+export { SubGrid } from './subgrid.js'
+export * from './types.js'

@@ -2,7 +2,6 @@ import type { NavbarProps } from '#api/hooks/types'
 import type { ReactRouter } from '#dep/react-router/index'
 import { route } from '#lib/react-router-effect/route'
 import { Swiss } from '#lib/swiss'
-import '#lib/swiss/styles.css'
 import type { Stores } from '#template/stores/$'
 import { Box, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
@@ -20,6 +19,7 @@ import { ToastContainer } from '../components/ToastContainer.js'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.js'
 import { swissSharpTheme } from '../theme/swiss-sharp.js'
 import '../theme/swiss-sharp.css'
+import '../../lib/swiss/styles.css'
 import { changelog } from './changelog.js'
 import { examplesRoute } from './examples/_.js'
 import { index } from './index.js'
@@ -39,6 +39,13 @@ export const Component = () => {
 
 const Layout = () => {
   const { appearance } = useTheme()
+  const location = useLocation()
+
+  // Check if we're on home page with cinematic hero
+  const isHomeWithCinematicHero = location.pathname === '/'
+    && templateConfig.home.enabled
+    && templateConfig.home.hero.enabled
+    && templateConfig.home.hero.layout === 'cinematic'
 
   const navbarProps: NavbarProps = {
     items: navbar,
@@ -69,20 +76,49 @@ const Layout = () => {
       appearance={appearance}
       {...swissSharpTheme}
     >
-      <Box
-        width={{ initial: `100%`, sm: `100%`, md: `var(--container-4)` }}
-        maxWidth='100vw'
-        my={{ initial: `0`, sm: `0`, md: `8` }}
-        mx='auto'
-        px={{ initial: `4`, sm: `4`, md: `0` }}
-        py={{ initial: `4`, sm: `4`, md: `0` }}
-        data-page={location.pathname === '/' ? 'home' : undefined}
-        data-hero-layout={isHomeWithCinematicHero ? 'cinematic' : undefined}
+      <Swiss.Grid
+        maxWidth={1440}
+        gutter='var(--space-4)'
+        margins='var(--space-5)'
       >
-        {header}
+        {/* Navbar */}
+        {isHomeWithCinematicHero
+          ? (
+            // Cinematic hero mode: navbar is fixed overlay
+            <Theme asChild appearance='dark'>
+              <Swiss.Grid
+                position='fixed'
+                top={'0'}
+                left={'0'}
+                right={'0'}
+                py={'6'}
+                style={{
+                  zIndex: 100,
+                  background: 'rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                <Swiss.Body subgrid>
+                  <NavbarComponent {...navbarProps} />
+                </Swiss.Body>
+              </Swiss.Grid>
+            </Theme>
+          )
+          : (
+            // Normal mode: navbar in grid flow
+            <Swiss.Body
+              subgrid
+              py={'6'}
+              mb={{ initial: '4', md: '8' }}
+              style={{
+                borderBottom: '1px solid var(--gray-3)',
+              }}
+            >
+              <NavbarComponent {...navbarProps} />
+            </Swiss.Body>
+          )}
         <Outlet />
         <ToastContainer />
-      </Box>
+      </Swiss.Grid>
     </Theme>
   )
 }

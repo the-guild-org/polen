@@ -2,9 +2,9 @@ import { Api } from '#api/$'
 import { AiImageGeneration } from '#lib/ai-image-generation/$'
 import { Catalog } from '#lib/catalog/$'
 import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
+import { Command, Options } from '@effect/cli'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
-import { Command, Options } from '@effect/cli'
 import { Console, Effect, Option } from 'effect'
 import * as Path from 'node:path'
 import { projectParameter } from '../_/parameters.js'
@@ -17,11 +17,11 @@ const backupExistingHeroImage = (dir: string) =>
     const fs = yield* FileSystem.FileSystem
     const publicDir = Path.join(dir, 'public')
     const heroExtensions = ['svg', 'png', 'jpg', 'jpeg', 'webp']
-    
+
     // Find existing hero image
     let existingHeroPath: string | null = null
     let existingExt: string | null = null
-    
+
     for (const ext of heroExtensions) {
       const heroPath = Path.join(publicDir, `hero.${ext}`)
       const exists = yield* fs.exists(heroPath)
@@ -31,12 +31,12 @@ const backupExistingHeroImage = (dir: string) =>
         break
       }
     }
-    
+
     if (!existingHeroPath || !existingExt) {
       // No existing hero image to backup
       return
     }
-    
+
     // Find next available backup number
     let backupNumber = 1
     while (true) {
@@ -56,7 +56,7 @@ const backupExistingHeroImage = (dir: string) =>
 
 export const heroImage = Command.make(
   'hero-image',
-  { 
+  {
     project: projectParameter,
     overwrite: Options.boolean('overwrite').pipe(
       Options.withDescription('Skip backup and overwrite existing hero image'),
@@ -67,23 +67,23 @@ export const heroImage = Command.make(
     Effect.gen(function*() {
       // Get project directory
       const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
-      
+
       // Load config
       const configInput = yield* Api.Config.load({ dir })
       const config = yield* Api.Config.normalizeInput(configInput, dir)
-      
+
       // Check if home hero is configured
       if (!config.home || config.home.enabled === false) {
         yield* Console.log('❌ Home page not enabled in polen.config.ts')
         return
       }
-      
+
       const heroConfig = config.home.hero
       if (!heroConfig || !heroConfig.enabled) {
         yield* Console.log('❌ Hero section not enabled in polen.config.ts')
         return
       }
-      
+
       // Extract AI config and layout from the raw input (since it's not in normalized config)
       const rawHero = (configInput as any)?.home?.hero
       const rawHeroImage = rawHero?.heroImage
@@ -94,7 +94,7 @@ export const heroImage = Command.make(
         yield* Console.log(`📝 Using custom prompt from config`)
       }
       let aiConfig: any = {}
-      
+
       if (rawHeroImage && typeof rawHeroImage === 'object' && rawHeroImage.ai) {
         aiConfig = rawHeroImage.ai
         if (!aiConfig.enabled) {
@@ -127,7 +127,7 @@ export const heroImage = Command.make(
           nologo: true,
         }
       }
-      
+
       // Load and analyze schema if available
       let schema = undefined
       const schemaResult = yield* Api.Schema.loadOrNull(config)
@@ -149,11 +149,11 @@ export const heroImage = Command.make(
           yield* Console.log('⚠️  Schema processing failed, generating generic image')
         }
       }
-      
+
       // Determine dimensions based on layout
       let width = 1200
       let height = 400
-      
+
       if (layout === 'asymmetric') {
         // Square/portrait aspect ratio for side-by-side layout
         width = 800
@@ -170,7 +170,7 @@ export const heroImage = Command.make(
         height = 800
         yield* Console.log(`📐 Layout: auto (using asymmetric aspect ratio)`)
       }
-      
+
       // Generate image - default to 'illustration' style for asymmetric layout
       const defaultStyle = layout === 'asymmetric' ? 'illustration' : 'modern'
       const style = aiConfig.style || defaultStyle
@@ -179,7 +179,7 @@ export const heroImage = Command.make(
         yield* Console.log(`   (Using illustration style for better placement next to text)`)
       }
       yield* Console.log('🤖 Using Pollinations.ai (free, no API key required)')
-      
+
       const service = new AiImageGeneration.AiImageGenerationService()
       const generationConfig = {
         config: {
@@ -196,76 +196,76 @@ export const heroImage = Command.make(
         projectName: config.name,
         layout,
       }
-      
+
       // Get topics from config if available
       const topics = (configInput as any)?.home?.topics
-      
+
       // Build the prompt that will be used
-      const schemaContext = schema 
+      const schemaContext = schema
         ? { ...AiImageGeneration.analyzeSchema(schema), topics }
         : {
-            mainTypes: [],
-            queryNames: [],
-            mutationNames: [],
-            subscriptionNames: [],
-            suggestedTheme: 'modern API',
-            topics
-          }
-      
+          mainTypes: [],
+          queryNames: [],
+          mutationNames: [],
+          subscriptionNames: [],
+          suggestedTheme: 'modern API',
+          topics,
+        }
+
       const finalPrompt = customPrompt || AiImageGeneration.buildPrompt(
         schemaContext,
         style,
         undefined,
-        layout
+        layout,
       )
-      
+
       yield* Console.log(`📝 Prompt: ${finalPrompt.substring(0, 150)}...`)
-      
+
       // Let errors bubble up naturally
       const image = yield* Effect.promise(() => service.generate(generationConfig))
-      
+
       if (!image) {
         yield* Console.log('❌ Failed to generate image')
         return
       }
-      
+
       // Download image
       yield* Console.log('📥 Downloading generated image...')
       yield* Console.log(`   Pollinations URL: ${image.url}`)
-      
+
       // Wait a moment for Pollinations to generate the image on-demand
       yield* Effect.sleep('2 seconds')
-      
+
       const response = yield* Effect.promise(() => fetch(image.url))
-      
+
       if (!response.ok) {
         yield* Console.log(`❌ Failed to download image: ${response.statusText}`)
         return
       }
-      
+
       const buffer = yield* Effect.promise(() => response.arrayBuffer())
-      
+
       // Backup existing hero image unless --overwrite is specified
       if (!overwrite) {
         yield* backupExistingHeroImage(dir)
       }
-      
+
       // Save to public directory
       const fs = yield* FileSystem.FileSystem
       const outputPath = Path.join(dir, 'public', 'hero.png')
       const publicDir = Path.join(dir, 'public')
-      
+
       // Ensure public directory exists
       yield* fs.makeDirectory(publicDir, { recursive: true }).pipe(
         Effect.catchIf(
           error => error._tag === 'SystemError' && error.reason === 'AlreadyExists',
-          () => Effect.succeed(undefined)
-        )
+          () => Effect.succeed(undefined),
+        ),
       )
-      
+
       // Write the image file
       yield* fs.writeFile(outputPath, new Uint8Array(buffer))
-      
+
       yield* Console.log(`✅ Saved to: public/hero.png`)
       yield* Console.log(`\n📝 Polen will automatically use this Pollinations-generated image.`)
       yield* Console.log(`   To regenerate with different settings, run this command again.`)
@@ -276,7 +276,7 @@ export const heroImage = Command.make(
       heroImage: '/custom-hero.png'
     }
   }`)
-    }).pipe(Effect.provide(NodeFileSystem.layer))
+    }).pipe(Effect.provide(NodeFileSystem.layer)),
 ).pipe(
-  Command.withDescription('Generate AI hero image using Pollinations.ai')
+  Command.withDescription('Generate AI hero image using Pollinations.ai'),
 )

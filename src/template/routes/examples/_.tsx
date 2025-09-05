@@ -1,6 +1,7 @@
 import { Catalog } from '#api/examples/schemas/catalog'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
+import { Swiss } from '#lib/swiss/$'
 import { Box, Flex, Heading } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
 import { Outlet } from 'react-router'
@@ -47,28 +48,29 @@ export const LayoutComponent = () => {
   })) ?? []
 
   return (
-    <Flex gap='0' style={{ minHeight: '100vh' }}>
+    <Swiss.Body subgrid>
       {/* Sidebar */}
-      <Box
+      <Swiss.Item
+        cols={4}
         style={{
-          width: '250px',
-          borderRight: '1px solid var(--gray-a5)',
-          padding: '1rem',
+          // width: '250px',
+          // borderRight: '1px solid var(--gray-a5)',
+          // padding: '1rem',
           overflowY: 'auto',
           position: 'sticky',
           top: 0,
-          height: '100vh',
+          // height: '100vh',
         }}
       >
         <Heading size='4' mb='4' style={{ paddingLeft: '1rem' }}>Examples</Heading>
         <Sidebar data={sidebarData as any} basePath='/examples' />
-      </Box>
+      </Swiss.Item>
 
       {/* Main content */}
-      <Box style={{ flex: 1, padding: '2rem', maxWidth: '900px' }}>
+      <Swiss.Item cols={8}>
         <Outlet />
-      </Box>
-    </Flex>
+      </Swiss.Item>
+    </Swiss.Body>
   )
 }
 

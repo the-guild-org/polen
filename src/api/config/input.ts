@@ -165,6 +165,42 @@ warnings: {
 })
 
 // ============================================================================
+// Branding Config
+// ============================================================================
+
+const BrandingConfig = S.Struct({
+  /**
+   * Specifies which theme mode the single logo.* file is designed for.
+   *
+   * This setting only applies when you provide a single logo file (e.g., `logo.svg`).
+   * It tells Polen whether your logo was designed for light or dark backgrounds,
+   * so it can automatically invert the logo colors when needed.
+   *
+   * When you provide theme-specific logos (`logo-light.svg` and `logo-dark.svg`),
+   * this setting is ignored as each logo is used directly for its respective theme.
+   *
+   * @default 'light'
+   *
+   * @example
+   * ```ts
+   * // Default: Your logo.svg has dark graphics for light backgrounds
+   * branding: {
+   *   // logoDesignedFor: 'light' // This is the default
+   * }
+   *
+   * // Your logo.svg has light/white graphics for dark backgrounds
+   * branding: {
+   *   logoDesignedFor: 'dark'
+   * }
+   * ```
+   */
+  logoDesignedFor: S.optional(S.Literal('light', 'dark')),
+}).annotations({
+  identifier: 'BrandingConfig',
+  description: 'Branding configuration for customizing visual identity elements.',
+})
+
+// ============================================================================
 // Advanced Config
 // ============================================================================
 
@@ -273,6 +309,7 @@ export const ConfigInput = S.Struct({
   examples: S.optional(ExamplesConfig),
   templateVariables: S.optional(TemplateVariables),
   home: S.optional(HomeConfig),
+  branding: S.optional(BrandingConfig),
   build: S.optional(BuildConfig),
   server: S.optional(ServerConfig),
   warnings: S.optional(WarningsConfig),
@@ -331,6 +368,11 @@ export const mergeInputs = (
   // Merge home config
   if (base_as_writable.home ?? overrides_as_writable.home) {
     merged.home = spreadShallow(base_as_writable.home, overrides_as_writable.home)
+  }
+
+  // Merge branding config
+  if (base_as_writable.branding ?? overrides_as_writable.branding) {
+    merged.branding = spreadShallow(base_as_writable.branding, overrides_as_writable.branding)
   }
 
   // Merge build config

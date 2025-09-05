@@ -22,8 +22,8 @@ export const SwissHeading: React.FC<React.ComponentProps<typeof Heading>> = ({
       weight='bold'
       style={{
         fontSize: 'clamp(2.5rem, 7vw, 5.5rem)',
-        lineHeight: 0.9,
-        letterSpacing: '-0.04em',
+        lineHeight: 1.1,
+        letterSpacing: '-0.02em',
         fontWeight: 900,
         ...props.style,
       }}
@@ -33,7 +33,7 @@ export const SwissHeading: React.FC<React.ComponentProps<typeof Heading>> = ({
           key={i}
           style={{
             display: 'block',
-            marginBottom: i < words.length - 1 ? '-0.05em' : 0,
+            marginBottom: i < words.length - 1 ? '0.05em' : 0,
           }}
         >
           {word}

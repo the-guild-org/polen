@@ -331,6 +331,13 @@ export const Config = S.Struct({
   home: HomeConfig,
 
   /**
+   * Branding configuration with resolved defaults.
+   */
+  branding: S.Struct({
+    logoDesignedFor: S.Literal('light', 'dark'),
+  }),
+
+  /**
    * SSR configuration.
    */
   ssr: S.Struct({
@@ -507,6 +514,9 @@ const getConfigInputDefaults = (): Config => ({
     changelog: false,
     resources: false,
   },
+  branding: {
+    logoDesignedFor: 'light' as const,
+  },
   ssr: {
     enabled: true,
   },
@@ -653,6 +663,11 @@ export const normalizeInput = (
       if (examplesInput.diagnostics !== undefined) {
         config.examples.diagnostics = examplesInput.diagnostics
       }
+    }
+
+    // Process branding configuration
+    if (configInput_as_writeable?.branding?.logoDesignedFor !== undefined) {
+      config.branding.logoDesignedFor = configInput_as_writeable.branding.logoDesignedFor
     }
 
     // Process home configuration
