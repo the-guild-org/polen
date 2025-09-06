@@ -115,4 +115,3 @@ export const getLatest = (versionCoverage: VersionCoverage): Version.Version => 
   // Reduce the array to find the maximum
   return versions.reduce((latest, current) => Version.max(latest, current))
 }
-
