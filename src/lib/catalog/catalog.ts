@@ -88,14 +88,17 @@ export const getLatest = (catalog: Catalog): Schema.Schema =>
 
 /**
  * Get the latest version identifier from a catalog.
- * Returns the version for versioned catalogs, or null for unversioned catalogs.
+ * Returns the version for versioned catalogs, or none for unversioned catalogs.
  */
-export const getLatestVersion = (catalog?: Catalog): Version.Version | null => {
-  if (!catalog) return null
+export const getLatestVersion = (catalog?: Catalog): Option.Option<Version.Version> => {
+  if (!catalog) return Option.none()
   return Match.value(catalog).pipe(
     Match.tagsExhaustive({
-      CatalogUnversioned: () => null,
-      CatalogVersioned: (cat) => Versioned.getVersions(cat)[0] ?? null,
+      CatalogUnversioned: () => Option.none(),
+      CatalogVersioned: (cat) => {
+        const versions = Versioned.getVersions(cat)
+        return versions[0] ? Option.some(versions[0]) : Option.none()
+      },
     }),
   )
 }

@@ -185,7 +185,10 @@ export const createTypeUsageIndex = (
 
       for (const typeName of types) {
         // For unversioned, use the latest version from the catalog
-        const latestVersion = Catalog.getLatestVersion(schemasCatalog) ?? Version.fromString('1.0.0')
+        const latestVersion = Option.getOrElse(
+          Catalog.getLatestVersion(schemasCatalog),
+          () => Version.fromString('1.0.0'),
+        )
         index = addExampleToIndex(index, UNVERSIONED_KEY, typeName, example, latestVersion)
       }
     } else if (Document.Versioned.is(example.document)) {

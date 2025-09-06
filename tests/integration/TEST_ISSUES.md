@@ -18,6 +18,7 @@ These validation errors occur when Polen processes example GraphQL documents dur
 ### Affected Tests
 
 The validation errors affect integration tests that rely on Polen's example processing, particularly:
+
 - Tests that use GraphQL documents with schemas
 - Tests that process multiple example files
 - Tests that validate GraphQL queries against schemas
@@ -34,6 +35,7 @@ Until the underlying example validation issue is resolved, these errors may caus
 ## Future Resolution
 
 To properly fix these issues:
+
 1. Review the example validation logic in `src/api/examples/diagnostic/validator.ts`
 2. Ensure proper schema resolution for versioned and unversioned documents
 3. Update integration test fixtures to provide valid GraphQL schemas and examples

@@ -1,6 +1,7 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { VersionCoverage } from '#lib/version-coverage'
+import { Option } from 'effect'
 import * as React from 'react'
 import { useHighlighted } from '../hooks/use-highlighted.js'
 import { GraphQLInteractive } from './GraphQLInteractive/GraphQLInteractive.js'
@@ -41,7 +42,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   /// ━ VERSION MANAGEMENT
   const isControlled = controlledVersionCoverage !== undefined
   const [internalVersionCoverage, setInternalVersionCoverage] = React.useState<VersionCoverage.VersionCoverage | null>(
-    Catalog.getLatestVersion(schemaCatalog),
+    Option.getOrNull(Catalog.getLatestVersion(schemaCatalog)),
   )
   const selectedVersionCoverage = isControlled ? controlledVersionCoverage : internalVersionCoverage
   const internalOnVersionChange = (version: VersionCoverage.VersionCoverage) => {
