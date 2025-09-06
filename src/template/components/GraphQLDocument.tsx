@@ -1,6 +1,6 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
-import { VersionCoverage } from '#lib/version-selection/$'
+import { VersionCoverage } from '#lib/version-coverage'
 import * as React from 'react'
 import { useHighlighted } from '../hooks/use-highlighted.js'
 import { GraphQLInteractive } from './GraphQLInteractive/GraphQLInteractive.js'
@@ -55,7 +55,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   const {
     schema,
     content,
-  } = VersionCoverage.resolveDocumentAndSchema(document, schemaCatalog, selectedVersionCoverage)
+  } = Document.resolveDocumentAndSchema(document, schemaCatalog, selectedVersionCoverage)
 
   const highlightedCode = useHighlighted(content, { interactive: true })
 

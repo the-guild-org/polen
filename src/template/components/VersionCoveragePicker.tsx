@@ -1,6 +1,6 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
-import { VersionCoverage } from '#lib/version-selection/$'
+import { VersionCoverage } from '#lib/version-coverage'
 import { Select } from '@radix-ui/themes'
 import { HashMap } from 'effect'
 import type { FC } from 'react'

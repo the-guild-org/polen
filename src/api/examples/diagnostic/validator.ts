@@ -1,7 +1,7 @@
 import { Catalog as SchemaCatalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { Version } from '#lib/version/$'
-import { Match } from 'effect'
+import { Match, Option } from 'effect'
 import { HashMap } from 'effect/Schema'
 import type { GraphQLError, GraphQLSchema } from 'graphql'
 import { parse, specifiedRules, validate } from 'graphql'
@@ -41,14 +41,14 @@ export const validateExamples = (
               DocumentVersioned: (doc) => {
                 // Validate each version against its corresponding schema
                 for (const schema of SchemaCatalog.Versioned.getAll(versioned)) {
-                  const content = Document.Versioned.getContentForVersion(doc, schema.version)
-                  if (content) {
+                  const contentOption = Document.Versioned.getContentForVersion(doc, schema.version)
+                  if (Option.isSome(contentOption)) {
                     const versionStr = Version.encodeSync(schema.version)
                     validateDocument(
                       example.name,
                       example.path,
                       versionStr,
-                      content,
+                      contentOption.value,
                       schema.definition,
                       diagnostics,
                     )

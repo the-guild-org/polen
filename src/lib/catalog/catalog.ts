@@ -1,7 +1,8 @@
 import { S } from '#lib/kit-temp/effect'
 import { Schema } from '#lib/schema/$'
+import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
-import { HashMap, Match } from 'effect'
+import { HashMap, Match, Option } from 'effect'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
 
@@ -97,4 +98,40 @@ export const getLatestVersion = (catalog?: Catalog): Version.Version | null => {
       CatalogVersioned: (cat) => Versioned.getVersions(cat)[0] ?? null,
     }),
   )
+}
+
+// ============================================================================
+// Resolution Functions
+// ============================================================================
+
+/**
+ * Resolve schema from catalog for a given version coverage.
+ *
+ * @param catalog - The schema catalog
+ * @param versionCoverage - The version coverage to use (optional, defaults to latest)
+ * @returns The resolved schema
+ * @throws {Error} If catalog is versioned but version is not found
+ */
+export const resolveCatalogSchema = (
+  catalog: Catalog,
+  versionCoverage?: VersionCoverage.VersionCoverage | null,
+): Schema.Schema => {
+  if (Unversioned.is(catalog)) {
+    return catalog.schema
+  }
+
+  // If no version coverage specified, use latest
+  if (!versionCoverage) {
+    return Versioned.getLatestOrThrow(catalog)
+  }
+
+  // Get the latest version from the coverage
+  const version = VersionCoverage.getLatest(versionCoverage)
+
+  const schemaOption = HashMap.get(catalog.entries, version)
+  if (Option.isNone(schemaOption)) {
+    throw new Error(`Version ${Version.encodeSync(version)} not found in catalog`)
+  }
+
+  return Option.getOrThrow(schemaOption)
 }

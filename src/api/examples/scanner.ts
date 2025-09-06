@@ -1,7 +1,7 @@
 import { Catalog as SchemaCatalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { EffectGlob } from '#lib/effect-glob/$'
-import { VersionCoverage } from '#lib/version-selection/$'
+import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
 import { FileSystem } from '@effect/platform'
 import { Str } from '@wollybeard/kit'
@@ -12,7 +12,6 @@ import {
   makeDiagnosticDuplicateContent,
   makeDiagnosticMissingVersions,
   makeDiagnosticUnknownVersion,
-  makeDiagnosticUnusedDefault,
 } from './diagnostic/diagnostic.js'
 import { validateExamples } from './diagnostic/validator.js'
 import { Catalog } from './schemas/catalog.js'
@@ -262,7 +261,7 @@ export const scan = (
       // Determine the base path for this example
       const firstFile = resolved.unversioned
         || (HashMap.size(resolved.versionDocuments) > 0
-          ? Array.from(HashMap.values(resolved.versionDocuments))[0]
+          ? HashMap.values(resolved.versionDocuments).next().value
           : undefined)
       if (!firstFile) continue // No files for this example
 

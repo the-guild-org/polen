@@ -1,7 +1,5 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
-import { Schema } from '#lib/schema/$'
-import { VersionCoverage } from '#lib/version-selection/$'
 import { Version } from '#lib/version/$'
 import { HashMap, HashSet, Option } from 'effect'
 import { Schema as S } from 'effect'
@@ -77,19 +75,19 @@ const extractTypesFromQuery = (
   const resolveFieldType = (
     fieldName: string,
     parentTypeName: string | null,
-  ): string | null => {
-    if (!parentTypeName) return null
+  ): Option.Option<string> => {
+    if (!parentTypeName) return Option.none()
 
     const parentType = schema.getType(parentTypeName)
     if (!parentType || !isObjectType(parentType) && !isInterfaceType(parentType)) {
-      return null
+      return Option.none()
     }
 
     const field = parentType.getFields()[fieldName]
-    if (!field) return null
+    if (!field) return Option.none()
 
     const namedType = getNamedType(field.type)
-    return namedType.name
+    return Option.some(namedType.name)
   }
 
   // Track the current type context as we traverse
@@ -121,8 +119,9 @@ const extractTypesFromQuery = (
         // Special handling for __typename
         if (node.name.value === '__typename') return
 
-        const fieldType = resolveFieldType(node.name.value, currentType)
-        if (fieldType) {
+        const fieldTypeOption = resolveFieldType(node.name.value, currentType)
+        if (Option.isSome(fieldTypeOption)) {
+          const fieldType = fieldTypeOption.value
           addType(fieldType)
           // Update context for nested selections
           if (node.selectionSet) {
@@ -195,16 +194,18 @@ export const createTypeUsageIndex = (
 
       for (const version of allVersions) {
         // Use centralized resolution to get schema for version
-        let schema: Schema.Schema
-        try {
-          schema = VersionCoverage.resolveCatalogSchema(schemasCatalog, version)
-        } catch {
+        const schemaOption = Option.liftThrowable(
+          () => Catalog.resolveCatalogSchema(schemasCatalog, version),
+        )()
+        if (Option.isNone(schemaOption)) {
           // Skip if version not found in catalog
           continue
         }
+        const schema = schemaOption.value
 
-        const documentString = Document.Versioned.getContentForVersion(example.document, version)
-        if (!documentString) continue
+        const documentStringOption = Document.Versioned.getContentForVersion(example.document, version)
+        if (Option.isNone(documentStringOption)) continue
+        const documentString = documentStringOption.value
 
         const types = extractTypesFromQuery(documentString, schema.definition)
 

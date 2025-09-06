@@ -104,6 +104,8 @@
       "#lib/swiss/swiss": ["./src/lib/swiss/$$.ts"],
       "#lib/version": ["./src/lib/version/$.ts"],
       "#lib/version/version": ["./src/lib/version/$$.ts"],
+      "#lib/version-coverage": ["./src/lib/version-coverage/$.ts"],
+      "#lib/version-coverage/version-coverage": ["./src/lib/version-coverage/$$.ts"],
       "#lib/swiss/*": ["./src/lib/swiss/*"],
       "#lib/vite-reactive": ["./src/lib/vite-reactive/$.ts"],
       "#lib/vite-reactive/vite-reactive": ["./src/lib/vite-reactive/$$.ts"],
