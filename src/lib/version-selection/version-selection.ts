@@ -1,6 +1,9 @@
+import { Catalog } from '#lib/catalog/$'
+import { Document } from '#lib/document/$'
 import { S } from '#lib/kit-temp/effect'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { Array, HashSet, pipe } from 'effect'
+import { Array, HashMap, HashSet, Match, Option, pipe } from 'effect'
 
 // ============================================================================
 // Schema
@@ -58,7 +61,7 @@ export const encodeSync = S.encodeSync(VersionCoverage)
 export const equivalence = S.equivalence(VersionCoverage)
 
 // ============================================================================
-// Domain Logic
+// Domain Logic - Basic Operations
 // ============================================================================
 
 /**
@@ -114,4 +117,115 @@ export const getLatest = (versionCoverage: VersionCoverage): Version.Version => 
   // Use Version.max which takes exactly 2 arguments
   // Reduce the array to find the maximum
   return versions.reduce((latest, current) => Version.max(latest, current))
+}
+
+// ============================================================================
+// Domain Logic - Resolution Functions
+// ============================================================================
+
+/**
+ * Resolve document content for a given version coverage.
+ *
+ * @param document - The document to resolve content from
+ * @param versionCoverage - The version coverage to use (optional, defaults to latest)
+ * @returns The resolved document content
+ * @throws {Error} If version is not found in document
+ */
+export const resolveDocumentContent = (
+  document: Document.Document,
+  versionCoverage?: VersionCoverage | null,
+): string => {
+  if (Document.Unversioned.is(document)) {
+    return document.document
+  }
+
+  // If no version coverage specified, use latest
+  if (!versionCoverage) {
+    return Document.Versioned.getContentForLatestVersionOrThrow(document)
+  }
+
+  // Get the latest version from the coverage
+  const version = getLatest(versionCoverage)
+  const content = Document.Versioned.getContentForVersion(document, version)
+
+  if (!content) {
+    throw new Error(`Version ${Version.encodeSync(version)} not covered by document`)
+  }
+
+  return content
+}
+
+/**
+ * Resolve schema from catalog for a given version coverage.
+ *
+ * @param catalog - The schema catalog
+ * @param versionCoverage - The version coverage to use (optional, defaults to latest)
+ * @returns The resolved schema
+ * @throws {Error} If catalog is versioned but version is not found
+ */
+export const resolveCatalogSchema = (
+  catalog: Catalog.Catalog,
+  versionCoverage?: VersionCoverage | null,
+): Schema.Schema => {
+  if (Catalog.Unversioned.is(catalog)) {
+    return catalog.schema
+  }
+
+  // If no version coverage specified, use latest
+  if (!versionCoverage) {
+    return Catalog.Versioned.getLatestOrThrow(catalog)
+  }
+
+  // Get the latest version from the coverage
+  const version = getLatest(versionCoverage)
+
+  const schemaOption = HashMap.get(catalog.entries, version)
+  if (Option.isNone(schemaOption)) {
+    throw new Error(`Version ${Version.encodeSync(version)} not found in catalog`)
+  }
+
+  return Option.getOrThrow(schemaOption)
+}
+
+/**
+ * Resolve both document content and schema for a given version coverage.
+ * This is the primary resolution function that handles all combinations
+ * of versioned/unversioned documents and catalogs.
+ *
+ * @param document - The document to resolve content from
+ * @param catalog - The schema catalog (optional)
+ * @param versionCoverage - The version coverage to use (optional, defaults to latest)
+ * @returns Object with resolved content and optional schema
+ * @throws {Error} If versions don't match between document and catalog
+ */
+export const resolveDocumentAndSchema = (
+  document: Document.Document,
+  catalog?: Catalog.Catalog,
+  versionCoverage?: VersionCoverage | null,
+): { content: string; schema?: Schema.Schema } => {
+  // Handle unversioned document
+  if (Document.Unversioned.is(document)) {
+    const result: { content: string; schema?: Schema.Schema } = {
+      content: document.document,
+    }
+    if (catalog) {
+      result.schema = resolveCatalogSchema(catalog, null)
+    }
+    return result
+  }
+
+  // Handle versioned document
+  const content = resolveDocumentContent(document, versionCoverage)
+
+  if (!catalog) {
+    return { content }
+  }
+
+  // Cannot use version coverage with unversioned catalog
+  if (versionCoverage && Catalog.Unversioned.is(catalog)) {
+    throw new Error('Cannot use a version coverage with an unversioned catalog')
+  }
+
+  const schema = resolveCatalogSchema(catalog, versionCoverage)
+  return { content, schema }
 }

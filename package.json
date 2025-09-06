@@ -160,12 +160,6 @@
     "#lib/semver/semver": {
       "default": "./build/lib/semver/$$.js"
     },
-    "#lib/mask": {
-      "default": "./build/lib/mask/$.js"
-    },
-    "#lib/mask/mask": {
-      "default": "./build/lib/mask/$$.js"
-    },
     "#lib/path-map": {
       "default": "./build/lib/path-map/$.js"
     },

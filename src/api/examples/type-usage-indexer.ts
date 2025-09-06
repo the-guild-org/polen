@@ -1,6 +1,7 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { Schema } from '#lib/schema/$'
+import { VersionCoverage } from '#lib/version-selection/$'
 import { Version } from '#lib/version/$'
 import { HashMap, HashSet, Option } from 'effect'
 import { Schema as S } from 'effect'
@@ -161,29 +162,6 @@ const extractTypesFromQuery = (
 }
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get a schema by version from the catalog.
- */
-const getSchemaByVersion = (
-  catalog: Catalog.Catalog,
-  version: Version.Version,
-): Schema.Schema | undefined => {
-  if (Catalog.Versioned.is(catalog)) {
-    // Use HashMap.get for O(1) lookup
-    return HashMap.get(catalog.entries, version).pipe(Option.getOrElse(() => undefined))
-  }
-  // For unversioned catalog, return the single schema if version matches
-  if (Catalog.Unversioned.is(catalog)) {
-    // Unversioned catalogs don't have versions, so we can't match
-    return undefined
-  }
-  return undefined
-}
-
-// ============================================================================
 // Index Creation
 // ============================================================================
 
@@ -216,8 +194,14 @@ export const createTypeUsageIndex = (
       const allVersions = Document.Versioned.getAllVersions(example.document)
 
       for (const version of allVersions) {
-        const schema = getSchemaByVersion(schemasCatalog, version)
-        if (!schema) continue
+        // Use centralized resolution to get schema for version
+        let schema: Schema.Schema
+        try {
+          schema = VersionCoverage.resolveCatalogSchema(schemasCatalog, version)
+        } catch {
+          // Skip if version not found in catalog
+          continue
+        }
 
         const documentString = Document.Versioned.getContentForVersion(example.document, version)
         if (!documentString) continue

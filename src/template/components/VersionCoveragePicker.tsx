@@ -30,12 +30,11 @@ export const VersionCoveragePicker: FC<Props> = ({
     <Select.Root
       value={VersionCoverage.toLabel(current)}
       onValueChange={(label) => {
-        // Find selection by label and pick first version from it
+        // Find the full version coverage by label and pass it entirely
         const selection = options.find(s => VersionCoverage.toLabel(s) === label)
         if (selection) {
-          const versions = VersionCoverage.toVersions(selection)
-          const version = versions[0]
-          if (version) onChange(version)
+          // Pass the entire VersionCoverage, not just the first version
+          onChange(selection)
         }
       }}
     >

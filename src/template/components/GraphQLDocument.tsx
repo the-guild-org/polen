@@ -1,12 +1,6 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
-import { S } from '#lib/kit-temp/$'
-import type { Schema } from '#lib/schema/$'
 import { VersionCoverage } from '#lib/version-selection/$'
-import { VersionCoverageSet } from '#lib/version-selection/version-selection'
-import { Version } from '#lib/version/$'
-import { Array, HashMap, Match, Option } from 'effect'
-import type { GraphQLSchema } from 'graphql'
 import * as React from 'react'
 import { useHighlighted } from '../hooks/use-highlighted.js'
 import { GraphQLInteractive } from './GraphQLInteractive/GraphQLInteractive.js'
@@ -61,7 +55,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   const {
     schema,
     content,
-  } = resolveSelectedVerCov(document, selectedVersionCoverage, schemaCatalog)
+  } = VersionCoverage.resolveDocumentAndSchema(document, schemaCatalog, selectedVersionCoverage)
 
   const highlightedCode = useHighlighted(content, { interactive: true })
 
@@ -85,62 +79,5 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
         )
       )}
     />
-  )
-}
-
-/**
- * Matches a document with an optional schema catalog, returning the document content,
- * corresponding schema, and available versions for the selected version.
- *
- * @param document - The document to retrieve content from (required)
- * @param selectedVersionCoverage - The version to select (optional, defaults to latest)
- * @param schemaCatalog - The schema catalog to match against (optional)
- * @returns Object with document content, optional schema, and available versions
- * @throws {Error} If versions in catalog don't match versions in document
- */
-type Result = { content: string; schema?: Schema.Schema }
-const resolveSelectedVerCov = (
-  document: Document.Document,
-  selectedVersionCoverage?: VersionCoverage.VersionCoverage | null,
-  schemaCatalog?: Catalog.Catalog,
-): Result => {
-  if (Document.Unversioned.is(document)) {
-    return {
-      content: document.document,
-      schema: Match.value(schemaCatalog).pipe(
-        Match.tagsExhaustive({
-          CatalogUnversioned: (catalog) => catalog.schema,
-          CatalogVersioned: (catalog) => Catalog.Versioned.getLatestOrThrow(catalog),
-        }),
-      ),
-    }
-  }
-
-  return Match.value(selectedVersionCoverage).pipe(
-    Match.whenOr(null, undefined, _ => {
-      const content = Document.Versioned.getContentForLatestVersionOrThrow(document)
-      return { content }
-    }),
-    Match.orElse(_ => {
-      const version = VersionCoverage.getLatest(_)
-
-      const content = Document.Versioned.getContentForVersion(document, version)
-      if (!content) {
-        throw new Error(`Version ${Version.encodeSync(version)} not covered by document`)
-      }
-
-      if (!schemaCatalog) return { version, content }
-
-      if (Catalog.Unversioned.is(schemaCatalog)) {
-        throw new Error('Cannot use a set of versions with an unversioned catalog')
-      }
-      const schemaOption = HashMap.get(schemaCatalog.entries, version)
-      if (Option.isNone(schemaOption)) {
-        throw new Error(`Version ${Version.encodeSync(version)} not found in catalog`)
-      }
-      const schema = Option.getOrThrow(schemaOption)
-
-      return { content, schema: schema }
-    }),
   )
 }
