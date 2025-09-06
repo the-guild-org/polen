@@ -45,10 +45,25 @@ const VERSIONED_FILE_PATTERN = Str.pattern<{ groups: ['name', 'version'] }>(
 )
 
 // ============================================================================
+// File Parsing Types
+// ============================================================================
+
+type ParsedExampleFile =
+  | { type: 'unversioned'; name: string; file: string }
+  | { type: 'versioned'; name: string; version: Version.Version; file: string }
+  | { type: 'default'; name: string; file: string }
+
+type GroupedExampleFiles = Map<string, {
+  unversioned?: string
+  versioned: Map<Version.Version, string>
+  default?: string
+}>
+
+// ============================================================================
 // Helpers
 // ============================================================================
 
-const parseExampleFilename = (filename: string): { name: string; version: string | null } => {
+const parseExampleFile = (filename: string): ParsedExampleFile => {
   const parsed = Path.parse(filename)
   const base = parsed.name
 
@@ -60,30 +75,94 @@ const parseExampleFilename = (filename: string): { name: string; version: string
 
     // Handle special 'default' keyword
     if (versionStr === 'default') {
-      return { name, version: 'default' }
+      return { type: 'default', name, file: filename }
     }
-    const decoded = Version.decodeSync(versionStr)
-    // Return canonical version string
-    return { name, version: Version.encodeSync(decoded) }
+
+    const version = Version.decodeSync(versionStr)
+    return { type: 'versioned', name, version, file: filename }
   }
 
   // No version found - this is an unversioned example
-  return { name: base, version: null }
+  return { type: 'unversioned', name: base, file: filename }
 }
 
-const groupExampleFiles = (files: string[]): Map<string, Map<string | null, string>> => {
-  const grouped = new Map<string, Map<string | null, string>>()
+const groupExampleFiles = (files: string[]): GroupedExampleFiles => {
+  const grouped: GroupedExampleFiles = new Map()
 
   for (const file of files) {
-    const { name, version } = parseExampleFilename(file)
+    const parsed = parseExampleFile(file)
 
-    if (!grouped.has(name)) {
-      grouped.set(name, new Map())
+    if (!grouped.has(parsed.name)) {
+      grouped.set(parsed.name, {
+        versioned: new Map(),
+      })
     }
-    grouped.get(name)!.set(version, file)
+
+    const group = grouped.get(parsed.name)!
+
+    switch (parsed.type) {
+      case 'unversioned':
+        group.unversioned = parsed.file
+        break
+      case 'versioned':
+        group.versioned.set(parsed.version, parsed.file)
+        break
+      case 'default':
+        group.default = parsed.file
+        break
+    }
   }
 
   return grouped
+}
+
+/**
+ * Resolve .default files into proper version coverage.
+ * This erases the .default convention and converts it to semantic version sets.
+ */
+const resolveDefaultFiles = (
+  grouped: GroupedExampleFiles,
+  schemaVersions: Version.Version[],
+): Map<string, {
+  versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, string>
+  unversioned?: string
+}> => {
+  const resolved = new Map<string, {
+    versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, string>
+    unversioned?: string
+  }>()
+
+  for (const [name, group] of grouped) {
+    let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, string>()
+
+    // Add explicit versions
+    for (const [version, file] of group.versioned) {
+      versionDocuments = HashMap.set(versionDocuments, version, file)
+    }
+
+    // Handle default file if present
+    if (group.default) {
+      // Determine which versions the default covers
+      const explicitVersions = HashSet.fromIterable(group.versioned.keys())
+      const defaultVersions = schemaVersions.filter(v => !HashSet.has(explicitVersions, v))
+
+      if (defaultVersions.length > 0) {
+        // Create version coverage for default
+        const defaultCoverage = defaultVersions.length === 1
+          ? defaultVersions[0]! // Single version
+          : HashSet.fromIterable(defaultVersions) // Version set
+
+        versionDocuments = HashMap.set(versionDocuments, defaultCoverage, group.default)
+      }
+    }
+
+    resolved.set(name, {
+      versionDocuments,
+      ...(group.unversioned ? { unversioned: group.unversioned } : {}),
+    })
+  }
+
+  return resolved
 }
 
 const lintFileLayout = (
@@ -161,32 +240,41 @@ export const scan = (
     const pattern = `**/*.{${extensions.join(',')}}`
     const files = options.files ?? (yield* EffectGlob.glob(pattern, { cwd: options.dir }))
 
+    // Get schema versions upfront for default file resolution
+    const schemaVersions: Version.Version[] = options.schemaCatalog
+      ? SchemaCatalog.fold(
+        (versioned) => SchemaCatalog.Versioned.getVersions(versioned),
+        () => [], // Unversioned schemas don't have version-specific examples
+      )(options.schemaCatalog)
+      : []
+
     // Group files by example
     const groupedFiles = groupExampleFiles(files)
+
+    // Resolve .default files into proper version coverage immediately
+    const resolvedFiles = resolveDefaultFiles(groupedFiles, schemaVersions)
 
     // Process each example group
     const examples: Example.Example[] = []
     const diagnostics: Diagnostic[] = []
 
-    for (const [name, versions] of groupedFiles) {
-      // Check if this is a versioned or unversioned example
-      const hasMultipleVersions = versions.size > 1
-      const hasUnversionedFile = versions.has(null)
-      const hasDefaultFile = versions.has('default')
-      const hasOnlyDefaultFile = hasDefaultFile && versions.size === 1
-
+    for (const [name, resolved] of resolvedFiles) {
       // Determine the base path for this example
-      const firstFilePath = Array.from(versions.values())[0]!
-      const basePath = versions.size === 1
-        ? firstFilePath
-        : Path.dirname(firstFilePath)
+      const firstFile = resolved.unversioned
+        || (HashMap.size(resolved.versionDocuments) > 0
+          ? Array.from(HashMap.values(resolved.versionDocuments))[0]
+          : undefined)
+      if (!firstFile) continue // No files for this example
 
-      let example: Example.Example
+      const basePath = HashMap.size(resolved.versionDocuments) > 1 || resolved.unversioned
+        ? Path.dirname(firstFile)
+        : firstFile
 
-      if (hasUnversionedFile && versions.size === 1) {
+      let example: Example.Example | undefined
+
+      if (resolved.unversioned) {
         // Unversioned example - single file with no version
-        const filePath = versions.get(null)!
-        const fullPath = Path.join(options.dir, filePath)
+        const fullPath = Path.join(options.dir, resolved.unversioned)
         const document = yield* fs.readFileString(fullPath)
 
         example = Example.make({
@@ -196,104 +284,36 @@ export const scan = (
             document,
           }),
         })
-      } else if (hasOnlyDefaultFile) {
-        // Only default file - create versioned document with all schema versions as a set
-        const filePath = versions.get('default')!
-        const fullPath = Path.join(options.dir, filePath)
-        const documentContent = yield* fs.readFileString(fullPath)
-
-        // Get all schema versions to map to this default document
-        const schemaVersions: Version.Version[] = options.schemaCatalog
-          ? SchemaCatalog.fold(
-            (versioned) => SchemaCatalog.Versioned.getVersions(versioned),
-            () => [], // Unversioned schemas don't have version-specific examples
-          )(options.schemaCatalog)
-          : []
-
-        if (schemaVersions.length > 0) {
-          // Create a version set for all schema versions
-          const versionSet = HashSet.fromIterable(schemaVersions)
-          let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, string>()
-          versionDocuments = HashMap.set(versionDocuments, versionSet, documentContent)
-
-          example = Example.make({
-            name,
-            path: basePath,
-            document: Document.Versioned.make({
-              versionDocuments,
-            }),
-          })
-        } else {
-          // No schema versions, treat as unversioned
-          example = Example.make({
-            name,
-            path: basePath,
-            document: Document.Unversioned.make({
-              document: documentContent,
-            }),
-          })
-        }
-      } else {
-        // Versioned example - multiple files or versioned files
+      } else if (HashMap.size(resolved.versionDocuments) > 0) {
+        // Versioned example - read all version documents
         let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, string>()
-        let defaultDocument: string | undefined
-        let explicitVersions = HashSet.empty<Version.Version>() // Track which versions have explicit files
         const unknownVersions: Version.Version[] = []
-
-        // Get available schema versions if catalog is provided
-        const schemaVersions: Version.Version[] = options.schemaCatalog
-          ? SchemaCatalog.fold(
-            (versioned) => SchemaCatalog.Versioned.getVersions(versioned),
-            () => [], // Unversioned schemas don't have version-specific examples
-          )(options.schemaCatalog)
-          : []
-        
-        // Create HashSet for O(1) lookups
         const schemaVersionsSet = HashSet.fromIterable(schemaVersions)
 
-        // Read content for each version
-        for (const [version, filePath] of versions) {
+        for (const [versionCoverage, filePath] of HashMap.entries(resolved.versionDocuments)) {
           const fullPath = Path.join(options.dir, filePath)
           const fileContent = yield* fs.readFileString(fullPath)
 
-          if (version === 'default') {
-            defaultDocument = fileContent
-          } else if (version !== null) {
-            // Parse the version string
-            const parsedVersion = Version.decodeSync(version)
-            // Check if this version exists in the schema
-            const versionExists = HashSet.has(schemaVersionsSet, parsedVersion)
+          // Check if version is known (only for single versions, not sets)
+          if (Version.is(versionCoverage)) {
+            const versionExists = HashSet.has(schemaVersionsSet, versionCoverage)
             if (options.schemaCatalog && schemaVersions.length > 0 && !versionExists) {
-              unknownVersions.push(parsedVersion)
+              unknownVersions.push(versionCoverage)
               // Create diagnostic for unknown version
               diagnostics.push(makeDiagnosticUnknownVersion({
-                message: `Example "${name}" specifies version "${version}" which does not exist in the schema`,
+                message: `Example "${name}" specifies version "${
+                  Version.encodeSync(versionCoverage)
+                }" which does not exist in the schema`,
                 example: { name, path: basePath },
-                version: parsedVersion,
+                version: versionCoverage,
                 availableVersions: schemaVersions,
               }))
               // Skip this version - don't include it in the example
               continue
             }
-
-            // We already have parsedVersion from above
-            versionDocuments = HashMap.set(versionDocuments, parsedVersion, fileContent)
-            explicitVersions = HashSet.add(explicitVersions, parsedVersion)
           }
-        }
 
-        if (defaultDocument) {
-          // If we have a default, determine which versions it applies to
-          const defaultVersions = schemaVersions.filter(v => !HashSet.has(explicitVersions, v))
-
-          if (defaultVersions.length > 0) {
-            // Create a version set for the default document
-            const defaultVersionSet = defaultVersions.length === 1
-              ? defaultVersions[0]! // Single version
-              : HashSet.fromIterable(defaultVersions) // Version set
-
-            versionDocuments = HashMap.set(versionDocuments, defaultVersionSet, defaultDocument)
-          }
+          versionDocuments = HashMap.set(versionDocuments, versionCoverage, fileContent)
         }
 
         if (HashMap.size(versionDocuments) > 0) {
@@ -307,9 +327,6 @@ export const scan = (
           })
         } else if (unknownVersions.length > 0) {
           // All versions were unknown, skip this example entirely
-          continue
-        } else {
-          // No versions at all - shouldn't happen
           continue
         }
       }
