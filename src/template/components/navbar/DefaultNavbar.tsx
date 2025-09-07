@@ -10,7 +10,7 @@ export const DefaultNavbar: React.FC<NavbarProps> = ({ items, Item, Logo, ThemeT
   return (
     <>
       {/* Logo */}
-      <Swiss.Item cols={2}>
+      <Swiss.Item cols={3}>
         <Logo />
       </Swiss.Item>
 

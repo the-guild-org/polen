@@ -80,6 +80,9 @@ const Layout = () => {
         maxWidth='1440px'
         gutter='var(--space-4)'
         margins='var(--space-5)'
+        style={{
+          gridTemplateRows: '100px',
+        }}
       >
         {/* Navbar */}
         {isHomeWithCinematicHero
@@ -90,6 +93,7 @@ const Layout = () => {
                 position='fixed'
                 top={'0'}
                 left={'0'}
+                height='20px'
                 right={'0'}
                 py={'6'}
                 style={{
@@ -108,6 +112,7 @@ const Layout = () => {
             <Swiss.Body
               subgrid
               py={'6'}
+              height='20px'
               mb={{ initial: '4', md: '8' }}
               style={{
                 borderBottom: '1px solid var(--gray-3)',
