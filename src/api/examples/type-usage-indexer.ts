@@ -272,6 +272,7 @@ export const getExampleReferencesForType = (
 ): HashSet.HashSet<S.Schema.Type<typeof ExampleReference>> => {
   const versionKey = version ?? UNVERSIONED_KEY
 
+  // TODO does not work for unversioned schemas for some reason
   return HashMap.get(typeUsageIndex, versionKey).pipe(
     Option.flatMap(versionMap => HashMap.get(versionMap, typeName)),
     Option.getOrElse(HashSet.empty<S.Schema.Type<typeof ExampleReference>>),

@@ -38,6 +38,7 @@ export const NamedType: FC<Props> = ({ data }) => {
     ? schema.version
     : null
   const examples = useExamplesForType(data.name, currentVersion)
+  console.log(examples)
 
   return (
     <Box>

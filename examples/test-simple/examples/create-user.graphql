@@ -1,8 +1,0 @@
-# Create a new user
-mutation CreateUser($input: CreateUserInput!) {
-  createUser(input: $input) {
-    id
-    name
-    email
-  }
-}
