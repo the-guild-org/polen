@@ -2,12 +2,31 @@ import { S } from '#lib/kit-temp/effect'
 import { Schema } from '#lib/schema/$'
 import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
-import { HashMap, Match, Option } from 'effect'
+import { Data, Either, HashMap, Match, Option } from 'effect'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
 
 export * as Unversioned from './unversioned.js'
 export * as Versioned from './versioned.js'
+
+// ============================================================================
+// Error Types
+// ============================================================================
+
+/**
+ * Error thrown when a version is not found in the catalog
+ */
+export class VersionNotFoundInCatalogError extends Data.TaggedError('VersionNotFoundInCatalogError')<{
+  readonly version: string
+  readonly reason: string
+}> {}
+
+/**
+ * Error thrown when a catalog has no entries
+ */
+export class EmptyCatalogError extends Data.TaggedError('EmptyCatalogError')<{
+  readonly reason: string
+}> {}
 
 // ============================================================================
 // Schema
@@ -112,20 +131,19 @@ export const getLatestVersion = (catalog?: Catalog): Option.Option<Version.Versi
  *
  * @param catalog - The schema catalog
  * @param versionCoverage - The version coverage to use (optional, defaults to latest)
- * @returns The resolved schema
- * @throws {Error} If catalog is versioned but version is not found
+ * @returns Either with the resolved schema or error
  */
-export const resolveCatalogSchema = (
+export const resolveCatalogSchemaEither = (
   catalog: Catalog,
   versionCoverage?: VersionCoverage.VersionCoverage | null,
-): Schema.Schema => {
+): Either.Either<Schema.Schema, VersionNotFoundInCatalogError | EmptyCatalogError> => {
   if (Unversioned.is(catalog)) {
-    return catalog.schema
+    return Either.right(catalog.schema)
   }
 
   // If no version coverage specified, use latest
   if (!versionCoverage) {
-    return Versioned.getLatestOrThrow(catalog)
+    return Versioned.getLatest(catalog)
   }
 
   // Get the latest version from the coverage
@@ -133,8 +151,33 @@ export const resolveCatalogSchema = (
 
   const schemaOption = HashMap.get(catalog.entries, version)
   if (Option.isNone(schemaOption)) {
-    throw new Error(`Version ${Version.encodeSync(version)} not found in catalog`)
+    return Either.left(
+      new VersionNotFoundInCatalogError({
+        version: Version.encodeSync(version),
+        reason: `Version ${Version.encodeSync(version)} not found in catalog`,
+      }),
+    )
   }
 
-  return Option.getOrThrow(schemaOption)
+  return Either.right(Option.getOrThrow(schemaOption))
+}
+
+/**
+ * Resolve schema from catalog for a given version coverage.
+ *
+ * @param catalog - The schema catalog
+ * @param versionCoverage - The version coverage to use (optional, defaults to latest)
+ * @returns The resolved schema
+ * @throws {Error} If catalog is versioned but version is not found
+ * @deprecated Use resolveCatalogSchemaEither which returns Either
+ */
+export const resolveCatalogSchema = (
+  catalog: Catalog,
+  versionCoverage?: VersionCoverage.VersionCoverage | null,
+): Schema.Schema => {
+  const result = resolveCatalogSchemaEither(catalog, versionCoverage)
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.reason)
+  }
+  return result.right
 }

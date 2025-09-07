@@ -1,5 +1,6 @@
 import type { HighlightedCode } from 'codehike/code'
 import { highlight } from 'codehike/code'
+import { Duration, Effect } from 'effect'
 import * as React from 'react'
 
 /**
@@ -29,26 +30,37 @@ export const useHighlighted = (
   const [highlightedCode, setHighlightedCode] = React.useState<HighlightedCode | null>(null)
 
   React.useEffect(() => {
+    const HIGHLIGHT_TIMEOUT = Duration.seconds(5)
+
     const highlightContent = async () => {
-      // Add a timeout to detect if highlight is hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Highlight timeout after 5 seconds')), 5000)
-      })
-
-      const highlightPromise = highlight(
-        {
-          value: content,
-          lang: config.lang,
-          meta: metaString,
-        },
-        {
-          theme: 'github-light',
-        },
-      )
-
-      const highlighted = await Promise.race([highlightPromise, timeoutPromise])
-
-      setHighlightedCode(highlighted as any)
+      try {
+        const highlighted = await Effect.runPromise(
+          Effect.tryPromise({
+            try: () =>
+              highlight(
+                {
+                  value: content,
+                  lang: config.lang,
+                  meta: metaString,
+                },
+                {
+                  theme: 'github-light',
+                },
+              ),
+            catch: (error) => new Error(`Highlight failed: ${error}`),
+          }).pipe(
+            Effect.timeout(HIGHLIGHT_TIMEOUT),
+            Effect.catchTag(
+              'TimeoutException',
+              () => Effect.fail(new Error(`Highlight timeout after ${Duration.toSeconds(HIGHLIGHT_TIMEOUT)} seconds`)),
+            ),
+          ),
+        )
+        setHighlightedCode(highlighted)
+      } catch (error) {
+        console.error('Failed to highlight code:', error)
+        setHighlightedCode(null)
+      }
     }
     highlightContent()
   }, [content, config.lang, config.interactive])

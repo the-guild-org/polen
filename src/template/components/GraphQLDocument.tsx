@@ -1,7 +1,7 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { VersionCoverage } from '#lib/version-coverage'
-import { Option } from 'effect'
+import { Either, Option } from 'effect'
 import * as React from 'react'
 import { useHighlighted } from '../hooks/use-highlighted.js'
 import { GraphQLInteractive } from './GraphQLInteractive/GraphQLInteractive.js'
@@ -53,11 +53,15 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   }
 
   /// ━ DATA RESOLUTION
-  const {
-    schema,
-    content,
-  } = Document.resolveDocumentAndSchema(document, schemaCatalog, selectedVersionCoverage)
+  const result = Document.resolveDocumentAndSchema(document, schemaCatalog, selectedVersionCoverage)
 
+  // Handle resolution errors gracefully
+  if (Either.isLeft(result)) {
+    console.error('Failed to resolve document and schema:', result.left.message)
+    return null
+  }
+
+  const { schema, content } = result.right
   const highlightedCode = useHighlighted(content, { interactive: true })
 
   if (!highlightedCode) {

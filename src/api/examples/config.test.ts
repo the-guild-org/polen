@@ -28,6 +28,16 @@ describe('ExamplesConfig', () => {
       expect(result).toEqual({})
     })
 
+    test('boolean shorthand: false disables examples', () => {
+      const result = decodeExamplesConfig(false)
+      expect(result).toEqual({ enabled: false })
+    })
+
+    test('boolean shorthand: true uses defaults', () => {
+      const result = decodeExamplesConfig(true)
+      expect(result).toEqual({})
+    })
+
     test('decodes full config', () => {
       const input = {
         display: { include: ['example1', 'example2'] },

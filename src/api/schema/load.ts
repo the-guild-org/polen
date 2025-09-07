@@ -7,7 +7,7 @@ import { Catalog } from '#lib/catalog/$'
 import type { PlatformError } from '@effect/platform/Error'
 import type { FileSystem } from '@effect/platform/FileSystem'
 import { Arr } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Array, Effect, Option } from 'effect'
 
 // For now, we'll need a type that accepts both promise and effect sources
 type AnyInputSource = InputSource | EffectInputSource

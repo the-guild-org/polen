@@ -7,6 +7,7 @@
 
 import { Api } from '#api/iso'
 import type { CodeAnnotation } from 'codehike/code'
+import { Either } from 'effect'
 import {
   getNamedType,
   type GraphQLArgument,
@@ -504,40 +505,64 @@ class SemanticContext {
 }
 
 /**
- * Parse GraphQL code into interactive tokens with semantic information
+ * Error types for GraphQL parsing
+ */
+export type ParseError =
+  | { readonly _tag: 'InvalidInput'; readonly message: string }
+  | { readonly _tag: 'DocumentTooLarge'; readonly maxSize: number; readonly actualSize: number }
+  | { readonly _tag: 'TreeSitterError'; readonly message: string }
+  | { readonly _tag: 'ParserInitError'; readonly message: string }
+
+const makeParseError = {
+  invalidInput: (message: string): ParseError => ({ _tag: 'InvalidInput', message }),
+  documentTooLarge: (maxSize: number, actualSize: number): ParseError => ({
+    _tag: 'DocumentTooLarge',
+    maxSize,
+    actualSize,
+  }),
+  treeSitterError: (message: string): ParseError => ({ _tag: 'TreeSitterError', message }),
+  parserInitError: (message: string): ParseError => ({ _tag: 'ParserInitError', message }),
+}
+
+/**
+ * Parse GraphQL code into interactive tokens with semantic information (Either version)
  *
  * @param code - The raw GraphQL code to parse
  * @param annotations - CodeHike annotations that might affect rendering
  * @param schema - Optional GraphQL schema for semantic analysis
- * @returns Array of tokens representing the parsed code
+ * @returns Either with array of tokens on right or ParseError on left
  */
-export async function parseGraphQLWithTreeSitter(
+export async function parseGraphQLWithTreeSitterEither(
   code: string,
   annotations: CodeAnnotation[] = [],
   schema?: GraphQLSchema,
-): Promise<GraphQLToken[]> {
+): Promise<Either.Either<GraphQLToken[], ParseError>> {
   // Validate input
   if (!code || typeof code !== 'string') {
-    throw new Error('Invalid GraphQL code: code must be a non-empty string')
+    return Either.left(makeParseError.invalidInput('Invalid GraphQL code: code must be a non-empty string'))
   }
 
   // Prevent parsing extremely large documents that could cause performance issues
-  if (code.length > 100_000) {
-    throw new Error('GraphQL document too large: maximum 100,000 characters allowed')
+  const maxSize = 100_000
+  if (code.length > maxSize) {
+    return Either.left(makeParseError.documentTooLarge(maxSize, code.length))
   }
 
   // Step 1: Parse with tree-sitter
-  const parser = await getParser()
+  let parser: WebTreeSitter.Parser
+  try {
+    parser = await getParser()
+  } catch (error) {
+    return Either.left(makeParseError.parserInitError(
+      error instanceof Error ? error.message : 'Failed to initialize parser',
+    ))
+  }
+
   const tree = parser.parse(code)
 
   if (!tree) {
-    throw new Error('Tree-sitter failed to parse GraphQL code')
+    return Either.left(makeParseError.treeSitterError('Tree-sitter failed to parse GraphQL code'))
   }
-
-  // Check if tree-sitter found syntax errors (disabled for now as it may be too strict)
-  // if (tree.rootNode.hasError) {
-  //   throw new Error('GraphQL syntax error detected by tree-sitter parser')
-  // }
 
   try {
     // Step 2: Walk tree and attach semantics
@@ -546,24 +571,47 @@ export async function parseGraphQLWithTreeSitter(
     // Step 3: Add error hint tokens after invalid fields
     const tokensWithHints = addErrorHintTokens(tokens, code, annotations)
 
-    return tokensWithHints
+    return Either.right(tokensWithHints)
+  } catch (error) {
+    return Either.left(makeParseError.treeSitterError(
+      error instanceof Error ? error.message : 'Failed to process tokens',
+    ))
   } finally {
-    // ## Tree-sitter Resource Lifecycle Management
-    //
-    // Tree-sitter creates native WASM objects that must be explicitly freed to prevent memory leaks.
-    // The tree object holds references to parsed nodes and internal parser state that won't be
-    // garbage collected automatically by JavaScript.
-    //
-    // Critical cleanup points:
-    // 1. Always call tree.delete() in a finally block to ensure cleanup even on errors
-    // 2. Do not access tree or any of its nodes after calling delete()
-    // 3. The parser instance is cached globally and reused across multiple parsing calls
-    //
-    // Memory safety: Once tree.delete() is called, all WebTreeSitter.Node references become invalid.
-    // Our tokens hold references to these nodes, but only use their text and position properties
-    // which are copied during token creation, so the nodes can be safely deleted.
+    // Tree-sitter Resource Lifecycle Management
     tree.delete()
   }
+}
+
+/**
+ * Parse GraphQL code into interactive tokens with semantic information
+ *
+ * @param code - The raw GraphQL code to parse
+ * @param annotations - CodeHike annotations that might affect rendering
+ * @param schema - Optional GraphQL schema for semantic analysis
+ * @returns Array of tokens representing the parsed code
+ * @deprecated Use parseGraphQLWithTreeSitterEither for better error handling
+ */
+export async function parseGraphQLWithTreeSitter(
+  code: string,
+  annotations: CodeAnnotation[] = [],
+  schema?: GraphQLSchema,
+): Promise<GraphQLToken[]> {
+  const result = await parseGraphQLWithTreeSitterEither(code, annotations, schema)
+
+  if (Either.isLeft(result)) {
+    const error = result.left
+    switch (error._tag) {
+      case 'InvalidInput':
+        throw new Error(error.message)
+      case 'DocumentTooLarge':
+        throw new Error(`GraphQL document too large: maximum ${error.maxSize} characters allowed`)
+      case 'TreeSitterError':
+      case 'ParserInitError':
+        throw new Error(error.message)
+    }
+  }
+
+  return result.right
 }
 
 /**

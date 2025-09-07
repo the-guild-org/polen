@@ -4,7 +4,7 @@ import { renderDate } from '../../../src/template/components/Changelog/Changelog
 import { configMemorySchemaRevisions, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
 
-test('shows changelog in navigation bar when multiple schema revisions are provided', async ({ page, vite }) => {
+test('shows changelog in navigation bar when multiple schema revisions are provided', async ({ page, vite, project }) => {
   // Set up schema revisions with different content
   const olderSchema = {
     date: new Date('2023-01-01'),
@@ -28,7 +28,7 @@ test('shows changelog in navigation bar when multiple schema revisions are provi
   // Create Polen configuration with multiple schema revisions
   const viteUserConfig = await pc({
     schema: configMemorySchemaRevisions([olderSchema, newerSchema]),
-  })
+  }, project.layout.cwd)
 
   // Start the development server
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)

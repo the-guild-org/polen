@@ -1,13 +1,12 @@
 import type { Config } from '#api/config/$'
 import { Routes } from '#api/routes/$'
-import { chunk } from '#lib/kit-temp'
 import { debugPolen } from '#singletons/debug'
 import { Worker } from '@effect/platform'
 import { NodeContext, NodeWorker } from '@effect/platform-node'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Path } from '@wollybeard/kit'
 import consola from 'consola'
-import { Effect, Layer } from 'effect'
+import { Array, Chunk, Effect, Layer } from 'effect'
 import getPort from 'get-port'
 import { cpus, totalmem } from 'node:os'
 import {
@@ -42,7 +41,12 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
     const minBatchSize = 10
     const idealBatchesPerWorker = 3 // Better work stealing
     const batchSize = Math.max(minBatchSize, Math.ceil(totalRoutes / (optimalWorkers * idealBatchesPerWorker)))
-    const batches = chunk(routes, batchSize)
+    const batches = Chunk.toReadonlyArray(
+      Chunk.map(
+        Chunk.chunksOf(Chunk.fromIterable(routes), batchSize),
+        batch => Chunk.toReadonlyArray(batch),
+      ),
+    )
 
     consola.info(`SSG Build Plan:`)
     consola.info(`   Routes: ${totalRoutes} pages to generate`)
@@ -194,8 +198,9 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
 
         // Final stats using successful results
         const totalTime = ((Date.now() - startTime) / 1000).toFixed(1)
-        const totalMemoryMB = successfulResults.reduce((sum, r) => sum + r.memoryUsed, 0) / (1024 * 1024)
-        const avgTimePerBatch = successfulResults.reduce((sum, r) => sum + r.duration, 0) / successfulResults.length
+        const totalMemoryMB = Array.reduce(successfulResults, 0, (sum, r) => sum + r.memoryUsed) / (1024 * 1024)
+        const avgTimePerBatch = Array.reduce(successfulResults, 0, (sum, r) => sum + r.duration)
+          / successfulResults.length
           / 1000
 
         consola.success(`\n\nSSG Complete!`)

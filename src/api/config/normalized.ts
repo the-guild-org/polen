@@ -469,7 +469,7 @@ const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | unde
   }
 }
 
-const getConfigInputDefaults = (): Config => ({
+const getConfigInputDefaults = (baseRootDirPath: string): Config => ({
   _input: {},
   name: `My Developer Portal`,
   description: `Explore and integrate with our GraphQL API`,
@@ -525,7 +525,7 @@ const getConfigInputDefaults = (): Config => ({
       enabled: true,
     },
   },
-  paths: buildPaths(process.cwd()),
+  paths: buildPaths(baseRootDirPath),
   advanced: {
     isSelfContainedMode: false,
     debug: false,
@@ -549,7 +549,7 @@ export const normalizeInput = (
     assertPathAbsolute(baseRootDirPath)
 
     const configInput_as_writeable = configInput as WritableDeep<ConfigInput> | undefined
-    const config = structuredClone(getConfigInputDefaults()) as WritableDeep<Config>
+    const config = structuredClone(getConfigInputDefaults(baseRootDirPath)) as WritableDeep<Config>
 
     if (configInput_as_writeable) {
       config._input = configInput_as_writeable
@@ -655,6 +655,15 @@ export const normalizeInput = (
     // Process examples configuration
     if (configInput_as_writeable?.examples) {
       const examplesInput = configInput_as_writeable.examples
+
+      // The schema transform handles boolean shorthand, so we always get an object here
+      if (examplesInput.enabled !== undefined) {
+        // If explicitly disabled, set display to 'none'
+        if (examplesInput.enabled === false) {
+          config.examples.display = 'none'
+        }
+        // enabled: true keeps defaults
+      }
 
       if (examplesInput.display !== undefined) {
         config.examples.display = examplesInput.display

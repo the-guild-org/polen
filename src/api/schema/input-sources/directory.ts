@@ -98,8 +98,8 @@ export const loader = InputSource.createEffect({
       // Check if we have either:
       // 1. A single schema.graphql file (non-versioned mode)
       // 2. Any .graphql files with valid date names (versioned mode)
-      const hasSchemaFile = files.some(file => file === 'schema.graphql')
-      const hasVersionedFiles = files.some(file => {
+      const hasSchemaFile = Array.some(files, file => file === 'schema.graphql')
+      const hasVersionedFiles = Array.some(files, file => {
         if (!file.endsWith('.graphql')) return false
         const name = Path.basename(file, '.graphql')
         return /^\d{4}-\d{2}-\d{2}$/.test(name)

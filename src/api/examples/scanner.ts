@@ -5,7 +5,7 @@ import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
 import { FileSystem } from '@effect/platform'
 import { Str } from '@wollybeard/kit'
-import { Effect, HashMap, HashSet, Match } from 'effect'
+import { Array, Effect, HashMap, HashSet, Match } from 'effect'
 import * as Path from 'node:path'
 import type { Diagnostic } from './diagnostic/diagnostic.js'
 import {
@@ -183,7 +183,10 @@ const lintFileLayout = (
       DocumentVersioned: (doc) => {
         // Get all versions covered by this document
         const coveredVersions = Document.Versioned.getAllVersions(doc)
-        const missingVersions = schemaVersions.filter(sv => !coveredVersions.some(cv => Version.equivalence(sv, cv)))
+        const missingVersions = Array.filter(
+          schemaVersions,
+          sv => !Array.some(coveredVersions, cv => Version.equivalence(sv, cv)),
+        )
 
         if (missingVersions.length > 0) {
           diagnostics.push(makeDiagnosticMissingVersions({
@@ -195,7 +198,7 @@ const lintFileLayout = (
         }
 
         // Check for duplicate content between selections
-        const entries = Array.from(HashMap.entries(doc.versionDocuments))
+        const entries = [...HashMap.entries(doc.versionDocuments)]
         const duplicates: Array<{ version1: string; version2: string }> = []
         for (let i = 0; i < entries.length; i++) {
           for (let j = i + 1; j < entries.length; j++) {

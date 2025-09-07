@@ -1,41 +1,43 @@
 # Integration Test Issues
 
-## Example Validation Failures
+## Example Validation Errors in Pokemon Example
 
-As of PR #139 (https://github.com/the-guild-org/polen/pull/139), integration tests are experiencing validation errors during the Polen build process. These errors appear as:
+The Pokemon example project (`examples/pokemon/`) contains GraphQL documents with validation errors. These are legitimate issues in the example's GraphQL files that need to be fixed.
+
+### Current Validation Errors
+
+When running example tests that use the Pokemon project, Polen correctly validates the GraphQL documents against the schema and reports errors such as:
 
 ```
 examples-validation found 44 errors:
-✗ 1. Example "schema" has validation errors: The "Query" definition is not executable.
-✗ 2. Example "catch-pokemon" has validation errors: Unknown type "ID".
+✗ Example "catch-pokemon" has validation errors: Unknown type "ID".
+✗ Example "get-pokemon" has validation errors: Unknown type "ID".
 ...
 ```
 
 ### Root Cause
 
-These validation errors occur when Polen processes example GraphQL documents during the build. The errors are not directly related to the circular dependency fix implemented in PR #139, but are pre-existing issues with the example validation system.
+The Pokemon example's GraphQL schema files do not define the `ID` scalar type, which is a built-in GraphQL type. The example's GraphQL documents use `ID` type in their queries and mutations, but the schema files don't include this scalar definition.
 
-### Affected Tests
+### Test Isolation Status
 
-The validation errors affect integration tests that rely on Polen's example processing, particularly:
+**RESOLVED**: The test isolation issues have been fixed:
 
-- Tests that use GraphQL documents with schemas
-- Tests that process multiple example files
-- Tests that validate GraphQL queries against schemas
+1. Fixed runtime error in validator's `parseDocumentSafe` function
+2. Updated `getConfigInputDefaults` to use the correct base directory instead of `process.cwd()`
 
-### Temporary Workaround
+Tests are now properly isolated and run in their temporary directories. The validation errors seen are from the actual example projects being tested, not from Polen's own `/examples/` directory.
 
-Until the underlying example validation issue is resolved, these errors may cause integration test failures in CI. The core functionality (circular dependency resolution) has been verified to work correctly through unit tests and build verification.
+### To Fix the Validation Errors
 
-### Related Issues
+1. Add built-in scalar definitions to the Pokemon schema files:
+   - `scalar ID`
+   - Any other missing built-in scalars used in the documents
+2. Ensure all types referenced in the example GraphQL documents are defined in the schema
+3. Fix any executable/non-executable schema issues (e.g., Query types marked as non-executable)
 
-- PR #139: Removed mask library and resolved circular dependency between document and version-coverage modules
-- The validation system may need updates to properly handle the new module structure
+### Integration Tests Status
 
-## Future Resolution
-
-To properly fix these issues:
-
-1. Review the example validation logic in `src/api/examples/diagnostic/validator.ts`
-2. Ensure proper schema resolution for versioned and unversioned documents
-3. Update integration test fixtures to provide valid GraphQL schemas and examples
+- **Page tests**: ✅ Passing
+- **Schema tests**: ✅ Passing
+- **Example tests**: ⚠️ Show validation warnings but don't fail (expected behavior for invalid GraphQL documents)

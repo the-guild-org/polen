@@ -1,7 +1,8 @@
 import { S } from '#lib/kit-temp/effect'
-import { Array, HashMap, Iterable, Order, pipe } from 'effect'
+import { Array, Either, HashMap, Iterable, Order, pipe } from 'effect'
 import { Schema } from '../schema/$.js'
 import { Version } from '../version/$.js'
+import { EmptyCatalogError } from './catalog.js'
 
 // ============================================================================
 // Schema
@@ -51,19 +52,39 @@ export const equivalence = S.equivalence(Versioned)
 // ============================================================================
 
 /**
+ * Get the latest schema from a versioned catalog.
+ * The latest version is determined by Version.max comparison.
+ *
+ * @param catalog - The versioned catalog
+ * @returns Either with the latest schema or EmptyCatalogError
+ */
+export const getLatest = (catalog: Versioned): Either.Either<Schema.Versioned.Versioned, EmptyCatalogError> => {
+  const schema = getAll(catalog)[0]
+  if (!schema) {
+    return Either.left(
+      new EmptyCatalogError({
+        reason: 'Versioned catalog has no entries - cannot get latest schema',
+      }),
+    )
+  }
+  return Either.right(schema)
+}
+
+/**
  * Get the latest schema definition from a versioned catalog.
  * The latest version is determined by Version.max comparison.
  *
  * @param catalog - The versioned catalog
  * @returns The GraphQL schema definition of the latest version
  * @throws {Error} If the catalog has no entries
+ * @deprecated Use getLatest which returns Either
  */
 export const getLatestOrThrow = (catalog: Versioned): Schema.Versioned.Versioned => {
-  const schema = getAll(catalog)[0]
-  if (!schema) {
-    throw new Error('Versioned catalog has no entries - cannot get latest schema')
+  const result = getLatest(catalog)
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.reason)
   }
-  return schema
+  return result.right
 }
 
 /**

@@ -3,9 +3,28 @@ import { S } from '#lib/kit-temp/effect'
 import { Schema } from '#lib/schema/$'
 import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
-import { Option } from 'effect'
+import { Data, Either, Option } from 'effect'
 import { DocumentUnversioned } from './unversioned.js'
 import * as DocumentVersioned from './versioned.js'
+
+// ============================================================================
+// Error Types
+// ============================================================================
+
+/**
+ * Error thrown when trying to use version coverage with an unversioned catalog
+ */
+export class VersionCoverageMismatchError extends Data.TaggedError('VersionCoverageMismatchError')<{
+  readonly reason: string
+}> {}
+
+/**
+ * Error thrown when a version is not found in the document
+ */
+export class VersionNotFoundInDocumentError extends Data.TaggedError('VersionNotFoundInDocumentError')<{
+  readonly version: string
+  readonly reason: string
+}> {}
 
 // ============================================================================
 // Schema
@@ -71,7 +90,10 @@ export const resolveDocumentContent = (
   const contentOption = DocumentVersioned.getContentForVersion(document, version)
 
   if (Option.isNone(contentOption)) {
-    throw new Error(`Version ${Version.encodeSync(version)} not covered by document`)
+    throw new VersionNotFoundInDocumentError({
+      version: Version.encodeSync(version),
+      reason: `Version ${Version.encodeSync(version)} not covered by document`,
+    })
   }
 
   return contentOption.value
@@ -85,37 +107,64 @@ export const resolveDocumentContent = (
  * @param document - The document to resolve content from
  * @param catalog - The schema catalog (optional)
  * @param versionCoverage - The version coverage to use (optional, defaults to latest)
- * @returns Object with resolved content and optional schema
- * @throws {Error} If versions don't match between document and catalog
+ * @returns Either with resolved content and optional schema, or error
  */
 export const resolveDocumentAndSchema = (
   document: Document,
   catalog?: Catalog.Catalog,
   versionCoverage?: VersionCoverage.VersionCoverage | null,
-): { content: string; schema?: Schema.Schema } => {
+): Either.Either<
+  { content: string; schema?: Schema.Schema },
+  | VersionCoverageMismatchError
+  | VersionNotFoundInDocumentError
+  | Catalog.VersionNotFoundInCatalogError
+  | Catalog.EmptyCatalogError
+> => {
   // Handle unversioned document
   if (document._tag === 'DocumentUnversioned') {
-    const result: { content: string; schema?: Schema.Schema } = {
-      content: document.document,
+    const content = document.document
+
+    if (!catalog) {
+      return Either.right({ content })
     }
-    if (catalog) {
-      result.schema = Catalog.resolveCatalogSchema(catalog, null)
-    }
-    return result
+
+    return Catalog.resolveCatalogSchemaEither(catalog, null).pipe(
+      Either.map(schema => ({ content, schema })),
+    )
   }
 
   // Handle versioned document
-  const content = resolveDocumentContent(document, versionCoverage)
+  let content: string
+  try {
+    content = resolveDocumentContent(document, versionCoverage)
+  } catch (error) {
+    // resolveDocumentContent throws our tagged error
+    if (error instanceof VersionNotFoundInDocumentError) {
+      return Either.left(error)
+    }
+    // This shouldn't happen but handle gracefully
+    return Either.left(
+      new VersionNotFoundInDocumentError({
+        version: String(versionCoverage),
+        reason: error instanceof Error ? error.message : String(error),
+      }),
+    )
+  }
 
   if (!catalog) {
-    return { content }
+    return Either.right({ content })
   }
 
   // Cannot use version coverage with unversioned catalog
   if (versionCoverage && Catalog.Unversioned.is(catalog)) {
-    throw new Error('Cannot use a version coverage with an unversioned catalog')
+    return Either.left(
+      new VersionCoverageMismatchError({
+        reason: 'Cannot use a version coverage with an unversioned catalog',
+      }),
+    )
   }
 
-  const schema = Catalog.resolveCatalogSchema(catalog, versionCoverage)
-  return { content, schema }
+  return Catalog.resolveCatalogSchemaEither(catalog, versionCoverage).pipe(
+    Either.map(schema => ({ content, schema })),
+  )
 }

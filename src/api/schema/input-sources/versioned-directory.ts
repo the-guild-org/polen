@@ -10,7 +10,7 @@ import { debugPolen } from '#singletons/debug'
 import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Arr, Path } from '@wollybeard/kit'
-import { Effect, HashMap } from 'effect'
+import { Array, Effect, HashMap } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 
 const debug = debugPolen.sub(`schema:data-source-versioned-schema-directory`)
@@ -452,9 +452,8 @@ export const loader = InputSource.createEffect({
           // Check for revision files or schema.graphql
           const dirFiles = yield* Effect.either(fs.readDirectory(versionPath))
           if (dirFiles._tag === 'Right') {
-            const hasRevisions = dirFiles.right.some(file =>
-              /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql'
-            )
+            const hasRevisions = Array.some(dirFiles.right, file =>
+              /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql')
             if (hasRevisions) {
               return true
             }
@@ -520,9 +519,8 @@ export const loader = InputSource.createEffect({
         // Check for schema files
         const dirFiles = yield* Effect.either(fs.readDirectory(versionPath))
         if (dirFiles._tag === 'Right') {
-          const hasSchemaFiles = dirFiles.right.some(file =>
-            /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql'
-          )
+          const hasSchemaFiles = Array.some(dirFiles.right, file =>
+            /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql')
 
           if (hasSchemaFiles) {
             debug('found valid schema files, proceeding with full read')
