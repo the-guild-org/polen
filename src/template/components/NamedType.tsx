@@ -2,8 +2,8 @@ import { Api } from '#api/iso'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { Badge, Box, Heading, Link, Text } from '@radix-ui/themes'
-import { HashSet, Match } from 'effect'
+import { Badge, Box, Heading, Text } from '@radix-ui/themes'
+import { HashSet } from 'effect'
 import { type GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'
 import { useSchema } from '../contexts/GraphqlLifecycleContext.js'
@@ -12,6 +12,7 @@ import { ExampleLink } from './ExampleLink.js'
 import { FieldListSection } from './FieldListSection.js'
 import { TypeLink } from './graphql/graphql.js'
 import { Markdown } from './Markdown.js'
+import { SinceBadge } from './SinceBadge.js'
 
 export interface Props {
   data: GraphQLNamedType
@@ -44,32 +45,7 @@ export const NamedType: FC<Props> = ({ data }) => {
         <Heading size='8'>
           <TypeLink type={data} />
         </Heading>
-        {since && (
-          since._tag === 'initial'
-            ? (
-              <Badge color='blue' variant='soft' size='1'>
-                Since initial version
-              </Badge>
-            )
-            : (
-              <Link
-                href={Api.Schema.Routing.createChangelogUrl(
-                  since.revision.date,
-                  since.schema,
-                )}
-                style={{ textDecoration: 'none' }}
-              >
-                <Badge color='green' variant='soft' size='1' style={{ cursor: 'pointer' }}>
-                  Added {Match.value(since.schema).pipe(
-                    Match.tagsExhaustive({
-                      SchemaVersioned: (s) => `${Version.encodeSync(s.version)}@${since.revision.date}`,
-                      SchemaUnversioned: () => since.revision.date,
-                    }),
-                  )}
-                </Badge>
-              </Link>
-            )
-        )}
+        {since && <SinceBadge since={since} />}
         {removedDate && (
           <Badge color='red' variant='soft' size='1'>
             Removed {Api.Schema.dateToVersionString(removedDate)}

@@ -70,6 +70,13 @@ export const getLatest = (catalog: Versioned): Either.Either<Schema.Versioned.Ve
   return Either.right(schema)
 }
 
+export const getOldestOrThrow = (catalog: Versioned): Schema.Versioned.Versioned => {
+  const schemas = getAll(catalog)
+  const schema = schemas[schemas.length - 1]
+  if (!schema) throw new Error('Versioned catalog has no entries - cannot get oldest schema')
+  return schema
+}
+
 /**
  * Get the latest schema definition from a versioned catalog.
  * The latest version is determined by Version.max comparison.
