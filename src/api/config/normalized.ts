@@ -596,7 +596,13 @@ export const normalizeInput = (
     // Try to read package.json name as fallback for title and name
     if (!configInput_as_writeable?.templateVariables?.title || !configInput_as_writeable?.name) {
       const packageJsonResult = yield* Effect.tryPromise({
-        try: () => Manifest.resource.read(config.paths.project.rootDir),
+        try: async () => {
+          const result = await Manifest.resource.read(config.paths.project.rootDir)
+          if (result instanceof Error) {
+            throw result
+          }
+          return result
+        },
         catch: (error) => new Error(`Failed to read package.json: ${error}`),
       }).pipe(
         Effect.either, // Convert failure to Either.Left, success to Either.Right
