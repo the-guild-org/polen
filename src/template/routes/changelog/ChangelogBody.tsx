@@ -1,4 +1,3 @@
-import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { Revision } from '#lib/revision/$'
 import { Schema } from '#lib/schema/$'
@@ -20,7 +19,10 @@ export const ChangelogBody: React.FC<{ schema: Schema.Schema }> = ({ schema }) =
         Changelog
       </Heading>
 
-      {schema.revisions.map(revision => <Changeset key={revision.date} revision={revision} schema={schema} />)}
+      {/*// todo: reverse at input source processes*/}
+      {[...schema.revisions].reverse().map(revision => (
+        <Changeset key={revision.date} revision={revision} schema={schema} />
+      ))}
     </Box>
   )
 }

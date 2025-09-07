@@ -217,7 +217,7 @@ const read = (
     // Sort by date descending (newest first for consistent catalog structure)
     const revisionInputsSorted = Array.sort(
       revisionInputsLoaded,
-      Order.reverse(Order.mapInput(DateOnly.order, (item: typeof revisionInputsLoaded[0]) => item.date)),
+      Order.mapInput(DateOnly.order, (item: typeof revisionInputsLoaded[0]) => item.date),
     )
 
     const revisions = yield* Effect.all(
