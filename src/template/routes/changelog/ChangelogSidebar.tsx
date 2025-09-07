@@ -1,8 +1,8 @@
 import { Catalog } from '#lib/catalog/$'
+import { Schema } from '#lib/schema/$'
 import { Swiss } from '#lib/swiss/$'
 import { Version } from '#lib/version'
 import { Box, Text } from '@radix-ui/themes'
-import { HashMap, Option } from 'effect'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { VersionPicker } from '../../components/VersionPicker.js'
@@ -10,16 +10,13 @@ import { ChangelogSidebarItem } from './ChangelogSidebarItem.js'
 
 export const ChangelogSidebar: React.FC<{
   catalog: Catalog.Catalog
-}> = ({ catalog }) => {
+  schema: Schema.Schema
+}> = ({ catalog, schema }) => {
   {
-    const params = useParams()
     const navigate = useNavigate()
-    const urlVersion = params['version'] ? Option.some(Version.decodeSync(params['version'])) : Option.none()
 
     // Get revisions for the current version (for sidebar)
-    const revisions = Catalog.Unversioned.is(catalog)
-      ? catalog.schema.revisions
-      : Option.getOrThrow(HashMap.get(catalog.entries, Option.getOrThrow(urlVersion))).revisions
+    const revisions = schema.revisions
 
     const [activeRevision, setActiveRevision] = useState<string | null>(null)
     // Track active revision based on URL hash
@@ -46,7 +43,7 @@ export const ChangelogSidebar: React.FC<{
 
     return (
       <Swiss.Item
-        cols={4}
+        cols={3}
         style={{
           position: 'sticky',
           top: '2rem',
@@ -56,11 +53,11 @@ export const ChangelogSidebar: React.FC<{
           overflowY: 'auto',
         }}
       >
-        {Catalog.Versioned.is(catalog) && (
+        {Catalog.Versioned.is(catalog) && Schema.Versioned.is(schema) && (
           <Box mb='3'>
             <VersionPicker
               versions={Catalog.Versioned.getVersions(catalog)}
-              currentVersion={Option.getOrThrow(urlVersion)}
+              currentVersion={schema.version}
               onVersionChange={(newVersion) => {
                 navigate(`/changelog/version/${Version.encodeSync(newVersion)}`)
               }}

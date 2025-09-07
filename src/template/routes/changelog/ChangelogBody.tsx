@@ -2,52 +2,17 @@ import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { Revision } from '#lib/revision/$'
 import { Schema } from '#lib/schema/$'
-import { Version } from '#lib/version/$'
-import { HashMap, Option } from 'effect'
 const CRITICALITY_LEVELS = ['BREAKING', 'DANGEROUS', 'NON_BREAKING'] as const
 import type { CriticalityLevel } from '@graphql-inspector/core'
 import { Box, Heading } from '@radix-ui/themes'
 import React from 'react'
 import { useMemo } from 'react'
-import { useParams } from 'react-router'
 import { CriticalitySection } from '../../components/Changelog/CriticalitySection.js'
 import * as Group from '../../components/Changelog/groups/index.js'
 import { ComponentDispatch } from '../../components/ComponentDispatch.js'
 import { renderDate } from './utils.js'
 
-export const ChangelogBody: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) => {
-  const params = useParams()
-  const urlVersion = params['version']
-
-  // Get revisions and corresponding schema based on catalog type and URL params
-  const { revisions, schema } = useMemo(() => {
-    if (Catalog.Unversioned.is(catalog)) {
-      return {
-        revisions: catalog.schema.revisions,
-        schema: catalog.schema,
-      }
-    } else {
-      // For versioned catalogs, always show specific version (never all)
-      if (urlVersion) {
-        const entryOption = Option.map(
-          HashMap.findFirst(catalog.entries, (_, key) => Version.encodeSync(key) === urlVersion),
-          ([, value]) => value,
-        )
-        return Option.match(entryOption, {
-          onNone: () => ({ revisions: [], schema: null }),
-          onSome: (entry) => ({ revisions: entry.revisions, schema: entry }),
-        })
-      }
-      // This shouldn't happen due to redirect above, but return empty as fallback
-      return { revisions: [], schema: null }
-    }
-  }, [catalog, urlVersion])
-
-  // Don't render anything while redirecting
-  if (Catalog.Versioned.is(catalog) && !urlVersion) {
-    return null
-  }
-
+export const ChangelogBody: React.FC<{ schema: Schema.Schema }> = ({ schema }) => {
   return (
     <Box>
       {/* Title bar - always shown */}
@@ -55,7 +20,7 @@ export const ChangelogBody: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog 
         Changelog
       </Heading>
 
-      {revisions.map(revision => <Changeset key={revision.date} revision={revision} schema={schema} />)}
+      {schema.revisions.map(revision => <Changeset key={revision.date} revision={revision} schema={schema} />)}
     </Box>
   )
 }

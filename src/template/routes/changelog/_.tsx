@@ -1,10 +1,14 @@
 import { Catalog } from '#lib/catalog'
+import { S } from '#lib/kit-temp/$'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
+import { Schema } from '#lib/schema/$'
 import { Swiss } from '#lib/swiss'
 import { Version } from '#lib/version'
+import { Http } from '@wollybeard/kit'
 import { Effect, Option } from 'effect'
-import { redirect, useParams } from 'react-router'
+import { HashMap } from 'effect'
+import { redirect } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { ChangelogBody } from './ChangelogBody.js'
 import { ChangelogSidebar } from './ChangelogSidebar.js'
@@ -17,7 +21,10 @@ import { ChangelogSidebar } from './ChangelogSidebar.js'
 //
 //
 
-const schema = Catalog.Catalog
+const LoaderSchema = S.Struct({
+  catalog: Catalog.Catalog,
+  schema: Schema.Schema,
+})
 
 //
 //
@@ -37,7 +44,20 @@ const loader = ({ params }: { params: { version?: string } }) => {
     throw redirect(`/changelog/version/${urlVersion}`)
   }
 
-  return Effect.succeed(catalog)
+  const schemaMaybe = ((): Option.Option<Schema.Schema> => {
+    if (Catalog.Versioned.is(catalog)) {
+      const version = Version.decodeSync(params.version!)
+      const schema = HashMap.get(catalog.entries, version)
+      return schema
+    }
+    return Option.some(catalog.schema)
+  })()
+
+  if (Option.isNone(schemaMaybe)) {
+    throw Http.Response.notFound
+  }
+
+  return Effect.succeed({ catalog, schema: schemaMaybe.value })
 }
 
 //
@@ -49,14 +69,13 @@ const loader = ({ params }: { params: { version?: string } }) => {
 //
 
 const Component = () => {
-  const catalog = useLoaderData(schema)
+  const { catalog, schema } = useLoaderData(LoaderSchema)
 
   return (
     <Swiss.Body subgrid>
-      <ChangelogSidebar catalog={catalog} />
-      {/* Main content */}
-      <Swiss.Item start={6} cols={7}>
-        <ChangelogBody catalog={catalog} />
+      <ChangelogSidebar schema={schema} catalog={catalog} />
+      <Swiss.Item start={5} cols={8}>
+        <ChangelogBody schema={schema} />
       </Swiss.Item>
     </Swiss.Body>
   )
@@ -72,23 +91,39 @@ const Component = () => {
 
 export const changelog = !schemasCatalog
   ? null
-  : route({
-    schema,
+  : Catalog.Versioned.is(schemasCatalog)
+  ? route({
     path: `changelog`,
     loader,
     Component,
     children: [
-      // Support deep linking to specific version
       route({
         path: `version/:version`,
+        schema: LoaderSchema,
         loader,
         Component,
-      }),
-      // Support deep linking to specific version/revision
-      route({
-        path: `version/:version/revision/:revision`,
-        loader,
-        Component,
+        // children: [
+        //   route({
+        //     path: `revision/:revision`,
+        //     schema: LoaderSchema,
+        //     loader,
+        //     Component,
+        //   }),
+        // ],
       }),
     ],
+  })
+  : route({
+    path: `changelog`,
+    loader,
+    schema: LoaderSchema,
+    Component,
+    // children: [
+    //   route({
+    //     path: `revision/:revision`,
+    //     schema: LoaderSchema,
+    //     loader,
+    //     Component,
+    //   }),
+    // ],
   })
