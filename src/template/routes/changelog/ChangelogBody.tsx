@@ -1,6 +1,5 @@
 import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
-import { DateOnly } from '#lib/date-only/$'
 import { Revision } from '#lib/revision/$'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
@@ -8,38 +7,17 @@ import { HashMap, Option } from 'effect'
 const CRITICALITY_LEVELS = ['BREAKING', 'DANGEROUS', 'NON_BREAKING'] as const
 import type { CriticalityLevel } from '@graphql-inspector/core'
 import { Box, Heading } from '@radix-ui/themes'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router'
-import { ComponentDispatch } from '../ComponentDispatch.js'
-import { CriticalitySection } from './CriticalitySection.js'
-import * as Group from './groups/index.js'
+import { useParams } from 'react-router'
+import { CriticalitySection } from '../../components/Changelog/CriticalitySection.js'
+import * as Group from '../../components/Changelog/groups/index.js'
+import { ComponentDispatch } from '../../components/ComponentDispatch.js'
+import { renderDate } from './utils.js'
 
-export const renderDate = (dateOnly: DateOnly.DateOnly) => {
-  const date = DateOnly.toDate(dateOnly)
-  const year = date.getUTCFullYear()
-  return `${year} ${
-    date.toLocaleString('default', {
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'UTC',
-    })
-  }`
-}
-
-export const Changelog: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) => {
+export const ChangelogBody: React.FC<{ catalog: Catalog.Catalog }> = ({ catalog }) => {
   const params = useParams()
-  const navigate = useNavigate()
   const urlVersion = params['version']
-
-  // Redirect to latest version if versioned catalog and no version specified
-  useEffect(() => {
-    if (urlVersion) return
-    if (Catalog.Unversioned.is(catalog)) return
-    const latestSchema = Catalog.Versioned.getLatestOrThrow(catalog)
-    const latestVersion = Version.encodeSync(latestSchema.version)
-    navigate(`/changelog/version/${latestVersion}`, { replace: true })
-  }, [catalog, urlVersion, navigate])
 
   // Get revisions and corresponding schema based on catalog type and URL params
   const { revisions, schema } = useMemo(() => {

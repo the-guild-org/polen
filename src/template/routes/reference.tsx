@@ -18,7 +18,7 @@ import { Field } from '../components/Field.js'
 import { TypeKindIcon } from '../components/graphql/graphql.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
-import { VersionPicker } from '../components/VersionPicker.js'
+import { ReferenceVersionPicker } from '../components/ReferenceVersionPicker.js'
 import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
 import { SidebarLayout } from '../layouts/index.js'
 
@@ -160,7 +160,7 @@ const ReferenceView = () => {
           const version = Schema.getVersion(schema)
           return catalog._tag === 'CatalogVersioned' && version
             ? (
-              <VersionPicker
+              <ReferenceVersionPicker
                 data={Catalog.Versioned.getVersions(catalog)}
                 current={version}
               />
