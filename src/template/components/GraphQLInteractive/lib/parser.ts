@@ -608,6 +608,10 @@ export async function parseGraphQLWithTreeSitter(
       case 'TreeSitterError':
       case 'ParserInitError':
         throw new Error(error.message)
+      default: {
+        const exhaustiveCheck: never = error
+        throw new Error(`Unhandled parse error: ${JSON.stringify(exhaustiveCheck)}`)
+      }
     }
   }
 

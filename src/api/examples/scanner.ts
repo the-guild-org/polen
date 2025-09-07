@@ -293,9 +293,6 @@ export const scan = (
         const schemaVersionsSet = HashSet.fromIterable(schemaVersions)
 
         for (const [versionCoverage, filePath] of HashMap.entries(resolved.versionDocuments)) {
-          const fullPath = Path.join(options.dir, filePath)
-          const fileContent = yield* fs.readFileString(fullPath)
-
           // Check if version is known (only for single versions, not sets)
           if (Version.is(versionCoverage)) {
             const versionExists = HashSet.has(schemaVersionsSet, versionCoverage)
@@ -314,6 +311,9 @@ export const scan = (
               continue
             }
           }
+
+          const fullPath = Path.join(options.dir, filePath)
+          const fileContent = yield* fs.readFileString(fullPath)
 
           versionDocuments = HashMap.set(versionDocuments, versionCoverage, fileContent)
         }
