@@ -122,10 +122,22 @@ const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema
   Effect.gen(function*() {
     if (typeof value === 'string') {
       const ast = yield* Grafaid.Schema.AST.parse(value).pipe(
-        Effect.mapError((error) => InputSource.InputSourceError('memory', `Failed to parse schema: ${error}`, error)),
+        Effect.mapError((error) =>
+          new InputSource.InputSourceError({
+            source: 'memory',
+            message: `Failed to parse schema: ${error}`,
+            cause: error,
+          })
+        ),
       )
       return yield* Grafaid.Schema.fromAST(ast).pipe(
-        Effect.mapError((error) => InputSource.InputSourceError('memory', `Failed to build schema: ${error}`, error)),
+        Effect.mapError((error) =>
+          new InputSource.InputSourceError({
+            source: 'memory',
+            message: `Failed to build schema: ${error}`,
+            cause: error,
+          })
+        ),
       )
     }
     return value // Already a GraphQLSchema
@@ -186,7 +198,11 @@ export const read = (
 
             changes = yield* Change.calcChangeset({ before, after }).pipe(
               Effect.mapError((error) =>
-                InputSource.InputSourceError('memory', `Failed to calculate changeset: ${error}`, error)
+                new InputSource.InputSourceError({
+                  source: 'memory',
+                  message: `Failed to calculate changeset: ${error}`,
+                  cause: error,
+                })
               ),
             )
           }

@@ -80,7 +80,11 @@ export const read = (
 
     const introspectionFileContent = yield* fs.readFileString(config.path).pipe(
       Effect.mapError((error) =>
-        InputSource.InputSourceError('introspectionFile', `Failed to read file ${config.path}: ${error}`, error)
+        new InputSource.InputSourceError({
+          source: 'introspectionFile',
+          message: `Failed to read file ${config.path}: ${error}`,
+          cause: error,
+        })
       ),
     )
 
@@ -90,16 +94,20 @@ export const read = (
       try: () => Json.codec.decode(introspectionFileContent),
       catch: (error) => {
         if (error instanceof SyntaxError) {
-          return InputSource.InputSourceError(
-            'introspectionFile',
-            `Invalid JSON in ${config.path}: ${error.message}`,
-            error,
+          return new InputSource.InputSourceError(
+            {
+              source: 'introspectionFile',
+              message: `Invalid JSON in ${config.path}: ${error.message}`,
+              cause: error,
+            },
           )
         }
-        return InputSource.InputSourceError(
-          'introspectionFile',
-          `Failed to parse JSON in ${config.path}: ${error}`,
-          error,
+        return new InputSource.InputSourceError(
+          {
+            source: 'introspectionFile',
+            message: `Failed to parse JSON in ${config.path}: ${error}`,
+            cause: error,
+          },
         )
       },
     })
@@ -107,7 +115,10 @@ export const read = (
     // Validate introspection data structure before passing to fromIntrospectionQuery
     if (!introspectionData || typeof introspectionData !== 'object') {
       return yield* Effect.fail(
-        InputSource.InputSourceError('introspectionFile', 'Introspection data must be a valid JSON object'),
+        new InputSource.InputSourceError({
+          source: 'introspectionFile',
+          message: 'Introspection data must be a valid JSON object',
+        }),
       )
     }
 
@@ -115,10 +126,10 @@ export const read = (
     // It will provide more specific GraphQL-related error messages
     if (!('data' in introspectionData)) {
       return yield* Effect.fail(
-        InputSource.InputSourceError(
-          'introspectionFile',
-          'Introspection data missing required "data" property (expected GraphQL introspection result format)',
-        ),
+        new InputSource.InputSourceError({
+          source: 'introspectionFile',
+          message: 'Introspection data missing required "data" property (expected GraphQL introspection result format)',
+        }),
       )
     }
 
@@ -144,7 +155,11 @@ const createCatalogFromSchema = (
       after,
     }).pipe(
       Effect.mapError((error) =>
-        InputSource.InputSourceError('introspectionFile', `Failed to calculate changeset: ${error}`, error)
+        new InputSource.InputSourceError({
+          source: 'introspectionFile',
+          message: `Failed to calculate changeset: ${error}`,
+          cause: error,
+        })
       ),
     )
 

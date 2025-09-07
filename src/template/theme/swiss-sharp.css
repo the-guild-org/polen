@@ -40,18 +40,18 @@ body {
         "SF Mono", "Monaco", "Inconsolata", "Fira Code", monospace;
 
     /* Font adjustments for impact */
-    --heading-font-size-adjust: 1.05;
+    /*--heading-font-size-adjust: 1.05;
     --heading-letter-spacing: -0.04em;
-    --heading-line-height: 0.9;
+    --heading-line-height: 0.9;*/
 
     /* Weight system - extreme contrast */
-    --font-weight-light: 200;
+    /*--font-weight-light: 200;
     --font-weight-regular: 400;
     --font-weight-medium: 500;
-    --font-weight-bold: 900;
+    --font-weight-bold: 900;*/
 
     /* Letter spacing - tighter for sharpness */
-    --letter-spacing-1: 0.04em;
+    /*--letter-spacing-1: 0.04em;
     --letter-spacing-2: 0.02em;
     --letter-spacing-3: 0em;
     --letter-spacing-4: -0.01em;
@@ -59,16 +59,16 @@ body {
     --letter-spacing-6: -0.025em;
     --letter-spacing-7: -0.03em;
     --letter-spacing-8: -0.035em;
-    --letter-spacing-9: -0.04em;
+    --letter-spacing-9: -0.04em;*/
 
     /* ============================================================================
    * Accent Color - Sharp Blue
    * ============================================================================ */
 
     /* Override accent with a sharp blue - works in both light and dark */
-    --accent-9: #0055ff;
+    /*--accent-9: #0055ff;
     --accent-10: #0044dd;
-    --accent-11: #0033bb;
+    --accent-11: #0033bb;*/
 
     /* ============================================================================
    * Spacing - Using Radix defaults to avoid breaking components
@@ -80,32 +80,32 @@ body {
    * Radius - All Sharp (Zero Radius)
    * ============================================================================ */
 
-    --radius-1: 0px;
+    /*--radius-1: 0px;
     --radius-2: 0px;
     --radius-3: 0px;
     --radius-4: 0px;
     --radius-5: 0px;
     --radius-6: 0px;
     --radius-full: 0px;
-    --radius-thumb: 0px;
+    --radius-thumb: 0px;*/
 
     /* ============================================================================
    * Shadows - Minimal & Sharp
    * ============================================================================ */
 
     /* Minimal shadows - using semi-transparent blacks for theme compatibility */
-    --shadow-1: 0 1px 0 0 rgba(0, 0, 0, 0.05);
+    /*--shadow-1: 0 1px 0 0 rgba(0, 0, 0, 0.05);
     --shadow-2: 0 2px 0 0 rgba(0, 0, 0, 0.1);
     --shadow-3: 0 4px 0 0 rgba(0, 0, 0, 0.15);
     --shadow-4: 0 8px 0 0 rgba(0, 0, 0, 0.2);
     --shadow-5: 0 12px 0 0 rgba(0, 0, 0, 0.25);
-    --shadow-6: 0 16px 0 0 rgba(0, 0, 0, 0.3);
+    --shadow-6: 0 16px 0 0 rgba(0, 0, 0, 0.3);*/
 
     /* ============================================================================
    * Cursors - Minimal
    * ============================================================================ */
 
-    --cursor-button: pointer;
+    /*--cursor-button: pointer;
     --cursor-checkbox: pointer;
     --cursor-disabled: not-allowed;
     --cursor-link: pointer;
@@ -113,5 +113,5 @@ body {
     --cursor-radio: pointer;
     --cursor-slider-thumb: grab;
     --cursor-slider-thumb-active: grabbing;
-    --cursor-switch: pointer;
+    --cursor-switch: pointer;*/
 }

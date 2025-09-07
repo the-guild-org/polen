@@ -5,7 +5,6 @@ import { DateOnly } from '#lib/date-only/$'
 import { Grafaid } from '#lib/grafaid'
 import { Revision } from '#lib/revision/$'
 import { Schema } from '#lib/schema/$'
-import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
@@ -76,18 +75,32 @@ export const loader = InputSource.createEffect({
 
       const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
         Effect.mapError((error) =>
-          InputSource.InputSourceError('file', `Failed to parse schema file: ${error}`, error)
+          new InputSource.InputSourceError({
+            source: 'file',
+            message: `Failed to parse schema file: ${error}`,
+            cause: error,
+          })
         ),
       )
       const after = yield* Grafaid.Schema.fromAST(ast).pipe(
-        Effect.mapError((error) => InputSource.InputSourceError('file', `Failed to build schema: ${error}`, error)),
+        Effect.mapError((error) =>
+          new InputSource.InputSourceError({
+            source: 'file',
+            message: `Failed to build schema: ${error}`,
+            cause: error,
+          })
+        ),
       )
 
       const date = new Date()
       const before = Grafaid.Schema.empty
       const changes = yield* Change.calcChangeset({ before, after }).pipe(
         Effect.mapError((error) =>
-          InputSource.InputSourceError('file', `Failed to calculate changeset: ${error}`, error)
+          new InputSource.InputSourceError({
+            source: 'file',
+            message: `Failed to calculate changeset: ${error}`,
+            cause: error,
+          })
         ),
       )
 

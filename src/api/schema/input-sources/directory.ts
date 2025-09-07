@@ -1,4 +1,5 @@
 import { InputSource } from '#api/schema/input-source/$'
+import { InputSourceError } from '#api/schema/input-source/errors'
 import { Catalog } from '#lib/catalog/$'
 import { Change } from '#lib/change/$'
 import { DateOnly } from '#lib/date-only/$'
@@ -178,7 +179,7 @@ export const loader = InputSource.createEffect({
 
 const read = (
   revisionInputs: { date: DateOnly.DateOnly; filePath: string }[],
-): Effect.Effect<Schema.Unversioned.Unversioned, InputSource.InputSourceError | PlatformError, FileSystem> =>
+): Effect.Effect<Schema.Unversioned.Unversioned, InputSourceError | PlatformError, FileSystem> =>
   Effect.gen(function*() {
     const revisionInputsLoaded = yield* Effect.all(
       Arr.map(revisionInputs, (revisionInput) =>
@@ -187,20 +188,20 @@ const read = (
           const content = yield* fs.readFileString(revisionInput.filePath)
           const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
             Effect.mapError((error) =>
-              InputSource.InputSourceError(
-                'directory',
-                `Failed to parse schema file ${revisionInput.filePath}: ${error}`,
-                error,
-              )
+              new InputSourceError({
+                source: 'directory',
+                message: `Failed to parse schema file ${revisionInput.filePath}: ${error}`,
+                cause: error,
+              })
             ),
           )
           const schema = yield* Grafaid.Schema.fromAST(ast).pipe(
             Effect.mapError((error) =>
-              InputSource.InputSourceError(
-                'directory',
-                `Failed to build schema from ${revisionInput.filePath}: ${error}`,
-                error,
-              )
+              new InputSourceError({
+                source: 'directory',
+                message: `Failed to build schema from ${revisionInput.filePath}: ${error}`,
+                cause: error,
+              })
             ),
           )
 
@@ -230,7 +231,11 @@ const read = (
 
           const changes = yield* Change.calcChangeset({ before, after }).pipe(
             Effect.mapError((error) =>
-              InputSource.InputSourceError('directory', `Failed to calculate changeset: ${error}`, error)
+              new InputSourceError({
+                source: 'directory',
+                message: `Failed to calculate changeset: ${error}`,
+                cause: error,
+              })
             ),
           )
 
@@ -245,7 +250,7 @@ const read = (
     // Get the latest schema (first in the array after sorting newest first)
     const latestSchemaData = revisionInputsSorted[0]?.schema
     if (!latestSchemaData) {
-      return yield* Effect.fail(InputSource.InputSourceError('directory', 'No schema files found'))
+      return yield* Effect.fail(new InputSourceError({ source: 'directory', message: 'No schema files found' }))
     }
 
     // Create unversioned schema with full revisions

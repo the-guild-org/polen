@@ -1,13 +1,14 @@
 import type { Config } from '#api/config/normalized'
 import { Augmentations } from '#api/schema/augmentations/$'
-import type { EffectInputSource, InputSource, InputSourceError } from '#api/schema/input-source/input-source'
+import type { InputSourceError } from '#api/schema/input-source/errors'
+import type { EffectInputSource, InputSource } from '#api/schema/input-source/input-source'
 import * as InputSourceLoader from '#api/schema/input-source/load'
 import { InputSources } from '#api/schema/input-sources/$'
 import { Catalog } from '#lib/catalog/$'
 import type { PlatformError } from '@effect/platform/Error'
 import type { FileSystem } from '@effect/platform/FileSystem'
 import { Arr } from '@wollybeard/kit'
-import { Array, Effect, Option } from 'effect'
+import { Effect } from 'effect'
 
 // For now, we'll need a type that accepts both promise and effect sources
 type AnyInputSource = InputSource | EffectInputSource

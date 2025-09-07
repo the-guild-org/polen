@@ -203,20 +203,20 @@ export const readOrThrow = (
                 const content = yield* fs.readFileString(filePath)
                 const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
                   Effect.mapError((error) =>
-                    InputSource.InputSourceError(
-                      'versionedDirectory',
-                      `Failed to parse schema from ${filePath}: ${error}`,
-                      error,
-                    )
+                    new InputSource.InputSourceError({
+                      source: 'versionedDirectory',
+                      message: `Failed to parse schema from ${filePath}: ${error}`,
+                      cause: error,
+                    })
                   ),
                 )
                 const schema = yield* Grafaid.Schema.fromAST(ast).pipe(
                   Effect.mapError((error) =>
-                    InputSource.InputSourceError(
-                      'versionedDirectory',
-                      `Failed to build schema from ${filePath}: ${error}`,
-                      error,
-                    )
+                    new InputSource.InputSourceError({
+                      source: 'versionedDirectory',
+                      message: `Failed to build schema from ${filePath}: ${error}`,
+                      cause: error,
+                    })
                   ),
                 )
 
@@ -285,11 +285,11 @@ export const readOrThrow = (
 
                 const changes = yield* Change.calcChangeset({ before, after }).pipe(
                   Effect.mapError((error) =>
-                    InputSource.InputSourceError(
-                      'versionedDirectory',
-                      `Failed to calculate changeset for ${version.name}: ${error}`,
-                      error,
-                    )
+                    new InputSource.InputSourceError({
+                      source: 'versionedDirectory',
+                      message: `Failed to calculate changeset for ${version.name}: ${error}`,
+                      cause: error,
+                    })
                   ),
                 )
 
@@ -330,11 +330,11 @@ export const readOrThrow = (
 
                         const changes = yield* Change.calcChangeset({ before, after }).pipe(
                           Effect.mapError((error) =>
-                            InputSource.InputSourceError(
-                              'versionedDirectory',
-                              `Failed to calculate parent changeset: ${error}`,
-                              error,
-                            )
+                            new InputSource.InputSourceError({
+                              source: 'versionedDirectory',
+                              message: `Failed to calculate parent changeset: ${error}`,
+                              cause: error,
+                            })
                           ),
                         )
 

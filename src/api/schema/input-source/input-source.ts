@@ -1,4 +1,5 @@
 import { InputSource } from '#api/schema/input-source/$'
+import type { InputSourceError } from '#api/schema/input-source/errors'
 import type { Catalog } from '#lib/catalog/$'
 import type { PlatformError } from '@effect/platform/Error'
 import type { FileSystem } from '@effect/platform/FileSystem'
@@ -6,28 +7,6 @@ import { Err, Fn } from '@wollybeard/kit'
 import { Effect } from 'effect'
 
 type Options = object
-
-// ============================================================================
-// Error Types
-// ============================================================================
-
-export interface InputSourceError {
-  readonly _tag: 'InputSourceError'
-  readonly source: string
-  readonly message: string
-  readonly cause?: unknown
-}
-
-export const InputSourceError = (
-  source: string,
-  message: string,
-  cause?: unknown,
-): InputSourceError => ({
-  _tag: 'InputSourceError',
-  source,
-  message,
-  cause,
-})
 
 // ============================================================================
 // Effect-based InputSource
