@@ -1,4 +1,4 @@
-import { Schema as S } from 'effect'
+import { Duration, Schema as S } from 'effect'
 import { proxy } from 'valtio'
 
 // ============================================================================
@@ -68,8 +68,10 @@ export const initialState: State = {
   toasts: [],
 }
 
+const DEFAULT_TOAST_DURATION = Duration.seconds(5)
+
 const toastDefaults = {
-  duration: 5000,
+  duration: Duration.toMillis(DEFAULT_TOAST_DURATION),
   actions: [],
 } satisfies Partial<Toast>
 
@@ -96,7 +98,8 @@ export const store = proxy({
 
     // Auto-remove after duration (default 5 seconds). Set duration to 0 to disable auto-dismiss
     if (toast.duration !== 0) {
-      setTimeout(() => store.remove(id), toast.duration || toastDefaults.duration)
+      const durationMs = toast.duration || toastDefaults.duration
+      setTimeout(() => store.remove(id), durationMs)
     }
 
     return id

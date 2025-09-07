@@ -1,3 +1,4 @@
+import { HashSet } from 'effect'
 import type { ExampleName, ExampleSelection } from './config.js'
 import { Example } from './schemas/example/$.js'
 
@@ -28,14 +29,14 @@ export const filterExamplesBySelection = (
 
   // Handle include pattern
   if ('include' in selection) {
-    const includeSet = new Set<ExampleName>(selection.include)
-    return examples.filter(example => includeSet.has(example.name as ExampleName))
+    const includeSet = HashSet.fromIterable(selection.include)
+    return examples.filter(example => HashSet.has(includeSet, example.name as ExampleName))
   }
 
   // Handle exclude pattern
   if ('exclude' in selection) {
-    const excludeSet = new Set<ExampleName>(selection.exclude)
-    return examples.filter(example => !excludeSet.has(example.name as ExampleName))
+    const excludeSet = HashSet.fromIterable(selection.exclude)
+    return examples.filter(example => !HashSet.has(excludeSet, example.name as ExampleName))
   }
 
   // Fallback to all examples if selection pattern is not recognized
@@ -69,12 +70,14 @@ export const shouldDisplayExample = (
 
   // Handle include pattern
   if ('include' in selection) {
-    return selection.include.includes(exampleName)
+    const includeSet = HashSet.fromIterable(selection.include)
+    return HashSet.has(includeSet, exampleName)
   }
 
   // Handle exclude pattern
   if ('exclude' in selection) {
-    return !selection.exclude.includes(exampleName)
+    const excludeSet = HashSet.fromIterable(selection.exclude)
+    return !HashSet.has(excludeSet, exampleName)
   }
 
   // Fallback to show if selection pattern is not recognized

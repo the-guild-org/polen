@@ -1,6 +1,7 @@
 import { Grafaid } from '#lib/grafaid'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
+import { Array, Option, Predicate } from 'effect'
 
 export interface ReferencePathParts {
   version?: Version.Version
@@ -46,16 +47,15 @@ export const createReferenceVersionPath = (version?: Version.Version): string =>
 export const joinSegmentsAndPaths = (
   ...segmentsOrPaths: (string | undefined | null | (string | null | undefined)[])[]
 ): string => {
-  const path = '/' + segmentsOrPaths
-    .flat()
-    .filter((_): _ is string => _ !== undefined && _ !== null)
-    .map(chunkUnformatted =>
-      chunkUnformatted
-        .replace(/^\//, '')
-        .replace(/\/$/, '')
-    )
-    .filter(Boolean)
-    .join('/')
+  const segments = Array.filterMap(
+    segmentsOrPaths.flat(),
+    (segment) => {
+      if (!Predicate.isNotNullable(segment)) return Option.none()
+      const cleaned = segment.replace(/^\//, '').replace(/\/$/, '')
+      return cleaned ? Option.some(cleaned) : Option.none()
+    },
+  )
+  const path = '/' + segments.join('/')
 
   return path
 }

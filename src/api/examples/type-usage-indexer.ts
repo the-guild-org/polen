@@ -1,6 +1,5 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
-import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { HashMap, HashSet, Option } from 'effect'
 import { Schema as S } from 'effect'
@@ -76,19 +75,19 @@ const extractTypesFromQuery = (
   const resolveFieldType = (
     fieldName: string,
     parentTypeName: string | null,
-  ): string | null => {
-    if (!parentTypeName) return null
+  ): Option.Option<string> => {
+    if (!parentTypeName) return Option.none()
 
     const parentType = schema.getType(parentTypeName)
     if (!parentType || !isObjectType(parentType) && !isInterfaceType(parentType)) {
-      return null
+      return Option.none()
     }
 
     const field = parentType.getFields()[fieldName]
-    if (!field) return null
+    if (!field) return Option.none()
 
     const namedType = getNamedType(field.type)
-    return namedType.name
+    return Option.some(namedType.name)
   }
 
   // Track the current type context as we traverse
@@ -120,8 +119,9 @@ const extractTypesFromQuery = (
         // Special handling for __typename
         if (node.name.value === '__typename') return
 
-        const fieldType = resolveFieldType(node.name.value, currentType)
-        if (fieldType) {
+        const fieldTypeOption = resolveFieldType(node.name.value, currentType)
+        if (Option.isSome(fieldTypeOption)) {
+          const fieldType = fieldTypeOption.value
           addType(fieldType)
           // Update context for nested selections
           if (node.selectionSet) {
@@ -161,29 +161,6 @@ const extractTypesFromQuery = (
 }
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get a schema by version from the catalog.
- */
-const getSchemaByVersion = (
-  catalog: Catalog.Catalog,
-  version: Version.Version,
-): Schema.Schema | undefined => {
-  if (Catalog.Versioned.is(catalog)) {
-    // Use HashMap.get for O(1) lookup
-    return HashMap.get(catalog.entries, version).pipe(Option.getOrElse(() => undefined))
-  }
-  // For unversioned catalog, return the single schema if version matches
-  if (Catalog.Unversioned.is(catalog)) {
-    // Unversioned catalogs don't have versions, so we can't match
-    return undefined
-  }
-  return undefined
-}
-
-// ============================================================================
 // Index Creation
 // ============================================================================
 
@@ -208,7 +185,10 @@ export const createTypeUsageIndex = (
 
       for (const typeName of types) {
         // For unversioned, use the latest version from the catalog
-        const latestVersion = Catalog.getLatestVersion(schemasCatalog) ?? Version.fromString('1.0.0')
+        const latestVersion = Option.getOrElse(
+          Catalog.getLatestVersion(schemasCatalog),
+          () => Version.fromString('1.0.0'),
+        )
         index = addExampleToIndex(index, UNVERSIONED_KEY, typeName, example, latestVersion)
       }
     } else if (Document.Versioned.is(example.document)) {
@@ -216,11 +196,19 @@ export const createTypeUsageIndex = (
       const allVersions = Document.Versioned.getAllVersions(example.document)
 
       for (const version of allVersions) {
-        const schema = getSchemaByVersion(schemasCatalog, version)
-        if (!schema) continue
+        // Use centralized resolution to get schema for version
+        const schemaOption = Option.liftThrowable(
+          () => Catalog.resolveCatalogSchema(schemasCatalog, version),
+        )()
+        if (Option.isNone(schemaOption)) {
+          // Skip if version not found in catalog
+          continue
+        }
+        const schema = schemaOption.value
 
-        const documentString = Document.Versioned.getContentForVersion(example.document, version)
-        if (!documentString) continue
+        const documentStringOption = Document.Versioned.getContentForVersion(example.document, version)
+        if (Option.isNone(documentStringOption)) continue
+        const documentString = documentStringOption.value
 
         const types = extractTypesFromQuery(documentString, schema.definition)
 

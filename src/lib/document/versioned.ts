@@ -1,5 +1,5 @@
 import { S } from '#lib/kit-temp/effect'
-import { VersionCoverage } from '#lib/version-selection/$'
+import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
 import { HashMap, Option } from 'effect'
 
@@ -56,21 +56,21 @@ export const encode = S.encode(DocumentVersioned)
 export const getContentForVersion = (
   doc: DocumentVersioned,
   version: Version.Version,
-): string | null => {
+): Option.Option<string> => {
   // Try exact match first (single version key)
   const exactMatch = HashMap.get(doc.versionDocuments, version)
   if (Option.isSome(exactMatch)) {
-    return exactMatch.value
+    return Option.some(exactMatch.value)
   }
 
   // Check version sets
   for (const [selection, content] of HashMap.entries(doc.versionDocuments)) {
     if (VersionCoverage.isSet(selection) && VersionCoverage.contains(selection, version)) {
-      return content
+      return Option.some(content)
     }
   }
 
-  return null
+  return Option.none()
 }
 
 /**
@@ -98,9 +98,9 @@ export const getContentForLatestVersionOrThrow = (doc: DocumentVersioned): strin
   // Use Version.max with reduce to find the latest version
   const latestVersion = versions.reduce(Version.max)
 
-  const content = getContentForVersion(doc, latestVersion)
-  if (!content) {
+  const contentOption = getContentForVersion(doc, latestVersion)
+  if (Option.isNone(contentOption)) {
     throw new Error('Latest version not found in document')
   }
-  return content
+  return contentOption.value
 }

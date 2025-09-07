@@ -3,7 +3,7 @@ import { Change } from '#lib/change/$'
 import { Revision } from '#lib/revision/$'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { Match } from 'effect'
+import { Match, Option } from 'effect'
 
 // ============================================================================
 // Lifecycles Type - Simple Index
@@ -44,21 +44,21 @@ export type Since =
 /**
  * Extract the type name from a change
  */
-const extractTypeNameFromChange = (change: Change.Change): string | null => {
+const extractTypeNameFromChange = (change: Change.Change): Option.Option<string> => {
   return Match.value(change).pipe(
-    Match.tag('TYPE_ADDED', (c) => c.name),
-    Match.tag('TYPE_REMOVED', (c) => c.name),
-    Match.tag('FIELD_ADDED', (c) => c.typeName),
-    Match.tag('FIELD_REMOVED', (c) => c.typeName),
-    Match.tag('INPUT_FIELD_ADDED', (c) => c.inputName),
-    Match.tag('INPUT_FIELD_REMOVED', (c) => c.inputName),
-    Match.tag('ENUM_VALUE_ADDED', (c) => c.enumName),
-    Match.tag('ENUM_VALUE_REMOVED', (c) => c.enumName),
-    Match.tag('UNION_MEMBER_ADDED', (c) => c.unionName),
-    Match.tag('UNION_MEMBER_REMOVED', (c) => c.unionName),
-    Match.tag('OBJECT_TYPE_INTERFACE_ADDED', (c) => c.objectName),
-    Match.tag('OBJECT_TYPE_INTERFACE_REMOVED', (c) => c.objectName),
-    Match.orElse(() => null),
+    Match.tag('TYPE_ADDED', (c) => Option.some(c.name)),
+    Match.tag('TYPE_REMOVED', (c) => Option.some(c.name)),
+    Match.tag('FIELD_ADDED', (c) => Option.some(c.typeName)),
+    Match.tag('FIELD_REMOVED', (c) => Option.some(c.typeName)),
+    Match.tag('INPUT_FIELD_ADDED', (c) => Option.some(c.inputName)),
+    Match.tag('INPUT_FIELD_REMOVED', (c) => Option.some(c.inputName)),
+    Match.tag('ENUM_VALUE_ADDED', (c) => Option.some(c.enumName)),
+    Match.tag('ENUM_VALUE_REMOVED', (c) => Option.some(c.enumName)),
+    Match.tag('UNION_MEMBER_ADDED', (c) => Option.some(c.unionName)),
+    Match.tag('UNION_MEMBER_REMOVED', (c) => Option.some(c.unionName)),
+    Match.tag('OBJECT_TYPE_INTERFACE_ADDED', (c) => Option.some(c.objectName)),
+    Match.tag('OBJECT_TYPE_INTERFACE_REMOVED', (c) => Option.some(c.objectName)),
+    Match.orElse(() => Option.none()),
   )
 }
 
@@ -72,8 +72,9 @@ export const createFromSchema = (schema: Schema.Schema): Lifecycles => {
   for (const revision of schema.revisions) {
     // Process all changes in this revision
     for (const change of revision.changes) {
-      const typeName = extractTypeNameFromChange(change)
-      if (typeName) {
+      const typeNameOption = extractTypeNameFromChange(change)
+      if (Option.isSome(typeNameOption)) {
+        const typeName = typeNameOption.value
         if (!lifecycles[typeName]) {
           lifecycles[typeName] = []
         }
@@ -100,8 +101,9 @@ export const create = (catalog: Catalog.Catalog): Lifecycles => {
     for (const revision of schema.revisions) {
       // Process all changes in this revision
       for (const change of revision.changes) {
-        const typeName = extractTypeNameFromChange(change)
-        if (typeName) {
+        const typeNameOption = extractTypeNameFromChange(change)
+        if (Option.isSome(typeNameOption)) {
+          const typeName = typeNameOption.value
           if (!lifecycles[typeName]) {
             lifecycles[typeName] = []
           }
@@ -477,9 +479,9 @@ export const getFieldLifecycle = (
   lifecycles: Lifecycles,
   typeName: string,
   fieldName: string,
-): { events: ChangeEntry[] } | undefined => {
+): Option.Option<{ events: ChangeEntry[] }> => {
   const entries = lifecycles[typeName]
-  if (!entries) return undefined
+  if (!entries) return Option.none()
 
   // Filter entries related to this specific field
   const fieldEntries = entries.filter(entry => {
@@ -497,25 +499,28 @@ export const getFieldLifecycle = (
         && entry.change.fieldName === fieldName)
   })
 
-  if (fieldEntries.length === 0) return undefined
+  if (fieldEntries.length === 0) return Option.none()
 
   // Return in a format compatible with existing code that expects an object with events
-  return { events: fieldEntries }
+  return Option.some({ events: fieldEntries })
 }
 
 /**
  * Get type lifecycle info (for compatibility with existing UI code)
  */
-export const getTypeLifecycle = (lifecycles: Lifecycles, typeName: string): { events: ChangeEntry[] } | undefined => {
+export const getTypeLifecycle = (
+  lifecycles: Lifecycles,
+  typeName: string,
+): Option.Option<{ events: ChangeEntry[] }> => {
   const entries = lifecycles[typeName]
-  if (!entries) return undefined
+  if (!entries) return Option.none()
 
   // Filter entries related to type-level changes
   const typeEntries = entries.filter(entry => {
     return entry.change._tag === 'TYPE_ADDED' || entry.change._tag === 'TYPE_REMOVED'
   })
 
-  if (typeEntries.length === 0) return undefined
+  if (typeEntries.length === 0) return Option.none()
 
-  return { events: typeEntries }
+  return Option.some({ events: typeEntries })
 }

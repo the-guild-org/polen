@@ -1,5 +1,6 @@
 import { Box, Card, Heading, Section, Tabs, Text } from '@radix-ui/themes'
 import { highlight } from 'codehike/code'
+import { Effect } from 'effect'
 import * as React from 'react'
 import { CodeBlock } from '../CodeBlock.js'
 
@@ -73,14 +74,22 @@ export const QuickStartSection: React.FC<Props> = ({ examples = defaultExamples 
 
   React.useEffect(() => {
     const highlightExamples = async () => {
-      const highlighted = await Promise.all(
-        examples.map(async (example) => ({
-          label: example.label,
-          codeblock: await highlight(
-            { value: example.code, lang: example.language, meta: '' },
-            { theme: 'github-light' },
+      const highlighted = await Effect.runPromise(
+        Effect.all(
+          examples.map((example) =>
+            Effect.tryPromise({
+              try: async () => ({
+                label: example.label,
+                codeblock: await highlight(
+                  { value: example.code, lang: example.language, meta: '' },
+                  { theme: 'github-light' },
+                ),
+              }),
+              catch: (error) => new Error(`Failed to highlight ${example.label}: ${error}`),
+            })
           ),
-        })),
+          { concurrency: 'unbounded' },
+        ),
       )
       setHighlightedExamples(highlighted)
     }

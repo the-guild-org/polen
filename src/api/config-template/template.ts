@@ -1,5 +1,5 @@
 import type { Api } from '#api/$'
-import { ExamplesConfig } from '#api/examples/config'
+import { ExamplesConfigObject } from '#api/examples/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import type { Catalog } from '#lib/catalog/$'
 import { S } from '#lib/kit-temp/effect'
@@ -42,7 +42,7 @@ export const TemplateConfig = S.extend(
       }),
     ),
     examples: S.extend(
-      ExamplesConfig.pipe(S.omit('enabled')),
+      ExamplesConfigObject.pipe(S.omit('enabled')),
       S.Struct({
         enabled: S.Boolean,
       }),

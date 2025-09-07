@@ -1,4 +1,5 @@
 import { Grafaid } from '#lib/grafaid'
+import { Array, Option } from 'effect'
 import type { GraphQLFieldMap, GraphQLSchema } from 'graphql'
 
 export interface PathValidation {
@@ -28,8 +29,8 @@ export const doesPathExist = (schema: GraphQLSchema, path: PathValidation): bool
   if (!path.argument) return true
 
   // Check if argument exists
-  const arg = field.args.find(a => a.name === path.argument)
-  return !!arg
+  const arg = Array.findFirst(field.args, a => a.name === path.argument)
+  return Option.isSome(arg)
 }
 
 /**

@@ -5,11 +5,27 @@
 import { debugPolen } from '#singletons/debug'
 import { Path, WorkerRunner } from '@effect/platform'
 import { NodeContext, NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Effect, Layer } from 'effect'
+import { Data, Effect, Layer } from 'effect'
 import { promises as fs } from 'node:fs'
 import { type GenerateResult, PageMessage } from './worker-messages.js'
 
 const debug = debugPolen.sub(`api:ssg:page-generator`)
+
+// ============================================================================
+// Error Types
+// ============================================================================
+
+class RouteProcessingError extends Data.Error<{
+  route: string
+  cause: unknown
+}> {
+  override get message() {
+    const causeMessage = this.cause instanceof Error
+      ? this.cause.message
+      : String(this.cause)
+    return `Failed to process route ${this.route}: ${causeMessage}`
+  }
+}
 
 // ============================================================================
 // Generate Pages Handler
@@ -69,8 +85,7 @@ const handlers = {
           },
           catch: (error) => {
             debug(`Failed to process route`, { route, error })
-            const message = error instanceof Error ? error.message : String(error)
-            return new Error(`Failed to process route ${route}: ${message}`)
+            return new RouteProcessingError({ route, cause: error })
           },
         })
       }

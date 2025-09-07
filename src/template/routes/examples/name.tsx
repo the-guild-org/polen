@@ -4,6 +4,7 @@ import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
 import { Version } from '#lib/version/$'
 import { Heading } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
+import { Array, Option } from 'effect'
 import { useSearchParams } from 'react-router'
 import { examplesCatalog } from 'virtual:polen/project/examples'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
@@ -23,10 +24,11 @@ export const nameLoader = async ({ params }: any) => {
   }
 
   // Check if the example exists
-  const example = examplesCatalog.examples.find((e: any) => e.name === name)
-  if (!example) {
+  const exampleOption = Array.findFirst(examplesCatalog.examples, (e) => e.name === name)
+  if (Option.isNone(exampleOption)) {
     throw new Response('Not Found', { status: 404 })
   }
+  const example = exampleOption.value
 
   return example
 }

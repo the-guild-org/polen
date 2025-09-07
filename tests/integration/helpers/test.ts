@@ -44,8 +44,8 @@ export const test = base.extend<Fixtures>({
     }
     await viteController.stopDevelopmentServer()
   },
-  polen: async ({ page, vite }, use) => {
-    const polenBuilder = createPolenBuilder(page, vite)
+  polen: async ({ page, vite, project }, use) => {
+    const polenBuilder = createPolenBuilder(page, vite, project.layout.cwd)
     await use(polenBuilder)
   },
 })

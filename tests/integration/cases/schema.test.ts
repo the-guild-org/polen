@@ -49,14 +49,18 @@ test('no reference or changelog when schema is omitted or disabled', async ({ pa
   }
 })
 
-test('can loads schema from memory data source', async ({ page, vite }) => {
+test('can loads schema from memory data source', async ({ page, vite, project }) => {
   const viteUserConfig = await pc({
     schema: configMemorySchema(sdl),
-  })
+  }, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
-  await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
+  // Wait for the page to load
+  await page.waitForLoadState('networkidle')
+  // Check for Query and Mutation links in the sidebar
+  await expect(page.getByRole('link', { name: /Query/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Mutation/ })).toBeVisible()
 })
 
 test('can loads schema from schema data source', async ({ page, vite, project }) => {
@@ -67,7 +71,8 @@ test('can loads schema from schema data source', async ({ page, vite, project })
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
-  await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
+  // Check for Mutation link in the sidebar
+  await expect(page.getByRole('link', { name: /Mutation/ })).toBeVisible()
 })
 
 test('can loads schema from directory data source', async ({ page, vite, project }) => {
@@ -78,7 +83,7 @@ test('can loads schema from directory data source', async ({ page, vite, project
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
-  await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Mutation/ })).toBeVisible()
 })
 
 test('can loads schema from directory data source with single schema.graphql', async ({ page, vite, project }) => {
@@ -89,7 +94,7 @@ test('can loads schema from directory data source with single schema.graphql', a
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
-  await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Mutation/ })).toBeVisible()
 })
 
 test.skip('can loads schema from introspection data source', async ({ page, vite, project }) => {
@@ -124,5 +129,5 @@ test('file source takes precedence over introspection by default', async ({ page
   }, project.layout.cwd)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/reference').href)
-  await expect(page.getByText('Mutation', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Mutation/ })).toBeVisible()
 })

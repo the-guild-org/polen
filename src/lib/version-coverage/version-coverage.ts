@@ -58,7 +58,7 @@ export const encodeSync = S.encodeSync(VersionCoverage)
 export const equivalence = S.equivalence(VersionCoverage)
 
 // ============================================================================
-// Domain Logic
+// Domain Logic - Basic Operations
 // ============================================================================
 
 /**

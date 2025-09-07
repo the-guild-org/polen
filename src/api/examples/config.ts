@@ -141,7 +141,7 @@ export type ExampleDiagnostics = S.Schema.Type<typeof ExampleDiagnostics>
 // Schema - Examples Config
 // ============================================================================
 
-export const ExamplesConfig = S.Struct({
+export const ExamplesConfigObject = S.Struct({
   /**
    * Control whether the examples feature is enabled.
    * - true: Always enabled (show in nav even if no examples exist)
@@ -220,13 +220,42 @@ export const ExamplesConfig = S.Struct({
   description: 'Configuration for GraphQL examples behavior and diagnostics',
 })
 
+/**
+ * Examples configuration supporting both boolean shorthand and detailed object form.
+ * - `false`: Disable examples entirely
+ * - `true`: Enable examples with defaults
+ * - object: Fine-grained configuration
+ */
+export const ExamplesConfig = S.transform(
+  S.Union(
+    S.Boolean,
+    ExamplesConfigObject,
+  ),
+  ExamplesConfigObject,
+  {
+    strict: false,
+    decode: (input) => {
+      if (typeof input === 'boolean') {
+        // Convert boolean shorthand to object form
+        return input === false
+          ? { enabled: false } as const
+          : {} // true means use defaults
+      }
+      return input
+    },
+    encode: (value) => value,
+  },
+).annotations({
+  identifier: 'ExamplesConfigTransform',
+  title: 'Examples Configuration with Boolean Shorthand',
+  description: 'Configuration for GraphQL examples - accepts boolean shorthand or detailed object',
+})
+
 export type ExamplesConfig = S.Schema.Type<typeof ExamplesConfig>
 
 // ============================================================================
 // Constructors
-// ============================================================================
-
-export const makeExamplesConfig = ExamplesConfig.make
+export const makeExamplesConfig = ExamplesConfigObject.make
 
 // ============================================================================
 // Type Guards

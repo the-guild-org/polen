@@ -290,3 +290,33 @@ test('validates examples with version sets', () => {
   const diagnostics = validateExamples(examples, versionedCatalogWithV3)
   expect(diagnostics.length).toBe(1) // invalidField doesn't exist in the test schema
 })
+
+test('detects mismatch between versioned document and unversioned catalog', () => {
+  // Create a versioned document with multiple versions
+  const v1 = Version.fromString('1.0.0')
+  const v2 = Version.fromString('2.0.0')
+
+  const versionedDocument = Document.Versioned.make({
+    versionDocuments: HashMap.make(
+      [v1, 'query { user(id: "1") { id name } }'],
+      [v2, 'query { users { id name } }'],
+    ),
+  })
+
+  // Create an example with versioned document
+  const example = Example.make({
+    name: 'test-version-mismatch',
+    path: 'test.graphql',
+    document: versionedDocument,
+  })
+
+  // Validate against unversioned catalog - should detect mismatch
+  const diagnostics = validateExamples([example], catalog)
+
+  // Should have exactly one diagnostic about the version mismatch
+  expect(diagnostics.length).toBe(1)
+  expect(diagnostics[0]!._tag).toBe('Diagnostic')
+  expect(diagnostics[0]!.name).toBe('invalid-graphql')
+  expect(diagnostics[0]!.message).toContain('versioned content but catalog is unversioned')
+  expect(diagnostics[0]!.errors![0]!.message).toContain('Cannot use a version coverage with an unversioned catalog')
+})

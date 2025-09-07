@@ -1,6 +1,6 @@
 import { Diagnostic } from '#lib/diagnostic/$'
-import { GraphQLError } from '#lib/graphql-error/$'
 import { S } from '#lib/kit-temp/effect'
+import { Version } from '#lib/version/$'
 
 export const DiagnosticValidationError = Diagnostic.create({
   source: 'examples-validation',
@@ -11,8 +11,14 @@ export const DiagnosticValidationError = Diagnostic.create({
       name: S.String,
       path: S.String,
     }),
-    version: S.String,
-    errors: S.Array(GraphQLError.GraphQLError),
+    version: S.optional(Version.Version),
+    errors: S.Array(S.Struct({
+      message: S.String,
+      locations: S.optional(S.Array(S.Struct({
+        line: S.Number,
+        column: S.Number,
+      }))),
+    })),
   },
 }).annotations({
   identifier: 'DiagnosticValidationError',

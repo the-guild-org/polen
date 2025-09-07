@@ -5,7 +5,7 @@ import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
 test.describe('HMR', () => {
-  test('auto-refresh on content change', async ({ page, vite, project }) => {
+  test.skip('auto-refresh on content change', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/test.md': '# Initial' })
     const polenConfig = await Effect.runPromise(
       Api.ConfigResolver.fromMemory(

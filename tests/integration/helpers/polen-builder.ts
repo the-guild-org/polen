@@ -16,11 +16,15 @@ interface PolenAssertions {
 export class PolenBuilder {
   private config: WritableDeep<Polen.ConfigInput> = {}
   private server?: ViteController.ViteDevServerPlus
+  private cwd: string
 
   constructor(
     private page: Page,
     private vite: ViteController.ViteController,
-  ) {}
+    cwd: string,
+  ) {
+    this.cwd = cwd
+  }
 
   // Configuration builders
   withSchema(sdl: string): PolenBuilder {
@@ -70,7 +74,7 @@ export class PolenBuilder {
   // Navigation actions
   async goto(path: string): Promise<PolenBuilderWithPage> {
     if (!this.server) {
-      const viteUserConfig = await pc(this.config)
+      const viteUserConfig = await pc(this.config, this.cwd)
       this.server = await this.vite.startDevelopmentServer(viteUserConfig)
     }
 
@@ -140,4 +144,4 @@ export class PolenBuilderWithPage {
 }
 
 // Factory function for tests
-export const polen = (page: Page, vite: ViteController.ViteController) => new PolenBuilder(page, vite)
+export const polen = (page: Page, vite: ViteController.ViteController, cwd: string) => new PolenBuilder(page, vite, cwd)

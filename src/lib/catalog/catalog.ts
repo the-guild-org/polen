@@ -1,12 +1,32 @@
 import { S } from '#lib/kit-temp/effect'
 import { Schema } from '#lib/schema/$'
+import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
-import { HashMap, Match } from 'effect'
+import { Data, Either, HashMap, Match, Option } from 'effect'
 import * as Unversioned from './unversioned.js'
 import * as Versioned from './versioned.js'
 
 export * as Unversioned from './unversioned.js'
 export * as Versioned from './versioned.js'
+
+// ============================================================================
+// Error Types
+// ============================================================================
+
+/**
+ * Error thrown when a version is not found in the catalog
+ */
+export class VersionNotFoundInCatalogError extends Data.TaggedError('VersionNotFoundInCatalogError')<{
+  readonly version: string
+  readonly reason: string
+}> {}
+
+/**
+ * Error thrown when a catalog has no entries
+ */
+export class EmptyCatalogError extends Data.TaggedError('EmptyCatalogError')<{
+  readonly reason: string
+}> {}
 
 // ============================================================================
 // Schema
@@ -87,14 +107,77 @@ export const getLatest = (catalog: Catalog): Schema.Schema =>
 
 /**
  * Get the latest version identifier from a catalog.
- * Returns the version for versioned catalogs, or null for unversioned catalogs.
+ * Returns the version for versioned catalogs, or none for unversioned catalogs.
  */
-export const getLatestVersion = (catalog?: Catalog): Version.Version | null => {
-  if (!catalog) return null
+export const getLatestVersion = (catalog?: Catalog): Option.Option<Version.Version> => {
+  if (!catalog) return Option.none()
   return Match.value(catalog).pipe(
     Match.tagsExhaustive({
-      CatalogUnversioned: () => null,
-      CatalogVersioned: (cat) => Versioned.getVersions(cat)[0] ?? null,
+      CatalogUnversioned: () => Option.none(),
+      CatalogVersioned: (cat) => {
+        const versions = Versioned.getVersions(cat)
+        return versions[0] ? Option.some(versions[0]) : Option.none()
+      },
     }),
   )
+}
+
+// ============================================================================
+// Resolution Functions
+// ============================================================================
+
+/**
+ * Resolve schema from catalog for a given version coverage.
+ *
+ * @param catalog - The schema catalog
+ * @param versionCoverage - The version coverage to use (optional, defaults to latest)
+ * @returns Either with the resolved schema or error
+ */
+export const resolveCatalogSchemaEither = (
+  catalog: Catalog,
+  versionCoverage?: VersionCoverage.VersionCoverage | null,
+): Either.Either<Schema.Schema, VersionNotFoundInCatalogError | EmptyCatalogError> => {
+  if (Unversioned.is(catalog)) {
+    return Either.right(catalog.schema)
+  }
+
+  // If no version coverage specified, use latest
+  if (!versionCoverage) {
+    return Versioned.getLatest(catalog)
+  }
+
+  // Get the latest version from the coverage
+  const version = VersionCoverage.getLatest(versionCoverage)
+
+  const schemaOption = HashMap.get(catalog.entries, version)
+  if (Option.isNone(schemaOption)) {
+    return Either.left(
+      new VersionNotFoundInCatalogError({
+        version: Version.encodeSync(version),
+        reason: `Version ${Version.encodeSync(version)} not found in catalog`,
+      }),
+    )
+  }
+
+  return Either.right(Option.getOrThrow(schemaOption))
+}
+
+/**
+ * Resolve schema from catalog for a given version coverage.
+ *
+ * @param catalog - The schema catalog
+ * @param versionCoverage - The version coverage to use (optional, defaults to latest)
+ * @returns The resolved schema
+ * @throws {Error} If catalog is versioned but version is not found
+ * @deprecated Use resolveCatalogSchemaEither which returns Either
+ */
+export const resolveCatalogSchema = (
+  catalog: Catalog,
+  versionCoverage?: VersionCoverage.VersionCoverage | null,
+): Schema.Schema => {
+  const result = resolveCatalogSchemaEither(catalog, versionCoverage)
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.reason)
+  }
+  return result.right
 }
