@@ -5,6 +5,8 @@ import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
 test.describe('HMR', () => {
+  // Skipped: Flaky in CI - HMR timing is inconsistent across environments
+  // TODO: Find a more reliable way to test HMR functionality
   test.skip('auto-refresh on content change', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/test.md': '# Initial' })
     const polenConfig = await Effect.runPromise(
