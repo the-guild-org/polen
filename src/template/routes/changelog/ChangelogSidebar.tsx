@@ -16,7 +16,7 @@ export const ChangelogSidebar: React.FC<{
     const navigate = useNavigate()
 
     // todo: reverse at input source processes
-    const revisions = [...schema.revisions].reverse()
+    const revisions = schema.revisions
 
     const [activeRevision, setActiveRevision] = useState<string | null>(null)
     // Track active revision based on URL hash

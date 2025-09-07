@@ -38,7 +38,6 @@ export const NamedType: FC<Props> = ({ data }) => {
     ? schema.version
     : null
   const examples = useExamplesForType(data.name, currentVersion)
-  console.log(examples)
 
   return (
     <Box>
@@ -54,9 +53,8 @@ export const NamedType: FC<Props> = ({ data }) => {
         )}
       </Box>
       {description}
-      <FieldListSection data={data} />
       {HashSet.size(examples) > 0 && (
-        <Box mt='4'>
+        <Box mt='4' mb='4'>
           <Heading size='4' mb='2'>Used in Examples</Heading>
           <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {[...examples].map((exampleRef) => (
@@ -68,6 +66,7 @@ export const NamedType: FC<Props> = ({ data }) => {
           </Box>
         </Box>
       )}
+      <FieldListSection data={data} />
     </Box>
   )
 }

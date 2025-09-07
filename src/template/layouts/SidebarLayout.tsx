@@ -75,7 +75,7 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
       )}
 
       {/* Main Content - 8 columns on mobile, 9 on desktop when sidebar exists, 12 when not */}
-      <Swiss.Item cols={8} start={5}>
+      <Swiss.Item cols={6} start={5}>
         {children}
       </Swiss.Item>
     </Swiss.Body>

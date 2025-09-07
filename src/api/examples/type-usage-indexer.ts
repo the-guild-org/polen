@@ -174,7 +174,7 @@ export const createTypeUsageIndex = (
   examples: readonly Example[],
   schemasCatalog: Catalog.Catalog,
 ): TypeUsageIndex => {
-  let index = HashMap.empty<VersionKey, HashMap.HashMap<string, HashSet.HashSet<ExampleReference>>>()
+  let hashMap = HashMap.empty<VersionKey, HashMap.HashMap<string, HashSet.HashSet<ExampleReference>>>()
 
   for (const example of examples) {
     // Process based on document type
@@ -189,7 +189,7 @@ export const createTypeUsageIndex = (
           Catalog.getLatestVersion(schemasCatalog),
           () => Version.fromString('1.0.0'),
         )
-        index = addExampleToIndex(index, UNVERSIONED_KEY, typeName, example, latestVersion)
+        hashMap = addExampleToIndex(hashMap, UNVERSIONED_KEY, typeName, example, latestVersion)
       }
     } else if (Document.Versioned.is(example.document)) {
       // Versioned document - process each version covered
@@ -213,13 +213,13 @@ export const createTypeUsageIndex = (
         const types = extractTypesFromQuery(documentString, schema.definition)
 
         for (const typeName of types) {
-          index = addExampleToIndex(index, version, typeName, example, version)
+          hashMap = addExampleToIndex(hashMap, version, typeName, example, version)
         }
       }
     }
   }
 
-  return index
+  return hashMap
 }
 
 /**
@@ -272,7 +272,6 @@ export const getExampleReferencesForType = (
 ): HashSet.HashSet<S.Schema.Type<typeof ExampleReference>> => {
   const versionKey = version ?? UNVERSIONED_KEY
 
-  // TODO does not work for unversioned schemas for some reason
   return HashMap.get(typeUsageIndex, versionKey).pipe(
     Option.flatMap(versionMap => HashMap.get(versionMap, typeName)),
     Option.getOrElse(HashSet.empty<S.Schema.Type<typeof ExampleReference>>),

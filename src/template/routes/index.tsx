@@ -31,7 +31,7 @@ const Component = () => {
           )}
         />
       )}
-      <Swiss.Body>
+      <Swiss.Body style={{ marginTop: '800px' }}>
         {templateConfig.home.examples.enabled && filteredExamples.length > 0 && (
           <ExamplesSection
             examples={filteredExamples}

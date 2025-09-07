@@ -161,10 +161,9 @@ export const Examples = ({
                 scanExamplesResult.catalog.examples,
                 schemasCatalog,
               )
-              // The index will be properly encoded by the Catalog schema
               catalogWithIndex = {
                 ...scanExamplesResult.catalog,
-                typeUsageIndex: typeUsageIndex as any, // Will be encoded by Catalog.encode
+                typeUsageIndex: typeUsageIndex,
               }
             }
 
