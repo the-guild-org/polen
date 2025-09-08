@@ -16,17 +16,16 @@ You can provide schema augmentations to Polen in various ways.
 
 ### Configuration
 
-Define augmentations in your `polen.config.ts` file using the `schema.augmentations` array. Each augmentation specifies:
+Define augmentations in your `polen.config.ts` file using the `schema.augmentations` array. Each augmentation can specify:
 
-- **`type`** - What to augment (e.g., `'description'`)
-- **`on`** - Where to target it (type name, field name, etc.)
-- **`placement`** - How to place the content
-  - **`over`** - Replace the existing description entirely
-  - **`before`** - Prepend content to the existing description
-  - **`after`** - Append content to the existing description
-- **`content`** - What content to add
+- **`on`** - GraphQL path to the type or field (e.g., `'Pokemon'` or `'Query.users'`)
+- **`placement`** - How to apply the content (`'over'`, `'before'`, or `'after'`)
+- **`content`** - Markdown content to add
+- **`versions`** - Optional version-specific overrides
 
-The JSDoc documentation provides extensive details on all available options.
+::: tip
+The augmentation configuration has comprehensive JSDoc documentation with TypeScript intellisense. Hover over the configuration properties in your IDE to see detailed descriptions, examples, and usage notes.
+:::
 
 **Example:**
 
@@ -37,11 +36,7 @@ export default Polen.defineConfig({
   schema: {
     augmentations: [
       {
-        type: 'description',
-        on: {
-          type: 'TargetType',
-          name: 'User',
-        },
+        on: 'User',
         placement: 'after',
         content: 'Additional context about the User type.',
       },
@@ -71,63 +66,45 @@ export default Polen.defineConfig({
     augmentations: [
       // Replace a type's description
       {
-        type: `description`,
-        on: {
-          type: `TargetType`,
-          name: `User`,
-        },
-        placement: `over`,
+        on: 'User',
+        placement: 'over',
         content:
-          `Represents a user in the system. See the [User API Guide](/guides/users) for detailed usage.`,
+          'Represents a user in the system. See the [User API Guide](/guides/users) for detailed usage.',
       },
       // Add a deprecation notice before existing description
       {
-        type: `description`,
-        on: {
-          type: `TargetType`,
-          name: `LegacyAuth`,
-        },
-        placement: `before`,
+        on: 'LegacyAuth',
+        placement: 'before',
         content:
-          `⚠️ **Deprecated**: Use the new Auth type instead. This will be removed in v3.0.\n\n`,
+          '⚠️ **Deprecated**: Use the new Auth type instead. This will be removed in v3.0.\n\n',
       },
     ],
   },
 })
 ```
 
-```ts [Field]
+````ts [Field]
 export default Polen.defineConfig({
   schema: {
     augmentations: [
       // Add usage example after a field's description
       {
-        type: `description`,
-        on: {
-          type: `TargetField`,
-          targetType: `Query`,
-          name: `users`,
-        },
-        placement: `after`,
+        on: 'Query.users',
+        placement: 'after',
         content:
-          `\n\n**Example:**\n\`\`\`graphql\nquery GetActiveUsers {\n  users(filter: { status: ACTIVE }) {\n    id\n    name\n    email\n  }\n}\n\`\`\``,
+          '\n\n**Example:**\n```graphql\nquery GetActiveUsers {\n  users(filter: { status: ACTIVE }) {\n    id\n    name\n    email\n  }\n}\n```',
       },
       // Add implementation note to a mutation field
       {
-        type: `description`,
-        on: {
-          type: `TargetField`,
-          targetType: `Mutation`,
-          name: `createUser`,
-        },
-        placement: `after`,
+        on: 'Mutation.createUser',
+        placement: 'after',
         content:
-          `\n\n**Note:** This mutation requires authentication. Include your API key in the \`Authorization\` header.`,
+          '\n\n**Note:** This mutation requires authentication. Include your API key in the `Authorization` header.',
       },
     ],
   },
 })
-```
+````
 
 :::
 
@@ -159,13 +136,9 @@ Add team-specific implementation details, internal usage patterns, or organizati
 
 ```ts
 {
-  type: `description`,
-  on: {
-    type: `TargetType`,
-    name: `Payment`,
-  },
-  placement: `after`,
-  content: `\n\nSee also: [Payment Processing Guide](/guides/payments) | [Stripe Integration](/integrations/stripe)`,
+  on: 'Payment',
+  placement: 'after',
+  content: '\n\nSee also: [Payment Processing Guide](/guides/payments) | [Stripe Integration](/integrations/stripe)',
 }
 ```
 
@@ -173,14 +146,9 @@ Add team-specific implementation details, internal usage patterns, or organizati
 
 ```ts
 {
-  type: `description`,
-  on: {
-    type: `TargetField`,
-    targetType: `Query`,
-    name: `searchUsers`,
-  },
-  placement: `after`,
-  content: `\n\n**Rate Limit:** 100 requests per minute`,
+  on: 'Query.searchUsers',
+  placement: 'after',
+  content: '\n\n**Rate Limit:** 100 requests per minute',
 }
 ```
 
@@ -188,21 +156,64 @@ Add team-specific implementation details, internal usage patterns, or organizati
 
 ```ts
 {
-  type: `description`,
-  on: {
-    type: `TargetField`,
-    targetType: `User`,
-    name: `fullName`,
-  },
-  placement: `before`,
-  content: `**Migration Notice**: As of v2.5, use \`firstName\` and \`lastName\` separately.\n\n`,
+  on: 'User.fullName',
+  placement: 'before',
+  content: '**Migration Notice**: As of v2.5, use `firstName` and `lastName` separately.\n\n',
 }
 ```
+
+### Version-Specific Augmentations
+
+```ts
+{
+  // Default for all versions
+  on: 'Pokemon',
+  placement: 'after',
+  content: 'Standard Pokemon type.',
+  
+  // Version-specific overrides
+  versions: {
+    '2': {
+      content: 'Enhanced Pokemon with battle capabilities.',
+    },
+    '3': {
+      on: 'BattlePokemon',  // Type renamed in v3
+      content: 'Battle-ready Pokemon with advanced stats.',
+    },
+  },
+}
+```
+
+## Error Handling
+
+Polen provides robust error handling for schema augmentations. If an augmentation references a non-existent type or field, or has invalid configuration, Polen will:
+
+1. **Generate diagnostic errors** during the build process
+2. **Continue building** without the invalid augmentation
+3. **Report detailed error messages** showing exactly what went wrong
+
+This ensures your build won't crash due to augmentation issues, while still alerting you to problems that need fixing.
+
+**Example diagnostic output:**
+
+```
+[polen:schema-augmentations] Invalid path: Type 'NonExistentType' not found in schema (version: 2)
+```
+
+## Versioning Support
+
+Schema augmentations fully support versioned schemas. You can:
+
+- Apply augmentations to all versions (unversioned)
+- Target specific versions with overrides
+- Use different paths for types that change between versions
+
+The version-specific configuration inherits from top-level defaults, allowing you to define common settings once and override only what changes per version.
 
 ## Limitations
 
 ### Type Safety
 
-Currently, schema augmentations are not type-safe. You must manually ensure that the types and fields you're targeting actually exist in your schema. Referencing non-existent types or fields will not produce TypeScript errors at build time.
+Currently, schema augmentations are not type-safe at the TypeScript level. You must manually ensure that the types and fields you're targeting actually exist in your schema. However, Polen will validate these at build time and generate helpful diagnostics for any issues.
 
 **Future Enhancement**: Polen will generate static types for your augmentations to provide complete type safety and autocomplete support, making it impossible to target non-existent schema elements.

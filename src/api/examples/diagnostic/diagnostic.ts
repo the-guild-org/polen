@@ -2,7 +2,6 @@ import { DiagnosticDuplicateContent } from '#api/examples/diagnostic/duplicate-c
 import { DiagnosticInvalidFilename } from '#api/examples/diagnostic/invalid-filename'
 import { DiagnosticMissingVersions } from '#api/examples/diagnostic/missing-versions'
 import { DiagnosticUnknownVersion } from '#api/examples/diagnostic/unknown-version'
-import { DiagnosticUnusedDefault } from '#api/examples/diagnostic/unused-default'
 import { DiagnosticValidationError } from '#api/examples/diagnostic/validation-error'
 import { S } from '#lib/kit-temp/effect'
 
@@ -11,12 +10,10 @@ export * from './duplicate-content.js'
 export * from './invalid-filename.js'
 export * from './missing-versions.js'
 export * from './unknown-version.js'
-export * from './unused-default.js'
 export * from './validation-error.js'
 export { validateExamples } from './validator.js'
 
 export const Diagnostic = S.Union(
-  DiagnosticUnusedDefault,
   DiagnosticDuplicateContent,
   DiagnosticMissingVersions,
   DiagnosticInvalidFilename,

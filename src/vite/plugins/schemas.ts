@@ -1,6 +1,8 @@
 import { Api } from '#api/$'
 import { Schema } from '#api/schema/$'
+import type { Diagnostic as AugmentationDiagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
 import { Catalog } from '#lib/catalog/$'
+import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { ViteVirtual } from '#lib/vite-virtual/$'
@@ -39,7 +41,40 @@ export const Schemas = ({
   // Self-contained Schema Reader
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  const reader = createAssetReader(() => Schema.loadOrNull(config))
+  let lastDiagnostics: AugmentationDiagnostic[] = []
+
+  const reader = createAssetReader(() =>
+    Schema.loadOrNull(config).pipe(
+      Effect.map((result) => {
+        // Store diagnostics for reporting
+        if (result?.diagnostics) {
+          lastDiagnostics = result.diagnostics
+        }
+        return result
+      }),
+    )
+  )
+
+  // Map diagnostic to its control configuration
+  const getControlForDiagnostic = (diagnostic: AugmentationDiagnostic) => {
+    if (diagnostic.source === 'schema-augmentations') {
+      // All augmentation errors are always enabled with error severity
+      return {
+        enabled: true,
+        dev: { severity: 'error' as const },
+        build: { severity: 'error' as const },
+      }
+    }
+    return undefined
+  }
+
+  // Report diagnostics
+  const reportDiagnostics = (
+    diagnostics: AugmentationDiagnostic[],
+    phase: 'dev' | 'build' = 'dev',
+  ) => {
+    Diagnostic.filterAndReport(diagnostics, getControlForDiagnostic, phase)
+  }
 
   // Helper to check if a file is a schema file that should trigger regeneration
   const isSchemaFile = (file: string): boolean => {
@@ -102,7 +137,7 @@ export const Schemas = ({
         // @claude in what case can data be null?
         serializer: (loadedCatalog) =>
           Effect.gen(function*() {
-            if (!loadedCatalog.data) throw new Error('No schema data to serialize')
+            if (!loadedCatalog?.data) throw new Error('No schema data to serialize')
             const encoded = yield* Catalog.encode(loadedCatalog.data)
             return JSON.stringify(encoded, null, 2)
           }),
@@ -113,6 +148,14 @@ export const Schemas = ({
         isRelevant: isSchemaFile,
       },
       dependentVirtualModules,
+      hooks: {
+        async onDiagnostics(data) {
+          // Report augmentation diagnostics
+          if (data?.diagnostics) {
+            reportDiagnostics(data.diagnostics as AugmentationDiagnostic[], 'dev')
+          }
+        },
+      },
     }),
     {
       name: 'polen:schemas-virtual',
@@ -126,6 +169,12 @@ export const Schemas = ({
             const schemaResult = await Effect.runPromise(
               reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
             )
+
+            // Report diagnostics if any
+            if (schemaResult?.diagnostics && schemaResult.diagnostics.length > 0) {
+              reportDiagnostics(schemaResult.diagnostics, 'dev')
+            }
+
             if (!schemaResult?.data) {
               return `export const schemasCatalog = null`
             }

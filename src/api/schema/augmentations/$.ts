@@ -1,1 +1,1 @@
-export * as Augmentations from './schema-augmentation.js'
+export * as Augmentations from './$$.js'

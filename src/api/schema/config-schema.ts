@@ -1,4 +1,4 @@
-import { AugmentationSchema } from '#api/schema/augmentations/schema-augmentation'
+import { Augmentations } from '#api/schema/augmentations/$'
 import { S } from '#lib/kit-temp/effect'
 
 // ============================================================================
@@ -364,7 +364,7 @@ export const ConfigSchema = S.Struct({
    * ]
    * ```
    */
-  augmentations: S.optional(S.Array(AugmentationSchema)),
+  augmentations: S.optional(S.Array(Augmentations.AugmentationInput)),
   /**
    * Which data sources to use for loading schemas.
    *

@@ -141,16 +141,33 @@ export const loadOrNull = (
     if (loadedSchema.data && config.schema?.augmentations) {
       const augmentations = config.schema.augmentations
       const catalog = loadedSchema.data as Catalog.Catalog
+      const allDiagnostics: Augmentations.Diagnostic[] = []
+
       Catalog.fold(
         (versioned) => {
           for (const schema of Catalog.Versioned.getAll(versioned)) {
-            Augmentations.apply(schema.definition, augmentations)
+            const { diagnostics } = Augmentations.applyAll(
+              schema.definition,
+              augmentations,
+              schema.version,
+            )
+            allDiagnostics.push(...diagnostics)
           }
         },
         (unversioned) => {
-          Augmentations.apply(unversioned.schema.definition, augmentations)
+          const { diagnostics } = Augmentations.applyAll(
+            unversioned.schema.definition,
+            augmentations,
+            null,
+          )
+          allDiagnostics.push(...diagnostics)
         },
       )(catalog)
+
+      // Add diagnostics to loaded schema if any were generated
+      if (allDiagnostics.length > 0) {
+        loadedSchema.diagnostics = allDiagnostics
+      }
     }
 
     return loadedSchema
