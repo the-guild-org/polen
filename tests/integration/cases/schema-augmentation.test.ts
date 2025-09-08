@@ -3,7 +3,7 @@ import type { Augmentations } from '../../../src/api/schema/augmentations/$.js'
 import { configMemorySchema, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
 
-const cases: { placement: Augmentations.AugmentationDescription.Placement }[] = [
+const cases: { placement: Augmentations.Placement }[] = [
   { placement: 'over' },
   { placement: 'after' },
   { placement: 'before' },
@@ -25,8 +25,7 @@ cases.forEach(({ placement }) => {
         `),
         augmentations: [
           {
-            type: 'description',
-            on: { type: 'TargetType', name: 'Query' },
+            on: 'Query',
             content: augmentedContent,
             placement,
           },

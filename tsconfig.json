@@ -25,7 +25,6 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "#*": ["./src/*.ts"],
       "#vite": ["./src/vite/index.ts"],
       "#vite/*": ["./src/vite/*.ts"],
       "#lib/apple-touch-icon": ["./src/lib/apple-touch-icon/$.ts"],
@@ -126,7 +125,8 @@
       "#lib/vite-plugins": ["./src/lib/vite-plugins/$.ts"],
       "#lib/vite-plugins/*": ["./src/lib/vite-plugins/*.ts"],
       "#lib/vite-virtual": ["./src/lib/vite-virtual/$.ts"],
-      "#lib/vite-virtual/*": ["./src/lib/vite-virtual/*.ts"]
+      "#lib/vite-virtual/*": ["./src/lib/vite-virtual/*.ts"],
+      "#*": ["./src/*.ts"]
     },
 
     // todo

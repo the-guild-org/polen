@@ -6,19 +6,23 @@ import { Array, HashSet, pipe } from 'effect'
 // Schema
 // ============================================================================
 
+export class VersionCoverageUnversioned
+  extends S.TaggedClass<VersionCoverageUnversioned>()('VersionCoverageUnversioned', {})
+{}
 export const VersionCoverageOne = Version.Version
 export const VersionCoverageSet = S.HashSet(Version.Version)
 
 /**
- * A selection of versions - either a single version or a set of versions.
+ * A selection of versions - either unversioned (applies to all), a single version, or a set of versions.
  * Used as keys in versioned documents to map version(s) to document content.
  */
 export const VersionCoverage = S.Union(
+  VersionCoverageUnversioned,
   VersionCoverageOne,
   VersionCoverageSet,
 ).annotations({
   identifier: 'VersionCoverage',
-  description: 'A single version or set of versions',
+  description: 'Unversioned (all versions), a single version, or a set of versions',
 })
 
 // ============================================================================
@@ -31,16 +35,34 @@ export type VersionCoverage = S.Schema.Type<typeof VersionCoverage>
 // Constructors
 // ============================================================================
 
+/**
+ * Create an unversioned coverage that applies to all versions
+ */
+export const unversioned = (): VersionCoverage => new VersionCoverageUnversioned({})
+
+/**
+ * Create a single version coverage
+ */
+export const single = (version: Version.Version): VersionCoverage => version
+
+/**
+ * Create a version set coverage
+ */
+export const set = (versions: Version.Version[]): VersionCoverage => HashSet.fromIterable(versions)
+
 // ============================================================================
 // Type Guards
 // ============================================================================
 
 export const is = S.is(VersionCoverage)
 
-export const isSingle = Version.is
+export const isUnversioned = (coverage: VersionCoverage): coverage is VersionCoverageUnversioned =>
+  coverage instanceof VersionCoverageUnversioned
 
-export const isSet = (selection: VersionCoverage): selection is HashSet.HashSet<Version.Version> =>
-  !Version.is(selection)
+export const isSingle = (coverage: VersionCoverage): coverage is Version.Version => Version.is(coverage)
+
+export const isSet = (coverage: VersionCoverage): coverage is HashSet.HashSet<Version.Version> =>
+  !isUnversioned(coverage) && !Version.is(coverage)
 
 // ============================================================================
 // Codec
@@ -68,6 +90,9 @@ export const contains = (
   versionCoverage: VersionCoverage,
   version: Version.Version,
 ): boolean => {
+  if (isUnversioned(versionCoverage)) {
+    return true // Unversioned applies to all versions
+  }
   if (Version.is(versionCoverage)) {
     return Version.equivalence(versionCoverage, version)
   }
@@ -78,6 +103,9 @@ export const contains = (
  * Get display label for UI
  */
 export const toLabel = (versionCoverage: VersionCoverage): string => {
+  if (isUnversioned(versionCoverage)) {
+    return 'All Versions'
+  }
   return pipe(versionCoverage, encodeSync, Array.ensure, Array.map(_ => _.toString()), Array.join(', '))
 }
 
@@ -85,6 +113,9 @@ export const toLabel = (versionCoverage: VersionCoverage): string => {
  * Get all versions from a selection
  */
 export const toVersions = (versionCoverage: VersionCoverage): Version.Version[] => {
+  if (isUnversioned(versionCoverage)) {
+    return [] // Unversioned doesn't map to specific versions
+  }
   if (Version.is(versionCoverage)) {
     return [versionCoverage]
   }
@@ -98,9 +129,12 @@ export const toVersions = (versionCoverage: VersionCoverage): Version.Version[] 
  *
  * @param versionCoverage - The version coverage to get the latest version from
  * @returns The latest version
- * @throws {Error} If the version set is empty
+ * @throws {Error} If the version set is empty or if called on unversioned coverage
  */
 export const getLatest = (versionCoverage: VersionCoverage): Version.Version => {
+  if (isUnversioned(versionCoverage)) {
+    throw new Error('Cannot get latest version from unversioned coverage')
+  }
   if (Version.is(versionCoverage)) {
     return versionCoverage
   }
@@ -114,4 +148,12 @@ export const getLatest = (versionCoverage: VersionCoverage): Version.Version => 
   // Use Version.max which takes exactly 2 arguments
   // Reduce the array to find the maximum
   return versions.reduce((latest, current) => Version.max(latest, current))
+}
+
+/**
+ * Check if a version coverage matches a specific version.
+ * Unversioned always matches, single version must be equal, set must contain the version.
+ */
+export const matches = (coverage: VersionCoverage, version: Version.Version): boolean => {
+  return contains(coverage, version)
 }

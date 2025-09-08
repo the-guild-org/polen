@@ -2,117 +2,34 @@
  * Query path operations
  */
 
-import { createFieldSegment, createTypeSegment } from './constructors.js'
-import type { QueryPath, QuerySegment } from './types.js'
-
-/**
- * Builder class for creating query paths with a fluent interface
- *
- * @example
- * ```ts
- * const path = builder()
- *   .type('User')
- *   .field('posts')
- *   .type('Post')
- *   .field('author')
- *   .build()
- * ```
- */
-export class QueryPathBuilder {
-  private segments: QuerySegment[] = []
-
-  /**
-   * Add a type segment to the path
-   *
-   * @param typeName - The type name
-   * @returns The builder for chaining
-   */
-  type(typeName: string): this {
-    this.segments.push(createTypeSegment(typeName))
-    return this
-  }
-
-  /**
-   * Add a field segment to the path
-   *
-   * @param fieldName - The field name
-   * @returns The builder for chaining
-   */
-  field(fieldName: string): this {
-    this.segments.push(createFieldSegment(fieldName))
-    return this
-  }
-
-  /**
-   * Build the final query path
-   *
-   * @returns The constructed query path
-   */
-  build(): QueryPath {
-    return this.segments
-  }
-}
-
-/**
- * Create a new query path builder
- *
- * @returns A new query path builder instance
- * @example
- * ```ts
- * const path = builder()
- *   .type('User')
- *   .field('posts')
- *   .type('Post')
- *   .field('author')
- *   .build()
- * ```
- */
-export const builder = (): QueryPathBuilder => new QueryPathBuilder()
+import { S } from '#lib/kit-temp/effect'
+import { QueryPath } from './types.js'
 
 /**
  * Encode a query path to a human-readable expression string
+ * Uses the Effect Schema codec for QueryPath
  *
- * @param path - The query path to encode
+ * @param path - The query path segments to encode
  * @returns A string expression representation
  * @example
- * encode(builder().type('User').field('posts').type('Post').field('title').build()) // 'User.posts.Post.title'
+ * encode([
+ *   { _tag: 'TypeSegment', type: 'User' },
+ *   { _tag: 'FieldSegment', field: 'posts' },
+ *   { _tag: 'TypeSegment', type: 'Post' },
+ *   { _tag: 'FieldSegment', field: 'title' }
+ * ]) // 'User.posts.Post.title'
  */
-export const encode = (path: QueryPath): string => {
-  return path.map(segment => {
-    if (segment.kind === 'type') return segment.type
-    if (segment.kind === 'field') return segment.field
-    return ''
-  }).filter(Boolean).join('.')
-}
+export const encode = S.encodeSync(QueryPath)
 
 /**
  * Decode a string expression into a query path
+ * Uses the Effect Schema codec for QueryPath
  * Note: This assumes alternating type.field.type.field pattern
  *
  * @param expression - The string expression to decode
- * @returns The decoded query path or null if invalid
+ * @returns The decoded query path segments
+ * @throws ParseError if the expression is invalid
  * @example
  * decode('User.posts.Post.title') // Query path traversing User->posts->Post->title
  */
-export const decode = (expression: string): QueryPath | null => {
-  if (!expression) return null
-
-  const parts = expression.split('.')
-  const segments: QuerySegment[] = []
-
-  // Assume alternating pattern: type.field.type.field...
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i]
-    if (!part) continue
-
-    if (i % 2 === 0) {
-      // Even indices are types
-      segments.push(createTypeSegment(part))
-    } else {
-      // Odd indices are fields
-      segments.push(createFieldSegment(part))
-    }
-  }
-
-  return segments
-}
+export const decode = S.decodeUnknownSync(QueryPath)

@@ -22,21 +22,15 @@
  * const encoded = GraphQLPath.Definition.encode(userNameFieldPath) // "User.name"
  * const decoded = GraphQLPath.Definition.decode("User.name") // field definition path
  *
- * // Create a query path
- * const queryPath = GraphQLPath.Query.builder()
- *   .type('User')
- *   .field('posts')
- *   .type('Post')
- *   .field('author')
- *   .type('User')
- *   .field('name')
- *   .build()
+ * // Decode a query path from a string
+ * const queryPath = GraphQLPath.Query.decode("User.posts.Post.author.User.name")
+ * // Returns array of segments: [TypeSegment, FieldSegment, TypeSegment, FieldSegment, ...]
  *
- * // Encode/decode query paths
- * const encodedQuery = GraphQLPath.Query.encode(queryPath) // "User.posts.Post.author.User.name"
- * const decodedQuery = GraphQLPath.Query.decode("User.posts.Post.author") // query path
+ * // Encode query path segments to a string
+ * const encoded = GraphQLPath.Query.encode(queryPath) // "User.posts.Post.author.User.name"
  * ```
  */
 
 export * as Definition from './definition.js'
 export * as Query from './query.js'
+export * as Schema from './schema.js'
