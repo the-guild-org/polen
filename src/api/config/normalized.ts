@@ -1,4 +1,5 @@
 import { ExamplesConfig } from '#api/examples/config'
+import { DescriptionsView, ReferenceConfigObject } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Typings } from '#api/typings/$'
 import { DirectedFilter } from '#lib/directed-filter/$'
@@ -10,6 +11,24 @@ import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
 import { BuildArchitecture, ConfigInput } from './input.js'
+
+// ============================================================================
+// Normalized Reference Config
+// ============================================================================
+
+/**
+ * Normalized reference configuration where all optional fields have defaults applied.
+ */
+const NormalizedReferenceConfig = S.extend(
+  ReferenceConfigObject.pipe(S.omit('descriptionsView', 'nullabilityRendering')),
+  S.Struct({
+    descriptionsView: S.Struct({
+      defaultMode: S.Literal('compact', 'expanded'),
+      showControl: S.Boolean,
+    }),
+    nullabilityRendering: S.Literal('questionMark', 'bangMark'),
+  }),
+)
 
 // ============================================================================
 // DirectedFilter for Strings
@@ -321,6 +340,11 @@ export const Config = S.Struct({
   schema: ConfigSchema,
 
   /**
+   * Reference documentation configuration with resolved defaults.
+   */
+  reference: NormalizedReferenceConfig,
+
+  /**
    * Examples configuration with resolved defaults.
    */
   examples: ExamplesConfig,
@@ -487,6 +511,13 @@ const getConfigInputDefaults = (baseRootDirPath: string): Config => ({
     },
   },
   schema: {},
+  reference: {
+    descriptionsView: {
+      defaultMode: 'expanded',
+      showControl: true,
+    },
+    nullabilityRendering: 'bangMark',
+  },
   examples: {
     display: 'all',
   },
@@ -656,6 +687,29 @@ export const normalizeInput = (
     if (configInput_as_writeable?.warnings?.interactiveWithoutSchema?.enabled !== undefined) {
       config.warnings.interactiveWithoutSchema.enabled =
         configInput_as_writeable.warnings.interactiveWithoutSchema.enabled
+    }
+
+    // Process reference configuration
+    if (configInput_as_writeable?.reference) {
+      const referenceInput = configInput_as_writeable.reference
+      // The schema transform handles boolean shorthand, so we always get an object here
+      if (referenceInput.enabled !== undefined) {
+        config.reference.enabled = referenceInput.enabled
+      }
+      if (referenceInput.descriptionsView) {
+        if (referenceInput.descriptionsView.defaultMode !== undefined) {
+          config.reference.descriptionsView.defaultMode = referenceInput.descriptionsView.defaultMode
+        }
+        if (referenceInput.descriptionsView.showControl !== undefined) {
+          config.reference.descriptionsView.showControl = referenceInput.descriptionsView.showControl
+        }
+      }
+      if (referenceInput.nullabilityRendering !== undefined) {
+        config.reference.nullabilityRendering = referenceInput.nullabilityRendering
+      }
+      if (referenceInput.diagnostics) {
+        config.reference.diagnostics = referenceInput.diagnostics
+      }
     }
 
     // Process examples configuration

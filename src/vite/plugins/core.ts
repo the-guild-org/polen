@@ -10,6 +10,7 @@ import { Examples } from './examples.js'
 import { Hooks, viProjectHooks } from './hooks.js'
 import { Navbar, viProjectNavbar } from './navbar.js'
 import { Pages, viProjectRoutes } from './pages.js'
+import { Reference, viProjectReference } from './reference.js'
 import { Schemas, viProjectSchema } from './schemas.js'
 
 export interface ProjectRoutesModule {
@@ -44,6 +45,10 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
     schemaReader: schemasArea.reader,
     dependentVirtualModules: [viProjectConfig, viProjectNavbar],
   })
+  const referenceArea = Reference({
+    config,
+    dependentVirtualModules: [viProjectConfig, viProjectNavbar],
+  })
   const configPlugin = ConfigPlugin({
     config,
     schemaReader: schemasArea.reader,
@@ -62,6 +67,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
     ...conditionalPlugins,
     ...examplesArea.plugins,
     ...schemasArea.plugins,
+    ...referenceArea.plugins,
     ...pagesArea.plugins,
     configPlugin,
     navbarPlugin,

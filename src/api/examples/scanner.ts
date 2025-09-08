@@ -330,6 +330,20 @@ export const scan = (
       }
 
       if (example) {
+        // Check for description.md or description.mdx file
+        const descriptionMdPath = Path.join(options.dir, `${name}.md`)
+        const descriptionMdxPath = Path.join(options.dir, `${name}.mdx`)
+
+        const descriptionPath = (yield* fs.exists(descriptionMdPath))
+          ? descriptionMdPath
+          : (yield* fs.exists(descriptionMdxPath))
+          ? descriptionMdxPath
+          : null
+
+        if (descriptionPath) {
+          example = { ...example, description: { path: descriptionPath } }
+        }
+
         examples.push(example)
         // Generate diagnostics for this example
         diagnostics.push(...lintFileLayout(example, options.schemaCatalog))

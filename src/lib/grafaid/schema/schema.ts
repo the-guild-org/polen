@@ -51,6 +51,8 @@ export * as NodesLike from './nodes-like.js'
 
 export * from './read.js'
 
+export * from './format-default-value.js'
+
 import * as AST from './ast.js'
 
 export const empty: GraphQLSchema = buildASTSchema(AST.empty)

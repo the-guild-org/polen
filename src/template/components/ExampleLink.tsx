@@ -1,6 +1,7 @@
 import type { ExampleReference } from '#api/examples/schemas/type-usage-index'
 import { Version } from '#lib/version/$'
 import { Badge, Link } from '@radix-ui/themes'
+import { Str } from '@wollybeard/kit'
 import type { FC } from 'react'
 
 export interface Props {
@@ -20,7 +21,7 @@ export const ExampleLink: FC<Props> = ({ exampleRef }) => {
   return (
     <Link href={href} style={{ textDecoration: 'none' }}>
       <Badge variant='soft' size='2' style={{ cursor: 'pointer' }}>
-        {exampleRef.name}
+        {Str.titlizeSlug(exampleRef.name)}
       </Badge>
     </Link>
   )

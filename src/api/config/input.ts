@@ -1,4 +1,5 @@
 import { ExamplesConfig } from '#api/examples/config'
+import { ReferenceConfig } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Vite } from '#dep/vite/index'
 import { spreadShallow } from '#lib/kit-temp'
@@ -306,6 +307,7 @@ export const ConfigInput = S.Struct({
    */
   description: S.optional(S.String),
   schema: S.optional(ConfigSchema),
+  reference: S.optional(ReferenceConfig),
   examples: S.optional(ExamplesConfig),
   templateVariables: S.optional(TemplateVariables),
   home: S.optional(HomeConfig),

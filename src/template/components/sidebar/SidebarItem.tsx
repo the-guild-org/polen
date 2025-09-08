@@ -3,6 +3,7 @@ import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { Texts } from '#template/components/Texts/index'
 import { Box, Flex } from '@radix-ui/themes'
+import { Str } from '@wollybeard/kit'
 import { useContext } from 'react'
 import { useLocation } from 'react-router'
 import { getPathActiveReport, Link } from '../Link.js'
@@ -70,6 +71,11 @@ const SBLink: React.FC<{
   const href = Api.Schema.Routing.joinSegmentsAndPaths(basePath, link.pathExp)
   const active = getPathActiveReport(href, currentPathExp)
 
+  // Apply title case transformation to string titles for better readability
+  const displayTitle = typeof link.title === 'string'
+    ? Str.Case.title(link.title)
+    : link.title
+
   return (
     <Link
       role='Sidebar Link'
@@ -80,11 +86,11 @@ const SBLink: React.FC<{
         display: `block`,
         textDecoration: `none`,
         color: active.is ? `var(--accent-12)` : undefined,
-        backgroundColor: active.isDirect ? `var(--accent-2)` : active.isDescendant ? `var(--accent-1)` : `transparent`,
+        backgroundColor: active.isDirect ? `var(--accent-3)` : active.isDescendant ? `var(--gray-2)` : `transparent`,
         borderRadius: `var(--radius-2)`,
       }}
     >
-      <Box py='2' px='4'>{link.title}</Box>
+      <Box py='2' px='4'>{displayTitle}</Box>
     </Link>
   )
 }
@@ -100,11 +106,16 @@ const SBLink: React.FC<{
 const Section: React.FC<{
   section: TemplateItemSection
 }> = ({ section }) => {
+  // Apply title case transformation to string titles for better readability
+  const displayTitle = typeof section.title === 'string'
+    ? Str.Case.title(section.title)
+    : section.title
+
   return (
     <Box mt='8'>
       <Box ml='4' mb='2'>
         <Texts.MinorHeading color='gray'>
-          {section.title}
+          {displayTitle}
         </Texts.MinorHeading>
       </Box>
       <Items items={section.links} />
@@ -156,6 +167,11 @@ const SectionLink: React.FC<{ link: TemplateItemLink }> = ({ link }) => {
   const href = Api.Schema.Routing.joinSegmentsAndPaths(basePath, link.pathExp)
   const active = getPathActiveReport(href, location.pathname)
 
+  // Apply title case transformation to string titles for better readability
+  const displayTitle = typeof link.title === 'string'
+    ? Str.Case.title(link.title)
+    : link.title
+
   return (
     <Link
       role='Sidebar Link'
@@ -164,12 +180,12 @@ const SectionLink: React.FC<{ link: TemplateItemLink }> = ({ link }) => {
       style={{
         textDecoration: `none`,
         color: active.is ? `var(--accent-12)` : undefined,
-        backgroundColor: active.isDirect ? `var(--accent-2)` : active.isDescendant ? `var(--accent-1)` : `transparent`,
+        backgroundColor: active.isDirect ? `var(--accent-3)` : active.isDescendant ? `var(--gray-2)` : `transparent`,
         borderBottomRightRadius: `var(--radius-2)`,
         borderTopRightRadius: `var(--radius-2)`,
       }}
     >
-      <Box py='2' px='4'>{link.title}</Box>
+      <Box py='2' px='4'>{displayTitle}</Box>
     </Link>
   )
 }

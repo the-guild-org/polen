@@ -3,6 +3,7 @@ import { highlight } from 'codehike/code'
 import type { GraphQLSchema } from 'graphql'
 import * as React from 'react'
 import { Link } from 'react-router'
+import { templateConfig } from 'virtual:polen/project/config'
 import { GraphQLInteractive } from '../GraphQLInteractive/GraphQLInteractive.js'
 
 interface PlaygroundPreviewProps {
@@ -68,12 +69,14 @@ export const PlaygroundPreviewSection: React.FC<PlaygroundPreviewProps> = ({
                       codeblock={highlightedCode}
                       schema={schema}
                       showWarningIfNoSchema={false}
+                      referenceEnabled={templateConfig.reference.enabled}
                     />
                   )
                   : (
                     <GraphQLInteractive
                       codeblock={highlightedCode}
                       showWarningIfNoSchema={false}
+                      referenceEnabled={templateConfig.reference.enabled}
                     />
                   )}
               </Box>

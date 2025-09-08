@@ -46,7 +46,10 @@ export const Navbar = ({
             >,
           )
 
-          if (loadedSchemaCatalog?.data) {
+          // Check if reference is enabled (explicitly or auto-detected via schema presence)
+          const referenceEnabled = config.reference.enabled ?? Boolean(loadedSchemaCatalog?.data)
+
+          if (referenceEnabled && loadedSchemaCatalog?.data) {
             // IMPORTANT: Always ensure paths start with '/' for React Router compatibility.
             // Without the leading slash, React Router treats paths as relative, which causes
             // hydration mismatches between SSR (where base path is prepended) and client

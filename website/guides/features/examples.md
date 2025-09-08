@@ -62,3 +62,23 @@ examples/
 ├── ...
 └── search-products.graphql
 ```
+
+#### Descriptions
+
+Each example can have an optional description that appears above the GraphQL code. Add a markdown file with the same name as your example:
+
+```
+examples/
+├── get-user.graphql      # The example query
+├── get-user.md           # Description for this example
+├── create-post.graphql
+├── create-post.mdx       # MDX also supported for rich content
+└── search-products.graphql
+```
+
+Description features:
+
+- **Markdown/MDX support**: Full markdown formatting and MDX components
+- **Automatic discovery**: Files matching `<example-name>.md` or `<example-name>.mdx`
+- **Rendered above code**: Descriptions appear before the GraphQL example
+- **Same rendering pipeline**: Uses Polen's standard markdown processing

@@ -7,20 +7,28 @@ import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
+import { SegmentedControl, Text } from '@radix-ui/themes'
 import { Flex } from '@radix-ui/themes'
+import { Str } from '@wollybeard/kit'
 import { neverCase } from '@wollybeard/kit/language'
 import { HashMap, Option } from 'effect'
 import { Effect, Match } from 'effect'
 import React from 'react'
-import { useParams } from 'react-router'
+import { redirect, useParams } from 'react-router'
+import { templateConfig } from 'virtual:polen/project/config'
+import { IndexComponent } from 'virtual:polen/project/reference'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { Field } from '../components/Field.js'
 import { TypeKindIcon } from '../components/graphql/graphql.js'
 import { MissingSchema } from '../components/MissingSchema.js'
 import { NamedType } from '../components/NamedType.js'
 import { ReferenceVersionPicker } from '../components/ReferenceVersionPicker.js'
+import { ViewModeToggle } from '../components/ViewModeToggle.js'
 import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
+import { ReferenceConfigProvider } from '../contexts/ReferenceConfigContext.js'
+import { ViewModeProvider } from '../contexts/ViewModeContext.js'
 import { SidebarLayout } from '../layouts/index.js'
+import { MdxProvider } from '../providers/mdx.js'
 
 const routeSchema = S.Struct({
   catalog: Catalog.Catalog,
@@ -28,6 +36,17 @@ const routeSchema = S.Struct({
 })
 
 const referenceLoader = ({ params }: any) => {
+  // Check if reference is enabled
+  if (!templateConfig.reference.enabled) {
+    throw new Response('Reference documentation is disabled', { status: 404 })
+  }
+
+  // Check if no type is selected (index route) and no custom index exists
+  if (!params.type && !params.version && !IndexComponent) {
+    // Redirect to Query type which is guaranteed to exist
+    throw redirect('/reference/Query')
+  }
+
   // This should never be called when schemasCatalog is null
   // because the route won't be added to the router
   // But we return an Effect.fail for safety
@@ -97,7 +116,7 @@ const ReferenceView = () => {
   for (const [title, types] of kindEntries) {
     sidebarItems.push({
       type: `ItemSection` as const,
-      title,
+      title: Str.Case.title(Str.Case.snake(title)),
       pathExp: `reference-${title.toLowerCase()}`,
       isLinkToo: false,
       links: types.map(type => {
@@ -130,7 +149,16 @@ const ReferenceView = () => {
 
   const content: React.ReactNode = (() => {
     if (viewType === 'index') {
-      return <div>Select a type from the sidebar to view its documentation.</div>
+      // Render custom index component if available
+      if (IndexComponent) {
+        return (
+          <MdxProvider schema={schema.definition}>
+            <IndexComponent />
+          </MdxProvider>
+        )
+      }
+      // Fallback message (shouldn't reach here due to redirect)
+      return <Text>Select a type from the sidebar to view its documentation.</Text>
     } else if (viewType === 'type-missing' || viewType === 'field-missing') {
       return <MissingSchema />
     } else if (viewType === 'type') {
@@ -151,26 +179,42 @@ const ReferenceView = () => {
     }
   })()
 
+  const referenceConfig = {
+    descriptionsView: templateConfig.reference.descriptionsView,
+    nullabilityRendering: templateConfig.reference.nullabilityRendering,
+  }
+
   return (
-    <GraphqlLifecycleProvider lifecycle={lifecycle} schema={schema}>
-      <SidebarLayout
-        sidebar={sidebarItems}
-        basePath={basePath}
-        topContent={(() => {
-          const version = Schema.getVersion(schema)
-          return catalog._tag === 'CatalogVersioned' && version
-            ? (
-              <ReferenceVersionPicker
-                data={Catalog.Versioned.getVersions(catalog)}
-                current={version}
-              />
-            )
-            : null
-        })()}
-      >
-        {content}
-      </SidebarLayout>
-    </GraphqlLifecycleProvider>
+    <ReferenceConfigProvider config={referenceConfig}>
+      <ViewModeProvider defaultMode={referenceConfig.descriptionsView.defaultMode}>
+        <GraphqlLifecycleProvider lifecycle={lifecycle} schema={schema}>
+          <SidebarLayout
+            sidebar={sidebarItems}
+            basePath={basePath}
+            topContent={(() => {
+              const version = Schema.getVersion(schema)
+              const versionPicker = catalog._tag === 'CatalogVersioned' && version
+                ? (
+                  <ReferenceVersionPicker
+                    data={Catalog.Versioned.getVersions(catalog)}
+                    current={version}
+                  />
+                )
+                : null
+
+              return (
+                <Flex gap='3' align='center'>
+                  {versionPicker}
+                  {referenceConfig.descriptionsView.showControl && <ViewModeToggle />}
+                </Flex>
+              )
+            })()}
+          >
+            {content}
+          </SidebarLayout>
+        </GraphqlLifecycleProvider>
+      </ViewModeProvider>
+    </ReferenceConfigProvider>
   )
 }
 
@@ -207,7 +251,7 @@ const typeAndFieldRoutes = [
  * - Single ReferenceView component handles all variations
  */
 
-export const reference = !schemasCatalog
+export const reference = !schemasCatalog || !templateConfig.reference.enabled
   ? null
   : route({
     path: `reference`,

@@ -35,6 +35,11 @@ declare module 'virtual:polen/project/examples' {
   export const IndexComponent: React.ComponentType | null
 }
 
+declare module 'virtual:polen/project/reference' {
+  export const referenceCatalog: import('#api/reference/catalog').Catalog
+  export const IndexComponent: React.ComponentType | null
+}
+
 declare module 'virtual:polen/project/config' {
   export const templateConfig: import('#api/config-template/template').TemplateConfig
 }

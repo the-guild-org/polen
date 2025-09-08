@@ -1,4 +1,3 @@
-import { Change as GraphqlChange } from '#lib/change/$'
 import { Code } from '@radix-ui/themes'
 import type React from 'react'
 import { ChangeBase } from '../ChangeBase.js'

@@ -2,11 +2,12 @@ import { Api } from '#api/iso'
 import { Lifecycles } from '#lib/lifecycles/$'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { Badge, Box, Heading, Text } from '@radix-ui/themes'
+import { Badge, Box, Card, Heading, Section, Separator, Text } from '@radix-ui/themes'
 import { HashSet } from 'effect'
 import { type GraphQLNamedType } from 'graphql'
 import type { FC } from 'react'
 import { useSchema } from '../contexts/GraphqlLifecycleContext.js'
+import { useViewMode } from '../contexts/ViewModeContext.js'
 import { useExamplesForType } from '../hooks/use-examples.js'
 import { ExampleLink } from './ExampleLink.js'
 import { FieldListSection } from './FieldListSection.js'
@@ -20,10 +21,11 @@ export interface Props {
 
 export const NamedType: FC<Props> = ({ data }) => {
   const { schema, lifecycles } = useSchema()
+  const { viewMode } = useViewMode()
 
-  const description = data.description
+  const description = data.description && viewMode === 'expanded'
     ? (
-      <Text as='div' color='gray'>
+      <Text as='div' size='2' color='gray'>
         <Markdown>{data.description}</Markdown>
       </Text>
     )
@@ -33,6 +35,9 @@ export const NamedType: FC<Props> = ({ data }) => {
   const since = Lifecycles.getTypeSince(lifecycles, data.name, schema)
   const removedDate = Lifecycles.getTypeRemovedDate(lifecycles, data.name, schema)
 
+  // Only show since badge if it's NOT the initial version
+  const showSinceBadge = since && since._tag !== 'initial'
+
   // Get examples that use this type
   const currentVersion = Schema.Versioned.is(schema)
     ? schema.version
@@ -41,34 +46,55 @@ export const NamedType: FC<Props> = ({ data }) => {
 
   return (
     <Box>
-      <Box style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <Heading size='8'>
-          <TypeLink type={data} />
-        </Heading>
-        {since && <SinceBadge since={since} />}
-        {removedDate && (
-          <Badge color='red' variant='soft' size='1'>
-            Removed {Api.Schema.dateToVersionString(removedDate)}
-          </Badge>
-        )}
-      </Box>
-      {description}
-      {HashSet.size(examples) > 0 && (
-        <Box mt='4' mb='4'>
-          <Heading size='4' mb='2'>Used in Examples</Heading>
-          <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {[...examples].map((exampleRef) => (
-              <ExampleLink
-                key={`${exampleRef.name}-${
-                  exampleRef.version ? Version.encodeSync(exampleRef.version) : 'unversioned'
-                }`}
-                exampleRef={exampleRef}
-              />
-            ))}
-          </Box>
+      {/* Type header section */}
+      <Section size='1'>
+        <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Heading size='7' weight='bold'>
+            <TypeLink type={data} />
+          </Heading>
+          {showSinceBadge && <SinceBadge since={since} />}
+          {removedDate && (
+            <Badge color='red' variant='soft' size='1'>
+              Removed {Api.Schema.dateToVersionString(removedDate)}
+            </Badge>
+          )}
         </Box>
+
+        {/* Description section */}
+        {description && (
+          <Box mt='3'>
+            {description}
+          </Box>
+        )}
+      </Section>
+
+      {/* Examples section with separator */}
+      {HashSet.size(examples) > 0 && (
+        <>
+          <Separator size='4' my='4' />
+          <Section size='1'>
+            <Heading size='5' mb='3' weight='medium'>Used in Examples</Heading>
+            <Card variant='surface'>
+              <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {[...examples].map((exampleRef) => (
+                  <ExampleLink
+                    key={`${exampleRef.name}-${
+                      exampleRef.version ? Version.encodeSync(exampleRef.version) : 'unversioned'
+                    }`}
+                    exampleRef={exampleRef}
+                  />
+                ))}
+              </Box>
+            </Card>
+          </Section>
+        </>
       )}
-      <FieldListSection data={data} />
+
+      {/* Fields section with separator */}
+      <Separator size='4' my='4' />
+      <Section size='1'>
+        <FieldListSection data={data} />
+      </Section>
     </Box>
   )
 }

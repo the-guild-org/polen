@@ -5,21 +5,30 @@ type Query {
   """
   Get a specific Pokemon by ID
   """
-  pokemon(id: ID!): Pokemon
+  pokemon(
+    """The unique identifier of the Pokemon to retrieve"""
+    id: ID!
+  ): Pokemon
   
   """
   List all Pokemon with advanced filtering
   """
   pokemons(
-    type: PokemonType
+    """Advanced filter criteria for Pokemon"""
+    filter: PokemonFilterInput
+    """Maximum number of Pokemon to return (default: 20)"""
     limit: Int = 20
+    """Number of Pokemon to skip for pagination (default: 0)"""
     offset: Int = 0
   ): PokemonConnection!
   
   """
   Get a trainer by ID
   """
-  trainer(id: ID!): Trainer
+  trainer(
+    """The unique identifier of the trainer to retrieve"""
+    id: ID!
+  ): Trainer
   
   """
   List all trainers
@@ -28,9 +37,16 @@ type Query {
   
   
   """
-  Search for Pokemon by name
+  Search for Pokemon by various criteria
   """
-  searchPokemon(name: String!): PokemonConnection!
+  searchPokemon(
+    """Search criteria for finding Pokemon"""
+    criteria: PokemonSearchCriteria!
+    """Maximum number of Pokemon to return (default: 20)"""
+    limit: Int = 20
+    """Number of Pokemon to skip for pagination (default: 0)"""
+    offset: Int = 0
+  ): PokemonConnection!
 }
 
 """
@@ -38,24 +54,46 @@ Mutations for Pokemon operations
 """
 type Mutation {
   """
-  Catch a wild Pokemon
+  Catch a wild Pokemon (Relay-style input)
   """
-  catchPokemon(pokemonId: ID!, trainerId: ID!): Pokemon!
+  catchPokemon(
+    """Input for catching a Pokemon"""
+    input: CatchPokemonInput!
+  ): Pokemon!
   
   """
   Level up a Pokemon
   """
-  levelUpPokemon(id: ID!): Pokemon!
+  levelUpPokemon(
+    """The ID of the Pokemon to level up"""
+    id: ID!
+  ): Pokemon!
   
   """
-  Teach a move to a Pokemon
+  Teach a move to a Pokemon (Relay-style input)
   """
-  teachMove(pokemonId: ID!, moveId: ID!): Pokemon!
+  teachMove(
+    """Input for teaching a move"""
+    input: TeachMoveInput!
+  ): Pokemon!
   
   """
-  Trade Pokemon between trainers
+  Trade Pokemon between trainers (Relay-style input)
   """
-  tradePokemon(pokemonId: ID!, fromTrainerId: ID!, toTrainerId: ID!): Pokemon!
+  tradePokemon(
+    """Input for trading Pokemon"""
+    input: TradePokemonInput!
+  ): Pokemon!
+  
+  """
+  Create a new trainer
+  """
+  createTrainer(
+    """Trainer profile information"""
+    profile: TrainerProfileInput!
+    """Optional starting Pokemon ID"""
+    startingPokemonId: ID
+  ): Trainer!
 }
 
 """
@@ -65,7 +103,10 @@ type Subscription {
   """
   Subscribe to Pokemon level up events
   """
-  pokemonLevelUp(trainerId: ID!): Pokemon!
+  pokemonLevelUp(
+    """The ID of the trainer whose Pokemon to monitor for level ups"""
+    trainerId: ID!
+  ): Pokemon!
 }
 
 """
@@ -351,4 +392,74 @@ type PageInfo {
   Cursor of the last edge
   """
   endCursor: String
+}
+
+"""
+Input for catching a Pokemon (Relay pattern)
+"""
+input CatchPokemonInput {
+  """The ID of the Pokemon to catch"""
+  pokemonId: ID!
+  """The ID of the trainer catching the Pokemon"""
+  trainerId: ID!
+}
+
+"""
+Input for trading Pokemon (Relay pattern)
+"""
+input TradePokemonInput {
+  """The ID of the Pokemon being traded"""
+  pokemonId: ID!
+  """The ID of the trainer giving away the Pokemon"""
+  fromTrainerId: ID!
+  """The ID of the trainer receiving the Pokemon"""
+  toTrainerId: ID!
+}
+
+"""
+Input for teaching a move (Relay pattern)
+"""
+input TeachMoveInput {
+  """The ID of the Pokemon learning the move"""
+  pokemonId: ID!
+  """The ID of the move to teach"""
+  moveId: ID!
+}
+
+"""
+Filter criteria for listing Pokemon
+"""
+input PokemonFilterInput {
+  """Filter by elemental type"""
+  type: PokemonType
+  """Minimum level filter"""
+  minLevel: Int
+  """Maximum level filter"""
+  maxLevel: Int
+  """Filter by region"""
+  region: Region
+}
+
+"""
+Search criteria for finding Pokemon
+"""
+input PokemonSearchCriteria {
+  """Exact name match"""
+  name: String
+  """Partial name match"""
+  nameContains: String
+  """Filter by abilities"""
+  abilities: [String!]
+}
+
+"""
+Profile information for creating a trainer
+"""
+input TrainerProfileInput {
+  """Trainer's name"""
+  name: String!
+  """Trainer's hometown"""
+  hometown: String!
+  """Trainer's home region"""
+  region: Region!
 }

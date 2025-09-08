@@ -4,7 +4,7 @@
 
 Polen provides comprehensive schema documentation features. You can work with a single schema or a set of them to capture different versions of your schema across time.
 
-Features that Polen offers based on the schemas you give include automatic [reference docs](/guides/features/schema-reference) and [changelogs](/guides/features/schema-changelog).
+Features that Polen offers based on the schemas you give include automatic [reference docs](/guides/features/reference) and [changelogs](/guides/features/schema-changelog).
 
 ## Supplying Your Schema
 

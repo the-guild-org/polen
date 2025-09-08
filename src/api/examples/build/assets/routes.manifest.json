@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-09-08T12:38:59.505Z",
+  "totalRoutes": 2,
+  "routes": [
+    "/",
+    "/changelog"
+  ]
+}

@@ -26,6 +26,12 @@ export const Example = S.Struct({
    * The document content, which can be unversioned, versioned, or partially versioned.
    */
   document: Document.Document,
+
+  /**
+   * Optional description file for this example.
+   * Points to a markdown/MDX file that describes the example.
+   */
+  description: S.optional(S.Struct({ path: S.String })),
 }).annotations({
   identifier: 'Example',
   description: 'A GraphQL example that contains a document with optional versioning support',

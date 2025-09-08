@@ -1,4 +1,4 @@
-import type { FC } from 'react'
+import { forwardRef } from 'react'
 import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter, useLocation } from 'react-router'
 // todo: #lib/kit-temp does not work as import
@@ -20,7 +20,10 @@ const reactRouterPropKeys = [
   `children`,
 ] as const
 
-export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, `asChild`>> = props => {
+export const Link = forwardRef<
+  HTMLAnchorElement,
+  LinkPropsReactRouter & Omit<LinkPropsRadix, `asChild`>
+>((props, ref) => {
   const location = useLocation()
   const toPathExp = typeof props.to === `string` ? props.to : props.to.pathname || ``
 
@@ -34,6 +37,7 @@ export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, `asChild`>> = 
   // Only add data attributes if they're true
   const linkRadixProps = {
     ...radixProps,
+    ref,
     asChild: true,
     ...(active.is && { 'data-active': true }),
     ...(active.isDirect && { 'data-active-direct': true }),
@@ -45,7 +49,9 @@ export const Link: FC<LinkPropsReactRouter & Omit<LinkPropsRadix, `asChild`>> = 
       <LinkReactRouter {...reactRouterProps} />
     </LinkRadix>
   )
-}
+})
+
+Link.displayName = 'Link'
 
 export interface PathActiveReport {
   is: boolean

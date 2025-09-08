@@ -55,8 +55,8 @@ export default defineConfig({
               link: '/guides/features/schema-augmentations',
             },
             {
-              text: 'Schema Reference',
-              link: '/guides/features/schema-reference',
+              text: 'Reference',
+              link: '/guides/features/reference',
             },
             {
               text: 'Examples',

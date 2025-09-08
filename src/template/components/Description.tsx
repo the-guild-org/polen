@@ -9,7 +9,7 @@ export const Description: React.FC<{ data: GraphQLNamedType | GrafaidOld.GraphQL
   if (!data.description) return null
 
   return (
-    <Text as='div' color='gray'>
+    <Text as='div' size='2' color='gray' style={{ lineHeight: '1.5' }}>
       <Markdown>{data.description}</Markdown>
     </Text>
   )

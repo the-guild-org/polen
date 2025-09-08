@@ -1,5 +1,6 @@
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
+import { forwardRef } from 'react'
 import { useVersionPath } from '../hooks/useVersionPath.js'
 import { Link } from './Link.js'
 
@@ -10,14 +11,17 @@ import { Link } from './Link.js'
  * <ReferenceLink type="User">User</ReferenceLink>
  * <ReferenceLink type="User" field="name">User.name</ReferenceLink>
  */
-export const ReferenceLink: React.FC<{
-  /** The GraphQL type name */
-  type: string
-  /** Optional field name for field-specific links */
-  field?: string
-  /** Link content */
-  children: React.ReactNode
-}> = ({ type, field, children }) => {
+export const ReferenceLink = forwardRef<
+  HTMLAnchorElement,
+  {
+    /** The GraphQL type name */
+    type: string
+    /** Optional field name for field-specific links */
+    field?: string
+    /** Link content */
+    children: React.ReactNode
+  }
+>(({ type, field, children, ...props }, ref) => {
   const versionPath = useVersionPath()
 
   const path = Api.Schema.Routing.joinSegmentsAndPaths(
@@ -28,8 +32,10 @@ export const ReferenceLink: React.FC<{
   )
 
   return (
-    <Link to={path}>
+    <Link to={path} ref={ref} {...props}>
       {children}
     </Link>
   )
-}
+})
+
+ReferenceLink.displayName = 'ReferenceLink'

@@ -25,6 +25,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ codeblock, schema }) => {
         codeblock={codeblock}
         schema={schema}
         showWarningIfNoSchema={templateConfig.warnings.interactiveWithoutSchema.enabled}
+        referenceEnabled={templateConfig.reference.enabled}
       />
     )
   }

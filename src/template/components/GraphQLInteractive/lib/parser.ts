@@ -109,11 +109,13 @@ class UnifiedToken implements GraphQLToken {
   private _start: number
   private _end: number
   private _nodeType: TreeSitterGraphQLNodeType
+  private _referenceEnabled: boolean
 
   constructor(
     public treeSitterNode: WebTreeSitter.Node,
     public semantic: SemanticNode | undefined,
     annotations: CodeAnnotation[],
+    referenceEnabled = true,
   ) {
     // Cache the values immediately to avoid WASM access issues later
     // This works for both real WebTreeSitter nodes and synthetic nodes
@@ -121,6 +123,7 @@ class UnifiedToken implements GraphQLToken {
     this._start = treeSitterNode.startIndex
     this._end = treeSitterNode.endIndex
     this._nodeType = treeSitterNode.type as TreeSitterGraphQLNodeType
+    this._referenceEnabled = referenceEnabled
 
     this.codeHike = { annotations }
 
@@ -255,6 +258,8 @@ class UnifiedToken implements GraphQLToken {
   }
 
   private _getReferenceUrl(): string | null {
+    // If reference is disabled, don't generate URLs
+    if (!this._referenceEnabled) return null
     if (!this.semantic) return null
 
     // Arguments - use #<field>__<argument> pattern
@@ -536,6 +541,7 @@ export async function parseGraphQLWithTreeSitterEither(
   code: string,
   annotations: CodeAnnotation[] = [],
   schema?: GraphQLSchema,
+  referenceEnabled = true,
 ): Promise<Either.Either<GraphQLToken[], ParseError>> {
   // Validate input
   if (!code || typeof code !== 'string') {
@@ -566,10 +572,10 @@ export async function parseGraphQLWithTreeSitterEither(
 
   try {
     // Step 2: Walk tree and attach semantics
-    const tokens = collectTokensWithSemantics(tree, code, schema, annotations)
+    const tokens = collectTokensWithSemantics(tree, code, schema, annotations, referenceEnabled)
 
     // Step 3: Add error hint tokens after invalid fields
-    const tokensWithHints = addErrorHintTokens(tokens, code, annotations)
+    const tokensWithHints = addErrorHintTokens(tokens, code, annotations, referenceEnabled)
 
     return Either.right(tokensWithHints)
   } catch (error) {
@@ -595,8 +601,9 @@ export async function parseGraphQLWithTreeSitter(
   code: string,
   annotations: CodeAnnotation[] = [],
   schema?: GraphQLSchema,
+  referenceEnabled = true,
 ): Promise<GraphQLToken[]> {
-  const result = await parseGraphQLWithTreeSitterEither(code, annotations, schema)
+  const result = await parseGraphQLWithTreeSitterEither(code, annotations, schema, referenceEnabled)
 
   if (Either.isLeft(result)) {
     const error = result.left
@@ -714,6 +721,7 @@ function addErrorHintTokens(
   tokens: GraphQLToken[],
   code: string,
   annotations: CodeAnnotation[],
+  referenceEnabled = true,
 ): GraphQLToken[] {
   const tokensWithHints: GraphQLToken[] = []
   const processedIndices = new Set<number>()
@@ -792,6 +800,7 @@ function addErrorHintTokens(
         ),
         undefined,
         annotations,
+        referenceEnabled,
       )
       tokensWithHints.push(hintToken)
     }
@@ -808,6 +817,7 @@ function collectTokensWithSemantics(
   code: string,
   schema: GraphQLSchema | undefined,
   annotations: CodeAnnotation[],
+  referenceEnabled = true,
 ): GraphQLToken[] {
   const tokens: GraphQLToken[] = []
   const cursor = tree.walk()
@@ -861,6 +871,7 @@ function collectTokensWithSemantics(
             createWhitespaceNode(whitespace, lastEnd, node.startIndex),
             undefined,
             annotations,
+            referenceEnabled,
           ),
         )
       }
@@ -1009,6 +1020,7 @@ function collectTokensWithSemantics(
         node,
         semantic,
         annotations,
+        referenceEnabled,
       )
 
       tokens.push(token)
@@ -1050,6 +1062,7 @@ function collectTokensWithSemantics(
         createWhitespaceNode(remaining, lastEnd, code.length),
         undefined,
         annotations,
+        referenceEnabled,
       ),
     )
   }

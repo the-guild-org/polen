@@ -29,6 +29,9 @@ interface GraphQLInteractiveProps {
   /** Whether to show a warning indicator when schema is missing */
   showWarningIfNoSchema?: boolean | undefined
 
+  /** Whether reference documentation is enabled (controls if types link to reference) */
+  referenceEnabled?: boolean | undefined
+
   /** Optional toolbar component to render (e.g., version picker) */
   toolbar?: () => React.ReactNode
 
@@ -53,6 +56,7 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
   codeblock,
   schema,
   showWarningIfNoSchema = true,
+  referenceEnabled = true,
   toolbar,
   style,
 }) => {
@@ -86,6 +90,7 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
         codeblock.code,
         codeblock.annotations,
         schema, // Pass the schema for semantic analysis
+        referenceEnabled, // Pass reference enabled flag for link generation
       )
 
       setTokens(parsedTokens)
@@ -98,7 +103,7 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
     } finally {
       setIsLoading(false)
     }
-  }, [codeblock.code, codeblock.annotations, schema])
+  }, [codeblock.code, codeblock.annotations, schema, referenceEnabled])
 
   // Retry function for users
   const handleRetry = ReactHooks.useCallback(() => {

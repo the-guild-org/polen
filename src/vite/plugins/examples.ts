@@ -121,6 +121,8 @@ export const Examples = ({
             || file.endsWith('.gql')
             || file.endsWith('index.md')
             || file.endsWith('index.mdx')
+            || (file.endsWith('.md') && !file.endsWith('index.md'))
+            || (file.endsWith('.mdx') && !file.endsWith('index.mdx'))
           )
         },
       },
@@ -177,6 +179,16 @@ export const Examples = ({
             } else {
               s``
               s`export const IndexComponent = null`
+            }
+
+            // Export description components for each example
+            for (const example of scanExamplesResult.catalog.examples) {
+              if (example.description?.path) {
+                s``
+                s`export { default as DescriptionComponent_${
+                  example.name.replace(/-/g, '_')
+                } } from '${example.description.path}'`
+              }
             }
 
             // Encode the catalog to ensure HashMap and other Effect types are properly serialized

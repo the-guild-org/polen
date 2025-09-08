@@ -3,6 +3,7 @@ import { Document } from '#lib/document/$'
 import { VersionCoverage } from '#lib/version-coverage'
 import { Either, Option } from 'effect'
 import * as React from 'react'
+import { templateConfig } from 'virtual:polen/project/config'
 import { useHighlighted } from '../hooks/use-highlighted.js'
 import { GraphQLInteractive } from './GraphQLInteractive/GraphQLInteractive.js'
 import { VersionCoveragePicker } from './VersionCoveragePicker.js'
@@ -72,6 +73,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
     <GraphQLInteractive
       codeblock={highlightedCode}
       schema={schema?.definition}
+      referenceEnabled={templateConfig.reference.enabled}
       style={style}
       toolbar={() => (
         showVersionCoveragePicker && selectedVersionCoverage && (

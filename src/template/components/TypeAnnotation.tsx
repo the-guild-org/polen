@@ -7,13 +7,21 @@ import { TypeLink } from './graphql/graphql.js'
 /**
  * Renders a GraphQL type recursively, with links for named types
  */
-export const TypeAnnotation: React.FC<{ type: GraphQLType }> = ({ type }) => {
+export const TypeAnnotation: React.FC<{
+  type: GraphQLType
+  showDescription?: boolean
+  nullabilityRendering?: 'questionMark' | 'bangMark'
+}> = ({ type, showDescription = false, nullabilityRendering = 'bangMark' }) => {
   // Handle NonNull type wrapper
   if (isNonNullType(type)) {
     return (
       <>
-        <TypeAnnotation type={type.ofType} />
-        <Text color='gray'>!</Text>
+        <TypeAnnotation
+          type={type.ofType}
+          showDescription={showDescription}
+          nullabilityRendering={nullabilityRendering}
+        />
+        {nullabilityRendering === 'bangMark' && <Text color='gray'>!</Text>}
       </>
     )
   }
@@ -23,7 +31,11 @@ export const TypeAnnotation: React.FC<{ type: GraphQLType }> = ({ type }) => {
     return (
       <>
         <Text color='gray'>[</Text>
-        <TypeAnnotation type={type.ofType} />
+        <TypeAnnotation
+          type={type.ofType}
+          showDescription={showDescription}
+          nullabilityRendering={nullabilityRendering}
+        />
         <Text color='gray'>]</Text>
       </>
     )
@@ -31,7 +43,7 @@ export const TypeAnnotation: React.FC<{ type: GraphQLType }> = ({ type }) => {
 
   // Handle named types - use TypeLink which already has icon support
   if (isNamedType(type)) {
-    return <TypeLink type={type} />
+    return <TypeLink type={type} showDescription={showDescription} />
   }
 
   // TypeScript exhaustiveness check - this should be unreachable

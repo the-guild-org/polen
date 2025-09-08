@@ -1,5 +1,6 @@
 import type { Api } from '#api/$'
 import { ExamplesConfigObject } from '#api/examples/config'
+import { ReferenceConfigObject } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import type { Catalog } from '#lib/catalog/$'
 import { S } from '#lib/kit-temp/effect'
@@ -15,6 +16,13 @@ export const resolve = (config: Config, data: {
     schema: {
       ...config.schema,
       enabled: Boolean(config.schema.enabled ?? data.schemas),
+    },
+    reference: {
+      ...config.reference,
+      // Reference is enabled if explicitly enabled OR if schemas exist (unless explicitly disabled)
+      enabled: Boolean(config.reference.enabled ?? data.schemas),
+      descriptionsView: config.reference.descriptionsView,
+      nullabilityRendering: config.reference.nullabilityRendering,
     },
     examples: {
       ...config.examples,
@@ -33,7 +41,7 @@ export const resolve = (config: Config, data: {
  * that control feature enablement have been resolved to concrete values.
  */
 export const TemplateConfig = S.extend(
-  Config.pipe(S.omit('_input', 'schema', 'examples')),
+  Config.pipe(S.omit('_input', 'schema', 'reference', 'examples')),
   S.Struct({
     schema: S.extend(
       ConfigSchema.pipe(S.omit('enabled')),
@@ -41,6 +49,15 @@ export const TemplateConfig = S.extend(
         enabled: S.Boolean,
       }),
     ),
+    reference: S.Struct({
+      enabled: S.Boolean,
+      descriptionsView: S.Struct({
+        defaultMode: S.Literal('compact', 'expanded'),
+        showControl: S.Boolean,
+      }),
+      nullabilityRendering: S.Literal('questionMark', 'bangMark'),
+      diagnostics: S.optional(S.Unknown), // From ReferenceConfigObject
+    }),
     examples: S.extend(
       ExamplesConfigObject.pipe(S.omit('enabled')),
       S.Struct({
