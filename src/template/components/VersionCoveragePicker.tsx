@@ -26,6 +26,12 @@ export const VersionCoveragePicker: FC<Props> = ({
   const options = Array.from(HashMap.keys(document.versionDocuments))
   if (options.length === 0) return null
 
+  // Helper to format labels with proper Version/Versions prefix
+  const formatLabel = (versionCoverage: VersionCoverage.VersionCoverage): string => {
+    const prefix = VersionCoverage.isSingle(versionCoverage) ? 'Version' : 'Versions'
+    return `${prefix} ${VersionCoverage.toLabel(versionCoverage)}`
+  }
+
   return (
     <Select.Root
       value={VersionCoverage.toLabel(current)}
@@ -39,7 +45,7 @@ export const VersionCoveragePicker: FC<Props> = ({
       }}
     >
       <Select.Trigger>
-        {VersionCoverage.toLabel(current)}
+        {formatLabel(current)}
       </Select.Trigger>
       <Select.Content position='popper' sideOffset={5}>
         {options.map(selection => (
@@ -47,7 +53,7 @@ export const VersionCoveragePicker: FC<Props> = ({
             key={VersionCoverage.toLabel(selection)}
             value={VersionCoverage.toLabel(selection)}
           >
-            {VersionCoverage.toLabel(selection)}
+            {formatLabel(selection)}
           </Select.Item>
         ))}
       </Select.Content>

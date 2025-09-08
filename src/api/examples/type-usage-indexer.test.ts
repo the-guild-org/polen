@@ -44,15 +44,17 @@ const makeUnversionedCatalog = (definition: GraphQLSchema) =>
 const makeVersionedCatalog = (definition: GraphQLSchema, versions: Version.Version[]) =>
   Catalog.Versioned.make({
     entries: HashMap.make(
-      ...versions.map(v => [
-        v,
-        Schema.Versioned.make({
-          version: v,
-          definition,
-          branchPoint: null,
-          revisions: [],
-        }),
-      ] as const),
+      ...versions.map(v =>
+        [
+          v,
+          Schema.Versioned.make({
+            version: v,
+            definition,
+            branchPoint: null,
+            revisions: [],
+          }),
+        ] as const
+      ),
     ),
   })
 
@@ -72,7 +74,7 @@ describe('createTypeUsageIndex', () => {
 
     const index = createTypeUsageIndex([example], makeUnversionedCatalog(schemaDef))
     const refs = getExampleReferencesForType(index, type)
-    
+
     if (shouldExist) {
       expect(HashSet.size(refs)).toBe(1)
       expect([...refs][0]).toEqual({ name: 'get-user', version: null })
@@ -114,7 +116,7 @@ describe('createTypeUsageIndex', () => {
         document: Document.Unversioned.make({
           document: `query { user(id: "${name}") { id name } }`,
         }),
-      }),
+      })
     )
 
     const index = createTypeUsageIndex(examples, makeUnversionedCatalog(schemaDef))
@@ -168,7 +170,7 @@ describe('createTypeUsageIndex', () => {
 describe('ExampleReference', () => {
   test('structural equality works with HashSet', () => {
     const version = Version.decodeSync('1.0.0')
-    
+
     // Create set with duplicates to test deduplication
     const refs = [
       ExampleReference.make({ name: 'example1', version }),

@@ -155,7 +155,7 @@ const extractTypesFromDocument = (
 
 /**
  * Process a document version and add its type usage to the index.
- * 
+ *
  * @param example - The example being processed
  * @param documentContent - The document content to extract types from
  * @param schema - The schema containing version and definition
@@ -169,24 +169,24 @@ const processDocumentVersion = (
   hashMap: TypeUsageIndex,
 ): TypeUsageIndex => {
   const types = extractTypesFromDocument(documentContent, schema.definition)
-  
+
   // Get version from schema (null for unversioned)
   const version = Schema.getVersion(schema) ?? null
-  
+
   // Map to storage key: use version or UNVERSIONED_KEY
   const versionKey: VersionKey = version ?? UNVERSIONED_KEY
-  
+
   // Create reference with nullable version
-  const exampleRef = ExampleReference.make({ 
-    name: example.name, 
+  const exampleRef = ExampleReference.make({
+    name: example.name,
     version,
   })
-  
+
   let updatedMap = hashMap
   for (const typeName of types) {
     updatedMap = addExampleToIndex(updatedMap, versionKey, typeName, exampleRef)
   }
-  
+
   return updatedMap
 }
 
@@ -215,16 +215,16 @@ export const createTypeUsageIndex = (
     } else if (Document.Versioned.is(example.document)) {
       // For versioned: process each version
       const allVersions = Document.Versioned.getAllVersions(example.document)
-      
+
       for (const version of allVersions) {
         const schemaOption = Option.liftThrowable(
           () => Catalog.resolveCatalogSchema(schemasCatalog, version),
         )()
         if (Option.isNone(schemaOption)) continue
-        
+
         const documentOption = Document.Versioned.getContentForVersion(example.document, version)
         if (Option.isNone(documentOption)) continue
-        
+
         hashMap = processDocumentVersion(
           example,
           documentOption.value,

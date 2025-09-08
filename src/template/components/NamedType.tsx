@@ -59,7 +59,9 @@ export const NamedType: FC<Props> = ({ data }) => {
           <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {[...examples].map((exampleRef) => (
               <ExampleLink
-                key={`${exampleRef.name}-${exampleRef.version ? Version.encodeSync(exampleRef.version) : 'unversioned'}`}
+                key={`${exampleRef.name}-${
+                  exampleRef.version ? Version.encodeSync(exampleRef.version) : 'unversioned'
+                }`}
                 exampleRef={exampleRef}
               />
             ))}

@@ -13,7 +13,7 @@ export interface Props {
  */
 export const ExampleLink: FC<Props> = ({ exampleRef }) => {
   // Include version parameter only if version exists
-  const href = exampleRef.version 
+  const href = exampleRef.version
     ? `/examples/${exampleRef.name}?version=${Version.encodeSync(exampleRef.version)}`
     : `/examples/${exampleRef.name}`
 
