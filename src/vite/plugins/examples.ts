@@ -83,8 +83,6 @@ export const Examples = ({
   const getControlForDiagnostic = (diagnostic: ExamplesModule.Diagnostic) => {
     if (diagnostic.source === 'examples-scanner') {
       switch (diagnostic.name) {
-        case 'unused-default':
-          return config.examples.diagnostics?.unusedVersions
         case 'duplicate-content':
           return config.examples.diagnostics?.duplicateContent
         case 'missing-versions':

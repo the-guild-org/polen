@@ -34,8 +34,8 @@ examples/
 
 When using [multiple schema versions](/guides/features/schema-overview#versioning), you can author version-specific examples.
 
-- Use version identifier in extensions
-- Use keyword suffix `.default.graphql` if not all schema versions need their own variant of an example
+- Use version identifier in extensions for version-specific examples
+- Use base `.graphql` file as fallback for versions without specific files
 - Versioned examples display a client-side version picker in the UI, allowing users to switch between versions
 
 Example:
@@ -46,8 +46,8 @@ examples/
 ├── get-user.2.graphql
 ├── get-user.3.graphql
 ├── create-post.1.graphql
-├── create-post.default.graphql
-└── search-products.graphql
+├── create-post.graphql        # Serves as default for versions 2 and 3
+└── search-products.graphql    # Unversioned (applies to all versions)
 ```
 
 #### Index

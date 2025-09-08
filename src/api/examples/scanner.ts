@@ -50,19 +50,17 @@ const VERSIONED_FILE_PATTERN = Str.pattern<{ groups: ['name', 'version'] }>(
 type ParsedExampleFile =
   | { type: 'unversioned'; name: string; file: string }
   | { type: 'versioned'; name: string; version: Version.Version; file: string }
-  | { type: 'default'; name: string; file: string }
 
 type GroupedExampleFiles = Map<string, {
   unversioned?: string
   versioned: Map<Version.Version, string>
-  default?: string
 }>
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-const parseExampleFile = (filename: string): ParsedExampleFile => {
+export const parseExampleFile = (filename: string): ParsedExampleFile => {
   const parsed = Path.parse(filename)
   const base = parsed.name
 
@@ -71,11 +69,6 @@ const parseExampleFile = (filename: string): ParsedExampleFile => {
 
   if (match) {
     const { name, version: versionStr } = match.groups
-
-    // Handle special 'default' keyword
-    if (versionStr === 'default') {
-      return { type: 'default', name, file: filename }
-    }
 
     const version = Version.decodeSync(versionStr)
     return { type: 'versioned', name, version, file: filename }
@@ -106,9 +99,6 @@ const groupExampleFiles = (files: string[]): GroupedExampleFiles => {
       case 'versioned':
         group.versioned.set(parsed.version, parsed.file)
         break
-      case 'default':
-        group.default = parsed.file
-        break
     }
   }
 
@@ -119,7 +109,7 @@ const groupExampleFiles = (files: string[]): GroupedExampleFiles => {
  * Resolve .default files into proper version coverage.
  * This erases the .default convention and converts it to semantic version sets.
  */
-const resolveDefaultFiles = (
+export const resolveDefaultFiles = (
   grouped: GroupedExampleFiles,
   schemaVersions: Version.Version[],
 ): Map<string, {
@@ -139,9 +129,9 @@ const resolveDefaultFiles = (
       versionDocuments = HashMap.set(versionDocuments, version, file)
     }
 
-    // Handle default file if present
-    if (group.default) {
-      // Determine which versions the default covers
+    // Handle unversioned file
+    if (group.unversioned && group.versioned.size > 0) {
+      // When both unversioned and versioned exist, use unversioned as default for missing versions
       const explicitVersions = HashSet.fromIterable(group.versioned.keys())
       const defaultVersions = schemaVersions.filter(v => !HashSet.has(explicitVersions, v))
 
@@ -151,14 +141,20 @@ const resolveDefaultFiles = (
           ? defaultVersions[0]! // Single version
           : HashSet.fromIterable(defaultVersions) // Version set
 
-        versionDocuments = HashMap.set(versionDocuments, defaultCoverage, group.default)
+        versionDocuments = HashMap.set(versionDocuments, defaultCoverage, group.unversioned)
       }
+      // Don't add to resolved.unversioned since it's acting as a default
+      resolved.set(name, { versionDocuments })
+    } else if (group.unversioned) {
+      // Only unversioned exists - truly unversioned
+      resolved.set(name, {
+        versionDocuments,
+        unversioned: group.unversioned,
+      })
+    } else {
+      // Only versioned files exist
+      resolved.set(name, { versionDocuments })
     }
-
-    resolved.set(name, {
-      versionDocuments,
-      ...(group.unversioned ? { unversioned: group.unversioned } : {}),
-    })
   }
 
   return resolved
