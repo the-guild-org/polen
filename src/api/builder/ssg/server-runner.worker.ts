@@ -113,24 +113,7 @@ const handlers = {
         Effect.catchTag('TimeoutException', () =>
           Effect.die(new Error(`Server on port ${port} failed to start within 30 seconds`))),
       )
-
-      // Add finalizer to ensure cleanup
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
-          debug(`Finalizer: Stopping server on port ${port}`)
-          if (serverProcess && !serverProcess.killed) {
-            serverProcess.kill('SIGTERM')
-            // Try to kill forcefully after a brief wait
-            setTimeout(() => {
-              if (serverProcess && !serverProcess.killed) {
-                serverProcess.kill('SIGKILL')
-              }
-              serverProcess = null
-            }, 100)
-          }
-        })
-      )
-    }).pipe(Effect.scoped),
+    }),
   StopServer: () =>
     Effect.gen(function*() {
       if (serverProcess) {

@@ -15,6 +15,7 @@ import {
   PageMessage,
   ServerMessage,
   StartServerMessage,
+  StopServerMessage,
 } from './worker-messages.js'
 import { createPageSpawner, createServerSpawner } from './worker-spawners.js'
 
@@ -130,6 +131,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
           ),
           { concurrency: 'unbounded' },
         )
+        yield* Effect.addFinalizer(() => serverPool.broadcast(new StopServerMessage()).pipe(Effect.orDie))
         consola.success(`   All ${optimalWorkers} app instances ready on ports: ${serverPorts.join(', ')}`)
         debug(`All servers started successfully`)
 
