@@ -15,7 +15,7 @@ describe('decode', () => {
       { _tag: 'ArgumentSegment', argument: 'limit' },
     ]],
   ])('decodes "%s"', ([input, expected]) => {
-    expect(GraphQLPath.Definition.decode(input)).toEqual(expected)
+    expect(GraphQLPath.Definition.decodeSync(input)).toEqual(expected)
   })
 
   test.for([
@@ -25,7 +25,7 @@ describe('decode', () => {
     '.field',
     'Type.',
   ])('throws on invalid format "%s"', (input) => {
-    expect(() => GraphQLPath.Definition.decode(input)).toThrow()
+    expect(() => GraphQLPath.Definition.decodeSync(input)).toThrow()
   })
 })
 
@@ -37,7 +37,7 @@ describe('encode', () => {
       [GraphQLPath.Definition.argument('User', 'posts', 'limit'), 'User.posts(limit)'],
     ] as const,
   )('encodes path to "%s"', ([path, expected]) => {
-    expect(GraphQLPath.Definition.encode(path as any)).toBe(expected)
+    expect(GraphQLPath.Definition.encodeSync(path as any)).toBe(expected)
   })
 })
 
@@ -53,16 +53,16 @@ describe('round-trip', () => {
     'Query.search(query)',
     'Mutation.createUser(input)',
   ])('round-trips "%s"', (pathString) => {
-    const decoded = GraphQLPath.Definition.decode(pathString)
-    const encoded = GraphQLPath.Definition.encode(decoded)
+    const decoded = GraphQLPath.Definition.decodeSync(pathString)
+    const encoded = GraphQLPath.Definition.encodeSync(decoded)
     expect(encoded).toBe(pathString)
   })
 })
 
 describe('type guards', () => {
-  const typePath = GraphQLPath.Definition.decode('User')
-  const fieldPath = GraphQLPath.Definition.decode('User.name')
-  const argPath = GraphQLPath.Definition.decode('User.posts(limit)')
+  const typePath = GraphQLPath.Definition.decodeSync('User')
+  const fieldPath = GraphQLPath.Definition.decodeSync('User.name')
+  const argPath = GraphQLPath.Definition.decodeSync('User.posts(limit)')
 
   test('isTypeDefinitionPath', () => {
     expect(GraphQLPath.Definition.isTypeDefinitionPath(typePath)).toBe(true)
@@ -102,14 +102,14 @@ describe('type guards', () => {
 
 describe('helper functions', () => {
   test('getType extracts type from all path types', () => {
-    expect(GraphQLPath.Definition.getType(GraphQLPath.Definition.decode('User'))).toBe('User')
-    expect(GraphQLPath.Definition.getType(GraphQLPath.Definition.decode('User.name'))).toBe('User')
-    expect(GraphQLPath.Definition.getType(GraphQLPath.Definition.decode('User.posts(limit)'))).toBe('User')
+    expect(GraphQLPath.Definition.getType(GraphQLPath.Definition.decodeSync('User'))).toBe('User')
+    expect(GraphQLPath.Definition.getType(GraphQLPath.Definition.decodeSync('User.name'))).toBe('User')
+    expect(GraphQLPath.Definition.getType(GraphQLPath.Definition.decodeSync('User.posts(limit)'))).toBe('User')
   })
 
   test('getField extracts field name', () => {
-    const fieldPath = GraphQLPath.Definition.decode('User.name')
-    const argPath = GraphQLPath.Definition.decode('User.posts(limit)')
+    const fieldPath = GraphQLPath.Definition.decodeSync('User.name')
+    const argPath = GraphQLPath.Definition.decodeSync('User.posts(limit)')
 
     if (GraphQLPath.Definition.isFieldDefinitionPath(fieldPath)) {
       expect(GraphQLPath.Definition.getField(fieldPath)).toBe('name')
@@ -120,7 +120,7 @@ describe('helper functions', () => {
   })
 
   test('getArgument extracts argument name', () => {
-    const argPath = GraphQLPath.Definition.decode('User.posts(limit)')
+    const argPath = GraphQLPath.Definition.decodeSync('User.posts(limit)')
     if (GraphQLPath.Definition.isArgumentDefinitionPath(argPath)) {
       expect(GraphQLPath.Definition.getArgument(argPath)).toBe('limit')
     }

@@ -34,18 +34,17 @@ export default defineConfig({
           },
         },
       },
-      // Version-specific only (v2 has more features)
-      // {
-      //   versions: {
-      //     2: {
-      //       on: 'TypeEffectiveness',
-      //       content:
-      //         '**Battle System** - Type matchup effectiveness chart showing damage multipliers. Super effective (2x), not very effective (0.5x), and no effect (0x) relationships.',
-      //       placement: 'before',
-      //     },
-      //   },
-      // },
-
+      // Version-specific only (v2 has more features) - Testing invalid path diagnostic
+      {
+        versions: {
+          2: {
+            on: 'TypeEffectiveness',
+            content:
+              '**Battle System** - Type matchup effectiveness chart showing damage multipliers. Super effective (2x), not very effective (0.5x), and no effect (0x) relationships.',
+            placement: 'before',
+          },
+        },
+      },
       // // Stats field with version differences
       // {
       //   on: 'Pokemon.stats',

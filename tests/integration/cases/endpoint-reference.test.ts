@@ -17,7 +17,7 @@ test('no schema causes navbar without refernce link', async ({ page, vite }) => 
   await vite.devPolen()
   const svr = await vite.devPolen()
   await page.goto(svr.url('/').href, { timeout: 5000 })
-  expect(await page.getByRole('link').allInnerTexts()).toEqual(['My Developer Portal'])
+  expect(await page.getByRole('link').allInnerTexts()).toEqual(['Project'])
 })
 
 test('schema pressence causes navbar with reference link', async ({ page, vite, project }) => {

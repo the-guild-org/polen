@@ -128,7 +128,7 @@ export type DefinitionPath = S.Schema.Type<typeof DefinitionPath>
  * decode('User.name') // field definition path
  * decode('User.posts(limit)') // argument definition path
  */
-export const decode = S.decodeUnknownSync(DefinitionPath)
+export const decodeSync = S.decodeUnknownSync(DefinitionPath)
 
 /**
  * Encode a definition path to a string expression
@@ -138,7 +138,7 @@ export const decode = S.decodeUnknownSync(DefinitionPath)
  * encode([{ _tag: 'TypeSegment', type: 'User' }]) // 'User'
  * encode([{ _tag: 'TypeSegment', type: 'User' }, { _tag: 'FieldSegment', field: 'name' }]) // 'User.name'
  */
-export const encode = S.encodeSync(DefinitionPath)
+export const encodeSync = S.encodeSync(DefinitionPath)
 
 // ============================================================================
 // Helper Functions

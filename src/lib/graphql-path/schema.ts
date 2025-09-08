@@ -3,8 +3,23 @@
  */
 
 import { Grafaid } from '#lib/grafaid'
-import { Match } from 'effect'
+import { Data, Either, Match } from 'effect'
 import * as Definition from './definition.js'
+
+// ============================================================================
+// Errors
+// ============================================================================
+
+export class TypeNotFoundError extends Data.TaggedError('TypeNotFoundError')<{
+  typeName: string
+  path: string
+}> {}
+
+export class FieldNotFoundError extends Data.TaggedError('FieldNotFoundError')<{
+  typeName: string
+  fieldName: string
+  path: string
+}> {}
 
 // ============================================================================
 // Locate Functions
@@ -15,19 +30,23 @@ import * as Definition from './definition.js'
  *
  * @param schema - The GraphQL schema
  * @param path - The type definition path
- * @returns The located type
- * @throws Error if type not found
+ * @returns Either the located type or a TypeNotFoundError
  */
 export const locateType = (
   schema: Grafaid.Schema.Schema,
   path: Definition.TypeDefinitionPath,
-): Grafaid.Schema.TypesLike.Named => {
+): Either.Either<Grafaid.Schema.TypesLike.Named, TypeNotFoundError> => {
   const typeName = Definition.getType(path)
   const type = schema.getType(typeName)
   if (!type) {
-    throw new Error(`Could not find type ${typeName}`)
+    return Either.left(
+      new TypeNotFoundError({
+        typeName,
+        path: Definition.encodeSync(path),
+      }),
+    )
   }
-  return type
+  return Either.right(type)
 }
 
 /**
@@ -35,23 +54,34 @@ export const locateType = (
  *
  * @param schema - The GraphQL schema
  * @param path - The field definition path
- * @returns The located field
- * @throws Error if type or field not found
+ * @returns Either the located field or a FieldNotFoundError
  */
 export const locateField = (
   schema: Grafaid.Schema.Schema,
   path: Definition.FieldDefinitionPath,
-): Grafaid.Schema.NodesLike.Field => {
+): Either.Either<Grafaid.Schema.NodesLike.Field, FieldNotFoundError> => {
   const typeName = Definition.getType(path)
   const fieldName = Definition.getField(path)
 
   const type = schema.getType(typeName)
   if (!type) {
-    throw new Error(`Could not find type ${typeName}`)
+    return Either.left(
+      new FieldNotFoundError({
+        typeName,
+        fieldName,
+        path: Definition.encodeSync(path),
+      }),
+    )
   }
 
   if (!Grafaid.Schema.TypesLike.isFielded(type)) {
-    throw new Error(`Type ${typeName} does not have fields`)
+    return Either.left(
+      new FieldNotFoundError({
+        typeName,
+        fieldName,
+        path: Definition.encodeSync(path),
+      }),
+    )
   }
 
   const fields = type.getFields()
@@ -59,10 +89,14 @@ export const locateField = (
 
   if (!field) {
     // dprint-ignore
-    throw new Error(`Could not find field ${fieldName} on type ${typeName}`)
+    return Either.left(new FieldNotFoundError({
+      typeName,
+      fieldName,
+      path: Definition.encodeSync(path),
+    }))
   }
 
-  return field
+  return Either.right(field)
 }
 
 /**
@@ -70,12 +104,15 @@ export const locateField = (
  *
  * @param schema - The GraphQL schema
  * @param path - The definition path (type or field)
- * @returns The located type or field
+ * @returns Either the located type/field or an error
  */
 export const locate = (
   schema: Grafaid.Schema.Schema,
   path: Definition.DefinitionPath,
-): Grafaid.Schema.TypesLike.Named | Grafaid.Schema.NodesLike.Field => {
+): Either.Either<
+  Grafaid.Schema.TypesLike.Named | Grafaid.Schema.NodesLike.Field,
+  TypeNotFoundError | FieldNotFoundError
+> => {
   return Match.value(path).pipe(
     Match.when(
       Definition.isTypeDefinitionPath,
@@ -86,7 +123,14 @@ export const locate = (
       (p) => locateField(schema, p),
     ),
     Match.orElse(() => {
-      throw new Error(`Unsupported path type for schema location`)
+      // This should never happen with proper path types
+      // Return a generic error for unsupported path types
+      return Either.left(
+        new TypeNotFoundError({
+          typeName: 'unknown',
+          path: Definition.encodeSync(path),
+        }),
+      )
     }),
   )
 }
