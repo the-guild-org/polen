@@ -258,22 +258,37 @@ describe('PathMap', () => {
 
     it('absolute paths always start with base', () => {
       fc.assert(
-        fc.property(pathInput, fc.string({ minLength: 1 }).filter(s => s.startsWith('/')), (input, base) => {
-          const paths = PathMap.create(input, base)
-          const normalizedBase = normalizeBasePath(base)
+        fc.property(
+          pathInput,
+          fc.string({ minLength: 1 })
+            .filter(s => s.startsWith('/'))
+            // Exclude paths with .. segments as Path.join will resolve them
+            .filter(s => !s.includes('..')),
+          (input, base) => {
+            const paths = PathMap.create(input, base)
+            const normalizedBase = normalizeBasePath(base)
 
-          function checkAbsolute(obj: any) {
-            for (const [key, value] of Object.entries(obj)) {
-              if (typeof value === 'string') {
-                expect(value.startsWith(normalizedBase)).toBe(true)
-              } else if (typeof value === 'object') {
-                checkAbsolute(value)
+            function checkAbsolute(obj: any) {
+              for (const [key, value] of Object.entries(obj)) {
+                if (typeof value === 'string') {
+                  // Path.join resolves .. segments, so we need to resolve the base too
+                  const resolvedBase = Path.resolve(normalizedBase)
+                  const resolvedValue = Path.resolve(value)
+                  // Check that the resolved absolute path starts with resolved base
+                  // or that both resolve to root
+                  expect(
+                    resolvedValue.startsWith(resolvedBase)
+                      || (resolvedBase === '/' && resolvedValue.startsWith('/')),
+                  ).toBe(true)
+                } else if (typeof value === 'object') {
+                  checkAbsolute(value)
+                }
               }
             }
-          }
 
-          checkAbsolute(paths.absolute)
-        }),
+            checkAbsolute(paths.absolute)
+          },
+        ),
       )
     })
 

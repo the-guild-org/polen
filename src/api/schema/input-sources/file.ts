@@ -73,11 +73,11 @@ export const loader = InputSource.createEffect({
       const fs = yield* FileSystem
       const content = yield* fs.readFileString(config.path)
 
-      const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
+      const ast = yield* Grafaid.Parse.parseSchema(content, { source: config.path }).pipe(
         Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'file',
-            message: `Failed to parse schema file: ${error}`,
+            message: error.message,
             cause: error,
           })
         ),
@@ -86,7 +86,7 @@ export const loader = InputSource.createEffect({
         Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'file',
-            message: `Failed to build schema: ${error}`,
+            message: error.message,
             cause: error,
           })
         ),

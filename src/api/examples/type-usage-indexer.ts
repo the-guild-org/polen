@@ -1,19 +1,10 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
+import { Grafaid } from '#lib/grafaid'
 import { Version } from '#lib/version/$'
-import { HashMap, HashSet, Option } from 'effect'
+import { Effect, HashMap, HashSet, Option } from 'effect'
 import { Schema as S } from 'effect'
-import {
-  type DocumentNode,
-  getNamedType,
-  type GraphQLSchema,
-  isInterfaceType,
-  isObjectType,
-  isUnionType,
-  Kind,
-  parse,
-  visit,
-} from 'graphql'
+import { getNamedType, type GraphQLSchema, isInterfaceType, isObjectType, isUnionType, Kind, visit } from 'graphql'
 import type { Example } from './schemas/example/example.js'
 import { ExampleReference, type TypeUsageIndex, UNVERSIONED_KEY, type VersionKey } from './schemas/type-usage-index.js'
 
@@ -30,20 +21,17 @@ import { ExampleReference, type TypeUsageIndex, UNVERSIONED_KEY, type VersionKey
  * - For interfaces: both the interface and all implementations
  * - For unions: both the union and all member types
  */
-const extractTypesFromQuery = (
+const extractTypesFromDocument = (
   documentString: string,
   schema: GraphQLSchema,
 ): Set<string> => {
   const types = new Set<string>()
   const visitedTypes = new Set<string>() // Prevent infinite recursion
 
-  let ast: DocumentNode
-  try {
-    ast = parse(documentString)
-  } catch {
-    // If parsing fails, return empty set
-    return types
-  }
+  // Use Effect to parse, but handle it synchronously since this function is synchronous
+  const ast = Effect.runSync(
+    Grafaid.Parse.parseDocument(documentString, { source: 'example' }),
+  )
 
   // Helper to add a type and its related types
   const addType = (typeName: string) => {
@@ -181,7 +169,7 @@ export const createTypeUsageIndex = (
     if (Document.Unversioned.is(example.document)) {
       // Unversioned document
       const schema = Catalog.getLatest(schemasCatalog)
-      const types = extractTypesFromQuery(example.document.document, schema.definition)
+      const types = extractTypesFromDocument(example.document.document, schema.definition)
 
       for (const typeName of types) {
         // For unversioned, use the latest version from the catalog
@@ -210,7 +198,7 @@ export const createTypeUsageIndex = (
         if (Option.isNone(documentStringOption)) continue
         const documentString = documentStringOption.value
 
-        const types = extractTypesFromQuery(documentString, schema.definition)
+        const types = extractTypesFromDocument(documentString, schema.definition)
 
         for (const typeName of types) {
           hashMap = addExampleToIndex(hashMap, version, typeName, example, version)

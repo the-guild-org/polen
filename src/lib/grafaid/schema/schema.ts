@@ -1,5 +1,6 @@
 import { Effect } from 'effect'
 import { buildASTSchema, type GraphQLSchema } from 'graphql'
+import { makeParseError, ParseError } from '../parse-error.js'
 
 export {
   buildClientSchema as fromIntrospectionQuery,
@@ -9,10 +10,17 @@ export {
 } from 'graphql'
 
 // Effect-based version of fromAST
-export const fromAST = (ast: AST.Document): Effect.Effect<GraphQLSchema, Error> =>
+export const fromAST = (ast: AST.Document): Effect.Effect<GraphQLSchema, ParseError> =>
   Effect.try({
     try: () => buildASTSchema(ast),
-    catch: (error) => new Error(`Failed to build schema from AST: ${error}`),
+    catch: (error) =>
+      makeParseError(
+        `Failed to build schema from AST: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          parseType: 'schema',
+          cause: error,
+        },
+      ),
   })
 
 export * as AST from './ast.js'

@@ -121,11 +121,11 @@ export const normalize = (configInput: Options): Config => {
 const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema, InputSource.InputSourceError> =>
   Effect.gen(function*() {
     if (typeof value === 'string') {
-      const ast = yield* Grafaid.Schema.AST.parse(value).pipe(
+      const ast = yield* Grafaid.Parse.parseSchema(value, { source: 'memory' }).pipe(
         Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'memory',
-            message: `Failed to parse schema: ${error}`,
+            message: error.message,
             cause: error,
           })
         ),
@@ -134,7 +134,7 @@ const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema
         Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'memory',
-            message: `Failed to build schema: ${error}`,
+            message: error.message,
             cause: error,
           })
         ),

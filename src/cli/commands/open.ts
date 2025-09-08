@@ -74,7 +74,7 @@ const cacheRead = async (source: string, useCache: boolean) => {
     const filePath = Path.join(cacheDir, fileName)
     const sdl = await Fs.read(filePath)
     if (!sdl) return null
-    const documentNode = await Effect.runPromise(Grafaid.Schema.AST.parse(sdl))
+    const documentNode = await Effect.runPromise(Grafaid.Parse.parseSchema(sdl, { source: filePath }))
     return await Effect.runPromise(Grafaid.Schema.fromAST(documentNode))
   })
 }

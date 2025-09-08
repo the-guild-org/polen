@@ -59,24 +59,16 @@ export const load = (source: SchemaPointer): Effect.Effect<Grafaid.Schema.Schema
             catch: (error) => new Error(`Failed to read response text: ${error}`),
           })
 
-          const ast = yield* Grafaid.Schema.AST.parse(sdlContent).pipe(
-            Effect.mapError((error) => new Error(`Failed to parse SDL from ${source.pathOrUrl}: ${error}`)),
-          )
-          return yield* Grafaid.Schema.fromAST(ast).pipe(
-            Effect.mapError((error) => new Error(`Failed to build schema from ${source.pathOrUrl}: ${error}`)),
-          )
+          const ast = yield* Grafaid.Parse.parseSchema(sdlContent, { source: source.pathOrUrl })
+          return yield* Grafaid.Schema.fromAST(ast)
         } else {
           const fs = yield* FileSystem
           const sdlContent = yield* fs.readFileString(source.pathOrUrl).pipe(
             Effect.mapError((error) => new Error(`Failed to read SDL from ${source.pathOrUrl}: ${error}`)),
           )
 
-          const ast = yield* Grafaid.Schema.AST.parse(sdlContent).pipe(
-            Effect.mapError((error) => new Error(`Failed to parse SDL from ${source.pathOrUrl}: ${error}`)),
-          )
-          return yield* Grafaid.Schema.fromAST(ast).pipe(
-            Effect.mapError((error) => new Error(`Failed to build schema from ${source.pathOrUrl}: ${error}`)),
-          )
+          const ast = yield* Grafaid.Parse.parseSchema(sdlContent, { source: source.pathOrUrl })
+          return yield* Grafaid.Schema.fromAST(ast)
         }
       }
       case `name`: {

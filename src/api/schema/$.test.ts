@@ -112,7 +112,7 @@ const createTestConfig = (overrides?: Partial<Config.Config>): Config.Config => 
 // Helper to build GraphQL schema using Grafaid to avoid realm issues
 const buildSchemaWithGrafaid = (sdl: string) =>
   Effect.gen(function*() {
-    const ast = yield* Grafaid.Schema.AST.parse(sdl)
+    const ast = yield* Grafaid.Parse.parseSchema(sdl, { source: 'test' })
     return yield* Grafaid.Schema.fromAST(ast)
   })
 

@@ -186,11 +186,11 @@ const read = (
         Effect.gen(function*() {
           const fs = yield* FileSystem
           const content = yield* fs.readFileString(revisionInput.filePath)
-          const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
+          const ast = yield* Grafaid.Parse.parseSchema(content, { source: revisionInput.filePath }).pipe(
             Effect.mapError((error) =>
               new InputSourceError({
                 source: 'directory',
-                message: `Failed to parse schema file ${revisionInput.filePath}: ${error}`,
+                message: error.message,
                 cause: error,
               })
             ),
@@ -199,7 +199,7 @@ const read = (
             Effect.mapError((error) =>
               new InputSourceError({
                 source: 'directory',
-                message: `Failed to build schema from ${revisionInput.filePath}: ${error}`,
+                message: error.message,
                 cause: error,
               })
             ),

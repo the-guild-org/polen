@@ -2,7 +2,7 @@ import { FileSystem } from '@effect/platform/FileSystem'
 import { Fs } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { type GraphQLSchema } from 'graphql'
-import * as AST from './ast.js'
+import * as Parse from '../parse.js'
 import { fromAST } from './schema.js'
 
 export const read = (sdlFilePath: string): Effect.Effect<null | Fs.File<GraphQLSchema>, Error, FileSystem> =>
@@ -19,7 +19,7 @@ export const read = (sdlFilePath: string): Effect.Effect<null | Fs.File<GraphQLS
     const content = yield* fs.readFileString(sdlFilePath)
 
     // Parse and build schema
-    const node = yield* AST.parse(content)
+    const node = yield* Parse.parseSchema(content, { source: sdlFilePath })
     const schema = yield* fromAST(node)
 
     return {

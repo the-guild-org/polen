@@ -201,11 +201,11 @@ export const readOrThrow = (
               Effect.gen(function*() {
                 const filePath = Path.join(versionInfo.path, revisionFile)
                 const content = yield* fs.readFileString(filePath)
-                const ast = yield* Grafaid.Schema.AST.parse(content).pipe(
+                const ast = yield* Grafaid.Parse.parseSchema(content, { source: filePath }).pipe(
                   Effect.mapError((error) =>
                     new InputSource.InputSourceError({
                       source: 'versionedDirectory',
-                      message: `Failed to parse schema from ${filePath}: ${error}`,
+                      message: error.message,
                       cause: error,
                     })
                   ),
@@ -214,7 +214,7 @@ export const readOrThrow = (
                   Effect.mapError((error) =>
                     new InputSource.InputSourceError({
                       source: 'versionedDirectory',
-                      message: `Failed to build schema from ${filePath}: ${error}`,
+                      message: error.message,
                       cause: error,
                     })
                   ),
