@@ -38,9 +38,9 @@ export class ExampleReference extends S.Class<ExampleReference>('ExampleReferenc
   name: S.String,
   /**
    * The version this reference is for.
-   * Always included for consistent URL generation.
+   * Can be null for unversioned examples.
    */
-  version: Version.Version,
+  version: S.NullOr(Version.Version),
 }) {}
 
 // ============================================================================

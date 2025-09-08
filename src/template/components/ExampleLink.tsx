@@ -12,8 +12,10 @@ export interface Props {
  * Always includes the version query parameter for consistent behavior.
  */
 export const ExampleLink: FC<Props> = ({ exampleRef }) => {
-  // Always include version parameter for consistency
-  const href = `/examples/${exampleRef.name}?version=${Version.encodeSync(exampleRef.version)}`
+  // Include version parameter only if version exists
+  const href = exampleRef.version 
+    ? `/examples/${exampleRef.name}?version=${Version.encodeSync(exampleRef.version)}`
+    : `/examples/${exampleRef.name}`
 
   return (
     <Link href={href} style={{ textDecoration: 'none' }}>

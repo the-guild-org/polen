@@ -1,6 +1,7 @@
 import { Catalog } from '#lib/catalog/$'
 import { Document } from '#lib/document/$'
 import { Grafaid } from '#lib/grafaid'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { Effect, HashMap, HashSet, Option } from 'effect'
 import { Schema as S } from 'effect'
@@ -153,6 +154,43 @@ const extractTypesFromDocument = (
 // ============================================================================
 
 /**
+ * Process a document version and add its type usage to the index.
+ * 
+ * @param example - The example being processed
+ * @param documentContent - The document content to extract types from
+ * @param schema - The schema containing version and definition
+ * @param hashMap - The current type usage index
+ * @returns Updated type usage index
+ */
+const processDocumentVersion = (
+  example: Example,
+  documentContent: string,
+  schema: Schema.Schema,
+  hashMap: TypeUsageIndex,
+): TypeUsageIndex => {
+  const types = extractTypesFromDocument(documentContent, schema.definition)
+  
+  // Get version from schema (null for unversioned)
+  const version = Schema.getVersion(schema) ?? null
+  
+  // Map to storage key: use version or UNVERSIONED_KEY
+  const versionKey: VersionKey = version ?? UNVERSIONED_KEY
+  
+  // Create reference with nullable version
+  const exampleRef = ExampleReference.make({ 
+    name: example.name, 
+    version,
+  })
+  
+  let updatedMap = hashMap
+  for (const typeName of types) {
+    updatedMap = addExampleToIndex(updatedMap, versionKey, typeName, exampleRef)
+  }
+  
+  return updatedMap
+}
+
+/**
  * Create a type usage index from examples and schemas.
  *
  * Processes all examples and their documents (versioned or unversioned)
@@ -165,44 +203,34 @@ export const createTypeUsageIndex = (
   let hashMap = HashMap.empty<VersionKey, HashMap.HashMap<string, HashSet.HashSet<ExampleReference>>>()
 
   for (const example of examples) {
-    // Process based on document type
     if (Document.Unversioned.is(example.document)) {
-      // Unversioned document
+      // For unversioned: get latest schema from catalog
       const schema = Catalog.getLatest(schemasCatalog)
-      const types = extractTypesFromDocument(example.document.document, schema.definition)
-
-      for (const typeName of types) {
-        // For unversioned, use the latest version from the catalog
-        const latestVersion = Option.getOrElse(
-          Catalog.getLatestVersion(schemasCatalog),
-          () => Version.fromString('1.0.0'),
-        )
-        hashMap = addExampleToIndex(hashMap, UNVERSIONED_KEY, typeName, example, latestVersion)
-      }
+      hashMap = processDocumentVersion(
+        example,
+        example.document.document,
+        schema,
+        hashMap,
+      )
     } else if (Document.Versioned.is(example.document)) {
-      // Versioned document - process each version covered
+      // For versioned: process each version
       const allVersions = Document.Versioned.getAllVersions(example.document)
-
+      
       for (const version of allVersions) {
-        // Use centralized resolution to get schema for version
         const schemaOption = Option.liftThrowable(
           () => Catalog.resolveCatalogSchema(schemasCatalog, version),
         )()
-        if (Option.isNone(schemaOption)) {
-          // Skip if version not found in catalog
-          continue
-        }
-        const schema = schemaOption.value
-
-        const documentStringOption = Document.Versioned.getContentForVersion(example.document, version)
-        if (Option.isNone(documentStringOption)) continue
-        const documentString = documentStringOption.value
-
-        const types = extractTypesFromDocument(documentString, schema.definition)
-
-        for (const typeName of types) {
-          hashMap = addExampleToIndex(hashMap, version, typeName, example, version)
-        }
+        if (Option.isNone(schemaOption)) continue
+        
+        const documentOption = Document.Versioned.getContentForVersion(example.document, version)
+        if (Option.isNone(documentOption)) continue
+        
+        hashMap = processDocumentVersion(
+          example,
+          documentOption.value,
+          schemaOption.value,
+          hashMap,
+        )
       }
     }
   }
@@ -217,12 +245,8 @@ const addExampleToIndex = (
   index: TypeUsageIndex,
   versionKey: VersionKey,
   typeName: string,
-  example: Example,
-  version: Version.Version,
+  exampleRef: ExampleReference,
 ): TypeUsageIndex => {
-  // Create lightweight reference using the schema's make constructor
-  const exampleRef = ExampleReference.make({ name: example.name, version })
-
   // Get or create the version's type map
   const versionMap = HashMap.get(index, versionKey).pipe(
     Option.getOrElse(HashMap.empty<string, HashSet.HashSet<S.Schema.Type<typeof ExampleReference>>>),
