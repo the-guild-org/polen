@@ -17,22 +17,20 @@ hero:
       link: https://github.com/the-guild-org/polen
 
 features:
-  - title: Schema Reference
+  - title: Reference
     details: Automatically generate a beautiful interactive reference from your GraphQL schema.
-  - title: Schema Changelog
+  - title: Changelog
     details: Track schema evolution over time with automatically generated changelogs showing additions, removals, and modifications.
-  - title: Query Examples
+  - title: Examples
     details: Auto-discovered GraphQL examples displayed as interactive tabbed code blocks with validation.
-  - title: Content
+  - title: Arbitrary Pages
     details: Create custom documentation pages using MDX with full React component support and GraphQL-aware components.
+  - title: Seamless Cross References
+    details: Automatic linking between reference page types and content that it appears in (examples, guides, ...)
   - title: Multiple Build Architectures
     details: Choose between SSG for static hosting, SSR for dynamic content, or SPA for client-side apps.
-  - title: API or CLI
-    details: Use Polen as a CLI for quick tasks or integrate it as an API in your build pipeline.
-  - title: User & Project Context
-    details: Future-ready architecture for user authentication, project switching, and personalized documentation experiences.
-  - title: Proven Track Record
-    details: Built by The Guild, creators of GraphQL tools used by thousands of developers worldwide.
   - title: Interactive Document Blocks
     details: GraphQL code blocks that come alive with hover overlays, error detection, inline hints, click-to-explore, and more.
+  - title: Version Support
+    details: Supports multiple versions of your API with easy switching between them amongst content (reference, examples, ...)
 ---
