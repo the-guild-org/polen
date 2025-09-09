@@ -1,6 +1,6 @@
 # List Pokemon with filtering by type
-query ListPokemons($type: PokemonType, $limit: Int = 10) {
-  pokemons(type: $type, limit: $limit) {
+query ListPokemons {
+  pokemons(type: ELECTRIC, limit: 10) {
     edges {
       node {
         id

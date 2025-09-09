@@ -1,6 +1,6 @@
 # Catch a wild Pokemon
-mutation CatchPokemon($pokemonId: ID!, $trainerId: ID!) {
-  catchPokemon(pokemonId: $pokemonId, trainerId: $trainerId) {
+mutation CatchPokemon {
+  catchPokemon(pokemonId: "133", trainerId: "ash") {
     id
     name
     types

@@ -1,6 +1,6 @@
 # Subscribe to Pokemon level up events for a trainer
-subscription PokemonLevelUpEvents($trainerId: ID!) {
-  pokemonLevelUp(trainerId: $trainerId) {
+subscription PokemonLevelUpEvents {
+  pokemonLevelUp(trainerId: "ash") {
     id
     name
     level

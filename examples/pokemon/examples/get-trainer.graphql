@@ -1,6 +1,6 @@
 # Get a trainer with their Pokemon team
-query GetTrainer($id: ID!) {
-  trainer(id: $id) {
+query GetTrainer {
+  trainer(id: "ash") {
     id
     name
     hometown

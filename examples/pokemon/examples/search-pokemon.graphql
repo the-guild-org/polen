@@ -1,6 +1,6 @@
 # Search for Pokemon by name
-query SearchPokemon($name: String!) {
-  searchPokemon(name: $name) {
+query SearchPokemon {
+  searchPokemon(name: "pika") {
     edges {
       node {
         id

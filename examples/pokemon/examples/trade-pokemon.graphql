@@ -1,13 +1,9 @@
 # Trade Pokemon between trainers
-mutation TradePokemon(
-  $pokemonId: ID!
-  $fromTrainerId: ID!
-  $toTrainerId: ID!
-) {
+mutation TradePokemon {
   tradePokemon(
-    pokemonId: $pokemonId
-    fromTrainerId: $fromTrainerId
-    toTrainerId: $toTrainerId
+    pokemonId: "025"
+    fromTrainerId: "ash"
+    toTrainerId: "misty"
   ) {
     id
     name
