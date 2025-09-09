@@ -19,16 +19,19 @@ import { templateConfig } from 'virtual:polen/project/config'
 import { IndexComponent } from 'virtual:polen/project/reference'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { TypeKindIcon } from '../components/graphql/graphql.js'
-import { MissingSchema } from '../components/MissingSchema.js'
 import { Field } from '../components/reference/Field.js'
 import { NamedType } from '../components/reference/NamedType.js'
 import { ReferenceVersionPicker } from '../components/reference/ReferenceVersionPicker.js'
-import { ViewModeToggle } from '../components/ViewModeToggle.js'
+import { ViewModeToggle } from '../components/reference/ViewModeToggle.js'
 import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
 import { ReferenceConfigProvider } from '../contexts/ReferenceConfigContext.js'
 import { ViewModeProvider } from '../contexts/ViewModeContext.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { MdxProvider } from '../providers/mdx.js'
+
+const MissingSchema: React.FC = () => {
+  return <div>No content to show. There is no schema to work with.</div>
+}
 
 const routeSchema = S.Struct({
   catalog: Catalog.Catalog,

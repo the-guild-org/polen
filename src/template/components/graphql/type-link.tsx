@@ -1,8 +1,8 @@
 import { Grafaid } from '#lib/grafaid'
 import { Code, Flex, HoverCard, Text } from '@radix-ui/themes'
 import React from 'react'
-import { Description } from '../Description.js'
-import { ReferenceLink } from '../ReferenceLink.js'
+import { Description } from '../reference/Description.js'
+import { ReferenceLink } from '../reference/ReferenceLink.js'
 import { TypeKindIcon } from './graphql.js'
 import { typeKindTokensIndex } from './type-kind-tokens.js'
 

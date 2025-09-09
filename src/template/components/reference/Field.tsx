@@ -9,9 +9,9 @@ import { useSchema } from '../../contexts/GraphqlLifecycleContext.js'
 import { useReferenceConfig } from '../../contexts/ReferenceConfigContext.js'
 import { useViewMode } from '../../contexts/ViewModeContext.js'
 import { DeprecationReason } from '../DeprecationReason.js'
-import { Description } from '../Description.js'
-import { SinceBadge } from '../SinceBadge.js'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.js'
+import { Description } from './Description.js'
+import { SinceBadge } from './SinceBadge.js'
 import { TypeAnnotation } from './TypeAnnotation.js'
 
 export const Field: React.FC<

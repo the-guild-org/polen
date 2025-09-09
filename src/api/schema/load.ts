@@ -185,8 +185,7 @@ export const loadOrNull = (
               schema.definition,
               categoriesConfig as CategoryConfig[] | Record<string, CategoryConfig[]>,
               versionString,
-            )
-            // Update the schema's categories field
+            ) // Update the schema's categories field
             ;(schema as any).categories = categories
           }
         },
@@ -196,8 +195,7 @@ export const loadOrNull = (
             unversioned.schema.definition,
             categoriesConfig as CategoryConfig[] | Record<string, CategoryConfig[]>,
             undefined,
-          )
-          // Update the schema's categories field
+          ) // Update the schema's categories field
           ;(unversioned.schema as any).categories = categories
         },
       )(catalog)

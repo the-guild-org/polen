@@ -4,8 +4,8 @@ import { Box, Flex } from '@radix-ui/themes'
 import type { GraphQLArgument, GraphQLField } from 'graphql'
 import type { FC } from 'react'
 import { useAlignedColumns } from '../../hooks/useAlignedColumns.js'
-import { IAPIndicator } from '../IAPIndicator.js'
 import { ArgumentAnnotation } from './ArgumentAnnotation.js'
+import { IAPIndicator } from './IAPIndicator.js'
 
 export interface Props {
   field: GraphQLField<any, any>

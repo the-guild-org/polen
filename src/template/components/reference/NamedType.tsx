@@ -12,8 +12,8 @@ import { useExamplesForType } from '../../hooks/use-examples.js'
 import { ExampleLink } from '../ExampleLink.js'
 import { TypeLink } from '../graphql/graphql.js'
 import { Markdown } from '../Markdown.js'
-import { SinceBadge } from '../SinceBadge.js'
 import { FieldListSection } from './FieldListSection.js'
+import { SinceBadge } from './SinceBadge.js'
 
 export interface Props {
   data: GraphQLNamedType
