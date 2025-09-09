@@ -71,9 +71,6 @@ importers:
       '@vltpkg/semver':
         specifier: 0.0.0-18
         version: 0.0.0-18
-      '@vue/reactivity':
-        specifier: ^3.5.17
-        version: 3.5.17
       '@wollybeard/kit':
         specifier: ^0.41.0
         version: 0.41.0

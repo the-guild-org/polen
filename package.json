@@ -217,9 +217,6 @@
     "#lib/vite-plugin-mdx": {
       "default": "./build/lib/vite-plugin-mdx/$.js"
     },
-    "#lib/vite-plugin-reactive-data": {
-      "default": "./build/lib/vite-plugin-reactive-data/$.js"
-    },
     "#lib/vite-plugins": {
       "default": "./build/lib/vite-plugins/$.js"
     },
@@ -298,7 +295,6 @@
     "@vitejs/plugin-react": "^4.7.0",
     "@vitejs/plugin-react-oxc": "^0.3.0",
     "@vltpkg/semver": "0.0.0-18",
-    "@vue/reactivity": "^3.5.17",
     "@wollybeard/kit": "^0.41.0",
     "@wollybeard/projector": "^0.3.0",
     "ansis": "^4.1.0",

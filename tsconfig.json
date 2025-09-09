@@ -117,8 +117,6 @@
       "#lib/vite-plugin-json/*": ["./src/lib/vite-plugin-json/*.ts"],
       "#lib/vite-plugin-mdx": ["./src/lib/vite-plugin-mdx/$.ts"],
       "#lib/vite-plugin-mdx/*": ["./src/lib/vite-plugin-mdx/*.ts"],
-      "#lib/vite-plugin-reactive-data": ["./src/lib/vite-plugin-reactive-data/$.ts"],
-      "#lib/vite-plugin-reactive-data/*": ["./src/lib/vite-plugin-reactive-data/*.ts"],
       "#lib/react-router-effect": ["./src/lib/react-router-effect/$.ts"],
       "#lib/react-router-effect/react-router-effect": ["./src/lib/react-router-effect/$$.ts"],
       "#lib/react-router-effect/*": ["./src/lib/react-router-effect/*.ts"],
