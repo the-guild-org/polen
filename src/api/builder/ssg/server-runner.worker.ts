@@ -119,11 +119,11 @@ const handlers = {
 
       yield* Effect.logDebug(`Server on port ${port} started successfully`)
     }),
-  StopServer: ({ port }: { port?: number } = {}) =>
+  StopServer: ({ port }: { port?: number | undefined }) =>
     Effect.gen(function*() {
       const serverProc = yield* Ref.get(serverProcessRef)
       if (serverProc) {
-        if (port) {
+        if (port !== undefined) {
           yield* Effect.logDebug(`Stopping server on port ${port}`)
         }
         serverProc.kill('SIGTERM')
@@ -133,7 +133,7 @@ const handlers = {
           serverProc.kill('SIGKILL')
         }
         yield* Ref.set(serverProcessRef, null)
-        if (port) {
+        if (port !== undefined) {
           yield* Effect.logDebug(`Server on port ${port} stopped`)
         }
       }

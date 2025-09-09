@@ -255,24 +255,15 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
       }).pipe(
         // Provide NodeContext for Path service used in page generator
         Effect.provide(NodeContext.layer),
-        // Log when cleanup actually happens
-        Effect.tap(() => Effect.sync(() => consola.info('\nShutting down worker pools...'))),
-        Effect.ensuring(
-          Effect.gen(function*() {
-            consola.info('   Terminating page generators...')
-            yield* Effect.sleep(Duration.millis(100)) // Small delay to ensure message shows
-            consola.info('   Terminating servers...')
-            yield* Effect.sleep(Duration.millis(100))
-          }),
-        ),
       ),
     ).pipe(
-      // Log when all cleanup is complete
+      // After scoped resources are released
       Effect.tap(() =>
-        Effect.gen(function*() {
+        Effect.sync(() => {
+          consola.info('\nShutting down...')
           consola.success('Cleanup complete.')
-          yield* Effect.logDebug(`All resources cleaned up`)
         })
       ),
+      Effect.tap(() => Effect.logDebug(`All resources cleaned up`)),
     )
   })
