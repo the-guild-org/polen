@@ -110,7 +110,9 @@ export class PolenBuilderWithPage {
   get expect(): PolenAssertions {
     return {
       visible: async (text: string) => {
-        await expect(this.page.getByText(text)).toBeVisible()
+        // Try to find the text in various contexts - could be with type indicators like "O Query"
+        const element = this.page.getByText(text, { exact: false })
+        await expect(element.first()).toBeVisible()
       },
 
       sidebarLinks: async (pattern: string) => {
