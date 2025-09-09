@@ -334,27 +334,6 @@ importers:
         specifier: workspace:*
         version: link:../..
 
-  examples/test-memory:
-    dependencies:
-      graphql:
-        specifier: ^16.11.0
-        version: 16.11.0
-      polen:
-        specifier: workspace:*
-        version: link:../..
-
-  examples/test-simple:
-    dependencies:
-      polen:
-        specifier: workspace:*
-        version: link:../..
-
-  examples/test-unversioned:
-    dependencies:
-      polen:
-        specifier: workspace:*
-        version: link:../..
-
   website:
     devDependencies:
       vitepress:
