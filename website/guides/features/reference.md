@@ -52,15 +52,15 @@ export default Polen.defineConfig({
     categories: [
       {
         name: 'Errors',
-        typeNames: [/.*Error$/],  // Match all types ending with "Error"
+        typeNames: [/.*Error$/], // Match all types ending with "Error"
       },
       {
         name: 'Authentication',
-        typeNames: ['User', 'AuthToken', 'LoginInput'],  // Exact type names
+        typeNames: ['User', 'AuthToken', 'LoginInput'], // Exact type names
       },
       {
         name: 'Payment Types',
-        typeNames: [/^Payment/, 'Invoice', 'Subscription'],  // Mix patterns and exact names
+        typeNames: [/^Payment/, 'Invoice', 'Subscription'], // Mix patterns and exact names
       },
     ],
   },
