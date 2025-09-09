@@ -65,9 +65,6 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^5.0.2
         version: 5.0.2(rolldown-vite@7.0.10(@types/node@24.3.1)(esbuild@0.25.9)(tsx@4.20.5)(yaml@2.8.1))
-      '@vitejs/plugin-react-oxc':
-        specifier: ^0.4.1
-        version: 0.4.1(rolldown-vite@7.0.10(@types/node@24.3.1)(esbuild@0.25.9)(tsx@4.20.5)(yaml@2.8.1))
       '@vltpkg/semver':
         specifier: 0.0.0-29
         version: 0.0.0-29
@@ -2581,9 +2578,6 @@ packages:
   '@rolldown/pluginutils@1.0.0-beta.29':
     resolution: {integrity: sha512-NIJgOsMjbxAXvoGq/X0gD7VPMQ8j9g0BiDaNjVNVjvl+iKXxL3Jre0v31RmBYeLEmkbj2s02v8vFTbUXi5XS2Q==}
 
-  '@rolldown/pluginutils@1.0.0-beta.32':
-    resolution: {integrity: sha512-QReCdvxiUZAPkvp1xpAg62IeNzykOFA6syH2CnClif4YmALN1XKpB39XneL80008UbtMShthSVDKmrx05N1q/g==}
-
   '@rolldown/pluginutils@1.0.0-beta.34':
     resolution: {integrity: sha512-LyAREkZHP5pMom7c24meKmJCdhf2hEyvam2q0unr3or9ydwDL+DJ8chTF6Av/RFPb3rH8UFBdMzO5MxTZW97oA==}
 
@@ -2851,12 +2845,6 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
-
-  '@vitejs/plugin-react-oxc@0.4.1':
-    resolution: {integrity: sha512-aEJYLO6UwO3mCrK0MHXELZo+SqORbFp+HhP70fdVMtb101liQq1h7NT5jy6/NbwlvpQTJm1jRm7QkiuzGjoVjQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    peerDependencies:
-      vite: ^6.3.0 || ^7.0.0
 
   '@vitejs/plugin-react@5.0.2':
     resolution: {integrity: sha512-tmyFgixPZCx2+e6VO9TNITWcCQl8+Nl/E8YbAyPVv85QCc7/A3JrdfG2A8gIzvVhWuzMOVrFW1aReaNxrI6tbw==}
@@ -7817,8 +7805,6 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.0-beta.29': {}
 
-  '@rolldown/pluginutils@1.0.0-beta.32': {}
-
   '@rolldown/pluginutils@1.0.0-beta.34': {}
 
   '@rolldown/pluginutils@1.0.0-beta.36': {}
@@ -8066,11 +8052,6 @@ snapshots:
   '@types/web-bluetooth@0.0.21': {}
 
   '@ungap/structured-clone@1.3.0': {}
-
-  '@vitejs/plugin-react-oxc@0.4.1(rolldown-vite@7.0.10(@types/node@24.3.1)(esbuild@0.25.9)(tsx@4.20.5)(yaml@2.8.1))':
-    dependencies:
-      '@rolldown/pluginutils': 1.0.0-beta.32
-      vite: rolldown-vite@7.0.10(@types/node@24.3.1)(esbuild@0.25.9)(tsx@4.20.5)(yaml@2.8.1)
 
   '@vitejs/plugin-react@5.0.2(rolldown-vite@7.0.10(@types/node@24.3.1)(esbuild@0.25.9)(tsx@4.20.5)(yaml@2.8.1))':
     dependencies:

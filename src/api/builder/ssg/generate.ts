@@ -161,6 +161,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
                   routes: batch,
                   serverPort: assignedPort,
                   outputDir: config.paths.project.absolute.build.root,
+                  ...(config.build.base ? { basePath: config.build.base } : {}),
                 }),
               )
               .pipe(

@@ -70,6 +70,7 @@ export class GeneratePagesMessage extends S.TaggedRequest<GeneratePagesMessage>(
       routes: S.Array(RouteSchema),
       serverPort: S.Number,
       outputDir: S.String,
+      basePath: S.optional(S.String),
     },
     success: GenerateResultSchema,
   },

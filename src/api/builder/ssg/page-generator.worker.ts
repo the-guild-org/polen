@@ -63,12 +63,15 @@ const processRoute = (
   route: string,
   serverPort: number,
   outputDir: string,
+  basePath?: string,
 ) =>
   Effect.gen(function*() {
     const path = yield* Path.Path
 
     // Fetch the page from the server
-    const url = `http://localhost:${serverPort}${route}`
+    // Construct URL with base path if provided
+    const basePathNormalized = basePath ? basePath.replace(/\/$/, '') : ''
+    const url = `http://localhost:${serverPort}${basePathNormalized}${route}`
     const html = yield* fetchPage(url).pipe(
       Effect.mapError(error => new RouteProcessingError({ route, cause: error })),
     )
@@ -89,13 +92,14 @@ const processRoute = (
 
 const handlers = {
   GeneratePages: (
-    { routes, serverPort, outputDir }: { routes: readonly string[]; serverPort: number; outputDir: string },
+    { routes, serverPort, outputDir, basePath }: { routes: readonly string[]; serverPort: number; outputDir: string; basePath?: string | undefined },
   ) =>
     Effect.gen(function*() {
       yield* Effect.logDebug(`Starting batch generation`).pipe(
         Effect.annotateLogs({
           totalRoutes: routes.length,
           serverPort,
+          basePath: basePath || 'none',
         }),
       )
 
@@ -103,7 +107,7 @@ const handlers = {
       const [duration, results] = yield* Effect.forEach(
         routes,
         (route, index) =>
-          processRoute(route, serverPort, outputDir).pipe(
+          processRoute(route, serverPort, outputDir, basePath).pipe(
             Effect.tap(() =>
               // Log progress every 5 routes
               (index + 1) % 5 === 0 || index === routes.length - 1
