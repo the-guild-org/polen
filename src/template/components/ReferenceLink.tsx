@@ -14,6 +14,7 @@ import { Link } from './Link.js'
 export const ReferenceLink = forwardRef<
   HTMLAnchorElement,
   {
+    className?: string
     /** The GraphQL type name */
     type: string
     /** Optional field name for field-specific links */

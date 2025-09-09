@@ -14,15 +14,27 @@ export const TypeLink: React.FC<{
   const hasDescription = type.description && type.description.trim() !== ''
 
   const linkContent = (
-    // <a href='https://foo.bar'>
-    <ReferenceLink type={type.name}>
-      <Flex align='center' gap='1' display='inline-flex'>
-        <TypeKindIcon kind={kind} />
-        {` `}
-        <Code color={typeKindTokensIndex[kind].color} variant='ghost'>{type.name}</Code>
-      </Flex>
-    </ReferenceLink>
-    // {/*</a>*/}
+    <>
+      <style>
+        {`
+          .type-link-content:hover code:not(:first-child) {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+          }
+        `}
+      </style>
+      <ReferenceLink type={type.name} className='type-link-content'>
+        <Flex
+          align='center'
+          gap='1'
+          display='inline-flex'
+        >
+          <TypeKindIcon kind={kind} />
+          {` `}
+          <Code color={typeKindTokensIndex[kind].color} variant='ghost'>{type.name}</Code>
+        </Flex>
+      </ReferenceLink>
+    </>
   )
 
   // Only show HoverCard if showDescription is true AND description exists
