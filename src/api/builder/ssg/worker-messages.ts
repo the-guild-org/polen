@@ -16,6 +16,14 @@ const GenerateResultSchema = S.Struct({
   duration: S.Number,
   memoryUsed: S.Number,
   error: S.optional(S.String),
+  failures: S.optional(
+    S.Array(
+      S.Struct({
+        route: S.String,
+        error: S.String,
+      }),
+    ),
+  ),
 })
 
 export type GenerateResult = S.Schema.Type<typeof GenerateResultSchema>
@@ -40,7 +48,9 @@ export class StopServerMessage extends S.TaggedRequest<StopServerMessage>()(
   'StopServer',
   {
     failure: S.Never,
-    payload: {},
+    payload: {
+      port: S.optional(S.Number),
+    },
     success: S.Void,
   },
 ) {}

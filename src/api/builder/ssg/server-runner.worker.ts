@@ -2,18 +2,15 @@
  * Worker that runs a Polen server for SSG.
  * This is executed in a child process using Effect Worker API.
  */
-import { debugPolen } from '#singletons/debug'
 import { WorkerRunner } from '@effect/platform'
 import { NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Duration, Effect, Layer, Scope } from 'effect'
+import { Duration, Effect, Layer, Ref, Scope } from 'effect'
 import { spawn } from 'node:child_process'
 import type { ChildProcess } from 'node:child_process'
 import { ServerMessage } from './worker-messages.js'
 
-const debug = debugPolen.sub(`api:ssg:server-runner`)
-
-// Store the server process for cleanup
-let serverProcess: ChildProcess | null = null
+// Store the server process reference for cleanup
+const serverProcessRef = Ref.unsafeMake<ChildProcess | null>(null)
 
 // ============================================================================
 // Handlers
@@ -23,20 +20,21 @@ const handlers = {
   StartServer: ({ serverPath, port }: { serverPath: string; port: number }) =>
     Effect.gen(function*() {
       // If there's already a server running, stop it first
-      if (serverProcess) {
-        serverProcess.kill('SIGTERM')
+      const existingProcess = yield* Ref.get(serverProcessRef)
+      if (existingProcess) {
+        existingProcess.kill('SIGTERM')
         yield* Effect.sleep(Duration.millis(500))
-        if (!serverProcess.killed) {
-          serverProcess.kill('SIGKILL')
+        if (!existingProcess.killed) {
+          existingProcess.kill('SIGKILL')
         }
-        serverProcess = null
+        yield* Ref.set(serverProcessRef, null)
       }
 
       // Start the server process
-      const startServer = Effect.sync((): ChildProcess => {
-        debug(`Starting server with command: node ${serverPath}`)
+      yield* Effect.logDebug(`Starting server with command: node ${serverPath}`)
 
-        serverProcess = spawn('node', [serverPath], {
+      const proc = yield* Effect.sync(() => {
+        const serverProc = spawn('node', [serverPath], {
           env: {
             ...process.env,
             PORT: port.toString(),
@@ -44,18 +42,23 @@ const handlers = {
           stdio: ['ignore', 'pipe', 'pipe'],
         })
 
-        serverProcess.stdout?.on('data', (data) => {
-          debug(`[Server ${port}] stdout`, data.toString().trim())
+        // Log server output
+        serverProc.stdout?.on('data', (data) => {
+          Effect.logDebug(`[Server ${port}] stdout: ${data.toString().trim()}`).pipe(
+            Effect.runSync,
+          )
         })
 
-        serverProcess.stderr?.on('data', (data) => {
-          debug(`[Server ${port}] stderr`, data.toString().trim())
+        serverProc.stderr?.on('data', (data) => {
+          Effect.logDebug(`[Server ${port}] stderr: ${data.toString().trim()}`).pipe(
+            Effect.runSync,
+          )
         })
 
-        return serverProcess
+        return serverProc
       })
 
-      const proc: ChildProcess = yield* startServer
+      yield* Ref.set(serverProcessRef, proc)
 
       // Wait for server to be ready with proper interruption support
       const waitForReady = Effect.async<void>((resume) => {
@@ -80,7 +83,7 @@ const handlers = {
           try {
             const response = await fetch(`http://localhost:${port}/`)
             if (response.ok || response.status === 404) {
-              debug(`[Server ${port}] Ready!`)
+              Effect.logDebug(`[Server ${port}] Ready!`).pipe(Effect.runSync)
               if (checkInterval) clearInterval(checkInterval)
               proc.removeListener('error', errorHandler)
               proc.removeListener('exit', exitHandler)
@@ -114,33 +117,25 @@ const handlers = {
           Effect.die(new Error(`Server on port ${port} failed to start within 30 seconds`))),
       )
 
-      // Add finalizer to ensure cleanup
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
-          debug(`Finalizer: Stopping server on port ${port}`)
-          if (serverProcess && !serverProcess.killed) {
-            serverProcess.kill('SIGTERM')
-            // Try to kill forcefully after a brief wait
-            setTimeout(() => {
-              if (serverProcess && !serverProcess.killed) {
-                serverProcess.kill('SIGKILL')
-              }
-              serverProcess = null
-            }, 100)
-          }
-        })
-      )
-    }).pipe(Effect.scoped),
-  StopServer: () =>
+      yield* Effect.logDebug(`Server on port ${port} started successfully`)
+    }),
+  StopServer: ({ port }: { port?: number } = {}) =>
     Effect.gen(function*() {
-      if (serverProcess) {
-        serverProcess.kill('SIGTERM')
+      const serverProc = yield* Ref.get(serverProcessRef)
+      if (serverProc) {
+        if (port) {
+          yield* Effect.logDebug(`Stopping server on port ${port}`)
+        }
+        serverProc.kill('SIGTERM')
         // Give it time to shut down gracefully
         yield* Effect.sleep(Duration.millis(500))
-        if (!serverProcess.killed) {
-          serverProcess.kill('SIGKILL')
+        if (!serverProc.killed) {
+          serverProc.kill('SIGKILL')
         }
-        serverProcess = null
+        yield* Ref.set(serverProcessRef, null)
+        if (port) {
+          yield* Effect.logDebug(`Server on port ${port} stopped`)
+        }
       }
     }),
 }

@@ -3,6 +3,7 @@ import { Vite } from '#dep/vite/index'
 import { Catalog } from '#lib/catalog/$'
 import { FileRouter } from '#lib/file-router/$'
 import { SchemaDefinition } from '#lib/schema-definition/$'
+import { Version } from '#lib/version/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import consola from 'consola'
@@ -102,12 +103,14 @@ function processVersionedCatalog(
 ): void {
   for (const schema of Catalog.Versioned.getAll(catalog)) {
     const version = schema.version
-    routes.push(`/reference/version/${version}`)
+    // Properly encode the version to its string representation
+    const versionValue = Version.encodeSync(version)
+    routes.push(`/reference/version/${versionValue}`)
 
     processSchemaDefinition(
       schema.definition,
       routes,
-      `/reference/version/${version}`,
+      `/reference/version/${versionValue}`,
     )
   }
 }

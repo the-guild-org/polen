@@ -1,12 +1,11 @@
 import type { Config } from '#api/config/$'
 import { Routes } from '#api/routes/$'
-import { debugPolen } from '#singletons/debug'
 import { Worker } from '@effect/platform'
 import { NodeContext, NodeWorker } from '@effect/platform-node'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Path } from '@wollybeard/kit'
 import consola from 'consola'
-import { Array, Chunk, Effect, Layer } from 'effect'
+import { Array, Chunk, Duration, Effect, Either, Layer, Logger, Ref } from 'effect'
 import getPort from 'get-port'
 import { cpus, totalmem } from 'node:os'
 import {
@@ -17,8 +16,6 @@ import {
   StartServerMessage,
 } from './worker-messages.js'
 import { createPageSpawner, createServerSpawner } from './worker-spawners.js'
-
-const debug = debugPolen.sub(`api:ssg:generate`)
 
 export const generate = (config: Config.Config): Effect.Effect<void, Error, FileSystem> =>
   Effect.gen(function*() {
@@ -55,14 +52,16 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
     consola.info(`   Distribution: ${batches.length} batches × ~${batchSize} pages each`)
     consola.info(`   System: ${cpuCount} CPUs, ${memoryGB.toFixed(1)}GB RAM`)
 
-    debug(`SSG configuration`, {
-      totalRoutes,
-      optimalWorkers,
-      cpuCount,
-      memoryGB,
-      batchSize,
-      totalBatches: batches.length,
-    })
+    yield* Effect.logDebug(`SSG configuration`).pipe(
+      Effect.annotateLogs({
+        totalRoutes,
+        optimalWorkers,
+        cpuCount,
+        memoryGB,
+        batchSize,
+        totalBatches: batches.length,
+      }),
+    )
 
     // Create worker spawner layers
     const serverPath = config.paths.project.absolute.build.serverEntrypoint
@@ -76,7 +75,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
       'api/builder/ssg/page-generator.worker' + config.paths.framework.sourceExtension,
     )
 
-    debug(`Creating worker pools with ${optimalWorkers} workers each`)
+    yield* Effect.logDebug(`Creating worker pools with ${optimalWorkers} workers each`)
 
     // Create and use worker pools within a scoped context
     yield* Effect.scoped(
@@ -106,7 +105,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
 
         consola.info(`\nStarting SSG infrastructure:`)
         consola.info(`   Launching ${optimalWorkers} Polen app instances...`)
-        debug(`Finding available ports for servers`)
+        yield* Effect.logDebug(`Finding available ports for servers`)
 
         // Get available ports
         for (let i = 0; i < optimalWorkers; i++) {
@@ -116,7 +115,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
           })
           serverPorts.push(port)
         }
-        debug(`Using ports:`, serverPorts)
+        yield* Effect.logDebug(`Using ports: ${serverPorts.join(', ')}`)
 
         // Start servers using Effect
         yield* Effect.all(
@@ -131,13 +130,12 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
           { concurrency: 'unbounded' },
         )
         consola.success(`   All ${optimalWorkers} app instances ready on ports: ${serverPorts.join(', ')}`)
-        debug(`All servers started successfully`)
+        yield* Effect.logDebug(`All servers started successfully`)
 
         // Prepare page generation configs
         // Each batch is assigned to a server in round-robin fashion
         const generateConfigs = batches.map((batch, index) => {
           const assignedPort = serverPorts[index % serverPorts.length]!
-          debug(`Batch ${index + 1}: ${batch.length} routes → server on port ${assignedPort}`)
           return {
             batch,
             assignedPort,
@@ -151,14 +149,12 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
 
         // Process batches
         consola.info(`\nGenerating pages...`)
-        const startTime = Date.now()
-        let completedBatches = 0
-        let totalPagesProcessed = 0
+        const completedBatchesRef = yield* Ref.make(0)
+        const totalPagesProcessedRef = yield* Ref.make(0)
 
-        // Process batches using Effect.forEach
-        const results = yield* Effect.forEach(
-          generateConfigs,
-          ({ batch, assignedPort, index }) =>
+        // Process batches using Effect.all with timing
+        const [elapsedTime, results] = yield* Effect.all(
+          generateConfigs.map(({ batch, assignedPort, index }) =>
             pagePool
               .executeEffect(
                 new GeneratePagesMessage({
@@ -169,61 +165,114 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
               )
               .pipe(
                 Effect.tap((result) =>
-                  Effect.sync(() => {
-                    completedBatches++
-                    totalPagesProcessed += result.processedCount
-
-                    const elapsed = (Date.now() - startTime) / 1000
-                    const pagesPerSec = elapsed > 0 ? (totalPagesProcessed / elapsed).toFixed(1) : '0'
+                  Effect.gen(function*() {
+                    const completedBatches = yield* Ref.updateAndGet(completedBatchesRef, n => n + 1)
+                    const totalPagesProcessed = yield* Ref.updateAndGet(totalPagesProcessedRef, n =>
+                      n + result.processedCount)
+                    // Still use process.stdout.write for progress bar - this is UI, not logging
                     const progress = Math.floor((completedBatches / batches.length) * 100)
-
-                    process.stdout.write(
-                      `\r   Progress: ${completedBatches}/${batches.length} batches (${progress}%) • ${totalPagesProcessed}/${totalRoutes} pages • ${pagesPerSec} pages/s`,
-                    )
+                    yield* Effect.sync(() => {
+                      process.stdout.write(
+                        `\r   Progress: ${completedBatches}/${batches.length} batches (${progress}%) • ${totalPagesProcessed}/${totalRoutes} pages`,
+                      )
+                    })
                   })
                 ),
-                Effect.catchAll((error) => {
-                  consola.error(`\nBatch ${index} failed:`, error)
-                  debug(`Batch ${index} error details`, { error, batch })
-                  return Effect.fail(new Error(`Batch ${index} failed: ${error}`))
-                }),
-              ),
-          {
-            concurrency: optimalWorkers,
-            concurrentFinalizers: true,
-          },
-        )
+                Effect.tapError((error) =>
+                  Effect.logError(`Batch ${index} failed`).pipe(
+                    Effect.annotateLogs({ error: String(error), batch }),
+                  )
+                ),
+                Effect.map((result) => ({ ...result, batchIndex: index })),
+                Effect.either, // Convert to Either to capture both success and failure
+              )
+          ),
+          { concurrency: optimalWorkers },
+        ).pipe(Effect.timed)
 
-        const successfulResults = results.filter((r) => r.success)
+        // Partition results into successes and failures
+        const [lefts, rights] = Array.partition(results, Either.isRight)
+        const successfulResults = rights.map(r =>
+          r.right
+        )
+        const failedBatches = lefts.map(r => ({
+          error: r.left instanceof Error ? r.left.message : String(r.left),
+        }))
 
         // Final stats using successful results
-        const totalTime = ((Date.now() - startTime) / 1000).toFixed(1)
-        const totalMemoryMB = Array.reduce(successfulResults, 0, (sum, r) => sum + r.memoryUsed) / (1024 * 1024)
-        const avgTimePerBatch = Array.reduce(successfulResults, 0, (sum, r) => sum + r.duration)
-          / successfulResults.length
-          / 1000
+        const totalTime = (Duration.toMillis(elapsedTime) / 1000).toFixed(1)
+        const actualPagesGenerated = yield* Ref.get(totalPagesProcessedRef)
+        const totalFailures = totalRoutes - actualPagesGenerated
 
-        consola.success(`\n\nSSG Complete!`)
-        consola.info(`   Generated: ${totalRoutes} pages in ${totalTime}s`)
-        consola.info(`   Performance: ${(totalRoutes / parseFloat(totalTime)).toFixed(1)} pages/sec`)
-        consola.info(`   Avg batch time: ${avgTimePerBatch.toFixed(1)}s`)
-        consola.info(`   Peak memory: ${totalMemoryMB.toFixed(0)}MB`)
+        if (successfulResults.length > 0) {
+          const totalMemoryMB = Array.reduce(successfulResults, 0, (sum, r) => sum + r.memoryUsed) / (1024 * 1024)
+          const avgTimePerBatch = Array.reduce(successfulResults, 0, (sum, r) => sum + r.duration)
+            / successfulResults.length
+            / 1000
 
-        debug(`SSG generation complete`, {
-          totalTime,
-          avgTimePerBatch,
-          totalMemoryMB,
-          successfulBatches: successfulResults.length,
-        })
-        // Cleanup happens automatically when the scope ends
-        debug(`SSG generation complete, cleaning up resources`)
+          if (totalFailures === 0) {
+            consola.success(`\n\nSSG Complete!`)
+            consola.info(`   Generated: ${actualPagesGenerated} pages in ${totalTime}s`)
+            consola.info(`   Performance: ${(actualPagesGenerated / parseFloat(totalTime)).toFixed(1)} pages/sec`)
+            consola.info(`   Avg batch time: ${avgTimePerBatch.toFixed(1)}s`)
+            consola.info(`   Peak memory: ${totalMemoryMB.toFixed(0)}MB`)
+          } else {
+            consola.warn(`\n\nSSG Completed with Errors`)
+            consola.info(`   Generated: ${actualPagesGenerated} out of ${totalRoutes} pages`)
+            consola.error(`   Failed: ${totalFailures} pages`)
+            consola.info(`   Time: ${totalTime}s`)
+            consola.info(`   Performance: ${(actualPagesGenerated / parseFloat(totalTime)).toFixed(1)} pages/sec`)
+            consola.info(`   Avg batch time: ${avgTimePerBatch.toFixed(1)}s`)
+            consola.info(`   Peak memory: ${totalMemoryMB.toFixed(0)}MB`)
+
+            // Log details of failures from each batch
+            const allFailures = successfulResults.flatMap(r => r.failures ?? [])
+            if (allFailures.length > 0) {
+              consola.error(`\n   Failed routes:`)
+              for (const failure of allFailures.slice(0, 10)) {
+                consola.error(`     - ${failure.route}: ${failure.error}`)
+              }
+              if (allFailures.length > 10) {
+                consola.error(`     ... and ${allFailures.length - 10} more`)
+              }
+            }
+
+            // Fail the effect to indicate error
+            yield* Effect.fail(new Error(`SSG failed: ${totalFailures} pages could not be generated`))
+          }
+        } else {
+          consola.error(`\n\nSSG Failed Completely`)
+          consola.error(`   No pages were generated out of ${totalRoutes} total`)
+          yield* Effect.fail(new Error(`SSG failed: No pages could be generated`))
+        }
+
+        yield* Effect.logDebug(`SSG generation complete`).pipe(
+          Effect.annotateLogs({
+            totalTime,
+            successfulBatches: successfulResults.length,
+          }),
+        )
       }).pipe(
         // Provide NodeContext for Path service used in page generator
         Effect.provide(NodeContext.layer),
+        // Log when cleanup actually happens
+        Effect.tap(() => Effect.sync(() => consola.info('\nShutting down worker pools...'))),
+        Effect.ensuring(
+          Effect.gen(function*() {
+            consola.info('   Terminating page generators...')
+            yield* Effect.sleep(Duration.millis(100)) // Small delay to ensure message shows
+            consola.info('   Terminating servers...')
+            yield* Effect.sleep(Duration.millis(100))
+          }),
+        ),
+      ),
+    ).pipe(
+      // Log when all cleanup is complete
+      Effect.tap(() =>
+        Effect.gen(function*() {
+          consola.success('Cleanup complete.')
+          yield* Effect.logDebug(`All resources cleaned up`)
+        })
       ),
     )
-
-    consola.info('\nShutting down...')
-    consola.success('Cleanup complete.')
-    debug(`All resources cleaned up`)
   })
