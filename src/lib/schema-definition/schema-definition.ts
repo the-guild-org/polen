@@ -15,7 +15,11 @@ export const SchemaDefinition = S.transformOrFail(
     strict: true,
     decode: (ast, options, astSchema) => {
       try {
-        const schema = buildASTSchema(ast)
+        const schema = buildASTSchema(ast) as GraphQLSchema & {
+          categories: Array<{ name: string; types: string[] }>
+        }
+        // Initialize categories as empty array
+        schema.categories = []
         return ParseResult.succeed(schema)
       } catch (error) {
         return ParseResult.fail(
@@ -38,7 +42,7 @@ export const SchemaDefinition = S.transformOrFail(
 ).annotations({
   identifier: 'SchemaDefinition',
   title: 'Schema Definition',
-  description: 'A GraphQL schema definition',
+  description: 'A GraphQL schema definition with optional categories',
   equivalence: () => (a, b) => printSchema(a) === printSchema(b),
 })
 

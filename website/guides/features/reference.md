@@ -28,6 +28,83 @@ The reference documentation uses these URL patterns:
 
 ## Features
 
+### Sidebar Organization
+
+The reference documentation sidebar automatically organizes your schema types into logical sections:
+
+1. **Root Types** - Query, Mutation, and Subscription types appear first
+2. **Custom Categories** - Your configured type groupings (see [Categories](#categories) below)
+3. **Other Types** - All remaining types organized by kind (Objects, Interfaces, Enums, etc.)
+
+### Categories
+
+You can create custom sidebar groupings to organize related types together. This is especially useful for large schemas where you want to group types by domain or functionality.
+
+#### Configuration
+
+Configure categories in your Polen config:
+
+```ts
+import { Polen } from 'polen'
+
+export default Polen.defineConfig({
+  schema: {
+    categories: [
+      {
+        name: 'Errors',
+        typeNames: [/.*Error$/], // Match all types ending with "Error"
+      },
+      {
+        name: 'Authentication',
+        typeNames: ['User', 'AuthToken', 'LoginInput'], // Exact type names
+      },
+      {
+        name: 'Payment Types',
+        typeNames: [/^Payment/, 'Invoice', 'Subscription'], // Mix patterns and exact names
+      },
+    ],
+  },
+})
+```
+
+#### Pattern Matching
+
+Categories support flexible type matching:
+
+- **Exact strings**: `'User'`, `'Product'` - matches specific type names
+- **Regular expressions**: `/.*Error$/`, `/^Payment/` - matches patterns
+- **Mixed**: Combine both in the same category
+
+#### Exclude Mode
+
+You can also use exclude mode to create categories from everything except certain types:
+
+```ts
+{
+  name: 'Non-System Types',
+  typeNames: [/__.*/, /.*Internal$/],  // Exclude introspection and internal types
+  mode: 'exclude',
+}
+```
+
+#### Versioned Categories
+
+For versioned schemas, you can define different categories per version:
+
+```ts
+schema: {
+  categories: {
+    '2024-01-01': [
+      { name: 'Legacy Errors', typeNames: [/.*Error$/] },
+    ],
+    '2024-06-01': [
+      { name: 'Errors', typeNames: [/.*Error$/, /.*Exception$/] },
+      { name: 'Events', typeNames: [/.*Event$/] },
+    ],
+  },
+}
+```
+
 ### Type Documentation
 
 Each type page displays:

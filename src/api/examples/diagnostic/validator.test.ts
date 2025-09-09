@@ -22,11 +22,10 @@ const schema = buildSchema(`
 
 // Create an unversioned catalog for testing
 const catalog = Catalog.Unversioned.make({
-  schema: {
-    _tag: 'SchemaUnversioned',
+  schema: Schema.Unversioned.make({
     revisions: [],
     definition: schema,
-  },
+  }),
 })
 
 // Create a versioned catalog for versioned tests

@@ -2,6 +2,7 @@ import type { Config } from '#api/config/$'
 import { Catalog } from '#lib/catalog/$'
 import { Grafaid } from '#lib/grafaid'
 import { MemoryFilesystem } from '#lib/memory-filesystem/$'
+import { Schema as SchemaLib } from '#lib/schema/$'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Effect, HashMap } from 'effect'
 import { expect } from 'vitest'
@@ -186,11 +187,10 @@ testWithFileSystem<BaseTestCase&{
     const schema = yield* buildSchemaWithGrafaid(sdl1)
     testConfig = {
       revisions: Catalog.Unversioned.make({
-        schema: {
-          _tag: 'SchemaUnversioned',
+        schema: SchemaLib.Unversioned.make({
           revisions: [],
           definition: schema,
-        },
+        }),
       })
     }
   }

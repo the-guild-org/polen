@@ -1,6 +1,6 @@
 # Level up a Pokemon
-mutation LevelUpPokemon($id: ID!) {
-  levelUpPokemon(id: $id) {
+mutation LevelUpPokemon {
+  levelUpPokemon(id: "025") {
     id
     name
     level

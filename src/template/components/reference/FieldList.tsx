@@ -2,7 +2,7 @@ import { Grafaid } from '#lib/grafaid'
 import { GrafaidOld } from '#lib/grafaid-old'
 import { Box, Flex } from '@radix-ui/themes'
 import { type FC } from 'react'
-import { useAlignedColumns } from '../hooks/useAlignedColumns.js'
+import { useAlignedColumns } from '../../hooks/useAlignedColumns.js'
 import { Field } from './Field.js'
 
 export interface Props {

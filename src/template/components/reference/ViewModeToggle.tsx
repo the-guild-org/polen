@@ -1,7 +1,7 @@
 import type { React } from '#dep/react/index'
 import { ReaderIcon, RowsIcon } from '@radix-ui/react-icons'
 import { Flex, SegmentedControl } from '@radix-ui/themes'
-import { useViewMode } from '../contexts/ViewModeContext.js'
+import { useViewMode } from '../../contexts/ViewModeContext.js'
 
 export const ViewModeToggle: React.FC = () => {
   const { viewMode, setViewMode } = useViewMode()

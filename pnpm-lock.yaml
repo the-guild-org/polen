@@ -312,6 +312,9 @@ importers:
 
   examples/pokemon:
     dependencies:
+      '@vscode/tree-sitter-wasm':
+        specifier: 0.0.5-php.2
+        version: 0.0.5-php.2
       polen:
         specifier: workspace:*
         version: link:../..
@@ -2903,6 +2906,9 @@ packages:
   '@vltpkg/types@0.0.0-29':
     resolution: {integrity: sha512-ZyJQWBqHvlbrtO1ibBlRmilNrkA99Ztugvi5ixFvPk8J+3n7yKKDpZt4y8Iox7l/YRG5DwLlsN6gGTzc7G/DMA==}
     engines: {node: '>=22'}
+
+  '@vscode/tree-sitter-wasm@0.0.5-php.2':
+    resolution: {integrity: sha512-hEnCxsLqWSAZIRj16fjOJGFOsEQX7l1zYJK0cX4EnDyR+hsUJpYxotAaK5QPThzgqUHSExsfkSLfLkuy/nYjwA==}
 
   '@vue/compiler-core@3.5.17':
     resolution: {integrity: sha512-Xe+AittLbAyV0pabcN7cP7/BenRBNcteM4aSDCtRvGw0d9OL+HG1u/XHLY/kt1q4fyMeZYXyIYrsHuPSiDPosA==}
@@ -8126,6 +8132,8 @@ snapshots:
     dependencies:
       '@vltpkg/error-cause': 0.0.0-29
       '@vltpkg/semver': 0.0.0-29
+
+  '@vscode/tree-sitter-wasm@0.0.5-php.2': {}
 
   '@vue/compiler-core@3.5.17':
     dependencies:

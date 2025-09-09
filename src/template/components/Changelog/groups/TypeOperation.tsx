@@ -1,4 +1,3 @@
-import { Change as GraphqlChange } from '#lib/change/$'
 import { Grafaid } from '#lib/grafaid'
 import { Schema } from '#lib/schema/$'
 import { Code, Flex } from '@radix-ui/themes'
@@ -6,7 +5,7 @@ import { isNamedType } from 'graphql'
 import type React from 'react'
 import { TypeKindIcon } from '../../graphql/graphql.js'
 import { typeKindTokensIndex } from '../../graphql/type-kind-tokens.js'
-import { ReferenceLink } from '../../ReferenceLink.js'
+import { ReferenceLink } from '../../reference/ReferenceLink.js'
 import { ChangeBase } from '../ChangeBase.js'
 
 export const TypeOperation: React.FC<{ change: any; schema?: Schema.Schema }> = ({ change, schema }) => {

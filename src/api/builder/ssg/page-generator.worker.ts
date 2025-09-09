@@ -92,7 +92,12 @@ const processRoute = (
 
 const handlers = {
   GeneratePages: (
-    { routes, serverPort, outputDir, basePath }: { routes: readonly string[]; serverPort: number; outputDir: string; basePath?: string | undefined },
+    { routes, serverPort, outputDir, basePath }: {
+      routes: readonly string[]
+      serverPort: number
+      outputDir: string
+      basePath?: string | undefined
+    },
   ) =>
     Effect.gen(function*() {
       yield* Effect.logDebug(`Starting batch generation`).pipe(

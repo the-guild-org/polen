@@ -7,7 +7,7 @@ import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
-import { SegmentedControl, Text } from '@radix-ui/themes'
+import { Text } from '@radix-ui/themes'
 import { Flex } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
 import { neverCase } from '@wollybeard/kit/language'
@@ -18,17 +18,20 @@ import { redirect, useParams } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
 import { IndexComponent } from 'virtual:polen/project/reference'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
-import { Field } from '../components/Field.js'
 import { TypeKindIcon } from '../components/graphql/graphql.js'
-import { MissingSchema } from '../components/MissingSchema.js'
-import { NamedType } from '../components/NamedType.js'
-import { ReferenceVersionPicker } from '../components/ReferenceVersionPicker.js'
-import { ViewModeToggle } from '../components/ViewModeToggle.js'
+import { Field } from '../components/reference/Field.js'
+import { NamedType } from '../components/reference/NamedType.js'
+import { ReferenceVersionPicker } from '../components/reference/ReferenceVersionPicker.js'
+import { ViewModeToggle } from '../components/reference/ViewModeToggle.js'
 import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
 import { ReferenceConfigProvider } from '../contexts/ReferenceConfigContext.js'
 import { ViewModeProvider } from '../contexts/ViewModeContext.js'
 import { SidebarLayout } from '../layouts/index.js'
 import { MdxProvider } from '../providers/mdx.js'
+
+const MissingSchema: React.FC = () => {
+  return <div>No content to show. There is no schema to work with.</div>
+}
 
 const routeSchema = S.Struct({
   catalog: Catalog.Catalog,
@@ -111,28 +114,86 @@ const ReferenceView = () => {
   const kindMap = GrafaidOld.getKindMap(schema.definition)
 
   const sidebarItems: any[] = [] // Will be cast to template types in SidebarLayout
-  const kindEntries = Object.entries(kindMap.list).filter(([_, types]) => types.length > 0)
 
-  for (const [title, types] of kindEntries) {
-    sidebarItems.push({
-      type: `ItemSection` as const,
-      title: Str.Case.title(Str.Case.snake(title)),
-      pathExp: `reference-${title.toLowerCase()}`,
-      isLinkToo: false,
-      links: types.map(type => {
-        const kind = Grafaid.Schema.typeKindFromClass(type)
-        return {
-          type: `ItemLink` as const,
-          title: (
-            <Flex align='center' gap='1' display='inline-flex'>
-              <TypeKindIcon kind={kind} />
-              {type.name}
-            </Flex>
-          ),
-          pathExp: type.name, // Just the type name, basePath will be prepended
-        }
-      }),
-    })
+  // Track types that will be in categories
+  let typesInCategories = new Set<string>()
+  if (schema.categories && schema.categories.length > 0) {
+    for (const category of schema.categories) {
+      if (category.types.length > 0) {
+        // Add all type names from this category to the tracking set
+        category.types.forEach((typeName: string) => typesInCategories.add(typeName))
+      }
+    }
+  }
+
+  // Process all type sections, filtering out types that are in categories
+  const kindEntries = Object.entries(kindMap.list)
+    .map(([title, types]) => [
+      title,
+      (types as any[]).filter((type: any) => !typesInCategories.has(type.name)),
+    ])
+    .filter(([_, types]) => (types as any[]).length > 0)
+
+  // Helper function to create sidebar sections
+  const createSidebarSection = (title: string, types: any[]) => ({
+    type: `ItemSection` as const,
+    title: Str.Case.title(Str.Case.snake(title)),
+    pathExp: `reference-${title.toLowerCase()}`,
+    isLinkToo: false,
+    links: types.map((type: any) => {
+      const kind = Grafaid.Schema.typeKindFromClass(type)
+      return {
+        type: `ItemLink` as const,
+        title: (
+          <Flex align='center' gap='1' display='inline-flex'>
+            <TypeKindIcon kind={kind} />
+            {type.name}
+          </Flex>
+        ),
+        pathExp: type.name, // Just the type name, basePath will be prepended
+      }
+    }),
+  })
+
+  // 1. Add root types
+  const rootEntries = kindEntries.filter(([title]) => title === 'Root')
+  for (const [title, types] of rootEntries) {
+    sidebarItems.push(createSidebarSection(title as string, types as any[]))
+  }
+
+  // 2. Add custom categories
+  if (schema.categories && schema.categories.length > 0) {
+    for (const category of schema.categories) {
+      if (category.types.length > 0) {
+        sidebarItems.push({
+          type: `ItemSection` as const,
+          title: category.name,
+          pathExp: `reference-category-${category.name.toLowerCase().split(' ').join('-')}`,
+          isLinkToo: false,
+          links: category.types.map((typeName: string) => {
+            const type = schema.definition.getType(typeName)
+            if (!type) return null
+            const kind = Grafaid.Schema.typeKindFromClass(type)
+            return {
+              type: `ItemLink` as const,
+              title: (
+                <Flex align='center' gap='1' display='inline-flex'>
+                  <TypeKindIcon kind={kind} />
+                  {typeName}
+                </Flex>
+              ),
+              pathExp: typeName, // Just the type name, basePath will be prepended
+            }
+          }).filter(Boolean),
+        })
+      }
+    }
+  }
+
+  // 3. Add remaining types
+  const otherEntries = kindEntries.filter(([title]) => title !== 'Root')
+  for (const [title, types] of otherEntries) {
+    sidebarItems.push(createSidebarSection(title as string, types as any[]))
   }
 
   // Calculate basePath based on schema version

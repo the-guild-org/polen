@@ -1,8 +1,8 @@
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { forwardRef } from 'react'
-import { useVersionPath } from '../hooks/useVersionPath.js'
-import { Link } from './Link.js'
+import { useVersionPath } from '../../hooks/useVersionPath.js'
+import { Link } from '../Link.js'
 
 /**
  * Link component for GraphQL schema references that preserves version context

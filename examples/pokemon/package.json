@@ -6,6 +6,7 @@
     "build": "polen build"
   },
   "dependencies": {
+    "@vscode/tree-sitter-wasm": "0.0.5-php.2",
     "polen": "workspace:*"
   }
 }
