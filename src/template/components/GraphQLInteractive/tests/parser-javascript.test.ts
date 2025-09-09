@@ -136,7 +136,7 @@ describe('parseJavaScriptWithTreeSitter', () => {
 
     // Check that tokens are in order
     for (let i = 1; i < tokens.length; i++) {
-      expect(tokens[i].start).toBeGreaterThanOrEqual(tokens[i - 1].end)
+      expect(tokens[i]!.start).toBeGreaterThanOrEqual(tokens[i - 1]!.end)
     }
   })
 
@@ -153,7 +153,7 @@ describe('parseJavaScriptWithTreeSitter', () => {
 
     // Should have one token for the whitespace
     expect(tokens.length).toBe(1)
-    expect(tokens[0].text).toBe(code)
-    expect(tokens[0].cssClass).toBe('text')
+    expect(tokens[0]!.text).toBe(code)
+    expect(tokens[0]!.cssClass).toBe('text')
   })
 })

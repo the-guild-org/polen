@@ -1,5 +1,6 @@
 import { Catalog } from '#lib/catalog/$'
 import { DateOnly } from '#lib/date-only/$'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { HashMap } from 'effect'
 import { buildSchema, type GraphQLSchema } from 'graphql'
@@ -79,13 +80,13 @@ describe('analyzeSchema', () => {
 })
 
 describe('analyzeCatalog', () => {
-  const makeVersionedEntry = (version: number, schema: GraphQLSchema, dates: string[]) => ({
-    _tag: 'SchemaVersioned' as const,
-    version: Version.fromInteger(version),
-    branchPoint: null,
-    revisions: dates.map(date => ({ _tag: 'Revision' as const, date: DateOnly.make(date), changes: [] })),
-    definition: schema,
-  })
+  const makeVersionedEntry = (version: number, schema: GraphQLSchema, dates: string[]) =>
+    Schema.Versioned.make({
+      version: Version.fromInteger(version),
+      branchPoint: null,
+      revisions: dates.map(date => ({ _tag: 'Revision' as const, date: DateOnly.make(date), changes: [] })),
+      definition: schema,
+    })
 
   test.for([
     {
@@ -114,15 +115,14 @@ describe('analyzeCatalog', () => {
       name: 'unversioned catalog',
       catalog: () =>
         Catalog.Unversioned.make({
-          schema: {
-            _tag: 'SchemaUnversioned',
+          schema: Schema.Unversioned.make({
             revisions: ['2024-01-01', '2024-01-15', '2024-02-01'].map(date => ({
               _tag: 'Revision' as const,
               date: DateOnly.make(date),
               changes: [],
             })),
             definition: buildSchema('type Query { test: String }'),
-          },
+          }),
         }),
       expectedVersions: 1,
       expectedCurrentVersion: '2024-02-01',

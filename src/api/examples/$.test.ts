@@ -1,6 +1,7 @@
 import { Catalog } from '#lib/catalog/$'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { Document } from '#lib/document/$'
+import { Schema } from '#lib/schema/$'
 import { Version } from '#lib/version/$'
 import { Effect, HashMap } from 'effect'
 import { buildSchema } from 'graphql'
@@ -99,11 +100,10 @@ describe('ExampleScanner', () => {
 
 describe('ExampleValidator', () => {
   const mockCatalog = Catalog.Unversioned.make({
-    schema: {
-      _tag: 'SchemaUnversioned' as const,
+    schema: Schema.Unversioned.make({
       revisions: [],
       definition: buildSchema('type Query { test: String }'),
-    },
+    }),
   })
 
   test.for([

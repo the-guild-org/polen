@@ -1,6 +1,6 @@
 import type { Config } from '#api/config/normalized'
 import { Augmentations } from '#api/schema/augmentations/$'
-import { processCategoriesWithVersion } from '#api/schema/categories-processor'
+import { type CategoryConfig, processCategoriesWithVersion } from '#api/schema/categories-processor'
 import type { InputSourceError } from '#api/schema/input-source/errors'
 import type { EffectInputSource, InputSource } from '#api/schema/input-source/input-source'
 import * as InputSourceLoader from '#api/schema/input-source/load'
@@ -183,22 +183,22 @@ export const loadOrNull = (
             const versionString = schema.version?.toString()
             const categories = processCategoriesWithVersion(
               schema.definition,
-              categoriesConfig,
+              categoriesConfig as CategoryConfig[] | Record<string, CategoryConfig[]>,
               versionString,
             )
             // Update the schema's categories field
-            schema.categories = categories
+            ;(schema as any).categories = categories
           }
         },
         (unversioned) => {
           // For unversioned catalogs, apply categories directly
           const categories = processCategoriesWithVersion(
             unversioned.schema.definition,
-            categoriesConfig,
+            categoriesConfig as CategoryConfig[] | Record<string, CategoryConfig[]>,
             undefined,
           )
           // Update the schema's categories field
-          unversioned.schema.categories = categories
+          ;(unversioned.schema as any).categories = categories
         },
       )(catalog)
     }

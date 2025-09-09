@@ -4,9 +4,8 @@ import { describe, expect, test } from 'vitest'
 import { processCategories, processCategoriesWithVersion } from './categories-processor.js'
 
 describe('categories-processor', () => {
-  const createTestSchema = (sdl: string): SchemaDefinition => {
-    const schema = buildSchema(sdl) as SchemaDefinition
-    schema.categories = []
+  const createTestSchema = (sdl: string): SchemaDefinition.SchemaDefinition => {
+    const schema = buildSchema(sdl) as SchemaDefinition.SchemaDefinition
     return schema
   }
 
@@ -43,9 +42,9 @@ describe('categories-processor', () => {
       ])
 
       expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('Specific Errors')
-      expect(result[0].types).toHaveLength(1)
-      expect(result[0].types[0]).toBe('UserError')
+      expect(result[0]!.name).toBe('Specific Errors')
+      expect(result[0]!.types).toHaveLength(1)
+      expect(result[0]!.types[0]).toBe('UserError')
     })
 
     test('matches types by RegExp pattern', () => {
@@ -75,9 +74,9 @@ describe('categories-processor', () => {
       ])
 
       expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('Errors')
-      expect(result[0].types).toHaveLength(3)
-      const typeNames = result[0].types.sort()
+      expect(result[0]!.name).toBe('Errors')
+      expect(result[0]!.types).toHaveLength(3)
+      const typeNames = result[0]!.types.sort()
       expect(typeNames).toEqual(['SystemError', 'UserError', 'ValidationError'])
     })
 
@@ -109,9 +108,9 @@ describe('categories-processor', () => {
       ])
 
       expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('Non-Errors')
-      expect(result[0].types).toHaveLength(2)
-      const typeNames = result[0].types.sort()
+      expect(result[0]!.name).toBe('Non-Errors')
+      expect(result[0]!.types).toHaveLength(2)
+      const typeNames = result[0]!.types.sort()
       expect(typeNames).toEqual(['Query', 'User'])
     })
 
@@ -142,9 +141,9 @@ describe('categories-processor', () => {
       ])
 
       expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('Error Types')
-      expect(result[0].types).toHaveLength(3)
-      const typeNames = result[0].types.sort()
+      expect(result[0]!.name).toBe('Error Types')
+      expect(result[0]!.types).toHaveLength(3)
+      const typeNames = result[0]!.types.sort()
       expect(typeNames).toEqual(['CustomException', 'UserError', 'ValidationError'])
     })
 
@@ -176,10 +175,10 @@ describe('categories-processor', () => {
       ])
 
       expect(result).toHaveLength(2)
-      expect(result[0].name).toBe('Errors')
-      expect(result[0].types).toHaveLength(1)
-      expect(result[1].name).toBe('Inputs')
-      expect(result[1].types).toHaveLength(2)
+      expect(result[0]!.name).toBe('Errors')
+      expect(result[0]!.types).toHaveLength(1)
+      expect(result[1]!.name).toBe('Inputs')
+      expect(result[1]!.types).toHaveLength(2)
     })
 
     test('filters out introspection types', () => {
@@ -201,7 +200,7 @@ describe('categories-processor', () => {
       ])
 
       // Should not include __Schema, __Type, etc.
-      const typeNames = result[0].types
+      const typeNames = result[0]!.types
       expect(typeNames).not.toContain('__Schema')
       expect(typeNames).not.toContain('__Type')
       expect(typeNames).toContain('Query')
@@ -232,7 +231,7 @@ describe('categories-processor', () => {
       )
 
       expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('Errors')
+      expect(result[0]!.name).toBe('Errors')
     })
 
     test('handles versioned configuration with matching version', () => {
@@ -265,7 +264,7 @@ describe('categories-processor', () => {
       )
 
       expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('V2 Errors')
+      expect(result[0]!.name).toBe('V2 Errors')
     })
 
     test('handles versioned configuration with no matching version', () => {

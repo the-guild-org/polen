@@ -3,7 +3,7 @@ import { Grafaid } from '#lib/grafaid'
 import { GrafaidOld } from '#lib/grafaid-old'
 import { Box, Heading } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
-import { useAlignedColumns } from '../hooks/useAlignedColumns.js'
+import { useAlignedColumns } from '../../hooks/useAlignedColumns.js'
 import { FieldList } from './FieldList.js'
 
 export const FieldListSection: React.FC<{ data: GraphQLNamedType }> = ({ data }) => {

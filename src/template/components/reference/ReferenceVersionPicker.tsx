@@ -4,10 +4,10 @@ import { Version } from '#lib/version/$'
 import { HashMap, Option } from 'effect'
 import { useNavigate } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
-import { useReferencePath } from '../hooks/useReferencePath.js'
-import { Stores } from '../stores/$.js'
-import { tryWithToast } from '../utils/try-with-toast.js'
-import { VersionPicker } from './VersionPicker.js'
+import { useReferencePath } from '../../hooks/useReferencePath.js'
+import { Stores } from '../../stores/$.js'
+import { tryWithToast } from '../../utils/try-with-toast.js'
+import { VersionPicker } from '../VersionPicker.js'
 
 interface Props {
   data: readonly Version.Version[]

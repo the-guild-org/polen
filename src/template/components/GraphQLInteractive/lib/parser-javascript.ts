@@ -154,7 +154,7 @@ async function initializeParser(): Promise<void> {
   if (parser && JavaScriptLanguage) return
 
   // Skip initialization in test environment
-  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+  if (typeof process !== 'undefined' && process.env['NODE_ENV'] === 'test') {
     return
   }
 

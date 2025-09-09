@@ -45,7 +45,7 @@ export const Versioned = S.TaggedStruct('SchemaVersioned', {
   })),
   revisions: S.Array(Revision.Revision),
   definition: SchemaDefinition.SchemaDefinition,
-  categories: S.optional(
+  categories: S.optionalWith(
     S.Array(S.Struct({
       name: S.String,
       types: S.Array(S.String),
