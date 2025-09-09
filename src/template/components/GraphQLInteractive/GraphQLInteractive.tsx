@@ -13,11 +13,15 @@ import type { React } from '#dep/react/index'
 import { React as ReactHooks } from '#dep/react/index'
 import { Box } from '@radix-ui/themes'
 import type { HighlightedCode } from 'codehike/code'
+import { Either } from 'effect'
 import type { GraphQLSchema } from 'graphql'
+import { parse } from 'graphql'
 import { GraphQLErrorBoundary } from './components/GraphQLErrorBoundary.js'
 import { GraphQLTokenPopover } from './components/GraphQLTokenPopover.js'
 import { usePopoverState } from './hooks/use-popover-state.js'
-import { type GraphQLToken, parseGraphQLWithTreeSitter } from './lib/parser.js'
+import { type GraphQLToken, parseGraphQLWithTreeSitter } from './lib/parser-graphql.js'
+import { type JavaScriptToken, parseJavaScriptWithTreeSitter } from './lib/parser-javascript.js'
+import { convertDocument, graffleDocumentToString } from './lib/syntax/graffle/index.js'
 
 interface GraphQLInteractiveProps {
   /** The code block from CodeHike with code and annotations */
@@ -60,8 +64,21 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
   toolbar,
   style,
 }) => {
+  // State for syntax view toggle
+  const [syntaxView, setSyntaxView] = ReactHooks.useState<'graphql' | 'graffle'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('polen-syntax-view')
+      return saved === 'graffle' ? 'graffle' : 'graphql'
+    }
+    return 'graphql'
+  })
+
   // State to hold the parsed tokens
   const [tokens, setTokens] = ReactHooks.useState<GraphQLToken[] | null>(null)
+  
+  // State for Graffle tokens
+  const [graffleTokens, setGraffleTokens] = ReactHooks.useState<JavaScriptToken[] | null>(null)
+  const [graffleError, setGraffleError] = ReactHooks.useState<string | null>(null)
 
   // Loading state while parser initializes and processes the code
   const [isLoading, setIsLoading] = ReactHooks.useState(true)
@@ -115,6 +132,49 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
   ReactHooks.useEffect(() => {
     parseTokens()
   }, [parseTokens])
+
+  // Handle syntax view change and localStorage
+  ReactHooks.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('polen-syntax-view', syntaxView)
+    }
+  }, [syntaxView])
+
+  // Convert to Graffle when needed
+  ReactHooks.useEffect(() => {
+    if (syntaxView === 'graffle' && tokens && tokens.length > 0) {
+      const convertToGraffle = async () => {
+        try {
+          setGraffleError(null)
+          
+          // Parse the GraphQL document
+          const ast = parse(codeblock.code)
+          
+          // Convert to Graffle AST
+          const result = convertDocument(ast)
+          
+          if (Either.isRight(result)) {
+            // Convert Graffle AST to string
+            const graffleCode = graffleDocumentToString(result.right)
+            
+            // Parse the JavaScript/TypeScript code for syntax highlighting
+            const jsTokens = await parseJavaScriptWithTreeSitter(graffleCode, codeblock.annotations)
+            setGraffleTokens(jsTokens)
+          } else {
+            // Handle conversion errors (e.g., unsupported features)
+            setGraffleError(result.left.message || 'Failed to convert to Graffle syntax')
+            setGraffleTokens(null)
+          }
+        } catch (err) {
+          console.error('Failed to parse JavaScript:', err)
+          setGraffleError(err instanceof Error ? err.message : 'Failed to parse JavaScript')
+          setGraffleTokens(null)
+        }
+      }
+      
+      convertToGraffle()
+    }
+  }, [syntaxView, tokens, codeblock.code, codeblock.annotations])
 
   // Render loading state
   // Shows the code with reduced opacity and a loading indicator
@@ -247,20 +307,68 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
       {/* Render each token as a separate span with appropriate styling */}
       <pre style={{ margin: 0, whiteSpace: 'pre' }}>
         <code>
-          {tokens.map((token, index) => {
-            const tokenId = `${token.start}-${token.end}-${index}`
-            return (
-              <TokenComponent
-                key={tokenId}
-                token={token}
-                tokenId={tokenId}
-                popoverState={popoverState}
-                {...(schema !== undefined && { schema })}
-              />
-            )
-          })}
+          {syntaxView === 'graphql' ? (
+            // GraphQL view with interactive features
+            tokens.map((token, index) => {
+              const tokenId = `${token.start}-${token.end}-${index}`
+              return (
+                <TokenComponent
+                  key={tokenId}
+                  token={token}
+                  tokenId={tokenId}
+                  popoverState={popoverState}
+                  {...(schema !== undefined && { schema })}
+                />
+              )
+            })
+          ) : syntaxView === 'graffle' && graffleTokens ? (
+            // Graffle view (non-interactive)
+            graffleTokens.map((token, index) => (
+              <span
+                key={`${token.start}-${token.end}-${index}`}
+                style={getJavaScriptStyle(token.cssClass)}
+              >
+                {token.text}
+              </span>
+            ))
+          ) : syntaxView === 'graffle' && graffleError ? (
+            // Show error for Graffle conversion
+            <span style={{ color: 'var(--red-11)', fontStyle: 'italic' }}>
+              {graffleError}
+            </span>
+          ) : syntaxView === 'graffle' ? (
+            // Loading Graffle
+            <span style={{ opacity: 0.5 }}>Converting to Graffle...</span>
+          ) : null}
         </code>
       </pre>
+      {/* Syntax toggle dropdown */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '8px',
+          right: toolbar ? '120px' : '8px',
+          zIndex: 10,
+        }}
+      >
+        <select
+          value={syntaxView}
+          onChange={(e) => setSyntaxView(e.target.value as 'graphql' | 'graffle')}
+          style={{
+            backgroundColor: 'var(--gray-3)',
+            color: 'var(--gray-12)',
+            border: '1px solid var(--gray-6)',
+            borderRadius: '4px',
+            padding: '4px 8px',
+            fontSize: '12px',
+            cursor: 'pointer',
+          }}
+        >
+          <option value="graphql">GraphQL</option>
+          <option value="graffle">Graffle</option>
+        </select>
+      </div>
+      
       {/* Toolbar (e.g., version picker) */}
       {toolbar && (
         <div
@@ -301,6 +409,36 @@ const GraphQLInteractiveImpl: React.FC<GraphQLInteractiveProps> = ({
       )}
     </Box>
   )
+}
+
+/**
+ * Get styles for JavaScript/TypeScript tokens
+ */
+const getJavaScriptStyle = (cssClass: string): React.CSSProperties => {
+  switch (cssClass) {
+    case 'keyword':
+      return { color: 'var(--red-11)', fontWeight: 'bold' }
+    case 'string':
+      return { color: 'var(--green-11)' }
+    case 'number':
+      return { color: 'var(--blue-11)' }
+    case 'boolean':
+      return { color: 'var(--orange-11)' }
+    case 'comment':
+      return { color: 'var(--gray-11)', fontStyle: 'italic', opacity: 0.6 }
+    case 'property':
+      return { color: 'var(--violet-11)' }
+    case 'function':
+      return { color: 'var(--blue-11)', fontWeight: 500 }
+    case 'operator':
+      return { color: 'var(--gray-11)' }
+    case 'punctuation':
+      return { color: 'var(--gray-11)', opacity: 0.5 }
+    case 'identifier':
+      return { color: 'var(--gray-12)' }
+    default:
+      return { color: 'var(--gray-12)' }
+  }
 }
 
 interface TokenComponentProps {
@@ -366,6 +504,7 @@ const TokenComponent: React.FC<TokenComponentProps> = ({ token, tokenId, popover
   // Map class names to inline styles
   const getBaseStyle = (): React.CSSProperties => {
     switch (baseClass) {
+      // GraphQL-specific classes
       case 'graphql-keyword':
         return { color: 'var(--red-11)', fontWeight: 'bold' }
       case 'graphql-type-interactive':
@@ -403,6 +542,21 @@ const TokenComponent: React.FC<TokenComponentProps> = ({ token, tokenId, popover
         return { color: 'var(--blue-11)' }
       case 'graphql-punctuation':
         return { color: 'var(--gray-11)', opacity: 0.5 }
+      
+      // Generic classes (shared between languages)
+      case 'keyword':
+        return { color: 'var(--red-11)', fontWeight: 'bold' }
+      case 'string':
+        return { color: 'var(--green-11)' }
+      case 'number':
+        return { color: 'var(--blue-11)' }
+      case 'boolean':
+        return { color: 'var(--orange-11)' }
+      case 'comment':
+        return { color: 'var(--gray-11)', fontStyle: 'italic', opacity: 0.6 }
+      case 'punctuation':
+        return { color: 'var(--gray-11)', opacity: 0.5 }
+      
       default:
         return { color: 'var(--gray-12)' }
     }

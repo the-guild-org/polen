@@ -131,38 +131,34 @@ const ReferenceView = () => {
     ])
     .filter(([_, types]) => (types as any[]).length > 0)
 
-  // Add root types first (Query, Mutation, Subscription)
-  const rootTypeOrder = ['rootTypes', 'rootType'] // These are the keys used for root types in kindMap
-  for (const [title, types] of kindEntries) {
-    const isRootType = rootTypeOrder.some(rt => (title as string).toLowerCase().includes(rt.toLowerCase()))
-      || (title as string).toLowerCase() === 'query'
-      || (title as string).toLowerCase() === 'mutation'
-      || (title as string).toLowerCase() === 'subscription'
+  // Helper function to create sidebar sections
+  const createSidebarSection = (title: string, types: any[]) => ({
+    type: `ItemSection` as const,
+    title: Str.Case.title(Str.Case.snake(title)),
+    pathExp: `reference-${title.toLowerCase()}`,
+    isLinkToo: false,
+    links: types.map((type: any) => {
+      const kind = Grafaid.Schema.typeKindFromClass(type)
+      return {
+        type: `ItemLink` as const,
+        title: (
+          <Flex align='center' gap='1' display='inline-flex'>
+            <TypeKindIcon kind={kind} />
+            {type.name}
+          </Flex>
+        ),
+        pathExp: type.name, // Just the type name, basePath will be prepended
+      }
+    }),
+  })
 
-    if (isRootType) {
-      sidebarItems.push({
-        type: `ItemSection` as const,
-        title: Str.Case.title(Str.Case.snake(title as string)),
-        pathExp: `reference-${(title as string).toLowerCase()}`,
-        isLinkToo: false,
-        links: (types as any[]).map((type: any) => {
-          const kind = Grafaid.Schema.typeKindFromClass(type)
-          return {
-            type: `ItemLink` as const,
-            title: (
-              <Flex align='center' gap='1' display='inline-flex'>
-                <TypeKindIcon kind={kind} />
-                {type.name}
-              </Flex>
-            ),
-            pathExp: type.name, // Just the type name, basePath will be prepended
-          }
-        }),
-      })
-    }
+  // 1. Add root types
+  const rootEntries = kindEntries.filter(([title]) => title === 'Root')
+  for (const [title, types] of rootEntries) {
+    sidebarItems.push(createSidebarSection(title as string, types as any[]))
   }
 
-  // Add custom categories after root types
+  // 2. Add custom categories
   if (schema.categories && schema.categories.length > 0) {
     for (const category of schema.categories) {
       if (category.types.length > 0) {
@@ -191,34 +187,10 @@ const ReferenceView = () => {
     }
   }
 
-  // Add remaining type sections (non-root types)
-  for (const [title, types] of kindEntries) {
-    const isRootType = rootTypeOrder.some(rt => (title as string).toLowerCase().includes(rt.toLowerCase()))
-      || (title as string).toLowerCase() === 'query'
-      || (title as string).toLowerCase() === 'mutation'
-      || (title as string).toLowerCase() === 'subscription'
-
-    if (!isRootType) {
-      sidebarItems.push({
-        type: `ItemSection` as const,
-        title: Str.Case.title(Str.Case.snake(title as string)),
-        pathExp: `reference-${(title as string).toLowerCase()}`,
-        isLinkToo: false,
-        links: (types as any[]).map((type: any) => {
-          const kind = Grafaid.Schema.typeKindFromClass(type)
-          return {
-            type: `ItemLink` as const,
-            title: (
-              <Flex align='center' gap='1' display='inline-flex'>
-                <TypeKindIcon kind={kind} />
-                {type.name}
-              </Flex>
-            ),
-            pathExp: type.name, // Just the type name, basePath will be prepended
-          }
-        }),
-      })
-    }
+  // 3. Add remaining types
+  const otherEntries = kindEntries.filter(([title]) => title !== 'Root')
+  for (const [title, types] of otherEntries) {
+    sidebarItems.push(createSidebarSection(title as string, types as any[]))
   }
 
   // Calculate basePath based on schema version

@@ -16,7 +16,7 @@ export const SchemaDefinition = S.transformOrFail(
     decode: (ast, options, astSchema) => {
       try {
         const schema = buildASTSchema(ast) as GraphQLSchema & {
-          categories: Array<{ name: string; types: any[] }>
+          categories: Array<{ name: string; types: string[] }>
         }
         // Initialize categories as empty array
         schema.categories = []

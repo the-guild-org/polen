@@ -9,7 +9,8 @@
     "**/node_modules",
     "**/__snapshots__",
     "**/*-lock.json",
-    "**/*-lock.yaml"
+    "**/*-lock.yaml",
+    "**/src/template/components/GraphQLInteractive/GraphQLInteractive.tsx."
   ],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.88.3.wasm",
