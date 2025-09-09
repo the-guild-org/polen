@@ -37,6 +37,7 @@ test('reference index page should work', async ({ page, polen }) => {
   const p = await builder.goto('/reference')
 
   await p.expect.noErrors()
-  await expect(page.getByText('Select a type from the sidebar')).toBeVisible()
+  // The page should automatically redirect to the first type (Query)
+  await expect(page.getByRole('heading', { name: /Query/, level: 1 })).toBeVisible()
   await expect(page.getByText('No content to show. There is no schema to work with.')).not.toBeVisible()
 })
