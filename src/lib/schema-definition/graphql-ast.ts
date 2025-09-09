@@ -1,7 +1,14 @@
 import { S } from '#lib/kit-temp/effect'
 import { type DocumentNode } from 'graphql'
 
-const GraphQLIsDocumentNode = (input: unknown): input is DocumentNode =>
+export interface Ast extends DocumentNode {
+  categories?: {
+    name: string
+    types: string[]
+  }[]
+}
+
+const GraphQLIsDocumentNode = (input: unknown): input is Ast =>
   typeof input === 'object'
   && input !== null
   && 'kind' in input

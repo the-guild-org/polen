@@ -317,6 +317,67 @@ const SourcesSchema = S.Struct({
  * **Query details**: Uses the standard introspection query from the GraphQL spec
  * @see https://spec.graphql.org/draft/#sec-Introspection
  */
+// ============================================================================
+// Schema - Categories
+// ============================================================================
+
+const CategorySchema = S.Struct({
+  /**
+   * Display name for the category in the sidebar.
+   *
+   * @example
+   * ```ts
+   * name: 'Errors'
+   * ```
+   */
+  name: S.String,
+  /**
+   * Patterns to match type names. Can be strings for exact matches or RegExp for pattern matching.
+   *
+   * @example
+   * ```ts
+   * // Match all types ending with "Error"
+   * typeNames: [/.*Error$/]
+   *
+   * // Mix exact names and patterns
+   * typeNames: ['CustomError', /.*Exception$/]
+   * ```
+   */
+  typeNames: S.Array(S.Union(S.String, S.instanceOf(RegExp))),
+  /**
+   * Whether to include or exclude matched types.
+   *
+   * @default 'include'
+   *
+   * @example
+   * ```ts
+   * // Include all matched types (default)
+   * mode: 'include'
+   *
+   * // Exclude all matched types
+   * mode: 'exclude'
+   * ```
+   */
+  mode: S.optional(S.Literal('include', 'exclude')),
+}).annotations({
+  identifier: 'Category',
+  description: 'Configuration for grouping GraphQL types in the reference sidebar.',
+})
+
+const CategoriesSchema = S.Union(
+  // Plain array - applies to all schema versions
+  S.Array(CategorySchema),
+  // Versioned object - different categories per version
+  S.Record({ key: S.String, value: S.Array(CategorySchema) }),
+).annotations({
+  identifier: 'Categories',
+  description: 'Categories configuration that can be versioned or unversioned.',
+})
+
+// ============================================================================
+// Schema - Config
+// ============================================================================
+
 export const ConfigSchema = S.Struct({
   /**
    * Whether to enable schema loading.
@@ -365,6 +426,39 @@ export const ConfigSchema = S.Struct({
    * ```
    */
   augmentations: S.optional(S.Array(Augmentations.AugmentationInput)),
+  /**
+   * Custom categories for grouping GraphQL types in the reference sidebar.
+   *
+   * Categories help organize types logically (e.g., grouping all error types together).
+   * Types matching the patterns will appear in dedicated sidebar sections.
+   *
+   * Can be:
+   * - Plain array: Applies to all schema versions
+   * - Versioned object: Different categories per schema version
+   *
+   * @example
+   * ```ts
+   * // Group all error types together (applies to all versions)
+   * categories: [
+   *   {
+   *     name: 'Errors',
+   *     typeNames: [/.*Error$/]
+   *   }
+   * ]
+   *
+   * // Version-specific categories
+   * categories: {
+   *   '2024-01-01': [
+   *     { name: 'Errors', typeNames: [/.*Error$/] }
+   *   ],
+   *   '2024-06-01': [
+   *     { name: 'Errors', typeNames: [/.*Error$/] },
+   *     { name: 'Inputs', typeNames: [/.*Input$/] }
+   *   ]
+   * }
+   * ```
+   */
+  categories: S.optional(CategoriesSchema),
   /**
    * Which data sources to use for loading schemas.
    *

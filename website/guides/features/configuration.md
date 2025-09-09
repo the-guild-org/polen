@@ -51,6 +51,16 @@ export default Polen.defineConfig({
         path: './schema',
       },
     },
+    categories: [
+      {
+        name: 'Errors',
+        typeNames: [/.*Error$/, /.*Exception$/],
+      },
+      {
+        name: 'User Management',
+        typeNames: ['User', 'Role', 'Permission'],
+      },
+    ],
     augmentations: [
       {
         type: 'description',

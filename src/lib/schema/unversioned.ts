@@ -10,6 +10,13 @@ import { SchemaDefinition } from '../schema-definition/$.js'
 export const Unversioned = S.TaggedStruct('SchemaUnversioned', {
   revisions: S.Array(Revision.Revision),
   definition: SchemaDefinition.SchemaDefinition,
+  categories: S.optional(
+    S.Array(S.Struct({
+      name: S.String,
+      types: S.Array(S.String),
+    })),
+    { default: () => [] },
+  ),
 }).annotations({
   identifier: 'SchemaUnversioned',
   title: 'Unversioned Schema',

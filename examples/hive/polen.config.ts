@@ -7,5 +7,11 @@ export default Polen.defineConfig({
         path: './schema.graphql',
       },
     },
+    categories: [
+      {
+        name: 'Errors',
+        typeNames: [/.*Error$/],
+      },
+    ],
   },
 })

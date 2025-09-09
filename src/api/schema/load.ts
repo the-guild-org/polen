@@ -1,5 +1,6 @@
 import type { Config } from '#api/config/normalized'
 import { Augmentations } from '#api/schema/augmentations/$'
+import { processCategoriesWithVersion } from '#api/schema/categories-processor'
 import type { InputSourceError } from '#api/schema/input-source/errors'
 import type { EffectInputSource, InputSource } from '#api/schema/input-source/input-source'
 import * as InputSourceLoader from '#api/schema/input-source/load'
@@ -168,6 +169,38 @@ export const loadOrNull = (
       if (allDiagnostics.length > 0) {
         loadedSchema.diagnostics = allDiagnostics
       }
+    }
+
+    // Apply categories if configured and catalog was loaded
+    if (loadedSchema.data && config.schema?.categories) {
+      const categoriesConfig = config.schema.categories
+      const catalog = loadedSchema.data as Catalog.Catalog
+
+      Catalog.fold(
+        (versioned) => {
+          // For versioned catalogs, apply categories per version
+          for (const schema of Catalog.Versioned.getAll(versioned)) {
+            const versionString = schema.version?.toString()
+            const categories = processCategoriesWithVersion(
+              schema.definition,
+              categoriesConfig,
+              versionString,
+            )
+            // Update the schema's categories field
+            schema.categories = categories
+          }
+        },
+        (unversioned) => {
+          // For unversioned catalogs, apply categories directly
+          const categories = processCategoriesWithVersion(
+            unversioned.schema.definition,
+            categoriesConfig,
+            undefined,
+          )
+          // Update the schema's categories field
+          unversioned.schema.categories = categories
+        },
+      )(catalog)
     }
 
     return loadedSchema
