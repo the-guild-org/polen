@@ -31,8 +31,6 @@
       "#lib/apple-touch-icon/*": ["./src/lib/apple-touch-icon/*.ts"],
       "#lib/errors": ["./src/lib/errors/$.ts"],
       "#lib/errors/*": ["./src/lib/errors/*.ts"],
-      "#lib/extensible-data": ["./src/lib/extensible-data/$.ts"],
-      "#lib/extensible-data/*": ["./src/lib/extensible-data/*.ts"],
       "#lib/favicon": ["./src/lib/favicon/$.ts"],
       "#lib/favicon/*": ["./src/lib/favicon/*.ts"],
       "#lib/file-router": ["./src/lib/file-router/$.ts"],

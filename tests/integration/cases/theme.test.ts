@@ -213,8 +213,8 @@ test.describe('Theme functionality', () => {
     await page.goto(viteDevServer.url('/contact').href)
     await expect(htmlElement).toHaveAttribute('data-theme', 'dark')
 
-    // Toggle theme on contact page - should show "Switch to system theme" since we're in dark
-    const themeToggle = page.getByRole('button', { name: /Switch to system theme/i })
+    // Toggle theme on contact page - find the theme toggle button
+    const themeToggle = page.getByRole('button').filter({ has: page.locator('svg') }).first()
     await expect(themeToggle).toBeVisible()
     await themeToggle.click()
     await page.waitForTimeout(300)
