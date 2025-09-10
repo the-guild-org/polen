@@ -239,7 +239,7 @@ export const applyVersioned = (
 
     if (firstEntry) {
       diagnostics.push(makeDiagnosticVersionMismatch({
-        message: `No augmentation found for version '${version}' on path '${
+        message: `No augmentation found for version '${Version.encodeSync(version)}' on path '${
           GraphQLPath.Definition.encodeSync(firstEntry.on)
         }'`,
         path: GraphQLPath.Definition.encodeSync(firstEntry.on),

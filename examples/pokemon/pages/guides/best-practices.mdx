@@ -1,0 +1,242 @@
+# Best Practices
+
+Follow these best practices to get the most out of the Pokemon API.
+
+## Efficient Querying
+
+### Request Only What You Need
+
+Instead of fetching all fields, request only the data you need:
+
+```graphql interactive
+# ❌ Avoid - Fetches unnecessary data
+query GetPokemonBad {
+  pokemon(id: "025") {
+    id
+    name
+    types
+    stats {
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+    }
+    level
+    experience
+    evolution { evolvesTo { name } level condition }
+    abilities { id name description isHidden }
+    moves { id name description type power accuracy pp category }
+    trainer { id name hometown badges }
+    isShiny
+    region
+    generation
+  }
+}
+
+# ✅ Better - Only fetches required fields
+query GetPokemonGood {
+  pokemon(id: "025") {
+    name
+    types
+    stats {
+      hp
+      speed
+    }
+  }
+}
+```
+
+## Pagination Strategies
+
+### Use Cursor-Based Pagination
+
+For reliable pagination, always use cursors rather than offset:
+
+```graphql interactive
+query FirstPage {
+  pokemons(limit: 20) {
+    edges {
+      cursor
+      node {
+        name
+        types
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# Use the endCursor for the next page
+# query NextPage {
+#   pokemons(limit: 20, after: "cursor_value_here") {
+#     ...
+#   }
+# }
+```
+
+## Filtering Best Practices
+
+### Combine Filters Effectively
+
+Use multiple filter criteria to narrow down results:
+
+```graphql interactive
+query AdvancedFiltering {
+  pokemons(
+    filter: {
+      type: FIRE
+      minLevel: 30
+      maxLevel: 50
+      region: KANTO
+    }
+    limit: 10
+  ) {
+    edges {
+      node {
+        name
+        level
+        types
+        region
+      }
+    }
+  }
+}
+```
+
+## Caching Strategies
+
+### Cache by ID
+
+Pokemon data by ID is stable and can be cached aggressively:
+
+```graphql interactive
+# These queries can be cached for a long time
+query GetStaticPokemon {
+  pikachu: pokemon(id: "025") {
+    name
+    types
+    stats { ... }
+  }
+}
+```
+
+### Short Cache for Lists
+
+List queries should have shorter cache times as they change more frequently:
+
+```graphql interactive
+# Cache for shorter periods (5-15 minutes)
+query GetTrainerPokemon {
+  trainer(id: "ash") {
+    pokemon {
+      name
+      level  # Levels change as Pokemon gain experience
+    }
+  }
+}
+```
+
+## Error Handling
+
+### Handle Null Values
+
+Always check for null values when a Pokemon or Trainer might not exist:
+
+```graphql interactive
+query SafeQuery {
+  pokemon(id: "999") {  # Might not exist
+    name
+    evolution {
+      evolvesTo {
+        name
+      }
+    }
+  }
+}
+```
+
+## Performance Tips
+
+### 1. Use Field Aliases for Batch Queries
+
+```graphql interactive
+query BatchPokemon {
+  pikachu: pokemon(id: "025") {
+    name
+    types
+  }
+  charizard: pokemon(id: "006") {
+    name
+    types
+  }
+  blastoise: pokemon(id: "009") {
+    name
+    types
+  }
+}
+```
+
+### 2. Avoid Deep Nesting
+
+Limit the depth of your queries to avoid performance issues:
+
+```graphql interactive
+# ❌ Too deep
+query TooDeep {
+  trainer(id: "ash") {
+    pokemon {
+      evolution {
+        evolvesTo {
+          evolution {
+            evolvesTo {
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# ✅ Better - Flatten with separate queries if needed
+query Flattened {
+  trainer(id: "ash") {
+    pokemon {
+      id
+      name
+      evolution {
+        evolvesTo {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+```
+
+## FAQ
+
+### Q: What's the rate limit for the API?
+A: The API allows 100 requests per minute per IP address. Use caching and batch queries to stay within limits.
+
+### Q: How do I handle Pokemon with multiple forms?
+A: Use the `baseForm` field to identify regional variants and the `region` field to distinguish between them.
+
+### Q: Can I filter by multiple types?
+A: Currently, the filter accepts a single type. To find Pokemon with specific type combinations, fetch a larger set and filter client-side.
+
+### Q: How often is the Pokemon data updated?
+A: Static Pokemon data (stats, types, moves) is updated with each new game release. Trainer data and levels update in real-time.
+
+## Related Resources
+
+- [Getting Started Guide](/guides/getting-started)
+- [API Evolution](/guides/api-evolution)
+- [Interactive Examples](/examples)
+- [Complete API Reference](/reference)
