@@ -137,9 +137,8 @@ export function Branding(config: Api.Config.Config): Plugin {
         // Dual mode: both logo-light and logo-dark exist
         if (lightPath && darkPath) {
           const basePath = config.build.base || '/'
-          const normalizedBasePath = basePath.endsWith('/') && basePath.length > 1 ? basePath.slice(0, -1) : basePath
-          const lightUrl = `${normalizedBasePath}/${Path.basename(lightPath)}`
-          const darkUrl = `${normalizedBasePath}/${Path.basename(darkPath)}`
+          const lightUrl = basePath === '/' ? `/${Path.basename(lightPath)}` : `${basePath}/${Path.basename(lightPath)}`
+          const darkUrl = basePath === '/' ? `/${Path.basename(darkPath)}` : `${basePath}/${Path.basename(darkPath)}`
           return `export default {
             light: ${JSON.stringify(lightUrl)},
             dark: ${JSON.stringify(darkUrl)},
@@ -151,8 +150,7 @@ export function Branding(config: Api.Config.Config): Plugin {
         // Single mode: only logo.* exists
         if (singlePath) {
           const basePath = config.build.base || '/'
-          const normalizedBasePath = basePath.endsWith('/') && basePath.length > 1 ? basePath.slice(0, -1) : basePath
-          const url = `${normalizedBasePath}/${Path.basename(singlePath)}`
+          const url = basePath === '/' ? `/${Path.basename(singlePath)}` : `${basePath}/${Path.basename(singlePath)}`
           return `export default {
             light: ${JSON.stringify(url)},
             dark: ${JSON.stringify(url)},
@@ -178,8 +176,7 @@ export function Branding(config: Api.Config.Config): Plugin {
           currentHeroImagePath = heroImagePath
           // Just return the public URL path, let Vite handle the asset
           const basePath = config.build.base || '/'
-          const normalizedBasePath = basePath.endsWith('/') && basePath.length > 1 ? basePath.slice(0, -1) : basePath
-          const publicPath = `${normalizedBasePath}/${Path.basename(heroImagePath)}`
+          const publicPath = basePath === '/' ? `/${Path.basename(heroImagePath)}` : `${basePath}/${Path.basename(heroImagePath)}`
           return `export default ${JSON.stringify(publicPath)}`
         }
         return `export default null`
