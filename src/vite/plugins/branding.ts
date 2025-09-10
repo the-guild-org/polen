@@ -176,7 +176,9 @@ export function Branding(config: Api.Config.Config): Plugin {
           currentHeroImagePath = heroImagePath
           // Just return the public URL path, let Vite handle the asset
           const basePath = config.build.base || '/'
-          const publicPath = basePath === '/' ? `/${Path.basename(heroImagePath)}` : `${basePath}/${Path.basename(heroImagePath)}`
+          const publicPath = basePath === '/'
+            ? `/${Path.basename(heroImagePath)}`
+            : `${basePath}/${Path.basename(heroImagePath)}`
           return `export default ${JSON.stringify(publicPath)}`
         }
         return `export default null`
