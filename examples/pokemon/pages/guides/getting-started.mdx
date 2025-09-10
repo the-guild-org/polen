@@ -1,0 +1,130 @@
+# Getting Started
+
+Welcome to the Pokemon API! This guide will help you get up and running quickly.
+
+## Your First Query
+
+The simplest way to start is by fetching a single Pokemon:
+
+```graphql interactive
+query GetPikachu {
+  pokemon(id: "025") {
+    name
+    types
+    stats {
+      hp
+      attack
+      defense
+      speed
+    }
+  }
+}
+```
+
+## Understanding Pokemon Types
+
+Pokemon can have one or two elemental types that determine their strengths and weaknesses:
+
+```graphql interactive
+query GetTypeMatchups {
+  pokemon(id: "006") {  # Charizard
+    name
+    types  # [FIRE, FLYING]
+  }
+  
+  waterPokemon: pokemon(id: "009") {  # Blastoise
+    name
+    types  # [WATER]
+  }
+}
+```
+
+## Listing Pokemon
+
+Use the `pokemons` query to browse Pokemon with filtering:
+
+```graphql interactive
+query ListElectricPokemon {
+  pokemons(
+    filter: { type: ELECTRIC }
+    limit: 5
+  ) {
+    edges {
+      node {
+        name
+        types
+        stats {
+          speed
+        }
+      }
+    }
+    totalCount
+  }
+}
+```
+
+## Working with Trainers
+
+Trainers catch and train Pokemon. Here's how to fetch trainer data:
+
+```graphql interactive
+query GetTrainer {
+  trainer(id: "ash") {
+    name
+    hometown
+    badges
+    pokemon {
+      name
+      level
+      types
+    }
+  }
+}
+```
+
+## Mutations: Catching Pokemon
+
+If you have mutation access, you can catch Pokemon:
+
+```graphql interactive
+mutation CatchWildPokemon {
+  catchPokemon(input: {
+    pokemonId: "133"  # Eevee
+    trainerId: "ash"
+  }) {
+    id
+    name
+    trainer {
+      name
+    }
+  }
+}
+```
+
+## Pagination
+
+For large datasets, use cursor-based pagination:
+
+```graphql interactive
+query PaginatedPokemon {
+  pokemons(limit: 10) {
+    edges {
+      cursor
+      node {
+        name
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+```
+
+## Next Steps
+
+- Explore [API Evolution](/guides/api-evolution) to understand version differences
+- Check out [Best Practices](/guides/best-practices) for advanced usage
+- Browse the [API Reference](/reference) for complete schema documentation
+- Try our [Interactive Examples](/examples) to experiment with queries

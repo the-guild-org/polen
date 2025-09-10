@@ -1,15 +1,7 @@
 import { defineConfig } from 'polen/polen'
 
 export default defineConfig({
-  name: 'Pokemon API',
-  description: 'Catch, train, and battle with Pokemon through our comprehensive GraphQL API',
   schema: {
-    useSources: ['versionedDirectory'],
-    sources: {
-      versionedDirectory: {
-        path: './schema',
-      },
-    },
     augmentations: [
       // Unversioned - applies to all versions
       {
@@ -131,11 +123,28 @@ export default defineConfig({
       //   },
       // },
     ],
+    categories: [
+      {
+        name: 'Pokemon & Trainers',
+        typeNames: ['Pokemon', 'Trainer', 'Stats', 'Evolution'],
+      },
+      {
+        name: 'Battle System',
+        typeNames: ['Move', 'Ability', 'MoveCategory', 'PokemonType'],
+      },
+      {
+        name: 'Pagination',
+        typeNames: [/.*Connection$/, /.*Edge$/, 'PageInfo'],
+      },
+      {
+        name: 'Filters & Search',
+        typeNames: [/.*Filter.*/, /.*Search.*/, /.*Criteria$/],
+      },
+    ],
   },
   home: {
     topics: ['adventure', 'pokemon', 'wilderness', 'battles'],
     hero: {
-      prompt: 'hero image for pokemon platform allowing exploration and capture of wild pokemon.',
       layout: 'cinematic',
     },
     examples: {

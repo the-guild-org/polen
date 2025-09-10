@@ -1,5 +1,6 @@
 {
-  "name": "pokemon-api",
+  "name": "Pokemon API",
+  "description": "Catch, train, and battle with Pokemon through our comprehensive GraphQL API",
   "type": "module",
   "scripts": {
     "dev": "polen dev",
