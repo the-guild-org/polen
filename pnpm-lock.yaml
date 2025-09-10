@@ -252,6 +252,9 @@ importers:
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: ^24.3.1
         version: 24.3.1
@@ -261,6 +264,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.9
         version: 19.1.9(@types/react@19.1.12)
+      '@types/unist':
+        specifier: ^3.0.3
+        version: 3.0.3
       dprint:
         specifier: ^0.50.1
         version: 0.50.1
@@ -294,6 +300,9 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
+      unist-util-visit:
+        specifier: ^5.0.0
+        version: 5.0.0
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(rolldown-vite@7.0.10(@types/node@24.3.1)(esbuild@0.25.9)(tsx@4.20.5)(yaml@2.8.1))(typescript@5.9.2)

@@ -1,10 +1,12 @@
 import type { Api } from '#api/$'
 import { Content } from '#api/content/$'
+import type { LoadedCatalog } from '#api/schema/input-source/load'
 import type { Vite } from '#dep/vite/index'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { FileRouter } from '#lib/file-router'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
+import type { AssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import type { ViteVirtual } from '#lib/vite-virtual/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
@@ -12,6 +14,7 @@ import mdx from '@mdx-js/rollup'
 import { Arr, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { polenVirtual } from '../vi.js'
+import { MdxSchemaBridge } from './mdx-schema-bridge.js'
 
 export const viProjectRoutes = polenVirtual([`project`, `routes.jsx`], { allowPluginProcessing: true })
 
@@ -22,6 +25,7 @@ export const viProjectPages = polenVirtual([`project`, `pages`], {
 export interface Options {
   config: Api.Config.Config
   dependentVirtualModules?: ViteVirtual.Identifier.Identifier[]
+  schemaReader?: AssetReader<LoadedCatalog | null, any, any>
 }
 
 export interface ProjectPagesCatalog {
@@ -35,6 +39,7 @@ export interface ProjectPagesCatalog {
 export const Pages = ({
   config,
   dependentVirtualModules = [],
+  schemaReader,
 }: Options) => {
   const debug = debugPolen.sub(`vite-pages`)
   const reader = createAssetReader(() =>
@@ -75,10 +80,19 @@ export const Pages = ({
   }
 
   const plugins: Vite.Plugin[] = [
-    // Plugin 1: MDX Processing
+    // Add schema bridge plugin if schema reader is available
+    ...(schemaReader ? [MdxSchemaBridge({ schemaReader })] : []),
+
+    // Plugin 1: MDX Processing with GraphQL references enabled
     {
       enforce: `pre` as const,
-      ...mdx(Content.getMdxRollupConfig()),
+      ...mdx(Content.getMdxRollupConfig({
+        enableGraphQLReferences: !!schemaReader,
+        onDiagnostic: (diagnostic) => {
+          // Report diagnostics through Polen's diagnostic system
+          Diagnostic.report([diagnostic])
+        },
+      })),
     },
 
     // Plugin 2: Reactive Pages Management

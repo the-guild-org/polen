@@ -4,7 +4,7 @@ Welcome to the Pokemon API! This guide will help you get up and running quickly.
 
 ## Your First Query
 
-The simplest way to start is by fetching a single Pokemon:
+The simplest way to start is by fetching a single Pokemon using the `gql:Query.pokemon` field:
 
 ```graphql interactive
 query GetPikachu {
@@ -21,9 +21,11 @@ query GetPikachu {
 }
 ```
 
+The `gql:Pokemon` type contains all the information about a Pokemon, including its `gql:Pokemon.stats` which provides detailed battle statistics.
+
 ## Understanding Pokemon Types
 
-Pokemon can have one or two elemental types that determine their strengths and weaknesses:
+Pokemon can have one or two elemental types (`gql:PokemonType` enum) that determine their strengths and weaknesses. The `gql:Pokemon.types` field returns an array of these types:
 
 ```graphql interactive
 query GetTypeMatchups {
@@ -41,7 +43,7 @@ query GetTypeMatchups {
 
 ## Listing Pokemon
 
-Use the `pokemons` query to browse Pokemon with filtering:
+Use the `gql:Query.pokemons` query to browse Pokemon with filtering. This returns a `gql:PokemonConnection` type that supports pagination:
 
 ```graphql interactive
 query ListElectricPokemon {
@@ -63,9 +65,11 @@ query ListElectricPokemon {
 }
 ```
 
+The `gql:PokemonConnection.edges` field contains the actual Pokemon data, while `gql:PokemonConnection.pageInfo` helps with pagination.
+
 ## Working with Trainers
 
-Trainers catch and train Pokemon. Here's how to fetch trainer data:
+Trainers catch and train Pokemon. The `gql:Trainer` type includes information about their Pokemon team via the `gql:Trainer.pokemon` field:
 
 ```graphql interactive
 query GetTrainer {
@@ -82,9 +86,11 @@ query GetTrainer {
 }
 ```
 
+The `gql:Trainer.badges` field shows their achievements, while `gql:Trainer.hometown` indicates where they started their journey.
+
 ## Mutations: Catching Pokemon
 
-If you have mutation access, you can catch Pokemon:
+If you have mutation access, you can use `gql:Mutation.catchPokemon` to add Pokemon to a trainer's team:
 
 ```graphql interactive
 mutation CatchWildPokemon {
@@ -101,9 +107,11 @@ mutation CatchWildPokemon {
 }
 ```
 
+This mutation returns the updated `gql:Pokemon` with its new `gql:Pokemon.trainer` relationship established.
+
 ## Pagination
 
-For large datasets, use cursor-based pagination:
+For large datasets, use cursor-based pagination with `gql:PageInfo`:
 
 ```graphql interactive
 query PaginatedPokemon {
@@ -121,6 +129,8 @@ query PaginatedPokemon {
   }
 }
 ```
+
+The `gql:PageInfo.hasNextPage` boolean tells you if more data exists, and `gql:PageInfo.endCursor` provides the cursor for the next page.
 
 ## Next Steps
 

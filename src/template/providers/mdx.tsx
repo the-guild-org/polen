@@ -21,6 +21,7 @@ import {
 import type { GraphQLSchema } from 'graphql'
 import type * as React from 'react'
 import { CodeBlock } from '../components/CodeBlock.js'
+import { GraphQLReference } from '../components/graphql/GraphQLReference.js'
 
 interface MdxProviderProps extends React.PropsWithChildren {
   schema?: GraphQLSchema | null
@@ -65,6 +66,9 @@ export const MdxProvider: React.FC<MdxProviderProps> = ({ children, schema }) =>
       // @ts-expect-error
       Tabs,
       Tooltip,
+
+      // GraphQL reference component for MDX usage
+      GraphQLReference,
 
       // Code Hike component - schema will be loaded client-side if needed
       CodeBlock: (props: any) => <CodeBlock {...props} schema={schema || undefined} />,
