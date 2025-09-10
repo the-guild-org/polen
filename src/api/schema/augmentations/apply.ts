@@ -185,9 +185,9 @@ export const applyVersioned = (
             Either.match({
               onLeft: (error) => {
                 diagnostics.push(makeDiagnosticInvalidPath({
-                message: `Type '${error.typeName}' not found in schema`,
-                path: error.path,
-                version: version,
+                  message: `Type '${error.typeName}' not found in schema`,
+                  path: error.path,
+                  version: version,
                   error: `Type '${error.typeName}' not found`,
                 }))
               },
@@ -206,9 +206,9 @@ export const applyVersioned = (
             Either.match({
               onLeft: (error) => {
                 diagnostics.push(makeDiagnosticInvalidPath({
-                message: `Field '${error.fieldName}' not found on type '${error.typeName}'`,
-                path: error.path,
-                version: version,
+                  message: `Field '${error.fieldName}' not found on type '${error.typeName}'`,
+                  path: error.path,
+                  version: version,
                   error: `Field '${error.fieldName}' not found on type '${error.typeName}'`,
                 }))
               },

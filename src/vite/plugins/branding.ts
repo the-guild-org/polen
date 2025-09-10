@@ -136,8 +136,10 @@ export function Branding(config: Api.Config.Config): Plugin {
 
         // Dual mode: both logo-light and logo-dark exist
         if (lightPath && darkPath) {
-          const lightUrl = `/${Path.basename(lightPath)}`
-          const darkUrl = `/${Path.basename(darkPath)}`
+          const basePath = config.build.base || '/'
+          const normalizedBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath
+          const lightUrl = `${normalizedBasePath}/${Path.basename(lightPath)}`
+          const darkUrl = `${normalizedBasePath}/${Path.basename(darkPath)}`
           return `export default {
             light: ${JSON.stringify(lightUrl)},
             dark: ${JSON.stringify(darkUrl)},
@@ -148,7 +150,9 @@ export function Branding(config: Api.Config.Config): Plugin {
 
         // Single mode: only logo.* exists
         if (singlePath) {
-          const url = `/${Path.basename(singlePath)}`
+          const basePath = config.build.base || '/'
+          const normalizedBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath
+          const url = `${normalizedBasePath}/${Path.basename(singlePath)}`
           return `export default {
             light: ${JSON.stringify(url)},
             dark: ${JSON.stringify(url)},
@@ -173,7 +177,9 @@ export function Branding(config: Api.Config.Config): Plugin {
         if (heroImagePath) {
           currentHeroImagePath = heroImagePath
           // Just return the public URL path, let Vite handle the asset
-          const publicPath = `/${Path.basename(heroImagePath)}`
+          const basePath = config.build.base || '/'
+          const normalizedBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath
+          const publicPath = `${normalizedBasePath}/${Path.basename(heroImagePath)}`
           return `export default ${JSON.stringify(publicPath)}`
         }
         return `export default null`
