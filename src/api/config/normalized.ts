@@ -1,5 +1,5 @@
 import { ExamplesConfig } from '#api/examples/config'
-import { DescriptionsView, ReferenceConfigObject } from '#api/reference/config'
+import { ReferenceConfigObject } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Typings } from '#api/typings/$'
 import { DirectedFilter } from '#lib/directed-filter/$'
@@ -433,7 +433,7 @@ const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | unde
   const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
 
   // Dev assets paths
-  let devAssetsRelative = 'node_modules/.vite/polen-assets'
+  let devAssetsRelative = 'node_modules/.vite/assets'
   let devAssetsAbsolute = Path.join(rootDir, devAssetsRelative)
   if (overrides?.devAssets) {
     devAssetsRelative = Path.relative(rootDir, overrides?.devAssets)

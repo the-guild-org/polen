@@ -15,7 +15,14 @@ query GetPokemonBad {
     id
     name
     types
-    stats { hp attack defense specialAttack specialDefense speed }
+    stats {
+      hp
+      attack
+      defense
+      specialAttack
+      specialDefense
+      speed
+    }
     level
     experience
     evolution { evolvesTo { name } level condition }
