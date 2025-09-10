@@ -39,6 +39,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
   const pagesArea = Pages({
     config,
     dependentVirtualModules: [viProjectNavbar, viProjectConfig, viProjectRoutes],
+    schemaReader: schemasArea.reader,
   })
   const examplesArea = Examples({
     config,

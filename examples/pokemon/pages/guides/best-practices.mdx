@@ -6,7 +6,7 @@ Follow these best practices to get the most out of the Pokemon API.
 
 ### Request Only What You Need
 
-Instead of fetching all fields, request only the data you need:
+The `gql:Pokemon` type has many fields, but you should only request the data you actually need:
 
 ```graphql interactive
 # ❌ Avoid - Fetches unnecessary data
@@ -52,7 +52,7 @@ query GetPokemonGood {
 
 ### Use Cursor-Based Pagination
 
-For reliable pagination, always use cursors rather than offset:
+The `gql:PokemonConnection` type implements the Relay Connection specification. Always use `gql:PokemonEdge.cursor` values rather than offset:
 
 ```graphql interactive
 query FirstPage {
@@ -83,7 +83,7 @@ query FirstPage {
 
 ### Combine Filters Effectively
 
-Use multiple filter criteria to narrow down results:
+The `gql:PokemonFilterInput` input type supports multiple criteria. Use the `gql:PokemonFilterInput.type`, `gql:PokemonFilterInput.minLevel`, and `gql:PokemonFilterInput.region` fields together:
 
 ```graphql interactive
 query AdvancedFiltering {
@@ -112,7 +112,7 @@ query AdvancedFiltering {
 
 ### Cache by ID
 
-Pokemon data by ID is stable and can be cached aggressively:
+The `gql:Query.pokemon` field with an ID argument returns stable data that can be cached aggressively:
 
 ```graphql interactive
 # These queries can be cached for a long time
@@ -127,7 +127,7 @@ query GetStaticPokemon {
 
 ### Short Cache for Lists
 
-List queries should have shorter cache times as they change more frequently:
+The `gql:Trainer.pokemon` relationship changes as Pokemon level up, so use shorter cache times:
 
 ```graphql interactive
 # Cache for shorter periods (5-15 minutes)
@@ -145,7 +145,7 @@ query GetTrainerPokemon {
 
 ### Handle Null Values
 
-Always check for null values when a Pokemon or Trainer might not exist:
+Both `gql:Query.pokemon` and `gql:Query.trainer` can return null if the entity doesn't exist:
 
 ```graphql interactive
 query SafeQuery {
@@ -160,9 +160,13 @@ query SafeQuery {
 }
 ```
 
+The `gql:Evolution.evolvesTo` field can also be null for Pokemon that don't evolve.
+
 ## Performance Tips
 
 ### 1. Use Field Aliases for Batch Queries
+
+GraphQL aliases let you query multiple Pokemon in a single request to `gql:Query.pokemon`:
 
 ```graphql interactive
 query BatchPokemon {
@@ -183,7 +187,7 @@ query BatchPokemon {
 
 ### 2. Avoid Deep Nesting
 
-Limit the depth of your queries to avoid performance issues:
+The `gql:Evolution` type can create deep nesting. Limit your query depth:
 
 ```graphql interactive
 # ❌ Too deep
@@ -226,13 +230,13 @@ query Flattened {
 A: The API allows 100 requests per minute per IP address. Use caching and batch queries to stay within limits.
 
 ### Q: How do I handle Pokemon with multiple forms?
-A: Use the `baseForm` field to identify regional variants and the `region` field to distinguish between them.
+A: Use the `gql:Pokemon.baseForm` field to identify regional variants and the `gql:Pokemon.region` field to distinguish between them.
 
 ### Q: Can I filter by multiple types?
-A: Currently, the filter accepts a single type. To find Pokemon with specific type combinations, fetch a larger set and filter client-side.
+A: Currently, the `gql:PokemonFilterInput.type` field accepts a single `gql:PokemonType` value. To find Pokemon with specific type combinations, fetch a larger set and filter client-side.
 
 ### Q: How often is the Pokemon data updated?
-A: Static Pokemon data (stats, types, moves) is updated with each new game release. Trainer data and levels update in real-time.
+A: Static Pokemon data (`gql:Pokemon.stats`, `gql:Pokemon.types`, `gql:Pokemon.moves`) is updated with each new game release. The `gql:Trainer` data and `gql:Pokemon.level` values update in real-time.
 
 ## Related Resources
 
