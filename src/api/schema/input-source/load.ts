@@ -2,7 +2,7 @@ import { Config as PolenConfig } from '#api/config/$'
 import type { Diagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
 import type { Config } from '#api/schema/config'
 import type { InputSource } from '#api/schema/input-source/input-source'
-import type { Catalog } from '#lib/catalog/$'
+import type { Catalog } from 'graphql-kit'
 
 /**
  * Result of schema reading with provenance tracking for file watching and debugging.

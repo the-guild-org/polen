@@ -1,4 +1,4 @@
-import { EffectKit, S } from '#lib/kit-temp/effect'
+import { EffectKit, S } from 'graphql-kit'
 import * as SeverityModule from './severity.js'
 
 // ============================================================================

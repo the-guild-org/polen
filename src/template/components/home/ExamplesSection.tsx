@@ -1,6 +1,6 @@
 import type { Api } from '#api/$'
-import { Catalog } from '#lib/catalog/$'
 import { Box, Heading, Section } from '@radix-ui/themes'
+import { Catalog } from 'graphql-kit'
 import * as React from 'react'
 import { Carousel } from '../Carousel.js'
 import { GraphQLDocument } from '../GraphQLDocument.js'

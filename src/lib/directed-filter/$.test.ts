@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { describe, expect, test } from 'vitest'
 import { DirectedFilter } from './$.js'
 

@@ -1,6 +1,6 @@
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from '#lib/kit-temp/effect'
-import { Version } from '#lib/version/$'
+import { S } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 
 export const DiagnosticValidationError = Diagnostic.create({
   source: 'examples-validation',

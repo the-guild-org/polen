@@ -5,5 +5,10 @@ export default defineConfig({
   plugins: [ViteTsconfigPaths() as any],
   test: {
     include: [`src/**/*.test.ts`],
+    server: {
+      deps: {
+        inline: ['graphql-kit'],
+      },
+    },
   },
 })

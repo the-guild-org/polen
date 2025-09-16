@@ -79,21 +79,23 @@ export const Pages = ({
     return s.render()
   }
 
+  const mdxPlugin = mdx(Content.getMdxRollupConfig({
+    enableGraphQLReferences: !!schemaReader,
+    onDiagnostic: (diagnostic) => {
+      // Report diagnostics through Polen's diagnostic system
+      Diagnostic.report([diagnostic])
+    },
+  }))
+
   const plugins: Vite.Plugin[] = [
     // Add schema bridge plugin if schema reader is available
     ...(schemaReader ? [MdxSchemaBridge({ schemaReader })] : []),
 
     // Plugin 1: MDX Processing with GraphQL references enabled
     {
+      ...mdxPlugin,
       enforce: `pre` as const,
-      ...mdx(Content.getMdxRollupConfig({
-        enableGraphQLReferences: !!schemaReader,
-        onDiagnostic: (diagnostic) => {
-          // Report diagnostics through Polen's diagnostic system
-          Diagnostic.report([diagnostic])
-        },
-      })),
-    },
+    } as Vite.Plugin,
 
     // Plugin 2: Reactive Pages Management
     ViteReactive.ReactiveAssetPlugin({
@@ -121,7 +123,7 @@ export const Pages = ({
           Diagnostic.report(data.diagnostics)
         },
       },
-    }),
+    }) as Vite.Plugin,
 
     // Plugin 3: Pages Virtual Module
     {
@@ -160,7 +162,7 @@ export const Pages = ({
           return `export const pagesCatalog = ${JSON.stringify(projectPagesCatalog)}`
         },
       },
-    },
+    } as Vite.Plugin,
     // Plugin 3: Virtual Module for React Router Routes
     {
       name: `polen:routes`,
@@ -188,7 +190,7 @@ export const Pages = ({
           }
         },
       },
-    },
+    } as Vite.Plugin,
   ]
 
   return { plugins, reader }

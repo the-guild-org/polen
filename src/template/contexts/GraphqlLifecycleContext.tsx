@@ -1,6 +1,6 @@
 import type { React } from '#dep/react/index'
-import { Lifecycles } from '#lib/lifecycles/$'
-import { Schema } from '#lib/schema/$'
+import { Lifecycles } from 'graphql-kit'
+import { Schema } from 'graphql-kit'
 import { createContext, useContext } from 'react'
 
 interface SchemaContextValue {

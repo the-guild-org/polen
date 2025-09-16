@@ -1,8 +1,8 @@
 import { Api } from '#api/iso'
-import type { Lifecycles } from '#lib/lifecycles/$'
-import { Version } from '#lib/version/$'
 import { Badge, Link } from '@radix-ui/themes'
 import { Match } from 'effect'
+import type { Lifecycles } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 import type React from 'react'
 
 export const SinceBadge: React.FC<{ since: Lifecycles.Since }> = ({ since }) => {

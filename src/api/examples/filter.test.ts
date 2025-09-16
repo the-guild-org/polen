@@ -1,4 +1,4 @@
-import { Document } from '#lib/document/$'
+import { Document } from 'graphql-kit'
 import { describe, expect } from 'vitest'
 import { Test } from '../../../tests/unit/helpers/test.js'
 import type { ExampleName, ExampleSelection } from './config.js'

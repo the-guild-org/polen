@@ -1,13 +1,13 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { Catalog } from '#lib/catalog/$'
-import { Change } from '#lib/change/$'
-import { DateOnly } from '#lib/date-only/$'
-import { Grafaid } from '#lib/grafaid'
-import { Revision } from '#lib/revision/$'
-import { Schema } from '#lib/schema/$'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
+import { Catalog } from 'graphql-kit'
+import { Change } from 'graphql-kit'
+import { DateOnly } from 'graphql-kit'
+import { Grafaid } from 'graphql-kit'
+import { Revision } from 'graphql-kit'
+import { Schema } from 'graphql-kit'
 
 const defaultPaths = {
   schemaFile: `./schema.graphql`,

@@ -1,5 +1,5 @@
-import { S } from '#lib/kit-temp/effect'
 import { ParseResult } from 'effect'
+import { S } from 'graphql-kit'
 import { Segment } from './segment/$.js'
 
 const ENCODED_PREFIX = './'

@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Link } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 
-import { Catalog } from '#lib/catalog'
+import { Catalog } from 'graphql-kit'
 
 interface RecentChangesProps {
   limit?: number
@@ -23,7 +23,7 @@ export const RecentChangesSection: React.FC<RecentChangesProps> = ({
       const revisions = schemasCatalog.schema.revisions || []
       const recentRevisions = revisions.slice(0, limit)
 
-      return recentRevisions.map(revision => ({
+      return recentRevisions.map((revision: any) => ({
         date: revision.date,
         changes: revision.changes || [],
         version: null as string | null,
@@ -88,7 +88,7 @@ export const RecentChangesSection: React.FC<RecentChangesProps> = ({
         </Flex>
 
         <Flex direction='column' gap='3'>
-          {recentChanges.map((revision, index) => (
+          {recentChanges.map((revision: any, index: number) => (
             <Card key={index} size='2'>
               <Flex justify='between' align='start' mb='3'>
                 <Box>
@@ -112,7 +112,7 @@ export const RecentChangesSection: React.FC<RecentChangesProps> = ({
               </Flex>
 
               <Flex direction='column' gap='2'>
-                {revision.changes.slice(0, 3).map((change, changeIndex) => (
+                {revision.changes.slice(0, 3).map((change: any, changeIndex: number) => (
                   <Flex key={changeIndex} align='center' gap='2'>
                     <Badge
                       size='1'

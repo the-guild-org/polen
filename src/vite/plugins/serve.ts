@@ -2,11 +2,11 @@ import type { Api } from '#api/$'
 import { reportError } from '#api/server/report-error'
 import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
-import { ResponseInternalServerError } from '#lib/kit-temp'
 import { debugPolen } from '#singletons/debug'
 import type { App, AppOptions } from '#template/server/app'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err, Null } from '@wollybeard/kit'
+import { ResponseInternalServerError } from 'graphql-kit'
 import * as NodePath from 'node:path'
 
 interface AppServerModule {

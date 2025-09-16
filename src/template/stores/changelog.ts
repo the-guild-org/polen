@@ -1,7 +1,7 @@
-import { Revision } from '#lib/revision/$'
-import { Schema as SchemaLib } from '#lib/schema/$'
-import { Version } from '#lib/version/$'
 import { Schema as S } from 'effect'
+import { Revision } from 'graphql-kit'
+import { Schema as SchemaLib } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 import { proxy } from 'valtio'
 
 // ============================================================================

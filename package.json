@@ -43,18 +43,6 @@
     "#lib/errors/errors": {
       "default": "./build/lib/errors/$$.js"
     },
-    "#lib/version-coverage": {
-      "default": "./build/lib/version-coverage/$.js"
-    },
-    "#lib/version-coverage/version-coverage": {
-      "default": "./build/lib/version-coverage/$$.js"
-    },
-    "#lib/version": {
-      "default": "./build/lib/version/$.js"
-    },
-    "#lib/version/version": {
-      "default": "./build/lib/version/$$.js"
-    },
     "#lib/favicon": {
       "default": "./build/lib/favicon/$.js"
     },
@@ -64,41 +52,11 @@
     "#lib/file-router/file-router": {
       "default": "./build/lib/file-router/$$.js"
     },
-    "#lib/grafaid": {
-      "default": "./build/lib/grafaid/$.js"
-    },
-    "#lib/grafaid/grafaid": {
-      "default": "./build/lib/grafaid/$$.js"
-    },
-    "#lib/grafaid-old": {
-      "default": "./build/lib/grafaid-old/$.js"
-    },
-    "#lib/graphql-schema-path": {
-      "default": "./build/lib/graphql-schema-path/$.js"
-    },
-    "#lib/graphql-schema-path/graphql-schema-path": {
-      "default": "./build/lib/graphql-schema-path/$$.js"
-    },
-    "#lib/graphql-schema-loader": {
-      "default": "./build/lib/graphql-schema-loader/$.js"
-    },
     "#lib/hono-aid": {
       "default": "./build/lib/hono-aid/$.js"
     },
     "#lib/html-utils": {
       "default": "./build/lib/html-utils/$.js"
-    },
-    "#lib/catalog": {
-      "default": "./build/lib/catalog/$.js"
-    },
-    "#lib/catalog/catalog": {
-      "default": "./build/lib/catalog/catalog.js"
-    },
-    "#lib/catalog-statistics": {
-      "default": "./build/lib/catalog-statistics/$.js"
-    },
-    "#lib/catalog-statistics/catalog-statistics": {
-      "default": "./build/lib/catalog-statistics/$$.js"
     },
     "#lib/diagnostic": {
       "default": "./build/lib/diagnostic/$.js"
@@ -127,42 +85,6 @@
     "#lib/effect-glob/effect-glob": {
       "default": "./build/lib/effect-glob/$$.js"
     },
-    "#lib/change": {
-      "default": "./build/lib/change/$.js"
-    },
-    "#lib/change/change": {
-      "default": "./build/lib/change/$$.js"
-    },
-    "#lib/lifecycles": {
-      "default": "./build/lib/lifecycles/$.js"
-    },
-    "#lib/lifecycles/lifecycles": {
-      "default": "./build/lib/lifecycles/$$.js"
-    },
-    "#lib/revision": {
-      "default": "./build/lib/revision/$.js"
-    },
-    "#lib/revision/revision": {
-      "default": "./build/lib/revision/revision.js"
-    },
-    "#lib/schema": {
-      "default": "./build/lib/schema/$.js"
-    },
-    "#lib/schema/schema": {
-      "default": "./build/lib/schema/schema.js"
-    },
-    "#lib/schema-definition": {
-      "default": "./build/lib/schema-definition/$.js"
-    },
-    "#lib/schema-definition/schema-definition": {
-      "default": "./build/lib/schema-definition/schema-definition.js"
-    },
-    "#lib/semver": {
-      "default": "./build/lib/semver/$.js"
-    },
-    "#lib/semver/semver": {
-      "default": "./build/lib/semver/$$.js"
-    },
     "#lib/path-map": {
       "default": "./build/lib/path-map/$.js"
     },
@@ -174,9 +96,6 @@
     },
     "#lib/react-router-effect/react-router-effect": {
       "default": "./build/lib/react-router-effect/$$.js"
-    },
-    "#lib/kit-temp": {
-      "default": "./build/lib/kit-temp/$.js"
     },
     "#lib/effect-cli-help-markdown": {
       "default": "./build/lib/effect-cli-help-markdown/$.js"
@@ -305,6 +224,7 @@
     "get-port": "^7.1.0",
     "graffle": "8.0.0-next.163",
     "graphql": "^16.11.0",
+    "graphql-kit": "0.7.0-next.3",
     "gray-matter": "^4.0.3",
     "hono": "^4.9.6",
     "jsesc": "^3.1.0",

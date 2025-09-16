@@ -1,7 +1,7 @@
-import { Resource } from '#lib/kit-temp/$$'
-import { S } from '#lib/kit-temp/effect'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
+import { Resource } from 'graphql-kit'
+import { S } from 'graphql-kit'
 
 export const PolenBuildManifestSchema = S.Struct({
   type: S.Literal('ssg', 'ssr'),

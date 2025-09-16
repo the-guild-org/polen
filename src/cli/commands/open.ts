@@ -1,11 +1,11 @@
 import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
-import { Grafaid } from '#lib/grafaid'
-import { GraphqlSchemaLoader } from '#lib/graphql-schema-loader'
 import { toViteUserConfig } from '#vite/config'
 import { Command, Options } from '@effect/cli'
 import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'
 import { Effect, Option } from 'effect'
+import { Grafaid } from 'graphql-kit'
+import { GraphqlSchemaLoader } from 'graphql-kit'
 import { homedir } from 'node:os'
 import { allowGlobalParameter } from '../_/parameters.js'
 

@@ -1,7 +1,7 @@
 import { Api } from '#api/$'
-import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
 import { allowGlobalParameter, projectParameter } from '../_/parameters.js'
 
 // Define all the options exactly matching the original

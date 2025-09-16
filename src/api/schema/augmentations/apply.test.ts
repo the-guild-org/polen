@@ -1,4 +1,4 @@
-import type { GrafaidOld } from '#lib/grafaid-old'
+import { GrafaidOld } from 'graphql-kit'
 import { describe, expect, test } from 'vitest'
 import { Test } from '../../../../tests/unit/helpers/test.js'
 import { mutateDescription } from './apply.js'

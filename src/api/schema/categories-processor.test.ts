@@ -1,5 +1,5 @@
-import { SchemaDefinition } from '#lib/schema-definition/$'
 import { buildSchema } from 'graphql'
+import { SchemaDefinition } from 'graphql-kit'
 import { describe, expect, test } from 'vitest'
 import { processCategories, processCategoriesWithVersion } from './categories-processor.js'
 

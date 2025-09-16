@@ -1,6 +1,6 @@
-import { Change } from '#lib/change'
-import { Revision } from '#lib/revision'
 import { Box, Flex, Text } from '@radix-ui/themes'
+import { Change } from 'graphql-kit'
+import { Revision } from 'graphql-kit'
 import { renderDate } from './utils.js'
 
 export const ChangelogSidebarItem: React.FC<{

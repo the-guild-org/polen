@@ -1,7 +1,7 @@
 import { DiagnosticDuplicateVersion } from '#api/schema/augmentations/diagnostics/duplicate-version'
 import { DiagnosticInvalidPath } from '#api/schema/augmentations/diagnostics/invalid-path'
 import { DiagnosticVersionMismatch } from '#api/schema/augmentations/diagnostics/version-mismatch'
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 
 // Re-export all individual diagnostics
 export * from './duplicate-version.js'

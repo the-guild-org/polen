@@ -1,7 +1,6 @@
 import { Api } from '#api/$'
 import { Schema } from '#api/schema/$'
 import type { Diagnostic as AugmentationDiagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
-import { Catalog } from '#lib/catalog/$'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -10,6 +9,7 @@ import { debugPolen } from '#singletons/debug'
 import { polenVirtual } from '#vite/vi'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Effect } from 'effect'
+import { Catalog } from 'graphql-kit'
 import * as NodePath from 'node:path'
 
 export const viProjectSchema = polenVirtual([`project`, `schemas`])
@@ -179,7 +179,7 @@ export const Schemas = ({
               return `export const schemasCatalog = null`
             }
             return `
-              import { Catalog } from '#lib/catalog/$'
+              import { Catalog } from 'graphql-kit'
               const encoded = ${JSON.stringify(Catalog.encodeSync(schemaResult.data))}
               export const schemasCatalog = Catalog.decodeSync(encoded)
             `

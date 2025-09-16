@@ -1,14 +1,14 @@
 import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
-import { Catalog } from '#lib/catalog/$'
 import { FileRouter } from '#lib/file-router/$'
-import { SchemaDefinition } from '#lib/schema-definition/$'
-import { Version } from '#lib/version/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import consola from 'consola'
 import { Effect } from 'effect'
 import { isInterfaceType, isObjectType } from 'graphql'
+import { Catalog } from 'graphql-kit'
+import { SchemaDefinition } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 
 /**
  * Vite plugin that generates a routes manifest during build for SSG.

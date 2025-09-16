@@ -1,10 +1,10 @@
 import { InputSource } from '#api/schema/input-source/$'
 import type { InputSourceError } from '#api/schema/input-source/errors'
-import type { Catalog } from '#lib/catalog/$'
 import type { PlatformError } from '@effect/platform/Error'
 import type { FileSystem } from '@effect/platform/FileSystem'
 import { Err, Fn } from '@wollybeard/kit'
 import { Effect } from 'effect'
+import type { Catalog } from 'graphql-kit'
 
 type Options = object
 

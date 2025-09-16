@@ -1,6 +1,6 @@
-import { Grafaid } from '#lib/grafaid'
 import { Array, Option } from 'effect'
 import type { GraphQLFieldMap, GraphQLSchema } from 'graphql'
+import { Grafaid } from 'graphql-kit'
 
 export interface PathValidation {
   version?: string

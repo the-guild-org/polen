@@ -1,18 +1,18 @@
 import { Api } from '#api/iso'
-import { Catalog } from '#lib/catalog/$'
-import { GrafaidOld } from '#lib/grafaid-old'
-import { Grafaid } from '#lib/grafaid/$'
-import { S } from '#lib/kit-temp/effect'
-import { Lifecycles } from '#lib/lifecycles/$'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
-import { Schema } from '#lib/schema/$'
-import { Version } from '#lib/version/$'
 import { Text } from '@radix-ui/themes'
 import { Flex } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
 import { neverCase } from '@wollybeard/kit/language'
 import { HashMap, Option } from 'effect'
 import { Effect, Match } from 'effect'
+import { S } from 'graphql-kit'
+import { Catalog } from 'graphql-kit'
+import { GrafaidOld } from 'graphql-kit'
+import { Grafaid } from 'graphql-kit'
+import { Lifecycles } from 'graphql-kit'
+import { Schema } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 import React from 'react'
 import { redirect, useParams } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
@@ -66,8 +66,8 @@ const referenceLoader = ({ params }: any) => {
       // Resolve the actual schema based on catalog type and params
       const schema = Match.value(catalog).pipe(
         Match.tagsExhaustive({
-          CatalogUnversioned: (c) => c.schema,
-          CatalogVersioned: (c) => {
+          CatalogUnversioned: (c: any) => c.schema,
+          CatalogVersioned: (c: any) => {
             // If version param provided, find that specific version
             if (params.version) {
               const requestedVersion = Version.decodeSync(params.version)
@@ -85,8 +85,8 @@ const referenceLoader = ({ params }: any) => {
             }
             return latest
           },
-        }),
-      )
+        } as any),
+      ) as Schema.Schema
 
       return {
         catalog,

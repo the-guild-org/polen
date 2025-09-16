@@ -1,5 +1,5 @@
-import { S } from '#lib/kit-temp/effect'
 import { Brand } from 'effect'
+import { S } from 'graphql-kit'
 import * as Path from 'node:path'
 
 // ============================================================================

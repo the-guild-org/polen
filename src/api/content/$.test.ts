@@ -1,7 +1,7 @@
-import { S } from '#lib/kit-temp/effect'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Fs, Path } from '@wollybeard/kit'
 import { Effect, Either } from 'effect'
+import { S } from 'graphql-kit'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { Test } from '../../../tests/unit/helpers/test.js'
 import { Content } from './$.js'

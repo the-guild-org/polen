@@ -1,5 +1,5 @@
 import { Api } from '#api/iso'
-import { Version } from '#lib/version/$'
+import { Version } from 'graphql-kit'
 import { useParams } from 'react-router'
 
 /**

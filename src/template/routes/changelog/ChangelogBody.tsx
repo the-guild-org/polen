@@ -1,6 +1,6 @@
-import { Change } from '#lib/change/$'
-import { Revision } from '#lib/revision/$'
-import { Schema } from '#lib/schema/$'
+import { Change } from 'graphql-kit'
+import { Revision } from 'graphql-kit'
+import { Schema } from 'graphql-kit'
 const CRITICALITY_LEVELS = ['BREAKING', 'DANGEROUS', 'NON_BREAKING'] as const
 import type { CriticalityLevel } from '@graphql-inspector/core'
 import { Box, Heading } from '@radix-ui/themes'

@@ -1,7 +1,7 @@
-import { Grafaid } from '#lib/grafaid'
-import { Schema } from '#lib/schema/$'
-import { Version } from '#lib/version/$'
 import { Array, Option, Predicate } from 'effect'
+import { Grafaid } from 'graphql-kit'
+import { Schema } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 
 export interface ReferencePathParts {
   version?: Version.Version

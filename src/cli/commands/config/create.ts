@@ -1,9 +1,9 @@
 import { Api } from '#api/$'
-import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command } from '@effect/cli'
 import { Fs, Path } from '@wollybeard/kit'
 import consola from 'consola'
 import { Effect, Option } from 'effect'
+import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
 import { allowGlobalParameter, projectParameter } from '../../_/parameters.js'
 
 export const configCreate = Command.make(

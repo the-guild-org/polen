@@ -1,6 +1,0 @@
-export * as Document from './document.js'
-export * from './graphql.js'
-export * as HTTP from './http/http.js'
-export { ParseError } from './parse-error.js'
-export * as Parse from './parse.js'
-export * as Schema from './schema/schema.js'

@@ -1,5 +1,5 @@
-import { arrayEquals } from '#lib/kit-temp'
 import { type Path } from '@wollybeard/kit'
+import { arrayEquals } from 'graphql-kit'
 
 //
 //

@@ -1,6 +1,6 @@
-import { VersionCoverage } from '#lib/version-coverage'
-import { Version } from '#lib/version/$'
 import { HashMap, Option } from 'effect'
+import { VersionCoverage } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 import { describe, expect, test } from 'vitest'
 import { normalizeAugmentationInput } from './input.js'
 

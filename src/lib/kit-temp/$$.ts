@@ -1,6 +1,0 @@
-export * from './array.js'
-export * from './effect.js'
-export * from './global-local-check.js'
-export * as Ob from './ob.js'
-export * from './other.js'
-export * as Resource from './resource.js'

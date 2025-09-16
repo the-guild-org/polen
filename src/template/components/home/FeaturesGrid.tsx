@@ -1,6 +1,6 @@
-import { CatalogStatistics } from '#lib/catalog-statistics/$'
-import { Catalog } from '#lib/catalog/$'
 import { Box, Card, Flex, Grid, Heading, Section, Text } from '@radix-ui/themes'
+import { CatalogStatistics } from 'graphql-kit'
+import { Catalog } from 'graphql-kit'
 import { Link } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 

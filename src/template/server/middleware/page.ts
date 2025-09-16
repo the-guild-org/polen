@@ -1,6 +1,6 @@
 import type { Hono } from '#dep/hono/index'
 import type { HtmlTransformer } from '#lib/html-utils/html-transformer'
-import { asyncReduceWith } from '#lib/kit-temp'
+import { asyncReduceWith } from 'graphql-kit'
 import { createPageHtmlResponse } from '../create-page-html-response.js'
 import { view } from '../view.js'
 

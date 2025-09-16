@@ -1,5 +1,5 @@
-import { S } from '#lib/kit-temp/effect'
-import { Version } from '#lib/version/$'
+import { S } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 
 // ============================================================================
 // Runtime Types

@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { Absolute } from './absolute.js'
 import { Relative } from './relative.js'
 

@@ -1,8 +1,8 @@
 import { Api } from '#api/$'
-import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command } from '@effect/cli'
 import consola from 'consola'
 import { Effect, Option } from 'effect'
+import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
 import { allowGlobalParameter, projectParameter } from '../../_/parameters.js'
 
 export const cacheDelete = Command.make(

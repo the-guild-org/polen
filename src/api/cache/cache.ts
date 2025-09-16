@@ -1,9 +1,9 @@
-import { S } from '#lib/kit-temp/effect'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
+import { S } from 'graphql-kit'
 import * as NodePath from 'node:path'
 
 const debug = debugPolen.sub(`api:cache`)

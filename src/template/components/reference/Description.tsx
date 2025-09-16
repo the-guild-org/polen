@@ -1,7 +1,7 @@
 import type { React } from '#dep/react/index'
-import type { GrafaidOld } from '#lib/grafaid-old'
 import { Text } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
+import type { GrafaidOld } from 'graphql-kit'
 import { Markdown } from '../Markdown.js'
 
 export const Description: React.FC<{ data: GraphQLNamedType | GrafaidOld.GraphQLField }> = ({ data }) => {

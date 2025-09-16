@@ -1,4 +1,4 @@
-import { Change as GraphqlChange } from '#lib/change/$'
+import { Change as GraphqlChange } from 'graphql-kit'
 
 type CriticalityLevel = 'BREAKING' | 'DANGEROUS' | 'NON_BREAKING'
 

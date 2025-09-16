@@ -1,6 +1,6 @@
-import { Document } from '#lib/document/$'
-import { S } from '#lib/kit-temp/effect'
 import { Order } from 'effect'
+import { S } from 'graphql-kit'
+import { Document } from 'graphql-kit'
 
 // ============================================================================
 // Schema

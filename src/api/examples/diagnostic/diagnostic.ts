@@ -3,7 +3,7 @@ import { DiagnosticInvalidFilename } from '#api/examples/diagnostic/invalid-file
 import { DiagnosticMissingVersions } from '#api/examples/diagnostic/missing-versions'
 import { DiagnosticUnknownVersion } from '#api/examples/diagnostic/unknown-version'
 import { DiagnosticValidationError } from '#api/examples/diagnostic/validation-error'
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 
 // Re-export all individual diagnostics
 export * from './duplicate-content.js'
