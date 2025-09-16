@@ -315,8 +315,8 @@ exports[`.print > round-trip paths > 'arg resolved' 1`] = `
     },
     "version": undefined,
   },
-  "printed": "User.posts$limit#undefined",
-  "roundTripSuccess": false,
+  "printed": "User.posts$limit#",
+  "roundTripSuccess": true,
 }
 `;
 
@@ -451,8 +451,8 @@ exports[`.print > round-trip paths > 'resolved type' 1`] = `
     },
     "version": undefined,
   },
-  "printed": "User.posts#undefined",
-  "roundTripSuccess": false,
+  "printed": "User.posts#",
+  "roundTripSuccess": true,
 }
 `;
 

@@ -4,6 +4,7 @@ import { Nodes } from './nodes/$.js'
 import { parse as parseTokens } from './parser/parser.js'
 import { tokenize } from './parser/tokenizer.js'
 import type { ParsePath } from './parser/type-parser.js'
+import { print } from './printer-text.js'
 
 /**
  * The root GraphQL schema path structure with bidirectional string codec.
@@ -41,7 +42,7 @@ import type { ParsePath } from './parser/type-parser.js'
  * ```
  *
  * @todo Consider adding GraphQLPathSegmentDirectiveDefinition for standalone directive definitions
- * e.g., "directive @deprecated(reason: String) on FIELD_DEFINITION"
+ * e.g., "directive \@deprecated(reason: String) on FIELD_DEFINITION"
  * Currently we only support directive applications (directives on types/fields)
  */
 
@@ -52,43 +53,6 @@ import type { ParsePath } from './parser/type-parser.js'
 export const parse = (input: string): Nodes.Root.Root => {
   const tokens = tokenize(input)
   return parseTokens(tokens)
-}
-
-export const print = (path: Nodes.Root.Root): string => {
-  let result = ''
-
-  // Add version if present
-  if (path.version) {
-    result += `${path.version}:`
-  }
-
-  // Print the path segments
-  let current: any = path.next
-  let isFirst = true
-
-  while (current) {
-    if (!isFirst) {
-      // Add appropriate separator based on segment type
-      if (
-        current._tag === 'GraphQLPathSegmentField' || current._tag === 'GraphQLPathSegmentOutputField'
-        || current._tag === 'GraphQLPathSegmentInputField'
-      ) {
-        result += '.'
-      } else if (current._tag === 'GraphQLPathSegmentArgument') {
-        result += '$'
-      } else if (current._tag === 'GraphQLPathSegmentDirective') {
-        result += '@'
-      } else if (current._tag === 'GraphQLPathSegmentResolvedType') {
-        result += '#'
-      }
-    }
-
-    result += current.name
-    isFirst = false
-    current = current.next
-  }
-
-  return result
 }
 
 // ============================================================================

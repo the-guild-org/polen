@@ -1,5 +1,5 @@
 import { Data } from 'effect'
-import type { Path } from '../graphql-schema-path.js'
+import type { Path } from '../path.js'
 import type { StepFailure } from './stepper.js'
 import type { TraversalLocation } from './traversal-location.js'
 

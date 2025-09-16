@@ -1,4 +1,4 @@
-import { print } from '../graphql-schema-path.js'
+import { print } from '../printer-text.js'
 import { getSegmentName } from './error.js'
 import type { TraversalError } from './error.js'
 

@@ -1,6 +1,6 @@
 import { Either, Schema as S } from 'effect'
-import type { Path } from '../graphql-schema-path.js'
 import { Nodes } from '../nodes/$.js'
+import type { Path } from '../path.js'
 import type { TargetSpec } from './define.js'
 import * as TraversalError from './error.js'
 import type { TraversalLocation } from './traversal-location.js'

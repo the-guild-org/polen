@@ -1,5 +1,5 @@
-import type { Path } from '../graphql-schema-path.js'
 import { Nodes } from '../nodes/$.js'
+import type { Path } from '../path.js'
 import { type Token } from './tokens.js'
 import * as Tokens from './tokens.js'
 
@@ -143,27 +143,6 @@ function parseArgument(state: State): { value: any; state: State } {
   state = nameResult.state
 
   const nextResult = parseArgumentContinuation(state)
-  const next = nextResult.value
-  state = nextResult.state
-
-  return {
-    value: Nodes.Argument.make({
-      name,
-      next,
-    }),
-    state,
-  }
-}
-
-function parseArgumentArgs(state: State): { value: any; state: State } {
-  // Skip [
-  state = advance(state)
-
-  const nameResult = parseName(state)
-  const name = nameResult.value
-  state = nameResult.state
-
-  const nextResult = parseArgumentArgs(state)
   const next = nextResult.value
   state = nextResult.state
 

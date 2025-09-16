@@ -18,7 +18,7 @@ You can provide schema augmentations to Polen in various ways.
 
 Define augmentations in your `polen.config.ts` file using the `schema.augmentations` array. Each augmentation can specify:
 
-- **`on`** - GraphQL path to the type or field (e.g., `'Pokemon'` or `'Query.users'`)
+- **`on`** - [GraphQL path](/guides/features/graphql-schema-paths) to the type or field (e.g., `'Pokemon'` or `'Query.users'`)
 - **`placement`** - How to apply the content (`'over'`, `'before'`, or `'after'`)
 - **`content`** - Markdown content to add
 - **`versions`** - Optional version-specific overrides

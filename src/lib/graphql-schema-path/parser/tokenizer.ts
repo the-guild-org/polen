@@ -1,17 +1,5 @@
 import { EffectKit } from '#lib/kit-temp/effect'
-import {
-  ColonToken,
-  DollarToken,
-  DotToken,
-  EOFToken,
-  EqualsToken,
-  HashToken,
-  LBracketToken,
-  NameToken,
-  RBracketToken,
-  Token,
-  VersionToken,
-} from './tokens.js'
+import { ColonToken, DollarToken, DotToken, EOFToken, HashToken, NameToken, Token, VersionToken } from './tokens.js'
 
 /**
  * Tokenize a GraphQL schema path string into tokens
@@ -70,20 +58,8 @@ export function tokenize(input: string): Token[] {
         tokens.push(DollarToken.make({ pos }))
         pos++
         continue
-      case EffectKit.Schema.Literal.getValueAtField(LBracketToken, 'display'):
-        tokens.push(LBracketToken.make({ pos }))
-        pos++
-        continue
-      case EffectKit.Schema.Literal.getValueAtField(RBracketToken, 'display'):
-        tokens.push(RBracketToken.make({ pos }))
-        pos++
-        continue
       case EffectKit.Schema.Literal.getValueAtField(HashToken, 'display'):
         tokens.push(HashToken.make({ pos }))
-        pos++
-        continue
-      case EffectKit.Schema.Literal.getValueAtField(EqualsToken, 'display'):
-        tokens.push(EqualsToken.make({ pos }))
         pos++
         continue
       case EffectKit.Schema.Literal.getValueAtField(ColonToken, 'display'):
