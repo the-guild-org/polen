@@ -111,8 +111,8 @@ importers:
         specifier: ^16.11.0
         version: 16.11.0
       graphql-kit:
-        specifier: 0.7.0-next.1
-        version: 0.7.0-next.1(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))
+        specifier: 0.7.0-next.3
+        version: 0.7.0-next.3(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(graphql@16.11.0)
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -3771,8 +3771,10 @@ packages:
       prettier:
         optional: true
 
-  graphql-kit@0.7.0-next.1:
-    resolution: {integrity: sha512-9xdDz0l7IW6B7UoTAF043W3eWyrQsJpZ/S5jW7QfPMdKd9S7WqNWhLkyhKihHHBAWAUngbns3zcxHcamr8gO6Q==}
+  graphql-kit@0.7.0-next.3:
+    resolution: {integrity: sha512-zLjzja7B5X6MxLuQjT3IGVtJO5sLjfJZ/qFJZ2sCbmYI4xy/yBdl+pfMcGeRDXzQjkzdrQxo/EkmTQhFVOIv5A==}
+    peerDependencies:
+      graphql: ^16.0.0
 
   graphql@16.11.0:
     resolution: {integrity: sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw==}
@@ -9070,7 +9072,7 @@ snapshots:
       is-plain-obj: 4.1.0
       type-fest: 4.41.0
 
-  graphql-kit@0.7.0-next.1(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13)):
+  graphql-kit@0.7.0-next.3(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(graphql@16.11.0):
     dependencies:
       '@effect/platform': 0.90.7(effect@3.17.13)
       '@effect/platform-node': 0.96.1(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13)
