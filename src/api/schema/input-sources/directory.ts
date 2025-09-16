@@ -1,16 +1,11 @@
 import { InputSource } from '#api/schema/input-source/$'
 import { InputSourceError } from '#api/schema/input-source/errors'
-import { Catalog } from '#lib/catalog/$'
-import { Change } from '#lib/change/$'
-import { DateOnly } from '#lib/date-only/$'
-import { Grafaid } from '#lib/grafaid'
-import { Revision } from '#lib/revision/$'
-import { Schema } from '#lib/schema/$'
 import { debugPolen } from '#singletons/debug'
 import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Arr, Path } from '@wollybeard/kit'
 import { Array, Effect, Order } from 'effect'
+import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
 
 // const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
 const debug = debugPolen.sub(`schema:data-source-schema-directory`)

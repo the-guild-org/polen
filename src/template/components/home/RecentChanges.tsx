@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Link } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 
-import { Catalog } from '#lib/catalog'
+import { Catalog } from 'graphql-kit'
 
 interface RecentChangesProps {
   limit?: number

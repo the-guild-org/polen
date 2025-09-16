@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { Example } from './example/$.js'
 import { TypeUsageIndex } from './type-usage-index.js'
 

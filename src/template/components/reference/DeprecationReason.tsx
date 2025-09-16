@@ -1,6 +1,6 @@
 import type { React } from '#dep/react/index'
-import type { GrafaidOld } from '#lib/grafaid-old'
 import { Text } from '@radix-ui/themes'
+import type { GrafaidOld } from 'graphql-kit'
 import { Markdown } from '../Markdown.js'
 
 export const DeprecationReason: React.FC<{ data: GrafaidOld.GraphQLField }> = ({ data }) => {

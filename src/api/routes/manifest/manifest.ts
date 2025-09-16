@@ -1,5 +1,5 @@
-import { Resource } from '#lib/kit-temp/$$'
-import { S } from '#lib/kit-temp/effect'
+import { Resource } from 'graphql-kit'
+import { S } from 'graphql-kit'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'

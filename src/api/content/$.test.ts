@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Fs, Path } from '@wollybeard/kit'
 import { Effect, Either } from 'effect'

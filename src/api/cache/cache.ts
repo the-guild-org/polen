@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'

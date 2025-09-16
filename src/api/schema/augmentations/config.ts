@@ -1,6 +1,6 @@
 import { Placement } from '#api/schema/augmentations/placement'
-import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
+import { GraphQLSchemaPath } from 'graphql-kit'
 
 export const AugmentationConfig = S.Struct({
   on: GraphQLSchemaPath.Path,

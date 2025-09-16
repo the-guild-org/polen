@@ -1,1 +1,0 @@
-export * as GraphQLError from './$$.js'

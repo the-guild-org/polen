@@ -1,5 +1,5 @@
-import { Grafaid } from '#lib/grafaid'
 import { Code, Flex, HoverCard, Text } from '@radix-ui/themes'
+import { Grafaid } from 'graphql-kit'
 import React from 'react'
 import { Description } from '../reference/Description.js'
 import { ReferenceLink } from '../reference/ReferenceLink.js'

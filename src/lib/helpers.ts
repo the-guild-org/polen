@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { FileSystem } from '@effect/platform'
 import { Effect } from 'effect'
 import * as Path from 'node:path'

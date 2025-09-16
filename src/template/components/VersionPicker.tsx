@@ -1,5 +1,5 @@
-import { Version } from '#lib/version/$'
 import { Select } from '@radix-ui/themes'
+import { Version } from 'graphql-kit'
 import type * as React from 'react'
 
 interface Props {

@@ -1,12 +1,12 @@
 import { Api } from '#api/$'
 import { createNavbar, type NavbarItem } from '#api/content/navbar'
-import { Catalog } from '#lib/catalog/$'
 import type { AssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { polenVirtual } from '#vite/vi'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Effect } from 'effect'
+import { Catalog } from 'graphql-kit'
 import type * as Vite from 'vite'
 
 export const viProjectNavbar = polenVirtual([`project`, `navbar`])

@@ -1,8 +1,8 @@
 import type { Example } from '#api/examples/schemas/example/example'
 import type { ExampleReference, TypeUsageIndex } from '#api/examples/schemas/type-usage-index'
 import { getExampleReferencesForType } from '#api/examples/type-usage-indexer'
-import { Version } from '#lib/version/$'
 import { HashSet } from 'effect'
+import { Version } from 'graphql-kit'
 import { useMemo } from 'react'
 import { examplesCatalog } from 'virtual:polen/project/examples'
 

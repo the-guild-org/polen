@@ -1,7 +1,7 @@
 import type { ExampleReference } from '#api/examples/schemas/type-usage-index'
-import { Version } from '#lib/version/$'
 import { Badge, Link } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
+import { Version } from 'graphql-kit'
 import type { FC } from 'react'
 
 export interface Props {

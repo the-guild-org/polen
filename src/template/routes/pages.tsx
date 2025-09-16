@@ -1,6 +1,6 @@
-import { Catalog } from '#lib/catalog/$'
 import { route } from '#lib/react-router-effect/route'
 import { SidebarLayout } from '#template/layouts/index'
+import { Catalog } from 'graphql-kit'
 import { Outlet, useLocation } from 'react-router'
 import { pagesCatalog } from 'virtual:polen/project/pages'
 import { routes } from 'virtual:polen/project/routes.jsx'

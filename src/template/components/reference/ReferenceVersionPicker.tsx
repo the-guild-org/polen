@@ -1,7 +1,7 @@
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
-import { Version } from '#lib/version/$'
 import { HashMap, Option } from 'effect'
+import { Version } from 'graphql-kit'
 import { useNavigate } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { useReferencePath } from '../../hooks/useReferencePath.js'

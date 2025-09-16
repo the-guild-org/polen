@@ -110,6 +110,9 @@ importers:
       graphql:
         specifier: ^16.11.0
         version: 16.11.0
+      graphql-kit:
+        specifier: 0.7.1
+        version: 0.7.1(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -3746,6 +3749,9 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  graffle@0.0.0:
+    resolution: {integrity: sha512-sIChCCzbsLVnDtdr9D5mUF0bvPgEkwDgdR61Q+601FcUefk/2fUV13m8qPKfWKOux78YAxd3GU25fk52k1y/Bg==}
+
   graffle@8.0.0-next.163:
     resolution: {integrity: sha512-iPAJV66dbtM2eR/E3bLajy7390BJIum5naEYxeeblPpyW7fvuKJ0T0muGkogHSXzsToR+/+0893P2slQh64/QQ==}
     hasBin: true
@@ -3764,6 +3770,9 @@ packages:
         optional: true
       prettier:
         optional: true
+
+  graphql-kit@0.7.1:
+    resolution: {integrity: sha512-ObeCtYYQrjlTtTVoUifTD5dv9yhaT3USrpA+2eh+QP4oWes1UlZsrFkAouRs3A442GaVhsBb8YLgSO4k3gGKgA==}
 
   graphql@16.11.0:
     resolution: {integrity: sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw==}
@@ -9049,6 +9058,8 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
+  graffle@0.0.0: {}
+
   graffle@8.0.0-next.163(graphql@16.11.0):
     dependencies:
       '@0no-co/graphql.web': 1.2.0(graphql@16.11.0)
@@ -9058,6 +9069,24 @@ snapshots:
       graphql: 16.11.0
       is-plain-obj: 4.1.0
       type-fest: 4.41.0
+
+  graphql-kit@0.7.1(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13)):
+    dependencies:
+      '@effect/platform': 0.90.7(effect@3.17.13)
+      '@effect/platform-node': 0.96.1(@effect/cluster@0.46.2(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/workflow@0.8.1(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(@effect/rpc@0.68.0(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/sql@0.44.0(@effect/experimental@0.54.2(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(@effect/platform@0.90.7(effect@3.17.13))(effect@3.17.13))(effect@3.17.13)
+      '@graphql-inspector/core': 6.2.1(graphql@16.11.0)
+      '@wollybeard/kit': 0.41.0
+      effect: 3.17.13
+      fast-check: 3.23.2
+      graffle: 0.0.0
+      graphql: 16.11.0
+      type-fest: 4.41.0
+    transitivePeerDependencies:
+      - '@effect/cluster'
+      - '@effect/rpc'
+      - '@effect/sql'
+      - bufferutil
+      - utf-8-validate
 
   graphql@16.11.0: {}
 

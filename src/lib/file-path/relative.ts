@@ -1,4 +1,4 @@
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { ParseResult } from 'effect'
 import { Segment } from './segment/$.js'
 

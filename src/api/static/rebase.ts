@@ -1,5 +1,5 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Effect, Exit } from 'effect'

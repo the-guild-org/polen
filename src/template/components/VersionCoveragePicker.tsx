@@ -1,8 +1,8 @@
-import { Catalog } from '#lib/catalog/$'
-import { Document } from '#lib/document/$'
-import { VersionCoverage } from '#lib/version-coverage'
 import { Select } from '@radix-ui/themes'
 import { HashMap } from 'effect'
+import { Catalog } from 'graphql-kit'
+import { Document } from 'graphql-kit'
+import { VersionCoverage } from 'graphql-kit'
 import type { FC } from 'react'
 
 interface Props {

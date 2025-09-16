@@ -1,6 +1,6 @@
 import { AugmentationConfig } from '#api/schema/augmentations/config'
-import { S } from '#lib/kit-temp/effect'
-import { VersionCoverage } from '#lib/version-coverage'
+import { S } from 'graphql-kit'
+import { VersionCoverage } from 'graphql-kit'
 
 /**
  * Internal normalized schema for description augmentations.

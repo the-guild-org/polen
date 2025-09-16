@@ -1,4 +1,4 @@
-import { Change as GraphqlChange } from '#lib/change/$'
+import { Change as GraphqlChange } from 'graphql-kit'
 import type React from 'react'
 
 interface ChangeBaseProps {

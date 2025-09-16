@@ -1,10 +1,10 @@
 import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
-import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { toViteUserConfig } from '#vite/config'
 import { Command, Options } from '@effect/cli'
 import { Err } from '@wollybeard/kit'
 import { Effect, Option } from 'effect'
+import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
 import { allowGlobalParameter, projectParameter } from '../_/parameters.js'
 
 // Define all the options exactly matching the original

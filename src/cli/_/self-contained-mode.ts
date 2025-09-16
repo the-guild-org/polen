@@ -1,7 +1,7 @@
 import type { Vite } from '#dep/vite/index'
-import { type ImportEvent, isSpecifierFromPackage } from '#lib/kit-temp'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
+import { type ImportEvent, isSpecifierFromPackage } from 'graphql-kit'
 import type * as Module from 'node:module'
 import { fileURLToPath } from 'node:url'
 

@@ -1,11 +1,11 @@
 import { Api } from '#api/$'
 import { AiImageGeneration } from '#lib/ai-image-generation/$'
-import { Catalog } from '#lib/catalog/$'
-import { ensureOptionalAbsoluteWithCwd } from '#lib/kit-temp'
 import { Command, Options } from '@effect/cli'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Console, Effect, Option } from 'effect'
+import { Catalog } from 'graphql-kit'
+import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
 import * as Path from 'node:path'
 import { projectParameter } from '../_/parameters.js'
 

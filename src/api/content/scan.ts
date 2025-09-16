@@ -1,5 +1,5 @@
 import { FileRouter } from '#lib/file-router'
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { FileSystem } from '@effect/platform'
 import { Fs, Path, Tree } from '@wollybeard/kit'
 import { Effect, Either } from 'effect'

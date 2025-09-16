@@ -1,4 +1,4 @@
-import { DateOnly } from '#lib/date-only/$'
+import { DateOnly } from 'graphql-kit'
 
 export const renderDate = (dateOnly: DateOnly.DateOnly) => {
   const date = DateOnly.toDate(dateOnly)

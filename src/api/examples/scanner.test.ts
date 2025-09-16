@@ -1,5 +1,5 @@
-import { Version } from '#lib/version/$'
 import { HashMap } from 'effect'
+import { Version } from 'graphql-kit'
 import { describe, expect } from 'vitest'
 import { Test } from '../../../tests/unit/helpers/test.js'
 import * as scanner from './scanner.js'

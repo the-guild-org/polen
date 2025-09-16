@@ -8,12 +8,12 @@ import {
 } from '#api/schema/augmentations/diagnostics/diagnostic'
 import type { AugmentationInput } from '#api/schema/augmentations/input'
 import { normalizeAugmentationInput } from '#api/schema/augmentations/input'
-import type { GrafaidOld } from '#lib/grafaid-old'
-import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
-import { VersionCoverage } from '#lib/version-coverage'
-import { Version } from '#lib/version/$'
 import { Either, HashMap, Match, Option, pipe } from 'effect'
 import type { GraphQLSchema } from 'graphql'
+import { GrafaidOld } from 'graphql-kit'
+import { GraphQLSchemaPath } from 'graphql-kit'
+import { VersionCoverage } from 'graphql-kit'
+import { Version } from 'graphql-kit'
 
 /**
  * Apply version-aware augmentations to a schema.

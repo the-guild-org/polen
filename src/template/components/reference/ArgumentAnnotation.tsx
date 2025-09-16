@@ -1,6 +1,6 @@
-import { Grafaid } from '#lib/grafaid'
 import { Box, Flex, HoverCard, Text } from '@radix-ui/themes'
 import type { GraphQLArgument } from 'graphql'
+import { Grafaid } from 'graphql-kit'
 import type { FC } from 'react'
 import { useViewMode } from '../../contexts/ViewModeContext.js'
 import { Description } from './Description.js'

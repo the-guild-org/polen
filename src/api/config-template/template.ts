@@ -2,9 +2,9 @@ import type { Api } from '#api/$'
 import { ExamplesConfigObject } from '#api/examples/config'
 import { ReferenceConfigObject } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
-import type { Catalog } from '#lib/catalog/$'
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 import { Fn, Obj } from '@wollybeard/kit'
+import type { Catalog } from 'graphql-kit'
 import { Config } from '../config/normalized.js'
 
 export const resolve = (config: Config, data: {

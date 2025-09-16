@@ -1,5 +1,5 @@
 import { Augmentations } from '#api/schema/augmentations/$'
-import { S } from '#lib/kit-temp/effect'
+import { S } from 'graphql-kit'
 
 // ============================================================================
 // Schema - Input Source Names

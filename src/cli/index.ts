@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { checkGlobalVsLocal } from '#lib/kit-temp'
 import { Command, HelpDoc, Span } from '@effect/cli'
 import { NodeContext, NodeRuntime } from '@effect/platform-node'
 import { Console, Effect } from 'effect'
+import { checkGlobalVsLocal } from 'graphql-kit'
 import manifest from '../../package.json' with { type: 'json' }
 import { allowGlobalParameter } from './_/parameters.js'
 
