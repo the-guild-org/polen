@@ -295,17 +295,21 @@ export namespace Test {
    *
    * @example Inline case typing with column alignment
    * ```typescript
-   * // dprint-ignore
    * Test.suite<{
    *   input: string
    *   expected: number
-   * }>('string length', [
-   *   { name: 'short string',    input: 'hi',     expected: 2 },
-   *   { name: 'medium string',   input: 'hello',  expected: 5 },
-   *   { name: 'long string',     input: 'world!', expected: 6 },
-   * ], ({ input, expected }) => {
-   *   expect(input.length).toBe(expected)
-   * })
+   * }>(
+   *   'string length',
+   *   // dprint-ignore
+   *   [
+   *     { name: 'short string',    input: 'hi',     expected: 2 },
+   *     { name: 'medium string',   input: 'hello',  expected: 5 },
+   *     { name: 'long string',     input: 'world!', expected: 6 },
+   *   ],
+   *   ({ input, expected }) => {
+   *     expect(input.length).toBe(expected)
+   *   }
+   * )
    * ```
    *
    * @example With todo and skip cases
@@ -327,8 +331,11 @@ export namespace Test {
    * - Best practice: Use an `expected` property to group all expected values together,
    *   especially when test cases have many fields and span multiple lines. This keeps
    *   the expected outcomes clearly visible on a single line per case.
-   * - For simple types, prefer inline typing with `// dprint-ignore` and column alignment
-   *   over separate interface declarations for better readability.
+   * - For simple types, prefer inline typing with column alignment over separate interface
+   *   declarations for better readability.
+   * - Place `// dprint-ignore` comment directly before the array literal only, not before
+   *   the entire Test.suite call. This preserves column alignment for test cases while
+   *   allowing normal formatting for the rest of the code.
    */
    interface SuiteBase {
      <$Case extends object>(

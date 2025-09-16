@@ -31,6 +31,8 @@ export * from './type-class-name.js'
 
 export * from './type-kind-name.js'
 
+export * as Kinds from './kinds.js'
+
 export * from './RootDetails.js'
 
 export * from './RootTypeMap.js'
@@ -46,6 +48,8 @@ export * from './scalars.js'
 export * as Args from './args.js'
 
 export * as TypesLike from './types-like.js'
+
+export * as Helpers from './helpers.js'
 
 export * as NodesLike from './nodes-like.js'
 

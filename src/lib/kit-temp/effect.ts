@@ -1,9 +1,6 @@
-import { Ob } from '#lib/kit-temp/$'
 import type { ReplaceProperty } from '#lib/kit-temp/ob'
-import { Obj } from '@wollybeard/kit'
 import { Schema as S } from 'effect'
 import type * as E from 'effect'
-import { isPropertySignature } from 'effect/Schema'
 import type * as EAST from 'effect/SchemaAST'
 import { isLiteral, isSuspend, isTransformation, isTypeLiteral } from 'effect/SchemaAST'
 
@@ -52,6 +49,54 @@ export namespace EffectKit {
   }
 
   export namespace Schema {
+    export namespace Literal {
+      /**
+       * Extract the type of a literal field from a schema
+       */
+      export type GetFieldLiteralType<
+        $Schema extends S.Schema.All,
+        $FieldName extends string,
+      > = $Schema extends S.TaggedStruct<any, infer $Fields>
+        ? $FieldName extends keyof $Fields
+          ? $Fields[$FieldName] extends S.PropertySignature<any, infer $Type, any, any, any, any, any> ? $Type
+          : $Fields[$FieldName] extends S.Literal<infer $Values>
+            ? $Values extends readonly [infer $First, ...any[]] ? $First
+            : never
+          : never
+        : never
+        : never
+
+      /**
+       * Extract the literal value from a specific field in a schema
+       * Returns the exact literal type, not any
+       */
+      export const getValueAtField = <
+        $Schema extends S.Schema.All,
+        $FieldName extends string,
+      >(
+        schema: $Schema,
+        fieldName: $FieldName,
+      ): GetFieldLiteralType<$Schema, $FieldName> => {
+        const ast = schema.ast
+
+        // Resolve any transformations to get to the struct
+        let resolved = AST.resolve(ast)
+        if (isTransformation(ast)) {
+          resolved = AST.resolve(ast.to)
+        }
+
+        // Find the field with the given name
+        if (isTypeLiteral(resolved)) {
+          const field = resolved.propertySignatures.find(prop => prop.name === fieldName)
+          if (field && isLiteral(field.type)) {
+            return field.type.literal as GetFieldLiteralType<$Schema, $FieldName>
+          }
+        }
+
+        throw new Error(`Field "${fieldName}" is not a literal or not found`)
+      }
+    }
+
     export type Constructor<$Schema extends Struct.$any, $InputFields> = (
       fields: $InputFields,
     ) => S.Schema.Type<$Schema>
@@ -155,6 +200,56 @@ export namespace EffectKit {
     }
 
     export namespace TaggedStruct {
+      type AllUnion = S.Union<ReadonlyArray<S.Schema.All>>
+
+      // Extract a specific tagged struct from a union by tag name, returns never if not found
+      // NOTE: Cannot extract actual schemas from suspended types, only direct schemas
+      export type ExtractByTag<
+        $TagName extends Tag,
+        $Union extends S.Schema.All,
+      > = $Union extends S.Union<infer $Members extends readonly S.Schema.All[]>
+        ? ExtractTaggedStructFromArray<$TagName, $Members>
+        : $Union extends S.TaggedStruct<infer __tag__, any> ? $TagName extends __tag__ ? $Union
+          : never
+        : never
+
+      // Helper to extract from array of schemas
+      type ExtractTaggedStructFromArray<
+        $TagName extends Tag,
+        $Schemas extends readonly S.Schema.All[],
+      > = $Schemas extends readonly [infer $First extends S.Schema.All, ...infer $Rest extends readonly S.Schema.All[]]
+        ? $First extends S.TaggedStruct<infer __tag__, any> ? $TagName extends __tag__ ? $First
+          : ExtractTaggedStructFromArray<$TagName, $Rest>
+        : ExtractTaggedStructFromArray<$TagName, $Rest>
+        : never
+
+      // Predicate to check if a union contains a specific tag
+      // Can check suspended types by looking at their decoded type's _tag
+      export type DoesTaggedUnionContainTag<
+        $TagName extends string,
+        $Union extends S.Schema.All,
+      > = $Union extends S.Union<infer $Members extends readonly S.Schema.All[]>
+        ? ContainsTagInArray<$TagName, $Members>
+        : $Union extends S.TaggedStruct<infer __tag__, any> ? $TagName extends __tag__ ? true : false
+        : $Union extends S.suspend<infer $Type, any, any>
+          ? $Type extends { readonly _tag: infer __tag__ } ? $TagName extends __tag__ ? true : false
+          : false
+        : false
+
+      // Helper to check if array contains tag
+      type ContainsTagInArray<
+        $TagName extends string,
+        $Schemas extends readonly S.Schema.All[],
+      > = $Schemas extends readonly [infer $First extends S.Schema.All, ...infer $Rest extends readonly S.Schema.All[]]
+        ? $First extends S.TaggedStruct<infer __tag__, any>
+          ? $TagName extends __tag__ ? true : ContainsTagInArray<$TagName, $Rest>
+        : $First extends S.suspend<infer $Type, any, any>
+          ? $Type extends { readonly _tag: infer __tag__ }
+            ? $TagName extends __tag__ ? true : ContainsTagInArray<$TagName, $Rest>
+          : ContainsTagInArray<$TagName, $Rest>
+        : ContainsTagInArray<$TagName, $Rest>
+        : false
+
       export type Tag = string
 
       export type $any = S.TaggedStruct<E.SchemaAST.LiteralValue, any>

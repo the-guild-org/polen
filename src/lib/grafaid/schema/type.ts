@@ -1,15 +1,5 @@
-import {
-  type GraphQLEnumType,
-  type GraphQLInputObjectType,
-  type GraphQLInterfaceType,
-  type GraphQLList,
-  type GraphQLNamedType,
-  type GraphQLNonNull,
-  type GraphQLObjectType,
-  type GraphQLScalarType,
-  type GraphQLUnionType,
-  isNamedType,
-} from 'graphql'
+import type { GraphQLField, GraphQLOutputField } from '#lib/grafaid-old/grafaid'
+import { type GraphQLArgument, type GraphQLInputField, isNamedType } from 'graphql'
 import type { RootTypeMap } from './RootTypeMap.js'
 
 // dprint-ignore
@@ -37,18 +27,33 @@ export {
 
   GraphQLUnionType as Union,
   isUnionType as isUnion,
+
+  GraphQLDirective as Directive,
+  isDirective,
+
+  type GraphQLInputField as InputField,
+
+  // type GraphQLField as OutputField,
+
+  type GraphQLArgument as Argument,
+
+  getNamedType as getNamed,
 } from 'graphql'
 
-export type Type =
-  | GraphQLEnumType
-  | GraphQLInputObjectType
-  | GraphQLInterfaceType
-  | GraphQLObjectType
-  | GraphQLScalarType
-  | GraphQLUnionType
-  | GraphQLList<any>
-  | GraphQLNonNull<any>
+export type OutputField<TSource = any, TContext = any, TArgs = any> = GraphQLOutputField<TSource, TContext, TArgs>
 
-export const isRoot = (map: RootTypeMap, type: Type): boolean => {
+export const isOutputField = (value: unknown): value is GraphQLField => {
+  return false // TODO: implement
+}
+
+export const isArgument = (value: unknown): value is GraphQLArgument => {
+  return false // TODO: implement
+}
+
+export const isInputField = (value: unknown): value is GraphQLInputField => {
+  return false // TODO: implement
+}
+
+export const isRoot = (map: RootTypeMap, type: unknown): boolean => {
   return isNamedType(type) && map.list.some(_ => _.name.canonical === type.name)
 }

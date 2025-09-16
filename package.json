@@ -73,11 +73,8 @@
     "#lib/grafaid-old": {
       "default": "./build/lib/grafaid-old/$.js"
     },
-    "#lib/graphql-path": {
-      "default": "./build/lib/graphql-path/$.js"
-    },
-    "#lib/graphql-path/graphql-path": {
-      "default": "./build/lib/graphql-path/$$.js"
+    "#lib/graphql-schema-path": {
+      "default": "./build/lib/graphql-schema-path/$.js"
     },
     "#lib/graphql-schema-loader": {
       "default": "./build/lib/graphql-schema-loader/$.js"

@@ -1,0 +1,537 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`.parse > invalid paths > 'double dot' 1`] = `
+{
+  "error": "Expected name but got '.' at position 5",
+  "input": "User..name",
+}
+`;
+
+exports[`.parse > invalid paths > 'empty string' 1`] = `
+{
+  "error": "Expected name but got 'EOF' at position 0",
+  "input": "",
+}
+`;
+
+exports[`.parse > invalid paths > 'invalid char' 1`] = `
+{
+  "error": "Unexpected character '!' at position 4",
+  "input": "User!",
+}
+`;
+
+exports[`.parse > invalid paths > 'invalid prefix' 1`] = `
+{
+  "error": "Unexpected token '$' at position 4",
+  "input": "User$",
+}
+`;
+
+exports[`.parse > invalid paths > 'number start' 1`] = `
+{
+  "error": "Unexpected character '1' at position 0",
+  "input": "123User",
+}
+`;
+
+exports[`.parse > invalid paths > 'trailing dot' 1`] = `
+{
+  "error": "Expected name but got 'EOF' at position 5",
+  "input": "User.",
+}
+`;
+
+exports[`.parse > valid paths > 'String scalar' 1`] = `
+{
+  "input": "String",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "String",
+      "next": undefined,
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'User type' 1`] = `
+{
+  "input": "User",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": undefined,
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'arg resolved type' 1`] = `
+{
+  "input": "User.posts$limit#",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentArgument",
+          "name": "limit",
+          "next": {
+            "_tag": "GraphQLPathSegmentResolvedType",
+          },
+        },
+      },
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'field argument' 1`] = `
+{
+  "input": "User.posts$limit",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentArgument",
+          "name": "limit",
+          "next": undefined,
+        },
+      },
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'field resolved type' 1`] = `
+{
+  "input": "User.posts#",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentResolvedType",
+        },
+      },
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'input field' 1`] = `
+{
+  "input": "CreateUserInput.email",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "CreateUserInput",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "email",
+        "next": undefined,
+      },
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'input type' 1`] = `
+{
+  "input": "CreateUserInput",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "CreateUserInput",
+      "next": undefined,
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'multi version' 1`] = `
+{
+  "input": "v1.0,2.0:User.posts",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": undefined,
+      },
+    },
+    "version": "v1.0,2.0",
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'nested field' 1`] = `
+{
+  "input": "User.posts.title",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentField",
+          "name": "title",
+          "next": undefined,
+        },
+      },
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'nested input' 1`] = `
+{
+  "input": "CreateUserInput.address.street",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "CreateUserInput",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "address",
+        "next": {
+          "_tag": "GraphQLPathSegmentField",
+          "name": "street",
+          "next": undefined,
+        },
+      },
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'simple field' 1`] = `
+{
+  "input": "User.name",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "name",
+        "next": undefined,
+      },
+    },
+    "version": undefined,
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'version range' 1`] = `
+{
+  "input": "v1.0-3.0:Query.users",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "Query",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "users",
+        "next": undefined,
+      },
+    },
+    "version": "v1.0-3.0",
+  },
+}
+`;
+
+exports[`.parse > valid paths > 'with version' 1`] = `
+{
+  "input": "v1.0:User",
+  "result": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": undefined,
+    },
+    "version": "v1.0",
+  },
+}
+`;
+
+exports[`.print > round-trip paths > 'arg resolved' 1`] = `
+{
+  "input": "User.posts$limit#",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentArgument",
+          "name": "limit",
+          "next": {
+            "_tag": "GraphQLPathSegmentResolvedType",
+          },
+        },
+      },
+    },
+    "version": undefined,
+  },
+  "printed": "User.posts$limit#undefined",
+  "roundTripSuccess": false,
+}
+`;
+
+exports[`.print > round-trip paths > 'field access' 1`] = `
+{
+  "input": "User.name",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "name",
+        "next": undefined,
+      },
+    },
+    "version": undefined,
+  },
+  "printed": "User.name",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'input field' 1`] = `
+{
+  "input": "CreateUserInput.email",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "CreateUserInput",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "email",
+        "next": undefined,
+      },
+    },
+    "version": undefined,
+  },
+  "printed": "CreateUserInput.email",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'multi version' 1`] = `
+{
+  "input": "v1.0,2.0:User.posts",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": undefined,
+      },
+    },
+    "version": "v1.0,2.0",
+  },
+  "printed": "v1.0,2.0:User.posts",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'nested field' 1`] = `
+{
+  "input": "User.posts.title",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentField",
+          "name": "title",
+          "next": undefined,
+        },
+      },
+    },
+    "version": undefined,
+  },
+  "printed": "User.posts.title",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'nested input' 1`] = `
+{
+  "input": "CreateUserInput.address.street",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "CreateUserInput",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "address",
+        "next": {
+          "_tag": "GraphQLPathSegmentField",
+          "name": "street",
+          "next": undefined,
+        },
+      },
+    },
+    "version": undefined,
+  },
+  "printed": "CreateUserInput.address.street",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'resolved type' 1`] = `
+{
+  "input": "User.posts#",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentResolvedType",
+        },
+      },
+    },
+    "version": undefined,
+  },
+  "printed": "User.posts#undefined",
+  "roundTripSuccess": false,
+}
+`;
+
+exports[`.print > round-trip paths > 'simple type' 1`] = `
+{
+  "input": "User",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": undefined,
+    },
+    "version": undefined,
+  },
+  "printed": "User",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'version range' 1`] = `
+{
+  "input": "v1.0-3.0:Query.users",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "Query",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "users",
+        "next": undefined,
+      },
+    },
+    "version": "v1.0-3.0",
+  },
+  "printed": "v1.0-3.0:Query.users",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'with argument' 1`] = `
+{
+  "input": "User.posts$limit",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": {
+        "_tag": "GraphQLPathSegmentField",
+        "name": "posts",
+        "next": {
+          "_tag": "GraphQLPathSegmentArgument",
+          "name": "limit",
+          "next": undefined,
+        },
+      },
+    },
+    "version": undefined,
+  },
+  "printed": "User.posts$limit",
+  "roundTripSuccess": true,
+}
+`;
+
+exports[`.print > round-trip paths > 'with version' 1`] = `
+{
+  "input": "v1.0:User",
+  "parsed": {
+    "_tag": "GraphQLPathRoot",
+    "next": {
+      "_tag": "GraphQLPathSegmentType",
+      "name": "User",
+      "next": undefined,
+    },
+    "version": "v1.0",
+  },
+  "printed": "v1.0:User",
+  "roundTripSuccess": true,
+}
+`;

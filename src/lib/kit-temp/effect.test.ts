@@ -66,7 +66,7 @@ Test.suite<MakeMakeTestCase>('EffectKit.Schema.UnionAdt.makeMake', [
 
     const ComplexUnion = S.Union(ComplexAdded, ComplexRemoved)
     const complexMake = EffectKit.Schema.UnionAdt.makeMake(ComplexUnion)
-    
+
     const result = complexMake(tag as any, data)
     expect(result._tag).toBe(expectedTag)
     if (expectedFields) {
@@ -119,6 +119,190 @@ namespace _ {
         EffectKit.TaggedStruct.OmitTag<{ _tag: 'test'; field: string }>,
         { field: string }
       >
+    >,
+  ]
+}
+
+// Test ExtractTaggedStruct and DoesTaggedUnionContainTag type utilities
+namespace TaggedStructUtilityTests {
+  declare let _: any
+
+  // Test 1: ExtractTaggedStruct - extract specific schemas from union
+  const UserCreated = S.TaggedStruct('UserCreated', { userId: S.String })
+  const UserDeleted = S.TaggedStruct('UserDeleted', { userId: S.String })
+  const UserUpdated = S.TaggedStruct('UserUpdated', { userId: S.String, name: S.String })
+
+  const SimpleUnion = S.Union(UserCreated, UserDeleted, UserUpdated)
+
+  // Test ExtractTaggedStruct returns the correct schema or never
+  type ExtractTests = [
+    // Should extract UserCreated
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.ExtractByTag<'UserCreated', typeof SimpleUnion>,
+        typeof UserCreated
+      >
+    >,
+    // Should extract UserDeleted
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.ExtractByTag<'UserDeleted', typeof SimpleUnion>,
+        typeof UserDeleted
+      >
+    >,
+    // Should return never for non-existent tag
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.ExtractByTag<'UserArchived', typeof SimpleUnion>,
+        never
+      >
+    >,
+  ]
+
+  // Test DoesTaggedUnionContainTag predicate
+  type PredicateTests = [
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'UserCreated', typeof SimpleUnion>, true>
+    >,
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'UserDeleted', typeof SimpleUnion>, true>
+    >,
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'UserUpdated', typeof SimpleUnion>, true>
+    >,
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'UserArchived', typeof SimpleUnion>, false>
+    >,
+  ]
+
+  // Test 2: Single TaggedStruct (not a union)
+  const SingleStruct = S.TaggedStruct('SingleStruct', { data: S.String })
+  type _Single = [
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'SingleStruct', typeof SingleStruct>, true>
+    >,
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'OtherStruct', typeof SingleStruct>, false>
+    >,
+  ]
+
+  // Test 3: GraphQL schema path node types
+  const Argument = S.TaggedStruct('GraphQLPathSegmentArgument', { name: S.String })
+  const OutputField = S.TaggedStruct('GraphQLPathSegmentOutputField', { name: S.String })
+  const Directive = S.TaggedStruct('GraphQLPathSegmentDirective', { name: S.String })
+
+  const NodeUnion = S.Union(Argument, OutputField, Directive)
+  type _Nodes = [
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'GraphQLPathSegmentArgument', typeof NodeUnion>,
+        true
+      >
+    >,
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'GraphQLPathSegmentOutputField', typeof NodeUnion>,
+        true
+      >
+    >,
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'GraphQLPathSegmentDirective', typeof NodeUnion>,
+        true
+      >
+    >,
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'GraphQLPathSegmentInputField', typeof NodeUnion>,
+        false
+      >
+    >,
+  ]
+
+  // Test 4: Complex tag formats
+  const CamelCase = S.TaggedStruct('CamelCaseTag', { a: S.String })
+  const SnakeCase = S.TaggedStruct('snake_case_tag', { b: S.Number })
+  const KebabCase = S.TaggedStruct('kebab-case-tag', { c: S.Boolean })
+  const MixedCase = S.TaggedStruct('Mixed_Case-Tag', { d: S.Unknown })
+
+  const ComplexUnion = S.Union(CamelCase, SnakeCase, KebabCase, MixedCase)
+  type _Complex = [
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'CamelCaseTag', typeof ComplexUnion>, true>
+    >,
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'snake_case_tag', typeof ComplexUnion>,
+        true
+      >
+    >,
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'kebab-case-tag', typeof ComplexUnion>,
+        true
+      >
+    >,
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'Mixed_Case-Tag', typeof ComplexUnion>,
+        true
+      >
+    >,
+  ]
+
+  // Test 5: Suspend unwrapping in unions
+  const DirectEvent = S.TaggedStruct('DirectEvent', { value: S.Number })
+  const SuspendedEvent = S.TaggedStruct('SuspendedEvent', { data: S.String })
+
+  // Create suspended versions
+  const SuspendedDirectEvent = S.suspend((): typeof DirectEvent => DirectEvent)
+  const SuspendedSuspendedEvent = S.suspend((): typeof SuspendedEvent => SuspendedEvent)
+
+  // Test with union containing suspended schemas
+  const SuspendUnion = S.Union(SuspendedDirectEvent, SuspendedSuspendedEvent)
+  type _Suspend = [
+    // Should find DirectEvent even though it's wrapped in suspend
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'DirectEvent', typeof SuspendUnion>, true>
+    >,
+    // Should find SuspendedEvent even though it's wrapped in suspend
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'SuspendedEvent', typeof SuspendUnion>,
+        true
+      >
+    >,
+    // Should not find non-existent tag
+    Case<
+      Ts.AssertExact<
+        EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'NonExistentEvent', typeof SuspendUnion>,
+        false
+      >
+    >,
+  ]
+
+  // Test 6: Mixed suspended and direct schemas
+  const MixedA = S.TaggedStruct('MixedA', { id: S.String })
+  const MixedB = S.TaggedStruct('MixedB', { id: S.Number })
+  const MixedC = S.TaggedStruct('MixedC', { id: S.Boolean })
+  const SuspendedMixedC = S.suspend(() => MixedC)
+
+  const MixedSuspendUnion = S.Union(MixedA, MixedB, SuspendedMixedC)
+  type _MixedSuspend = [
+    // Should find direct schemas
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'MixedA', typeof MixedSuspendUnion>, true>
+    >,
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'MixedB', typeof MixedSuspendUnion>, true>
+    >,
+    // Should find suspended schema
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'MixedC', typeof MixedSuspendUnion>, true>
+    >,
+    // Should not find non-existent
+    Case<
+      Ts.AssertExact<EffectKit.Schema.TaggedStruct.DoesTaggedUnionContainTag<'MixedD', typeof MixedSuspendUnion>, false>
     >,
   ]
 }

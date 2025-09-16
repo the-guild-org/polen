@@ -1,7 +1,7 @@
 import type { Augmentation } from '#api/schema/augmentations/augmentation'
 import type { AugmentationConfig } from '#api/schema/augmentations/config'
 import { Placement } from '#api/schema/augmentations/placement'
-import { GraphQLPath } from '#lib/graphql-path'
+import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
 import { S } from '#lib/kit-temp/effect'
 import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
@@ -164,7 +164,7 @@ export const normalizeAugmentationInput = (input: AugmentationInput): Augmentati
     }
 
     const unversionedConfig: AugmentationConfig = {
-      on: GraphQLPath.Definition.decodeSync(input.on),
+      on: GraphQLSchemaPath.parse(input.on),
       placement: input.placement,
       content: input.content,
     }
@@ -194,7 +194,7 @@ export const normalizeAugmentationInput = (input: AugmentationInput): Augmentati
     }
 
     const config: AugmentationConfig = {
-      on: GraphQLPath.Definition.decodeSync(onString),
+      on: GraphQLSchemaPath.parse(onString),
       placement,
       content,
     }
