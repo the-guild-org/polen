@@ -95,7 +95,8 @@ export type Path = S.Schema.Type<typeof Nodes.Root.Schema>
 export function decode<$Input extends string>(
   input: $Input,
 ): Effect.Effect<
-  ParsePath<$Input> extends { _tag: 'GraphQLPathRoot' } ? ParsePath<$Input>
+  string extends $Input ? Path
+    : ParsePath<$Input> extends { _tag: 'GraphQLPathRoot' } ? ParsePath<$Input>
     : Path,
   ParseResult.ParseError,
   never
@@ -113,7 +114,8 @@ export function decode<$Input extends string>(
  */
 export function decodeSync<$Input extends string>(
   input: $Input,
-): ParsePath<$Input> extends { _tag: 'GraphQLPathRoot' } ? ParsePath<$Input>
+): string extends $Input ? Path
+  : ParsePath<$Input> extends { _tag: 'GraphQLPathRoot' } ? ParsePath<$Input>
   : Path
 {
   return S.decodeUnknownSync(Path as any)(input) as any

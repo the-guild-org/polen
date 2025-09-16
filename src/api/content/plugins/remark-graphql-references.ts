@@ -4,7 +4,6 @@ import { Grafaid } from '#lib/grafaid'
 import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
 import type { Version } from '#lib/version'
 import { Either } from 'effect'
-import { isNamedType } from 'graphql'
 import type { InlineCode, Root } from 'mdast'
 import type { Plugin } from 'unified'
 import type { Parent } from 'unist'
@@ -61,25 +60,12 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
               })
               // Cast is necessary because the resolver expects a more specific path type
               // than the generic GraphQLSchemaPath.Path that parsedPath provides
-              const result = resolver(parsedPath as any)
+              const result = resolver(parsedPath)
 
               if (Either.isRight(result)) {
                 isValidPath = true
                 resolvedVersion = versionKey
-
-                // Extract the type kind from the resolved result
-                // The resolver returns the actual GraphQL type/field/argument
-                const resolvedNode = result.right
-
-                // Check if it's a type (not a field or argument)
-                // If we're resolving just a type (e.g., "User"), get its kind
-                if (isNamedType(resolvedNode)) {
-                  resolvedTypeKind = Grafaid.Schema.typeKindFromClass(resolvedNode)
-                } else if ('type' in resolvedNode) {
-                  // For fields/arguments, get the type of the field
-                  const namedType = Grafaid.Schema.Type.getNamed(resolvedNode.type)
-                  resolvedTypeKind = Grafaid.Schema.typeKindFromClass(namedType)
-                }
+                resolvedTypeKind = Grafaid.Schema.typeKindFromClass(result.right)
                 break
               }
             }
@@ -90,22 +76,11 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
             })
             // Cast is necessary because the resolver expects a more specific path type
             // than the generic GraphQLSchemaPath.Path that parsedPath provides
-            const result = resolver(parsedPath as any)
+            const result = resolver(parsedPath)
 
             if (Either.isRight(result)) {
               isValidPath = true
-
-              // Extract the type kind from the resolved result
-              const resolvedNode = result.right
-
-              // Check if it's a type (not a field or argument)
-              if (isNamedType(resolvedNode)) {
-                resolvedTypeKind = Grafaid.Schema.typeKindFromClass(resolvedNode)
-              } else if ('type' in resolvedNode) {
-                // For fields/arguments, get the type of the field
-                const namedType = Grafaid.Schema.Type.getNamed(resolvedNode.type)
-                resolvedTypeKind = Grafaid.Schema.typeKindFromClass(namedType)
-              }
+              resolvedTypeKind = Grafaid.Schema.typeKindFromClass(result.right)
             }
           }
 
