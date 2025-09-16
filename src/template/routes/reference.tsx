@@ -66,8 +66,8 @@ const referenceLoader = ({ params }: any) => {
       // Resolve the actual schema based on catalog type and params
       const schema = Match.value(catalog).pipe(
         Match.tagsExhaustive({
-          CatalogUnversioned: (c) => c.schema,
-          CatalogVersioned: (c) => {
+          CatalogUnversioned: (c: any) => c.schema,
+          CatalogVersioned: (c: any) => {
             // If version param provided, find that specific version
             if (params.version) {
               const requestedVersion = Version.decodeSync(params.version)

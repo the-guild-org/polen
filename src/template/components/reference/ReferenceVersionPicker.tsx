@@ -35,7 +35,7 @@ export const ReferenceVersionPicker: React.FC<Props> = ({ data, current }) => {
       // Find the schema for the target version
       // Note: newVersion is a string that we need to parse
       const targetSchemaOption = Option.map(
-        HashMap.findFirst(catalog.entries, (_, key) => Version.encodeSync(key) === newVersion),
+        HashMap.findFirst(catalog.entries, (_, key) => Version.encodeSync(key as any) === newVersion),
         ([, value]) => value,
       )
 
@@ -46,10 +46,10 @@ export const ReferenceVersionPicker: React.FC<Props> = ({ data, current }) => {
       const targetSchema = Option.getOrThrow(targetSchemaOption)
 
       // Find fallback path if needed
-      const fallbackPath = Api.Schema.Validation.findFallbackPath(targetSchema.definition, currentPath)
+      const fallbackPath = Api.Schema.Validation.findFallbackPath((targetSchema as any).definition, currentPath)
       // Get redirect description if path changed
       const redirectDescription = Api.Schema.Validation.getRedirectDescription(
-        targetSchema.definition,
+        (targetSchema as any).definition,
         currentPath,
         fallbackPath,
         newVersion,
