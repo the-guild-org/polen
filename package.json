@@ -76,6 +76,9 @@
     "#lib/graphql-schema-path": {
       "default": "./build/lib/graphql-schema-path/$.js"
     },
+    "#lib/graphql-schema-path/graphql-schema-path": {
+      "default": "./build/lib/graphql-schema-path/$$.js"
+    },
     "#lib/graphql-schema-loader": {
       "default": "./build/lib/graphql-schema-loader/$.js"
     },
