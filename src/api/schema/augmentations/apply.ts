@@ -9,10 +9,11 @@ import {
 import type { AugmentationInput } from '#api/schema/augmentations/input'
 import { normalizeAugmentationInput } from '#api/schema/augmentations/input'
 import type { GrafaidOld } from '#lib/grafaid-old'
-import { GraphQLPath } from '#lib/graphql-path'
+import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
 import { VersionCoverage } from '#lib/version-coverage'
 import { Version } from '#lib/version/$'
 import { Either, HashMap, Match, Option, pipe } from 'effect'
+import type { GraphQLSchema } from 'graphql'
 
 /**
  * Apply version-aware augmentations to a schema.
@@ -22,8 +23,86 @@ import { Either, HashMap, Match, Option, pipe } from 'effect'
  * @param version - The specific version to apply augmentations for (null for unversioned)
  * @returns Diagnostics generated during augmentation application
  */
+// ============================================================================
+// Type Guards
+// ============================================================================
+
+/**
+ * Type guard to check if a node is describable (has a description property).
+ */
+const isDescribable = (node: unknown): node is GrafaidOld.Groups.Describable => {
+  return node !== null
+    && typeof node === 'object'
+    && 'description' in node
+}
+
+// ============================================================================
+// Shared Logic
+// ============================================================================
+
+/**
+ * Apply an augmentation to a path in the schema.
+ * This is the shared logic between apply() and applyVersioned().
+ *
+ * @param schema - The GraphQL schema to augment
+ * @param path - The path to resolve
+ * @param augmentation - The augmentation config to apply
+ * @param version - The version for diagnostic reporting (null for unversioned)
+ * @returns Diagnostics if there were errors, empty array on success
+ */
+const applyAugmentationToPath = (
+  schema: GraphQLSchema,
+  path: GraphQLSchemaPath.Path,
+  augmentation: AugmentationConfig,
+  version: Version.Version | null = null,
+): Diagnostic[] => {
+  // Step 1: Traverse path to resolve node
+  const resolve = GraphQLSchemaPath.Resolvers.GraphqlSchema.create({ schema })
+  const result = resolve(path)
+
+  if (Either.isLeft(result)) {
+    const error = result.left as unknown
+    // Use rich error rendering if it's a TraversalError
+    let message: string
+    let errorString: string
+
+    if (GraphQLSchemaPath.Errors.TraversalError.is(error)) {
+      message = GraphQLSchemaPath.Errors.TraversalError.print(error as any)
+      errorString = (error as any).message || String(error)
+    } else if (error instanceof Error) {
+      message = error.message
+      errorString = error.message
+    } else {
+      message = String(error)
+      errorString = String(error)
+    }
+
+    return [makeDiagnosticInvalidPath({
+      message,
+      path: GraphQLSchemaPath.print(path),
+      version,
+      error: errorString,
+    })]
+  }
+
+  // Step 2: Check if resolved node is describable
+  const resolved = result.right
+  if (!isDescribable(resolved)) {
+    return [makeDiagnosticInvalidPath({
+      message: `Path does not resolve to a describable node`,
+      path: GraphQLSchemaPath.print(path),
+      version,
+      error: 'Node is not describable',
+    })]
+  }
+
+  // Step 3: Apply augmentation
+  mutateDescription(resolved, augmentation)
+  return []
+}
+
 export const applyAll = (
-  schema: GrafaidOld.Schema.Schema,
+  schema: GraphQLSchema,
   augmentations: readonly AugmentationInput[],
   version: Version.Version | null = null,
 ): { diagnostics: Diagnostic[] } => {
@@ -66,67 +145,10 @@ export const applyAll = (
 }
 
 export const apply = (
-  schema: GrafaidOld.Schema.Schema,
+  schema: GraphQLSchema,
   augmentation: AugmentationConfig,
 ): Diagnostic[] => {
-  const diagnostics: Diagnostic[] = []
-
-  pipe(
-    augmentation.on,
-    Match.value,
-    Match.when(
-      GraphQLPath.Definition.isTypeDefinitionPath,
-      (path) => {
-        pipe(
-          GraphQLPath.Schema.locateType(schema, path),
-          Either.match({
-            onLeft: (error) => {
-              diagnostics.push(makeDiagnosticInvalidPath({
-                message: `Type '${error.typeName}' not found in schema`,
-                path: error.path,
-                version: null,
-                error: `Type '${error.typeName}' not found`,
-              }))
-            },
-            onRight: (type) => {
-              mutateDescription(type, augmentation)
-            },
-          }),
-        )
-      },
-    ),
-    Match.when(
-      GraphQLPath.Definition.isFieldDefinitionPath,
-      (path) => {
-        pipe(
-          GraphQLPath.Schema.locateField(schema, path),
-          Either.match({
-            onLeft: (error) => {
-              diagnostics.push(makeDiagnosticInvalidPath({
-                message: `Field '${error.fieldName}' not found on type '${error.typeName}'`,
-                path: error.path,
-                version: null,
-                error: `Field '${error.fieldName}' not found on type '${error.typeName}'`,
-              }))
-            },
-            onRight: (field) => {
-              mutateDescription(field, augmentation)
-            },
-          }),
-        )
-      },
-    ),
-    Match.orElse(() => {
-      diagnostics.push(makeDiagnosticInvalidPath({
-        message: `Unsupported path type for augmentations: ${GraphQLPath.Definition.encodeSync(augmentation.on)}`,
-        path: GraphQLPath.Definition.encodeSync(augmentation.on),
-        version: null,
-        error: 'Unsupported path type for augmentations',
-      }))
-    }),
-  )
-
-  return diagnostics
+  return applyAugmentationToPath(schema, augmentation.on, augmentation, null)
 }
 
 /**
@@ -138,11 +160,10 @@ export const apply = (
  * @returns Diagnostics generated during augmentation application
  */
 export const applyVersioned = (
-  schema: GrafaidOld.Schema.Schema,
+  schema: GraphQLSchema,
   augmentation: Augmentation,
   version: Version.Version | null,
 ): Diagnostic[] => {
-  const diagnostics: Diagnostic[] = []
   // Try to find augmentation for this specific version
   let config: AugmentationConfig | undefined
 
@@ -174,60 +195,7 @@ export const applyVersioned = (
 
   // Apply the augmentation if found
   if (config) {
-    pipe(
-      config.on,
-      Match.value,
-      Match.when(
-        GraphQLPath.Definition.isTypeDefinitionPath,
-        (path) => {
-          pipe(
-            GraphQLPath.Schema.locateType(schema, path),
-            Either.match({
-              onLeft: (error) => {
-                diagnostics.push(makeDiagnosticInvalidPath({
-                  message: `Type '${error.typeName}' not found in schema`,
-                  path: error.path,
-                  version: version,
-                  error: `Type '${error.typeName}' not found`,
-                }))
-              },
-              onRight: (type) => {
-                mutateDescription(type, config)
-              },
-            }),
-          )
-        },
-      ),
-      Match.when(
-        GraphQLPath.Definition.isFieldDefinitionPath,
-        (path) => {
-          pipe(
-            GraphQLPath.Schema.locateField(schema, path),
-            Either.match({
-              onLeft: (error) => {
-                diagnostics.push(makeDiagnosticInvalidPath({
-                  message: `Field '${error.fieldName}' not found on type '${error.typeName}'`,
-                  path: error.path,
-                  version: version,
-                  error: `Field '${error.fieldName}' not found on type '${error.typeName}'`,
-                }))
-              },
-              onRight: (field) => {
-                mutateDescription(field, config)
-              },
-            }),
-          )
-        },
-      ),
-      Match.orElse(() => {
-        diagnostics.push(makeDiagnosticInvalidPath({
-          message: `Unsupported path type for augmentations: ${GraphQLPath.Definition.encodeSync(config.on)}`,
-          path: GraphQLPath.Definition.encodeSync(config.on),
-          version: version,
-          error: 'Unsupported path type for augmentations',
-        }))
-      }),
-    )
+    return applyAugmentationToPath(schema, config.on, config, version)
   } else if (version && HashMap.size(augmentation.versionAugmentations) > 0) {
     // No matching version coverage found - generate version mismatch diagnostic
     // Get first config from HashMap
@@ -238,22 +206,22 @@ export const applyVersioned = (
     )
 
     if (firstEntry) {
-      diagnostics.push(makeDiagnosticVersionMismatch({
+      return [makeDiagnosticVersionMismatch({
         message: `No augmentation found for version '${Version.encodeSync(version)}' on path '${
-          GraphQLPath.Definition.encodeSync(firstEntry.on)
+          GraphQLSchemaPath.print(firstEntry.on)
         }'`,
-        path: GraphQLPath.Definition.encodeSync(firstEntry.on),
+        path: GraphQLSchemaPath.print(firstEntry.on),
         requestedVersion: version,
         availableVersions: pipe(
           augmentation.versionAugmentations,
           HashMap.keys,
           (iter) => Array.from(iter).map(VersionCoverage.toLabel),
         ),
-      }))
+      })]
     }
   }
 
-  return diagnostics
+  return []
 }
 
 export const mutateDescription = (

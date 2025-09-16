@@ -281,7 +281,7 @@ declare let _: any
 test('descriptive test name', () => {
   // Inline fixture
   const Schema = S.TaggedStruct('Name', { ... })
-  
+
   // Type assertion: expected type is front-loaded, actual type is cast
   Ts.assertExact<ExpectedType>()(_ as ActualType)
 })
@@ -321,36 +321,83 @@ test('optional fields are excluded from valid keys', () => {
 - Use to maximum effect to ensure type safety at runtime boundaries
 - Inside test blocks, tightly coupled to the runtime test
 
-### CRITICAL: test.for Usage
+### CRITICAL: Test Utils Usage (MANDATORY)
 
-- **ALWAYS** use `test.for` when testing multiple similar cases or edge cases
-- Prefer `test.for` over multiple individual `test` blocks for the same behavior
-- Use descriptive test names with template literals that include the test case data
-- Group related test cases in arrays for better readability
-- This makes tests more maintainable and reduces boilerplate
+Polen has a sophisticated test utility library at `/tests/unit/helpers/test.ts` that **MUST** be used for all table-driven tests.
 
-### test.for Examples
+**NEVER use raw `test.for` from vitest directly.** Always use the Test utils:
+
+**When to use `test` vs `Test`:**
+
+- Use `test` from vitest for standalone test cases (single tests not in a data-driven table)
+- Use `Test.suite` or `Test.each` from the helper library for table-driven/parameterized tests
+- The `Test` namespace is NOT a function - it only provides `Test.suite` and `Test.each` methods
 
 ```typescript
-// ✅ GOOD - Using test.for for multiple cases
-test.for([
-  { input: 'Tag@Bad', error: 'Reserved characters found in tag' },
-  { input: 'Tag!Bad', error: 'Reserved characters found in tag' },
-  { input: 'Tag___Bad', error: 'Reserved characters found in tag' },
-])('makeSegment throws on reserved character "$input"', ({ input, error }) => {
+import { Test } from '../../../tests/unit/helpers/test.js' // Adjust path as needed
+```
+
+### Test.suite - Primary Pattern for Table-Driven Tests
+
+Use `Test.suite` for all parameterized tests with structured data:
+
+```typescript
+// dprint-ignore
+Test.suite<{ input: string; error: string }>('makeSegment validation', [
+  { name: '@ character',   input: 'Tag@Bad',   error: 'Reserved characters found in tag' },
+  { name: '! character',   input: 'Tag!Bad',   error: 'Reserved characters found in tag' },
+  { name: 'triple underscore', input: 'Tag___Bad', error: 'Reserved characters found in tag' },
+  { name: 'todo case',     todo: 'Not implemented yet' },
+  { name: 'skip case',     input: 'flaky',     error: 'error', skip: 'Flaky on CI' },
+], ({ input, error }) => {
   expect(() => UHL.makeSegment(input)).toThrow(error)
 })
+```
 
-// ❌ BAD - Repetitive individual tests
-test('makeSegment throws on @ in tag', () => {
-  expect(() => UHL.makeSegment('Tag@Bad')).toThrow(
-    'Reserved characters found in tag',
-  )
+**Key Rules:**
+
+- READ ALL ITS JSDOC TO BEST UNDERSTAND THE FUNCTIONALITY AND WHAT IS IDIOMATIC
+- ALWAYS provide explicit type parameter to Test.suite
+- Use `// dprint-ignore` DIRECTLY ABOVE Test.suite call (not inside the array) for column-aligned test data
+- Each case MUST have a `name` property with descriptive name
+- Use descriptive names, not just "test 1", "test 2"
+- Group expected values in an `expected` property for complex cases
+- Use `todo` for unimplemented tests
+- Use `skip` with reason for temporarily disabled tests
+
+### Test.each - For Cases Without describe Block
+
+Use when you need parameterized tests without a describe wrapper:
+
+```typescript
+Test.each(cases, ({ input, expected }) => {
+  expect(process(input)).toBe(expected)
 })
-test('makeSegment throws on ! in tag', () => {
-  expect(() => UHL.makeSegment('Tag!Bad')).toThrow(
-    'Reserved characters found in tag',
-  )
+```
+
+### Examples
+
+```typescript
+// ✅ GOOD - Using Test.suite with proper typing and alignment
+// dprint-ignore    <-- Place DIRECTLY ABOVE Test.suite, not inside the array
+Test.suite<{
+  input: string
+  transform: 'upper' | 'lower'
+  expected: string
+}>('string transformations', [
+  { name: 'uppercase hello', input: 'hello', transform: 'upper', expected: 'HELLO' },
+  { name: 'lowercase WORLD', input: 'WORLD', transform: 'lower', expected: 'world' },
+  { name: 'unicode support',  todo: 'Implement unicode handling' },
+], ({ input, transform, expected }) => {
+  expect(transform === 'upper' ? input.toUpperCase() : input.toLowerCase()).toBe(expected)
+})
+
+// ❌ BAD - Using raw test.for
+test.for([
+  { input: 'hello', expected: 'HELLO' },
+  { input: 'world', expected: 'WORLD' },
+])('uppercase $input', ({ input, expected }) => {
+  expect(input.toUpperCase()).toBe(expected)
 })
 ```
 

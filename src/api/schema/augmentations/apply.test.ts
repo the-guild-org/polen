@@ -1,15 +1,17 @@
 import type { GrafaidOld } from '#lib/grafaid-old'
 import { describe, expect, test } from 'vitest'
+import { Test } from '../../../../tests/unit/helpers/test.js'
 import { mutateDescription } from './apply.js'
 import type { AugmentationConfig } from './config.js'
 
 describe('mutateDescription', () => {
   describe('with empty existing description', () => {
-    test.for([
-      { placement: 'before' as const, expected: 'New content' },
-      { placement: 'after' as const, expected: 'New content' },
-      { placement: 'over' as const, expected: 'New content' },
-    ])('$placement placement does not add extra newlines', ({ placement, expected }) => {
+    // dprint-ignore
+    Test.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('placement without newlines', [
+      { name: 'before placement', placement: 'before' as const, expected: 'New content' },
+      { name: 'after placement',  placement: 'after' as const,  expected: 'New content' },
+      { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
+    ], ({ placement, expected }) => {
       const type = { description: undefined } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on: {} as any, // Not used by mutateDescription
@@ -22,11 +24,12 @@ describe('mutateDescription', () => {
       expect(type.description).toBe(expected)
     })
 
-    test.for([
-      { placement: 'before' as const, expected: 'New content' },
-      { placement: 'after' as const, expected: 'New content' },
-      { placement: 'over' as const, expected: 'New content' },
-    ])('$placement placement handles empty string description', ({ placement, expected }) => {
+    // dprint-ignore
+    Test.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('empty string handling', [
+      { name: 'before placement', placement: 'before' as const, expected: 'New content' },
+      { name: 'after placement',  placement: 'after' as const,  expected: 'New content' },
+      { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
+    ], ({ placement, expected }) => {
       const type = { description: '' } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on: {} as any,
@@ -41,11 +44,12 @@ describe('mutateDescription', () => {
   })
 
   describe('with existing description', () => {
-    test.for([
-      { placement: 'before' as const, expected: 'New content\n\nExisting description' },
-      { placement: 'after' as const, expected: 'Existing description\n\nNew content' },
-      { placement: 'over' as const, expected: 'New content' },
-    ])('$placement placement correctly combines content', ({ placement, expected }) => {
+    // dprint-ignore
+    Test.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('content combination', [
+      { name: 'before placement', placement: 'before' as const, expected: 'New content\n\nExisting description' },
+      { name: 'after placement',  placement: 'after' as const,  expected: 'Existing description\n\nNew content' },
+      { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
+    ], ({ placement, expected }) => {
       const type = { description: 'Existing description' } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on: {} as any,

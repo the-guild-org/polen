@@ -5,6 +5,7 @@ import { Version } from '#lib/version/$'
 import { HashMap } from 'effect'
 import { buildSchema, type GraphQLSchema } from 'graphql'
 import { describe, expect, test } from 'vitest'
+import { Test } from '../../../tests/unit/helpers/test.js'
 import { CatalogStatistics } from './$.js'
 
 describe('analyzeSchema', () => {
@@ -63,10 +64,11 @@ describe('analyzeSchema', () => {
     expect(stats.descriptionCoverage.arguments).toBe(0)
   })
 
-  test.for([
-    { ignoreDeprecated: false, expectedFields: 2 },
-    { ignoreDeprecated: true, expectedFields: 1 },
-  ])('ignoreDeprecated=$ignoreDeprecated yields $expectedFields fields', ({ ignoreDeprecated, expectedFields }) => {
+  // dprint-ignore
+  Test.suite<{ ignoreDeprecated: boolean; expectedFields: number }>('deprecated field handling', [
+    { name: 'includes deprecated', ignoreDeprecated: false, expectedFields: 2 },
+    { name: 'excludes deprecated', ignoreDeprecated: true,  expectedFields: 1 },
+  ], ({ ignoreDeprecated, expectedFields }) => {
     const schema = buildSchema(`
       type Query {
         current: String
@@ -88,7 +90,8 @@ describe('analyzeCatalog', () => {
       definition: schema,
     })
 
-  test.for([
+  // dprint-ignore
+  Test.suite<{ catalog: () => Catalog.Catalog; expectedVersions: number; expectedCurrentVersion: string }>('catalog processing', [
     {
       name: 'versioned catalog',
       catalog: () =>
@@ -127,7 +130,7 @@ describe('analyzeCatalog', () => {
       expectedVersions: 1,
       expectedCurrentVersion: '2024-02-01',
     },
-  ])('processes $name', ({ catalog, expectedVersions, expectedCurrentVersion }) => {
+  ], ({ catalog, expectedVersions, expectedCurrentVersion }) => {
     const report = CatalogStatistics.analyzeCatalog(catalog())
 
     expect(report.versions).toHaveLength(expectedVersions)

@@ -97,12 +97,12 @@ describe('Description Augmentation Transform', () => {
     expect(Option.isSome(v2Config)).toBe(true)
     if (Option.isSome(v2Config)) {
       expect(v2Config.value.content).toBe('V2 only content')
-      // v2Config.value.on is now a GraphQLPath.Definition.FieldDefinitionPath
-      // which is a tuple: [TypeSegment, FieldSegment]
-      expect(v2Config.value.on).toEqual([
-        { _tag: 'TypeSegment', type: 'Pokemon' },
-        { _tag: 'FieldSegment', field: 'stats' },
-      ])
+      // v2Config.value.on is now a GraphQLSchemaPath
+      expect(v2Config.value.on._tag).toBe('GraphQLPathRoot')
+      expect(v2Config.value.on.next!._tag).toBe('GraphQLPathSegmentType')
+      expect(v2Config.value.on.next!.name).toBe('Pokemon')
+      expect(v2Config.value.on.next!.next?._tag).toBe('GraphQLPathSegmentField')
+      expect((v2Config.value.on.next!.next as any)?.name).toBe('stats')
     }
   })
 

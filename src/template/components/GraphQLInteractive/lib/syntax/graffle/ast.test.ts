@@ -1,6 +1,7 @@
 import { Either } from 'effect'
 import { parse } from 'graphql'
 import { describe, expect, test } from 'vitest'
+import { Test } from '../../../../../../../tests/unit/helpers/test.js'
 import {
   convertDocument,
   graffleDocumentToString,
@@ -10,7 +11,8 @@ import {
 
 describe('convertDocument', () => {
   describe('queries', () => {
-    test.for([
+    // dprint-ignore
+    Test.suite<{ graphql: string; expected: any }>('valid queries', [
       {
         name: 'simple query with scalar fields',
         graphql: `query { user { id name email } }`,
@@ -71,7 +73,7 @@ describe('convertDocument', () => {
           },
         },
       },
-    ])('$name', ({ graphql, expected }) => {
+    ], ({ graphql, expected }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
       expect(Either.isRight(result)).toBe(true)
@@ -82,7 +84,8 @@ describe('convertDocument', () => {
   })
 
   describe('arguments', () => {
-    test.for([
+    // dprint-ignore
+    Test.suite<{ graphql: string; expected: any }>('field arguments', [
       {
         name: 'single argument',
         graphql: `query { user(id: "123") { name } }`,
@@ -154,7 +157,7 @@ describe('convertDocument', () => {
           },
         },
       },
-    ])('field with $name', ({ graphql, expected }) => {
+    ], ({ graphql, expected }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
       expect(Either.isRight(result)).toBe(true)
@@ -165,7 +168,8 @@ describe('convertDocument', () => {
   })
 
   describe('variables', () => {
-    test.for([
+    // dprint-ignore
+    Test.suite<{ graphql: string; expectedError: { operationName: string; variableNames: string[] } }>('variable errors', [
       {
         name: 'single variable',
         graphql: `query GetUser($id: ID!) { user(id: $id) { name } }`,
@@ -182,7 +186,7 @@ describe('convertDocument', () => {
           variableNames: ['name', 'limit'],
         },
       },
-    ])('query with $name returns error', ({ graphql, expectedError }) => {
+    ], ({ graphql, expectedError }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
       expect(Either.isLeft(result)).toBe(true)
@@ -197,7 +201,8 @@ describe('convertDocument', () => {
   })
 
   describe('aliases', () => {
-    test.for([
+    // dprint-ignore
+    Test.suite<{ graphql: string; expected: any }>('aliases', [
       {
         name: 'field aliases',
         graphql: `
@@ -250,7 +255,7 @@ describe('convertDocument', () => {
           },
         },
       },
-    ])('$name', ({ graphql, expected }) => {
+    ], ({ graphql, expected }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
       expect(Either.isRight(result)).toBe(true)
@@ -329,7 +334,8 @@ describe('convertDocument', () => {
   })
 
   describe('directives', () => {
-    test.for([
+    // dprint-ignore
+    Test.suite<{ graphql: string; expected?: any; expectError?: boolean; expectedError?: any }>('directives', [
       {
         name: '@include with variable',
         graphql: `query GetUser($includeEmail: Boolean!) { user { name email @include(if: $includeEmail) } }`,
@@ -369,7 +375,7 @@ describe('convertDocument', () => {
           },
         },
       },
-    ])('field with $name directive', ({ graphql, expected, expectError, expectedError }) => {
+    ], ({ graphql, expected, expectError, expectedError }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
@@ -392,7 +398,8 @@ describe('convertDocument', () => {
   })
 
   describe('mutations', () => {
-    test.for([
+    // dprint-ignore
+    Test.suite<{ graphql: string; expected?: any; expectedError?: any }>('mutations', [
       {
         name: 'named mutation with variable',
         graphql: `mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name } }`,
@@ -417,7 +424,7 @@ describe('convertDocument', () => {
           },
         },
       },
-    ])('$name', ({ graphql, expected, expectedError }) => {
+    ], ({ graphql, expected, expectedError }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
@@ -519,7 +526,8 @@ describe('convertDocument', () => {
 })
 
 describe('graffleDocumentToString', () => {
-  test.for([
+  // dprint-ignore
+  Test.suite<{ graphql: string; clientName?: string; expectedCode: string }>('code generation', [
     {
       name: 'simple query',
       graphql: `query { user { name } }`,
@@ -610,7 +618,7 @@ describe('graffleDocumentToString', () => {
   }
 }).run()`,
     },
-  ])('generates code for $name', ({ graphql, clientName = 'client', expectedCode }) => {
+  ], ({ graphql, clientName = 'client', expectedCode }) => {
     const ast = parse(graphql)
     const result = convertDocument(ast)
 
