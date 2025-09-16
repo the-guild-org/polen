@@ -85,12 +85,6 @@
     "#lib/effect-glob/effect-glob": {
       "default": "./build/lib/effect-glob/$$.js"
     },
-    "#lib/semver": {
-      "default": "./build/lib/semver/$.js"
-    },
-    "#lib/semver/semver": {
-      "default": "./build/lib/semver/$$.js"
-    },
     "#lib/path-map": {
       "default": "./build/lib/path-map/$.js"
     },
