@@ -10,7 +10,7 @@ import type { TraversalLocation } from './traversal-location.js'
 // Re-export needed types
 export type { GetStepperInputTargetNode } from './stepper.js'
 
-export type Traverser<
+export type Resolve<
   $TargetSpec extends TargetSpec,
 > = (path: Path) => Either.Either<
   $TargetSpec['nodes'][keyof $TargetSpec['nodes']],
@@ -68,7 +68,7 @@ export interface Introspection<$TargetSpec extends TargetSpec> {
 export interface Definition<
   $TargetSpec extends TargetSpec,
 > {
-  create: (context: $TargetSpec['context']) => Traverser<$TargetSpec>
+  create: (context: $TargetSpec['context']) => Resolve<$TargetSpec>
   introspection?: Introspection<$TargetSpec>
 }
 
@@ -284,7 +284,7 @@ export const define = <$TargetSpec extends TargetSpec>(
             return Either.right(state.targetParentNode)
           }
 
-          return resolve as Traverser<$TargetSpec>
+          return resolve as Resolve<$TargetSpec>
         },
       }
     }
