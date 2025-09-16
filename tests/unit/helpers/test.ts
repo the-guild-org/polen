@@ -233,6 +233,7 @@ export namespace Test {
    *
    * @example Basic usage
    * ```typescript
+   * // dprint-ignore  <-- Place directly above Test.suite for column alignment
    * Test.suite<{ input: string; expected: string }>('string transformations', [
    *   { name: 'uppercase', input: 'hello', expected: 'HELLO' },
    *   { name: 'lowercase', input: 'WORLD', expected: 'world' },
@@ -241,7 +242,7 @@ export namespace Test {
    * })
    * ```
    *
-   * @example With custom name template
+   * @example With custom name template and column alignment
    * ```typescript
    * interface MathCase {
    *   a: number
@@ -249,9 +250,10 @@ export namespace Test {
    *   expected: number
    * }
    *
+   * // dprint-ignore
    * Test.suite<MathCase>('math operations', '$a + $b = $expected', [
-   *   { name: 'addition', a: 2, b: 3, expected: 5 },
-   *   { name: 'subtraction', a: 5, b: 3, expected: 2 },
+   *   { name: 'addition',     a: 2, b: 3, expected: 5 },
+   *   { name: 'subtraction',  a: 5, b: 3, expected: 2 },
    * ], ({ a, b, expected }) => {
    *   expect(calculate(a, b)).toBe(expected)
    * })

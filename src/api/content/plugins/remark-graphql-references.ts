@@ -1,6 +1,8 @@
 import type { LoadedCatalog } from '#api/schema/input-source/load'
 import { Diagnostic } from '#lib/diagnostic'
+import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
 import type { Version } from '#lib/version'
+import { Either } from 'effect'
 import type { InlineCode, Root } from 'mdast'
 import type { Plugin } from 'unified'
 import type { Parent } from 'unist'
@@ -39,10 +41,10 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
       let isValidPath = false
       let resolvedVersion: Version.Version | undefined
 
-      if (schema) {
+      if (schema && gqlPath) {
         try {
-          // Parse the path
-          const pathSegments = gqlPath.split('.')
+          // Parse the path using GraphQLSchemaPath
+          const parsedPath = GraphQLSchemaPath.decodeSync(gqlPath)
 
           // Check if this is a valid type/field reference
           if (schema._tag === 'CatalogVersioned') {
@@ -50,39 +52,27 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
             // Note: entries is a HashMap, need to iterate over its values
             const entries = Array.from(schema.entries)
             for (const [versionKey, versionSchema] of entries.reverse()) {
-              const typeExists = versionSchema.definition.getType(pathSegments[0]!)
-              if (typeExists) {
-                // If there's a field segment, validate it too
-                if (pathSegments[1]) {
-                  if ('getFields' in typeExists && typeof typeExists.getFields === 'function') {
-                    const fields = typeExists.getFields()
-                    if (fields[pathSegments[1]]) {
-                      isValidPath = true
-                      resolvedVersion = versionKey
-                      break
-                    }
-                  }
-                } else {
-                  isValidPath = true
-                  resolvedVersion = versionKey
-                  break
-                }
+              // Create a resolver for this version's schema
+              const resolver = GraphQLSchemaPath.Resolvers.GraphqlSchema.create({
+                schema: versionSchema.definition,
+              })
+              const result = resolver(parsedPath as any)
+
+              if (Either.isRight(result)) {
+                isValidPath = true
+                resolvedVersion = versionKey
+                break
               }
             }
           } else if (schema._tag === 'CatalogUnversioned') {
             // For unversioned schemas
-            const typeExists = schema.schema.definition.getType(pathSegments[0]!)
-            if (typeExists) {
-              if (pathSegments[1]) {
-                if ('getFields' in typeExists && typeof typeExists.getFields === 'function') {
-                  const fields = typeExists.getFields()
-                  if (fields[pathSegments[1]]) {
-                    isValidPath = true
-                  }
-                }
-              } else {
-                isValidPath = true
-              }
+            const resolver = GraphQLSchemaPath.Resolvers.GraphqlSchema.create({
+              schema: schema.schema.definition,
+            })
+            const result = resolver(parsedPath as any)
+
+            if (Either.isRight(result)) {
+              isValidPath = true
             }
           }
 
@@ -102,7 +92,9 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
             source: 'mdx-graphql-references',
             name: 'invalid-syntax',
             severity: 'warning',
-            message: `Invalid GraphQL path syntax: ${gqlPath} in ${file.path}`,
+            message: `Invalid GraphQL path syntax: ${gqlPath} in ${file.path}${
+              error instanceof Error ? `: ${error.message}` : ''
+            }`,
           })
         }
       }

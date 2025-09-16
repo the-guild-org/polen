@@ -358,7 +358,7 @@ Test.suite<{ input: string; error: string }>('makeSegment validation', [
 
 - READ ALL ITS JSDOC TO BEST UNDERSTAND THE FUNCTIONALITY AND WHAT IS IDIOMATIC
 - ALWAYS provide explicit type parameter to Test.suite
-- Use `// dprint-ignore` for column-aligned test data
+- Use `// dprint-ignore` DIRECTLY ABOVE Test.suite call (not inside the array) for column-aligned test data
 - Each case MUST have a `name` property with descriptive name
 - Use descriptive names, not just "test 1", "test 2"
 - Group expected values in an `expected` property for complex cases
@@ -379,7 +379,7 @@ Test.each(cases, ({ input, expected }) => {
 
 ```typescript
 // ✅ GOOD - Using Test.suite with proper typing and alignment
-// dprint-ignore
+// dprint-ignore    <-- Place DIRECTLY ABOVE Test.suite, not inside the array
 Test.suite<{
   input: string
   transform: 'upper' | 'lower'

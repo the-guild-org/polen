@@ -1,4 +1,5 @@
 import { Grafaid } from '#lib/grafaid'
+import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
 import { Code, Flex } from '@radix-ui/themes'
 import type * as React from 'react'
 import { ReferenceLink } from '../reference/ReferenceLink.js'
@@ -25,9 +26,38 @@ export const GraphQLReference: React.FC<GraphQLReferenceProps> = ({
   children,
 }) => {
   // Parse the path to extract type and optional field
-  const segments = path.split('.')
-  const typeName = segments[0]
-  const fieldName = segments[1]
+  let typeName: string | undefined
+  let fieldName: string | undefined
+
+  try {
+    // Try to parse with GraphQLSchemaPath for more robust handling
+    const parsedPath = GraphQLSchemaPath.decodeSync(path) as any
+
+    // Extract type name from the first segment
+    if (parsedPath?.next) {
+      const firstSegment = parsedPath.next
+      if (firstSegment?._tag === 'GraphQLPathSegmentType') {
+        typeName = firstSegment.name
+
+        // Check for field segment
+        if (firstSegment.next && firstSegment.next._tag === 'GraphQLPathSegmentField') {
+          fieldName = firstSegment.next.name
+        }
+      }
+    }
+  } catch {
+    // Fallback to simple string splitting if path parsing fails
+    const segments = path.split('.')
+    typeName = segments[0]
+    fieldName = segments[1]
+  }
+
+  // Fallback if parsing didn't work
+  if (!typeName) {
+    const segments = path.split('.')
+    typeName = segments[0]
+    fieldName = segments[1]
+  }
 
   // Determine the type kind based on common GraphQL type names
   let typeKind: Grafaid.Schema.TypeKindName = 'Object' // Default
