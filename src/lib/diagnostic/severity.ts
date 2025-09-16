@@ -1,5 +1,5 @@
-import { S } from 'graphql-kit'
 import { Order } from 'effect'
+import { S } from 'graphql-kit'
 
 // ============================================================================
 // Schema - Severity

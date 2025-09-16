@@ -1,5 +1,5 @@
-import { S } from 'graphql-kit'
 import { Match } from 'effect'
+import { S } from 'graphql-kit'
 
 // ============================================================================
 // Factory

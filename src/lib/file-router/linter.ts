@@ -1,6 +1,6 @@
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
 import { Idx, Path } from '@wollybeard/kit'
+import { S } from 'graphql-kit'
 import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.js'
 
 // ============================================================================

@@ -1,8 +1,8 @@
-import { Resource } from 'graphql-kit'
-import { S } from 'graphql-kit'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
+import { Resource } from 'graphql-kit'
+import { S } from 'graphql-kit'
 
 /**
  * Schema for the routes manifest generated during build.

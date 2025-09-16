@@ -1,8 +1,8 @@
 import { TinyGlobby } from '#dep/tiny-globby/index'
-import { S } from 'graphql-kit'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
 import { Effect, Exit } from 'effect'
+import { S } from 'graphql-kit'
 import * as NodePath from 'node:path'
 import { buildManifest, type PolenBuildManifest } from './manifest.js'
 

@@ -1,6 +1,6 @@
 import { renderDate } from '#template/routes/changelog/utils'
-import { expect } from 'playwright/test'
 import { DateOnly } from 'graphql-kit'
+import { expect } from 'playwright/test'
 import { configMemorySchemaRevisions, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
 

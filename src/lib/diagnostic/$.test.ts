@@ -1,5 +1,5 @@
-import { S } from 'graphql-kit'
 import { Ts } from '@wollybeard/kit'
+import { S } from 'graphql-kit'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Diagnostic } from './$.js'
 
