@@ -4,6 +4,7 @@ import { Grafaid } from '#lib/grafaid'
 import { GraphQLSchemaPath } from '#lib/graphql-schema-path'
 import type { Version } from '#lib/version'
 import { Either } from 'effect'
+import { getNamedType } from 'graphql'
 import type { InlineCode, Root } from 'mdast'
 import type { Plugin } from 'unified'
 import type { Parent } from 'unist'
@@ -65,7 +66,13 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
               if (Either.isRight(result)) {
                 isValidPath = true
                 resolvedVersion = versionKey
-                resolvedTypeKind = Grafaid.Schema.typeKindFromClass(result.right)
+                const resolvedNode = result.right
+                if (Grafaid.Schema.TypesLike.isNamed(resolvedNode)) {
+                  resolvedTypeKind = Grafaid.Schema.typeKindFromClass(resolvedNode)
+                } else {
+                  const namedType = getNamedType(resolvedNode.type)
+                  resolvedTypeKind = Grafaid.Schema.typeKindFromClass(namedType)
+                }
                 break
               }
             }
@@ -80,7 +87,13 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
 
             if (Either.isRight(result)) {
               isValidPath = true
-              resolvedTypeKind = Grafaid.Schema.typeKindFromClass(result.right)
+              const resolvedNode = result.right
+              if (Grafaid.Schema.TypesLike.isNamed(resolvedNode)) {
+                resolvedTypeKind = Grafaid.Schema.typeKindFromClass(resolvedNode)
+              } else {
+                const namedType = getNamedType(resolvedNode.type)
+                resolvedTypeKind = Grafaid.Schema.typeKindFromClass(namedType)
+              }
             }
           }
 

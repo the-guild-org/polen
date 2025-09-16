@@ -12,10 +12,8 @@ export type { GetStepperInputTargetNode } from './stepper.js'
 
 export type Traverser<
   $TargetSpec extends TargetSpec,
-> = <$PathNodeRoot extends Path>(
-  path: $PathNodeRoot,
-) => Either.Either<
-  $TargetSpec['nodes'][Nodes.$Types.GetChildrenTags<$PathNodeRoot>],
+> = (path: Path) => Either.Either<
+  $TargetSpec['nodes'][keyof $TargetSpec['nodes']],
   TraversalError.TraversalError
 >
 
