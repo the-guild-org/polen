@@ -1,4 +1,4 @@
-import { print } from '../printer-text.js'
+import { print } from '../printer.js'
 import { getSegmentName } from './error.js'
 import type { TraversalError } from './error.js'
 

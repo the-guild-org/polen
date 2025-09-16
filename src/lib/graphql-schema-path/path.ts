@@ -4,7 +4,7 @@ import { Nodes } from './nodes/$.js'
 import { parse as parseTokens } from './parser/parser.js'
 import { tokenize } from './parser/tokenizer.js'
 import type { ParsePath } from './parser/type-parser.js'
-import { print } from './printer-text.js'
+import { print } from './printer.js'
 
 /**
  * The root GraphQL schema path structure with bidirectional string codec.

@@ -20,19 +20,19 @@ export type Any =
 
 export type Memberable = Types.Enum | Types.Union
 export const isMemberable = (value: unknown): value is Memberable => {
-  return false // TODO: implement
+  return Types.isEnum(value) || Types.isUnion(value)
 }
 
 export type Field = Types.InputField | Types.OutputField
 
 export type Argable = Types.Directive | Types.OutputField
 export const isArgable = (value: unknown): value is Argable => {
-  return false // TODO: implement
+  return Types.isDirective(value) || Types.isOutputField(value)
 }
 
 export type Typeable = Types.Argument | Field
 export const isTypable = (value: unknown): value is Typeable => {
-  return false // TODO: implement
+  return Types.isArgument(value) || Types.isInputField(value) || Types.isOutputField(value)
 }
 
 export const getTypeableNamedType = (value: Typeable): Named => {
@@ -41,12 +41,13 @@ export const getTypeableNamedType = (value: Typeable): Named => {
 
 export type Input = Types.Enum | Types.Scalar | Types.InputObject
 export const isInput = (value: unknown): value is Input => {
-  return false // TODO: implement
+  return Types.isEnum(value) || Types.isScalar(value) || Types.isInputObject(value)
 }
 
 export type Output = Types.Enum | Types.Scalar | Types.Interface | Types.Union | Types.Object
 export const isOutput = (value: unknown): value is Output => {
-  return false // TODO: implement
+  return Types.isEnum(value) || Types.isScalar(value) || Types.isInterface(value)
+    || Types.isUnion(value) || Types.isObject(value)
 }
 
 export type Named = GraphQLNamedType

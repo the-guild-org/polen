@@ -43,15 +43,19 @@ export {
 export type OutputField<TSource = any, TContext = any, TArgs = any> = GraphQLOutputField<TSource, TContext, TArgs>
 
 export const isOutputField = (value: unknown): value is GraphQLField => {
-  return false // TODO: implement
+  return typeof value === 'object' && value !== null && 'args' in value && 'type' in value && 'name' in value
 }
 
 export const isArgument = (value: unknown): value is GraphQLArgument => {
-  return false // TODO: implement
+  return typeof value === 'object' && value !== null
+    && 'name' in value && 'type' in value
+    && 'defaultValue' in value && !('args' in value)
 }
 
 export const isInputField = (value: unknown): value is GraphQLInputField => {
-  return false // TODO: implement
+  return typeof value === 'object' && value !== null
+    && 'name' in value && 'type' in value
+    && 'defaultValue' in value && !('args' in value)
 }
 
 export const isRoot = (map: RootTypeMap, type: unknown): boolean => {

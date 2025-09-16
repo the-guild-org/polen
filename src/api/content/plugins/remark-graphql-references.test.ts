@@ -77,13 +77,13 @@ describe('path transformation', () => {
       expect(paragraph?.children[0]).toMatchObject({
         type: 'mdxJsxTextElement',
         name: 'GraphQLReference',
-        attributes: [
+        attributes: expect.arrayContaining([
           {
             type: 'mdxJsxAttribute',
             name: 'path',
             value: path,
           },
-        ],
+        ]),
       })
 
       expect(onDiagnostic).not.toHaveBeenCalled()

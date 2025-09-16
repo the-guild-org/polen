@@ -9,6 +9,7 @@ import { typeKindTokensIndex } from './type-kind-tokens.js'
 interface GraphQLReferenceProps {
   path: string
   version?: string
+  kind?: Grafaid.Schema.TypeKindName
   children?: React.ReactNode
 }
 
@@ -23,11 +24,14 @@ interface GraphQLReferenceProps {
 export const GraphQLReference: React.FC<GraphQLReferenceProps> = ({
   path,
   version, // Currently handled by useVersionPath in ReferenceLink
+  kind,
   children,
 }) => {
   // Parse the path to extract type and optional field
   let typeName: string | undefined
   let fieldName: string | undefined
+  // Use the provided kind or default to 'Object'
+  const typeKind: Grafaid.Schema.TypeKindName = kind || 'Object'
 
   try {
     // Try to parse with GraphQLSchemaPath for more robust handling
@@ -46,41 +50,13 @@ export const GraphQLReference: React.FC<GraphQLReferenceProps> = ({
       }
     }
   } catch {
-    // Fallback to simple string splitting if path parsing fails
-    const segments = path.split('.')
-    typeName = segments[0]
-    fieldName = segments[1]
+    // If parsing fails, render as plain text (not as a link)
+    return <>{children || path}</>
   }
 
-  // Fallback if parsing didn't work
+  // If we couldn't extract a type name, render as plain text
   if (!typeName) {
-    const segments = path.split('.')
-    typeName = segments[0]
-    fieldName = segments[1]
-  }
-
-  // Determine the type kind based on common GraphQL type names
-  let typeKind: Grafaid.Schema.TypeKindName = 'Object' // Default
-
-  // Common GraphQL root types
-  if (typeName === 'Query' || typeName === 'Mutation' || typeName === 'Subscription') {
-    typeKind = 'Object'
-  } // Common suffix patterns
-  else if (typeName?.endsWith('Input')) {
-    typeKind = 'InputObject'
-  } else if (typeName?.endsWith('Type') || typeName?.endsWith('Enum')) {
-    typeKind = 'Enum'
-  } else if (typeName?.endsWith('Interface')) {
-    typeKind = 'Interface'
-  } else if (typeName?.endsWith('Union')) {
-    typeKind = 'Union'
-  } else if (typeName?.endsWith('Connection') || typeName?.endsWith('Edge') || typeName?.endsWith('PageInfo')) {
-    typeKind = 'Object'
-  } // Special scalar types
-  else if (
-    typeName === 'String' || typeName === 'Int' || typeName === 'Float' || typeName === 'Boolean' || typeName === 'ID'
-  ) {
-    typeKind = 'Scalar'
+    return <>{children || path}</>
   }
 
   const color = typeKindTokensIndex[typeKind]?.color || 'gray'
@@ -96,7 +72,7 @@ export const GraphQLReference: React.FC<GraphQLReferenceProps> = ({
         `}
       </style>
       <ReferenceLink
-        type={typeName!}
+        type={typeName}
         {...(fieldName ? { field: fieldName } : {})}
         className='graphql-reference-link'
       >
