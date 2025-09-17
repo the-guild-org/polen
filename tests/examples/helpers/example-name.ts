@@ -1,9 +1,13 @@
-import { z } from 'zod'
+import * as S from 'effect/Schema'
 
-export const ExampleNameEnum = {
-  hive: `hive`,
-} as const
+export namespace ExampleName {
+  export const ExampleName = S.Enums(
+    {
+      hive: `hive`,
+    } as const,
+  )
 
-export type ExampleName = (typeof ExampleNameEnum)[keyof typeof ExampleNameEnum]
+  export type ExampleName = S.Schema.Type<typeof ExampleName>
 
-export const ExampleName = z.nativeEnum(ExampleNameEnum)
+  export const decodeSync = S.decodeUnknownSync(ExampleName)
+}

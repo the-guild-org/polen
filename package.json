@@ -292,8 +292,7 @@
     "typescript": "^5.9.2",
     "unist-util-visit": "^5.0.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4",
-    "zod": "3.25.74"
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.11.1",
   "scripts": {

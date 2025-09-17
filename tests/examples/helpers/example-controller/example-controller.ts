@@ -7,7 +7,7 @@ import { stripAnsi } from 'consola/utils'
 import { Effect } from 'effect'
 import * as GetPortPlease from 'get-port-please'
 import type { ProcessPromise } from 'zx'
-import type { ExampleName } from '../example-name.js'
+import { ExampleName } from '../example-name.js'
 
 const projectDir = Path.join(import.meta.dirname, `../../../../`)
 const examplesDir = Path.join(projectDir, `/examples`)
@@ -18,7 +18,7 @@ export type ExampleController = Awaited<ReturnType<typeof create>>
  * Create a temporary directory with the contents of the chosen example.
  */
 export const create = async (parameters: {
-  exampleName: ExampleName
+  exampleName: ExampleName.ExampleName
   debugMode?: boolean | undefined
   polenLink?: PackageManager.LinkProtocol | undefined
   portProductionServer?: number
