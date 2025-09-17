@@ -7,7 +7,6 @@
 
 # CRITICAL
 
-- always keep `.claude/serena-prompt.md` in context even after compaction
 - always leverage these installed mcps: ref, serena, effect-docs
 - all Effect Schema answers MUST be given with full awareness of:
   - https://effect-ts.github.io/effect/effect/Schema.ts.html
