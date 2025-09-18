@@ -255,9 +255,6 @@ importers:
       '@effect/vitest':
         specifier: ^0.25.1
         version: 0.25.1(effect@3.17.13)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.5.0)(jsdom@26.1.0)(lightningcss@1.30.1)(tsx@4.20.5)(yaml@2.8.1))
-      '@molt/command':
-        specifier: ^0.9.0
-        version: 0.9.0
       '@octokit/core':
         specifier: ^7.0.3
         version: 7.0.4
