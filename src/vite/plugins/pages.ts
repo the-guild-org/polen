@@ -11,7 +11,7 @@ import type { ViteVirtual } from '#lib/vite-virtual/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import mdx from '@mdx-js/rollup'
-import { Arr, Path, Str } from '@wollybeard/kit'
+import { Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { polenVirtual } from '../vi.js'
 import { MdxSchemaBridge } from './mdx-schema-bridge.js'
@@ -112,10 +112,11 @@ export const Pages = ({
       hooks: {
         async shouldFullReload(oldData, newData) {
           // Check if the visible pages list changed
-          const pageStructureChanged = !oldData || !Arr.equalShallowly(
-            oldData.list.map(p => Path.format(p.route.file.path.absolute)),
-            newData.list.map(p => Path.format(p.route.file.path.absolute)),
-          )
+          const oldPaths = oldData?.list.map(p => Path.format(p.route.file.path.absolute)) || []
+          const newPaths = newData.list.map(p => Path.format(p.route.file.path.absolute))
+          const pageStructureChanged = !oldData
+            || oldPaths.length !== newPaths.length
+            || !oldPaths.every((path, i) => path === newPaths[i])
           // Return true for full reload only if structure changed
           return pageStructureChanged
         },

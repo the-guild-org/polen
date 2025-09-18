@@ -1,12 +1,9 @@
 import type { SelfContainedModeHooksData } from '#cli/_/self-contained-mode'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
-import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { FileSystem } from '@effect/platform/FileSystem'
-import type { Prom } from '@wollybeard/kit'
-import { Path } from '@wollybeard/kit'
+import { Fs, Path, Prom } from '@wollybeard/kit'
 import { Effect, ParseResult } from 'effect'
-import { assertOptionalPathAbsolute, pickFirstPathExisting } from 'graphql-kit'
 import * as Module from 'node:module'
 import type { WritableDeep } from 'type-fest'
 import type { ConfigInput } from './input.js'
@@ -27,7 +24,7 @@ let isSelfContainedModeRegistered = false
 export const load = (options: LoadOptions): Effect.Effect<ConfigInput, Error, FileSystem> =>
   Effect.gen(function*() {
     const debug = debugPolen.sub(`load`)
-    assertOptionalPathAbsolute(options.dir)
+    Path.assertOptionalAbsolute(options.dir)
 
     //
     // ━━ Enable Self-Contained Mode
@@ -54,7 +51,7 @@ export const load = (options: LoadOptions): Effect.Effect<ConfigInput, Error, Fi
     //
 
     const filePaths = fileNames.map(fileName => Path.join(options.dir, fileName))
-    const filePath = yield* pickFirstPathExisting(filePaths)
+    const filePath = yield* Fs.pickFirstPathExisting(filePaths)
 
     let configInput: ConfigInput
     if (!filePath) {

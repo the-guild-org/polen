@@ -1,10 +1,10 @@
+import { O, S } from '#dep/effect'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
+import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { S } from 'graphql-kit'
-import * as NodePath from 'node:path'
 
 const debug = debugPolen.sub(`api:cache`)
 
@@ -17,18 +17,20 @@ const debug = debugPolen.sub(`api:cache`)
  * - Project build output (build/)
  * - Project Vite cache (node_modules/.vite)
  */
-export const deleteAll = async (projectRoot: string): Promise<void> => {
-  const deleteAllEffect = Effect.gen(function*() {
+export const deleteAll = (
+  projectRoot: string,
+): Effect.Effect<void, never, FileSystem.FileSystem> =>
+  Effect.gen(function*() {
     debug(`deleteAll`, { projectRoot })
     const fs = yield* FileSystem.FileSystem
 
     // Framework caches (Polen's internal caches)
-    const frameworkCacheRoot = NodePath.join(packagePaths.rootDir, `node_modules`, `.vite`)
-    const frameworkDevAssets = NodePath.join(frameworkCacheRoot, `polen-assets`)
+    const frameworkCacheRoot = Path.join(packagePaths.rootDir, `node_modules`, `.vite`)
+    const frameworkDevAssets = Path.join(frameworkCacheRoot, `polen-assets`)
 
     // Project caches
-    const projectBuildDir = NodePath.join(projectRoot, `build`)
-    const projectViteCache = NodePath.join(projectRoot, `node_modules`, `.vite`)
+    const projectBuildDir = Path.join(projectRoot, `build`)
+    const projectViteCache = Path.join(projectRoot, `node_modules`, `.vite`)
 
     const cachePaths = [
       frameworkDevAssets,
@@ -56,41 +58,34 @@ export const deleteAll = async (projectRoot: string): Promise<void> => {
     debug(`deleteAllComplete`)
   })
 
-  return Effect.runPromise(
-    deleteAllEffect.pipe(
-      Effect.provide(NodeFileSystem.layer),
-    ),
-  )
-}
-
 // Types
 
 export interface CacheInfo {
   rootPath: string
   developmentAssets: CacheEntry & {
-    tree?: TreeNode[] | undefined
+    tree: O.Option<TreeNode[]>
   }
   vite: CacheEntry & {
-    optimizedDependencies?:
-      | Array<{
+    optimizedDependencies: O.Option<
+      Array<{
         name: string
         size: number
       }>
-      | undefined
+    >
   }
 }
 
 interface CacheEntry {
   path: string
   exists: boolean
-  size?: number | undefined
+  size: O.Option<number>
 }
 
 export interface TreeNode {
   name: string
   type: 'file' | 'directory'
-  size?: number | undefined
-  children?: TreeNode[] | undefined
+  size: O.Option<number>
+  children: O.Option<TreeNode[]>
 }
 
 // Helpers
@@ -108,19 +103,26 @@ const getDirectorySize = (dirPath: string): Effect.Effect<number, never, FileSys
     )
 
     for (const entry of entries) {
-      const fullPath = NodePath.join(dirPath, entry)
+      const fullPath = Path.join(dirPath, entry)
       const fileInfo = yield* fs.stat(fullPath).pipe(
-        Effect.catchAll(() => Effect.succeed(null)),
+        Effect.map(O.some),
+        Effect.catchAll(() => Effect.succeed(O.none())),
       )
 
-      if (fileInfo) {
-        if (fileInfo.type === 'Directory') {
-          const subSize = yield* getDirectorySize(fullPath)
-          totalSize += subSize
-        } else if (fileInfo.type === 'File') {
-          totalSize += Number(fileInfo.size)
-        }
-      }
+      yield* O.match(fileInfo, {
+        onNone: () => Effect.succeed(undefined),
+        onSome: (info) => {
+          if (info.type === 'Directory') {
+            return Effect.map(getDirectorySize(fullPath), (subSize) => {
+              totalSize += subSize
+            })
+          } else if (info.type === 'File') {
+            totalSize += Number(info.size)
+            return Effect.succeed(undefined)
+          }
+          return Effect.succeed(undefined)
+        },
+      })
     }
 
     return totalSize
@@ -147,28 +149,31 @@ const buildDirectoryTree = (
     )
 
     for (const entryName of entries) {
-      const fullPath = NodePath.join(dirPath, entryName)
+      const fullPath = Path.join(dirPath, entryName)
       const fileInfo = yield* fs.stat(fullPath).pipe(
-        Effect.catchAll(() => Effect.succeed(null)),
+        Effect.map(O.some),
+        Effect.catchAll(() => Effect.succeed(O.none())),
       )
 
-      if (fileInfo) {
-        const node: TreeNode = {
-          name: entryName,
-          type: fileInfo.type === 'Directory' ? 'directory' : 'file',
-        }
+      yield* O.match(fileInfo, {
+        onNone: () => Effect.succeed(undefined),
+        onSome: (info) =>
+          Effect.gen(function*() {
+            const node: TreeNode = {
+              name: entryName,
+              type: info.type === 'Directory' ? 'directory' : 'file',
+              size: info.type === 'File' ? O.some(Number(info.size)) : O.none(),
+              children: O.none(),
+            }
 
-        if (fileInfo.type === 'File') {
-          node.size = Number(fileInfo.size)
-        }
+            if (info.type === 'Directory' && currentDepth + 1 < maxDepth) {
+              const children = yield* buildDirectoryTree(fullPath, currentDepth + 1, maxDepth)
+              node.children = children.length > 0 ? O.some(children) : O.none()
+            }
 
-        if (fileInfo.type === 'Directory' && currentDepth + 1 < maxDepth) {
-          const children = yield* buildDirectoryTree(fullPath, currentDepth + 1, maxDepth)
-          node.children = children
-        }
-
-        tree.push(node)
-      }
+            tree.push(node)
+          }),
+      })
     }
 
     return tree
@@ -177,58 +182,70 @@ const buildDirectoryTree = (
 /**
  * Get information about Polen's internal caches.
  */
-export const info = async (options?: { depth?: number }): Promise<CacheInfo> => {
-  const infoEffect = Effect.gen(function*() {
+export const info = (
+  options?: { depth?: number },
+): Effect.Effect<CacheInfo, Error, FileSystem.FileSystem> =>
+  Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
     const depth = options?.depth ?? 2
-    const cacheRoot = NodePath.join(packagePaths.rootDir, `node_modules`, `.vite`)
-    const devAssetsPath = NodePath.join(cacheRoot, `polen-assets`)
-    const depsPath = NodePath.join(cacheRoot, `deps`)
+    const cacheRoot = Path.join(packagePaths.rootDir, `node_modules`, `.vite`)
+    const devAssetsPath = Path.join(cacheRoot, `polen-assets`)
+    const depsPath = Path.join(cacheRoot, `deps`)
 
     debug(`info`, { cacheRoot, depth })
 
     // Check development assets
     const devAssetsExists = yield* fs.exists(devAssetsPath)
-    let devAssetsSize: number | undefined
-    let devAssetsTree: TreeNode[] | undefined
-
-    if (devAssetsExists) {
-      devAssetsSize = yield* getDirectorySize(devAssetsPath)
-      devAssetsTree = yield* buildDirectoryTree(devAssetsPath, 0, depth)
-    }
+    const devAssetsSize = devAssetsExists
+      ? yield* Effect.map(getDirectorySize(devAssetsPath), O.some)
+      : O.none()
+    const devAssetsTree = devAssetsExists
+      ? yield* Effect.map(buildDirectoryTree(devAssetsPath, 0, depth), (tree) =>
+        tree.length > 0 ? O.some(tree) : O.none())
+      : O.none()
 
     // Check vite cache
     const viteExists = yield* fs.exists(cacheRoot)
-    let viteSize: number | undefined
-    let optimizedDeps: Array<{ name: string; size: number }> | undefined
+    const viteSize = viteExists
+      ? yield* Effect.map(getDirectorySize(cacheRoot), O.some)
+      : O.none()
+    let optimizedDeps: O.Option<Array<{ name: string; size: number }>> = O.none()
 
     if (viteExists) {
-      viteSize = yield* getDirectorySize(cacheRoot)
-
       // Get optimized dependencies
       const depFiles = yield* fs.readDirectory(depsPath).pipe(
-        Effect.catchAll(() => Effect.succeed([])),
+        Effect.catchAll(() =>
+          Effect.succeed([])
+        ),
       )
 
-      optimizedDeps = []
+      const deps: Array<{ name: string; size: number }> = []
       for (const file of depFiles) {
         if (file.endsWith('.js') && !file.startsWith('chunk-')) {
-          const filePath = NodePath.join(depsPath, file)
+          const filePath = Path.join(depsPath, file)
           const fileInfo = yield* fs.stat(filePath).pipe(
-            Effect.catchAll(() => Effect.succeed(null)),
+            Effect.map(O.some),
+            Effect.catchAll(() => Effect.succeed(O.none())),
           )
 
-          if (fileInfo && fileInfo.type === 'File') {
-            optimizedDeps.push({
-              name: file.replace('.js', ''),
-              size: Number(fileInfo.size),
-            })
-          }
+          yield* O.match(fileInfo, {
+            onNone: () => Effect.succeed(undefined),
+            onSome: (info) => {
+              if (info.type === 'File') {
+                deps.push({
+                  name: file.replace('.js', ''),
+                  size: Number(info.size),
+                })
+              }
+              return Effect.succeed(undefined)
+            },
+          })
         }
       }
 
       // Sort by size descending
-      optimizedDeps.sort((a, b) => b.size - a.size)
+      deps.sort((a, b) => b.size - a.size)
+      optimizedDeps = deps.length > 0 ? O.some(deps) : O.none()
     }
 
     return {
@@ -247,10 +264,3 @@ export const info = async (options?: { depth?: number }): Promise<CacheInfo> => 
       },
     }
   })
-
-  return Effect.runPromise(
-    infoEffect.pipe(
-      Effect.provide(NodeFileSystem.layer),
-    ),
-  )
-}

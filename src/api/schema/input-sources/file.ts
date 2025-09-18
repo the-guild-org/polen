@@ -2,12 +2,7 @@ import { InputSource } from '#api/schema/input-source/$'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Change } from 'graphql-kit'
-import { DateOnly } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
+import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
 
 const defaultPaths = {
   schemaFile: `./schema.graphql`,

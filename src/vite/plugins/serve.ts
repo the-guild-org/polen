@@ -1,13 +1,14 @@
 import type { Api } from '#api/$'
 import { reportError } from '#api/server/report-error'
+import { O } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { debugPolen } from '#singletons/debug'
 import type { App, AppOptions } from '#template/server/app'
 import * as HonoNodeServer from '@hono/node-server'
-import { Err, Null } from '@wollybeard/kit'
-import { ResponseInternalServerError } from 'graphql-kit'
-import * as NodePath from 'node:path'
+import { Err, Http } from '@wollybeard/kit'
+import { Path } from '@wollybeard/kit'
+import { Effect } from 'effect'
 
 interface AppServerModule {
   createApp: (options: AppOptions) => App
@@ -61,37 +62,47 @@ export const Serve = (
   const reloadApp = async (server: Vite.ViteDevServer): AppPromise => {
     debug(`reloadApp`)
 
-    const App = await ssrLoadModule<AppServerModule>(server, config.paths.framework.template.absolute.server.app)
-    if (Err.is(App)) return App
-    if (Null.is(App)) return App
+    const appOption = await ssrLoadModule<AppServerModule>(server, config.paths.framework.template.absolute.server.app)
 
-    return App.createApp({
-      hooks: {
-        transformHtml: [
-          // Inject entry client script for development
-          createHtmlTransformer((html, ___ctx) => {
-            const entryClientPath = `/${config.paths.framework.template.relative.client.entrypoint}`
-            const entryClientScript = `<script type="module" src="${entryClientPath}"></script>`
-            return html.replace(`</body>`, `${entryClientScript}\n</body>`)
-          }),
-          // Apply Vite's transformations
-          createHtmlTransformer(async (html, ctx) => {
-            return await server.transformIndexHtml(ctx.req.url, html)
-          }),
-        ],
-      },
-      paths: {
-        base: config.build.base,
-        assets: {
-          // Calculate relative path from CWD to Polen's assets
-          // CWD is user's project directory where they run 'pnpm dev'
-          // Assets are in Polen's dev assets directory
-          directory: NodePath.relative(
-            process.cwd(),
-            config.paths.framework.devAssets.absolute,
-          ),
-          route: config.server.routes.assets,
-        },
+    return O.match(appOption, {
+      onNone: () => O.none<App | Error>(),
+      onSome: (appOrError) => {
+        if (Err.is(appOrError)) {
+          return O.some<App | Error>(appOrError)
+        }
+
+        return O.some(appOrError.createApp({
+          hooks: {
+            transformHtml: [
+              // Inject entry client script for development
+              createHtmlTransformer((html, ___ctx) => {
+                const entryClientPath = `/${config.paths.framework.template.relative.client.entrypoint}`
+                const entryClientScript = `<script type="module" src="${entryClientPath}"></script>`
+                return Effect.succeed(html.replace(`</body>`, `${entryClientScript}\n</body>`))
+              }),
+              // Apply Vite's transformations
+              createHtmlTransformer((html, ctx) => {
+                return Effect.tryPromise({
+                  try: () => server.transformIndexHtml(ctx.req.url, html),
+                  catch: (error) => new Error(`Failed to transform HTML: ${String(error)}`),
+                }).pipe(Effect.orDie)
+              }),
+            ],
+          },
+          paths: {
+            base: config.build.base,
+            assets: {
+              // Calculate relative path from CWD to Polen's assets
+              // CWD is user's project directory where they run 'pnpm dev'
+              // Assets are in Polen's dev assets directory
+              directory: Path.relative(
+                process.cwd(),
+                config.paths.framework.devAssets.absolute,
+              ),
+              route: config.server.routes.assets,
+            },
+          },
+        }))
       },
     })
   }
@@ -142,16 +153,17 @@ export const Serve = (
 
           void HonoNodeServer.getRequestListener(async request => {
             // Always await the current app promise
-            const app = await appPromise
-            if (Err.is(app)) {
-              return ResponseInternalServerError()
-            }
-            if (Null.is(app)) {
-              // todo better response type, 'not available' etc.
-              return ResponseInternalServerError()
-            }
+            const appOption = await appPromise
 
-            return await app.fetch(request)
+            return O.match(appOption, {
+              onNone: () => Http.Response.internalServerError(),
+              onSome: async (appOrError) => {
+                if (Err.is(appOrError)) {
+                  return Http.Response.internalServerError()
+                }
+                return await appOrError.fetch(request)
+              },
+            })
           })(req, res)
         })
       }
@@ -176,9 +188,9 @@ const isFetchTransportDisconnectError = (error: Error): boolean => {
   return regex.test(error.message)
 }
 /**
- * null when dev server was closed/is closing making ssrLoadModule impossible to succeed.
+ * O.none() when dev server was closed/is closing making ssrLoadModule impossible to succeed.
  */
-type AppPromiseGeneric<$AppServerModule> = Promise<$AppServerModule | Error | null>
+type AppPromiseGeneric<$AppServerModule> = Promise<O.Option<$AppServerModule | Error>>
 
 const ssrLoadModule = async <$AppServerModule>(
   server: Vite.ViteDevServer,
@@ -187,14 +199,14 @@ const ssrLoadModule = async <$AppServerModule>(
   return await server
     // .ssrLoadModule(config.paths.framework.template.absolute.server.app)
     .ssrLoadModule(appModulePath)
-    .then(module => module as $AppServerModule)
+    .then(module => O.some(module as $AppServerModule))
     .catch(async (error) => {
-      if (isFetchTransportDisconnectError(error) && isServerClosing(server)) return null
+      if (isFetchTransportDisconnectError(error) && isServerClosing(server)) return O.none()
       if (Err.is(error)) {
         // ━ Clean Stack Trace
         server.ssrFixStacktrace(error)
         reportError(error)
-        return error
+        return O.some(error)
       }
       throw error
     })

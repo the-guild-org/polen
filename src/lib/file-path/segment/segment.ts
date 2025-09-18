@@ -1,6 +1,6 @@
+import { S } from '#dep/effect'
+import { Path } from '@wollybeard/kit'
 import { Brand } from 'effect'
-import { S } from 'graphql-kit'
-import * as Path from 'node:path'
 
 // ============================================================================
 // Constants

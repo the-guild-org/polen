@@ -1,3 +1,4 @@
+// TODO: Review and replace inline styles with Tailwind classes
 /**
  * Popover component for GraphQL tokens
  *
@@ -7,8 +8,8 @@
 
 import type { React } from '#dep/react/index'
 import { Cross1Icon } from '@radix-ui/react-icons'
-import { Button, Popover } from '@radix-ui/themes'
 import { polenUrlPath } from '../../../lib/polen-url.js'
+import { Button, Popover, PopoverContent, PopoverTrigger } from '../../ui/index.js'
 import type { GraphQLToken } from '../lib/parser.js'
 import {
   isArgument,
@@ -472,8 +473,8 @@ export const GraphQLTokenPopover: React.FC<GraphQLTokenPopoverProps> = ({
   )
 
   return (
-    <Popover.Root open={open}>
-      <Popover.Trigger>
+    <Popover open={open}>
+      <PopoverTrigger>
         <span
           style={{ cursor: token.polen.isInteractive() ? 'pointer' : 'default' }}
           onMouseEnter={onTriggerHover}
@@ -482,9 +483,9 @@ export const GraphQLTokenPopover: React.FC<GraphQLTokenPopoverProps> = ({
         >
           {children}
         </span>
-      </Popover.Trigger>
+      </PopoverTrigger>
 
-      <Popover.Content
+      <PopoverContent
         side='top'
         align='start'
         sideOffset={4}
@@ -499,7 +500,7 @@ export const GraphQLTokenPopover: React.FC<GraphQLTokenPopoverProps> = ({
         }}
       >
         {popoverContent}
-      </Popover.Content>
-    </Popover.Root>
+      </PopoverContent>
+    </Popover>
   )
 }

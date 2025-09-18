@@ -1,11 +1,10 @@
 import type { Content } from '#api/content/$'
-import { Swiss } from '#lib/swiss'
-import { Box } from '@radix-ui/themes'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
 import { HamburgerMenu } from '../components/HamburgerMenu.js'
 import { Sidebar } from '../components/sidebar/Sidebar.js'
+import { Box, Container, GridItem } from '../components/ui/index.js'
 
 // Template layer extension: Allow React elements in title
 interface TemplateItemLink extends Omit<Content.ItemLink, 'title'> {
@@ -38,7 +37,7 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
   const isShowSidebar = sidebar && sidebar.length > 0
 
   return (
-    <Swiss.Body subgrid>
+    <Container subgrid>
       {/* Mobile menu - only show when sidebar exists */}
       {isShowSidebar && (
         <Box display={{ initial: `block`, md: `none` }} mb='4'>
@@ -59,7 +58,7 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
 
       {/* Desktop Sidebar - 3 columns */}
       {isShowSidebar && (
-        <Swiss.Item cols={{ initial: 3, md: 3 }}>
+        <GridItem cols={{ initial: 3, md: 3 }}>
           <Box
             display={{ initial: `none`, md: `block` }}
             position={'sticky'}
@@ -71,13 +70,13 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
               {...(topContent !== undefined && { topContent })}
             />
           </Box>
-        </Swiss.Item>
+        </GridItem>
       )}
 
       {/* Main Content - 8 columns on mobile, 9 on desktop when sidebar exists, 12 when not */}
-      <Swiss.Item cols={6} start={5}>
+      <GridItem cols={6} start={5}>
         {children}
-      </Swiss.Item>
-    </Swiss.Body>
+      </GridItem>
+    </Container>
   )
 }

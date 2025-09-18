@@ -1,5 +1,5 @@
+import { Test } from '@wollybeard/kit/test'
 import { expect } from 'vitest'
-import { Test } from '../../../tests/unit/helpers/test.js'
 import { lint } from './linter.js'
 import type { Route } from './route.js'
 
@@ -42,8 +42,8 @@ interface LinterTestCase {
 }
 
 // dprint-ignore
-Test.suite<LinterTestCase>('linter', [
-  { 
+Test.Table.suite<LinterTestCase>('linter', [
+  {
     name: 'warns about numbered prefix on index files',
     routes: [
       { path: ['docs'], order: 10, isIndex: true }, // 10_index.md
@@ -65,7 +65,7 @@ Test.suite<LinterTestCase>('linter', [
       })
     }
   },
-  { 
+  {
     name: 'no warning for index files without numbered prefix',
     routes: [
       { path: ['docs'], isIndex: true }, // index.md
@@ -73,7 +73,7 @@ Test.suite<LinterTestCase>('linter', [
     ],
     expectedDiagnosticCount: 0,
   },
-  { 
+  {
     name: 'warns about numbered prefix conflicts',
     routes: [
       { path: ['about'], order: 10 }, // 10_about.md
@@ -89,7 +89,7 @@ Test.suite<LinterTestCase>('linter', [
       })
     }
   },
-  { 
+  {
     name: 'warns about index/literal conflicts',
     routes: [
       { path: ['docs'], isIndex: true }, // docs/index.md
@@ -105,7 +105,7 @@ Test.suite<LinterTestCase>('linter', [
       })
     }
   },
-  { 
+  {
     name: 'warns about numbered prefix conflicts with same order number',
     routes: [
       { path: ['about'], order: 10 }, // 10_about.md
@@ -124,9 +124,9 @@ Test.suite<LinterTestCase>('linter', [
 ], ({ routes, expectedDiagnosticCount, expectedMessage, checkDiagnostic }) => {
   const routeObjects = routes.map(r => createRoute(r.path, r.order, r.isIndex))
   const result = lint(routeObjects)
-  
+
   expect(result.diagnostics).toHaveLength(expectedDiagnosticCount)
-  
+
   if (expectedDiagnosticCount > 0 && checkDiagnostic) {
     checkDiagnostic(result.diagnostics[0])
   }

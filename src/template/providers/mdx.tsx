@@ -1,4 +1,9 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { MDXProvider } from '@mdx-js/react'
+import type { GraphQLSchema } from 'graphql'
+import type * as React from 'react'
+import { CodeBlock } from '../components/CodeBlock.js'
+import { GraphQLReference } from '../components/graphql/GraphQLReference.js'
 import {
   Badge,
   Box,
@@ -17,11 +22,7 @@ import {
   Tabs,
   Text,
   Tooltip,
-} from '@radix-ui/themes'
-import type { GraphQLSchema } from 'graphql'
-import type * as React from 'react'
-import { CodeBlock } from '../components/CodeBlock.js'
-import { GraphQLReference } from '../components/graphql/GraphQLReference.js'
+} from '../components/ui/index.js'
 
 interface MdxProviderProps extends React.PropsWithChildren {
   schema?: GraphQLSchema | null
@@ -58,12 +59,12 @@ export const MdxProvider: React.FC<MdxProviderProps> = ({ children, schema }) =>
       // Direct Radix components for MDX
       Badge,
       Button,
-      // @ts-expect-error
+      // @ts-expect-error - MDX type mismatch with namespace objects
       Callout,
       Card,
-      // @ts-expect-error
+      // @ts-expect-error - MDX type mismatch with namespace objects
       DataList,
-      // @ts-expect-error
+      // @ts-expect-error - MDX type mismatch with namespace objects
       Tabs,
       Tooltip,
 

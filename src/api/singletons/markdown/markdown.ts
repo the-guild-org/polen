@@ -16,7 +16,10 @@ const createProcessor = () => {
 
 export const parse = (content: string): Effect.Effect<string, Error> =>
   Effect.gen(function*() {
-    const result = yield* Effect.promise(() => createProcessor().process(content))
+    const result = yield* Effect.tryPromise({
+      try: () => createProcessor().process(content),
+      catch: (error) => new Error(`Failed to parse markdown: ${String(error)}`),
+    })
     return String(result)
   })
 

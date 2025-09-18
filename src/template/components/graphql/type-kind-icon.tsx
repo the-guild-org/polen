@@ -1,6 +1,6 @@
 import type { React } from '#dep/react/index'
-import { Code } from '@radix-ui/themes'
 import type { Grafaid } from 'graphql-kit'
+import { Code } from '../ui/index.js'
 import { typeKindTokensIndex, unknownTypeKindToken } from './type-kind-tokens.js'
 
 export const TypeKindIcon: React.FC<{ kind: Grafaid.Schema.TypeKindName }> = ({ kind }) => {

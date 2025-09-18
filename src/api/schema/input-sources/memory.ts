@@ -1,13 +1,8 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { Arr } from '@wollybeard/kit'
+import { A } from '#dep/effect'
 import { Effect } from 'effect'
 import type { GraphQLSchema } from 'graphql'
-import { Catalog } from 'graphql-kit'
-import { Change } from 'graphql-kit'
-import { DateOnly } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
+import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
 
 /**
  * Configuration for defining schemas programmatically in memory.
@@ -90,10 +85,10 @@ export const normalize = (configInput: Options): Config => {
   }
 
   // Convert all other formats to normalized array format
-  const revisionsArray = Arr.sure(configInput.revisions)
+  const revisionsArray = A.isArray(configInput.revisions) ? configInput.revisions : [configInput.revisions]
 
   const config: Config = {
-    revisions: Arr.map(revisionsArray, (item) => {
+    revisions: A.map(revisionsArray, (item) => {
       // Handle string (SDL)
       if (typeof item === 'string') {
         return {
@@ -160,12 +155,12 @@ export const read = (
       }
     }
 
-    if (!Arr.isntEmpty(config.revisions)) {
+    if (!A.isNonEmptyArray(config.revisions)) {
       return null
     }
 
     const parsedRevisions = yield* Effect.all(
-      Arr.map(config.revisions, (item) =>
+      A.map(config.revisions, (item) =>
         Effect.gen(function*() {
           const schema = yield* parseSchema(item.value)
           return {
@@ -180,7 +175,7 @@ export const read = (
     parsedRevisions.sort((a, b) => b.date.getTime() - a.date.getTime())
 
     const revisions = yield* Effect.all(
-      Arr.map(parsedRevisions, (revision, index) =>
+      A.map(parsedRevisions, (revision, index) =>
         Effect.gen(function*() {
           const current = revision
           const previous = parsedRevisions[index - 1]
@@ -243,7 +238,7 @@ export const loader = InputSource.createEffect({
         return config.revisions
       }
 
-      if (!Arr.isntEmpty(config.revisions)) {
+      if (!A.isNonEmptyArray(config.revisions)) {
         return null
       }
 

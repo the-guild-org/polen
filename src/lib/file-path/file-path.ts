@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 import { Absolute } from './absolute.js'
 import { Relative } from './relative.js'
 

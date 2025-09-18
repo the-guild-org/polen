@@ -1,4 +1,5 @@
-import { Change as GraphqlChange } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Change } from 'graphql-kit'
 
 type CriticalityLevel = 'BREAKING' | 'DANGEROUS' | 'NON_BREAKING'
 
@@ -16,12 +17,12 @@ const CRITICALITY_CONFIG = {
     color: 'green',
   },
 } as const
-import { Heading } from '@radix-ui/themes'
 import type React from 'react'
+import { Heading } from '../ui/index.js'
 
 interface CriticalitySectionProps {
   level: CriticalityLevel
-  changes: GraphqlChange.Change[]
+  changes: Change.Change[]
   children: React.ReactNode
 }
 

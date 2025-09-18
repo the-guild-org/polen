@@ -1,5 +1,5 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
 
 // ============================================================================
 // Global Interface for Type Augmentation

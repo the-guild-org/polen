@@ -1,4 +1,5 @@
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
+import { Effect } from 'effect'
 
 /**
  * HTML transformer that injects theme initialization script
@@ -12,12 +13,12 @@ export const createThemeInitInjector = () => {
   // Apply theme immediately to prevent FOUC
   (function() {
     let theme = globalThis.__POLEN__.serverContext.theme;
-    
+
     // If system preference, detect actual theme
     if (theme === 'system') {
       theme = globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-    
+
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.className = 'radix-themes ' + theme;
   })();
@@ -25,6 +26,6 @@ export const createThemeInitInjector = () => {
 
     // Inject the script right after the Polen data script
     // This ensures __POLEN__ is available when this script runs
-    return html.replace('</head>', `${themeInitScript}\n</head>`)
+    return Effect.succeed(html.replace('</head>', `${themeInitScript}\n</head>`))
   })
 }

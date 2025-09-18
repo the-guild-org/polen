@@ -8,6 +8,7 @@ import Inspect from 'vite-plugin-inspect'
 import { Branding } from './branding.js'
 import { Build } from './build.js'
 import { Core } from './core.js'
+import { PostCSS } from './postcss.js'
 import { Serve } from './serve.js'
 
 export const Main = (
@@ -28,6 +29,7 @@ export const Main = (
 
   plugins.push(
     ViteReact(),
+    PostCSS(config),
     vitePluginSsrCss({
       entries: [`/${config.paths.framework.template.relative.client.entrypoint}`],
     }),

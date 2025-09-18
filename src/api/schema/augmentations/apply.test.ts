@@ -1,13 +1,13 @@
+import { Test } from '@wollybeard/kit/test'
 import { GrafaidOld } from 'graphql-kit'
 import { describe, expect, test } from 'vitest'
-import { Test } from '../../../../tests/unit/helpers/test.js'
 import { mutateDescription } from './apply.js'
 import type { AugmentationConfig } from './config.js'
 
 describe('mutateDescription', () => {
   describe('with empty existing description', () => {
     // dprint-ignore
-    Test.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('placement without newlines', [
+    Test.Table.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('placement without newlines', [
       { name: 'before placement', placement: 'before' as const, expected: 'New content' },
       { name: 'after placement',  placement: 'after' as const,  expected: 'New content' },
       { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
@@ -25,7 +25,7 @@ describe('mutateDescription', () => {
     })
 
     // dprint-ignore
-    Test.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('empty string handling', [
+    Test.Table.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('empty string handling', [
       { name: 'before placement', placement: 'before' as const, expected: 'New content' },
       { name: 'after placement',  placement: 'after' as const,  expected: 'New content' },
       { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
@@ -45,7 +45,7 @@ describe('mutateDescription', () => {
 
   describe('with existing description', () => {
     // dprint-ignore
-    Test.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('content combination', [
+    Test.Table.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('content combination', [
       { name: 'before placement', placement: 'before' as const, expected: 'New content\n\nExisting description' },
       { name: 'after placement',  placement: 'after' as const,  expected: 'Existing description\n\nNew content' },
       { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },

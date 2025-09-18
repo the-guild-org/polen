@@ -1,6 +1,6 @@
+import { Test } from '@wollybeard/kit/test'
 import { Document } from 'graphql-kit'
 import { describe, expect } from 'vitest'
-import { Test } from '../../../tests/unit/helpers/test.js'
 import type { ExampleName, ExampleSelection } from './config.js'
 import { filterExamplesBySelection, shouldDisplayExample } from './filter.js'
 import { Example } from './schemas/example/$.js'
@@ -25,7 +25,7 @@ describe('filterExamplesBySelection', () => {
   ]
 
   // dprint-ignore
-  Test.suite<{ selection: ExampleSelection | undefined; expected: string[] }>('selection filtering', [
+  Test.Table.suite<{ selection: ExampleSelection | undefined; expected: string[] }>('selection filtering', [
     { name: 'undefined returns all',        selection: undefined,                           expected: ['a', 'b', 'c'] },
     { name: 'all returns all',              selection: 'all',                               expected: ['a', 'b', 'c'] },
     { name: 'none returns empty',           selection: 'none',                              expected: [] },
@@ -43,7 +43,7 @@ describe('filterExamplesBySelection', () => {
 
 describe('shouldDisplayExample', () => {
   // dprint-ignore
-  Test.suite<{ exampleName: ExampleName; selection: ExampleSelection | undefined; expected: boolean }>('display logic', [
+  Test.Table.suite<{ exampleName: ExampleName; selection: ExampleSelection | undefined; expected: boolean }>('display logic', [
     { name: 'undefined displays',       exampleName: 'x' as ExampleName, selection: undefined,               expected: true },
     { name: 'all displays',             exampleName: 'x' as ExampleName, selection: 'all',                   expected: true },
     { name: 'none hides',               exampleName: 'x' as ExampleName, selection: 'none',                  expected: false },

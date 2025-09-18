@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Swiss minimalist color palette */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    --accent: 221 100% 50%; /* #0066ff */
+    --accent-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+
+    --radius: 0;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --accent: 221 100% 60%;
+    --accent-foreground: 0 0% 0%;
+
+    --border: 0 0% 15%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  /* Container utilities */
+  .container-page {
+    @apply max-w-container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .grid-content {
+    @apply grid grid-cols-1 lg:grid-cols-12 gap-6;
+  }
+
+  /* Typography utilities */
+  .text-display-1 {
+    @apply text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-[0.9];
+  }
+
+  .text-display-2 {
+    @apply text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1];
+  }
+
+  .text-heading-1 {
+    @apply text-3xl lg:text-4xl font-bold leading-tight;
+  }
+
+  .text-heading-2 {
+    @apply text-2xl lg:text-3xl font-semibold leading-tight;
+  }
+
+  .text-heading-3 {
+    @apply text-xl lg:text-2xl font-semibold;
+  }
+
+  .text-body {
+    @apply text-base leading-relaxed;
+  }
+
+  .text-small {
+    @apply text-sm leading-normal;
+  }
+
+  /* Swiss grid zones (temporary during migration) */
+  .swiss-body {
+    @apply col-start-1 col-end-13 lg:col-start-2 lg:col-end-12;
+  }
+
+  .swiss-extended {
+    @apply col-start-1 col-end-13;
+  }
+
+  .swiss-viewport {
+    @apply col-start-1 col-end-13 -mx-4 sm:-mx-6 lg:-mx-8;
+  }
+}

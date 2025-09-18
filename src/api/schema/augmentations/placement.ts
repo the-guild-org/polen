@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 
 export const Placement = S.Enums(
   {

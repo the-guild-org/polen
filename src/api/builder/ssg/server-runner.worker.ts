@@ -4,7 +4,7 @@
  */
 import { WorkerRunner } from '@effect/platform'
 import { NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Duration, Effect, Layer, Ref, Scope } from 'effect'
+import { Duration, Effect, Layer, Ref } from 'effect'
 import { spawn } from 'node:child_process'
 import type { ChildProcess } from 'node:child_process'
 import { ServerMessage } from './worker-messages.js'

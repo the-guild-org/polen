@@ -1,5 +1,6 @@
-import { Box, Button, Flex, Heading, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import { Link as LinkReactRouter } from 'react-router'
+import { Box, Button, Flex, Heading, Text } from './ui/index.js'
 
 export const NotFound: React.FC = () => {
   return (

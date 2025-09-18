@@ -1,9 +1,8 @@
 import type { LoadedCatalog } from '#api/schema/input-source/load'
+import { A, E, O } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic'
-import { Either } from 'effect'
 import { getNamedType } from 'graphql'
-import { Grafaid } from 'graphql-kit'
-import { GraphQLSchemaPath } from 'graphql-kit'
+import { Grafaid, GraphQLSchemaPath } from 'graphql-kit'
 import type { Version } from 'graphql-kit'
 import type { InlineCode, Root } from 'mdast'
 import type { Plugin } from 'unified'
@@ -11,7 +10,7 @@ import type { Parent } from 'unist'
 import { visit } from 'unist-util-visit'
 
 interface GraphQLReferenceOptions {
-  schemaLoader: () => LoadedCatalog | null
+  schemaLoader: () => O.Option<LoadedCatalog>
   onDiagnostic?: (diagnostic: Diagnostic.Diagnostic) => void
 }
 
@@ -23,8 +22,10 @@ interface GraphQLReferenceOptions {
  */
 export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = (options) => {
   return (tree, file) => {
-    const loadedCatalog = options.schemaLoader()
-    const schema = loadedCatalog?.data
+    const loadedCatalogOption = options.schemaLoader()
+    const schema = O.isSome(loadedCatalogOption)
+      ? O.getOrNull(loadedCatalogOption.value.data)
+      : null
     const diagnostics: Diagnostic.Diagnostic[] = []
 
     visit(tree, 'inlineCode', (node: InlineCode, index: number | undefined, parent: Parent | undefined) => {
@@ -53,7 +54,7 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
           if (schema._tag === 'CatalogVersioned') {
             // For versioned schemas, check latest version first
             // Note: entries is a HashMap, need to iterate over its values
-            const entries = Array.from(schema.entries)
+            const entries = A.fromIterable(schema.entries)
             for (const [versionKey, versionSchema] of entries.reverse()) {
               // Create a resolver for this version's schema
               const resolver = GraphQLSchemaPath.Resolvers.GraphqlSchema.create({
@@ -63,7 +64,7 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
               // than the generic GraphQLSchemaPath.Path that parsedPath provides
               const result = resolver(parsedPath)
 
-              if (Either.isRight(result)) {
+              if (E.isRight(result)) {
                 isValidPath = true
                 resolvedVersion = versionKey
                 const resolvedNode = result.right
@@ -85,7 +86,7 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
             // than the generic GraphQLSchemaPath.Path that parsedPath provides
             const result = resolver(parsedPath)
 
-            if (Either.isRight(result)) {
+            if (E.isRight(result)) {
               isValidPath = true
               const resolvedNode = result.right
               if (Grafaid.Schema.TypesLike.isNamed(resolvedNode)) {

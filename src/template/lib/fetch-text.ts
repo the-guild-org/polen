@@ -1,4 +1,4 @@
-import { Either } from 'effect'
+import { E } from '#dep/effect'
 
 /**
  * Error type for fetch failures
@@ -24,17 +24,17 @@ const makeFetchError = (url: string, status: number, statusText: string): FetchE
  * @param url - The URL to fetch from
  * @returns Either with text content on right or FetchError on left
  */
-export const fetchTextEither = async (url: string): Promise<Either.Either<string, FetchError>> => {
+export const fetchTextEither = async (url: string): Promise<E.Either<string, FetchError>> => {
   try {
     const response = await fetch(url)
     if (!response.ok) {
-      return Either.left(makeFetchError(url, response.status, response.statusText))
+      return E.left(makeFetchError(url, response.status, response.statusText))
     }
     const text = await response.text()
-    return Either.right(text)
+    return E.right(text)
   } catch (error) {
     // Network errors or other exceptions
-    return Either.left(makeFetchError(url, 0, 'Network Error'))
+    return E.left(makeFetchError(url, 0, 'Network Error'))
   }
 }
 
@@ -47,7 +47,7 @@ export const fetchTextEither = async (url: string): Promise<Either.Either<string
  */
 export const fetchText = async (url: string): Promise<string> => {
   const result = await fetchTextEither(url)
-  if (Either.isLeft(result)) {
+  if (E.isLeft(result)) {
     throw new Error(result.left.message)
   }
   return result.right

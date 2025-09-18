@@ -12,7 +12,11 @@ export namespace EffectGlobby {
   export const glob = (
     pattern: string | string[],
     options?: Omit<TinyGlobbyLib.GlobOptions, 'patterns'>,
-  ): Effect.Effect<string[], Error> => Effect.promise(() => TinyGlobbyLib.glob(pattern, options))
+  ): Effect.Effect<string[], Error> =>
+    Effect.tryPromise({
+      try: () => TinyGlobbyLib.glob(pattern, options),
+      catch: (error) => new Error(`Failed to glob pattern: ${String(error)}`),
+    })
 
   /**
    * Effect-based wrapper for TinyGlobby.globSync (wrapped as Effect for consistency)

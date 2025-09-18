@@ -1,9 +1,10 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { Api } from '#api/iso'
-import { Badge, Link } from '@radix-ui/themes'
 import { Match } from 'effect'
 import type { Lifecycles } from 'graphql-kit'
 import { Version } from 'graphql-kit'
 import type React from 'react'
+import { Badge, Link } from '../ui/index.js'
 
 export const SinceBadge: React.FC<{ since: Lifecycles.Since }> = ({ since }) => {
   return (

@@ -1,4 +1,5 @@
-import { S } from 'graphql-kit'
+// import { S } from '#dep/effect'
+import { S } from '#dep/effect'
 
 // ============================================================================
 // Home Page Components

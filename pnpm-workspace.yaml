@@ -5,3 +5,5 @@ onlyBuiltDependencies:
   - dprint
   - '@playwright/browser-chromium'
   - lightningcss
+overrides:
+  kit: link:../../../Library/pnpm/global/5/node_modules/@wollybeard/kit

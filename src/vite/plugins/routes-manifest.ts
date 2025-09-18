@@ -1,4 +1,5 @@
 import { Api } from '#api/$'
+import { O } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router/$'
 import { debugPolen } from '#singletons/debug'
@@ -6,9 +7,7 @@ import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import consola from 'consola'
 import { Effect } from 'effect'
 import { isInterfaceType, isObjectType } from 'graphql'
-import { Catalog } from 'graphql-kit'
-import { SchemaDefinition } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog, SchemaDefinition, Version } from 'graphql-kit'
 
 /**
  * Vite plugin that generates a routes manifest during build for SSG.
@@ -44,16 +43,17 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
           ),
         )
 
-        const catalog = catalogData?.data
-
-        if (catalog) {
+        if (O.isSome(catalogData)) {
+          const catalog = catalogData.value.data
           routes.push('/reference')
 
           // Process catalog using fold
-          Catalog.fold(
-            (versioned) => processVersionedCatalog(versioned, routes),
-            (unversioned) => processUnversionedCatalog(unversioned, routes),
-          )(catalog)
+          if (O.isSome(catalog)) {
+            Catalog.fold(
+              (versioned) => processVersionedCatalog(versioned, routes),
+              (unversioned) => processUnversionedCatalog(unversioned, routes),
+            )(catalog.value)
+          }
         }
       }
 

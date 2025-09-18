@@ -1,6 +1,6 @@
+import { Test } from '@wollybeard/kit/test'
 import { buildSchema } from 'graphql'
 import { beforeEach, describe, expect, vi } from 'vitest'
-import { Test } from '../../../../tests/unit/helpers/test.js'
 import { remarkGraphQLReferences } from './remark-graphql-references.js'
 
 const createTree = (inlineCodeValue: string) => ({
@@ -62,7 +62,7 @@ describe('path transformation', () => {
   const file = { path: 'test.md' }
 
   // dprint-ignore
-  Test.suite<{
+  Test.Table.suite<{
       path: string
     }>('transforms gql: paths to GraphQLReference components', [
       { name: 'simple type',       path: 'User' },
@@ -98,7 +98,7 @@ describe('path validation', () => {
   const file = { path: 'test.md' }
 
   // dprint-ignore
-  Test.suite<{
+  Test.Table.suite<{
       path: string
       shouldHaveDiagnostic: boolean
       diagnosticType?: 'invalid-path' | 'invalid-syntax'

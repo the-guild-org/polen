@@ -3,6 +3,7 @@ import { Examples as ExamplesModule } from '#api/examples/$'
 import * as Catalog from '#api/examples/schemas/catalog'
 import { generateExampleTypes } from '#api/examples/type-generator'
 import { createTypeUsageIndex } from '#api/examples/type-usage-indexer'
+import { O } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -10,9 +11,8 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Str } from '@wollybeard/kit'
+import { Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import * as Path from 'node:path'
 import type * as Vite from 'vite'
 import { polenVirtual } from '../vi.js'
 
@@ -51,9 +51,13 @@ export const Examples = ({
     return Effect.gen(function*() {
       const loadedCatalog = yield* schemaReader.read()
 
+      const schemaCatalog = loadedCatalog
+        ? O.getOrUndefined(loadedCatalog.data)
+        : undefined
+
       const scanExamplesResult = yield* ExamplesModule.scan({
         dir: examplesDir,
-        schemaCatalog: loadedCatalog?.data as any ?? undefined,
+        schemaCatalog: schemaCatalog as any,
       })
 
       // Generate TypeScript types if examples have changed

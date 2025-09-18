@@ -1,7 +1,7 @@
 import type { Config } from '#api/config/normalized'
 import { FileSystem } from '@effect/platform'
+import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import * as Path from 'node:path'
 
 // ============================================================================
 // Types

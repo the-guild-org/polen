@@ -1,7 +1,9 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { Idx, Path } from '@wollybeard/kit'
-import { S } from 'graphql-kit'
-import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.js'
+import { Sch } from '@wollybeard/kit'
+import { type Route, routeIsFromIndexFile, routeToPathExpression } from './route.js'
+Sch
 
 // ============================================================================
 // Schema - File Router Diagnostics

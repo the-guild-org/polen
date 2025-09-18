@@ -1,6 +1,6 @@
-import { Box, Flex, Text } from '@radix-ui/themes'
-import { Change } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Change, Revision } from 'graphql-kit'
+import { Box, Flex, Text } from '../../components/ui/index.js'
 import { renderDate } from './utils.js'
 
 export const ChangelogSidebarItem: React.FC<{
@@ -34,7 +34,7 @@ export const ChangelogSidebarItem: React.FC<{
           document.getElementById(revision.date)?.scrollIntoView({ behavior: 'smooth' })
         }}
       >
-        <Text size='2' weight={isActive ? 'medium' : 'regular'}>
+        <Text size='2' weight={isActive ? 'medium' : 'normal'}>
           {renderDate(revision.date)}
         </Text>
         <Flex gap='2' align='center'>

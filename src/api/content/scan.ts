@@ -1,8 +1,8 @@
+import { E, O, S } from '#dep/effect'
 import { FileRouter } from '#lib/file-router'
 import { FileSystem } from '@effect/platform'
-import { Fs, Path, Tree } from '@wollybeard/kit'
-import { Effect, Either } from 'effect'
-import { S } from 'graphql-kit'
+import { Path, Tree } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import matter from 'gray-matter'
 import { MetadataSchema } from './metadata.js'
 import type { Page } from './page.js'
@@ -55,7 +55,7 @@ export const scan = (options: {
     let tree: Tree.Tree<Page>
     if (hasMultipleRoots) {
       // Create a virtual root node to hold all root-level pages
-      const virtualRoot: Page & { id: string; parentId: null } = {
+      const virtualRoot: Page & { id: string; parentId: string | null } = {
         route: {
           id: `__virtual_root__`,
           parentId: null,
@@ -115,11 +115,11 @@ const readRoute = (route: FileRouter.Route): Effect.Effect<Page, Error, FileSyst
     // Validate and parse the data
     const parsed = S.decodeUnknownEither(MetadataSchema)(data)
 
-    if (Either.isLeft(parsed)) {
+    if (E.isLeft(parsed)) {
       // Log warning but continue with defaults
       console.warn(`Invalid front matter in ${filePath}:`, parsed.left)
     }
 
-    const metadata = Either.isRight(parsed) ? parsed.right : { hidden: false }
+    const metadata = E.isRight(parsed) ? parsed.right : { hidden: false }
     return { route, metadata }
   })

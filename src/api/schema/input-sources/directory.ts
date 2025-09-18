@@ -1,10 +1,11 @@
 import { InputSource } from '#api/schema/input-source/$'
 import { InputSourceError } from '#api/schema/input-source/errors'
+import { A } from '#dep/effect'
 import { debugPolen } from '#singletons/debug'
 import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Arr, Path } from '@wollybeard/kit'
-import { Array, Effect, Order } from 'effect'
+import { Path } from '@wollybeard/kit'
+import { Effect, Order } from 'effect'
 import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
 
 // const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
@@ -94,8 +95,8 @@ export const loader = InputSource.createEffect({
       // Check if we have either:
       // 1. A single schema.graphql file (non-versioned mode)
       // 2. Any .graphql files with valid date names (versioned mode)
-      const hasSchemaFile = Array.some(files, file => file === 'schema.graphql')
-      const hasVersionedFiles = Array.some(files, file => {
+      const hasSchemaFile = A.some(files, file => file === 'schema.graphql')
+      const hasVersionedFiles = A.some(files, file => {
         if (!file.endsWith('.graphql')) return false
         const name = Path.basename(file, '.graphql')
         return /^\d{4}-\d{2}-\d{2}$/.test(name)
@@ -122,7 +123,7 @@ export const loader = InputSource.createEffect({
       const files = filesResult.right
       const graphqlFiles = files.filter((file: string) => file.endsWith('.graphql'))
 
-      if (!Arr.isntEmpty(graphqlFiles)) {
+      if (!A.isNonEmptyArray(graphqlFiles)) {
         return null
       }
 
@@ -146,7 +147,7 @@ export const loader = InputSource.createEffect({
       }
 
       // Otherwise, look for versioned files with date prefixes
-      const revisionInputs = Arr.map(filePaths, (filePath) => {
+      const revisionInputs = A.map(filePaths, (filePath) => {
         const name = Path.basename(filePath, '.graphql')
         // Validate date format YYYY-MM-DD
         const dateMatch = name.match(/^\d{4}-\d{2}-\d{2}$/)
@@ -157,7 +158,7 @@ export const loader = InputSource.createEffect({
         }
       }).filter((x): x is NonNullable<typeof x> => x !== null)
 
-      if (!Arr.isntEmpty(revisionInputs)) {
+      if (!A.isNonEmptyArray(revisionInputs)) {
         return null
       }
 
@@ -177,7 +178,7 @@ const read = (
 ): Effect.Effect<Schema.Unversioned.Unversioned, InputSourceError | PlatformError, FileSystem> =>
   Effect.gen(function*() {
     const revisionInputsLoaded = yield* Effect.all(
-      Arr.map(revisionInputs, (revisionInput) =>
+      A.map(revisionInputs, (revisionInput) =>
         Effect.gen(function*() {
           const fs = yield* FileSystem
           const content = yield* fs.readFileString(revisionInput.filePath)
@@ -210,13 +211,13 @@ const read = (
     debug(`read revisions`)
 
     // Sort by date descending (newest first for consistent catalog structure)
-    const revisionInputsSorted = Array.sort(
+    const revisionInputsSorted = A.sort(
       revisionInputsLoaded,
       Order.mapInput(DateOnly.order, (item: typeof revisionInputsLoaded[0]) => item.date),
     )
 
     const revisions = yield* Effect.all(
-      Arr.map(revisionInputsSorted, (item, index) =>
+      A.map(revisionInputsSorted, (item, index) =>
         Effect.gen(function*() {
           const current = item
           const previous = revisionInputsSorted[index - 1]

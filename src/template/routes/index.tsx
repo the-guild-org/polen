@@ -1,12 +1,13 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { DirectedFilter } from '#lib/directed-filter'
 import { routeIndex } from '#lib/react-router-effect/react-router-effect'
-import { Swiss } from '#lib/swiss'
 import { redirect } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
 import { examplesCatalog } from 'virtual:polen/project/examples'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { ExamplesSection } from '../components/home/ExamplesSection.js'
 import { Hero } from '../components/home/HeroSection.js'
+import { Container } from '../components/ui/index.js'
 
 const loader = () => {
   // If home is disabled, redirect to reference page
@@ -31,7 +32,7 @@ const Component = () => {
           )}
         />
       )}
-      <Swiss.Body style={{ marginTop: '800px' }}>
+      <Container style={{ marginTop: '800px' }}>
         {templateConfig.home.examples.enabled && filteredExamples.length > 0 && (
           <ExamplesSection
             examples={filteredExamples}
@@ -45,7 +46,7 @@ const Component = () => {
             )}
           />
         )}
-      </Swiss.Body>
+      </Container>
     </>
   )
 }

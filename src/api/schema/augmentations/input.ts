@@ -1,11 +1,9 @@
 import type { Augmentation } from '#api/schema/augmentations/augmentation'
 import type { AugmentationConfig } from '#api/schema/augmentations/config'
 import { Placement } from '#api/schema/augmentations/placement'
+import { S } from '#dep/effect'
 import { HashMap } from 'effect'
-import { S } from 'graphql-kit'
-import { GraphQLSchemaPath } from 'graphql-kit'
-import { VersionCoverage } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { GraphQLSchemaPath, Version, VersionCoverage } from 'graphql-kit'
 
 /**
  * Configuration for augmenting GraphQL schema descriptions.

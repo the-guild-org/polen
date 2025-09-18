@@ -1,6 +1,7 @@
 import type { Api } from '#api/$'
 import { encodeSyncTemplateConfig, resolve } from '#api/config-template/template'
 import type { Examples as ExamplesModule } from '#api/examples/$'
+import { O } from '#dep/effect'
 import type { AssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
@@ -46,7 +47,7 @@ export const Config = ({
         const templateConfig = resolve(config, {
           // @claude todo: on loaded data structure, rename catalog to data
           examples: loadedExamplesCatalog.catalog,
-          schemas: loadedSchemaCatalog?.data ?? undefined,
+          schemas: loadedSchemaCatalog ? O.getOrNull(loadedSchemaCatalog.data) ?? undefined : undefined,
         })
 
         // @claude run decodeSync on the export

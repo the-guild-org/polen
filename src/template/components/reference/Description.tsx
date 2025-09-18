@@ -1,8 +1,9 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { React } from '#dep/react/index'
-import { Text } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
 import type { GrafaidOld } from 'graphql-kit'
 import { Markdown } from '../Markdown.js'
+import { Text } from '../ui/index.js'
 
 export const Description: React.FC<{ data: GraphQLNamedType | GrafaidOld.GraphQLField }> = ({ data }) => {
   if (!data.description) return null

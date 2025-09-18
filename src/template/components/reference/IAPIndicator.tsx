@@ -1,8 +1,9 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { InfoCircledIcon } from '@radix-ui/react-icons'
-import { Box, Flex, HoverCard, Separator, Text } from '@radix-ui/themes'
 import type { GraphQLInputObjectType } from 'graphql'
 import type { FC } from 'react'
 import { TypeLink } from '../graphql/type-link.js'
+import { Box, Flex, HoverCard, Separator, Text } from '../ui/index.js'
 
 interface Props {
   inputObject: GraphQLInputObjectType

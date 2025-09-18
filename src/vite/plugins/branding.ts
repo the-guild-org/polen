@@ -2,8 +2,10 @@ import type { Api } from '#api/$'
 import type { Vite } from '#dep/vite/index'
 import { type ExistenceDiff, getMutationType, MutationType } from '#lib/mutation-type'
 import { debugPolen } from '#singletons/debug'
-import { Fs } from '@wollybeard/kit'
-import * as Path from 'node:path'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { FileSystem } from '@effect/platform/FileSystem'
+import { Path } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import type { Plugin } from 'vite'
 import { polenVirtual } from '../vi.js'
 
@@ -20,7 +22,14 @@ const findLogoPath = async (publicDir: string, filename: string): Promise<string
   const extensions = ['svg', 'png', 'jpg', 'jpeg', 'webp']
   for (const ext of extensions) {
     const path = Path.join(publicDir, `${filename}.${ext}`)
-    if (await Fs.exists(path)) {
+    const exists = await Effect.runPromise(
+      Effect.gen(function*() {
+        const fs = yield* FileSystem
+        const result = yield* Effect.either(fs.stat(path))
+        return result._tag === 'Right'
+      }).pipe(Effect.provide(NodeFileSystem.layer)),
+    )
+    if (exists) {
       return path
     }
   }
@@ -38,7 +47,14 @@ const findHeroImagePath = async (publicDir: string): Promise<string | null> => {
 
   for (const imageName of heroImageNames) {
     const imagePath = Path.join(publicDir, imageName)
-    if (await Fs.exists(imagePath)) {
+    const exists = await Effect.runPromise(
+      Effect.gen(function*() {
+        const fs = yield* FileSystem
+        const result = yield* Effect.either(fs.stat(imagePath))
+        return result._tag === 'Right'
+      }).pipe(Effect.provide(NodeFileSystem.layer)),
+    )
+    if (exists) {
       return imagePath
     }
   }
@@ -204,7 +220,13 @@ const handleWatchedFileChange = async (
   if (changedFile !== watchedFile) return
 
   // Check current existence
-  const existsNow = await Fs.exists(watchedFile)
+  const existsNow = await Effect.runPromise(
+    Effect.gen(function*() {
+      const fs = yield* FileSystem
+      const result = yield* Effect.either(fs.stat(watchedFile))
+      return result._tag === 'Right'
+    }).pipe(Effect.provide(NodeFileSystem.layer)),
+  )
 
   // Check previous existence via module graph
   const module = server.moduleGraph.getModuleById(moduleId)

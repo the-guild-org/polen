@@ -1,5 +1,5 @@
+import { S } from '#dep/effect'
 import { Order } from 'effect'
-import { S } from 'graphql-kit'
 import { Document } from 'graphql-kit'
 
 // ============================================================================

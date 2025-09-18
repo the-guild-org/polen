@@ -1,5 +1,5 @@
+import { Test } from '@wollybeard/kit/test'
 import { describe, expect, test } from 'vitest'
-import { Test } from '../../../../tests/unit/helpers/test.js'
 import * as FilePathSegment from './segment.js'
 
 describe('FilePathSegment', () => {
@@ -9,7 +9,7 @@ describe('FilePathSegment', () => {
     })
   })
   // dprint-ignore
-  Test.suite<{ segments: string[]; expected: string }>('join', [
+  Test.Table.suite<{ segments: string[]; expected: string }>('join', [
     { name: 'joins path segments',                                                                       segments: ['foo', 'bar', 'baz.txt'],                                                               expected: 'foo/bar/baz.txt' },
     { name: 'handles leading slashes',                                                                   segments: ['/foo', '/bar', '/baz.txt'],                                                            expected: '/foo/bar/baz.txt' },
     { name: 'handles trailing slashes',                                                                  segments: ['foo/', 'bar/', 'baz.txt'],                                                             expected: 'foo/bar/baz.txt' },
@@ -21,7 +21,7 @@ describe('FilePathSegment', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ path: string; extension: string; expected: string }>('upsertExtension', [
+  Test.Table.suite<{ path: string; extension: string; expected: string }>('upsertExtension', [
     { name: 'adds extension when missing',                                                               path: 'file',                                                                                      extension: 'json',  expected: 'file.json' },
     { name: 'replaces existing extension',                                                               path: 'file.txt',                                                                                  extension: 'json',  expected: 'file.json' },
     { name: 'handles extension with dot',                                                                path: 'file',                                                                                      extension: '.json', expected: 'file.json' },
@@ -33,7 +33,7 @@ describe('FilePathSegment', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ path: string; extension: string; expected: string }>('withExtension', [
+  Test.Table.suite<{ path: string; extension: string; expected: string }>('withExtension', [
     { name: 'adds extension without dot',                                                                path: 'file',                                                                                      extension: 'json',  expected: 'file.json' },
     { name: 'adds extension with dot',                                                                  path: 'file',                                                                                      extension: '.json', expected: 'file.json' },
   ], ({ path, extension, expected }) => {
@@ -42,7 +42,7 @@ describe('FilePathSegment', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ path: string; expected: string }>('withoutExtension', [
+  Test.Table.suite<{ path: string; expected: string }>('withoutExtension', [
     { name: 'removes extension',                                                                         path: 'file.json',                                                                                 expected: 'file' },
     { name: 'handles no extension',                                                                      path: 'file',                                                                                      expected: 'file' },
   ], ({ path, expected }) => {
@@ -51,7 +51,7 @@ describe('FilePathSegment', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ path: string; expected: string | undefined }>('getExtension', [
+  Test.Table.suite<{ path: string; expected: string | undefined }>('getExtension', [
     { name: 'gets extension',                                                                            path: 'file.json',                                                                                 expected: 'json' },
     { name: 'returns undefined for no extension',                                                        path: 'file',                                                                                      expected: undefined },
   ], ({ path, expected }) => {
@@ -60,7 +60,7 @@ describe('FilePathSegment', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ path: string; expected: string }>('getFileName', [
+  Test.Table.suite<{ path: string; expected: string }>('getFileName', [
     { name: 'gets filename from path',                                                                   path: '/path/to/file.json',                                                                        expected: 'file.json' },
     { name: 'handles Windows paths',                                                                     path: 'C:/path/to/file.json',                                                                      expected: 'file.json' },
     { name: 'returns full path if no directory',                                                         path: 'file.json',                                                                                 expected: 'file.json' },
@@ -70,7 +70,7 @@ describe('FilePathSegment', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ path: string; expected: string }>('getDirectory', [
+  Test.Table.suite<{ path: string; expected: string }>('getDirectory', [
     { name: 'gets directory from path',                                                                  path: '/path/to/file.json',                                                                        expected: '/path/to' },
     { name: 'returns dot for no directory',                                                              path: 'file.json',                                                                                 expected: '.' },
   ], ({ path, expected }) => {

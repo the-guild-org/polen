@@ -1,18 +1,9 @@
 import { Api } from '#api/iso'
+import { O, S } from '#dep/effect'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
-import { Text } from '@radix-ui/themes'
-import { Flex } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
-import { neverCase } from '@wollybeard/kit/language'
-import { HashMap, Option } from 'effect'
-import { Effect, Match } from 'effect'
-import { S } from 'graphql-kit'
-import { Catalog } from 'graphql-kit'
-import { GrafaidOld } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { Lifecycles } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Effect, HashMap, Match } from 'effect'
+import { Catalog, Grafaid, GrafaidOld, Lifecycles, Schema, Version } from 'graphql-kit'
 import React from 'react'
 import { redirect, useParams } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
@@ -23,6 +14,7 @@ import { Field } from '../components/reference/Field.js'
 import { NamedType } from '../components/reference/NamedType.js'
 import { ReferenceVersionPicker } from '../components/reference/ReferenceVersionPicker.js'
 import { ViewModeToggle } from '../components/reference/ViewModeToggle.js'
+import { Flex, Text } from '../components/ui/index.js'
 import { GraphqlLifecycleProvider } from '../contexts/GraphqlLifecycleContext.js'
 import { ReferenceConfigProvider } from '../contexts/ReferenceConfigContext.js'
 import { ViewModeProvider } from '../contexts/ViewModeContext.js'
@@ -72,11 +64,11 @@ const referenceLoader = ({ params }: any) => {
             if (params.version) {
               const requestedVersion = Version.decodeSync(params.version)
               const foundOption = HashMap.get(c.entries, requestedVersion)
-              if (Option.isNone(foundOption)) {
+              if (O.isNone(foundOption)) {
                 // TODO: Return 404 error
                 throw new Error(`Version ${params.version} not found`)
               }
-              return Option.getOrThrow(foundOption)
+              return O.getOrThrow(foundOption)
             }
             // No version param means "latest" - use the last entry
             const latest = Catalog.Versioned.getLatestOrThrow(c)
@@ -236,7 +228,7 @@ const ReferenceView = () => {
         />
       )
     } else {
-      neverCase(viewType)
+      return Match.value(viewType).pipe(Match.exhaustive) as never
     }
   })()
 

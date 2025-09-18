@@ -1,12 +1,13 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { Content } from '#api/content/$'
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
 import { Texts } from '#template/components/Texts/index'
-import { Box, Flex } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
 import { useContext } from 'react'
 import { useLocation } from 'react-router'
 import { getPathActiveReport, Link } from '../Link.js'
+import { Box, Flex } from '../ui/index.js'
 import { SidebarContext } from './SidebarContext.js'
 
 // Template layer extension: Allow React elements in title
@@ -51,7 +52,7 @@ export const Item: React.FC<{ item: TemplateItem }> = ({ item }) => {
     return <LinkedSection section={item} />
   }
 
-  return <Section section={item} />
+  return <section data-section={item.title} />
 }
 
 //

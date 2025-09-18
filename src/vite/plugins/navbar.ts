@@ -1,5 +1,6 @@
 import { Api } from '#api/$'
 import { createNavbar, type NavbarItem } from '#api/content/navbar'
+import { O } from '#dep/effect'
 import type { AssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
@@ -59,17 +60,21 @@ export const Navbar = ({
 
             // Check if we have revisions to show changelog
             const catalog = loadedSchemaCatalog.data
-            const hasMultipleRevisions = Catalog.fold(
-              (versioned) => {
-                // For versioned catalogs, count total revisions across all entries
-                const totalRevisions = Catalog.Versioned.getAll(versioned).reduce(
-                  (sum: number, entry) => sum + entry.revisions.length,
-                  0,
-                )
-                return totalRevisions > 1
-              },
-              (unversioned) => unversioned.schema.revisions?.length > 1,
-            )(catalog)
+            const hasMultipleRevisions = O.match(catalog, {
+              onNone: () => false,
+              onSome: (catalogValue) =>
+                Catalog.fold(
+                  (versioned) => {
+                    // For versioned catalogs, count total revisions across all entries
+                    const totalRevisions = Catalog.Versioned.getAll(versioned).reduce(
+                      (sum: number, entry) => sum + entry.revisions.length,
+                      0,
+                    )
+                    return totalRevisions > 1
+                  },
+                  (unversioned) => unversioned.schema.revisions?.length > 1,
+                )(catalogValue),
+            })
 
             if (hasMultipleRevisions) {
               navbar.push({ pathExp: `/changelog`, title: `Changelog`, position: 'right' })

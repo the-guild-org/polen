@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 import { describe, expect, test } from 'vitest'
 import { DirectedFilter } from './$.js'
 

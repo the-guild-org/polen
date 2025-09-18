@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 import { Example } from './example/$.js'
 import { TypeUsageIndex } from './type-usage-index.js'
 

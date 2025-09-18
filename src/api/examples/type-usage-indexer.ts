@@ -1,11 +1,7 @@
-import { Effect, HashMap, HashSet, Option } from 'effect'
-import { Schema as S } from 'effect'
+import { O } from '#dep/effect'
+import { Effect, HashMap, HashSet } from 'effect'
 import { getNamedType, type GraphQLSchema, isInterfaceType, isObjectType, isUnionType, Kind, visit } from 'graphql'
-import { Catalog } from 'graphql-kit'
-import { Document } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog, Document, Grafaid, Schema, Version } from 'graphql-kit'
 import type { Example } from './schemas/example/example.js'
 import { ExampleReference, type TypeUsageIndex, UNVERSIONED_KEY, type VersionKey } from './schemas/type-usage-index.js'
 
@@ -64,63 +60,66 @@ const extractTypesFromDocument = (
   const resolveFieldType = (
     fieldName: string,
     parentTypeName: string | null,
-  ): Option.Option<string> => {
-    if (!parentTypeName) return Option.none()
+  ): O.Option<string> => {
+    if (!parentTypeName) return O.none()
 
     const parentType = schema.getType(parentTypeName)
     if (!parentType || !isObjectType(parentType) && !isInterfaceType(parentType)) {
-      return Option.none()
+      return O.none()
     }
 
     const field = parentType.getFields()[fieldName]
-    if (!field) return Option.none()
+    if (!field) return O.none()
 
     const namedType = getNamedType(field.type)
-    return Option.some(namedType.name)
+    return O.some(namedType.name)
   }
 
   // Track the current type context as we traverse
-  let currentType: string | null = null
+  let currentType: O.Option<string> = O.none()
 
   visit(ast, {
     [Kind.OPERATION_DEFINITION]: (node) => {
       // Set initial type based on operation
       switch (node.operation) {
         case 'query':
-          currentType = schema.getQueryType()?.name ?? null
+          const queryType = schema.getQueryType()?.name
+          currentType = queryType ? O.some(queryType) : O.none()
           break
         case 'mutation':
-          currentType = schema.getMutationType()?.name ?? null
+          const mutationType = schema.getMutationType()?.name
+          currentType = mutationType ? O.some(mutationType) : O.none()
           break
         case 'subscription':
-          currentType = schema.getSubscriptionType()?.name ?? null
+          const subscriptionType = schema.getSubscriptionType()?.name
+          currentType = subscriptionType ? O.some(subscriptionType) : O.none()
           break
       }
-      if (currentType) {
-        addType(currentType)
+      if (O.isSome(currentType)) {
+        addType(currentType.value)
       }
     },
 
     [Kind.FIELD]: {
       enter(node) {
-        if (!currentType) return
+        if (O.isNone(currentType)) return
 
         // Special handling for __typename
         if (node.name.value === '__typename') return
 
-        const fieldTypeOption = resolveFieldType(node.name.value, currentType)
-        if (Option.isSome(fieldTypeOption)) {
+        const fieldTypeOption = resolveFieldType(node.name.value, currentType.value)
+        if (O.isSome(fieldTypeOption)) {
           const fieldType = fieldTypeOption.value
           addType(fieldType)
           // Update context for nested selections
           if (node.selectionSet) {
-            currentType = fieldType
+            currentType = O.some(fieldType)
           }
         }
       },
       leave(node) {
         // Restore parent context when leaving field with selection set
-        if (node.selectionSet && currentType) {
+        if (node.selectionSet && O.isSome(currentType)) {
           // This is simplified - in production would need proper context stack
         }
       },
@@ -130,7 +129,7 @@ const extractTypesFromDocument = (
       if (node.typeCondition) {
         const typeName = node.typeCondition.name.value
         addType(typeName)
-        currentType = typeName
+        currentType = O.some(typeName)
       }
     },
 
@@ -142,7 +141,7 @@ const extractTypesFromDocument = (
     [Kind.FRAGMENT_DEFINITION]: (node) => {
       const typeName = node.typeCondition.name.value
       addType(typeName)
-      currentType = typeName
+      currentType = O.some(typeName)
     },
   })
 
@@ -217,13 +216,13 @@ export const createTypeUsageIndex = (
       const allVersions = Document.Versioned.getAllVersions(example.document)
 
       for (const version of allVersions) {
-        const schemaOption = Option.liftThrowable(
+        const schemaOption = O.liftThrowable(
           () => Catalog.resolveCatalogSchema(schemasCatalog, version),
         )()
-        if (Option.isNone(schemaOption)) continue
+        if (O.isNone(schemaOption)) continue
 
         const documentOption = Document.Versioned.getContentForVersion(example.document, version)
-        if (Option.isNone(documentOption)) continue
+        if (O.isNone(documentOption)) continue
 
         hashMap = processDocumentVersion(
           example,
@@ -249,12 +248,12 @@ const addExampleToIndex = (
 ): TypeUsageIndex => {
   // Get or create the version's type map
   const versionMap = HashMap.get(index, versionKey).pipe(
-    Option.getOrElse(HashMap.empty<string, HashSet.HashSet<S.Schema.Type<typeof ExampleReference>>>),
+    O.getOrElse(HashMap.empty<string, HashSet.HashSet<ExampleReference>>),
   )
 
   // Get or create the type's example set
   const examples = HashMap.get(versionMap, typeName).pipe(
-    Option.getOrElse(HashSet.empty<S.Schema.Type<typeof ExampleReference>>),
+    O.getOrElse(HashSet.empty<ExampleReference>),
   )
 
   // Add example reference to set (HashSet handles deduplication automatically)
@@ -281,11 +280,11 @@ export const getExampleReferencesForType = (
   typeUsageIndex: TypeUsageIndex,
   typeName: string,
   version: Version.Version | null = null,
-): HashSet.HashSet<S.Schema.Type<typeof ExampleReference>> => {
+): HashSet.HashSet<ExampleReference> => {
   const versionKey = version ?? UNVERSIONED_KEY
 
   return HashMap.get(typeUsageIndex, versionKey).pipe(
-    Option.flatMap(versionMap => HashMap.get(versionMap, typeName)),
-    Option.getOrElse(HashSet.empty<S.Schema.Type<typeof ExampleReference>>),
+    O.flatMap(versionMap => HashMap.get(versionMap, typeName)),
+    O.getOrElse(HashSet.empty<ExampleReference>),
   )
 }

@@ -1,5 +1,6 @@
-import { Box } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import * as React from 'react'
+import { Box } from './ui/index.js'
 
 export interface CarouselPillProps {
   /** Whether this pill represents the active slide */

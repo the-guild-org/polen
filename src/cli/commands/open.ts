@@ -1,11 +1,13 @@
 import { Api } from '#api/$'
+import { O } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig } from '#vite/config'
 import { Command, Options } from '@effect/cli'
-import { Err, Fs, Json, Path, Rec } from '@wollybeard/kit'
-import { Effect, Option } from 'effect'
-import { Grafaid } from 'graphql-kit'
-import { GraphqlSchemaLoader } from 'graphql-kit'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { FileSystem } from '@effect/platform/FileSystem'
+import { Err, Json, Path, Rec } from '@wollybeard/kit'
+import { Effect } from 'effect'
+import { Grafaid, GraphqlSchemaLoader } from 'graphql-kit'
 import { homedir } from 'node:os'
 import { allowGlobalParameter } from '../_/parameters.js'
 
@@ -62,7 +64,14 @@ const cacheWrite = async (source: string, schema: Grafaid.Schema.Schema, useCach
     const fileName = base64Codec.encode(source)
     const filePath = Path.join(cacheDir, fileName)
     const sdl = Grafaid.Schema.print(schema)
-    await Fs.write({ path: filePath, content: sdl })
+    await Effect.runPromise(
+      Effect.gen(function*() {
+        const fs = yield* FileSystem
+        // Ensure cache directory exists
+        yield* fs.makeDirectory(cacheDir, { recursive: true })
+        yield* fs.writeFileString(filePath, sdl)
+      }).pipe(Effect.provide(NodeFileSystem.layer)),
+    )
   })
 }
 
@@ -72,7 +81,14 @@ const cacheRead = async (source: string, useCache: boolean) => {
   return Err.tryCatchIgnore(async () => {
     const fileName = base64Codec.encode(source)
     const filePath = Path.join(cacheDir, fileName)
-    const sdl = await Fs.read(filePath)
+    const sdl = await Effect.runPromise(
+      Effect.gen(function*() {
+        const fs = yield* FileSystem
+        const result = yield* Effect.either(fs.readFileString(filePath))
+        if (result._tag === 'Left') return null
+        return result.right
+      }).pipe(Effect.provide(NodeFileSystem.layer)),
+    )
     if (!sdl) return null
     const documentNode = await Effect.runPromise(Grafaid.Parse.parseSchema(sdl, { source: filePath }))
     return await Effect.runPromise(Grafaid.Schema.fromAST(documentNode))
@@ -83,7 +99,10 @@ const wrapCache = (fn: typeof GraphqlSchemaLoader.load, useCache: boolean) => {
   const wrapped = (...args: Parameters<typeof GraphqlSchemaLoader.load>) =>
     Effect.gen(function*() {
       const cacheKey = JSON.stringify(args)
-      const cachedSchema = yield* Effect.promise(() => cacheRead(cacheKey, useCache))
+      const cachedSchema = yield* Effect.tryPromise({
+        try: () => cacheRead(cacheKey, useCache),
+        catch: (error) => new Error(`Failed to read cache: ${String(error)}`),
+      })
 
       if (cachedSchema) {
         return cachedSchema
@@ -92,7 +111,10 @@ const wrapCache = (fn: typeof GraphqlSchemaLoader.load, useCache: boolean) => {
       // GraphqlSchemaLoader.load returns Effect<GraphQLSchema, Error, FileSystem>
       const value = yield* fn(...args)
 
-      yield* Effect.promise(() => cacheWrite(cacheKey, value, useCache))
+      yield* Effect.tryPromise({
+        try: () => cacheWrite(cacheKey, value, useCache),
+        catch: (error) => new Error(`Failed to write cache: ${String(error)}`),
+      })
 
       return value
     })
@@ -121,10 +143,10 @@ export const open = Command.make(
   ({ introspectionHeaders, introspectUrl, sdlPath, namedSchema, cache, allowGlobal }) =>
     Effect.gen(function*() {
       // Validate that exactly one source option is provided
-      const introspectValue = Option.getOrUndefined(introspectUrl)
-      const sdlValue = Option.getOrUndefined(sdlPath)
-      const namedValue = Option.getOrUndefined(namedSchema)
-      const headersValue = Option.getOrUndefined(introspectionHeaders)
+      const introspectValue = O.getOrUndefined(introspectUrl)
+      const sdlValue = O.getOrUndefined(sdlPath)
+      const namedValue = O.getOrUndefined(namedSchema)
+      const headersValue = O.getOrUndefined(introspectionHeaders)
 
       const sources = [introspectValue, sdlValue, namedValue].filter(Boolean)
       if (sources.length === 0) {
@@ -158,7 +180,8 @@ export const open = Command.make(
       const load = wrapCache(GraphqlSchemaLoader.load, cache)
       const schema = yield* load(sourceConfig)
 
-      const tempDir = yield* Effect.promise(() => Fs.makeTemporaryDirectory())
+      const fs = yield* FileSystem
+      const tempDir = yield* fs.makeTempDirectoryScoped()
       const config = yield* Api.ConfigResolver.fromMemory({
         schema: {
           sources: {
@@ -175,9 +198,15 @@ export const open = Command.make(
       }, tempDir)
 
       const viteConfig = toViteUserConfig(config)
-      const viteDevServer = yield* Effect.promise(() => Vite.createServer(viteConfig))
+      const viteDevServer = yield* Effect.tryPromise({
+        try: () => Vite.createServer(viteConfig),
+        catch: (error) => new Error(`Failed to create Vite server: ${String(error)}`),
+      })
 
-      yield* Effect.promise(() => viteDevServer.listen())
+      yield* Effect.tryPromise({
+        try: () => viteDevServer.listen(),
+        catch: (error) => new Error(`Failed to start dev server: ${String(error)}`),
+      })
       viteDevServer.printUrls()
-    }),
+    }).pipe(Effect.provide(NodeFileSystem.layer)),
 )

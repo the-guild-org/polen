@@ -1,6 +1,6 @@
-import { HashMap, Option } from 'effect'
-import { VersionCoverage } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { O } from '#dep/effect'
+import { HashMap } from 'effect'
+import { Version, VersionCoverage } from 'graphql-kit'
 import { describe, expect, test } from 'vitest'
 import { normalizeAugmentationInput } from './input.js'
 
@@ -53,8 +53,8 @@ describe('Description Augmentation Transform', () => {
       result!.versionAugmentations,
       VersionCoverage.single(v1),
     )
-    expect(Option.isSome(v1Config)).toBe(true)
-    if (Option.isSome(v1Config)) {
+    expect(O.isSome(v1Config)).toBe(true)
+    if (O.isSome(v1Config)) {
       expect(v1Config.value.content).toBe('V1 content')
       expect(v1Config.value.placement).toBe('after') // inherited
     }
@@ -65,8 +65,8 @@ describe('Description Augmentation Transform', () => {
       result!.versionAugmentations,
       VersionCoverage.single(v2),
     )
-    expect(Option.isSome(v2Config)).toBe(true)
-    if (Option.isSome(v2Config)) {
+    expect(O.isSome(v2Config)).toBe(true)
+    if (O.isSome(v2Config)) {
       expect(v2Config.value.content).toBe('V2 content')
       expect(v2Config.value.placement).toBe('before') // overridden
     }
@@ -94,8 +94,8 @@ describe('Description Augmentation Transform', () => {
       result!.versionAugmentations,
       VersionCoverage.single(v2),
     )
-    expect(Option.isSome(v2Config)).toBe(true)
-    if (Option.isSome(v2Config)) {
+    expect(O.isSome(v2Config)).toBe(true)
+    if (O.isSome(v2Config)) {
       expect(v2Config.value.content).toBe('V2 only content')
       // v2Config.value.on is now a GraphQLSchemaPath
       expect(v2Config.value.on._tag).toBe('GraphQLPathRoot')
@@ -139,6 +139,6 @@ describe('Description Augmentation Transform', () => {
       result!.versionAugmentations,
       VersionCoverage.single(v2),
     )
-    expect(Option.isSome(v2Config)).toBe(true)
+    expect(O.isSome(v2Config)).toBe(true)
   })
 })

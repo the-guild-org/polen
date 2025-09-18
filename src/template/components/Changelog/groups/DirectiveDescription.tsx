@@ -1,9 +1,15 @@
-import { Code } from '@radix-ui/themes'
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
+import { Code } from '../../ui/index.js'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const DirectiveDescription: React.FC<{ change: any }> = ({ change }) => {
+type DirectiveDescriptionChange = typeof Change.DirectiveDescriptionChanged.Type
+
+interface DirectiveDescriptionProps {
+  change: DirectiveDescriptionChange
+}
+
+export const DirectiveDescription: React.FC<DirectiveDescriptionProps> = ({ change }) => {
   return (
     <ChangeBase change={change}>
       Changed description for directive <Code>@{change.name}</Code>

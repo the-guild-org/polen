@@ -1,13 +1,13 @@
 import type { Config } from '#api/config/normalized'
 import { Augmentations } from '#api/schema/augmentations/$'
 import { type CategoryConfig, processCategoriesWithVersion } from '#api/schema/categories-processor'
-import type { InputSourceError } from '#api/schema/input-source/errors'
+import { InputSourceError } from '#api/schema/input-source/errors'
 import type { EffectInputSource, InputSource } from '#api/schema/input-source/input-source'
 import * as InputSourceLoader from '#api/schema/input-source/load'
 import { InputSources } from '#api/schema/input-sources/$'
+import { A, O } from '#dep/effect'
 import type { PlatformError } from '@effect/platform/Error'
 import type { FileSystem } from '@effect/platform/FileSystem'
-import { Arr } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { Catalog } from 'graphql-kit'
 
@@ -21,15 +21,15 @@ type AnyInputSource = InputSource | EffectInputSource
 const findApplicableSource = (
   config: Config,
 ): Effect.Effect<
-  {
+  O.Option<{
     source: AnyInputSource
     sourceConfig: object
-  } | null,
+  }>,
   PlatformError | InputSourceError,
   FileSystem
 > =>
   Effect.gen(function*() {
-    if (config.schema?.enabled === false) return null
+    if (config.schema?.enabled === false) return O.none()
 
     const allSources: AnyInputSource[] = [
       InputSources.VersionedDirectory.loader,
@@ -41,8 +41,10 @@ const findApplicableSource = (
     ] as AnyInputSource[]
 
     const useFirst = config.schema?.useSources
-      ? Arr.sure(config.schema.useSources)
-      : null
+      ? A.isArray(config.schema.useSources)
+        ? config.schema.useSources
+        : [config.schema.useSources]
+      : undefined
 
     const context: InputSourceLoader.Context = { paths: config.paths }
 
@@ -65,18 +67,26 @@ const findApplicableSource = (
       } else {
         // It's a promise-based source
         const promiseSource = source as InputSource
-        isApplicable = yield* Effect.promise(() => promiseSource.isApplicable(sourceConfig, context))
+        isApplicable = yield* Effect.tryPromise({
+          try: () => promiseSource.isApplicable(sourceConfig, context),
+          catch: (error) =>
+            new InputSourceError({
+              source: 'unknown',
+              message: `Source isApplicable check failed: ${String(error)}`,
+              cause: error,
+            }),
+        })
       }
 
       if (isApplicable) {
-        return {
+        return O.some({
           source: source as any,
           sourceConfig,
-        }
+        })
       }
     }
 
-    return null
+    return O.none()
   })
 
 /**
@@ -86,7 +96,7 @@ const findApplicableSource = (
 export const hasSchema = (config: Config): Effect.Effect<boolean, PlatformError | InputSourceError, FileSystem> =>
   Effect.gen(function*() {
     const source = yield* findApplicableSource(config)
-    return source !== null
+    return O.isSome(source)
   })
 
 /**
@@ -95,53 +105,62 @@ export const hasSchema = (config: Config): Effect.Effect<boolean, PlatformError 
  */
 export const loadOrNull = (
   config: Config,
-): Effect.Effect<InputSourceLoader.LoadedCatalog | null, PlatformError | InputSourceError, FileSystem> =>
+): Effect.Effect<O.Option<InputSourceLoader.LoadedCatalog>, PlatformError | InputSourceError, FileSystem> =>
   Effect.gen(function*() {
-    if (config.schema?.enabled === false) return null
+    if (config.schema?.enabled === false) return O.none()
 
     const applicable = yield* findApplicableSource(config)
-    if (!applicable) {
-      return null
+    if (O.isNone(applicable)) {
+      return O.none()
     }
 
     const context: InputSourceLoader.Context = { paths: config.paths }
+    const applicableValue = applicable.value
 
     // Check if this is an Effect-based source by checking the source type
-    const isEffectSource = (applicable.source as any).__effectInputSource === true
+    const isEffectSource = (applicableValue.source as any).__effectInputSource === true
 
     let catalog: Catalog.Catalog | null
 
     if (isEffectSource) {
       // It's an Effect-based source
-      const effectSource = applicable.source as EffectInputSource
+      const effectSource = applicableValue.source as EffectInputSource
       catalog = yield* effectSource.readIfApplicableOrThrow(
-        applicable.sourceConfig,
+        applicableValue.sourceConfig,
         context,
       )
     } else {
       // It's a promise-based source
-      const promiseSource = applicable.source as InputSource
-      catalog = yield* Effect.promise(() =>
-        promiseSource.readIfApplicableOrThrow(
-          applicable.sourceConfig,
-          context,
-        )
-      )
+      const promiseSource = applicableValue.source as InputSource
+      catalog = yield* Effect.tryPromise({
+        try: () =>
+          promiseSource.readIfApplicableOrThrow(
+            applicableValue.sourceConfig,
+            context,
+          ),
+        catch: (error) =>
+          new InputSourceError({
+            source: 'unknown',
+            message: `Failed to read schema from source: ${String(error)}`,
+            cause: error,
+          }),
+      })
     }
 
     if (!catalog) {
-      return null
+      return O.none()
     }
 
     const loadedSchema: InputSourceLoader.LoadedCatalog = {
-      data: catalog,
-      source: applicable.source as InputSource,
+      data: O.some(catalog),
+      source: applicableValue.source as InputSource,
+      diagnostics: O.none(),
     }
 
     // Apply augmentations if configured and catalog was loaded
-    if (loadedSchema.data && config.schema?.augmentations) {
+    if (O.isSome(loadedSchema.data) && config.schema?.augmentations) {
       const augmentations = config.schema.augmentations
-      const catalog = loadedSchema.data as Catalog.Catalog
+      const catalog = loadedSchema.data.value as Catalog.Catalog
       const allDiagnostics: Augmentations.Diagnostic[] = []
 
       Catalog.fold(
@@ -167,14 +186,14 @@ export const loadOrNull = (
 
       // Add diagnostics to loaded schema if any were generated
       if (allDiagnostics.length > 0) {
-        loadedSchema.diagnostics = allDiagnostics
+        loadedSchema.diagnostics = O.some(allDiagnostics)
       }
     }
 
     // Apply categories if configured and catalog was loaded
-    if (loadedSchema.data && config.schema?.categories) {
+    if (O.isSome(loadedSchema.data) && config.schema?.categories) {
       const categoriesConfig = config.schema.categories
-      const catalog = loadedSchema.data as Catalog.Catalog
+      const catalog = loadedSchema.data.value as Catalog.Catalog
 
       Catalog.fold(
         (versioned) => {
@@ -201,7 +220,7 @@ export const loadOrNull = (
       )(catalog)
     }
 
-    return loadedSchema
+    return O.some(loadedSchema)
   })
 
 /**
@@ -217,14 +236,14 @@ export const loadOrNull = (
  */
 export const loadOrThrow = (
   config: Config,
-): Effect.Effect<InputSourceLoader.LoadedCatalog | null, PlatformError | InputSourceError | Error, FileSystem> =>
+): Effect.Effect<O.Option<InputSourceLoader.LoadedCatalog>, PlatformError | InputSourceError | Error, FileSystem> =>
   Effect.gen(function*() {
     const result = yield* loadOrNull(config)
 
-    if (result === null && config.schema?.enabled !== false) {
+    if (O.isNone(result) && config.schema?.enabled !== false) {
       // Only throw if schema is enabled but none found
       const applicable = yield* findApplicableSource(config)
-      if (!applicable) {
+      if (O.isNone(applicable)) {
         return yield* Effect.fail(new Error(`No applicable schema source found. Please check your configuration.`))
       } else {
         return yield* Effect.fail(new Error(`Schema source was applicable but returned no data`))

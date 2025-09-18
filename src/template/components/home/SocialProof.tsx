@@ -1,5 +1,6 @@
-import { Box, Flex, Heading, Section, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import * as React from 'react'
+import { Box, Container, Flex, Heading, Text } from '../ui/index.js'
 
 interface Logo {
   name: string
@@ -34,7 +35,7 @@ export const SocialProof: React.FC<SocialProofProps> = ({
   })
 
   return (
-    <Section size='3' style={{ background: 'var(--gray-2)' }}>
+    <Container size='lg' style={{ background: 'var(--gray-2)' }}>
       <Box style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
         <Heading size='5' mb='5' color='gray'>
           {title}
@@ -104,6 +105,6 @@ export const SocialProof: React.FC<SocialProofProps> = ({
           Join thousands of developers building with our GraphQL API
         </Text>
       </Box>
-    </Section>
+    </Container>
   )
 }

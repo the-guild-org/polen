@@ -1,13 +1,17 @@
 import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
-import type { FsLayout } from '@wollybeard/kit'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
+type FileTree = {
+  [path: string]: string | FileTree
+}
+
 interface TestCase {
   title?: string
-  fixture: FsLayout.Tree
+  fixture: FileTree
   result: {
     path: string
     navBarTitle?: string
@@ -172,7 +176,9 @@ testCases.forEach(({ fixture, result, title, additionalChecks }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
     await project.layout.set(fixture)
     const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)

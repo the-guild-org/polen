@@ -1,6 +1,7 @@
 import { Api } from '#api/$'
 import { Schema } from '#api/schema/$'
 import type { Diagnostic as AugmentationDiagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
+import { O } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -8,9 +9,9 @@ import { ViteVirtual } from '#lib/vite-virtual/$'
 import { debugPolen } from '#singletons/debug'
 import { polenVirtual } from '#vite/vi'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { Catalog } from 'graphql-kit'
-import * as NodePath from 'node:path'
 
 export const viProjectSchema = polenVirtual([`project`, `schemas`])
 
@@ -47,10 +48,10 @@ export const Schemas = ({
     Schema.loadOrNull(config).pipe(
       Effect.map((result) => {
         // Store diagnostics for reporting
-        if (result?.diagnostics) {
-          lastDiagnostics = result.diagnostics
+        if (O.isSome(result) && O.isSome(result.value.diagnostics)) {
+          lastDiagnostics = result.value.diagnostics.value
         }
-        return result
+        return O.isSome(result) ? result.value : null
       }),
     )
   )
@@ -80,11 +81,11 @@ export const Schemas = ({
   const isSchemaFile = (file: string): boolean => {
     if (!config.schema) return false
 
-    const absoluteFile = NodePath.resolve(file)
+    const absoluteFile = Path.resolve(file)
 
     // Check if file path matches the configured schema file
     if (config.schema.sources?.file?.path) {
-      const absoluteSchemaFile = NodePath.resolve(
+      const absoluteSchemaFile = Path.resolve(
         config.paths.project.rootDir,
         config.schema.sources.file.path,
       )
@@ -93,16 +94,16 @@ export const Schemas = ({
 
     // Check if file path is within the configured schema directory
     if (config.schema.sources?.directory?.path) {
-      const absoluteSchemaDir = NodePath.resolve(
+      const absoluteSchemaDir = Path.resolve(
         config.paths.project.rootDir,
         config.schema.sources.directory.path,
       )
-      if (absoluteFile.startsWith(absoluteSchemaDir + NodePath.sep)) return true
+      if (absoluteFile.startsWith(absoluteSchemaDir + Path.sep)) return true
     }
 
     // Check if file is the introspection file
     if (config.schema.sources?.introspection?.url) {
-      const absoluteIntrospectionFile = NodePath.resolve(
+      const absoluteIntrospectionFile = Path.resolve(
         config.paths.project.rootDir,
         `schema.introspection.json`,
       )
@@ -123,7 +124,7 @@ export const Schemas = ({
       paths.push(config.schema.sources.file.path)
     }
     if (config.schema?.sources?.introspection?.url) {
-      paths.push(NodePath.join(config.paths.project.rootDir, `schema.introspection.json`))
+      paths.push(Path.join(config.paths.project.rootDir, `schema.introspection.json`))
     }
 
     return paths
@@ -137,8 +138,9 @@ export const Schemas = ({
         // @claude in what case can data be null?
         serializer: (loadedCatalog) =>
           Effect.gen(function*() {
-            if (!loadedCatalog?.data) throw new Error('No schema data to serialize')
-            const encoded = yield* Catalog.encode(loadedCatalog.data)
+            const data = O.getOrNull(loadedCatalog.data)
+            if (!data) throw new Error('No schema data to serialize')
+            const encoded = yield* Catalog.encode(data)
             return JSON.stringify(encoded, null, 2)
           }),
         path: 'schemas/catalog.json',
@@ -151,8 +153,8 @@ export const Schemas = ({
       hooks: {
         async onDiagnostics(data) {
           // Report augmentation diagnostics
-          if (data?.diagnostics) {
-            reportDiagnostics(data.diagnostics as AugmentationDiagnostic[], 'dev')
+          if (data?.diagnostics && O.isSome(data.diagnostics)) {
+            reportDiagnostics(data.diagnostics.value as AugmentationDiagnostic[], 'dev')
           }
         },
       },
@@ -171,8 +173,11 @@ export const Schemas = ({
             )
 
             // Report diagnostics if any
-            if (schemaResult?.diagnostics && schemaResult.diagnostics.length > 0) {
-              reportDiagnostics(schemaResult.diagnostics, 'dev')
+            if (
+              schemaResult?.diagnostics && O.isSome(schemaResult.diagnostics)
+              && schemaResult.diagnostics.value.length > 0
+            ) {
+              reportDiagnostics(schemaResult.diagnostics.value, 'dev')
             }
 
             if (!schemaResult?.data) {
@@ -180,7 +185,7 @@ export const Schemas = ({
             }
             return `
               import { Catalog } from 'graphql-kit'
-              const encoded = ${JSON.stringify(Catalog.encodeSync(schemaResult.data))}
+              const encoded = ${JSON.stringify(Catalog.encodeSync(O.getOrThrow(schemaResult.data)))}
               export const schemasCatalog = Catalog.decodeSync(encoded)
             `
           },

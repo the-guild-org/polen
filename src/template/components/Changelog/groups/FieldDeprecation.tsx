@@ -1,9 +1,17 @@
-import { Code } from '@radix-ui/themes'
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
+import { Code } from '../../ui/index.js'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const FieldDeprecation: React.FC<{ change: any }> = ({ change }) => {
+type FieldDeprecationChange =
+  | typeof Change.FieldDeprecationAdded.Type
+  | typeof Change.FieldDeprecationRemoved.Type
+
+interface FieldDeprecationProps {
+  change: FieldDeprecationChange
+}
+
+export const FieldDeprecation: React.FC<FieldDeprecationProps> = ({ change }) => {
   switch (change._tag) {
     case `FIELD_DEPRECATION_ADDED`:
       return (

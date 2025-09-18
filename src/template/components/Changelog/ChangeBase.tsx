@@ -1,8 +1,8 @@
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
 
 interface ChangeBaseProps {
-  change: GraphqlChange.Change
+  change: Change.Change
   children: React.ReactNode
 }
 

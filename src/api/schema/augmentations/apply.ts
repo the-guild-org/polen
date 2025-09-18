@@ -8,12 +8,10 @@ import {
 } from '#api/schema/augmentations/diagnostics/diagnostic'
 import type { AugmentationInput } from '#api/schema/augmentations/input'
 import { normalizeAugmentationInput } from '#api/schema/augmentations/input'
-import { Either, HashMap, Match, Option, pipe } from 'effect'
+import { A, E, O } from '#dep/effect'
+import { HashMap, Match, pipe } from 'effect'
 import type { GraphQLSchema } from 'graphql'
-import { GrafaidOld } from 'graphql-kit'
-import { GraphQLSchemaPath } from 'graphql-kit'
-import { VersionCoverage } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { GrafaidOld, GraphQLSchemaPath, Version, VersionCoverage } from 'graphql-kit'
 
 /**
  * Apply version-aware augmentations to a schema.
@@ -60,7 +58,7 @@ const applyAugmentationToPath = (
   const resolve = GraphQLSchemaPath.Resolvers.GraphqlSchema.create({ schema })
   const result = resolve(path)
 
-  if (Either.isLeft(result)) {
+  if (E.isLeft(result)) {
     const error = result.left as unknown
     // Use rich error rendering if it's a TraversalError
     let message: string
@@ -171,7 +169,7 @@ export const applyVersioned = (
     // First try exact version match
     const versionCoverage = VersionCoverage.single(version)
     const maybeConfig = HashMap.get(augmentation.versionAugmentations, versionCoverage)
-    if (Option.isSome(maybeConfig)) {
+    if (O.isSome(maybeConfig)) {
       config = maybeConfig.value
     }
 
@@ -188,7 +186,7 @@ export const applyVersioned = (
     // For unversioned schemas, only apply unversioned augmentations
     const unversionedCoverage = VersionCoverage.unversioned()
     const maybeConfig = HashMap.get(augmentation.versionAugmentations, unversionedCoverage)
-    if (Option.isSome(maybeConfig)) {
+    if (O.isSome(maybeConfig)) {
       config = maybeConfig.value
     }
   }
@@ -202,7 +200,7 @@ export const applyVersioned = (
     const firstEntry = pipe(
       augmentation.versionAugmentations,
       HashMap.values,
-      (iter) => Array.from(iter)[0],
+      (iter) => A.fromIterable(iter)[0],
     )
 
     if (firstEntry) {
@@ -215,7 +213,7 @@ export const applyVersioned = (
         availableVersions: pipe(
           augmentation.versionAugmentations,
           HashMap.keys,
-          (iter) => Array.from(iter).map(VersionCoverage.toLabel),
+          (iter) => A.fromIterable(iter).map(VersionCoverage.toLabel),
         ),
       })]
     }

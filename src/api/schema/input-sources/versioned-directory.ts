@@ -1,17 +1,12 @@
 import { InputSource } from '#api/schema/input-source/$'
+import { A, O } from '#dep/effect'
 import { debugPolen } from '#singletons/debug'
 import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Arr, Path } from '@wollybeard/kit'
-import { Array, Effect, HashMap } from 'effect'
+import { Path } from '@wollybeard/kit'
+import { Effect, HashMap } from 'effect'
 import type { GraphQLSchema } from 'graphql'
-import { Catalog } from 'graphql-kit'
-import { Change } from 'graphql-kit'
-import { DateOnly } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog, Change, DateOnly, Grafaid, Revision, Schema, Version } from 'graphql-kit'
 
 const debug = debugPolen.sub(`schema:data-source-versioned-schema-directory`)
 
@@ -77,8 +72,8 @@ interface VersionInfo {
   name: string
   path: string
   version: Version.Version
-  parentVersion: Version.Version | null
-  branchDate: string | null
+  parentVersion: O.Option<Version.Version>
+  branchDate: O.Option<string>
   revisionFiles: string[]
 }
 
@@ -115,15 +110,15 @@ export const readOrThrow = (
 
       // Parse the directory name: <version>[><parent>@<date>]
       let versionStr: string
-      let parentVersion: Version.Version | null = null
-      let branchDate: string | null = null
+      let parentVersion: O.Option<Version.Version> = O.none()
+      let branchDate: O.Option<string> = O.none()
 
       const branchMatch = entry.match(/^([^>]+)>([^@]+)(?:@([\d-]+))?$/)
       if (branchMatch) {
         // Has branch point: "2.0.0>1.0.0@2024-03-20" or "2.0.0>1.0.0"
         versionStr = branchMatch[1]!
         const parentVersionStr = branchMatch[2]!
-        branchDate = branchMatch[3] || null
+        branchDate = branchMatch[3] ? O.some(branchMatch[3]) : O.none()
 
         // Parse parent version
         const parentVersionResult = yield* Effect.either(Effect.try({
@@ -135,7 +130,7 @@ export const readOrThrow = (
           debug(`skipping ${entry} - invalid parent version format`)
           continue
         }
-        parentVersion = parentVersionResult.right
+        parentVersion = O.some(parentVersionResult.right)
       } else {
         // Simple version: "1.0.0"
         versionStr = entry
@@ -180,7 +175,7 @@ export const readOrThrow = (
       })
     }
 
-    if (!Arr.isntEmpty(versionInfos)) {
+    if (!A.isNonEmptyArray(versionInfos)) {
       debug(`no version directories with schema.graphql found`)
       return null
     }
@@ -193,11 +188,11 @@ export const readOrThrow = (
 
     // Load all versions with their revisions
     const versions = yield* Effect.all(
-      Arr.map(versionInfos, (versionInfo) =>
+      A.map(versionInfos, (versionInfo) =>
         Effect.gen(function*() {
           // Load all revision files for this version
           const revisionData = yield* Effect.all(
-            Arr.map(versionInfo.revisionFiles, (revisionFile) =>
+            A.map(versionInfo.revisionFiles, (revisionFile) =>
               Effect.gen(function*() {
                 const filePath = Path.join(versionInfo.path, revisionFile)
                 const content = yield* fs.readFileString(filePath)
@@ -252,34 +247,36 @@ export const readOrThrow = (
 
     // Create catalog entries for each version
     const catalogEntries = yield* Effect.all(
-      Arr.map(versions, (version) =>
+      A.map(versions, (version) =>
         Effect.gen(function*() {
           // Get parent schema for first revision comparison if this is a branched version
-          let parentSchemaForComparison: GraphQLSchema | null = null
-          if (version.parentVersion && version.branchDate) {
-            const parentVersionStr = Version.encodeSync(version.parentVersion)
+          let parentSchemaForComparison: O.Option<GraphQLSchema> = O.none()
+          if (O.isSome(version.parentVersion) && O.isSome(version.branchDate)) {
+            const parentVersionStr = Version.encodeSync(version.parentVersion.value)
+            const branchDateValue = version.branchDate.value
             const parentVersionData = versionMap.get(parentVersionStr)
             if (parentVersionData) {
               const matchingRevisionIndex = parentVersionData.revisions.findIndex(
-                rev => rev.date === version.branchDate,
+                rev => rev.date === branchDateValue,
               )
               if (matchingRevisionIndex >= 0) {
-                parentSchemaForComparison = parentVersionData.revisions[matchingRevisionIndex]?.schema ?? null
+                const schema = parentVersionData.revisions[matchingRevisionIndex]?.schema
+                parentSchemaForComparison = schema ? O.some(schema) : O.none()
               }
             }
           }
 
           // Calculate revisions with changes
           const revisions = yield* Effect.all(
-            Arr.map(version.revisions, (revisionData, index) =>
+            A.map(version.revisions, (revisionData, index) =>
               Effect.gen(function*() {
                 const current = revisionData
                 const previous = version.revisions[index - 1]
 
                 // For first revision of a branched version, compare against parent's schema at branch point
                 // Otherwise compare against previous revision in same version (or empty if first version)
-                const before = index === 0 && parentSchemaForComparison
-                  ? parentSchemaForComparison
+                const before = index === 0 && O.isSome(parentSchemaForComparison)
+                  ? parentSchemaForComparison.value
                   : (previous?.schema ?? Grafaid.Schema.empty)
                 const after = current.schema
 
@@ -307,20 +304,21 @@ export const readOrThrow = (
 
           // Find parent schema based on parentVersion and branchDate
           let parentSchema: Schema.Versioned.Versioned | null = null
-          if (version.parentVersion) {
-            const parentVersionStr = Version.encodeSync(version.parentVersion)
+          if (O.isSome(version.parentVersion)) {
+            const parentVersionStr = Version.encodeSync(version.parentVersion.value)
             const parentVersionData = versionMap.get(parentVersionStr)
 
             if (parentVersionData) {
-              if (version.branchDate && parentVersionData.revisions.length > 0) {
+              if (O.isSome(version.branchDate) && parentVersionData.revisions.length > 0) {
                 // Find the revision matching the branch date
+                const branchDateValue = version.branchDate.value
                 const matchingRevisionIndex = parentVersionData.revisions.findIndex(
-                  rev => rev.date === version.branchDate,
+                  rev => rev.date === branchDateValue,
                 )
                 if (matchingRevisionIndex >= 0) {
                   // Calculate parent's revisions up to branch point
                   const parentRevisions = yield* Effect.all(
-                    Arr.map(parentVersionData.revisions.slice(0, matchingRevisionIndex + 1), (revData, idx) =>
+                    A.map(parentVersionData.revisions.slice(0, matchingRevisionIndex + 1), (revData, idx) =>
                       Effect.gen(function*() {
                         const current = revData
                         const previous = idx > 0 ? parentVersionData.revisions[idx - 1] : null
@@ -348,7 +346,7 @@ export const readOrThrow = (
 
                   const parentSchemaAtBranch = parentVersionData.revisions[matchingRevisionIndex]?.schema
                   parentSchema = Schema.Versioned.make({
-                    version: version.parentVersion,
+                    version: version.parentVersion.value,
                     branchPoint: null, // TODO: Support nested branchPoint relationships
                     revisions: parentRevisions.reverse(), // Newest first
                     definition: parentSchemaAtBranch ?? Grafaid.Schema.empty,
@@ -357,7 +355,7 @@ export const readOrThrow = (
               } else {
                 // No specific branch date or no revisions - use parent's initial state
                 parentSchema = Schema.Versioned.make({
-                  version: version.parentVersion,
+                  version: version.parentVersion.value,
                   branchPoint: null,
                   revisions: [], // No revisions for initial state
                   definition: parentVersionData.revisions[0]?.schema ?? Grafaid.Schema.empty,
@@ -368,10 +366,11 @@ export const readOrThrow = (
 
           // Create branchPoint if we have a parent and branch date
           let branchPoint: Schema.Versioned.BranchPoint | null = null
-          if (parentSchema && version.branchDate) {
+          if (parentSchema && O.isSome(version.branchDate)) {
             // Find the revision at the branch point
+            const branchDateValue = version.branchDate.value
             const branchRevision = parentSchema.revisions.find(r =>
-              r.date === version.branchDate
+              DateOnly.equivalence(r.date, DateOnly.make(branchDateValue))
             )
             if (branchRevision) {
               branchPoint = { schema: parentSchema, revision: branchRevision }
@@ -452,7 +451,7 @@ export const loader = InputSource.createEffect({
           // Check for revision files or schema.graphql
           const dirFiles = yield* Effect.either(fs.readDirectory(versionPath))
           if (dirFiles._tag === 'Right') {
-            const hasRevisions = Array.some(dirFiles.right, file =>
+            const hasRevisions = A.some(dirFiles.right, file =>
               /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql')
             if (hasRevisions) {
               return true
@@ -519,7 +518,7 @@ export const loader = InputSource.createEffect({
         // Check for schema files
         const dirFiles = yield* Effect.either(fs.readDirectory(versionPath))
         if (dirFiles._tag === 'Right') {
-          const hasSchemaFiles = Array.some(dirFiles.right, file =>
+          const hasSchemaFiles = A.some(dirFiles.right, file =>
             /^\d{4}-\d{2}-\d{2}\.graphql$/.test(file) || file === 'schema.graphql')
 
           if (hasSchemaFiles) {

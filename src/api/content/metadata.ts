@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 
 /**
  * Schema for validating front matter content

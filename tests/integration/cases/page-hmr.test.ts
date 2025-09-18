@@ -1,5 +1,6 @@
 import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
@@ -13,6 +14,8 @@ test.describe('HMR', () => {
       Api.ConfigResolver.fromMemory(
         { advanced: { isSelfContainedMode: true } },
         project.layout.cwd,
+      ).pipe(
+        Effect.provide(NodeFileSystem.layer),
       ),
     )
     const server = await vite.startDevelopmentServer(toViteUserConfig(polenConfig))
@@ -33,6 +36,8 @@ test.describe('HMR', () => {
       Api.ConfigResolver.fromMemory(
         { advanced: { isSelfContainedMode: true } },
         project.layout.cwd,
+      ).pipe(
+        Effect.provide(NodeFileSystem.layer),
       ),
     )
     const server = await vite.startDevelopmentServer(toViteUserConfig(polenConfig))

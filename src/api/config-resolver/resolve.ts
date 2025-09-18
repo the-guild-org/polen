@@ -28,6 +28,6 @@ export const fromMemory = (
    * @default `process.cwd()`
    */
   baseRootDirPath?: string,
-): Effect.Effect<Config, Error, never> => {
+): Effect.Effect<Config, Error, FileSystem> => {
   return normalizeInput(input, baseRootDirPath ?? process.cwd())
 }

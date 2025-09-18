@@ -6,10 +6,10 @@ import {
   ExclamationTriangleIcon,
   InfoCircledIcon,
 } from '@radix-ui/react-icons'
-import { Box, Button, Card, Flex, IconButton, Text } from '@radix-ui/themes'
-import type { TextProps } from '@radix-ui/themes'
 import type { ReadonlyDeep } from 'type-fest'
 import { Stores } from '../stores/$.js'
+import { Box, Button, Card, Flex, IconButton, Text } from './ui/index.js'
+import type { TextProps } from './ui/index.js'
 
 const toastVariants = {
   info: {
@@ -47,7 +47,7 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
         position: 'relative',
       }}
     >
-      <Flex gap='3' align='start' maxWidth={'400px'}>
+      <Flex gap='3' align='start' style={{ maxWidth: '400px' }}>
         <Text
           as='div'
           size='4'
@@ -87,7 +87,7 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
           variant='ghost'
           color='gray'
           onClick={handleClose}
-          style={{ flexShrink: 0 }}
+          className='shrink-0'
         >
           <Cross2Icon />
         </IconButton>

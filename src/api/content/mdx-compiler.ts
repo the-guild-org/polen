@@ -1,5 +1,6 @@
 import { compile } from '@mdx-js/mdx'
 import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
+import { Data, Effect } from 'effect'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import { getCurrentSchema } from '../../vite/plugins/mdx-schema-bridge.js'
@@ -58,6 +59,15 @@ export const createMdxPlugins = (options: MdxPluginOptions = {}) => ({
 })
 
 // ============================================================================
+// Error Types
+// ============================================================================
+
+export class MdxCompilationError extends Data.TaggedError('MdxCompilationError')<{
+  readonly content: string
+  readonly error: unknown
+}> {}
+
+// ============================================================================
 // Compilation Functions
 // ============================================================================
 
@@ -67,19 +77,26 @@ export const createMdxPlugins = (options: MdxPluginOptions = {}) => ({
  *
  * @param content - The MDX content to compile
  * @param options - Optional plugin configuration
- * @returns Compiled MDX as a function body string
+ * @returns Effect that compiles MDX as a function body string
  */
-export const compileMdxToFunctionBody = async (
+export const compileMdxToFunctionBody = (
   content: string,
   options?: MdxPluginOptions,
-) => {
-  return compile(content, {
-    ...MDX_CONFIG,
-    ...createMdxPlugins(options),
-    outputFormat: 'function-body',
-    development: false,
+): Effect.Effect<any, MdxCompilationError, never> =>
+  Effect.tryPromise({
+    try: () =>
+      compile(content, {
+        ...MDX_CONFIG,
+        ...createMdxPlugins(options),
+        outputFormat: 'function-body',
+        development: false,
+      }),
+    catch: (error) =>
+      new MdxCompilationError({
+        content,
+        error,
+      }),
   })
-}
 
 /**
  * Get configuration for @mdx-js/rollup plugin.

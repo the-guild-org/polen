@@ -1,7 +1,8 @@
-import { Badge, Box, Card, Flex, Heading, Section, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import * as React from 'react'
 import { Link } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
+import { Badge, Box, Card, Container, Flex, Heading, Text } from '../ui/index.js'
 
 import { Catalog } from 'graphql-kit'
 
@@ -70,7 +71,7 @@ export const RecentChangesSection: React.FC<RecentChangesProps> = ({
   }
 
   return (
-    <Section size='3'>
+    <Container size='lg'>
       <Box style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <Flex justify='between' align='center' mb='4'>
           <Box>
@@ -146,9 +147,9 @@ export const RecentChangesSection: React.FC<RecentChangesProps> = ({
           </Box>
         )}
       </Box>
-    </Section>
+    </Container>
   )
 }
 
 // Add missing Button import (Radix Themes doesn't export Button, we'll use a simple link)
-import { Button } from '@radix-ui/themes'
+import { Button } from '../ui/index.js'

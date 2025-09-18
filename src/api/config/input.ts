@@ -1,11 +1,12 @@
 import { ExamplesConfig } from '#api/examples/config'
 import { ReferenceConfig } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
+import { S } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
-import { S } from 'graphql-kit'
-import { spreadShallow } from 'graphql-kit'
+import { Obj } from '@wollybeard/kit'
 import type { WritableDeep } from 'type-fest'
 import { HomeConfig } from './home.js'
+import { ThemeConfig } from './theme.js'
 
 // ============================================================================
 // Build
@@ -311,6 +312,7 @@ export const ConfigInput = S.Struct({
   examples: S.optional(ExamplesConfig),
   templateVariables: S.optional(TemplateVariables),
   home: S.optional(HomeConfig),
+  theme: S.optional(ThemeConfig),
   branding: S.optional(BrandingConfig),
   build: S.optional(BuildConfig),
   server: S.optional(ServerConfig),
@@ -355,7 +357,7 @@ export const mergeInputs = (
     return base_as_writable ?? {}
   }
 
-  const merged: WritableDeep<ConfigInput> = spreadShallow(base_as_writable, overrides_as_writable)
+  const merged: WritableDeep<ConfigInput> = Obj.spreadShallow(base_as_writable, overrides_as_writable)
 
   // Merge schema if both have it
   if (base_as_writable.schema ?? overrides_as_writable.schema) {
@@ -364,38 +366,38 @@ export const mergeInputs = (
 
   // Merge examples config
   if (base_as_writable.examples ?? overrides_as_writable.examples) {
-    merged.examples = spreadShallow(base_as_writable.examples, overrides_as_writable.examples)
+    merged.examples = Obj.spreadShallow(base_as_writable.examples, overrides_as_writable.examples)
   }
 
   // Merge home config
   if (base_as_writable.home ?? overrides_as_writable.home) {
-    merged.home = spreadShallow(base_as_writable.home, overrides_as_writable.home)
+    merged.home = Obj.spreadShallow(base_as_writable.home, overrides_as_writable.home)
   }
 
   // Merge branding config
   if (base_as_writable.branding ?? overrides_as_writable.branding) {
-    merged.branding = spreadShallow(base_as_writable.branding, overrides_as_writable.branding)
+    merged.branding = Obj.spreadShallow(base_as_writable.branding, overrides_as_writable.branding)
   }
 
   // Merge build config
   if (base_as_writable.build ?? overrides_as_writable.build) {
-    merged.build = spreadShallow(base_as_writable.build, overrides_as_writable.build)
+    merged.build = Obj.spreadShallow(base_as_writable.build, overrides_as_writable.build)
   }
 
   // Merge server config
   if (base_as_writable.server ?? overrides_as_writable.server) {
-    merged.server = spreadShallow(base_as_writable.server, overrides_as_writable.server)
+    merged.server = Obj.spreadShallow(base_as_writable.server, overrides_as_writable.server)
   }
 
   // Merge warnings config
   if (base_as_writable.warnings ?? overrides_as_writable.warnings) {
-    merged.warnings = spreadShallow(base_as_writable.warnings, overrides_as_writable.warnings)
+    merged.warnings = Obj.spreadShallow(base_as_writable.warnings, overrides_as_writable.warnings)
 
     // Merge interactiveWithoutSchema config
     if (
       base_as_writable.warnings?.interactiveWithoutSchema ?? overrides_as_writable.warnings?.interactiveWithoutSchema
     ) {
-      merged.warnings.interactiveWithoutSchema = spreadShallow(
+      merged.warnings.interactiveWithoutSchema = Obj.spreadShallow(
         base_as_writable.warnings?.interactiveWithoutSchema,
         overrides_as_writable.warnings?.interactiveWithoutSchema,
       )
@@ -404,7 +406,7 @@ export const mergeInputs = (
 
   // Merge advanced config
   if (base_as_writable.advanced ?? overrides_as_writable.advanced) {
-    merged.advanced = spreadShallow(base_as_writable.advanced, overrides_as_writable.advanced)
+    merged.advanced = Obj.spreadShallow(base_as_writable.advanced, overrides_as_writable.advanced)
 
     // Merge Vite configs if present
     if (base_as_writable.advanced?.vite ?? overrides_as_writable.advanced?.vite) {
@@ -415,7 +417,7 @@ export const mergeInputs = (
     }
 
     if (base_as_writable.advanced?.paths ?? overrides_as_writable.advanced?.paths) {
-      merged.advanced.paths = spreadShallow(base_as_writable.advanced?.paths, overrides_as_writable.advanced?.paths)
+      merged.advanced.paths = Obj.spreadShallow(base_as_writable.advanced?.paths, overrides_as_writable.advanced?.paths)
     }
   }
 

@@ -2,6 +2,7 @@ import { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig, type ViteUserConfigWithPolen } from '#vite/config'
 import { ViteMemoryLogger } from '#vite/logger'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Obj, Url } from '@wollybeard/kit'
 import { Effect } from 'effect'
 
@@ -63,7 +64,9 @@ export const create = (
     devPolen: async (configInput, testOptions) => {
       const configInputMerged = Api.Config.mergeInputs(config?.defaultConfigInput, configInput)
       const appConfig = await Effect.runPromise(
-        Api.ConfigResolver.fromMemory(configInputMerged, config?.cwd),
+        Api.ConfigResolver.fromMemory(configInputMerged, config?.cwd).pipe(
+          Effect.provide(NodeFileSystem.layer),
+        ),
       )
       // dump(appConfig)
       const viteConfig = toViteUserConfig(appConfig)

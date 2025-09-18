@@ -1,7 +1,8 @@
+import { O } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { StackProcessor } from '#lib/stack-processor'
+import { Effect } from 'effect'
 import { debug } from './debug.js'
-import type { HookLoad, HookResolveId } from './hooks.js'
 import type { Identifier } from './identifier.js'
 
 export interface IdentifiedLoader {
@@ -11,30 +12,40 @@ export interface IdentifiedLoader {
 
 export const toHookLoad = (
   identifiedLoader: IdentifiedLoader,
-): HookLoad => {
-  return async (...args) => {
-    // debug(`load candidate`, { virtualIdentifier, args })
-    if (args[0] === identifiedLoader.identifier.resolved) {
-      debug(`will load`, { identifier: identifiedLoader.identifier })
-      const result = await identifiedLoader.loader(...args)
-      debug(`did load`, { identifier: identifiedLoader.identifier, result })
-      // Add moduleType for Rolldown compatibility
-      if (result && typeof result === `string`) {
-        return { code: result, moduleType: `js` }
+): (
+  ...args: Parameters<Vite.HookLoadFnPure>
+) => Effect.Effect<O.Option<Awaited<ReturnType<Vite.HookLoadFnPure>>>, Error, never> => {
+  return (...args) =>
+    Effect.gen(function*() {
+      // debug(`load candidate`, { virtualIdentifier, args })
+      if (args[0] === identifiedLoader.identifier.resolved) {
+        debug(`will load`, { identifier: identifiedLoader.identifier })
+        const result = yield* Effect.tryPromise({
+          try: () => Promise.resolve(identifiedLoader.loader(...args)),
+          catch: (error) => new Error(`Loader failed: ${String(error)}`),
+        })
+        debug(`did load`, { identifier: identifiedLoader.identifier, result })
+        // Add moduleType for Rolldown compatibility
+        if (result && typeof result === `string`) {
+          return O.some({ code: result, moduleType: `js` })
+        }
+        return O.some(result)
       }
-      return result
-    }
-    return undefined
-  }
+      return O.none()
+    })
 }
 
-export const toHookResolveId = (identifiedLoader: IdentifiedLoader): HookResolveId => {
-  return id => {
-    if (id === identifiedLoader.identifier.id) {
-      return identifiedLoader.identifier.resolved
-    }
-    return undefined
-  }
+export const toHookResolveId = (
+  identifiedLoader: IdentifiedLoader,
+): (
+  ...args: Parameters<Vite.HookResolveIdFnPure>
+) => Effect.Effect<O.Option<ReturnType<Vite.HookResolveIdFnPure>>, never, never> => {
+  return (id) =>
+    Effect.succeed(
+      id === identifiedLoader.identifier.id
+        ? O.some(identifiedLoader.identifier.resolved)
+        : O.none(),
+    )
 }
 
 export const toHooks = (
@@ -43,17 +54,23 @@ export const toHooks = (
   resolveId: Vite.HookResolveIdFnPure
   load: Vite.HookLoadFnPure
 } => {
-  const resolveId = StackProcessor.untilDefined<HookResolveId>(
+  const resolveIdEffect = StackProcessor.untilSome(
     identifiedloaders.map(toHookResolveId),
   )
 
-  const load = StackProcessor.untilDefined(
+  const loadEffect = StackProcessor.untilSome(
     identifiedloaders.map(toHookLoad),
   )
 
   return {
-    resolveId,
-    load,
+    resolveId: async (...args) => {
+      const result = await Effect.runPromise(resolveIdEffect(...args))
+      return O.getOrUndefined(result)
+    },
+    load: async (...args) => {
+      const result = await Effect.runPromise(loadEffect(...args))
+      return O.getOrUndefined(result)
+    },
   }
 }
 

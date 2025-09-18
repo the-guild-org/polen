@@ -1,10 +1,8 @@
-import { Swiss } from '#lib/swiss'
-import { Box, Text } from '@radix-ui/themes'
-import { Catalog } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Catalog, Schema, Version } from 'graphql-kit'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { Box, GridItem, Text } from '../../components/ui/index.js'
 import { VersionPicker } from '../../components/VersionPicker.js'
 import { ChangelogSidebarItem } from './ChangelogSidebarItem.js'
 
@@ -42,7 +40,7 @@ export const ChangelogSidebar: React.FC<{
     }, [])
 
     return (
-      <Swiss.Item
+      <GridItem
         cols={3}
         style={{
           position: 'sticky',
@@ -74,7 +72,7 @@ export const ChangelogSidebar: React.FC<{
             isActive={activeRevision === revision.date}
           />
         ))}
-      </Swiss.Item>
+      </GridItem>
     )
   }
 }

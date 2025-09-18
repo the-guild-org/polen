@@ -2,14 +2,16 @@ import { ExamplesConfig } from '#api/examples/config'
 import { ReferenceConfigObject } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Typings } from '#api/typings/$'
+import { S } from '#dep/effect'
+import { O } from '#dep/effect'
 import { DirectedFilter } from '#lib/directed-filter/$'
 import { FilePath } from '#lib/file-path/$'
 import { packagePaths } from '#package-paths'
+import { FileSystem } from '@effect/platform'
 import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { S } from 'graphql-kit'
-import { assertPathAbsolute } from 'graphql-kit'
 import type { WritableDeep } from 'type-fest'
+import { ensureAbsoluteWith } from '../../lib/path-utils.js'
 import { BuildArchitecture, ConfigInput } from './input.js'
 
 // ============================================================================
@@ -422,15 +424,15 @@ export interface ConfigAdvancedPathsInput {
 
 const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | undefined): Config[`paths`] => {
   if (!Path.isAbsolute(rootDir)) throw new Error(`Root dir path must be absolute: ${rootDir}`)
-  const rootAbsolute = Path.ensureAbsoluteWith(rootDir)
+  const rootAbsolute = ensureAbsoluteWith(rootDir)
 
   const buildAbsolutePath = rootAbsolute(`build`)
-  const buildAbsolute = Path.ensureAbsoluteWith(buildAbsolutePath)
+  const buildAbsolute = ensureAbsoluteWith(buildAbsolutePath)
 
   const publicAbsolutePath = rootAbsolute(`public`)
-  const publicAbsolute = Path.ensureAbsoluteWith(publicAbsolutePath)
+  const publicAbsolute = ensureAbsoluteWith(publicAbsolutePath)
 
-  const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
+  const assetsAbsolute = ensureAbsoluteWith(buildAbsolute(`assets`))
 
   // Dev assets paths
   let devAssetsRelative = 'node_modules/.vite/assets'
@@ -575,9 +577,9 @@ export const normalizeInput = (
    * If this is omitted, then relative root paths will throw an error.
    */
   baseRootDirPath: string,
-): Effect.Effect<Config, Error, never> =>
+): Effect.Effect<Config, Error, FileSystem.FileSystem> =>
   Effect.gen(function*() {
-    assertPathAbsolute(baseRootDirPath)
+    Path.assertAbsolute(baseRootDirPath)
 
     const configInput_as_writeable = configInput as WritableDeep<ConfigInput> | undefined
     const config = structuredClone(getConfigInputDefaults(baseRootDirPath)) as WritableDeep<Config>
@@ -626,31 +628,25 @@ export const normalizeInput = (
 
     // Try to read package.json name as fallback for title and name
     if (!configInput_as_writeable?.templateVariables?.title || !configInput_as_writeable?.name) {
-      const packageJsonResult = yield* Effect.tryPromise({
-        try: async () => {
-          const result = await Manifest.resource.read(config.paths.project.rootDir)
-          if (result instanceof Error) {
-            throw result
-          }
-          return result
-        },
-        catch: (error) => new Error(`Failed to read package.json: ${error}`),
-      }).pipe(
-        Effect.either, // Convert failure to Either.Left, success to Either.Right
+      const packageJsonResult = yield* Manifest.resource.read(config.paths.project.rootDir).pipe(
+        Effect.either, // Convert failure to E.Left, success to E.Right
       )
 
       // If we successfully read package.json and it has a name, use it
-      if (packageJsonResult._tag === 'Right' && packageJsonResult.right.name) {
-        const titleCasedName = Str.Case.title(packageJsonResult.right.name)
+      if (packageJsonResult._tag === 'Right' && O.isSome(packageJsonResult.right)) {
+        const manifest = packageJsonResult.right.value
+        if (manifest.name) {
+          const titleCasedName = Str.Case.title(manifest.name)
 
-        // Use for title if not already set
-        if (!configInput_as_writeable?.templateVariables?.title) {
-          config.templateVariables.title = titleCasedName
-        }
+          // Use for title if not already set
+          if (!configInput_as_writeable?.templateVariables?.title) {
+            config.templateVariables.title = titleCasedName
+          }
 
-        // Use for name if not already set
-        if (!configInput_as_writeable?.name) {
-          config.name = titleCasedName
+          // Use for name if not already set
+          if (!configInput_as_writeable?.name) {
+            config.name = titleCasedName
+          }
         }
       }
       // Otherwise, the defaults from getConfigInputDefaults() will be used

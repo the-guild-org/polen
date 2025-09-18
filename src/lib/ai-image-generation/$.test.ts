@@ -221,13 +221,16 @@ describe('AI Image Generation', () => {
   describe('Pollinations Provider', () => {
     test('generates correct URL format', async () => {
       const { generateImage } = await import('./providers/pollinations.js')
+      const { Effect } = await import('effect')
 
-      const result = await generateImage({
-        prompt: 'Abstract API visualization',
-        width: 1200,
-        height: 400,
-        nologo: true,
-      })
+      const result = await Effect.runPromise(
+        generateImage({
+          prompt: 'Abstract API visualization',
+          width: 1200,
+          height: 400,
+          nologo: true,
+        }),
+      )
 
       expect(result.url).toContain('https://image.pollinations.ai/prompt/')
       expect(result.url).toContain('Abstract%20API%20visualization')
@@ -239,11 +242,14 @@ describe('AI Image Generation', () => {
 
     test('includes seed when provided', async () => {
       const { generateImage } = await import('./providers/pollinations.js')
+      const { Effect } = await import('effect')
 
-      const result = await generateImage({
-        prompt: 'Test prompt',
-        seed: 12345,
-      })
+      const result = await Effect.runPromise(
+        generateImage({
+          prompt: 'Test prompt',
+          seed: 12345,
+        }),
+      )
 
       expect(result.url).toContain('seed=12345')
     })

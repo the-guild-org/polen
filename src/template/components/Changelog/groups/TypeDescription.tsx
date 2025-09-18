@@ -1,9 +1,18 @@
-import { Code } from '@radix-ui/themes'
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
+import { Code } from '../../ui/index.js'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const TypeDescription: React.FC<{ change: any }> = ({ change }) => {
+type TypeDescriptionChange =
+  | typeof Change.TypeDescriptionAdded.Type
+  | typeof Change.TypeDescriptionRemoved.Type
+  | typeof Change.TypeDescriptionChanged.Type
+
+interface TypeDescriptionProps {
+  change: TypeDescriptionChange
+}
+
+export const TypeDescription: React.FC<TypeDescriptionProps> = ({ change }) => {
   switch (change._tag) {
     case `TYPE_DESCRIPTION_ADDED`:
       return (

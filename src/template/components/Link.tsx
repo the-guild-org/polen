@@ -1,8 +1,7 @@
+import { Obj } from '@wollybeard/kit'
 import { forwardRef } from 'react'
 import type { LinkProps as LinkPropsReactRouter } from 'react-router'
 import { Link as LinkReactRouter, useLocation } from 'react-router'
-// todo: #lib/kit-temp does not work as import
-import { ObjPartition } from 'graphql-kit'
 import { useClientOnly } from '../hooks/useClientOnly.js'
 import type { LinkPropsRadix } from './RadixLink.js'
 import { LinkRadix } from './RadixLink.js'
@@ -25,14 +24,17 @@ export const Link = forwardRef<
   LinkPropsReactRouter & Omit<LinkPropsRadix, `asChild`>
 >((props, ref) => {
   const location = useLocation()
-  const toPathExp = typeof props.to === `string` ? props.to : props.to.pathname || ``
+  const to = props.to
+  const toPathExp = typeof to === `string`
+    ? to
+    : (to && typeof to === 'object' && 'pathname' in to ? to.pathname : '') || ``
 
   const active = useClientOnly(
     () => getPathActiveReport(toPathExp, location.pathname),
     { is: false, isDirect: false, isDescendant: false },
   )
 
-  const { picked: reactRouterProps, omitted: radixProps } = ObjPartition(props, reactRouterPropKeys)
+  const { picked: reactRouterProps, omitted: radixProps } = Obj.partition(props, reactRouterPropKeys)
 
   // Only add data attributes if they're true
   const linkRadixProps = {

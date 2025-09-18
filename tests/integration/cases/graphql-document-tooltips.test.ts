@@ -4,12 +4,16 @@
 
 import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
-import type { FsLayout } from '@wollybeard/kit'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
-const createTestFixture = (): FsLayout.Tree => ({
+type FileTree = {
+  [path: string]: string | FileTree
+}
+
+const createTestFixture = (): FileTree => ({
   'pages/test.mdx': `
 import { GraphQLDocumentWithSchema } from 'polen/components'
 
@@ -181,7 +185,9 @@ export default defineConfig({
 test.skip('should show tooltip on hover after delay', async ({ page, vite, project }) => {
   await project.layout.set(createTestFixture())
   const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+      Effect.provide(NodeFileSystem.layer),
+    ),
   )
   const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)

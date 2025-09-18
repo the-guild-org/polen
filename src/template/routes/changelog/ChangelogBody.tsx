@@ -1,14 +1,13 @@
-import { Change } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Change, Revision, Schema } from 'graphql-kit'
 const CRITICALITY_LEVELS = ['BREAKING', 'DANGEROUS', 'NON_BREAKING'] as const
 import type { CriticalityLevel } from '@graphql-inspector/core'
-import { Box, Heading } from '@radix-ui/themes'
 import React from 'react'
 import { useMemo } from 'react'
 import { CriticalitySection } from '../../components/Changelog/CriticalitySection.js'
 import * as Group from '../../components/Changelog/groups/index.js'
 import { ComponentDispatch } from '../../components/ComponentDispatch.js'
+import { Box, Heading } from '../../components/ui/index.js'
 import { renderDate } from './utils.js'
 
 export const ChangelogBody: React.FC<{ schema: Schema.Schema }> = ({ schema }) => {

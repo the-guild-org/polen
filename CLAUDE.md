@@ -342,7 +342,7 @@ Use `Test.suite` for all parameterized tests with structured data:
 
 ```typescript
 // dprint-ignore
-Test.suite<{ input: string; error: string }>('makeSegment validation', [
+Test.Table.suite<{ input: string; error: string }>('makeSegment validation', [
   { name: '@ character',   input: 'Tag@Bad',   error: 'Reserved characters found in tag' },
   { name: '! character',   input: 'Tag!Bad',   error: 'Reserved characters found in tag' },
   { name: 'triple underscore', input: 'Tag___Bad', error: 'Reserved characters found in tag' },
@@ -379,7 +379,7 @@ Test.each(cases, ({ input, expected }) => {
 ```typescript
 // ✅ GOOD - Using Test.suite with proper typing and alignment
 // dprint-ignore    <-- Place DIRECTLY ABOVE Test.suite, not inside the array
-Test.suite<{
+Test.Table.suite<{
   input: string
   transform: 'upper' | 'lower'
   expected: string

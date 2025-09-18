@@ -1,12 +1,9 @@
+import { A, O } from '#dep/effect'
 import { EffectGlob } from '#lib/effect-glob/$'
 import { FileSystem } from '@effect/platform'
-import { Str } from '@wollybeard/kit'
-import { Array, Effect, HashMap, HashSet, Match } from 'effect'
-import { Catalog as SchemaCatalog } from 'graphql-kit'
-import { Document } from 'graphql-kit'
-import { VersionCoverage } from 'graphql-kit'
-import { Version } from 'graphql-kit'
-import * as Path from 'node:path'
+import { Path, Str } from '@wollybeard/kit'
+import { Effect, HashMap, HashSet, Match, String } from 'effect'
+import { Catalog as SchemaCatalog, Document, Version, VersionCoverage } from 'graphql-kit'
 import type { Diagnostic } from './diagnostic/diagnostic.js'
 import {
   makeDiagnosticDuplicateContent,
@@ -65,10 +62,11 @@ export const parseExampleFile = (filename: string): ParsedExampleFile => {
   const base = parsed.name
 
   // Try to match versioned pattern: <name>.<version>
-  const match = Str.match(base, VERSIONED_FILE_PATTERN)
+  const matchResult = String.match(VERSIONED_FILE_PATTERN)(base)
 
-  if (match) {
-    const { name, version: versionStr } = match.groups
+  if (O.isSome(matchResult)) {
+    const match = matchResult.value
+    const { name, version: versionStr } = (match as any).groups
 
     const version = Version.decodeSync(versionStr)
     return { type: 'versioned', name, version, file: filename }
@@ -179,9 +177,9 @@ const lintFileLayout = (
       DocumentVersioned: (doc) => {
         // Get all versions covered by this document
         const coveredVersions = Document.Versioned.getAllVersions(doc)
-        const missingVersions = Array.filter(
+        const missingVersions = A.filter(
           schemaVersions,
-          sv => !Array.some(coveredVersions, cv => Version.equivalence(sv, cv)),
+          sv => !A.some(coveredVersions, cv => Version.equivalence(sv, cv)),
         )
 
         if (missingVersions.length > 0) {

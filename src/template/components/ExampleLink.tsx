@@ -1,8 +1,9 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { ExampleReference } from '#api/examples/schemas/type-usage-index'
-import { Badge, Link } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
 import { Version } from 'graphql-kit'
 import type { FC } from 'react'
+import { Badge, Link } from './ui/index.js'
 
 export interface Props {
   exampleRef: ExampleReference

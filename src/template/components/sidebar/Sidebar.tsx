@@ -1,7 +1,7 @@
 import type { Content } from '#api/content/$'
 import type { React } from '#dep/react/index'
-import { Box } from '@radix-ui/themes'
-import type { BoxOwnProps, LayoutProps, MarginProps } from '@radix-ui/themes/props'
+import { Box } from '../ui/index.js'
+import type { BoxOwnProps, LayoutProps, MarginProps } from '../ui/index.js'
 import { SidebarContext } from './SidebarContext.js'
 import { Items } from './SidebarItem.js'
 

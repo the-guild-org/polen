@@ -1,9 +1,8 @@
 import type { React } from '#dep/react/index'
-import { Box, Heading } from '@radix-ui/themes'
 import type { GraphQLNamedType } from 'graphql'
-import { Grafaid } from 'graphql-kit'
-import { GrafaidOld } from 'graphql-kit'
+import { Grafaid, GrafaidOld } from 'graphql-kit'
 import { useAlignedColumns } from '../../hooks/useAlignedColumns.js'
+import { Box, Heading } from '../ui/index.js'
 import { FieldList } from './FieldList.js'
 
 export const FieldListSection: React.FC<{ data: GraphQLNamedType }> = ({ data }) => {

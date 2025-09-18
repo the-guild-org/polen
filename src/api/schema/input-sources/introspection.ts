@@ -1,14 +1,9 @@
 import { InputSource } from '#api/schema/input-source/$'
+import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Fs, Json, Path } from '@wollybeard/kit'
+import { Json, Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Change } from 'graphql-kit'
-import { DateOnly } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { GraphqlSchemaLoader } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
+import { Catalog, Change, DateOnly, Grafaid, GraphqlSchemaLoader, Revision, Schema } from 'graphql-kit'
 import { createHash } from 'node:crypto'
 
 /**
@@ -77,24 +72,32 @@ const getCachePath = (url: string, projectRoot: string): string => {
   return Path.join(projectRoot, '.polen', 'cache', 'introspection', `${cacheKey}.json`)
 }
 
-const readCache = async (cachePath: string): Promise<CacheEntry | null> => {
-  const content = await Fs.read(cachePath)
-  if (!content) return null
+const readCache = (cachePath: string): Effect.Effect<CacheEntry | null, PlatformError, FileSystem> =>
+  Effect.gen(function*() {
+    const fs = yield* FileSystem
+    const exists = yield* fs.exists(cachePath)
+    if (!exists) return null
 
-  try {
-    const data = Json.codec.decode(content)
-    return data as unknown as CacheEntry
-  } catch {
-    return null
-  }
-}
+    const content = yield* fs.readFileString(cachePath).pipe(
+      Effect.catchAll(() => Effect.succeed(null)),
+    )
+    if (!content) return null
 
-const writeCache = async (cachePath: string, entry: CacheEntry): Promise<void> => {
-  await Fs.write({
-    path: cachePath,
-    content: Json.codec.encode(entry as any),
+    try {
+      const data = Json.codec.decode(content)
+      return data as unknown as CacheEntry
+    } catch {
+      return null
+    }
   })
-}
+
+const writeCache = (cachePath: string, entry: CacheEntry): Effect.Effect<void, Error, FileSystem> =>
+  Effect.gen(function*() {
+    const fs = yield* FileSystem
+    const dir = Path.dirname(cachePath)
+    yield* fs.makeDirectory(dir, { recursive: true })
+    yield* fs.writeFileString(cachePath, Json.codec.encode(entry as any))
+  })
 
 const fetchIntrospection = (options: Options): Effect.Effect<Grafaid.Schema.Schema, Error, FileSystem> =>
   GraphqlSchemaLoader.load({
@@ -148,15 +151,15 @@ export const loader = InputSource.createEffect({
       const cachePath = getCachePath(options.url, config.paths.project.rootDir)
 
       // Try to read from cache
-      const cacheEntry = yield* Effect.tryPromise({
-        try: () => readCache(cachePath),
-        catch: (error) =>
+      const cacheEntry = yield* readCache(cachePath).pipe(
+        Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'introspection',
             message: `Failed to read cache: ${error}`,
             cause: error,
-          }),
-      })
+          })
+        ),
+      )
 
       let schema: Grafaid.Schema.Schema
 
@@ -183,15 +186,15 @@ export const loader = InputSource.createEffect({
           introspectionResult: { data: { __schema } },
         }
 
-        yield* Effect.tryPromise({
-          try: () => writeCache(cachePath, newCacheEntry),
-          catch: (error) =>
+        yield* writeCache(cachePath, newCacheEntry).pipe(
+          Effect.mapError((error) =>
             new InputSource.InputSourceError({
               source: 'introspection',
               message: `Failed to write cache: ${error}`,
               cause: error,
-            }),
-        })
+            })
+          ),
+        )
       }
 
       return yield* createCatalogFromSchema(schema).pipe(
@@ -230,15 +233,15 @@ export const loader = InputSource.createEffect({
         introspectionResult: { data: { __schema } },
       }
 
-      yield* Effect.tryPromise({
-        try: () => writeCache(cachePath, newCacheEntry),
-        catch: (error) =>
+      yield* writeCache(cachePath, newCacheEntry).pipe(
+        Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'introspection',
             message: `Failed to write cache: ${error}`,
             cause: error,
-          }),
-      })
+          })
+        ),
+      )
 
       return yield* createCatalogFromSchema(schema).pipe(
         Effect.mapError((error) =>

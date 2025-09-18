@@ -1,6 +1,7 @@
+import { O } from '#dep/effect'
 import * as TinyGlobbyModule from '#dep/tiny-globby/index'
 import { Path, Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Effect, String } from 'effect'
 import { type Diagnostic, lint } from './linter.js'
 import { type Route, type RouteFile, type RouteLogical } from './route.js'
 
@@ -92,18 +93,33 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
 }
 
 export const filePathToRouteLogical = (filePath: Path.Parsed): RouteLogical => {
-  const dirSegments = Str.split(Str.removeSurrounding(filePath.dir, Path.sep), Path.sep)
+  // Remove leading/trailing path separators and split by separator
+  const dirWithoutSeparators = Str.removeSurrounding(filePath.dir, Path.sep)
+  const dirSegments = String.split(Path.sep)(dirWithoutSeparators)
 
   // Parse numbered prefixes from directory segments
   const dirPath = dirSegments.map(segment => {
-    const prefixMatch = Str.match(segment, conventions.numberedPrefix.pattern)
-    return prefixMatch?.groups.name ?? segment
+    const matchResult = String.match(conventions.numberedPrefix.pattern)(segment)
+    if (O.isSome(matchResult)) {
+      const match = matchResult.value as any
+      return match.groups.name
+    }
+    return segment
   })
 
   // Parse numbered prefix from filename
-  const prefixMatch = Str.match(filePath.name, conventions.numberedPrefix.pattern)
-  const order = prefixMatch ? parseInt(prefixMatch.groups.order, 10) : undefined
-  const nameWithoutPrefix = prefixMatch?.groups.name ?? filePath.name
+  const matchResult = String.match(conventions.numberedPrefix.pattern)(filePath.name)
+  let order: number | undefined
+  let nameWithoutPrefix: string
+
+  if (O.isSome(matchResult)) {
+    const match = matchResult.value as any
+    order = parseInt(match.groups.order, 10)
+    nameWithoutPrefix = match.groups.name
+  } else {
+    order = undefined
+    nameWithoutPrefix = filePath.name
+  }
 
   if (nameWithoutPrefix === conventions.index.name) {
     const path = dirPath

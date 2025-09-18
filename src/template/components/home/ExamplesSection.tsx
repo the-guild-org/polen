@@ -1,9 +1,10 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { Api } from '#api/$'
-import { Box, Heading, Section } from '@radix-ui/themes'
 import { Catalog } from 'graphql-kit'
 import * as React from 'react'
 import { Carousel } from '../Carousel.js'
 import { GraphQLDocument } from '../GraphQLDocument.js'
+import { Box, Container, Heading } from '../ui/index.js'
 
 interface ExamplesSectionProps {
   schemaCatalog?: Catalog.Catalog | undefined
@@ -27,7 +28,7 @@ export const ExamplesSection: React.FC<ExamplesSectionProps> = ({
   const displayExamples = examples.slice(0, maxExamples)
 
   return (
-    <Section size='3' id='examples' style={{ overflow: 'visible' }}>
+    <Container size='lg' id='examples' style={{ overflow: 'visible' }}>
       <Box mb='4' style={{ textAlign: 'center' }}>
         <Heading size='6' mb='2'>
           {title}
@@ -44,6 +45,6 @@ export const ExamplesSection: React.FC<ExamplesSectionProps> = ({
           />
         ))}
       </Carousel>
-    </Section>
+    </Container>
   )
 }

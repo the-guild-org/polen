@@ -1,9 +1,17 @@
-import { Code } from '@radix-ui/themes'
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
+import { Code } from '../../ui/index.js'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const DirectiveArgument: React.FC<{ change: any }> = ({ change }) => {
+type DirectiveArgumentChange =
+  | typeof Change.DirectiveArgumentDefaultValueChanged.Type
+  | typeof Change.DirectiveArgumentTypeChanged.Type
+
+interface DirectiveArgumentProps {
+  change: DirectiveArgumentChange
+}
+
+export const DirectiveArgument: React.FC<DirectiveArgumentProps> = ({ change }) => {
   switch (change._tag) {
     case `DIRECTIVE_ARGUMENT_DEFAULT_VALUE_CHANGED`:
       return (
