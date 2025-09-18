@@ -265,7 +265,12 @@ testWithFileSystem<BaseTestCase & {
     expect(O.isSome(nullResult)).toBe(true)
     if (O.isSome(nullResult)) {
       expect(nullResult.value.data).not.toBe(null)
-      expect(Catalog.is(nullResult.value.data!)).toBe(true)
+      // The data is wrapped in an Option, so we need to unwrap it
+      if (O.isSome(nullResult.value.data)) {
+        expect(Catalog.is(nullResult.value.data.value)).toBe(true)
+      } else {
+        expect(O.isSome(nullResult.value.data)).toBe(true) // This will fail if data is None
+      }
     }
   }
 
@@ -284,7 +289,12 @@ testWithFileSystem<BaseTestCase & {
       expect(O.isSome(result)).toBe(true)
       if (O.isSome(result)) {
         expect(result.value.data).not.toBe(null)
-        expect(Catalog.is(result.value.data!)).toBe(true)
+        // The data is wrapped in an Option, so we need to unwrap it
+        if (O.isSome(result.value.data)) {
+          expect(Catalog.is(result.value.data.value)).toBe(true)
+        } else {
+          expect(O.isSome(result.value.data)).toBe(true) // This will fail if data is None
+        }
       }
     }
   }

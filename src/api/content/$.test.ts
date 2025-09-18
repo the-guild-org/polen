@@ -7,40 +7,37 @@ import { Effect } from 'effect'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { Content } from './$.js'
 
-describe('content', () => {
-  let testDir: string
+let testDir: string
 
-  beforeEach(async () => {
-    testDir = await Effect.runPromise(
-      Effect.scoped(
-        Effect.gen(function*() {
-          const fs = yield* FileSystem
-          return yield* fs.makeTempDirectoryScoped()
-        }),
-      ).pipe(Effect.provide(NodeFileSystem.layer)),
-    )
-  })
+beforeEach(async () => {
+  testDir = await Effect.runPromise(
+    Effect.gen(function*() {
+      const fs = yield* FileSystem
+      return yield* fs.makeTempDirectory()
+    }).pipe(Effect.provide(NodeFileSystem.layer)),
+  )
+})
 
-  afterEach(async () => {
-    const exists = await Effect.runPromise(
+afterEach(async () => {
+  const exists = await Effect.runPromise(
+    Effect.gen(function*() {
+      const fs = yield* FileSystem
+      const result = yield* Effect.either(fs.stat(testDir))
+      return result._tag === 'Right'
+    }).pipe(Effect.provide(NodeFileSystem.layer)),
+  )
+  if (testDir && exists) {
+    await Effect.runPromise(
       Effect.gen(function*() {
         const fs = yield* FileSystem
-        const result = yield* Effect.either(fs.stat(testDir))
-        return result._tag === 'Right'
+        yield* fs.remove(testDir, { recursive: true })
       }).pipe(Effect.provide(NodeFileSystem.layer)),
     )
-    if (testDir && exists) {
-      await Effect.runPromise(
-        Effect.gen(function*() {
-          const fs = yield* FileSystem
-          yield* fs.remove(testDir, { recursive: true })
-        }).pipe(Effect.provide(NodeFileSystem.layer)),
-      )
-    }
-  })
+  }
+})
 
-  // dprint-ignore
-  Test.Table.suite<{ input: unknown; isValid: boolean; expected?: { description?: string; hidden?: boolean } }>('MetadataSchema', [
+// dprint-ignore
+Test.Table.suite<{ input: unknown; isValid: boolean; expected?: { description?: string; hidden?: boolean } }>('MetadataSchema', [
     { name: 'validates metadata correctly',                                                              input: { description: 'Test page description', hidden: true },                                     isValid: true,  expected: { description: 'Test page description', hidden: true } },
     { name: 'applies default values',                                                                    input: { description: 'Just a description' },                                                      isValid: true,  expected: { description: 'Just a description', hidden: false } },
     { name: 'rejects invalid values',                                                                    input: { hidden: 'not a boolean', invalid_field: 123 },                                           isValid: false },
@@ -57,37 +54,36 @@ describe('content', () => {
     }
   })
 
-  describe('scan', () => {
-    test('scans directory and extracts metadata', async () => {
-      const filePath = Path.join(testDir, 'page.md')
-      await Effect.runPromise(
-        Effect.gen(function*() {
-          const fs = yield* FileSystem
-          yield* fs.writeFileString(
-            filePath,
-            `---
+describe('scan', () => {
+  test('scans directory and extracts metadata', async () => {
+    const filePath = Path.join(testDir, 'page.md')
+    await Effect.runPromise(
+      Effect.gen(function*() {
+        const fs = yield* FileSystem
+        yield* fs.writeFileString(
+          filePath,
+          `---
 description: Page description
 ---
 Content`,
-          )
-        }).pipe(Effect.provide(NodeFileSystem.layer)),
-      )
+        )
+      }).pipe(Effect.provide(NodeFileSystem.layer)),
+    )
 
-      const result = await Effect.runPromise(
-        Content.scan({
-          dir: testDir,
-          glob: '**/*.md',
-        }).pipe(
-          Effect.provide(NodeFileSystem.layer),
-        ),
-      )
+    const result = await Effect.runPromise(
+      Content.scan({
+        dir: testDir,
+        glob: '**/*.md',
+      }).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
+    )
 
-      expect(result.list).toHaveLength(1)
-      expect(result.list[0]?.metadata).toEqual({
-        description: 'Page description',
-        hidden: false,
-      })
-      expect(result.diagnostics).toEqual([])
+    expect(result.list).toHaveLength(1)
+    expect(result.list[0]?.metadata).toEqual({
+      description: 'Page description',
+      hidden: false,
     })
+    expect(result.diagnostics).toEqual([])
   })
 })

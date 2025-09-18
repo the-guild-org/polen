@@ -11,7 +11,6 @@ import { FileSystem } from '@effect/platform'
 import { Manifest, Path, Str } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
-import { ensureAbsoluteWith } from '../../lib/path-utils.js'
 import { BuildArchitecture, ConfigInput } from './input.js'
 
 // ============================================================================
@@ -424,15 +423,15 @@ export interface ConfigAdvancedPathsInput {
 
 const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | undefined): Config[`paths`] => {
   if (!Path.isAbsolute(rootDir)) throw new Error(`Root dir path must be absolute: ${rootDir}`)
-  const rootAbsolute = ensureAbsoluteWith(rootDir)
+  const rootAbsolute = Path.ensureAbsoluteWith(rootDir)
 
   const buildAbsolutePath = rootAbsolute(`build`)
-  const buildAbsolute = ensureAbsoluteWith(buildAbsolutePath)
+  const buildAbsolute = Path.ensureAbsoluteWith(buildAbsolutePath)
 
   const publicAbsolutePath = rootAbsolute(`public`)
-  const publicAbsolute = ensureAbsoluteWith(publicAbsolutePath)
+  const publicAbsolute = Path.ensureAbsoluteWith(publicAbsolutePath)
 
-  const assetsAbsolute = ensureAbsoluteWith(buildAbsolute(`assets`))
+  const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
 
   // Dev assets paths
   let devAssetsRelative = 'node_modules/.vite/assets'

@@ -66,6 +66,7 @@ export const MdxProvider: React.FC<MdxProviderProps> = ({ children, schema }) =>
       DataList,
       // @ts-expect-error - MDX type mismatch with namespace objects
       Tabs,
+      // @ts-expect-error - MDX type mismatch with namespace objects
       Tooltip,
 
       // GraphQL reference component for MDX usage

@@ -2,7 +2,6 @@ import { O, S } from '#dep/effect'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
-import { NodeFileSystem } from '@effect/platform-node'
 import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
 

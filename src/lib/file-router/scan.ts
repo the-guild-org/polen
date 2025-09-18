@@ -95,7 +95,11 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
 export const filePathToRouteLogical = (filePath: Path.Parsed): RouteLogical => {
   // Remove leading/trailing path separators and split by separator
   const dirWithoutSeparators = Str.removeSurrounding(filePath.dir, Path.sep)
-  const dirSegments = String.split(Path.sep)(dirWithoutSeparators)
+
+  // Handle empty directory case - should result in empty array, not ['']
+  const dirSegments = dirWithoutSeparators === ''
+    ? []
+    : String.split(Path.sep)(dirWithoutSeparators)
 
   // Parse numbered prefixes from directory segments
   const dirPath = dirSegments.map(segment => {

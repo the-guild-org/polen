@@ -5,19 +5,22 @@ import * as React from 'react'
 import { cn } from '../../lib/utils.js'
 
 // Core layout components
+export { Box } from './Box.js'
 export { Container } from './Container.js'
+export { Flex } from './Flex.js'
 export { Grid, GridItem } from './Grid.js'
+export { Text } from './Text.js'
 
 // Typography
 export { Code } from './Code.js'
-export { Heading, headingVariants } from './Heading.js'
+export { Heading } from './Heading.js'
 
 // Interactive components
-export { Button, buttonVariants } from './Button.js'
+export { Button } from './Button.js'
 
 // Display components
-export { Badge, badgeVariants } from './Badge.js'
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './Card.js'
+export { Badge } from './Badge.js'
+export { Card, CardContent, CardHeader } from './Card.js'
 export { Separator } from './Separator.js'
 
 // shadcn/ui components - import but re-export as namespace for compatibility
@@ -72,13 +75,16 @@ export { Alert, AlertDescription, AlertTitle }
 
 // Re-export types
 export type { BadgeProps } from './Badge.js'
+export type { BoxProps } from './Box.js'
 export type { ButtonProps } from './Button.js'
 export type { CardProps } from './Card.js'
 export type { CodeProps } from './Code.js'
 export type { ContainerProps } from './Container.js'
+export type { FlexProps } from './Flex.js'
 export type { GridItemProps, GridProps } from './Grid.js'
 export type { HeadingProps } from './Heading.js'
 export type { SeparatorProps } from './Separator.js'
+export type { TextProps } from './Text.js'
 
 // Compatibility exports for components used in the codebase
 // IconButton - using Button with icon-only styling

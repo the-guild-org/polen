@@ -41,10 +41,19 @@ const testSchema = buildSchema(`
   `)
 
 const mockSchemaLoader = () => ({
-  data: {
-    _tag: 'CatalogUnversioned' as const,
-    schema: {
-      definition: testSchema,
+  _id: 'Option',
+  _tag: 'Some',
+  value: {
+    data: {
+      _id: 'Option',
+      _tag: 'Some',
+      value: {
+        _tag: 'CatalogUnversioned' as const,
+        schema: {
+          definition: testSchema,
+          revisions: [], // Add revisions field to match the full structure
+        },
+      },
     },
   },
 })
@@ -110,6 +119,7 @@ describe('path validation', () => {
       { name: 'double dots',        path: 'User..field',     shouldHaveDiagnostic: true,  diagnosticType: 'invalid-syntax' },
       { name: 'empty segments',     path: '.User.',          shouldHaveDiagnostic: true,  diagnosticType: 'invalid-syntax' },
     ], ({ path, shouldHaveDiagnostic, diagnosticType }) => {
+      onDiagnostic.mockClear() // Clear the mock before each test case
       const tree = createTree(`gql:${path}`)
       transformer(tree, file)
 
