@@ -76,7 +76,7 @@ const Layout = () => {
         appearance === 'dark' ? 'dark' : '',
       )}
     >
-      <div className='max-w-[1440px] mx-auto'>
+      <div className='max-w-[1440px] mx-auto grid grid-cols-12 gap-x-6 px-6'>
         {/* Navbar */}
         {isHomeWithCinematicHero
           ? (

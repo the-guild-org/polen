@@ -32,7 +32,7 @@ const Component = () => {
           )}
         />
       )}
-      <Container style={{ marginTop: '800px' }}>
+      <Container className='mt-[800px]'>
         {templateConfig.home.examples.enabled && filteredExamples.length > 0 && (
           <ExamplesSection
             examples={filteredExamples}

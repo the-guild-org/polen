@@ -7,7 +7,7 @@ import { Str } from '@wollybeard/kit'
 import { useContext } from 'react'
 import { useLocation } from 'react-router'
 import { getPathActiveReport, Link } from '../Link.js'
-import { Box, Flex } from '../ui/index.js'
+import { Box, Flex, Text } from '../ui/index.js'
 import { SidebarContext } from './SidebarContext.js'
 
 // Template layer extension: Allow React elements in title
@@ -52,7 +52,15 @@ export const Item: React.FC<{ item: TemplateItem }> = ({ item }) => {
     return <LinkedSection section={item} />
   }
 
-  return <section data-section={item.title} />
+  return (
+    <Box pt='5' pb='2' px='4'>
+      <section data-section={item.title}>
+        <Text size='sm' weight='semibold' color='muted'>
+          {item.title}
+        </Text>
+      </section>
+    </Box>
+  )
 }
 
 //

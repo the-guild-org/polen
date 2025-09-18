@@ -23,16 +23,17 @@ export class ContextualAggregateError<
 export const partitionAndAggregateErrors = <Results>(
   results: Results[],
 ): [Exclude<Results, Error>[], null | ContextualAggregateError<Extract<Results, Error>>] => {
-  const values: Exclude<Results, Error>[] = []
-  const errors: Extract<Results, Error>[] = []
-
-  for (const result of results) {
-    if (result instanceof Error) {
-      errors.push(result as Extract<Results, Error>)
-    } else {
-      values.push(result as Exclude<Results, Error>)
-    }
-  }
+  const { values, errors } = results.reduce(
+    (acc, result) => {
+      if (result instanceof Error) {
+        acc.errors.push(result as Extract<Results, Error>)
+      } else {
+        acc.values.push(result as Exclude<Results, Error>)
+      }
+      return acc
+    },
+    { values: [] as Exclude<Results, Error>[], errors: [] as Extract<Results, Error>[] },
+  )
 
   const error = errors.length > 0
     ? new ContextualAggregateError(`One or more extensions are invalid.`, {}, errors)

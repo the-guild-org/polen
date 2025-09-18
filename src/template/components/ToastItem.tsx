@@ -47,7 +47,7 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
         position: 'relative',
       }}
     >
-      <Flex gap='3' align='start' style={{ maxWidth: '400px' }}>
+      <Flex gap='3' align='start' className='max-w-[400px]'>
         <Text
           as='div'
           size='4'

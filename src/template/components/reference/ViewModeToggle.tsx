@@ -8,9 +8,10 @@ export const ViewModeToggle: React.FC = () => {
 
   return (
     <SegmentedControl.Root
+      type='single'
       value={viewMode}
       onValueChange={(value: string) => setViewMode(value as 'compact' | 'expanded')}
-      {...{ size: 1 } as any}
+      size={1}
     >
       <SegmentedControl.Item value='expanded'>
         <Flex align='center' gap='2'>
