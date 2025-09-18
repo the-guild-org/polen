@@ -23,7 +23,7 @@ interface GraphQLReferenceOptions {
 export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = (options) => {
   return (tree, file) => {
     const loadedCatalogOption = options.schemaLoader()
-    const schema = O.isSome(loadedCatalogOption)
+    const schema = loadedCatalogOption && O.isSome(loadedCatalogOption)
       ? O.getOrNull(loadedCatalogOption.value.data)
       : null
     const diagnostics: Diagnostic.Diagnostic[] = []
