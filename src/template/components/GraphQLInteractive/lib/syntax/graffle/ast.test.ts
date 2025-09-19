@@ -1,7 +1,7 @@
-import { Either } from 'effect'
+import { E } from '#dep/effect'
+import { Test } from '@wollybeard/kit/test'
 import { parse } from 'graphql'
 import { describe, expect, test } from 'vitest'
-import { Test } from '../../../../../../../tests/unit/helpers/test.js'
 import {
   convertDocument,
   graffleDocumentToString,
@@ -12,7 +12,7 @@ import {
 describe('convertDocument', () => {
   describe('queries', () => {
     // dprint-ignore
-    Test.suite<{ graphql: string; expected: any }>('valid queries', [
+    Test.Table.suite<{ graphql: string; expected: any }>('valid queries', [
       {
         name: 'simple query with scalar fields',
         graphql: `query { user { id name email } }`,
@@ -76,8 +76,8 @@ describe('convertDocument', () => {
     ], ({ graphql, expected }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
-      expect(Either.isRight(result)).toBe(true)
-      if (Either.isRight(result)) {
+      expect(E.isRight(result)).toBe(true)
+      if (E.isRight(result)) {
         expect(result.right).toEqual(expected)
       }
     })
@@ -85,7 +85,7 @@ describe('convertDocument', () => {
 
   describe('arguments', () => {
     // dprint-ignore
-    Test.suite<{ graphql: string; expected: any }>('field arguments', [
+    Test.Table.suite<{ graphql: string; expected: any }>('field arguments', [
       {
         name: 'single argument',
         graphql: `query { user(id: "123") { name } }`,
@@ -160,8 +160,8 @@ describe('convertDocument', () => {
     ], ({ graphql, expected }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
-      expect(Either.isRight(result)).toBe(true)
-      if (Either.isRight(result)) {
+      expect(E.isRight(result)).toBe(true)
+      if (E.isRight(result)) {
         expect(result.right).toEqual(expected)
       }
     })
@@ -169,7 +169,7 @@ describe('convertDocument', () => {
 
   describe('variables', () => {
     // dprint-ignore
-    Test.suite<{ graphql: string; expectedError: { operationName: string; variableNames: string[] } }>('variable errors', [
+    Test.Table.suite<{ graphql: string; expectedError: { operationName: string; variableNames: string[] } }>('variable errors', [
       {
         name: 'single variable',
         graphql: `query GetUser($id: ID!) { user(id: $id) { name } }`,
@@ -189,8 +189,8 @@ describe('convertDocument', () => {
     ], ({ graphql, expectedError }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
-      expect(Either.isLeft(result)).toBe(true)
-      if (Either.isLeft(result)) {
+      expect(E.isLeft(result)).toBe(true)
+      if (E.isLeft(result)) {
         expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
         if (result.left instanceof GraffleVariablesNotSupportedError) {
           expect(result.left.operationName).toBe(expectedError.operationName)
@@ -202,7 +202,7 @@ describe('convertDocument', () => {
 
   describe('aliases', () => {
     // dprint-ignore
-    Test.suite<{ graphql: string; expected: any }>('aliases', [
+    Test.Table.suite<{ graphql: string; expected: any }>('aliases', [
       {
         name: 'field aliases',
         graphql: `
@@ -258,8 +258,8 @@ describe('convertDocument', () => {
     ], ({ graphql, expected }) => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
-      expect(Either.isRight(result)).toBe(true)
-      if (Either.isRight(result)) {
+      expect(E.isRight(result)).toBe(true)
+      if (E.isRight(result)) {
         expect(result.right).toEqual(expected)
       }
     })
@@ -274,8 +274,8 @@ describe('convertDocument', () => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
-      expect(Either.isLeft(result)).toBe(true)
-      if (Either.isLeft(result)) {
+      expect(E.isLeft(result)).toBe(true)
+      if (E.isLeft(result)) {
         expect(result.left).toBeInstanceOf(GraffleFragmentsNotSupportedError)
         if (result.left instanceof GraffleFragmentsNotSupportedError) {
           expect(result.left.fragmentNames).toEqual(['UserInfo'])
@@ -295,8 +295,8 @@ describe('convertDocument', () => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
-      expect(Either.isRight(result)).toBe(true)
-      if (Either.isRight(result)) {
+      expect(E.isRight(result)).toBe(true)
+      if (E.isRight(result)) {
         expect(result.right).toEqual({
           query: {
             profile: {
@@ -323,8 +323,8 @@ describe('convertDocument', () => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
-      expect(Either.isLeft(result)).toBe(true)
-      if (Either.isLeft(result)) {
+      expect(E.isLeft(result)).toBe(true)
+      if (E.isLeft(result)) {
         expect(result.left).toBeInstanceOf(GraffleFragmentsNotSupportedError)
         if (result.left instanceof GraffleFragmentsNotSupportedError) {
           expect(result.left.fragmentNames).toEqual(['BasicInfo', 'ContactInfo'])
@@ -335,7 +335,7 @@ describe('convertDocument', () => {
 
   describe('directives', () => {
     // dprint-ignore
-    Test.suite<{ graphql: string; expected?: any; expectError?: boolean; expectedError?: any }>('directives', [
+    Test.Table.suite<{ graphql: string; expected?: any; expectError?: boolean; expectedError?: any }>('directives', [
       {
         name: '@include with variable',
         graphql: `query GetUser($includeEmail: Boolean!) { user { name email @include(if: $includeEmail) } }`,
@@ -380,8 +380,8 @@ describe('convertDocument', () => {
       const result = convertDocument(ast)
 
       if (expectError) {
-        expect(Either.isLeft(result)).toBe(true)
-        if (Either.isLeft(result)) {
+        expect(E.isLeft(result)).toBe(true)
+        if (E.isLeft(result)) {
           expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
           if (result.left instanceof GraffleVariablesNotSupportedError) {
             expect(result.left.operationName).toBe(expectedError.operationName)
@@ -389,8 +389,8 @@ describe('convertDocument', () => {
           }
         }
       } else {
-        expect(Either.isRight(result)).toBe(true)
-        if (Either.isRight(result)) {
+        expect(E.isRight(result)).toBe(true)
+        if (E.isRight(result)) {
           expect(result.right).toEqual(expected)
         }
       }
@@ -399,7 +399,7 @@ describe('convertDocument', () => {
 
   describe('mutations', () => {
     // dprint-ignore
-    Test.suite<{ graphql: string; expected?: any; expectedError?: any }>('mutations', [
+    Test.Table.suite<{ graphql: string; expected?: any; expectedError?: any }>('mutations', [
       {
         name: 'named mutation with variable',
         graphql: `mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name } }`,
@@ -429,8 +429,8 @@ describe('convertDocument', () => {
       const result = convertDocument(ast)
 
       if (expectedError) {
-        expect(Either.isLeft(result)).toBe(true)
-        if (Either.isLeft(result)) {
+        expect(E.isLeft(result)).toBe(true)
+        if (E.isLeft(result)) {
           expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
           if (result.left instanceof GraffleVariablesNotSupportedError) {
             expect(result.left.operationName).toBe(expectedError.operationName)
@@ -438,8 +438,8 @@ describe('convertDocument', () => {
           }
         }
       } else {
-        expect(Either.isRight(result)).toBe(true)
-        if (Either.isRight(result)) {
+        expect(E.isRight(result)).toBe(true)
+        if (E.isRight(result)) {
           expect(result.right).toEqual(expected)
         }
       }
@@ -459,8 +459,8 @@ describe('convertDocument', () => {
     const ast = parse(graphql)
     const result = convertDocument(ast)
 
-    expect(Either.isLeft(result)).toBe(true)
-    if (Either.isLeft(result)) {
+    expect(E.isLeft(result)).toBe(true)
+    if (E.isLeft(result)) {
       expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
       if (result.left instanceof GraffleVariablesNotSupportedError) {
         expect(result.left.operationName).toBe('OnCommentAdded')
@@ -479,8 +479,8 @@ describe('convertDocument', () => {
     const result = convertDocument(ast)
 
     // Should fail because UpdateUser has a variable
-    expect(Either.isLeft(result)).toBe(true)
-    if (Either.isLeft(result)) {
+    expect(E.isLeft(result)).toBe(true)
+    if (E.isLeft(result)) {
       expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
       if (result.left instanceof GraffleVariablesNotSupportedError) {
         expect(result.left.operationName).toBe('UpdateUser')
@@ -515,8 +515,8 @@ describe('convertDocument', () => {
     const result = convertDocument(ast)
 
     // Should fail because of fragment (checked first)
-    expect(Either.isLeft(result)).toBe(true)
-    if (Either.isLeft(result)) {
+    expect(E.isLeft(result)).toBe(true)
+    if (E.isLeft(result)) {
       expect(result.left).toBeInstanceOf(GraffleFragmentsNotSupportedError)
       if (result.left instanceof GraffleFragmentsNotSupportedError) {
         expect(result.left.fragmentNames).toEqual(['PostFields'])
@@ -527,7 +527,7 @@ describe('convertDocument', () => {
 
 describe('graffleDocumentToString', () => {
   // dprint-ignore
-  Test.suite<{ graphql: string; clientName?: string; expectedCode: string }>('code generation', [
+  Test.Table.suite<{ graphql: string; clientName?: string; expectedCode: string }>('code generation', [
     {
       name: 'simple query',
       graphql: `query { user { name } }`,
@@ -624,13 +624,13 @@ describe('graffleDocumentToString', () => {
 
     // These tests have variables so they should return errors
     if (graphql.includes('$')) {
-      expect(Either.isLeft(result)).toBe(true)
+      expect(E.isLeft(result)).toBe(true)
       // Skip code generation test for error cases
       return
     }
 
-    expect(Either.isRight(result)).toBe(true)
-    if (Either.isRight(result)) {
+    expect(E.isRight(result)).toBe(true)
+    if (E.isRight(result)) {
       const code = graffleDocumentToString(result.right, clientName)
       expect(code).toBe(expectedCode)
     }

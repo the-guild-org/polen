@@ -1,7 +1,7 @@
 import type { Vite } from '#dep/vite/index'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
-import { type ImportEvent, isSpecifierFromPackage } from 'graphql-kit'
+import { PackageManager } from '@wollybeard/kit'
 import type * as Module from 'node:module'
 import { fileURLToPath } from 'node:url'
 
@@ -20,7 +20,7 @@ export const resolve: Module.ResolveHook = async (specifier, context, nextResolv
 
   const debug = debugPolen.sub(`node-module-hooks`)
 
-  const from: ImportEvent = {
+  const from: PackageManager.ImportEvent = {
     specifier,
     context,
   }
@@ -34,7 +34,7 @@ export const resolve: Module.ResolveHook = async (specifier, context, nextResolv
   ) {
     debug(`resolve check`, { specifier, context })
 
-    const to: ImportEvent = {
+    const to: PackageManager.ImportEvent = {
       specifier: from.specifier,
       context: {
         conditions: [...from.context.conditions, `source`],
@@ -60,7 +60,7 @@ export const checkIsSelfImportFromProject = (input: {
   // ...would be intersted to know if this is ever false.
   const isImporterTheProject = input.importerPathExpOrFileUrlExp.includes(input.projectDirPathExp)
 
-  const isImportMe = isSpecifierFromPackage(input.specifier, packagePaths.name)
+  const isImportMe = PackageManager.isSpecifierFromPackage(input.specifier, packagePaths.name)
 
   return isImporterTheProject && isImportMe
 }

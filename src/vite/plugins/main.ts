@@ -1,13 +1,15 @@
 import type { Api } from '#api/$'
 import type { Vite } from '#dep/vite/index'
 import { Manifest } from '#vite/plugins/manifest'
-import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
+// TODO: Fix vite-plugin-ssr-css compatibility with Rolldown/virtual modules
+// import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
 import ViteReact from '@vitejs/plugin-react'
 import { Path } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
 import { Branding } from './branding.js'
 import { Build } from './build.js'
 import { Core } from './core.js'
+import { PostCSS } from './postcss.js'
 import { Serve } from './serve.js'
 
 export const Main = (
@@ -28,9 +30,11 @@ export const Main = (
 
   plugins.push(
     ViteReact(),
-    vitePluginSsrCss({
-      entries: [`/${config.paths.framework.template.relative.client.entrypoint}`],
-    }),
+    PostCSS(config),
+    // TODO: Fix vite-plugin-ssr-css compatibility with Rolldown/virtual modules
+    // vitePluginSsrCss({
+    //   entries: [`/${config.paths.framework.template.relative.client.entrypoint}`],
+    // }),
     Branding(config),
     Manifest(config),
     Serve(config),

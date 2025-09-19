@@ -6,10 +6,10 @@ import {
   ExclamationTriangleIcon,
   InfoCircledIcon,
 } from '@radix-ui/react-icons'
-import { Box, Button, Card, Flex, IconButton, Text } from '@radix-ui/themes'
-import type { TextProps } from '@radix-ui/themes'
 import type { ReadonlyDeep } from 'type-fest'
 import { Stores } from '../stores/$.js'
+import { Box, Button, Card, Flex, IconButton, Text } from './ui/index.js'
+import type { TextProps } from './ui/index.js'
 
 const toastVariants = {
   info: {
@@ -42,12 +42,9 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
   return (
     <Card
       size={'2'}
-      style={{
-        animation: 'slideIn 0.2s ease-out',
-        position: 'relative',
-      }}
+      className='animate-slide-in relative'
     >
-      <Flex gap='3' align='start' maxWidth={'400px'}>
+      <Flex gap='3' align='start' className='max-w-[400px]'>
         <Text
           as='div'
           size='4'
@@ -55,7 +52,7 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
         >
           {toastVariants[type].icon}
         </Text>
-        <Box style={{ flex: 1 }}>
+        <Box className='flex-1'>
           <Flex align='baseline' gap='2' wrap='wrap'>
             <Text weight='medium' size='2'>
               {toast.message}
@@ -76,7 +73,7 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
           </Flex>
 
           {toast.description && (
-            <Text size='1' color='gray' mt='1' style={{ display: 'block' }}>
+            <Text size='1' color='gray' mt='1' className='block'>
               {toast.description}
             </Text>
           )}
@@ -87,7 +84,7 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
           variant='ghost'
           color='gray'
           onClick={handleClose}
-          style={{ flexShrink: 0 }}
+          className='shrink-0'
         >
           <Cross2Icon />
         </IconButton>
@@ -95,19 +92,14 @@ export const ToastItem: React.FC<{ toast: ReadonlyDeep<Stores.Toast.Toast> }> = 
 
       {showTimer && (
         <Box
+          className='absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden'
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '2px',
             backgroundColor: `var(--${toastVariants[toast.type || 'info'].color}-a3)`,
-            overflow: 'hidden',
           }}
         >
           <Box
+            className='h-full'
             style={{
-              height: '100%',
               backgroundColor: `var(--${toastVariants[toast.type || 'info'].color}-a6)`,
               animation: `timerCountdown ${duration}ms linear forwards`,
             }}

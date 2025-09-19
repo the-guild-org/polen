@@ -1,50 +1,18 @@
-import type { Bool, Fn, Prom } from '@wollybeard/kit'
-import { Undefined } from '@wollybeard/kit'
+import { O } from '#dep/effect'
 import { Effect } from 'effect'
 
 /**
- * Effect-based version that processes functions sequentially until predicate is met
+ * Processes functions sequentially until Some is found.
+ * Returns the first Some result, or None if all functions return None.
  */
-export const untilEffect = <A extends readonly unknown[], R, E, Context>(
-  predicate: (value: R) => boolean,
+export const untilSome = <A extends readonly unknown[], R, E, Context>(
+  fns: readonly ((..._: A) => Effect.Effect<O.Option<R>, E, Context>)[],
 ) =>
-<fns extends readonly ((..._: A) => Effect.Effect<R, E, Context>)[]>(
-  fns: fns,
-) =>
-(...args: A): Effect.Effect<R | undefined, E, Context> =>
+(...args: A): Effect.Effect<O.Option<R>, E, Context> =>
   Effect.gen(function*() {
     for (const fn of fns) {
       const result = yield* fn(...args)
-      if (predicate(result)) return result
+      if (O.isSome(result)) return result
     }
-    return undefined
+    return O.none()
   })
-
-/**
- * Legacy Promise-based version for backward compatibility
- * @deprecated Use untilEffect for better error handling and composition
- */
-export const until = (
-  predicate: Bool.Predicate,
-) =>
-<fn extends Fn.AnyAny>(fns: fn[]): Fn.ReturnExtract<Prom.AnyAny, fn> => {
-  // @ts-expect-error
-  return async (...args) => {
-    for (const fn of fns) {
-      const result: any = await fn(...args)
-      if (predicate(result)) return result
-    }
-    return undefined
-  }
-}
-
-/**
- * Effect-based version that processes functions until a defined result is found
- */
-export const untilDefinedEffect = untilEffect(Undefined.isnt)
-
-/**
- * Legacy Promise-based version for backward compatibility
- * @deprecated Use untilDefinedEffect
- */
-export const untilDefined = until(Undefined.isnt)

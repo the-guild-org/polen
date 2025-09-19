@@ -1,25 +1,24 @@
 import type { NavbarProps } from '#api/hooks/types'
 import type { ReactRouter } from '#dep/react-router/index'
 import { route } from '#lib/react-router-effect/route'
-import { Swiss } from '#lib/swiss'
 import type { Stores } from '#template/stores/$'
-import { Box, Theme } from '@radix-ui/themes'
 import { Link as LinkReactRouter } from 'react-router'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import logoSrc from 'virtual:polen/project/assets/logo.svg'
 import { templateConfig } from 'virtual:polen/project/config'
+import { examplesCatalog } from 'virtual:polen/project/examples'
 import * as projectHooks from 'virtual:polen/project/hooks'
 import { navbar } from 'virtual:polen/project/navbar'
+import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { Logo } from '../components/Logo.js'
 import { DefaultNavbar } from '../components/navbar/DefaultNavbar.js'
 import { Item } from '../components/navbar/Item.js'
 import { NotFound } from '../components/NotFound.js'
 import { ThemeToggle } from '../components/ThemeToggle.js'
 import { ToastContainer } from '../components/ToastContainer.js'
+import { Container } from '../components/ui/index.js'
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext.js'
-import { swissSharpTheme } from '../theme/swiss-sharp.js'
-import '../theme/swiss-sharp.css'
-import '../../lib/swiss/styles.css'
+import { cn } from '../lib/utils.js'
 import { changelog } from './changelog/_.js'
 import { examplesRoute } from './examples/_.js'
 import { index } from './index.js'
@@ -53,16 +52,16 @@ const Layout = () => {
     Logo: () => (
       <LinkReactRouter
         to='/'
-        style={{ color: `inherit`, textDecoration: `none` }}
+        className='text-inherit no-underline'
       >
-        <Box display={{ initial: `block`, md: `block` }}>
+        <div className='block'>
           <Logo
             src={logoSrc}
             title={templateConfig.templateVariables.title}
             height={30}
             showTitle={true}
           />
-        </Box>
+        </div>
       </LinkReactRouter>
     ),
     ThemeToggle,
@@ -71,60 +70,37 @@ const Layout = () => {
   const NavbarComponent = projectHooks.navbar || DefaultNavbar
 
   return (
-    <Theme
-      asChild
-      appearance={appearance}
-      {...swissSharpTheme}
+    <div
+      className={cn(
+        'min-h-screen',
+        appearance === 'dark' ? 'dark' : '',
+      )}
     >
-      <Swiss.Grid
-        maxWidth='1440px'
-        gutter='var(--space-4)'
-        margins='var(--space-5)'
-        style={{
-          gridTemplateRows: '100px',
-        }}
-      >
+      <div className='min-h-screen'>
         {/* Navbar */}
         {isHomeWithCinematicHero
           ? (
             // Cinematic hero mode: navbar is fixed overlay
-            <Theme asChild appearance='dark'>
-              <Swiss.Grid
-                position='fixed'
-                top={'0'}
-                left={'0'}
-                height='20px'
-                right={'0'}
-                py={'6'}
-                style={{
-                  zIndex: 100,
-                  background: 'rgba(0, 0, 0, 0.2)',
-                }}
-              >
-                <Swiss.Body subgrid>
+            <div className='dark'>
+              <nav className='fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm'>
+                <div className='max-w-[1440px] mx-auto px-6 py-6'>
                   <NavbarComponent {...navbarProps} />
-                </Swiss.Body>
-              </Swiss.Grid>
-            </Theme>
+                </div>
+              </nav>
+            </div>
           )
           : (
-            // Normal mode: navbar in grid flow
-            <Swiss.Body
-              subgrid
-              py={'6'}
-              height='20px'
-              mb={{ initial: '4', md: '8' }}
-              style={{
-                borderBottom: '1px solid var(--gray-3)',
-              }}
-            >
-              <NavbarComponent {...navbarProps} />
-            </Swiss.Body>
+            // Normal mode: navbar in flow
+            <nav className='border-b border-border mb-4 md:mb-8'>
+              <div className='max-w-[1440px] mx-auto px-6 py-6'>
+                <NavbarComponent {...navbarProps} />
+              </div>
+            </nav>
           )}
         <Outlet />
         <ToastContainer />
-      </Swiss.Grid>
-    </Theme>
+      </div>
+    </div>
   )
 }
 
@@ -150,9 +126,10 @@ children.push(pages)
 //
 //
 //
+//
 
-// Use the enabled flag from config
-if (templateConfig.examples.enabled) {
+// Add examples route if examples are configured and the catalog exists
+if (templateConfig.examples && examplesCatalog && examplesCatalog.examples && examplesCatalog.examples.length > 0) {
   children.push(examplesRoute)
 }
 
@@ -160,45 +137,36 @@ if (templateConfig.examples.enabled) {
 //
 //
 //
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Project Routes
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Changelog Routes
+//
 //
 //
 //
 
-if (templateConfig.schema?.enabled) {
-  if (changelog) {
-    children.push(changelog)
-  }
-  if (reference) {
-    children.push(reference)
-  }
+if (schemasCatalog && changelog) {
+  children.push(changelog)
 }
 
 //
 //
 //
 //
-// ━━━━━━━━━━━━━━ • Not Found Route
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Reference Routes
+//
 //
 //
 //
 
-const notFoundRoute = {
-  id: `*_not_found`,
-  path: `*`,
+// Add reference route if schema catalog exists
+if (reference && templateConfig.schema?.enabled) {
+  children.push(reference)
+}
+
+// Catch all route for 404
+children.push({
+  path: '*',
   Component: NotFound,
-  handle: {
-    statusCode: 404,
-  },
-}
-children.push(notFoundRoute)
-
-//
-//
-//
-// ━━━━━━━━━━━━━━ • Root Route
-//
-//
+})
 
 const storeModules = import.meta.glob('../stores/!($.*)*.ts', { eager: true }) as Record<
   string,
@@ -209,7 +177,8 @@ export const root = route({
   path: `/`,
   Component,
   loader: async () => {
-    // Reset all stores on SSR to prevent cross-request pollution
+    // Important: Reset all stores on SSR to prevent cross-request pollution
+    // Without this, store state from one request would leak into another
     if (import.meta.env.SSR) {
       for (const module of Object.values(storeModules)) {
         if (module.store?.reset) {

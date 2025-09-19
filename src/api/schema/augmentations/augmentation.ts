@@ -1,5 +1,5 @@
 import { AugmentationConfig } from '#api/schema/augmentations/config'
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 import { VersionCoverage } from 'graphql-kit'
 
 /**

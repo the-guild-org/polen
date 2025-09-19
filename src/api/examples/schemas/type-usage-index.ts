@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 import { Version } from 'graphql-kit'
 
 // ============================================================================

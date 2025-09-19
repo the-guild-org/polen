@@ -1,20 +1,15 @@
 import type { Config } from '#api/config/$'
 import { Routes } from '#api/routes/$'
+import { A, E } from '#dep/effect'
 import { Worker } from '@effect/platform'
 import { NodeContext, NodeWorker } from '@effect/platform-node'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Path } from '@wollybeard/kit'
 import consola from 'consola'
-import { Array, Chunk, Duration, Effect, Either, Layer, Logger, Ref } from 'effect'
+import { Chunk, Duration, Effect, Layer, Ref } from 'effect'
 import getPort from 'get-port'
 import { cpus, totalmem } from 'node:os'
-import {
-  GeneratePagesMessage,
-  type GenerateResult,
-  PageMessage,
-  ServerMessage,
-  StartServerMessage,
-} from './worker-messages.js'
+import { GeneratePagesMessage, PageMessage, ServerMessage, StartServerMessage } from './worker-messages.js'
 import { createPageSpawner, createServerSpawner } from './worker-spawners.js'
 
 export const generate = (config: Config.Config): Effect.Effect<void, Error, FileSystem> =>
@@ -192,7 +187,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
         ).pipe(Effect.timed)
 
         // Partition results into successes and failures
-        const [lefts, rights] = Array.partition(results, Either.isRight)
+        const [lefts, rights] = A.partition(results, E.isRight)
         const successfulResults = rights.map(r =>
           r.right
         )
@@ -206,8 +201,8 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
         const totalFailures = totalRoutes - actualPagesGenerated
 
         if (successfulResults.length > 0) {
-          const totalMemoryMB = Array.reduce(successfulResults, 0, (sum, r) => sum + r.memoryUsed) / (1024 * 1024)
-          const avgTimePerBatch = Array.reduce(successfulResults, 0, (sum, r) => sum + r.duration)
+          const totalMemoryMB = A.reduce(successfulResults, 0, (sum, r) => sum + r.memoryUsed) / (1024 * 1024)
+          const avgTimePerBatch = A.reduce(successfulResults, 0, (sum, r) => sum + r.duration)
             / successfulResults.length
             / 1000
 

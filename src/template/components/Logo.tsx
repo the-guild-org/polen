@@ -1,6 +1,7 @@
-import { Box, Flex, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import * as React from 'react'
 import { useTheme } from '../contexts/ThemeContext.js'
+import { Box, Flex, Text } from './ui/index.js'
 
 interface LogoConfig {
   light: string

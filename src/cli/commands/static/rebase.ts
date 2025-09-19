@@ -1,6 +1,8 @@
 import { Api } from '#api/$'
+import { O } from '#dep/effect'
 import { Args, Command, Options } from '@effect/cli'
-import { Effect, Option } from 'effect'
+import { NodeFileSystem } from '@effect/platform-node'
+import { Effect } from 'effect'
 import { allowGlobalParameter } from '../../_/parameters.js'
 
 const source = Args.text({ name: 'source' }).pipe(
@@ -27,7 +29,7 @@ export const staticRebase = Command.make(
   },
   ({ source, newBasePath, target, allowGlobal }) =>
     Effect.gen(function*() {
-      const targetPath = Option.getOrUndefined(target)
+      const targetPath = O.getOrUndefined(target)
       const plan: Api.Static.RebasePlan = targetPath
         ? {
           changeMode: 'copy',
@@ -44,22 +46,22 @@ export const staticRebase = Command.make(
       // Direct Effect execution with timing and error handling
       const start = Date.now()
 
-      const result = yield* Effect.promise(() => Api.Static.rebase(plan))
-        .pipe(
-          Effect.tap(() => {
-            const duration = Date.now() - start
-            console.log(`Task: rebase`)
-            console.log(`Duration: ${duration}ms`)
-            console.log(`Input: ${JSON.stringify(plan, null, 2)}`)
-          }),
-          Effect.tapError((error) => {
-            const duration = Date.now() - start
-            console.error(`Task: rebase failed`)
-            console.error(`Duration: ${duration}ms`)
-            console.error(`Error:`, error)
-            return Effect.succeed(undefined)
-          }),
-        )
+      const result = yield* Api.Static.rebase(plan).pipe(
+        Effect.provide(NodeFileSystem.layer),
+        Effect.tap(() => {
+          const duration = Date.now() - start
+          console.log(`Task: rebase`)
+          console.log(`Duration: ${duration}ms`)
+          console.log(`Input: ${JSON.stringify(plan, null, 2)}`)
+        }),
+        Effect.tapError((error) => {
+          const duration = Date.now() - start
+          console.error(`Task: rebase failed`)
+          console.error(`Duration: ${duration}ms`)
+          console.error(`Error:`, error)
+          return Effect.succeed(undefined)
+        }),
+      )
 
       return result
     }),

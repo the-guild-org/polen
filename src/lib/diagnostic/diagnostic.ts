@@ -1,4 +1,5 @@
-import { EffectKit, S } from 'graphql-kit'
+import { S } from '#dep/effect'
+import { Sch } from '@wollybeard/kit'
 import * as SeverityModule from './severity.js'
 
 // ============================================================================
@@ -98,12 +99,12 @@ export const create = <
   },
 ): S.TaggedStruct<
   'Diagnostic',
-  & Omit<EffectKit.Schema.Struct.ExtractFields<typeof Diagnostic>, 'name' | 'source' | 'severity' | '_tag'>
+  & Omit<Sch.Struct.ExtractFields<typeof Diagnostic>, 'name' | 'source' | 'severity' | '_tag'>
   & {
     name: S.Literal<[name]>
     source: S.Literal<[source]>
     severity: severity extends string ? S.Literal<[severity]>
-      : EffectKit.Schema.Struct.ExtractFields<typeof Diagnostic>['severity']
+      : Sch.Struct.ExtractFields<typeof Diagnostic>['severity']
   }
   & context
 > => {
@@ -120,10 +121,10 @@ export const create = <
 
 export const createMake = <diagnostic extends S.TaggedStruct<any, any>>(
   diagnostic: diagnostic,
-): EffectKit.Schema.ConstructorUsingOmitLiteral1Algo<diagnostic> => {
+): Sch.Struct.ConstructorUsingOmitLiteral1Algo<diagnostic> => {
   return ((fields: object) => {
     return diagnostic.make({
-      ...EffectKit.Schema.pickLiteral1FieldsAsLiterals(diagnostic),
+      ...Sch.Struct.pickLiteral1FieldsAsLiterals(diagnostic),
       ...fields,
     }) as any
   }) as any

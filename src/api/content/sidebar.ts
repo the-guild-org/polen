@@ -1,6 +1,6 @@
+import { A } from '#dep/effect'
 import { FileRouter } from '#lib/file-router'
 import { Str } from '@wollybeard/kit'
-import { Array } from 'effect'
 import type { Page } from './page.js'
 import type { ScanResult } from './scan.js'
 
@@ -130,7 +130,7 @@ export const buildSidebarIndex = (scanResult: ScanResult): SidebarIndex => {
 
   // Build sidebar for each directory that has an index page
   for (const [topLevelDir, pages] of pagesByTopLevelDir) {
-    const hasIndexPage = Array.some(pages, page =>
+    const hasIndexPage = A.some(pages, page =>
       page.route.logical.path.length === 1
       && FileRouter.routeIsFromIndexFile(page.route))
 

@@ -2,9 +2,10 @@
  * Worker that generates static pages by fetching from servers.
  * This is executed in a worker thread using Effect Worker API.
  */
+import { A, E } from '#dep/effect'
 import { FileSystem, Path, WorkerRunner } from '@effect/platform'
 import { NodeContext, NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Array, Data, Duration, Effect, Either, Layer } from 'effect'
+import { Data, Duration, Effect, Layer } from 'effect'
 import { type GenerateResult, PageMessage } from './worker-messages.js'
 
 // ============================================================================
@@ -125,7 +126,7 @@ const handlers = {
       ).pipe(Effect.timed)
 
       // Partition results into successes and failures
-      const [failures, successes] = Array.partition(results, Either.isRight)
+      const [failures, successes] = A.partition(results, E.isRight)
       const processedCount = successes.length
 
       const result: GenerateResult = {

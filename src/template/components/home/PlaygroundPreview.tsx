@@ -1,10 +1,11 @@
-import { Box, Button, Card, Flex, Heading, Section, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import { highlight } from 'codehike/code'
 import type { GraphQLSchema } from 'graphql'
 import * as React from 'react'
 import { Link } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
 import { GraphQLInteractive } from '../GraphQLInteractive/GraphQLInteractive.js'
+import { Box, Button, Card, Container, Flex, Heading, Text } from '../ui/index.js'
 
 interface PlaygroundPreviewProps {
   schema?: GraphQLSchema
@@ -47,7 +48,7 @@ export const PlaygroundPreviewSection: React.FC<PlaygroundPreviewProps> = ({
     return null
   }
   return (
-    <Section size='3' pb='8' id='playground'>
+    <Container size='lg' pb='8' id='playground'>
       <Box style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <Heading size='7' mb='2' style={{ textAlign: 'center' }}>
           Try It Out
@@ -116,7 +117,7 @@ export const PlaygroundPreviewSection: React.FC<PlaygroundPreviewProps> = ({
           </Flex>
         </Flex>
       </Box>
-    </Section>
+    </Container>
   )
 }
 

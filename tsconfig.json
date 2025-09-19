@@ -93,7 +93,9 @@
       "#lib/vite-plugins/*": ["./src/lib/vite-plugins/*.ts"],
       "#lib/vite-virtual": ["./src/lib/vite-virtual/$.ts"],
       "#lib/vite-virtual/*": ["./src/lib/vite-virtual/*.ts"],
-      "#*": ["./src/*.ts"]
+      "#dep/effect": ["./src/dep/effect/$$.ts"],
+      "#*": ["./src/*.ts"],
+      "@/*": ["./src/template/*"]
     },
 
     // todo

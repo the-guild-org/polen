@@ -1,5 +1,5 @@
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons'
-import { Button } from '@radix-ui/themes'
+import { Button } from '../ui/index.js'
 
 export const ToggleButton = ({ isExpanded, toggleExpanded }: { isExpanded: boolean; toggleExpanded: () => void }) => (
   <Button

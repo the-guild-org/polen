@@ -1,10 +1,31 @@
+import { O } from '#dep/effect'
 import { TinyGlobby } from '#dep/tiny-globby/index'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
-import { Effect, Exit } from 'effect'
-import { S } from 'graphql-kit'
-import * as NodePath from 'node:path'
+import { Path } from '@wollybeard/kit'
+import { Data, Effect } from 'effect'
 import { buildManifest, type PolenBuildManifest } from './manifest.js'
+
+// Custom error types
+export class InvalidBasePathError extends Data.TaggedError('InvalidBasePathError')<{
+  readonly path: string
+  readonly reason: string
+}> {}
+
+export class ManifestNotFoundError extends Data.TaggedError('ManifestNotFoundError')<{
+  readonly path: string
+}> {}
+
+export class TargetExistsError extends Data.TaggedError('TargetExistsError')<{
+  readonly path: string
+}> {}
+
+export class HtmlProcessingError extends Data.TaggedError('HtmlProcessingError')<{
+  readonly filePath: string
+  readonly reason: string
+}> {}
+
+export type RebaseError = InvalidBasePathError | ManifestNotFoundError | TargetExistsError | HtmlProcessingError | Error
 
 export type RebasePlan = RebaseOverwritePlan | RebaseCopyPlan
 
@@ -21,23 +42,43 @@ export interface RebaseCopyPlan {
   targetPath: string
 }
 
-export const rebase = async (plan: RebasePlan): Promise<void> => {
-  const rebaseEffect = Effect.gen(function*() {
+const validateBasePath = (path: string) =>
+  Effect.succeed(path).pipe(
+    Effect.filterOrFail(
+      isValidUrlPath,
+      (path) =>
+        new InvalidBasePathError({
+          path,
+          reason: 'Path must start and end with /',
+        }),
+    ),
+  )
+
+/**
+ * Rebase a Polen build to a new base path.
+ *
+ * @param plan - The rebase plan specifying source, target, and mode
+ * @returns Effect that performs the rebase operation
+ */
+export const rebase = (
+  plan: RebasePlan,
+): Effect.Effect<void, RebaseError, FileSystem.FileSystem> =>
+  Effect.gen(function*() {
     const fs = yield* FileSystem.FileSystem
 
     // 1. Validate source is a Polen build
-    const manifestResult = yield* Effect.promise(() => buildManifest.read(plan.sourcePath))
-    if (Exit.isFailure(manifestResult)) {
-      return yield* Effect.fail(
-        new Error(`Polen build manifest not found at: ${NodePath.join(plan.sourcePath, `.polen`, `build.json`)}`),
-      )
-    }
-    const manifest = manifestResult.value
+    const manifest = yield* buildManifest.read(plan.sourcePath).pipe(
+      Effect.flatMap(O.match({
+        onNone: () =>
+          Effect.fail(
+            new ManifestNotFoundError({ path: plan.sourcePath }),
+          ),
+        onSome: Effect.succeed,
+      })),
+    )
 
     // 2. Validate newBasePath is valid URL path
-    if (!isValidUrlPath(plan.newBasePath)) {
-      return yield* Effect.fail(new Error(`Invalid base path: ${plan.newBasePath}`))
-    }
+    yield* validateBasePath(plan.newBasePath)
 
     // 3. Handle copy vs mutate
     let workingPath: string
@@ -47,7 +88,7 @@ export const rebase = async (plan: RebasePlan): Promise<void> => {
         const isEmpty = yield* isEmptyDirectory(plan.targetPath)
         if (!isEmpty) {
           return yield* Effect.fail(
-            new Error(`Target path already exists and is not empty: ${plan.targetPath}`),
+            new TargetExistsError({ path: plan.targetPath }),
           )
         }
       }
@@ -63,13 +104,6 @@ export const rebase = async (plan: RebasePlan): Promise<void> => {
     // 5. Update manifest
     yield* updateManifest(workingPath, { basePath: plan.newBasePath })
   })
-
-  return Effect.runPromise(
-    rebaseEffect.pipe(
-      Effect.provide(NodeFileSystem.layer),
-    ),
-  )
-}
 
 //
 //
@@ -102,23 +136,23 @@ const copyDirectory = (from: string, to: string): Effect.Effect<void, Error, Fil
       Effect.mapError((error) => new Error(`Failed to read source directory: ${error}`)),
     )
 
-    // Copy each entry
-    for (const entry of entries) {
-      const sourcePath = NodePath.join(from, entry)
-      const targetPath = NodePath.join(to, entry)
+    // Copy each entry in parallel
+    yield* Effect.all(
+      entries.map(entry => {
+        const sourcePath = Path.join(from, entry)
+        const targetPath = Path.join(to, entry)
 
-      const fileInfo = yield* fs.stat(sourcePath).pipe(
-        Effect.mapError((error) => new Error(`Failed to stat ${sourcePath}: ${error}`)),
-      )
-
-      if (fileInfo.type === 'Directory') {
-        yield* copyDirectory(sourcePath, targetPath)
-      } else {
-        yield* fs.copyFile(sourcePath, targetPath).pipe(
-          Effect.mapError((error) => new Error(`Failed to copy file ${sourcePath}: ${error}`)),
+        return fs.stat(sourcePath).pipe(
+          Effect.flatMap(fileInfo =>
+            fileInfo.type === 'Directory'
+              ? copyDirectory(sourcePath, targetPath)
+              : fs.copyFile(sourcePath, targetPath)
+          ),
+          Effect.mapError((error) => new Error(`Failed to copy ${sourcePath}: ${error}`)),
         )
-      }
-    }
+      }),
+      { concurrency: 'unbounded' },
+    )
   })
 
 // TODO: this is very generic, factor out to kit-temp
@@ -137,16 +171,15 @@ const updateHtmlFiles = (
   oldBasePath: string,
   newBasePath: string,
 ): Effect.Effect<void, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    // Find all HTML files recursively
-    const htmlFiles = yield* findHtmlFiles(buildPath)
-
-    // Update all HTML files in parallel
-    yield* Effect.all(
-      htmlFiles.map(htmlFile => updateHtmlFile(htmlFile, oldBasePath, newBasePath)),
-      { concurrency: 'unbounded' },
-    )
-  })
+  findHtmlFiles(buildPath).pipe(
+    Effect.flatMap(htmlFiles =>
+      Effect.all(
+        htmlFiles.map(htmlFile => updateHtmlFile(htmlFile, oldBasePath, newBasePath)),
+        { concurrency: 'unbounded' },
+      )
+    ),
+    Effect.asVoid,
+  )
 
 const findHtmlFiles = (dir: string): Effect.Effect<string[], Error, never> =>
   Effect.tryPromise({
@@ -192,7 +225,10 @@ const updateHtmlFile = (
           + content.slice(insertPosition)
       } else {
         return yield* Effect.fail(
-          new Error(`Could not find <head> tag in HTML file: ${filePath}`),
+          new HtmlProcessingError({
+            filePath,
+            reason: 'Could not find <head> tag in HTML file',
+          }),
         )
       }
     }
@@ -205,25 +241,20 @@ const updateHtmlFile = (
 const updateManifest = (
   buildPath: string,
   updates: Partial<PolenBuildManifest>,
-): Effect.Effect<void, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const manifestPath = NodePath.join(buildPath, `.polen`, `build.json`)
-    const manifestResult = yield* Effect.promise(() => buildManifest.read(buildPath))
-
-    if (Exit.isFailure(manifestResult)) {
-      return yield* Effect.fail(
-        new Error(`Polen build manifest not found at: ${manifestPath}`),
-      )
-    }
-    const currentManifest = manifestResult.value
-
-    const updatedManifest = { ...currentManifest, ...updates }
-
-    const writeResult = yield* Effect.promise(() => buildManifest.write(updatedManifest, buildPath))
-    if (Exit.isFailure(writeResult)) {
-      const error = writeResult.cause
-      return yield* Effect.fail(
-        new Error(`Failed to write manifest: ${error}`),
-      )
-    }
-  })
+): Effect.Effect<void, ManifestNotFoundError | Error, FileSystem.FileSystem> =>
+  buildManifest.read(buildPath).pipe(
+    Effect.flatMap(O.match({
+      onNone: () =>
+        Effect.fail(
+          new ManifestNotFoundError({ path: buildPath }),
+        ),
+      onSome: (currentManifest) => {
+        const updatedManifest = { ...currentManifest, ...updates }
+        return buildManifest.write(updatedManifest, buildPath).pipe(
+          Effect.mapError((error) =>
+            error instanceof Error ? error : new Error(`Failed to write manifest: ${String(error)}`)
+          ),
+        )
+      },
+    })),
+  )

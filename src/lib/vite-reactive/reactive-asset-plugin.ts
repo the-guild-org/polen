@@ -3,8 +3,8 @@ import type { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { Path } from '@wollybeard/kit'
 import { Cache, Effect } from 'effect'
-import * as Path from 'node:path'
 
 // ============================================================================
 // Types
@@ -127,52 +127,53 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
   }
 
   // Helper to run the Effect reader with the provided layer
-  const runReader = async (reader: () => Effect.Effect<T, E, R>): Promise<T> => {
-    const effect = reader()
-    // Always provide NodeFileSystem.layer for file system operations
-    const finalEffect = effect.pipe(Effect.provide(NodeFileSystem.layer as any))
-    return await Effect.runPromise(finalEffect as Effect.Effect<T, E, never>)
+  const runReader = (reader: () => Effect.Effect<T, E, R>): Effect.Effect<T, E, never> => {
+    return reader().pipe(Effect.provide(NodeFileSystem.layer as any)) as Effect.Effect<T, E, never>
   }
 
-  const handleAssetChange = async (
+  const handleAssetChange = (
     file: string,
     event: 'add' | 'unlink' | 'change',
     server: Vite.ViteDevServer,
-  ): Promise<boolean> => {
-    if (!options.filePatterns.isRelevant(file)) return false
+  ): Effect.Effect<boolean, never, never> => {
+    if (!options.filePatterns.isRelevant(file)) return Effect.succeed(false)
 
     debug(`${options.name} file ${event}: ${file}`)
 
-    // Get old data if we need to compare
-    let oldData: T | null = null
-    if (options.hooks?.shouldFullReload) {
-      oldData = await runReader(options.reader.read)
-    }
+    return Effect.gen(function*() {
+      // Get old data if we need to compare
+      let oldData: T | null = null
+      if (options.hooks?.shouldFullReload) {
+        oldData = yield* runReader(options.reader.read)
+      }
 
-    // Clear cache and re-read
-    await Effect.runPromise(
-      options.reader.clear().pipe(Effect.provide(NodeFileSystem.layer as any)) as Effect.Effect<void, never, never>,
-    )
-    const newData = await runReader(options.reader.read)
+      // Clear cache and re-read
+      yield* options.reader.clear().pipe(Effect.provide(NodeFileSystem.layer as any))
+      const newData = yield* runReader(options.reader.read)
 
-    // Run diagnostics hook if provided
-    if (options.hooks?.onDiagnostics) {
-      await options.hooks.onDiagnostics(newData)
-    }
+      // Run diagnostics hook if provided
+      if (options.hooks?.onDiagnostics) {
+        yield* Effect.tryPromise({
+          try: () => Promise.resolve(options.hooks!.onDiagnostics!(newData)),
+          catch: (error) => new Error(`Diagnostics hook failed: ${String(error)}`),
+        })
+      }
 
-    // Invalidate all dependent virtual modules
-    invalidateVirtualModules(server)
+      // Invalidate all dependent virtual modules
+      invalidateVirtualModules(server)
 
-    // Check if full reload is needed
-    let needsFullReload = true
-    if (options.hooks?.shouldFullReload) {
-      needsFullReload = await options.hooks.shouldFullReload(oldData, newData)
-    }
+      // Check if full reload is needed
+      let needsFullReload = true
+      if (options.hooks?.shouldFullReload) {
+        needsFullReload = yield* Effect.tryPromise({
+          try: () => Promise.resolve(options.hooks!.shouldFullReload!(oldData, newData)),
+          catch: (error) => new Error(`shouldFullReload hook failed: ${String(error)}`),
+        })
+      }
 
-    // Handle asset emission in dev mode
-    if (options.emit && viteServer && newData) {
-      await Effect.runPromise(
-        Effect.gen(function*() {
+      // Handle asset emission in dev mode
+      if (options.emit && viteServer && newData) {
+        yield* Effect.gen(function*() {
           // Run the serializer (could be Effect or plain string)
           const serializerResult = options.emit!.serializer(newData as Exclude<T, null>)
           const content = typeof serializerResult === 'string'
@@ -191,11 +192,11 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
           debug(`Dev assets written: ${options.emit!.path}`)
         }).pipe(
           Effect.provide(NodeFileSystem.layer),
-        ),
-      )
-    }
+        )
+      }
 
-    return needsFullReload
+      return needsFullReload
+    }) as Effect.Effect<boolean, never, never>
   }
 
   return {
@@ -219,13 +220,19 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
       }
 
       // Handle file additions and deletions
-      const handleFileStructureChange = async (file: string, event: 'add' | 'unlink') => {
-        const needsFullReload = await handleAssetChange(file, event, server)
-
-        if (needsFullReload) {
-          debug(`Triggering full reload due to ${event} event`)
-          server.ws.send({ type: 'full-reload' })
-        }
+      const handleFileStructureChange = (file: string, event: 'add' | 'unlink') => {
+        Effect.runPromise(
+          handleAssetChange(file, event, server).pipe(
+            Effect.map((needsFullReload) => {
+              if (needsFullReload) {
+                debug(`Triggering full reload due to ${event} event`)
+                server.ws.send({ type: 'full-reload' })
+              }
+            }),
+          ),
+        ).catch(error => {
+          console.error(`Error handling ${event} for ${file}:`, error)
+        })
       }
 
       server.watcher.on('add', (file) => handleFileStructureChange(file, 'add'))
@@ -235,37 +242,42 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
     async buildStart() {
       // Handle asset emission in build mode
       if (options.emit && !viteServer) {
-        // Read the data
-        const data = await runReader(options.reader.read)
+        const pluginContext = this
+        await Effect.runPromise(
+          Effect.gen(function*() {
+            // Read the data
+            const data = yield* runReader(options.reader.read)
 
-        if (!data) {
-          debug(`No data to emit for ${options.name}`)
-          return
-        }
+            if (!data) {
+              debug(`No data to emit for ${options.name}`)
+              return
+            }
 
-        // Run the serializer
-        const serializerResult = options.emit.serializer(data as Exclude<T, null>)
-        const content = typeof serializerResult === 'string'
-          ? serializerResult
-          : await Effect.runPromise(
-            serializerResult.pipe(
-              Effect.provide(NodeFileSystem.layer),
-            ),
-          )
+            // Run the serializer
+            const serializerResult = options.emit!.serializer(data as Exclude<T, null>)
+            const content = typeof serializerResult === 'string'
+              ? serializerResult
+              : yield* serializerResult.pipe(
+                Effect.provide(NodeFileSystem.layer),
+              )
 
-        // Emit the asset (Vite will place it in the correct output directory)
-        this.emitFile({
-          type: 'asset',
-          fileName: `assets/${options.emit.path}`,
-          source: content,
-        })
+            // Emit the asset (Vite will place it in the correct output directory)
+            pluginContext.emitFile({
+              type: 'asset',
+              fileName: `assets/${options.emit!.path}`,
+              source: content,
+            })
 
-        debug(`Build asset emitted: ${options.emit.path}`)
+            debug(`Build asset emitted: ${options.emit!.path}`)
+          }),
+        )
       }
     },
 
     async handleHotUpdate({ file, server, modules }) {
-      const needsFullReload = await handleAssetChange(file, 'change', server)
+      const needsFullReload = await Effect.runPromise(
+        handleAssetChange(file, 'change', server),
+      )
 
       if (needsFullReload) {
         debug(`Triggering full reload due to change event`)

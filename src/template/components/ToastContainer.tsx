@@ -1,8 +1,9 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { React } from '#dep/react/index'
-import { Box, Flex } from '@radix-ui/themes'
 import { useSnapshot } from 'valtio'
 import { Stores } from '../stores/$.js'
 import { ToastItem } from './ToastItem.js'
+import { Box, Flex } from './ui/index.js'
 
 export const ToastContainer: React.FC = () => {
   const snap = useSnapshot(Stores.Toast.store)
@@ -44,10 +45,8 @@ export const ToastContainer: React.FC = () => {
         `}
       </style>
       <Box
-        position='fixed'
-        bottom='0'
-        right='0'
         p='4'
+        className='fixed bottom-0 right-0'
         style={{
           zIndex: 9999,
           pointerEvents: 'none',

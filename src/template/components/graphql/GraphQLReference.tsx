@@ -1,8 +1,7 @@
-import { Code, Flex } from '@radix-ui/themes'
-import { Grafaid } from 'graphql-kit'
-import { GraphQLSchemaPath } from 'graphql-kit'
+import { Grafaid, GraphQLSchemaPath } from 'graphql-kit'
 import type * as React from 'react'
 import { ReferenceLink } from '../reference/ReferenceLink.js'
+import { Code, Flex } from '../ui/index.js'
 import { TypeKindIcon } from './graphql.js'
 import { typeKindTokensIndex } from './type-kind-tokens.js'
 

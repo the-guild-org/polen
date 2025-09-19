@@ -1,9 +1,12 @@
 import { Api } from '#api/$'
+import { O } from '#dep/effect'
 import { Args, Command, Options } from '@effect/cli'
-import { Err, Fs, Manifest, Name, Path, Str } from '@wollybeard/kit'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { FileSystem } from '@effect/platform/FileSystem'
+import { Err, Manifest, Name, Path, Str } from '@wollybeard/kit'
 import * as Ansis from 'ansis'
 import consola from 'consola'
-import { Console, Effect, Option } from 'effect'
+import { Effect } from 'effect'
 import { $ } from 'zx'
 
 // Define all the options and arguments exactly matching the original
@@ -40,7 +43,12 @@ const example = Options.choice('example', ['hive']).pipe(
 
 const getProjectRoot = async (args: { name?: string; path?: string }): Promise<string> => {
   if (args.path) {
-    if (await Api.Project.validateProjectDirectory(args.path, { mustExist: false, mustBeEmpty: true })) {
+    const isValid = await Effect.runPromise(
+      Api.Project.validateProjectDirectory(args.path, { mustExist: false, mustBeEmpty: true }).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
+    )
+    if (isValid) {
       return args.path
     }
     throw new Error('Invalid project directory')
@@ -50,9 +58,21 @@ const getProjectRoot = async (args: { name?: string; path?: string }): Promise<s
 
   const findUsableName = async (isRetry?: true): Promise<string> => {
     const projectRoot = Path.join(process.cwd(), name + (isRetry ? `-${Date.now().toString(36).substring(2, 8)}` : ''))
-    const stat = await Fs.stat(projectRoot)
-    if (Fs.isNotFoundError(stat)) return projectRoot
-    if (stat.isDirectory() && await Fs.isEmptyDir(projectRoot)) return projectRoot
+    const result = await Effect.runPromise(
+      Effect.gen(function*() {
+        const fs = yield* FileSystem
+        const statResult = yield* Effect.either(fs.stat(projectRoot))
+        if (statResult._tag === 'Left') return { notFound: true }
+        const stat = statResult.right
+        if (stat.type === 'Directory') {
+          const files = yield* fs.readDirectory(projectRoot)
+          return { notFound: false, isEmptyDir: files.length === 0 }
+        }
+        return { notFound: false, isEmptyDir: false }
+      }).pipe(Effect.provide(NodeFileSystem.layer)),
+    )
+    if (result.notFound) return projectRoot
+    if (result.isEmptyDir) return projectRoot
     return await findUsableName(true)
   }
 
@@ -68,8 +88,21 @@ const copyGitRepositoryTemplate = async (input: {
   exampleName: string
 }): Promise<void> => {
   try {
-    const tmpDirPath = await Fs.makeTemporaryDirectory()
-    const cleanup = async () => await Fs.remove(tmpDirPath)
+    const tmpDirPath = await Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function*() {
+          const fs = yield* FileSystem
+          return yield* fs.makeTempDirectoryScoped()
+        }),
+      ).pipe(Effect.provide(NodeFileSystem.layer)),
+    )
+    const cleanup = async () =>
+      await Effect.runPromise(
+        Effect.gen(function*() {
+          const fs = yield* FileSystem
+          yield* fs.remove(tmpDirPath, { recursive: true })
+        }).pipe(Effect.provide(NodeFileSystem.layer)),
+      )
 
     try {
       // Clone only the specific example directory using sparse checkout
@@ -81,7 +114,14 @@ const copyGitRepositoryTemplate = async (input: {
       const templatePath = Path.join(tmpDirPath, input.repository.templatePath)
 
       // Verify the example exists
-      if (!await Fs.exists(templatePath)) {
+      const exists = await Effect.runPromise(
+        Effect.gen(function*() {
+          const fs = yield* FileSystem
+          const result = yield* Effect.either(fs.stat(templatePath))
+          return result._tag === 'Right'
+        }).pipe(Effect.provide(NodeFileSystem.layer)),
+      )
+      if (!exists) {
         consola.error(
           `Example "${input.exampleName}" not found in the Polen repository. Are you using the latest version of the CLI?`,
         )
@@ -89,10 +129,12 @@ const copyGitRepositoryTemplate = async (input: {
         throw new Error(`Example not found`)
       }
 
-      await Fs.copyDir({
-        from: templatePath,
-        to: input.destinationPath,
-      })
+      await Effect.runPromise(
+        Effect.gen(function*() {
+          const fs = yield* FileSystem
+          yield* fs.copy(templatePath, input.destinationPath)
+        }).pipe(Effect.provide(NodeFileSystem.layer)),
+      )
     } finally {
       await cleanup()
     }
@@ -114,54 +156,64 @@ export const create = Command.make(
   },
   ({ name, path, link, version, example }) =>
     Effect.gen(function*() {
-      const finalName = Str.Case.kebab(Option.getOrUndefined(name) ?? Name.generate())
-      const nameValue = Option.getOrUndefined(name)
-      const pathValue = Option.getOrUndefined(path)
-      const projectRoot = yield* Effect.promise(() =>
-        getProjectRoot({
-          ...(nameValue && { name: nameValue }),
-          ...(pathValue && { path: pathValue }),
-        })
-      )
+      const finalName = Str.Case.kebab(O.getOrUndefined(name) ?? Name.generate())
+      const nameValue = O.getOrUndefined(name)
+      const pathValue = O.getOrUndefined(path)
+      const projectRoot = yield* Effect.tryPromise({
+        try: () =>
+          getProjectRoot({
+            ...(nameValue && { name: nameValue }),
+            ...(pathValue && { path: pathValue }),
+          }),
+        catch: (error) => new Error(`Failed to get project root: ${String(error)}`),
+      })
       const project$ = $({ cwd: projectRoot })
 
       console.log('')
       consola.info(`Creating your Polen project "${Ansis.green(Str.Case.title(finalName))}"`)
 
       consola.info(`Initializing with example "${Ansis.green(Str.Case.title(example))}"`)
-      yield* Effect.promise(() =>
-        copyGitRepositoryTemplate({
-          repository: {
-            url: new URL('https://github.com/the-guild-org/polen'),
-            templatePath: Path.join('examples', example),
-          },
-          destinationPath: projectRoot,
-          exampleName: example,
-        })
-      )
+      yield* Effect.tryPromise({
+        try: () =>
+          copyGitRepositoryTemplate({
+            repository: {
+              url: new URL('https://github.com/the-guild-org/polen'),
+              templatePath: Path.join('examples', example),
+            },
+            destinationPath: projectRoot,
+            exampleName: example,
+          }),
+        catch: (error) => new Error(`Failed to copy template: ${String(error)}`),
+      })
 
-      yield* Effect.promise(() =>
-        Manifest.resource.update((manifest) => {
-          manifest.name = finalName
-          manifest.description = 'A new project'
-          manifest.packageManager = 'pnpm@10.11.0'
-          if (manifest.dependencies) {
-            delete manifest.dependencies['polen'] // Repo uses links, we will install polen next.
-          }
-        }, projectRoot)
-      )
+      yield* Effect.gen(function*() {
+        const manifest = yield* Manifest.resource.readOrEmpty(projectRoot)
+        manifest.name = finalName
+        manifest.description = 'A new project'
+        manifest.packageManager = 'pnpm@10.11.0'
+        if (manifest.dependencies) {
+          delete manifest.dependencies['polen'] // Repo uses links, we will install polen next.
+        }
+        yield* Manifest.resource.write(manifest, projectRoot)
+      }).pipe(Effect.provide(NodeFileSystem.layer))
 
       if (link) {
-        yield* Effect.promise(() => project$`pnpm link polen`)
+        yield* Effect.tryPromise({
+          try: () => project$`pnpm link polen`,
+          catch: (error) => new Error(`Failed to link polen: ${String(error)}`),
+        })
       } else {
-        const versionStr = Option.getOrUndefined(version)
+        const versionStr = O.getOrUndefined(version)
         const fqpn = `polen${versionStr ? `@${versionStr}` : ''}`
         consola.info(`Installing ${Ansis.magenta(fqpn)}`)
-        yield* Effect.promise(() => project$`pnpm add ${fqpn}`)
+        yield* Effect.tryPromise({
+          try: () => project$`pnpm add ${fqpn}`,
+          catch: (error) => new Error(`Failed to install ${fqpn}: ${String(error)}`),
+        })
       }
 
       consola.success('Your project is ready! Get Started:')
       console.log('')
       console.log(Ansis.magenta(`  cd ${Path.relative(process.cwd(), projectRoot)} && pnpm dev`))
-    }),
+    }).pipe(Effect.provide(NodeFileSystem.layer)),
 )

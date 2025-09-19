@@ -1,9 +1,15 @@
-import { Code } from '@radix-ui/themes'
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
+import { Code } from '../../ui/index.js'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const FieldArgumentDescription: React.FC<{ change: any }> = (
+type FieldArgumentDescriptionChange = typeof Change.FieldArgumentDescriptionChanged.Type
+
+interface FieldArgumentDescriptionProps {
+  change: FieldArgumentDescriptionChange
+}
+
+export const FieldArgumentDescription: React.FC<FieldArgumentDescriptionProps> = (
   { change },
 ) => {
   return (

@@ -1,14 +1,14 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { HeroCallToAction } from '#api/config/home'
-import { Swiss } from '#lib/swiss'
-import { Box, Button, Container, Flex, Grid, Heading, Section, Text } from '@radix-ui/themes'
-import { CatalogStatistics } from 'graphql-kit'
-import { Catalog } from 'graphql-kit'
+import { A } from '#dep/effect'
+import { Catalog, CatalogStatistics } from 'graphql-kit'
 import * as React from 'react'
 import { Link } from 'react-router'
 import heroImageSrc from 'virtual:polen/project/assets/hero'
 import { templateConfig } from 'virtual:polen/project/config'
 import { examplesCatalog } from 'virtual:polen/project/examples'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
+import { Box, Button, Container, Flex, Grid, Heading, Text } from '../ui/index.js'
 
 interface HeroProps {
   title?: string
@@ -57,7 +57,7 @@ export const Hero: React.FC<HeroProps> = ({
   // Process callToActions configuration
   let ctaButtons: HeroCallToAction[]
   if (callToActions) {
-    if (Array.isArray(callToActions)) {
+    if (A.isArray(callToActions)) {
       ctaButtons = [...callToActions]
     } else {
       const ctaConfig = callToActions as {
@@ -110,10 +110,10 @@ export const Hero: React.FC<HeroProps> = ({
   // Render asymmetric layout (text left, image right)
   if (effectiveLayout === 'asymmetric') {
     return (
-      <Swiss.Body>
-        <Section size='4' py='9'>
+      <Container>
+        <Box py='9'>
           <Container size='4'>
-            <Grid columns='12' gap='5' align='center'>
+            <Grid columns='12' gap='xl' align='center'>
               {/* Text content - columns 1-7 */}
               <Box style={{ gridColumn: '1 / 8' }}>
                 <Heading
@@ -220,14 +220,14 @@ export const Hero: React.FC<HeroProps> = ({
               )}
             </Grid>
           </Container>
-        </Section>
-      </Swiss.Body>
+        </Box>
+      </Container>
     )
   }
 
   // Render cinematic layout (full viewport image with overlaid text)
   return (
-    <Swiss.Viewport>
+    <div className='w-full'>
       <Box
         style={{
           display: 'grid',
@@ -252,7 +252,7 @@ export const Hero: React.FC<HeroProps> = ({
         }}
       >
         {/* Content centered via grid placeItems */}
-        <Container size='4' style={{ position: 'relative', zIndex: 3 }}>
+        <Container size='xl' style={{ position: 'relative', zIndex: 3 }}>
           <Box
             style={{
               textAlign: 'center',
@@ -374,6 +374,6 @@ export const Hero: React.FC<HeroProps> = ({
           </Box>
         </Container>
       </Box>
-    </Swiss.Viewport>
+    </div>
   )
 }

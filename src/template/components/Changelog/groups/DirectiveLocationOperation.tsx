@@ -1,9 +1,17 @@
-import { Code } from '@radix-ui/themes'
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
+import { Code } from '../../ui/index.js'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const DirectiveLocationOperation: React.FC<{ change: any }> = (
+type DirectiveLocationOperationChange =
+  | typeof Change.DirectiveLocationAdded.Type
+  | typeof Change.DirectiveLocationRemoved.Type
+
+interface DirectiveLocationOperationProps {
+  change: DirectiveLocationOperationChange
+}
+
+export const DirectiveLocationOperation: React.FC<DirectiveLocationOperationProps> = (
   { change },
 ) => {
   switch (change._tag) {

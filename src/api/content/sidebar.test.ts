@@ -1,3 +1,4 @@
+import { A } from '#dep/effect'
 import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import type { Page } from './page.js'
@@ -123,7 +124,7 @@ describe('buildSidebarIndex properties', () => {
 
             if (item.type === 'ItemSection') {
               expect(typeof item.isLinkToo).toBe('boolean')
-              expect(Array.isArray(item.links)).toBe(true)
+              expect(A.isArray(item.links)).toBe(true)
 
               // Check all links in section
               for (const link of item.links) {

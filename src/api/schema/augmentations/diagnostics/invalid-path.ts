@@ -1,6 +1,8 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
+import { Sch } from '@wollybeard/kit'
 import { Version } from 'graphql-kit'
+Sch
 
 export const DiagnosticInvalidPath = Diagnostic.create({
   source: 'schema-augmentations',

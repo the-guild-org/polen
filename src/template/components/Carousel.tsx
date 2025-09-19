@@ -1,8 +1,9 @@
-import { Box, Flex } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import useEmblaCarousel from 'embla-carousel-react'
 import * as React from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CarouselPill } from './CarouselPill.js'
+import { Box, Flex } from './ui/index.js'
 
 export interface CarouselProps {
   /** Items to display in the carousel */

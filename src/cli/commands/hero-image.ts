@@ -1,12 +1,12 @@
 import { Api } from '#api/$'
+import { O } from '#dep/effect'
 import { AiImageGeneration } from '#lib/ai-image-generation/$'
 import { Command, Options } from '@effect/cli'
 import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
-import { Console, Effect, Option } from 'effect'
+import { Path } from '@wollybeard/kit'
+import { Console, Effect } from 'effect'
 import { Catalog } from 'graphql-kit'
-import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
-import * as Path from 'node:path'
 import { projectParameter } from '../_/parameters.js'
 
 /**
@@ -66,7 +66,7 @@ export const heroImage = Command.make(
   ({ project, overwrite }) =>
     Effect.gen(function*() {
       // Get project directory
-      const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
+      const dir = Path.ensureOptionalAbsoluteWithCwd(O.getOrUndefined(project))
 
       // Load config
       const configInput = yield* Api.Config.load({ dir })
@@ -131,9 +131,10 @@ export const heroImage = Command.make(
       // Load and analyze schema if available
       let schema = undefined
       const schemaResult = yield* Api.Schema.loadOrNull(config)
-      if (schemaResult?.data) {
+      if (O.isSome(schemaResult) && O.isSome(schemaResult.value.data)) {
         try {
-          const latestSchema = Catalog.getLatest(schemaResult.data)
+          const catalogData = schemaResult.value.data.value
+          const latestSchema = Catalog.getLatest(catalogData)
           if (latestSchema?.definition) {
             schema = latestSchema.definition
             const context = AiImageGeneration.analyzeSchema(schema)
@@ -222,8 +223,9 @@ export const heroImage = Command.make(
       yield* Console.log(`📝 Prompt: ${finalPrompt.substring(0, 150)}...`)
 
       // Let errors bubble up naturally
-      const image = yield* Effect.promise(() => service.generate(generationConfig))
+      const imageOption = yield* service.generate(generationConfig)
 
+      const image = O.getOrNull(imageOption)
       if (!image) {
         yield* Console.log('❌ Failed to generate image')
         return
@@ -236,14 +238,20 @@ export const heroImage = Command.make(
       // Wait a moment for Pollinations to generate the image on-demand
       yield* Effect.sleep('2 seconds')
 
-      const response = yield* Effect.promise(() => fetch(image.url))
+      const response = yield* Effect.tryPromise({
+        try: () => fetch(image.url),
+        catch: (error) => new Error(`Failed to fetch image: ${String(error)}`),
+      })
 
       if (!response.ok) {
         yield* Console.log(`❌ Failed to download image: ${response.statusText}`)
         return
       }
 
-      const buffer = yield* Effect.promise(() => response.arrayBuffer())
+      const buffer = yield* Effect.tryPromise({
+        try: () => response.arrayBuffer(),
+        catch: (error) => new Error(`Failed to read response buffer: ${String(error)}`),
+      })
 
       // Backup existing hero image unless --overwrite is specified
       if (!overwrite) {

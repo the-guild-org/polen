@@ -1,8 +1,10 @@
 import { Api } from '#api/$'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
+import { O } from '#dep/effect'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
 import { Json, Str } from '@wollybeard/kit'
+import { String } from 'effect'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
 import { Config as ConfigPlugin, viProjectConfig } from './config.js'
@@ -103,8 +105,9 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
         // debug(`check candidate`, { id, importer, isPolenImporter })
 
         const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
-        const match = Str.match(id, find)
-        if (!match) return null
+        const matchResult = String.match(find)(id)
+        if (O.isNone(matchResult)) return null
+        const match = matchResult.value
 
         // Use Node's resolver to handle package.json imports correctly
         try {

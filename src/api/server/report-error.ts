@@ -1,27 +1,51 @@
 import { Err } from '@wollybeard/kit'
 import cleanStack from 'clean-stack'
+import { Data, Effect } from 'effect'
 import { ErrorParser } from 'youch-core'
 import type { ParsedError, StackFrame } from 'youch-core/types'
 
-export const reportError = async (value: unknown): Promise<void> => {
-  const error = Err.ensure(value)
+// Custom error types
+export class ErrorParsingError extends Data.TaggedError('ErrorParsingError')<{
+  readonly originalError: unknown
+  readonly parseError: unknown
+}> {}
 
-  const excludeStackFramesPattern = /.*(?:rolldown-vite|rolldown|node_modules).*/
+export type ReportErrorError = ErrorParsingError | Error
 
-  cleanStackRecursive(error, excludeStackFramesPattern)
+/**
+ * Report an error with stack trace and code snippets.
+ * Returns an Effect that handles error parsing and reporting.
+ *
+ * @param value - The error value to report
+ * @returns Effect that reports the error with snippets
+ */
+export const reportError = (value: unknown): Effect.Effect<void, ReportErrorError, never> =>
+  Effect.gen(function*() {
+    const error = Err.ensure(value)
 
-  Err.log(error)
+    const excludeStackFramesPattern = /.*(?:rolldown-vite|rolldown|node_modules).*/
 
-  const parser = new ErrorParser()
+    cleanStackRecursive(error, excludeStackFramesPattern)
 
-  const parsedError = await parser.parse(error)
+    Err.log(error)
 
-  const snippets = createSnippets(parsedError)
+    const parser = new ErrorParser()
 
-  if (snippets) {
-    console.log(`\n\n\n\n` + snippets)
-  }
-}
+    const parsedError = yield* Effect.tryPromise({
+      try: () => parser.parse(error),
+      catch: (parseError) =>
+        new ErrorParsingError({
+          originalError: error,
+          parseError,
+        }),
+    })
+
+    const snippets = createSnippets(parsedError)
+
+    if (snippets) {
+      console.log(`\n\n\n\n` + snippets)
+    }
+  })
 
 const createSnippets = (parsedError: ParsedError) => {
   const snippets = parsedError.frames.map((frame) => {

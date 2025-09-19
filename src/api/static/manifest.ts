@@ -1,7 +1,7 @@
-import { NodeFileSystem } from '@effect/platform-node'
+import { O, S } from '#dep/effect'
+import type { FileSystem } from '@effect/platform/FileSystem'
+import { Resource } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { Resource } from 'graphql-kit'
-import { S } from 'graphql-kit'
 
 export const PolenBuildManifestSchema = S.Struct({
   type: S.Literal('ssg', 'ssr'),
@@ -11,11 +11,11 @@ export const PolenBuildManifestSchema = S.Struct({
 
 export type PolenBuildManifest = S.Schema.Type<typeof PolenBuildManifestSchema>
 
-const buildManifestResource = Resource.create({
-  name: 'polen-build-manifest',
-  path: '.polen/build.json',
-  schema: PolenBuildManifestSchema,
-})
+const buildManifestResource = Resource.createSchemaResource(
+  '.polen/build.json',
+  PolenBuildManifestSchema,
+  {} as PolenBuildManifest, // empty value
+)
 
 /**
  * Resource for reading and writing the Polen build manifest.
@@ -24,28 +24,19 @@ const buildManifestResource = Resource.create({
 export const buildManifest = {
   /**
    * Read the build manifest from the specified directory.
+   * Returns an Effect that yields an Option of the manifest.
    * @param directory - The directory containing the .polen/build.json file
-   * @returns Promise resolving to Either with error or manifest data
+   * @returns Effect yielding Option<PolenBuildManifest>
    */
-  read: async (directory: string) => {
-    return Effect.runPromiseExit(
-      buildManifestResource.read(directory).pipe(
-        Effect.provide(NodeFileSystem.layer),
-      ),
-    )
-  },
+  read: (directory: string): Effect.Effect<O.Option<PolenBuildManifest>, Resource.ResourceError, FileSystem> =>
+    buildManifestResource.read(directory),
 
   /**
    * Write the build manifest to the specified directory.
    * @param data - The manifest data to write
    * @param directory - The directory where to write the .polen/build.json file
-   * @returns Promise resolving to Either with error or void
+   * @returns Effect yielding void on success
    */
-  write: async (data: PolenBuildManifest, directory: string) => {
-    return Effect.runPromiseExit(
-      buildManifestResource.write(data, directory).pipe(
-        Effect.provide(NodeFileSystem.layer),
-      ),
-    )
-  },
+  write: (data: PolenBuildManifest, directory: string): Effect.Effect<void, Resource.ResourceError, FileSystem> =>
+    buildManifestResource.write(data, directory),
 }

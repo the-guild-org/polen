@@ -1,7 +1,8 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { React } from '#dep/react/index'
 import { DesktopIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
-import { IconButton } from '@radix-ui/themes'
 import { useTheme } from '../contexts/ThemeContext.js'
+import { IconButton } from './ui/index.js'
 
 export const ThemeToggle: React.FC = () => {
   const { appearance, toggleTheme, preference } = useTheme()

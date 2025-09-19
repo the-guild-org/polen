@@ -1,30 +1,34 @@
-import type { colorPropDef } from '@radix-ui/themes/props'
 import type { Grafaid } from 'graphql-kit'
 
-type RadixColor = typeof colorPropDef[`color`][`values`][number]
-
-interface TypeKindTyokens {
+interface TypeKindTokens {
   symbol: string
-  color: RadixColor
+  color: string
 }
 
-export const typeKindTokensIndex = {
-  // O
-  Object: { symbol: `O`, color: `iris` },
-  Interface: { symbol: `T`, color: `pink` },
-  Union: { symbol: `U`, color: `pink` },
-  // IO
-  Enum: { symbol: `E`, color: `orange` },
-  Scalar: { symbol: `S`, color: `orange` },
-  // I
-  InputObject: { symbol: `I`, color: `green` },
-  //
-  // rare (todo: never possible? limit to NAMED type kinds?)
-  List: { symbol: `L`, color: `gray` },
-  NonNull: { symbol: `N`, color: `gray` },
-} satisfies Record<Grafaid.Schema.TypeKindName, TypeKindTyokens>
+// Create a partial index with known types
+const knownTypeKinds = {
+  // Output types
+  Object: { symbol: `O`, color: `primary` },
+  Interface: { symbol: `T`, color: `accent` },
+  Union: { symbol: `U`, color: `accent` },
+  // Input/Output types
+  Enum: { symbol: `E`, color: `destructive` },
+  Scalar: { symbol: `S`, color: `destructive` },
+  // Input types
+  InputObject: { symbol: `I`, color: `muted` },
+  // Modifiers
+  List: { symbol: `L`, color: `muted` },
+  NonNull: { symbol: `N`, color: `muted` },
+} satisfies Partial<Record<Grafaid.Schema.TypeKindName, TypeKindTokens>>
 
-export const unknownTypeKindToken: TypeKindTyokens = {
-  symbol: `UNKNOWN`,
-  color: `jade`,
+export const unknownTypeKindToken: TypeKindTokens = {
+  symbol: `?`,
+  color: `muted`,
 }
+
+// Create a type-safe index with fallback
+export const typeKindTokensIndex = new Proxy(knownTypeKinds, {
+  get(target, prop: string) {
+    return target[prop as keyof typeof target] ?? unknownTypeKindToken
+  },
+}) as Record<Grafaid.Schema.TypeKindName, TypeKindTokens>

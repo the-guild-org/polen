@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 import type { Diagnostic } from './diagnostic.js'
 import { Severity } from './severity.js'
 

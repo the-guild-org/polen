@@ -1,7 +1,9 @@
 import { Api } from '#api/$'
+import { O } from '#dep/effect'
 import { Command, Options } from '@effect/cli'
-import { Effect, Option } from 'effect'
-import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
+import { NodeFileSystem } from '@effect/platform-node'
+import { Path } from '@wollybeard/kit'
+import { Effect } from 'effect'
 import { allowGlobalParameter, projectParameter } from '../_/parameters.js'
 
 // Define all the options exactly matching the original
@@ -40,9 +42,11 @@ export const build = Command.make(
   },
   ({ debug, project, architecture, base, port, allowGlobal }) =>
     Effect.gen(function*() {
-      const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
+      const dir = Path.ensureOptionalAbsoluteWithCwd(O.getOrUndefined(project))
 
-      const isValidProject = yield* Effect.promise(() => Api.Project.validateProjectDirectory(dir))
+      const isValidProject = yield* Api.Project.validateProjectDirectory(dir).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      )
       if (!isValidProject) {
         return yield* Effect.fail(new Error('Invalid project directory'))
       }
@@ -52,10 +56,10 @@ export const build = Command.make(
         overrides: {
           build: {
             architecture,
-            base: Option.getOrUndefined(base),
+            base: O.getOrUndefined(base),
           },
           server: {
-            port: Option.getOrUndefined(port),
+            port: O.getOrUndefined(port),
           },
           advanced: {
             debug,

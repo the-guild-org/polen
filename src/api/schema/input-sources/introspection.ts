@@ -1,15 +1,11 @@
 import { InputSource } from '#api/schema/input-source/$'
+import { PlatformError } from '@effect/platform/Error'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Fs, Json, Path } from '@wollybeard/kit'
+import { Json, Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Change } from 'graphql-kit'
-import { DateOnly } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { GraphqlSchemaLoader } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
+import { Catalog, Change, DateOnly, Grafaid, GraphqlSchemaLoader, Revision, Schema } from 'graphql-kit'
 import { createHash } from 'node:crypto'
+import * as IntrospectionSchema from './introspection-schema.js'
 
 /**
  * Configuration for loading schema via GraphQL introspection.
@@ -44,7 +40,7 @@ export interface Options {
    *
    * @example 'https://api.example.com/graphql'
    */
-  url: string
+  url?: string
   /**
    * Optional headers to include in the introspection request.
    *
@@ -65,7 +61,7 @@ export interface Options {
 interface CacheEntry {
   url: string
   fetchedAt: string // ISO timestamp
-  introspectionResult: any // The GraphQL introspection result
+  introspectionResult: { data: IntrospectionSchema.IntrospectionQuery } // Validated GraphQL introspection result
 }
 
 const getCacheKey = (url: string): string => {
@@ -77,31 +73,51 @@ const getCachePath = (url: string, projectRoot: string): string => {
   return Path.join(projectRoot, '.polen', 'cache', 'introspection', `${cacheKey}.json`)
 }
 
-const readCache = async (cachePath: string): Promise<CacheEntry | null> => {
-  const content = await Fs.read(cachePath)
-  if (!content) return null
+const readCache = (cachePath: string): Effect.Effect<CacheEntry | null, PlatformError, FileSystem> =>
+  Effect.gen(function*() {
+    const fs = yield* FileSystem
+    const exists = yield* fs.exists(cachePath)
+    if (!exists) return null
 
-  try {
-    const data = Json.codec.decode(content)
-    return data as unknown as CacheEntry
-  } catch {
-    return null
-  }
-}
+    const content = yield* fs.readFileString(cachePath).pipe(
+      Effect.catchAll(() => Effect.succeed(null)),
+    )
+    if (!content) return null
 
-const writeCache = async (cachePath: string, entry: CacheEntry): Promise<void> => {
-  await Fs.write({
-    path: cachePath,
-    content: Json.codec.encode(entry as any),
+    try {
+      const data = Json.codec.decode(content) as any
+      // Validate the introspection result in the cache
+      if (data && data.introspectionResult && data.introspectionResult.data) {
+        const validated = IntrospectionSchema.decodeSync(data.introspectionResult.data)
+        return {
+          ...data,
+          introspectionResult: { data: validated },
+        } as CacheEntry
+      }
+      return null
+    } catch {
+      return null
+    }
   })
-}
 
-const fetchIntrospection = (options: Options): Effect.Effect<Grafaid.Schema.Schema, Error, FileSystem> =>
-  GraphqlSchemaLoader.load({
+const writeCache = (cachePath: string, entry: CacheEntry): Effect.Effect<void, Error, FileSystem> =>
+  Effect.gen(function*() {
+    const fs = yield* FileSystem
+    const dir = Path.dirname(cachePath)
+    yield* fs.makeDirectory(dir, { recursive: true })
+    yield* fs.writeFileString(cachePath, Json.codec.encode(entry as any))
+  })
+
+const fetchIntrospection = (options: Options): Effect.Effect<Grafaid.Schema.Schema, Error, FileSystem> => {
+  if (!options.url) {
+    return Effect.fail(new Error('URL is required for introspection'))
+  }
+  return GraphqlSchemaLoader.load({
     type: `introspect`,
     url: options.url,
     headers: options.headers,
   })
+}
 
 const createCatalogFromSchema = (
   schemaData: Grafaid.Schema.Schema,
@@ -133,7 +149,7 @@ const createCatalogFromSchema = (
     })
   })
 
-export const loader = InputSource.createEffect({
+export const loader = InputSource.create({
   name: 'introspection',
 
   isApplicable: (options: Options) => {
@@ -148,21 +164,22 @@ export const loader = InputSource.createEffect({
       const cachePath = getCachePath(options.url, config.paths.project.rootDir)
 
       // Try to read from cache
-      const cacheEntry = yield* Effect.tryPromise({
-        try: () => readCache(cachePath),
-        catch: (error) =>
+      const cacheEntry = yield* readCache(cachePath).pipe(
+        Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'introspection',
             message: `Failed to read cache: ${error}`,
             cause: error,
-          }),
-      })
+          })
+        ),
+      )
 
       let schema: Grafaid.Schema.Schema
 
       if (cacheEntry && cacheEntry.url === options.url) {
         // Use cached introspection result
-        schema = Grafaid.Schema.fromIntrospectionQuery(cacheEntry.introspectionResult)
+        // The cache contains { data: IntrospectionQuery } structure
+        schema = Grafaid.Schema.fromIntrospectionQuery(cacheEntry.introspectionResult.data as any)
       } else {
         // Fetch fresh introspection
         schema = yield* fetchIntrospection(options).pipe(
@@ -176,22 +193,22 @@ export const loader = InputSource.createEffect({
         )
 
         // Save to cache
-        const __schema = Grafaid.Schema.toIntrospectionQuery(schema)
+        const introspectionQuery = Grafaid.Schema.toIntrospectionQuery(schema)
         const newCacheEntry: CacheEntry = {
           url: options.url,
           fetchedAt: new Date().toISOString(),
-          introspectionResult: { data: { __schema } },
+          introspectionResult: { data: introspectionQuery as IntrospectionSchema.IntrospectionQuery },
         }
 
-        yield* Effect.tryPromise({
-          try: () => writeCache(cachePath, newCacheEntry),
-          catch: (error) =>
+        yield* writeCache(cachePath, newCacheEntry).pipe(
+          Effect.mapError((error) =>
             new InputSource.InputSourceError({
               source: 'introspection',
               message: `Failed to write cache: ${error}`,
               cause: error,
-            }),
-        })
+            })
+          ),
+        )
       }
 
       return yield* createCatalogFromSchema(schema).pipe(
@@ -227,18 +244,18 @@ export const loader = InputSource.createEffect({
       const newCacheEntry: CacheEntry = {
         url: options.url,
         fetchedAt: new Date().toISOString(),
-        introspectionResult: { data: { __schema } },
+        introspectionResult: { data: { __schema } as any as IntrospectionSchema.IntrospectionQuery },
       }
 
-      yield* Effect.tryPromise({
-        try: () => writeCache(cachePath, newCacheEntry),
-        catch: (error) =>
+      yield* writeCache(cachePath, newCacheEntry).pipe(
+        Effect.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'introspection',
             message: `Failed to write cache: ${error}`,
             cause: error,
-          }),
-      })
+          })
+        ),
+      )
 
       return yield* createCatalogFromSchema(schema).pipe(
         Effect.mapError((error) =>

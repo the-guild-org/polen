@@ -6,8 +6,8 @@
  */
 
 import { Api } from '#api/iso'
+import { E } from '#dep/effect'
 import type { CodeAnnotation } from 'codehike/code'
-import { Either } from 'effect'
 import {
   getNamedType,
   type GraphQLArgument,
@@ -542,16 +542,16 @@ export async function parseGraphQLWithTreeSitterEither(
   annotations: CodeAnnotation[] = [],
   schema?: GraphQLSchema,
   referenceEnabled = true,
-): Promise<Either.Either<GraphQLToken[], ParseError>> {
+): Promise<E.Either<GraphQLToken[], ParseError>> {
   // Validate input
   if (!code || typeof code !== 'string') {
-    return Either.left(makeParseError.invalidInput('Invalid GraphQL code: code must be a non-empty string'))
+    return E.left(makeParseError.invalidInput('Invalid GraphQL code: code must be a non-empty string'))
   }
 
   // Prevent parsing extremely large documents that could cause performance issues
   const maxSize = 100_000
   if (code.length > maxSize) {
-    return Either.left(makeParseError.documentTooLarge(maxSize, code.length))
+    return E.left(makeParseError.documentTooLarge(maxSize, code.length))
   }
 
   // Step 1: Parse with tree-sitter
@@ -559,7 +559,7 @@ export async function parseGraphQLWithTreeSitterEither(
   try {
     parser = await getParser()
   } catch (error) {
-    return Either.left(makeParseError.parserInitError(
+    return E.left(makeParseError.parserInitError(
       error instanceof Error ? error.message : 'Failed to initialize parser',
     ))
   }
@@ -567,7 +567,7 @@ export async function parseGraphQLWithTreeSitterEither(
   const tree = parser.parse(code)
 
   if (!tree) {
-    return Either.left(makeParseError.treeSitterError('Tree-sitter failed to parse GraphQL code'))
+    return E.left(makeParseError.treeSitterError('Tree-sitter failed to parse GraphQL code'))
   }
 
   try {
@@ -577,9 +577,9 @@ export async function parseGraphQLWithTreeSitterEither(
     // Step 3: Add error hint tokens after invalid fields
     const tokensWithHints = addErrorHintTokens(tokens, code, annotations, referenceEnabled)
 
-    return Either.right(tokensWithHints)
+    return E.right(tokensWithHints)
   } catch (error) {
-    return Either.left(makeParseError.treeSitterError(
+    return E.left(makeParseError.treeSitterError(
       error instanceof Error ? error.message : 'Failed to process tokens',
     ))
   } finally {
@@ -605,7 +605,7 @@ export async function parseGraphQLWithTreeSitter(
 ): Promise<GraphQLToken[]> {
   const result = await parseGraphQLWithTreeSitterEither(code, annotations, schema, referenceEnabled)
 
-  if (Either.isLeft(result)) {
+  if (E.isLeft(result)) {
     const error = result.left
     switch (error._tag) {
       case 'InvalidInput':

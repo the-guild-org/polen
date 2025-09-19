@@ -1,15 +1,12 @@
+import { O, S } from '#dep/effect'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
-import { Swiss } from '#lib/swiss'
 import { Http } from '@wollybeard/kit'
-import { Effect, Option } from 'effect'
-import { HashMap } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { S } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Effect, HashMap } from 'effect'
+import { Catalog, Schema, Version } from 'graphql-kit'
 import { redirect } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
+import { Container, Grid, GridItem } from '../../components/ui/index.js'
 import { ChangelogBody } from './ChangelogBody.js'
 import { ChangelogSidebar } from './ChangelogSidebar.js'
 
@@ -40,20 +37,20 @@ const loader = ({ params }: { params: { version?: string } }) => {
   // If catalog is versioned and no version is provided in URL, redirect to latest version
   if (Catalog.Versioned.is(catalog) && !params.version) {
     const latestVersion = Catalog.getLatestVersion(catalog)
-    const urlVersion = Version.encodeSync(Option.getOrThrow(latestVersion))
+    const urlVersion = Version.encodeSync(O.getOrThrow(latestVersion))
     throw redirect(`/changelog/version/${urlVersion}`)
   }
 
-  const schemaMaybe = ((): Option.Option<Schema.Schema> => {
+  const schemaMaybe = ((): O.Option<Schema.Schema> => {
     if (Catalog.Versioned.is(catalog)) {
       const version = Version.decodeSync(params.version!)
       const schema = HashMap.get(catalog.entries, version)
       return schema
     }
-    return Option.some(catalog.schema)
+    return O.some(catalog.schema)
   })()
 
-  if (Option.isNone(schemaMaybe)) {
+  if (O.isNone(schemaMaybe)) {
     throw Http.Response.notFound
   }
 
@@ -72,12 +69,16 @@ const Component = () => {
   const { catalog, schema } = useLoaderData(LoaderSchema)
 
   return (
-    <Swiss.Body subgrid>
-      <ChangelogSidebar schema={schema} catalog={catalog} />
-      <Swiss.Item start={5} cols={8}>
-        <ChangelogBody schema={schema} />
-      </Swiss.Item>
-    </Swiss.Body>
+    <Container>
+      <Grid cols={12} gap='lg'>
+        <GridItem span={4}>
+          <ChangelogSidebar schema={schema} catalog={catalog} />
+        </GridItem>
+        <GridItem span={8}>
+          <ChangelogBody schema={schema} />
+        </GridItem>
+      </Grid>
+    </Container>
   )
 }
 

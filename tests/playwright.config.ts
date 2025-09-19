@@ -1,13 +1,14 @@
+import { S } from '#dep/effect'
 import { PackageManager } from '@wollybeard/kit'
 import { defineConfig, devices } from 'playwright/test'
 
 const isCi = !!process.env[`CI`]
 
 const polenLink = process.env[`POLEN_LINK`]
-  ? PackageManager.LinkProtocol.parse(process.env[`POLEN_LINK`])
+  ? S.decodeUnknownSync(PackageManager.LinkProtocol)(process.env[`POLEN_LINK`])
   : isCi
-  ? PackageManager.LinkProtocol.enum.file
-  : PackageManager.LinkProtocol.enum.file
+  ? PackageManager.LinkProtocol.enums.file
+  : PackageManager.LinkProtocol.enums.file
 
 export default defineConfig({
   outputDir: `./__results__`,

@@ -1,4 +1,4 @@
-import { Array, Option } from 'effect'
+import { A, O } from '#dep/effect'
 import type { GraphQLFieldMap, GraphQLSchema } from 'graphql'
 import { Grafaid } from 'graphql-kit'
 
@@ -29,8 +29,8 @@ export const doesPathExist = (schema: GraphQLSchema, path: PathValidation): bool
   if (!path.argument) return true
 
   // Check if argument exists
-  const arg = Array.findFirst(field.args, a => a.name === path.argument)
-  return Option.isSome(arg)
+  const arg = A.findFirst(field.args, a => a.name === path.argument)
+  return O.isSome(arg)
 }
 
 /**

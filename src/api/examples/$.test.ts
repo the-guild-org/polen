@@ -1,17 +1,14 @@
 import { Diagnostic } from '#lib/diagnostic/$'
+import { Test } from '@wollybeard/kit/test'
 import { Effect, HashMap } from 'effect'
 import { buildSchema } from 'graphql'
-import { Catalog } from 'graphql-kit'
-import { Document } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog, Document, Schema, Version } from 'graphql-kit'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { Test } from '../../../tests/unit/helpers/test.js'
 import { Examples } from './$.js'
 
 describe('Example', () => {
   // dprint-ignore
-  Test.suite<{ example: Examples.Example.Example; expected: boolean }>('validation', [
+  Test.Table.suite<{ example: Examples.Example.Example; expected: boolean }>('validation', [
     { name: 'validates unversioned example', example: Examples.Example.Example.make({ name: 'list-users', path: 'examples/list-users.graphql', document: Document.Unversioned.make({ document: 'query ListUsers { users { id name } }' }) }), expected: true },
     { name: 'validates versioned example',   example: Examples.Example.Example.make({ name: 'list-users', path: 'examples', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query ListUsers { users { id name } }'], [Version.fromString('v2'), 'query ListUsers { users { id email name } }']) }) }), expected: true },
   ], ({ example, expected }) => {
@@ -29,14 +26,14 @@ describe('ExampleScanner', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ files: string[]; fileContents: Record<string, string>; expectedExamples: number; expectedDiagnostics: number }>('scanning', [
+  Test.Table.suite<{ files: string[]; fileContents: Record<string, string>; expectedExamples: number; expectedDiagnostics: number }>('scanning', [
     { name: 'scans unversioned example', skip: true, files: ['get-users.graphql'],                         fileContents: { 'get-users.graphql': 'query GetUsers { users { id } }' },                                                                                 expectedExamples: 1, expectedDiagnostics: 0 },
     { name: 'scans versioned examples',  skip: true, files: ['users/v1.graphql', 'users/v2.graphql'],    fileContents: { 'users/v1.graphql': 'query V1 { users { id } }', 'users/v2.graphql': 'query V2 { users { id email } }' },                                expectedExamples: 1, expectedDiagnostics: 0 },
     { name: 'detects duplicate content', skip: true, files: ['users/v1.graphql', 'users/v2.graphql'],    fileContents: { 'users/v1.graphql': 'query Users { users { id } }', 'users/v2.graphql': 'query Users { users { id } }' },                                expectedExamples: 1, expectedDiagnostics: 1 },
   ], async ({ files, fileContents, expectedExamples, expectedDiagnostics }) => {
     mockFs.readFileString.mockImplementation((path: string) => {
       const fileName = path.split('/').pop()!
-      const content = (fileContents as any)[files.find(f => f.endsWith(fileName!))!]
+      const content = (fileContents )[files.find(f => f.endsWith(fileName!))!]
       return Effect.succeed(content)
     })
 
@@ -46,11 +43,11 @@ describe('ExampleScanner', () => {
     //     dir: '/examples',
     //     schemaVersions: ['v1', 'v2'],
     //     files,
-    //   }).pipe(Effect.provide({ FileSystem: mockFs } as any) as any),
+    //   }).pipe(Effect.provide({ FileSystem: mockFs } ) ),
     // )
 
-    // expect((result as any).examples).toHaveLength(expectedExamples)
-    // expect((result as any).diagnostics).toHaveLength(expectedDiagnostics)
+    // expect((result ).examples).toHaveLength(expectedExamples)
+    // expect((result ).diagnostics).toHaveLength(expectedDiagnostics)
   })
 })
 
@@ -63,7 +60,7 @@ describe('ExampleValidator', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ examples: Examples.Example.Example[]; expectedErrors: number }>('validation', [
+  Test.Table.suite<{ examples: Examples.Example.Example[]; expectedErrors: number }>('validation', [
     { name: 'validates unversioned example', examples: [Examples.Example.Example.make({ name: 'test', path: 'test.graphql', document: Document.Unversioned.make({ document: 'query Test { test }' }) })],                                                                                                                     expectedErrors: 0 },
     { name: 'validates versioned example',   examples: [Examples.Example.Example.make({ name: 'test', path: 'test', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query Test { test }'], [Version.fromString('v2'), 'query Test { test { id } }']) }) })],                        expectedErrors: 0 },
   ], ({ examples, expectedErrors }) => {
@@ -94,13 +91,13 @@ describe('filterExamplesBySelection', () => {
   ]
 
   // dprint-ignore
-  Test.suite<{ selection: any; expected: string[] }>('selection filtering', [
+  Test.Table.suite<{ selection: any; expected: string[] }>('selection filtering', [
     { name: 'undefined returns all',     selection: undefined,                expected: ['a', 'b', 'c'] },
     { name: 'all returns all',           selection: 'all',                    expected: ['a', 'b', 'c'] },
     { name: 'none returns empty',        selection: 'none',                   expected: [] },
     { name: 'include filters',           selection: { include: ['a', 'b'] }, expected: ['a', 'b'] },
   ], ({ selection, expected }) => {
-    const result = Examples.filterExamplesBySelection(examples, selection as any)
+    const result = Examples.filterExamplesBySelection(examples, selection )
     expect(result.map(e => e.name)).toEqual(expected)
   })
 })

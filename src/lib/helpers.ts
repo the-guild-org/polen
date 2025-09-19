@@ -1,7 +1,7 @@
+import { S } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
+import { Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { S } from 'graphql-kit'
-import * as Path from 'node:path'
 
 // ============================================================================
 // Error Types

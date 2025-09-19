@@ -1,12 +1,12 @@
 import { Catalog as ExamplesCatalog } from '#api/examples/schemas/catalog'
 import { routeIndex } from '#lib/react-router-effect/react-router-effect'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
-import { Box, Code, Text } from '@radix-ui/themes'
 import { Catalog } from 'graphql-kit'
 import { redirect } from 'react-router'
 import { examplesCatalog, IndexComponent } from 'virtual:polen/project/examples'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { DevelopmentTip } from '../../components/DevelopmentTip.js'
+import { Box, Code, Text } from '../../components/ui/index.js'
 import { MdxProvider } from '../../providers/mdx.js'
 
 // ============================================================================

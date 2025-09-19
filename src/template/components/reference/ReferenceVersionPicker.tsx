@@ -1,6 +1,7 @@
 import { Api } from '#api/iso'
+import { O } from '#dep/effect'
 import type { React } from '#dep/react/index'
-import { HashMap, Option } from 'effect'
+import { HashMap } from 'effect'
 import { Version } from 'graphql-kit'
 import { useNavigate } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
@@ -34,16 +35,16 @@ export const ReferenceVersionPicker: React.FC<Props> = ({ data, current }) => {
 
       // Find the schema for the target version
       // Note: newVersion is a string that we need to parse
-      const targetSchemaOption = Option.map(
+      const targetSchemaOption = O.map(
         HashMap.findFirst(catalog.entries, (_, key) => Version.encodeSync(key as any) === newVersion),
         ([, value]) => value,
       )
 
-      if (Option.isNone(targetSchemaOption)) {
+      if (O.isNone(targetSchemaOption)) {
         throw new Error(`Version ${newVersion} not found`)
       }
 
-      const targetSchema = Option.getOrThrow(targetSchemaOption)
+      const targetSchema = O.getOrThrow(targetSchemaOption)
 
       // Find fallback path if needed
       const fallbackPath = Api.Schema.Validation.findFallbackPath((targetSchema as any).definition, currentPath)

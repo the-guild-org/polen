@@ -49,11 +49,11 @@ const injectAssetsIntoHtml = (
     css: (assets) =>
       assets
         .map((asset) => `<link rel="stylesheet" href="${asset.path}" />`)
-        .join(Str.Char.newline),
+        .join('\n'),
     js: (assets) =>
       assets
         .map((asset) => `<script type="module" src="${asset.path}"></script>`)
-        .join(Str.Char.newline),
+        .join('\n'),
   })
 
   return html

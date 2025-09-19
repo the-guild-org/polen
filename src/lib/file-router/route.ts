@@ -1,5 +1,9 @@
-import { type Path } from '@wollybeard/kit'
-import { arrayEquals } from 'graphql-kit'
+import { A } from '#dep/effect'
+import { Path } from '@wollybeard/kit'
+import { Equivalence } from 'effect'
+
+// Create an equivalence for comparing string arrays (path segments)
+const pathSegmentArrayEquals = A.getEquivalence(Equivalence.string)
 
 //
 //
@@ -142,7 +146,7 @@ export const routeIsSubOf = (route: Route, potentialAncestorPath: PathSegment[])
   if (route.logical.path.length <= potentialAncestorPath.length) {
     return false
   }
-  return arrayEquals(
+  return pathSegmentArrayEquals(
     route.logical.path.slice(0, potentialAncestorPath.length),
     potentialAncestorPath,
   )

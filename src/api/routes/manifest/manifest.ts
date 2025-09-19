@@ -1,8 +1,7 @@
+import { O, S } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
-import { NodeFileSystem } from '@effect/platform-node'
+import { Resource } from '@wollybeard/kit'
 import { Effect } from 'effect'
-import { Resource } from 'graphql-kit'
-import { S } from 'graphql-kit'
 
 /**
  * Schema for the routes manifest generated during build.
@@ -21,11 +20,11 @@ export type RoutesManifest = S.Schema.Type<typeof RoutesManifestSchema>
  * Resource for reading and writing the routes manifest.
  * The manifest is stored as routes.manifest.json in the build assets directory.
  */
-const routesManifestResource = Resource.create({
-  name: 'routes-manifest',
-  path: 'routes.manifest.json',
-  schema: RoutesManifestSchema,
-})
+const routesManifestResource = Resource.createSchemaResource(
+  'routes.manifest.json',
+  RoutesManifestSchema,
+  { version: '1.0.0', timestamp: new Date().toISOString(), totalRoutes: 0, routes: [] } as RoutesManifest,
+)
 
 /**
  * Get a routes manifest from the specified directory.
@@ -35,10 +34,14 @@ const routesManifestResource = Resource.create({
  */
 export const get = (directory: string): Effect.Effect<RoutesManifest, Error, FileSystem.FileSystem> => {
   return routesManifestResource.read(directory).pipe(
+    Effect.flatMap(O.match({
+      onNone: () => Effect.fail(new Error(`Routes manifest not found in ${directory}/routes.manifest.json`)),
+      onSome: Effect.succeed,
+    })),
     Effect.catchAll(error =>
       Effect.fail(
         new Error(
-          `Failed to load routes manifest from ${directory}/routes.manifest.json. Ensure the build has completed successfully. ${error.message}`,
+          `Failed to load routes manifest from ${directory}/routes.manifest.json. Ensure the build has completed successfully.`,
         ),
       )
     ),
@@ -56,6 +59,6 @@ export const write = (
   directory: string,
 ): Effect.Effect<void, Error, FileSystem.FileSystem> => {
   return routesManifestResource.write(manifest, directory).pipe(
-    Effect.catchAll(error => Effect.fail(new Error(`Failed to write routes manifest: ${error.message}`))),
+    Effect.catchAll(error => Effect.fail(new Error(`Failed to write routes manifest`))),
   )
 }

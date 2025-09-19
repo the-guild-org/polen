@@ -1,5 +1,6 @@
 import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
@@ -8,7 +9,9 @@ test.describe('Theme functionality', () => {
   test('starts with system theme preference', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
     const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -30,7 +33,9 @@ test.describe('Theme functionality', () => {
   test('theme toggle creates cookie and persists on reload', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
     const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -76,7 +81,9 @@ test.describe('Theme functionality', () => {
   test('theme toggle cycles through system, light, dark', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
     const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -132,7 +139,9 @@ test.describe('Theme functionality', () => {
   test('theme toggle updates cookie on subsequent clicks', async ({ page, vite, project }) => {
     await project.layout.set({ 'pages/index.md': '# Hello' })
     const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -187,7 +196,9 @@ test.describe('Theme functionality', () => {
       'pages/contact.md': '# Contact',
     })
     const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+      Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+        Effect.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)

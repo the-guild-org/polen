@@ -1,8 +1,7 @@
-import { Box, Flex } from '@radix-ui/themes'
-import { Grafaid } from 'graphql-kit'
-import { GrafaidOld } from 'graphql-kit'
+import { Grafaid, GrafaidOld } from 'graphql-kit'
 import { type FC } from 'react'
 import { useAlignedColumns } from '../../hooks/useAlignedColumns.js'
+import { Box, Flex } from '../ui/index.js'
 import { Field } from './Field.js'
 
 export interface Props {

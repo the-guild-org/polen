@@ -1,16 +1,15 @@
 import { Example } from '#api/examples/schemas/example/example'
+import { A, O } from '#dep/effect'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
-import { Box, Heading } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
-import { Array, Option } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog, Version } from 'graphql-kit'
 import { useSearchParams } from 'react-router'
 import * as ExamplesModule from 'virtual:polen/project/examples'
 import { examplesCatalog } from 'virtual:polen/project/examples'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { GraphQLDocument } from '../../components/GraphQLDocument.js'
+import { Box, Heading } from '../../components/ui/index.js'
 import { MdxProvider } from '../../providers/mdx.js'
 
 export const NameSchema = Example
@@ -27,8 +26,8 @@ export const nameLoader = async ({ params }: any) => {
   }
 
   // Check if the example exists
-  const exampleOption = Array.findFirst(examplesCatalog.examples, (e) => e.name === name)
-  if (Option.isNone(exampleOption)) {
+  const exampleOption = A.findFirst(examplesCatalog.examples, (e) => e.name === name)
+  if (O.isNone(exampleOption)) {
     throw new Response('Not Found', { status: 404 })
   }
   const example = exampleOption.value

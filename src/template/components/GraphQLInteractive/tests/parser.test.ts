@@ -1,6 +1,6 @@
+import { Test } from '@wollybeard/kit/test'
 import { buildSchema } from 'graphql'
 import { describe, expect, test } from 'vitest'
-import { Test } from '../../../../../tests/unit/helpers/test.js'
 import { parseGraphQLWithTreeSitter } from '../lib/parser.js'
 import { isArgument } from '../lib/semantic-nodes.js'
 
@@ -18,7 +18,7 @@ describe('parseGraphQLWithTreeSitter', () => {
   }
 
   // dprint-ignore
-  Test.suite<ArgumentParsingCase>('argument parsing', [
+  Test.Table.suite<ArgumentParsingCase>('argument parsing', [
     {
       name: 'should recognize argument names as interactive tokens',
       schemaSDL: `
@@ -72,7 +72,7 @@ describe('parseGraphQLWithTreeSitter', () => {
   ], async ({ schemaSDL, code, checks }) => {
     const schema = buildSchema(schemaSDL)
     const tokens = await parseGraphQLWithTreeSitter(code, [], schema)
-    
+
     for (const check of checks) {
       const token = tokens.find(t => {
         if (check.isArgument) {
@@ -80,20 +80,20 @@ describe('parseGraphQLWithTreeSitter', () => {
         }
         return t.text === check.tokenText
       })
-      
+
       if (check.isArgument || check.expectedInteractive !== undefined || check.expectedUrl) {
         expect(token).toBeDefined()
       }
-      
+
       if (token) {
         if (check.expectedInteractive !== undefined) {
           expect(token.polen.isInteractive()).toBe(check.expectedInteractive)
         }
-        
+
         if (check.expectedUrl) {
           expect(token.polen.getReferenceUrl()).toBe(check.expectedUrl)
         }
-        
+
         if (check.checkVariable && token.semantic && 'kind' in token.semantic) {
           expect(token.semantic.kind).toBe('Variable')
         }
@@ -108,7 +108,7 @@ describe('parseGraphQLWithTreeSitter', () => {
           id: ID!
           name: String!
         }
-        
+
         type Query {
           pokemon: Pokemon
         }

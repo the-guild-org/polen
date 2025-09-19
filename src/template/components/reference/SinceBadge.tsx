@@ -1,9 +1,10 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { Api } from '#api/iso'
-import { Badge, Link } from '@radix-ui/themes'
 import { Match } from 'effect'
 import type { Lifecycles } from 'graphql-kit'
 import { Version } from 'graphql-kit'
 import type React from 'react'
+import { Badge, Link } from '../ui/index.js'
 
 export const SinceBadge: React.FC<{ since: Lifecycles.Since }> = ({ since }) => {
   return (
@@ -19,9 +20,9 @@ export const SinceBadge: React.FC<{ since: Lifecycles.Since }> = ({ since }) => 
             since.revision.date,
             since.schema,
           )}
-          style={{ textDecoration: 'none' }}
+          className='no-underline'
         >
-          <Badge color='green' variant='soft' size='1' style={{ cursor: 'pointer' }}>
+          <Badge color='green' variant='soft' size='1' className='cursor-pointer'>
             Added {Match.value(since.schema).pipe(
               Match.tagsExhaustive({
                 SchemaVersioned: (s) => `${Version.encodeSync(s.version)}@${since.revision.date}`,

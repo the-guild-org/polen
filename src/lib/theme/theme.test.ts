@@ -1,5 +1,5 @@
+import { Test } from '@wollybeard/kit/test'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { Test } from '../../../tests/unit/helpers/test.js'
 import { createThemeManager } from './theme.js'
 
 // Mock document and window
@@ -47,7 +47,7 @@ describe('Theme', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ cookieString: string; cookieName?: string; expected: 'dark' | 'light' | null }>('readCookie', [
+  Test.Table.suite<{ cookieString: string; cookieName?: string; expected: 'dark' | 'light' | null }>('readCookie', [
     { name: 'reads dark theme from cookie',                cookieString: 'theme=dark',                         expected: 'dark' },
     { name: 'reads light theme from cookie',               cookieString: 'theme=light',                        expected: 'light' },
     { name: 'reads theme from middle of cookie string',    cookieString: 'other=value; theme=dark; more=stuff', expected: 'dark' },
@@ -63,7 +63,7 @@ describe('Theme', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ theme: 'dark' | 'light'; options?: { cookieName?: string; maxAge?: number; path?: string }; expected: string }>('writeCookie', [
+  Test.Table.suite<{ theme: 'dark' | 'light'; options?: { cookieName?: string; maxAge?: number; path?: string }; expected: string }>('writeCookie', [
     { name: 'returns properly formatted cookie string',     theme: 'dark',  expected: 'theme=dark; Max-Age=31536000; Path=/; SameSite=Strict' },
     { name: 'uses custom options in cookie string',        theme: 'light', options: { cookieName: 'app-theme', maxAge: 3600, path: '/app' }, expected: 'app-theme=light; Max-Age=3600; Path=/app; SameSite=Strict' },
   ], ({ theme, options, expected }) => {
@@ -110,7 +110,7 @@ describe('Theme', () => {
   })
 
   // dprint-ignore
-  Test.suite<{ mockClass?: string; classPrefix?: string; expected: 'dark' | 'light' | null }>('getCurrentFromDOM', [
+  Test.Table.suite<{ mockClass?: string; classPrefix?: string; expected: 'dark' | 'light' | null }>('getCurrentFromDOM', [
     { name: 'returns dark theme based on DOM class',       mockClass: 'dark',                          expected: 'dark' },
     { name: 'returns light theme based on DOM class',      mockClass: 'light',                         expected: 'light' },
     { name: 'returns null when no theme class present',                                                expected: null },
@@ -118,15 +118,15 @@ describe('Theme', () => {
   ], ({ mockClass, classPrefix, expected }) => {
     // @ts-expect-error - mocking document
     global.document = mockDocument
-    
+
     const manager = classPrefix ? createThemeManager({ classPrefix }) : createThemeManager()
-    
+
     if (mockClass) {
       mockDocument.documentElement.classList.contains.mockImplementation((className) => className === mockClass)
     } else {
       mockDocument.documentElement.classList.contains.mockReturnValue(false)
     }
-    
+
     expect(manager.getCurrentFromDOM()).toBe(expected)
   })
 

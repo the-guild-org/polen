@@ -1,3 +1,6 @@
-// Re-export Radix UI themes that Polen uses internally
-// This allows users to import from 'polen/radix-ui/themes' without installing @radix-ui/themes
-export * from '@radix-ui/themes'
+// DEPRECATED: Polen no longer uses @radix-ui/themes
+// This module has been migrated to shadcn/ui components
+// Users should install @radix-ui/themes directly if needed
+
+// Export empty object to prevent import errors during migration
+export {}

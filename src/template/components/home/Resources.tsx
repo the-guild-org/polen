@@ -1,6 +1,7 @@
-import { Box, Button, Card, Flex, Grid, Heading, Section, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import * as React from 'react'
 import { Link } from 'react-router'
+import { Box, Button, Card, Container, Flex, Grid, Heading, Text } from '../ui/index.js'
 
 interface ResourceLink {
   title: string
@@ -72,7 +73,7 @@ export const ResourcesSection: React.FC<ResourcesProps> = ({
   supportContact,
 }) => {
   return (
-    <Section size='3' style={{ background: 'var(--gray-2)' }}>
+    <Container size='lg' style={{ background: 'var(--gray-2)' }}>
       <Box style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <Box mb='6' style={{ textAlign: 'center' }}>
           <Heading size='6' mb='2'>
@@ -84,7 +85,7 @@ export const ResourcesSection: React.FC<ResourcesProps> = ({
         </Box>
 
         {/* Main resource links */}
-        <Grid columns={{ initial: '1', sm: '2', md: '4' }} gap='4' mb='6'>
+        <Grid columns={{ initial: '1', sm: '2', md: '4' }} gap='lg' mb='6'>
           {links.map((link, index) => (
             <Card key={index} size='2' asChild>
               <Link to={link.href} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -202,6 +203,6 @@ export const ResourcesSection: React.FC<ResourcesProps> = ({
           </Card>
         )}
       </Box>
-    </Section>
+    </Container>
   )
 }

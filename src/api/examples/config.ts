@@ -1,5 +1,5 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
 
 // ============================================================================
 // Global Interface for Type Augmentation
@@ -54,7 +54,7 @@ export const ExampleName = S.transform(
   })),
   {
     strict: false,
-    decode: (s) => s as any as AvailableExampleNames,
+    decode: (s) => s,
     encode: (s) => s,
   },
 )

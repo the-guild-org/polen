@@ -1,8 +1,8 @@
 import type { React } from '#dep/react/index'
-import { Text } from '@radix-ui/themes'
 import type { GraphQLType } from 'graphql'
 import { isListType, isNamedType, isNonNullType } from 'graphql'
 import { TypeLink } from '../graphql/graphql.js'
+import { Text } from '../ui/index.js'
 
 /**
  * Renders a GraphQL type recursively, with links for named types

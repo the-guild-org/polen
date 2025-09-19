@@ -1,12 +1,12 @@
+import { Test } from '@wollybeard/kit/test'
 import { HashMap } from 'effect'
 import { Version } from 'graphql-kit'
 import { describe, expect } from 'vitest'
-import { Test } from '../../../tests/unit/helpers/test.js'
 import * as scanner from './scanner.js'
 
 describe('parseExampleFile', () => {
   // dprint-ignore
-  Test.suite<{ input: string; expected: any }>('parsing', [
+  Test.Table.suite<{ input: string; expected: any }>('parsing', [
     { name: 'unversioned file',  input: 'get-user.graphql',         expected: { type: 'unversioned', name: 'get-user', file: 'get-user.graphql' } },
     { name: 'versioned file',    input: 'get-user.1.graphql',      expected: { type: 'versioned', name: 'get-user', version: Version.decodeSync('1'), file: 'get-user.1.graphql' } },
     { name: 'custom version',    input: 'get-user.default.graphql', expected: { type: 'versioned', name: 'get-user', version: expect.objectContaining({ _tag: 'VersionCustom', value: 'default' }), file: 'get-user.default.graphql' } },
@@ -22,7 +22,7 @@ describe('resolveDefaultFiles', () => {
   const schemaVersions = [v1, v2, v3]
 
   // dprint-ignore
-  Test.suite<{ grouped: any; assertions: (resolved: ReturnType<typeof scanner.resolveDefaultFiles>) => void }>('default file resolution', [
+  Test.Table.suite<{ grouped: any; assertions: (resolved: ReturnType<typeof scanner.resolveDefaultFiles>) => void }>('default file resolution', [
     {
       name: 'unversioned file alone remains unversioned',
       grouped: new Map([['example', { unversioned: 'example.graphql', versioned: new Map() }]]),

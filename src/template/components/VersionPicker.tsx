@@ -1,6 +1,7 @@
-import { Select } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import { Version } from 'graphql-kit'
 import type * as React from 'react'
+import { Select } from './ui/index.js'
 
 interface Props {
   versions: readonly Version.Version[]

@@ -2,6 +2,7 @@ import { Api } from '#api/$'
 import type { Vite } from '#dep/vite/index'
 import type { Polen } from '#exports/index'
 import { toViteUserConfig } from '#vite/config'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
 
 export const defaultViteConfig: Vite.UserConfig = {
@@ -19,7 +20,9 @@ export const pc = async (configInput?: Polen.ConfigInput, baseRootDirPath?: stri
         },
       },
       ...configInput,
-    }, baseRootDirPath),
+    }, baseRootDirPath).pipe(
+      Effect.provide(NodeFileSystem.layer),
+    ),
   )
   return toViteUserConfig(polenConfig)
 }

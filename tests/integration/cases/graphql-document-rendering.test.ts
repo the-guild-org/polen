@@ -4,13 +4,17 @@
 
 import { Api } from '#api/$'
 import { toViteUserConfig } from '#vite/config'
-import type { FsLayout } from '@wollybeard/kit'
+import { NodeFileSystem } from '@effect/platform-node'
 import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
+type FileTree = {
+  [path: string]: string | FileTree
+}
+
 test.skip('GraphQL documents render with syntax highlighting', async ({ page, vite, project }) => {
-  const fixture: FsLayout.Tree = {
+  const fixture: FileTree = {
     'pages/test.mdx': [
       "import { GraphQLDocumentWithSchema } from 'polen/components'",
       '',
@@ -31,7 +35,9 @@ test.skip('GraphQL documents render with syntax highlighting', async ({ page, vi
 
   await project.layout.set(fixture)
   const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+      Effect.provide(NodeFileSystem.layer),
+    ),
   )
   const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -61,7 +67,7 @@ test.skip('GraphQL documents render with syntax highlighting', async ({ page, vi
 })
 
 test.skip('GraphQL documents handle schema-less rendering gracefully', async ({ page, vite, project }) => {
-  const fixture: FsLayout.Tree = {
+  const fixture: FileTree = {
     'pages/test.mdx': [
       "import { GraphQLDocumentWithSchema } from 'polen/components'",
       '',
@@ -80,7 +86,9 @@ test.skip('GraphQL documents handle schema-less rendering gracefully', async ({ 
 
   await project.layout.set(fixture)
   const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+      Effect.provide(NodeFileSystem.layer),
+    ),
   )
   const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -102,7 +110,7 @@ test.skip('GraphQL documents handle schema-less rendering gracefully', async ({ 
 })
 
 test.skip('Multiple GraphQL documents on same page work correctly', async ({ page, vite, project }) => {
-  const fixture: FsLayout.Tree = {
+  const fixture: FileTree = {
     'pages/test.mdx': [
       "import { GraphQLDocumentWithSchema } from 'polen/components'",
       '',
@@ -134,7 +142,9 @@ test.skip('Multiple GraphQL documents on same page work correctly', async ({ pag
 
   await project.layout.set(fixture)
   const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
+      Effect.provide(NodeFileSystem.layer),
+    ),
   )
   const viteConfig = toViteUserConfig(polenConfig)
   const viteDevServer = await vite.startDevelopmentServer(viteConfig)

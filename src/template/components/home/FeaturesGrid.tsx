@@ -1,8 +1,8 @@
-import { Box, Card, Flex, Grid, Heading, Section, Text } from '@radix-ui/themes'
-import { CatalogStatistics } from 'graphql-kit'
-import { Catalog } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Catalog, CatalogStatistics } from 'graphql-kit'
 import { Link } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
+import { Box, Card, Container, Flex, Grid, Heading, Text } from '../ui/index.js'
 
 interface FeaturesGridProps {
   features?: Feature[]
@@ -20,7 +20,7 @@ export const FeaturesGridSection: React.FC<FeaturesGridProps> = ({ features }) =
   const displayFeatures = features || defaultFeatures
 
   return (
-    <Section size='3' pb='8'>
+    <Container size='lg' pb='8'>
       <Box style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <Heading size='7' mb='2' style={{ textAlign: 'center' }}>
           API at a Glance
@@ -29,11 +29,11 @@ export const FeaturesGridSection: React.FC<FeaturesGridProps> = ({ features }) =
           Key metrics and resources
         </Text>
 
-        <Grid columns={{ initial: '1', sm: '2', md: '4' }} gap='4'>
+        <Grid columns={{ initial: '1', sm: '2', md: '4' }} gap='lg'>
           {displayFeatures.map((feature, index) => <FeatureCard key={index} {...feature} />)}
         </Grid>
       </Box>
-    </Section>
+    </Container>
   )
 }
 

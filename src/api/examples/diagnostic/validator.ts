@@ -1,10 +1,8 @@
-import { Array, Either, Match, Schema as S } from 'effect'
+import { A, E } from '#dep/effect'
+import { Match, Schema as S } from 'effect'
 import type { DocumentNode, GraphQLError } from 'graphql'
 import { parse, specifiedRules, validate } from 'graphql'
-import { Catalog as SchemaCatalog } from 'graphql-kit'
-import { Document } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog as SchemaCatalog, Document, Schema, Version } from 'graphql-kit'
 import { Example } from '../schemas/example/$.js'
 import type { DiagnosticValidationError } from './diagnostic.js'
 import { makeDiagnosticValidationError } from './diagnostic.js'
@@ -37,8 +35,8 @@ type GraphQLErrorData = S.Schema.Type<typeof GraphQLErrorData>
  * Safely parse a GraphQL document without throwing.
  * Returns an Either with the document on success or error on failure.
  */
-const parseDocumentSafe = (content: string): Either.Either<DocumentNode, GraphQLError> => {
-  return Either.try({
+const parseDocumentSafe = (content: string): E.Either<DocumentNode, GraphQLError> => {
+  return E.try({
     try: () => parse(content),
     catch: (error) => error as GraphQLError,
   })
@@ -61,13 +59,13 @@ export const validateExamples = (
 ): ValidationDiagnostic[] => {
   const diagnostics: ValidationDiagnostic[] = []
 
-  Array.forEach(examples, (example) => {
+  A.forEach(examples, (example) => {
     if (example.document._tag === 'DocumentVersioned') {
       // Versioned document: iterate all versions and let utility handle compatibility
       const documentVersions = Document.Versioned.getAllVersions(example.document)
       let versionMismatchDetected = false
 
-      Array.forEach(documentVersions, (version) => {
+      A.forEach(documentVersions, (version) => {
         // Skip remaining versions if we already detected a version mismatch
         if (versionMismatchDetected) return
 
@@ -77,7 +75,7 @@ export const validateExamples = (
           version, // Pass each version as VersionCoverage
         )
 
-        Either.match(result, {
+        E.match(result, {
           onLeft: (error) => {
             // Pattern match on error types - all errors are now tagged
             Match.value(error).pipe(
@@ -117,7 +115,7 @@ export const validateExamples = (
         catalog,
       )
 
-      Either.match(result, {
+      E.match(result, {
         onLeft: () => {
           // Resolution failed - skip silently
         },
@@ -152,7 +150,7 @@ const validateDocument = (
   // Parse the document safely
   const parseResult = parseDocumentSafe(content)
 
-  if (Either.isLeft(parseResult)) {
+  if (E.isLeft(parseResult)) {
     // Handle parse errors
     diagnostics.push(makeDiagnosticValidationError({
       message: formatParseError(example.name, version),
@@ -166,7 +164,7 @@ const validateDocument = (
   // Validate the parsed document against the schema
   const errors = validate(schema.definition, parseResult.right, specifiedRules)
 
-  if (Array.isNonEmptyReadonlyArray(errors)) {
+  if (A.isNonEmptyReadonlyArray(errors)) {
     diagnostics.push(makeDiagnosticValidationError({
       message: formatValidationMessage(example.name, version, errors),
       example: { name: example.name, path: example.path },
@@ -193,14 +191,14 @@ const formatParseError = (
 const formatValidationMessage = (
   exampleId: string,
   version: Version.Version | undefined,
-  errors: Array.NonEmptyReadonlyArray<GraphQLError>,
+  errors: A.NonEmptyReadonlyArray<GraphQLError>,
 ): string => {
   const versionStr = version ? ` (${Version.encodeSync(version)})` : ''
   const errorCount = errors.length
   const errorWord = errorCount === 1 ? 'error' : 'errors'
 
   // Include the first error message for context - always safe with NonEmptyArray
-  const firstError = Array.headNonEmpty(errors)
+  const firstError = A.headNonEmpty(errors)
   const preview = `: ${firstError.message}`
 
   return `Example "${exampleId}"${versionStr} has ${errorCount} validation ${errorWord}${preview}`

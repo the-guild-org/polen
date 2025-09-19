@@ -1,12 +1,11 @@
 import type { Config } from '#api/config/$'
+import { O } from '#dep/effect'
 import { MemoryFilesystem } from '#lib/memory-filesystem/$'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { Test } from '@wollybeard/kit/test'
 import { Effect, HashMap } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Grafaid } from 'graphql-kit'
-import { Schema as SchemaLib } from 'graphql-kit'
+import { Catalog, Grafaid, Schema as SchemaLib } from 'graphql-kit'
 import { expect } from 'vitest'
-import { Test } from '../../../tests/unit/helpers/test.js'
 import { Schema } from './$.js'
 
 // ============================================================================
@@ -122,7 +121,7 @@ const buildSchemaWithGrafaid = (sdl: string) =>
 // ============================================================================
 
 // Create test suite with FileSystem layer
-const testWithFileSystem = Test.suiteWithLayers(NodeFileSystem.layer)
+const testWithFileSystem = Test.Table.suiteWithLayers(NodeFileSystem.layer)
 
 // // Create test suite with memory filesystem layer
 // const testWithMemoryFileSystem = <T>(diskLayout: MemoryFilesystem.DiskLayout) =>
@@ -261,11 +260,18 @@ testWithFileSystem<BaseTestCase & {
   const nullResult = yield* Schema.loadOrNull(fullConfig)
 
   if (expected.loadOrNull === 'null') {
-    expect(nullResult).toBe(null)
+    expect(O.isNone(nullResult)).toBe(true)
   } else {
-    expect(nullResult).not.toBe(null)
-    expect(nullResult!.data).not.toBe(null)
-    expect(Catalog.is(nullResult!.data!)).toBe(true)
+    expect(O.isSome(nullResult)).toBe(true)
+    if (O.isSome(nullResult)) {
+      expect(nullResult.value.data).not.toBe(null)
+      // The data is wrapped in an Option, so we need to unwrap it
+      if (O.isSome(nullResult.value.data)) {
+        expect(Catalog.is(nullResult.value.data.value)).toBe(true)
+      } else {
+        expect(O.isSome(nullResult.value.data)).toBe(true) // This will fail if data is None
+      }
+    }
   }
 
   // Test loadOrThrow
@@ -278,11 +284,18 @@ testWithFileSystem<BaseTestCase & {
   } else {
     const result = yield* Schema.loadOrThrow(fullConfig)
     if (expected.loadOrThrow === 'null') {
-      expect(result).toBe(null)
+      expect(O.isNone(result)).toBe(true)
     } else {
-      expect(result).not.toBe(null)
-      expect(result!.data).not.toBe(null)
-      expect(Catalog.is(result!.data!)).toBe(true)
+      expect(O.isSome(result)).toBe(true)
+      if (O.isSome(result)) {
+        expect(result.value.data).not.toBe(null)
+        // The data is wrapped in an Option, so we need to unwrap it
+        if (O.isSome(result.value.data)) {
+          expect(Catalog.is(result.value.data.value)).toBe(true)
+        } else {
+          expect(O.isSome(result.value.data)).toBe(true) // This will fail if data is None
+        }
+      }
     }
   }
 }))
@@ -454,7 +467,7 @@ testWithFileSystem<BaseTestCase & {
       '/project/schema.graphql': sdl1,
       '/project/schema/2024-01-01.graphql': sdl2,
     },
-    config: { paths: { project: { rootDir: '/project' } as any } },
+    config: { paths: { project: { rootDir: '/project' }  } },
     expected: { isApplicable: true, detectedSource: 'file', catalogType: 'unversioned' },
     todo: 'Implement with Effect FileSystem' },
 
@@ -464,7 +477,7 @@ testWithFileSystem<BaseTestCase & {
       '/project/schema/2024-01-01.graphql': sdl2,
     },
     config: {
-      paths: { project: { rootDir: '/project' } as any },
+      paths: { project: { rootDir: '/project' }  },
       schema: { useSources: ['directory', 'file'] }
     },
     expected: { isApplicable: true, detectedSource: 'directory', catalogType: 'unversioned' },
@@ -475,7 +488,7 @@ testWithFileSystem<BaseTestCase & {
       '/project/schema/1.0.0/schema.graphql': sdl1,
     },
     config: {
-      paths: { project: { rootDir: '/project' } as any },
+      paths: { project: { rootDir: '/project' }  },
       schema: { useSources: ['file', 'versionedDirectory'] }
     },
     expected: { isApplicable: true, detectedSource: 'versionedDirectory', catalogType: 'versioned' },
@@ -486,17 +499,19 @@ testWithFileSystem<BaseTestCase & {
   // Test with memory file system to simulate source priority
   const program = Effect.gen(function* () {
     const result = yield* Schema.loadOrNull(fullConfig)
-    expect(result).not.toBe(null)
+    expect(O.isSome(result)).toBe(true)
 
     // Note: This is a simplified test since we don't have access to which source was detected
     // In a full implementation, we would need the Schema.load function to return source info
-    expect(result!.data).not.toBe(null)
-    expect(Catalog.is(result!.data!)).toBe(true)
+    if (O.isSome(result)) {
+      expect(result.value.data).not.toBe(null)
+      expect(Catalog.is(result.value.data!)).toBe(true)
+    }
 
-    if (expected.catalogType === 'versioned') {
-      expect(result!.data!._tag).toBe('CatalogVersioned')
-    } else {
-      expect(result!.data!._tag).toBe('CatalogUnversioned')
+    if (O.isSome(result) && expected.catalogType === 'versioned') {
+      expect(result.value.data!._tag).toBe('CatalogVersioned')
+    } else if (O.isSome(result)) {
+      expect(result.value.data!._tag).toBe('CatalogUnversioned')
     }
   })
 

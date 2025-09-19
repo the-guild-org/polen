@@ -7,7 +7,8 @@
  * @see https://graffle.js.org/examples/document-builder/document
  */
 
-import { Data, Either } from 'effect'
+import { A, E } from '#dep/effect'
+import { Data } from 'effect'
 import type {
   ArgumentNode,
   DirectiveNode,
@@ -67,7 +68,7 @@ export interface GraffleFieldSelection {
  */
 export function convertDocument(
   document: DocumentNode,
-): Either.Either<GraffleDocument, GraffleVariablesNotSupportedError | GraffleFragmentsNotSupportedError> {
+): E.Either<GraffleDocument, GraffleVariablesNotSupportedError | GraffleFragmentsNotSupportedError> {
   const result: GraffleDocument = {}
   const fragments = new Map<string, FragmentDefinitionNode>()
   const fragmentNames: string[] = []
@@ -82,7 +83,7 @@ export function convertDocument(
 
   // Check if document contains named fragments
   if (fragmentNames.length > 0) {
-    return Either.left(
+    return E.left(
       new GraffleFragmentsNotSupportedError({
         fragmentNames,
       }),
@@ -101,7 +102,7 @@ export function convertDocument(
         if (definition.name?.value) {
           error.operationName = definition.name.value
         }
-        return Either.left(
+        return E.left(
           new GraffleVariablesNotSupportedError(error),
         )
       }
@@ -119,7 +120,7 @@ export function convertDocument(
     }
   }
 
-  return Either.right(result)
+  return E.right(result)
 }
 
 /**
@@ -478,7 +479,7 @@ function objectToString(obj: any, indent = 0): string {
     return `variables.${obj.__variable}`
   }
 
-  if (Array.isArray(obj)) {
+  if (A.isArray(obj)) {
     // Check if this is an alias tuple: [string, selection]
     if (obj.length === 2 && typeof obj[0] === 'string') {
       const fieldName = `'${obj[0]}'`
@@ -526,7 +527,7 @@ function objectToString(obj: any, indent = 0): string {
         keyStr = key
       }
 
-      const valueStr = typeof value === 'object' && value !== null && !Array.isArray(value) && !('__variable' in value)
+      const valueStr = typeof value === 'object' && value !== null && !A.isArray(value) && !('__variable' in value)
         ? objectToString(value, indent + 2)
         : objectToString(value, indent)
 
