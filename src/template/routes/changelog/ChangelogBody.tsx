@@ -14,7 +14,7 @@ export const ChangelogBody: React.FC<{ schema: Schema.Schema }> = ({ schema }) =
   return (
     <Box>
       {/* Title bar - always shown */}
-      <Heading size='5' style={{ padding: '1rem 0', borderBottom: '1px solid var(--gray-4)', marginBottom: '1.5rem' }}>
+      <Heading size='5' className='py-4 border-b border-gray-300 mb-6'>
         Changelog
       </Heading>
 
@@ -58,15 +58,11 @@ const Changeset: React.FC<{ revision: Revision.Revision; schema: Schema.Schema |
   }, [revision])
 
   return (
-    <Box mb='6' id={revision.date} style={{ scrollMarginTop: '2rem' }}>
+    <Box mb='6' id={revision.date} className='scroll-mt-8'>
       <h1>
         <a
           href={`#${revision.date}`}
-          style={{
-            color: 'inherit',
-            textDecoration: 'none',
-            position: 'relative',
-          }}
+          className='text-inherit no-underline relative'
           onClick={(e) => {
             e.preventDefault()
             // Update URL hash

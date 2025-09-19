@@ -3,7 +3,7 @@ import { Vite } from '#dep/vite/index'
 import { Err, Str } from '@wollybeard/kit'
 import { stripAnsi } from 'consola/utils'
 
-const baseLogger = Vite.createLogger(undefined)
+const baseLogger = Vite.createLogger()
 
 export const createLogger = (config: Api.Config.Config): Vite.Logger => {
   return {
@@ -53,7 +53,7 @@ export namespace ViteMemoryLogger {
   }
   export const create = (params: {
     store: Store
-    onError?: (error: Error) => void
+    onError?: (error: Error | Vite.Rolldown.RollupError) => void
   }): Vite.Logger => {
     const store = params.store ?? createStore()
     return {
@@ -64,7 +64,7 @@ export namespace ViteMemoryLogger {
       },
       error(message, options) {
         if (options?.error) {
-          params.onError?.(options.error as any)
+          params.onError?.(options.error)
         }
         const log: MemoryLog<'error'> = {
           level: 'error',

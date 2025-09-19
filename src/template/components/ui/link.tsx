@@ -1,7 +1,9 @@
+import { Slot } from '@radix-ui/react-slot'
 import * as React from 'react'
 import { cn } from '../../lib/utils.js'
 
 export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  asChild?: boolean
   underline?: 'auto' | 'always' | 'hover' | 'none'
   color?: 'gray' | 'blue' | 'green' | 'red' | 'iris' | 'inherit'
   weight?: 'light' | 'regular' | 'medium' | 'bold'
@@ -11,6 +13,7 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
 const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   ({
     className,
+    asChild = false,
     underline = 'auto',
     color = 'blue',
     weight = 'regular',
@@ -53,8 +56,10 @@ const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       'none': 'no-underline',
     }
 
+    const Comp = asChild ? Slot : 'a'
+
     return (
-      <a
+      <Comp
         ref={ref}
         className={cn(
           'transition-colors',

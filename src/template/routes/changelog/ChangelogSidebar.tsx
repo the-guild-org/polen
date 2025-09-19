@@ -42,14 +42,7 @@ export const ChangelogSidebar: React.FC<{
     return (
       <GridItem
         cols={3}
-        style={{
-          position: 'sticky',
-          top: '2rem',
-          height: 'fit-content',
-          minWidth: '250px',
-          maxHeight: 'calc(100vh - 4rem)',
-          overflowY: 'auto',
-        }}
+        className='sticky top-8 h-fit min-w-[250px] max-h-[calc(100vh-4rem)] overflow-y-auto'
       >
         {Catalog.Versioned.is(catalog) && Schema.Versioned.is(schema) && (
           <Box mb='3'>
@@ -62,7 +55,7 @@ export const ChangelogSidebar: React.FC<{
             />
           </Box>
         )}
-        <Text size='2' weight='medium' mb='3' style={{ display: 'block' }}>
+        <Text size='2' weight='medium' mb='3' className='block'>
           Revisions
         </Text>
         {revisions.map((revision) => (

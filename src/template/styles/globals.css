@@ -6,11 +6,17 @@
   --color-foreground: hsl(0 0% 0%);
   --color-primary: hsl(0 0% 0%);
   --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(0 0% 96%);
+  --color-secondary-foreground: hsl(0 0% 10%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 98%);
   --color-muted: hsl(0 0% 96%);
   --color-muted-foreground: hsl(0 0% 45%);
   --color-accent: hsl(221 100% 50%);
   --color-accent-foreground: hsl(0 0% 100%);
   --color-border: hsl(0 0% 90%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 0%);
 
   /* Custom spacing for container */
   --width-container: 1440px;
@@ -32,8 +38,17 @@
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
     --accent: 221 100% 50%; /* #0066ff */
     --accent-foreground: 0 0% 100%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
 
     --border: 0 0% 90%;
 
@@ -50,8 +65,17 @@
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
 
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+
     --accent: 221 100% 60%;
     --accent-foreground: 0 0% 0%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
 
     --border: 0 0% 15%;
   }

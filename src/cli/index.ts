@@ -129,7 +129,10 @@ const program = Effect.gen(function*() {
   // Run the CLI after the check passes
   return yield* cli(filteredArgv)
 }).pipe(
-  Effect.catchAll(() => Effect.die('CLI failed')),
+  Effect.catchAll((error) => {
+    console.error('[POLEN DEBUG] CLI error:', error)
+    return Effect.die('CLI failed')
+  }),
   Effect.provide(Layer.merge(NodeContext.layer, NodeFileSystem.layer)),
   Effect.scoped,
 )

@@ -181,7 +181,7 @@ export const remove = (
     // Try to remove the file, ignore if it doesn't exist
     yield* fs.remove(outputFile).pipe(
       Effect.catchIf(
-        error => (error as any).code === 'ENOENT',
+        error => 'code' in error && (error as any).code === 'ENOENT',
         () => Effect.void,
       ),
     )
@@ -202,7 +202,7 @@ export const clear = (
     // Try to remove the directory, ignore if it doesn't exist
     yield* fs.remove(outputDir, { recursive: true }).pipe(
       Effect.catchIf(
-        error => (error as any).code === 'ENOENT',
+        error => 'code' in error && (error as any).code === 'ENOENT',
         () => Effect.void,
       ),
     )

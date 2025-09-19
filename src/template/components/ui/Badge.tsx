@@ -29,6 +29,13 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       'xl': 'text-xl px-5 py-2',
     }
 
+    const variantClasses = {
+      'default': 'bg-primary text-primary-foreground',
+      'secondary': 'bg-secondary text-secondary-foreground',
+      'destructive': 'bg-destructive text-destructive-foreground',
+      'outline': 'border text-foreground',
+    }
+
     return (
       <div
         ref={ref}
@@ -37,12 +44,7 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
           // Apply size classes
           sizeClasses[mappedSize as keyof typeof sizeClasses] ?? 'text-xs px-2.5 py-0.5',
           // Apply variant/color classes
-          {
-            'default': 'bg-primary text-primary-foreground',
-            'secondary': 'bg-secondary text-secondary-foreground',
-            'destructive': 'bg-destructive text-destructive-foreground',
-            'outline': 'border text-foreground',
-          }[mappedVariant as keyof typeof variantClasses] ?? 'bg-secondary text-secondary-foreground',
+          variantClasses[mappedVariant as keyof typeof variantClasses] ?? 'bg-secondary text-secondary-foreground',
           spacingClasses,
           className,
         )}
@@ -53,10 +55,3 @@ export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 )
 
 Badge.displayName = 'Badge'
-
-const variantClasses = {
-  'default': 'bg-primary text-primary-foreground',
-  'secondary': 'bg-secondary text-secondary-foreground',
-  'destructive': 'bg-destructive text-destructive-foreground',
-  'outline': 'border text-foreground',
-}

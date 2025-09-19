@@ -102,7 +102,7 @@ describe('Description Augmentation Transform', () => {
       expect(v2Config.value.on.next!._tag).toBe('GraphQLPathSegmentType')
       expect(v2Config.value.on.next!.name).toBe('Pokemon')
       expect(v2Config.value.on.next!.next?._tag).toBe('GraphQLPathSegmentField')
-      expect((v2Config.value.on.next!.next as any)?.name).toBe('stats')
+      expect(v2Config.value.on.next!.next?.name).toBe('stats')
     }
   })
 

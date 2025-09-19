@@ -54,7 +54,7 @@ export const ExampleName = S.transform(
   })),
   {
     strict: false,
-    decode: (s) => s as any as AvailableExampleNames,
+    decode: (s) => s,
     encode: (s) => s,
   },
 )

@@ -33,7 +33,7 @@ describe('ExampleScanner', () => {
   ], async ({ files, fileContents, expectedExamples, expectedDiagnostics }) => {
     mockFs.readFileString.mockImplementation((path: string) => {
       const fileName = path.split('/').pop()!
-      const content = (fileContents as any)[files.find(f => f.endsWith(fileName!))!]
+      const content = (fileContents )[files.find(f => f.endsWith(fileName!))!]
       return Effect.succeed(content)
     })
 
@@ -43,11 +43,11 @@ describe('ExampleScanner', () => {
     //     dir: '/examples',
     //     schemaVersions: ['v1', 'v2'],
     //     files,
-    //   }).pipe(Effect.provide({ FileSystem: mockFs } as any) as any),
+    //   }).pipe(Effect.provide({ FileSystem: mockFs } ) ),
     // )
 
-    // expect((result as any).examples).toHaveLength(expectedExamples)
-    // expect((result as any).diagnostics).toHaveLength(expectedDiagnostics)
+    // expect((result ).examples).toHaveLength(expectedExamples)
+    // expect((result ).diagnostics).toHaveLength(expectedDiagnostics)
   })
 })
 
@@ -97,7 +97,7 @@ describe('filterExamplesBySelection', () => {
     { name: 'none returns empty',        selection: 'none',                   expected: [] },
     { name: 'include filters',           selection: { include: ['a', 'b'] }, expected: ['a', 'b'] },
   ], ({ selection, expected }) => {
-    const result = Examples.filterExamplesBySelection(examples, selection as any)
+    const result = Examples.filterExamplesBySelection(examples, selection )
     expect(result.map(e => e.name)).toEqual(expected)
   })
 })

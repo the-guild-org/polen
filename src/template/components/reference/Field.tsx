@@ -173,7 +173,7 @@ export const Field: React.FC<
 
       {/* Arguments section below, with left border - only show if field has arguments */}
       {argumentList && GrafaidOld.isOutputField(data) && data.args.length > 0 && (
-        <Box mt='2' ml='3' pl='3' style={{ borderLeft: '2px solid var(--gray-4)' }}>
+        <Box mt='2' ml='3' pl='3' className='border-l-2 border-gray-300'>
           {argumentList}
         </Box>
       )}

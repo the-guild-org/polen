@@ -467,7 +467,7 @@ testWithFileSystem<BaseTestCase & {
       '/project/schema.graphql': sdl1,
       '/project/schema/2024-01-01.graphql': sdl2,
     },
-    config: { paths: { project: { rootDir: '/project' } as any } },
+    config: { paths: { project: { rootDir: '/project' }  } },
     expected: { isApplicable: true, detectedSource: 'file', catalogType: 'unversioned' },
     todo: 'Implement with Effect FileSystem' },
 
@@ -477,7 +477,7 @@ testWithFileSystem<BaseTestCase & {
       '/project/schema/2024-01-01.graphql': sdl2,
     },
     config: {
-      paths: { project: { rootDir: '/project' } as any },
+      paths: { project: { rootDir: '/project' }  },
       schema: { useSources: ['directory', 'file'] }
     },
     expected: { isApplicable: true, detectedSource: 'directory', catalogType: 'unversioned' },
@@ -488,7 +488,7 @@ testWithFileSystem<BaseTestCase & {
       '/project/schema/1.0.0/schema.graphql': sdl1,
     },
     config: {
-      paths: { project: { rootDir: '/project' } as any },
+      paths: { project: { rootDir: '/project' }  },
       schema: { useSources: ['file', 'versionedDirectory'] }
     },
     expected: { isApplicable: true, detectedSource: 'versionedDirectory', catalogType: 'versioned' },

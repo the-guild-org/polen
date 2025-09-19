@@ -65,8 +65,8 @@ const applyAugmentationToPath = (
     let errorString: string
 
     if (GraphQLSchemaPath.Errors.TraversalError.is(error)) {
-      message = GraphQLSchemaPath.Errors.TraversalError.print(error as any)
-      errorString = (error as any).message || String(error)
+      message = GraphQLSchemaPath.Errors.TraversalError.print(error)
+      errorString = error.message || String(error)
     } else if (error instanceof Error) {
       message = error.message
       errorString = error.message

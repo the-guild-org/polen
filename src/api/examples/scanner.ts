@@ -1,8 +1,8 @@
-import { A, O } from '#dep/effect'
+import { A } from '#dep/effect'
 import { EffectGlob } from '#lib/effect-glob/$'
 import { FileSystem } from '@effect/platform'
 import { Path, Str } from '@wollybeard/kit'
-import { Effect, HashMap, HashSet, Match, String } from 'effect'
+import { Effect, HashMap, HashSet, Match } from 'effect'
 import { Catalog as SchemaCatalog, Document, Version, VersionCoverage } from 'graphql-kit'
 import type { Diagnostic } from './diagnostic/diagnostic.js'
 import {
@@ -62,11 +62,11 @@ export const parseExampleFile = (filename: string): ParsedExampleFile => {
   const base = parsed.name
 
   // Try to match versioned pattern: <name>.<version>
-  const matchResult = String.match(VERSIONED_FILE_PATTERN)(base)
+  const matchResult = Str.match(base, VERSIONED_FILE_PATTERN)
 
-  if (O.isSome(matchResult)) {
-    const match = matchResult.value
-    const { name, version: versionStr } = (match as any).groups
+  if (matchResult) {
+    const match = matchResult
+    const { name, version: versionStr } = match.groups
 
     const version = Version.decodeSync(versionStr)
     return { type: 'versioned', name, version, file: filename }

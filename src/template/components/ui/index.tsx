@@ -1,8 +1,24 @@
-// UI Component Library
-// These components use shadcn/ui patterns with Radix Primitives + Tailwind
-
+// shadcn/ui components - import but re-export as namespace for compatibility
 import * as React from 'react'
 import { cn } from '../../lib/utils.js'
+import { Alert, AlertDescription, AlertTitle } from './alert.js'
+import { Code } from './Code.js'
+import { Heading } from './Heading.js'
+import { HoverCard as HoverCardRoot, HoverCardContent, HoverCardTrigger } from './hover-card.js'
+import {
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectRoot,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from './select.js'
+import { Tabs as TabsRoot, TabsContent, TabsList, TabsTrigger } from './tabs.js'
+import { Text } from './Text.js'
+import { ToggleGroupItem, ToggleGroupRoot } from './toggle-group.js'
+import { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from './tooltip.js'
 
 // Core layout components
 export { Box } from './Box.js'
@@ -22,23 +38,6 @@ export { Button } from './Button.js'
 export { Badge } from './Badge.js'
 export { Card, CardContent, CardHeader } from './Card.js'
 export { Separator } from './Separator.js'
-
-// shadcn/ui components - import but re-export as namespace for compatibility
-import { Alert, AlertDescription, AlertTitle } from './alert.js'
-import { HoverCard as HoverCardRoot, HoverCardContent, HoverCardTrigger } from './hover-card.js'
-import {
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectRoot,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from './select.js'
-import { Tabs as TabsRoot, TabsContent, TabsList, TabsTrigger } from './tabs.js'
-import { ToggleGroupItem, ToggleGroupRoot } from './toggle-group.js'
-import { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from './tooltip.js'
 
 // Export HoverCard as namespace to match usage pattern
 export const HoverCard = {
@@ -93,6 +92,11 @@ export const IconButton = Button
 
 // Callout - using Alert as base with compatibility wrapper
 import { Alert as AlertBase, AlertDescription as AlertDesc } from './alert.js'
+import { Badge } from './Badge.js'
+import { Box } from './Box.js'
+import { Card } from './Card.js'
+import { Link } from './link.js'
+import { Separator } from './Separator.js'
 
 // Create a wrapper that accepts color and variant props
 const CalloutRoot = React.forwardRef<
@@ -228,6 +232,57 @@ export const Theme = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
   ({ children, ...props }, ref) => <div ref={ref} {...props}>{children}</div>,
 )
 Theme.displayName = 'Theme'
+
+// MDX Components Export
+// Create a single object with all MDX-compatible components
+export const MDXComponents = {
+  // Typography
+  p: (props: React.HTMLAttributes<HTMLParagraphElement>) => <Text as='p' mb='4' {...props} />,
+  h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='8' mt='6' mb='4' {...props} />,
+  h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='7' mt='6' mb='3' {...props} />,
+  h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='6' mt='5' mb='3' {...props} />,
+  h4: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='5' mt='5' mb='2' {...props} />,
+  h5: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='4' mt='4' mb='2' {...props} />,
+  h6: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='3' mt='4' mb='2' {...props} />,
+  strong: Strong,
+  em: Em,
+  code: Code,
+  blockquote: Quote,
+  a: Link,
+  hr: Separator,
+
+  // Tables
+  table: Table.Root,
+  thead: Table.Header,
+  tbody: Table.Body,
+  tr: Table.Row,
+  th: Table.ColumnHeaderCell,
+  td: Table.Cell,
+
+  // Lists
+  ul: (props: React.HTMLAttributes<HTMLUListElement>) => <Box as='ul' mb='4' className='pl-6' {...props} />,
+  ol: (props: React.HTMLAttributes<HTMLOListElement>) => <Box as='ol' mb='4' className='pl-6' {...props} />,
+  li: (props: React.HTMLAttributes<HTMLLIElement>) => <Box as='li' mb='2' {...props} />,
+
+  // Custom components
+  Badge,
+  Button,
+  Card,
+  Callout: Callout.Root,
+  CalloutIcon: Callout.Icon,
+  CalloutText: Callout.Text,
+  DataList: DataList.Root,
+  DataListItem: DataList.Item,
+  DataListLabel: DataList.Label,
+  DataListValue: DataList.Value,
+  Tabs: Tabs.Root,
+  TabsList: Tabs.List,
+  TabsTrigger: Tabs.Trigger,
+  TabsContent: Tabs.Content,
+  Tooltip: Tooltip.Root,
+  TooltipTrigger: Tooltip.Trigger,
+  TooltipContent: Tooltip.Content,
+}
 
 // Type exports for compatibility
 export type BoxOwnProps = React.HTMLAttributes<HTMLDivElement>

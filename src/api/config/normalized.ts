@@ -13,6 +13,14 @@ import { Effect } from 'effect'
 import type { WritableDeep } from 'type-fest'
 import { BuildArchitecture, ConfigInput } from './input.js'
 
+/**
+ * Identity function that casts a value to WritableDeep.
+ * Used to convert readonly structures to mutable ones for config assignment.
+ */
+const writeable = <T>(value: T): WritableDeep<T> => {
+  return value as WritableDeep<T>
+}
+
 // ============================================================================
 // Normalized Reference Config
 // ============================================================================
@@ -791,7 +799,7 @@ export const normalizeInput = (
             tagline: homeInput.hero.tagline ?? config.description,
             callToActions: homeInput.hero.callToActions,
             layout: homeInput.hero.layout ?? 'asymmetric',
-            heroImage: heroImageValue as any,
+            heroImage: heroImageValue,
           }
         }
       } else {
@@ -840,7 +848,7 @@ export const normalizeInput = (
             title: undefined,
             description: undefined,
             maxExamples: 3,
-            filter: DirectedFilter.AllowAll,
+            filter: writeable(DirectedFilter.AllowAll),
           }
         } else if (homeInput.examples === true) {
           config.home.examples = {
@@ -848,7 +856,7 @@ export const normalizeInput = (
             title: undefined,
             description: undefined,
             maxExamples: 3,
-            filter: DirectedFilter.AllowAll,
+            filter: writeable(DirectedFilter.AllowAll),
           }
         } else {
           // Create DirectedFilter from only/exclude pattern (never returns null now)
@@ -861,7 +869,7 @@ export const normalizeInput = (
             title: homeInput.examples.title,
             description: homeInput.examples.description,
             maxExamples: homeInput.examples.maxExamples ?? 3,
-            filter: filter as any,
+            filter: writeable(filter),
           }
         }
       }

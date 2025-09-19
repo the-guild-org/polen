@@ -1,9 +1,11 @@
 import { Test } from '@wollybeard/kit/test'
 import { buildSchema } from 'graphql'
+import type { Root } from 'mdast'
+import { unified } from 'unified'
 import { beforeEach, describe, expect, vi } from 'vitest'
 import { remarkGraphQLReferences } from './remark-graphql-references.js'
 
-const createTree = (inlineCodeValue: string) => ({
+const createTree = (inlineCodeValue: string): Root => ({
   type: 'root',
   children: [
     {
@@ -64,10 +66,13 @@ beforeEach(() => {
 })
 
 describe('path transformation', () => {
-  const transformer = (remarkGraphQLReferences as any)({
-    schemaLoader: mockSchemaLoader,
-    onDiagnostic,
-  })
+  // Create a unified processor with the plugin
+  const processor = unified()
+    .use(remarkGraphQLReferences as any, {
+      schemaLoader: mockSchemaLoader,
+      onDiagnostic,
+    })
+
   const file = { path: 'test.md' }
 
   // dprint-ignore
@@ -80,10 +85,12 @@ describe('path transformation', () => {
       { name: 'nested field',      path: 'Post.author' },
     ], ({ path }) => {
       const tree = createTree(`gql:${path}`)
-      transformer(tree, file)
 
-      const paragraph = tree.children[0] as any
-      expect(paragraph?.children[0]).toMatchObject({
+      // Use runSync to process the tree synchronously
+      const result = processor.runSync(tree, file) as Root
+
+      const paragraph = result.children[0] as any
+      expect(paragraph?.children?.[0]).toMatchObject({
         type: 'mdxJsxTextElement',
         name: 'GraphQLReference',
         attributes: expect.arrayContaining([
@@ -100,10 +107,13 @@ describe('path transformation', () => {
 })
 
 describe('path validation', () => {
-  const transformer = (remarkGraphQLReferences as any)({
-    schemaLoader: mockSchemaLoader as any,
-    onDiagnostic,
-  })
+  // Create a new processor for this test suite
+  const processor = unified()
+    .use(remarkGraphQLReferences as any, {
+      schemaLoader: mockSchemaLoader,
+      onDiagnostic,
+    })
+
   const file = { path: 'test.md' }
 
   // dprint-ignore
@@ -121,11 +131,13 @@ describe('path validation', () => {
     ], ({ path, shouldHaveDiagnostic, diagnosticType }) => {
       onDiagnostic.mockClear() // Clear the mock before each test case
       const tree = createTree(`gql:${path}`)
-      transformer(tree, file)
+
+      // Use runSync to process the tree
+      const result = processor.runSync(tree, file) as Root
 
       // Should always transform to GraphQLReference regardless of validity
-      const paragraph = tree.children[0] as any
-      expect(paragraph?.children[0]).toMatchObject({
+      const paragraph = result.children[0] as any
+      expect(paragraph?.children?.[0]).toMatchObject({
         type: 'mdxJsxTextElement',
         name: 'GraphQLReference',
       })

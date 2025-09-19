@@ -70,10 +70,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
           <Box
             position='fixed'
             inset='0'
-            style={{
-              backgroundColor: `var(--black-a9)`,
-              zIndex: 50,
-            }}
+            className='bg-black/60 z-50'
             onClick={onClose}
             display={{ initial: `block`, xs: `block`, sm: `block`, md: `none`, lg: `none`, xl: `none` }}
           />
@@ -85,12 +82,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             left='0'
             bottom='0'
             width='280px'
-            style={{
-              backgroundColor: `var(--color-background)`,
-              boxShadow: `var(--shadow-6)`,
-              zIndex: 100,
-              overflowY: `auto`,
-            }}
+            className='bg-background shadow-2xl z-[100] overflow-y-auto'
             p='4'
             display={{ initial: `block`, xs: `block`, sm: `block`, md: `none`, lg: `none`, xl: `none` }}
           >

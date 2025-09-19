@@ -71,7 +71,7 @@ export const normalizeOptions = (options: Options, projectRoot: string): Config 
   return config
 }
 
-export const loader = InputSource.createEffect({
+export const loader = InputSource.create({
   name: 'directory',
   isApplicable: (options: Options, context) =>
     Effect.gen(function*() {

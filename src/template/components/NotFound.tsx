@@ -4,8 +4,8 @@ import { Box, Button, Flex, Heading, Text } from './ui/index.js'
 
 export const NotFound: React.FC = () => {
   return (
-    <Flex direction='column' align='center' gap='6' style={{ textAlign: `center`, paddingTop: `4rem` }}>
-      <Heading size='9' style={{ color: `var(--gray-12)` }}>404</Heading>
+    <Flex direction='column' align='center' gap='6' className='text-center pt-16'>
+      <Heading size='9' className='text-gray-900 dark:text-gray-100'>404</Heading>
       <Box>
         <Heading size='5' mb='2'>Page Not Found</Heading>
         <Text size='3' color='gray'>

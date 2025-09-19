@@ -9,7 +9,7 @@ import type { Plugin } from 'unified'
 import type { Parent } from 'unist'
 import { visit } from 'unist-util-visit'
 
-interface GraphQLReferenceOptions {
+export interface GraphQLReferenceOptions {
   schemaLoader: () => O.Option<LoadedCatalog>
   onDiagnostic?: (diagnostic: Diagnostic.Diagnostic) => void
 }
@@ -155,7 +155,7 @@ export const remarkGraphQLReferences: Plugin<[GraphQLReferenceOptions], Root> = 
       }
 
       // Replace the inline code node with JSX node
-      parent.children[index] = jsxNode as any
+      parent.children[index] = jsxNode
     })
 
     // Report diagnostics

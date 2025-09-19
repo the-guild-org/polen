@@ -26,7 +26,7 @@ export const DevelopmentTip: React.FC<Props> = ({
   const color = variant === 'warning' ? 'amber' : 'blue'
 
   return (
-    <Callout.Root color={color} variant='surface' style={{ marginBottom: 'var(--space-4)' }}>
+    <Callout.Root color={color} variant='surface' className='mb-4'>
       <Callout.Icon>
         <InfoCircledIcon />
       </Callout.Icon>

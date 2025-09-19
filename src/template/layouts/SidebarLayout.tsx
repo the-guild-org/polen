@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router'
 import { HamburgerMenu } from '../components/HamburgerMenu.js'
 import { Sidebar } from '../components/sidebar/Sidebar.js'
-import { Box, Container, GridItem } from '../components/ui/index.js'
+import { Box, Container } from '../components/ui/index.js'
 
 // Template layer extension: Allow React elements in title
 interface TemplateItemLink extends Omit<Content.ItemLink, 'title'> {
@@ -37,7 +37,7 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
   const isShowSidebar = sidebar && sidebar.length > 0
 
   return (
-    <Container subgrid>
+    <Container>
       {/* Mobile menu - only show when sidebar exists */}
       {isShowSidebar && (
         <Box display={{ initial: `block`, md: `none` }} mb='4'>
@@ -56,27 +56,26 @@ export const SidebarLayout: React.FC<Props> = ({ children, sidebar, basePath, to
         </Box>
       )}
 
-      {/* Desktop Sidebar - 3 columns */}
-      {isShowSidebar && (
-        <GridItem cols={{ initial: 3, md: 3 }}>
-          <Box
-            display={{ initial: `none`, md: `block` }}
-            position={'sticky'}
-            top={'4'}
-          >
-            <Sidebar
-              data={sidebar}
-              {...(basePath !== undefined && { basePath })}
-              {...(topContent !== undefined && { topContent })}
-            />
-          </Box>
-        </GridItem>
-      )}
+      {/* Desktop layout with Flexbox */}
+      <div className='flex gap-6'>
+        {/* Desktop Sidebar */}
+        {isShowSidebar && (
+          <div className='hidden md:block w-64 flex-shrink-0'>
+            <div className='sticky top-4'>
+              <Sidebar
+                data={sidebar}
+                {...(basePath !== undefined && { basePath })}
+                {...(topContent !== undefined && { topContent })}
+              />
+            </div>
+          </div>
+        )}
 
-      {/* Main Content - 8 columns on mobile, 9 on desktop when sidebar exists, 12 when not */}
-      <GridItem cols={6} start={5}>
-        {children}
-      </GridItem>
+        {/* Main Content */}
+        <div className='flex-1 min-w-0'>
+          {children}
+        </div>
+      </div>
     </Container>
   )
 }

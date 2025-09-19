@@ -21,8 +21,12 @@ export const toHookLoad = (
       if (args[0] === identifiedLoader.identifier.resolved) {
         debug(`will load`, { identifier: identifiedLoader.identifier })
         const result = yield* Effect.tryPromise({
-          try: () => Promise.resolve(identifiedLoader.loader(...args)),
-          catch: (error) => new Error(`Loader failed: ${String(error)}`),
+          try: () => {
+            return Promise.resolve(identifiedLoader.loader(...args))
+          },
+          catch: (error) => {
+            return new Error(`Loader failed: ${String(error)}`)
+          },
         })
         debug(`did load`, { identifier: identifiedLoader.identifier, result })
         // Add moduleType for Rolldown compatibility

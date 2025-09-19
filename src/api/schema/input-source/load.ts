@@ -40,7 +40,7 @@ export const loadOrThrow = (
     useFirst: O.Option<InputSourceName[]>
     sources: InputSource[]
   },
-): Effect.Effect<LoadedCatalog, LoadError, never> =>
+): Effect.Effect<LoadedCatalog, LoadError, import('@effect/platform/FileSystem').FileSystem> =>
   Effect.gen(function*() {
     const getSourceConfig = (sourceName: InputSourceName) => {
       const config = O.getOrUndefined(params.config)
@@ -65,14 +65,14 @@ export const loadOrThrow = (
     // Try each source
     for (const source of sourcesToTry) {
       const sourceConfig = getSourceConfig(source.name)
-      const result = yield* Effect.tryPromise({
-        try: () => source.readIfApplicableOrThrow(sourceConfig as any, params.context),
-        catch: (error) =>
+      const result = yield* source.readIfApplicableOrThrow(sourceConfig, params.context).pipe(
+        Effect.mapError((error) =>
           new SourceReadError({
             source: source.name,
             error,
-          }),
-      })
+          })
+        ),
+      )
 
       if (result) {
         return {

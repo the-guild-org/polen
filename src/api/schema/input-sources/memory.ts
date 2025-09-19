@@ -50,7 +50,7 @@ export interface Options {
    * revisions: myCatalog
    * ```
    */
-  revisions:
+  revisions?:
     | string
     | string[]
     | { date: Date; value: string }[]
@@ -225,7 +225,7 @@ export const read = (
     }
   })
 
-export const loader = InputSource.createEffect({
+export const loader = InputSource.create({
   name: 'memory',
   isApplicable: (options: Options, _context) =>
     Effect.succeed(options.revisions !== undefined && options.revisions !== null),

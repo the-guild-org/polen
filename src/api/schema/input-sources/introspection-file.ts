@@ -1,8 +1,10 @@
 import { InputSource } from '#api/schema/input-source/$'
+import { S } from '#dep/effect'
 import { FileSystem } from '@effect/platform/FileSystem'
 import { Json, Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
+import * as IntrospectionSchema from './introspection-schema.js'
 
 /**
  * Configuration for loading schema from an existing introspection file.
@@ -85,7 +87,8 @@ export const read = (
 
     let schema: Grafaid.Schema.Schema
 
-    const introspectionData = yield* Effect.try({
+    // Parse JSON
+    const jsonData = yield* Effect.try({
       try: () => Json.codec.decode(introspectionFileContent),
       catch: (error) => {
         if (error instanceof SyntaxError) {
@@ -107,28 +110,28 @@ export const read = (
       },
     })
 
-    // Validate introspection data structure before passing to fromIntrospectionQuery
-    if (!introspectionData || typeof introspectionData !== 'object') {
-      return yield* Effect.fail(
-        new InputSource.InputSourceError({
+    // Validate using Effect Schema
+    const validatedData = yield* Effect.try({
+      try: () => {
+        return S.decodeUnknownSync(IntrospectionSchema.IntrospectionQuery)(jsonData)
+      },
+      catch: (error) => {
+        if (IntrospectionSchema.isParseError(error)) {
+          return new InputSource.InputSourceError({
+            source: 'introspectionFile',
+            message: `Invalid introspection format in ${config.path}: ${IntrospectionSchema.formatError(error)}`,
+            cause: error,
+          })
+        }
+        return new InputSource.InputSourceError({
           source: 'introspectionFile',
-          message: 'Introspection data must be a valid JSON object',
-        }),
-      )
-    }
+          message: `Validation failed for ${config.path}: ${error}`,
+          cause: error,
+        })
+      },
+    })
 
-    // Allow fromIntrospectionQuery to handle validation of the introspection format
-    // It will provide more specific GraphQL-related error messages
-    if (!('data' in introspectionData)) {
-      return yield* Effect.fail(
-        new InputSource.InputSourceError({
-          source: 'introspectionFile',
-          message: 'Introspection data missing required "data" property (expected GraphQL introspection result format)',
-        }),
-      )
-    }
-
-    schema = Grafaid.Schema.fromIntrospectionQuery(introspectionData as any)
+    schema = Grafaid.Schema.fromIntrospectionQuery(validatedData as any)
 
     return yield* createCatalogFromSchema(schema)
   })
@@ -175,7 +178,7 @@ const createCatalogFromSchema = (
     })
   })
 
-export const loader = InputSource.createEffect({
+export const loader = InputSource.create({
   name: 'introspectionFile',
   isApplicable: (options: Options, context) =>
     Effect.gen(function*() {

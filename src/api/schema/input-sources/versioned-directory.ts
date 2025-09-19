@@ -403,7 +403,7 @@ export const readOrThrow = (
     })
   })
 
-export const loader = InputSource.createEffect({
+export const loader = InputSource.create({
   name: 'versionedDirectory',
   isApplicable: (configInput: ConfigInput, context) =>
     Effect.gen(function*() {
@@ -416,7 +416,7 @@ export const loader = InputSource.createEffect({
         return false
       }
 
-      // Check if it has any entries
+      // Check if it h entries
       const entriesResult = yield* Effect.either(fs.readDirectory(config.path))
       if (entriesResult._tag === 'Left') {
         return false

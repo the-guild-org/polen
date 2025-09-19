@@ -5,6 +5,8 @@ import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { debugPolen } from '#singletons/debug'
 import type { App, AppOptions } from '#template/server/app'
+import { NodeFileSystem } from '@effect/platform-node'
+import { FileSystem } from '@effect/platform/FileSystem'
 import * as HonoNodeServer from '@hono/node-server'
 import { Err, Http } from '@wollybeard/kit'
 import { Path } from '@wollybeard/kit'
@@ -135,6 +137,18 @@ export const Serve = (
       debug(`configureServer`)
 
       PLUGIN_SCOPE.server = server
+
+      // Ensure the dev assets directory exists before server starts
+      // This prevents the serveStatic middleware from logging warnings
+      const assetsDir = config.paths.framework.devAssets.absolute
+      await Effect.gen(function*() {
+        const fs = yield* FileSystem
+        yield* fs.makeDirectory(assetsDir, { recursive: true })
+        debug(`Ensured dev assets directory exists: ${assetsDir}`)
+      }).pipe(
+        Effect.provide(NodeFileSystem.layer),
+        Effect.runPromise,
+      )
 
       return () => {
         // Remove index.html serving middleware.

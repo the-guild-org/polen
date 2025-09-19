@@ -374,6 +374,19 @@ export const mergeInputs = (
     merged.home = Obj.spreadShallow(base_as_writable.home, overrides_as_writable.home)
   }
 
+  // Merge theme config
+  if (base_as_writable.theme ?? overrides_as_writable.theme) {
+    merged.theme = Obj.spreadShallow(base_as_writable.theme, overrides_as_writable.theme)
+
+    // Merge nested theme colors if both have them
+    if (base_as_writable.theme?.colors ?? overrides_as_writable.theme?.colors) {
+      merged.theme = {
+        ...merged.theme,
+        colors: Obj.spreadShallow(base_as_writable.theme?.colors, overrides_as_writable.theme?.colors),
+      }
+    }
+  }
+
   // Merge branding config
   if (base_as_writable.branding ?? overrides_as_writable.branding) {
     merged.branding = Obj.spreadShallow(base_as_writable.branding, overrides_as_writable.branding)

@@ -29,14 +29,12 @@ export const PostCSS = (
       // Cast to any to work around Vite's strict PostCSS plugin typing
       // which doesn't properly handle the array format for plugins
       return {
-        css: {
-          postcss: hasPostCSS
-            ? postcssConfigPath
-            : hasTailwind
-            ? postcssConfigPath // Let Vite handle finding postcss.config.js
-            : undefined,
-        },
-      } as any
+        css: hasPostCSS || hasTailwind
+          ? {
+            postcss: postcssConfigPath,
+          }
+          : {},
+      }
     },
   }
 }

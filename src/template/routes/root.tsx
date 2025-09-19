@@ -76,25 +76,25 @@ const Layout = () => {
         appearance === 'dark' ? 'dark' : '',
       )}
     >
-      <div className='max-w-[1440px] mx-auto grid grid-cols-12 gap-x-6 px-6'>
+      <div className='min-h-screen'>
         {/* Navbar */}
         {isHomeWithCinematicHero
           ? (
             // Cinematic hero mode: navbar is fixed overlay
             <div className='dark'>
               <nav className='fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm'>
-                <Container size='xl' className='py-6'>
+                <div className='max-w-[1440px] mx-auto px-6 py-6'>
                   <NavbarComponent {...navbarProps} />
-                </Container>
+                </div>
               </nav>
             </div>
           )
           : (
-            // Normal mode: navbar in grid flow
+            // Normal mode: navbar in flow
             <nav className='border-b border-border mb-4 md:mb-8'>
-              <Container size='xl' className='py-6'>
+              <div className='max-w-[1440px] mx-auto px-6 py-6'>
                 <NavbarComponent {...navbarProps} />
-              </Container>
+              </div>
             </nav>
           )}
         <Outlet />

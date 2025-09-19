@@ -5,6 +5,7 @@ import { Json, Path } from '@wollybeard/kit'
 import { Effect } from 'effect'
 import { Catalog, Change, DateOnly, Grafaid, GraphqlSchemaLoader, Revision, Schema } from 'graphql-kit'
 import { createHash } from 'node:crypto'
+import * as IntrospectionSchema from './introspection-schema.js'
 
 /**
  * Configuration for loading schema via GraphQL introspection.
@@ -39,7 +40,7 @@ export interface Options {
    *
    * @example 'https://api.example.com/graphql'
    */
-  url: string
+  url?: string
   /**
    * Optional headers to include in the introspection request.
    *
@@ -60,7 +61,7 @@ export interface Options {
 interface CacheEntry {
   url: string
   fetchedAt: string // ISO timestamp
-  introspectionResult: any // The GraphQL introspection result
+  introspectionResult: { data: IntrospectionSchema.IntrospectionQuery } // Validated GraphQL introspection result
 }
 
 const getCacheKey = (url: string): string => {
@@ -84,8 +85,16 @@ const readCache = (cachePath: string): Effect.Effect<CacheEntry | null, Platform
     if (!content) return null
 
     try {
-      const data = Json.codec.decode(content)
-      return data as unknown as CacheEntry
+      const data = Json.codec.decode(content) as any
+      // Validate the introspection result in the cache
+      if (data && data.introspectionResult && data.introspectionResult.data) {
+        const validated = IntrospectionSchema.decodeSync(data.introspectionResult.data)
+        return {
+          ...data,
+          introspectionResult: { data: validated },
+        } as CacheEntry
+      }
+      return null
     } catch {
       return null
     }
@@ -99,12 +108,16 @@ const writeCache = (cachePath: string, entry: CacheEntry): Effect.Effect<void, E
     yield* fs.writeFileString(cachePath, Json.codec.encode(entry as any))
   })
 
-const fetchIntrospection = (options: Options): Effect.Effect<Grafaid.Schema.Schema, Error, FileSystem> =>
-  GraphqlSchemaLoader.load({
+const fetchIntrospection = (options: Options): Effect.Effect<Grafaid.Schema.Schema, Error, FileSystem> => {
+  if (!options.url) {
+    return Effect.fail(new Error('URL is required for introspection'))
+  }
+  return GraphqlSchemaLoader.load({
     type: `introspect`,
     url: options.url,
     headers: options.headers,
   })
+}
 
 const createCatalogFromSchema = (
   schemaData: Grafaid.Schema.Schema,
@@ -136,7 +149,7 @@ const createCatalogFromSchema = (
     })
   })
 
-export const loader = InputSource.createEffect({
+export const loader = InputSource.create({
   name: 'introspection',
 
   isApplicable: (options: Options) => {
@@ -165,7 +178,8 @@ export const loader = InputSource.createEffect({
 
       if (cacheEntry && cacheEntry.url === options.url) {
         // Use cached introspection result
-        schema = Grafaid.Schema.fromIntrospectionQuery(cacheEntry.introspectionResult)
+        // The cache contains { data: IntrospectionQuery } structure
+        schema = Grafaid.Schema.fromIntrospectionQuery(cacheEntry.introspectionResult.data as any)
       } else {
         // Fetch fresh introspection
         schema = yield* fetchIntrospection(options).pipe(
@@ -179,11 +193,11 @@ export const loader = InputSource.createEffect({
         )
 
         // Save to cache
-        const __schema = Grafaid.Schema.toIntrospectionQuery(schema)
+        const introspectionQuery = Grafaid.Schema.toIntrospectionQuery(schema)
         const newCacheEntry: CacheEntry = {
           url: options.url,
           fetchedAt: new Date().toISOString(),
-          introspectionResult: { data: { __schema } },
+          introspectionResult: { data: introspectionQuery as IntrospectionSchema.IntrospectionQuery },
         }
 
         yield* writeCache(cachePath, newCacheEntry).pipe(
@@ -230,7 +244,7 @@ export const loader = InputSource.createEffect({
       const newCacheEntry: CacheEntry = {
         url: options.url,
         fetchedAt: new Date().toISOString(),
-        introspectionResult: { data: { __schema } },
+        introspectionResult: { data: { __schema } as any as IntrospectionSchema.IntrospectionQuery },
       }
 
       yield* writeCache(cachePath, newCacheEntry).pipe(

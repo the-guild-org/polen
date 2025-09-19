@@ -1,4 +1,5 @@
 import { S } from '#dep/effect'
+import { Test } from '@wollybeard/kit/test'
 import { describe, expect, test } from 'vitest'
 import { ExamplesConfig } from './config.js'
 
@@ -6,13 +7,17 @@ describe('ExamplesConfig', () => {
   const decodeExamplesConfig = S.decodeSync(ExamplesConfig)
 
   describe('ExampleSelection', () => {
-    test.for([
-      { input: 'all', expected: 'all' },
-      { input: 'none', expected: 'none' },
-      { input: { include: ['example1', 'example2'] }, expected: { include: ['example1', 'example2'] } },
-      { input: { exclude: ['example3'] }, expected: { exclude: ['example3'] } },
-    ])('accepts $input as display value', ({ input, expected }) => {
-      const result = decodeExamplesConfig({ display: input as any })
+    // dprint-ignore
+    Test.Table.suite<{
+      input: 'all' | 'none' | { include: string[] } | { exclude: string[] }
+      expected: 'all' | 'none' | { include: string[] } | { exclude: string[] }
+    }>('display value acceptance', [
+      { name: 'all literal',      input: 'all',                                    expected: 'all' },
+      { name: 'none literal',     input: 'none',                                   expected: 'none' },
+      { name: 'include pattern',  input: { include: ['example1', 'example2'] },   expected: { include: ['example1', 'example2'] } },
+      { name: 'exclude pattern',  input: { exclude: ['example3'] },               expected: { exclude: ['example3'] } },
+    ], ({ input, expected }) => {
+      const result = decodeExamplesConfig({ display: input })
       expect(result.display).toEqual(expected)
     })
 
@@ -47,29 +52,20 @@ describe('ExamplesConfig', () => {
         },
       }
 
-      const result = decodeExamplesConfig(input as any)
+      const result = decodeExamplesConfig(input)
       expect(result).toEqual(input)
     })
 
-    test.for([
-      {
-        name: 'include pattern',
-        config: { display: { include: ['get-user', 'create-post'] } },
-      },
-      {
-        name: 'exclude pattern',
-        config: { display: { exclude: ['advanced-filtering'] } },
-      },
-      {
-        name: 'all examples',
-        config: { display: 'all' },
-      },
-      {
-        name: 'no examples',
-        config: { display: 'none' },
-      },
-    ])('accepts $name', ({ config }) => {
-      const result = decodeExamplesConfig(config as any)
+    // dprint-ignore
+    Test.Table.suite<{
+      config: { display?: 'all' | 'none' | { include: string[] } | { exclude: string[] } }
+    }>('full configuration', [
+      { name: 'include pattern',  config: { display: { include: ['get-user', 'create-post'] } } },
+      { name: 'exclude pattern',  config: { display: { exclude: ['advanced-filtering'] } } },
+      { name: 'all examples',     config: { display: 'all' } },
+      { name: 'no examples',      config: { display: 'none' } },
+    ], ({ config }) => {
+      const result = decodeExamplesConfig(config)
       expect(result.display).toEqual(config.display)
     })
   })

@@ -2,7 +2,7 @@ import type { Config } from '#api/config/normalized'
 import { Augmentations } from '#api/schema/augmentations/$'
 import { type CategoryConfig, processCategoriesWithVersion } from '#api/schema/categories-processor'
 import { InputSourceError } from '#api/schema/input-source/errors'
-import type { EffectInputSource, InputSource } from '#api/schema/input-source/input-source'
+import type { InputSource } from '#api/schema/input-source/input-source'
 import * as InputSourceLoader from '#api/schema/input-source/load'
 import { InputSources } from '#api/schema/input-sources/$'
 import { A, O } from '#dep/effect'
@@ -10,9 +10,6 @@ import type { PlatformError } from '@effect/platform/Error'
 import type { FileSystem } from '@effect/platform/FileSystem'
 import { Effect } from 'effect'
 import { Catalog } from 'graphql-kit'
-
-// For now, we'll need a type that accepts both promise and effect sources
-type AnyInputSource = InputSource | EffectInputSource
 
 /**
  * Find the first applicable source for the given config.
@@ -22,7 +19,7 @@ const findApplicableSource = (
   config: Config,
 ): Effect.Effect<
   O.Option<{
-    source: AnyInputSource
+    source: InputSource
     sourceConfig: object
   }>,
   PlatformError | InputSourceError,
@@ -31,14 +28,14 @@ const findApplicableSource = (
   Effect.gen(function*() {
     if (config.schema?.enabled === false) return O.none()
 
-    const allSources: AnyInputSource[] = [
+    const allSources: InputSource[] = [
       InputSources.VersionedDirectory.loader,
       InputSources.Directory.loader,
       InputSources.File.loader,
       InputSources.Memory.loader,
       InputSources.Introspection.loader,
       InputSources.IntrospectionFile.loader,
-    ] as AnyInputSource[]
+    ]
 
     const useFirst = config.schema?.useSources
       ? A.isArray(config.schema.useSources)
@@ -49,38 +46,17 @@ const findApplicableSource = (
     const context: InputSourceLoader.Context = { paths: config.paths }
 
     const sourcesToTry = useFirst
-      ? useFirst.map(name => allSources.find(s => s.name === name)).filter(Boolean) as AnyInputSource[]
+      ? useFirst.map(name => allSources.find(s => s.name === name))
+        .filter((s): s is InputSource => s !== undefined)
       : allSources
 
     for (const source of sourcesToTry) {
       const sourceConfig = (config.schema?.sources as any)?.[source.name] ?? {}
-
-      // Check if this is an Effect-based source by checking the source type
-      const isEffectSource = (source as any).__effectInputSource === true
-
-      let isApplicable: boolean
-
-      if (isEffectSource) {
-        // It's an Effect-based source
-        const effectSource = source as EffectInputSource
-        isApplicable = yield* effectSource.isApplicable(sourceConfig, context)
-      } else {
-        // It's a promise-based source
-        const promiseSource = source as InputSource
-        isApplicable = yield* Effect.tryPromise({
-          try: () => promiseSource.isApplicable(sourceConfig, context),
-          catch: (error) =>
-            new InputSourceError({
-              source: 'unknown',
-              message: `Source isApplicable check failed: ${String(error)}`,
-              cause: error,
-            }),
-        })
-      }
+      const isApplicable = yield* source.isApplicable(sourceConfig, context)
 
       if (isApplicable) {
         return O.some({
-          source: source as any,
+          source,
           sourceConfig,
         })
       }
@@ -117,35 +93,10 @@ export const loadOrNull = (
     const context: InputSourceLoader.Context = { paths: config.paths }
     const applicableValue = applicable.value
 
-    // Check if this is an Effect-based source by checking the source type
-    const isEffectSource = (applicableValue.source as any).__effectInputSource === true
-
-    let catalog: Catalog.Catalog | null
-
-    if (isEffectSource) {
-      // It's an Effect-based source
-      const effectSource = applicableValue.source as EffectInputSource
-      catalog = yield* effectSource.readIfApplicableOrThrow(
-        applicableValue.sourceConfig,
-        context,
-      )
-    } else {
-      // It's a promise-based source
-      const promiseSource = applicableValue.source as InputSource
-      catalog = yield* Effect.tryPromise({
-        try: () =>
-          promiseSource.readIfApplicableOrThrow(
-            applicableValue.sourceConfig,
-            context,
-          ),
-        catch: (error) =>
-          new InputSourceError({
-            source: 'unknown',
-            message: `Failed to read schema from source: ${String(error)}`,
-            cause: error,
-          }),
-      })
-    }
+    const catalog = yield* applicableValue.source.readIfApplicableOrThrow(
+      applicableValue.sourceConfig,
+      context,
+    )
 
     if (!catalog) {
       return O.none()
@@ -153,7 +104,7 @@ export const loadOrNull = (
 
     const loadedSchema: InputSourceLoader.LoadedCatalog = {
       data: O.some(catalog),
-      source: applicableValue.source as InputSource,
+      source: applicableValue.source,
       diagnostics: O.none(),
     }
 
@@ -205,7 +156,8 @@ export const loadOrNull = (
               categoriesConfig as CategoryConfig[] | Record<string, CategoryConfig[]>,
               versionString,
             ) // Update the schema's categories field
-            ;(schema as any).categories = categories
+            // @ts-expect-error force write readonly field
+            schema.categories = categories
           }
         },
         (unversioned) => {
@@ -215,7 +167,8 @@ export const loadOrNull = (
             categoriesConfig as CategoryConfig[] | Record<string, CategoryConfig[]>,
             undefined,
           ) // Update the schema's categories field
-          ;(unversioned.schema as any).categories = categories
+          // @ts-expect-error force write readonly field
+          unversioned.schema.categories = categories
         },
       )(catalog)
     }

@@ -1,32 +1,27 @@
 import type { NavbarProps } from '#api/hooks/types'
 import { A } from '#dep/effect'
 import type React from 'react'
-import { Flex, GridItem } from '../ui/index.js'
 
 export const DefaultNavbar: React.FC<NavbarProps> = ({ items, Item, Logo, ThemeToggle }) => {
   const [leftItems, rightItems] = A.partition(items, item => item.position === 'right')
 
   return (
-    <>
+    <div className='flex items-center justify-between w-full'>
       {/* Logo */}
-      <GridItem span={3}>
+      <div className='flex-shrink-0'>
         <Logo />
-      </GridItem>
+      </div>
 
       {/* Center navigation */}
-      <GridItem span={4}>
-        <Flex direction='row' gap='4' justify='center' align='center'>
-          {leftItems.map((item, index) => <Item key={index} item={item} index={index} />)}
-        </Flex>
-      </GridItem>
+      <div className='flex items-center gap-4'>
+        {leftItems.map((item, index) => <Item key={index} item={item} index={index} />)}
+      </div>
 
       {/* Right actions */}
-      <GridItem span={6}>
-        <Flex direction='row' gap='4' justify='end' align='center'>
-          {rightItems.map((item, index) => <Item key={index} item={item} index={index} />)}
-          <ThemeToggle />
-        </Flex>
-      </GridItem>
-    </>
+      <div className='flex items-center gap-4'>
+        {rightItems.map((item, index) => <Item key={index} item={item} index={index} />)}
+        <ThemeToggle />
+      </div>
+    </div>
   )
 }
