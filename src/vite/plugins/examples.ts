@@ -58,7 +58,7 @@ export const Examples = ({
 
       const scanExamplesResult = yield* scan({
         dir: examplesDir,
-        schemaCatalog: schemaCatalog,
+        ...(schemaCatalog ? { schemaCatalog } : {}),
       })
 
       // Generate TypeScript types if examples have changed

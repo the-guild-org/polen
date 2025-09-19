@@ -176,6 +176,12 @@
     },
     "./radix-ui/react-icons": {
       "default": "./build/exports/radix-ui/react-icons.js"
+    },
+    "./tailwind-merge": {
+      "default": "./build/exports/tailwind-merge.js"
+    },
+    "./clsx": {
+      "default": "./build/exports/clsx.js"
     }
   },
   "files": [

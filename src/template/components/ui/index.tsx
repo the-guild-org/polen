@@ -237,13 +237,13 @@ Theme.displayName = 'Theme'
 // Create a single object with all MDX-compatible components
 export const MDXComponents = {
   // Typography
-  p: (props: React.HTMLAttributes<HTMLParagraphElement>) => <Text as='p' mb='4' {...props} />,
-  h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='8' mt='6' mb='4' {...props} />,
-  h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='7' mt='6' mb='3' {...props} />,
-  h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='6' mt='5' mb='3' {...props} />,
-  h4: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='5' mt='5' mb='2' {...props} />,
-  h5: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='4' mt='4' mb='2' {...props} />,
-  h6: (props: React.HTMLAttributes<HTMLHeadingElement>) => <Heading size='3' mt='4' mb='2' {...props} />,
+  p: (props: any) => <Text as='p' mb='4' {...props} />,
+  h1: (props: any) => <Heading size='8' mt='6' mb='4' {...props} />,
+  h2: (props: any) => <Heading size='7' mt='6' mb='3' {...props} />,
+  h3: (props: any) => <Heading size='6' mt='5' mb='3' {...props} />,
+  h4: (props: any) => <Heading size='5' mt='5' mb='2' {...props} />,
+  h5: (props: any) => <Heading size='4' mt='4' mb='2' {...props} />,
+  h6: (props: any) => <Heading size='3' mt='4' mb='2' {...props} />,
   strong: Strong,
   em: Em,
   code: Code,
@@ -260,9 +260,9 @@ export const MDXComponents = {
   td: Table.Cell,
 
   // Lists
-  ul: (props: React.HTMLAttributes<HTMLUListElement>) => <Box as='ul' mb='4' className='pl-6' {...props} />,
-  ol: (props: React.HTMLAttributes<HTMLOListElement>) => <Box as='ol' mb='4' className='pl-6' {...props} />,
-  li: (props: React.HTMLAttributes<HTMLLIElement>) => <Box as='li' mb='2' {...props} />,
+  ul: (props: React.HTMLAttributes<HTMLUListElement>) => <Box as='ul' mb='4' className='pl-6' {...props as any} />,
+  ol: (props: React.HTMLAttributes<HTMLOListElement>) => <Box as='ol' mb='4' className='pl-6' {...props as any} />,
+  li: (props: React.HTMLAttributes<HTMLLIElement>) => <Box as='li' mb='2' {...props as any} />,
 
   // Custom components
   Badge,
