@@ -1,4 +1,4 @@
-import { Effect } from 'effect'
+import { Ef } from '#dep/effect'
 import { describe, expect, test } from 'vitest'
 import { parse } from './markdown.js'
 
@@ -12,7 +12,7 @@ const x = 42
 console.log(x)
 \`\`\`
 `
-    const result = await Effect.runPromise(parse(markdown))
+    const result = await Ef.runPromise(parse(markdown))
 
     expect(result).toContain('<h1>Hello</h1>')
     expect(result).toContain('<pre')
@@ -29,7 +29,7 @@ type Query {
 }
 \`\`\`
 `
-    const result = await Effect.runPromise(parse(markdown))
+    const result = await Ef.runPromise(parse(markdown))
 
     expect(result).toContain('<code class="language-graphql">')
     expect(result).toContain('type Query')
@@ -39,7 +39,7 @@ type Query {
 
   test('parse handles inline code', async () => {
     const markdown = 'This is `inline code` in a sentence.'
-    const result = await Effect.runPromise(parse(markdown))
+    const result = await Ef.runPromise(parse(markdown))
 
     expect(result).toContain('<code>inline code</code>')
   })
@@ -53,7 +53,7 @@ type Query {
 - [x] Task 1
 - [ ] Task 2
 `
-    const result = await Effect.runPromise(parse(markdown))
+    const result = await Ef.runPromise(parse(markdown))
 
     expect(result).toContain('<table>')
     expect(result).toContain('<input')
@@ -66,7 +66,7 @@ type Query {
 plain text without language
 \`\`\`
 `
-    const result = await Effect.runPromise(parse(markdown))
+    const result = await Ef.runPromise(parse(markdown))
 
     expect(result).toContain('<pre')
     expect(result).toContain('plain text without language')
@@ -78,7 +78,7 @@ plain text without language
 const theme = "light"
 \`\`\`
 `
-    const result = await Effect.runPromise(parse(markdown))
+    const result = await Ef.runPromise(parse(markdown))
 
     expect(result).toContain('<pre>')
     expect(result).toContain('<code class="language-javascript">')

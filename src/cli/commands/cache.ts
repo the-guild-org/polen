@@ -1,5 +1,6 @@
+import { Ef } from '#dep/effect'
 import { Command } from '@effect/cli'
-import { Console, Effect } from 'effect'
+import { Console } from 'effect'
 
 // Import subcommands
 import { cacheDelete } from './cache/delete.js'
@@ -10,14 +11,14 @@ const cacheDefault = Command.make(
   'cache',
   {},
   () =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       yield* Console.error(`Usage: polen cache <command>
 
 Commands:
   delete    Delete all Polen-generated caches
   show      Display information about Polen caches
 `)
-      return yield* Effect.fail(new Error('No cache subcommand specified'))
+      return yield* Ef.fail(new Error('No cache subcommand specified'))
     }),
 )
 

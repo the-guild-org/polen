@@ -1,4 +1,4 @@
-import { E } from '#dep/effect'
+import { Ei } from '#dep/effect'
 import { Test } from '@wollybeard/kit/test'
 import { parse } from 'graphql'
 import { describe, expect, test } from 'vitest'
@@ -11,40 +11,43 @@ import {
 
 describe('convertDocument', () => {
   describe('queries', () => {
+    type QueryInput = { graphql: string }
+    type QueryOutput = { expected: any }
+
     // dprint-ignore
-    Test.Table.suite<{ graphql: string; expected: any }>('valid queries', [
+    Test.Table.suite<QueryInput, QueryOutput>('valid queries', [
       {
-        name: 'simple query with scalar fields',
-        graphql: `query { user { id name email } }`,
-        expected: {
+        n: 'simple query with scalar fields',
+        i: { graphql: `query { user { id name email } }` },
+        o: { expected: {
           query: {
             user: { id: true, name: true, email: true },
           },
-        },
+        } },
       },
       {
-        name: 'anonymous query',
-        graphql: `{ hero { name } }`,
-        expected: {
+        n: 'anonymous query',
+        i: { graphql: `{ hero { name } }` },
+        o: { expected: {
           query: {
             hero: { name: true },
           },
-        },
+        } },
       },
       {
-        name: 'named query',
-        graphql: `query GetUser { user { name } }`,
-        expected: {
+        n: 'named query',
+        i: { graphql: `query GetUser { user { name } }` },
+        o: { expected: {
           query: {
             GetUser: {
               user: { name: true },
             },
           },
-        },
+        } },
       },
       {
-        name: 'deeply nested selections',
-        graphql: `
+        n: 'deeply nested selections',
+        i: { graphql: `
           query {
             user {
               name
@@ -57,11 +60,11 @@ describe('convertDocument', () => {
               }
             }
           }
-        `,
-        expected: {
+        ` },
+        o: { expected: {
           query: {
             user: {
-              name: true,
+              n: true,
               posts: {
                 title: true,
                 comments: {
@@ -71,176 +74,185 @@ describe('convertDocument', () => {
               },
             },
           },
-        },
+        } },
       },
-    ], ({ graphql, expected }) => {
-      const ast = parse(graphql)
+    ], ({ i, o }) => {
+      const ast = parse(i.graphql)
       const result = convertDocument(ast)
-      expect(E.isRight(result)).toBe(true)
-      if (E.isRight(result)) {
-        expect(result.right).toEqual(expected)
+      expect(Ei.isRight(result)).toBe(true)
+      if (Ei.isRight(result)) {
+        expect(result.right).toEqual(o.expected)
       }
     })
   })
 
   describe('arguments', () => {
+    type ArgumentInput = { graphql: string }
+    type ArgumentOutput = { expected: any }
+
     // dprint-ignore
-    Test.Table.suite<{ graphql: string; expected: any }>('field arguments', [
+    Test.Table.suite<ArgumentInput, ArgumentOutput>('field arguments', [
       {
-        name: 'single argument',
-        graphql: `query { user(id: "123") { name } }`,
-        expected: {
+        n: 'single argument',
+        i: { graphql: `query { user(id: "123") { name } }` },
+        o: { expected: {
           query: {
             user: {
               $: { id: '123' },
-              name: true,
+              n: true,
             },
           },
-        },
+        } },
       },
       {
-        name: 'multiple arguments',
-        graphql: `query { users(first: 10, after: "cursor123") { name } }`,
-        expected: {
+        n: 'multiple arguments',
+        i: { graphql: `query { users(first: 10, after: "cursor123") { name } }` },
+        o: { expected: {
           query: {
             users: {
               $: { first: 10, after: 'cursor123' },
-              name: true,
+              n: true,
             },
           },
-        },
+        } },
       },
       {
-        name: 'object argument',
-        graphql: `query { createUser(input: { name: "John", age: 30 }) { id } }`,
-        expected: {
+        n: 'object argument',
+        i: { graphql: `query { createUser(input: { name: "John", age: 30 }) { id } }` },
+        o: { expected: {
           query: {
             createUser: {
               $: { input: { name: 'John', age: 30 } },
               id: true,
             },
           },
-        },
+        } },
       },
       {
-        name: 'list argument',
-        graphql: `query { users(ids: ["1", "2", "3"]) { name } }`,
-        expected: {
+        n: 'list argument',
+        i: { graphql: `query { users(ids: ["1", "2", "3"]) { name } }` },
+        o: { expected: {
           query: {
             users: {
               $: { ids: ['1', '2', '3'] },
-              name: true,
+              n: true,
             },
           },
-        },
+        } },
       },
       {
-        name: 'enum argument',
-        graphql: `query { users(role: ADMIN) { name } }`,
-        expected: {
+        n: 'enum argument',
+        i: { graphql: `query { users(role: ADMIN) { name } }` },
+        o: { expected: {
           query: {
             users: {
               $: { role: 'ADMIN' },
-              name: true,
+              n: true,
             },
           },
-        },
+        } },
       },
       {
-        name: 'scalar field with arguments',
-        graphql: `query { user { avatar(size: 200) } }`,
-        expected: {
+        n: 'scalar field with arguments',
+        i: { graphql: `query { user { avatar(size: 200) } }` },
+        o: { expected: {
           query: {
             user: {
               avatar: { $: { size: 200 } },
             },
           },
-        },
+        } },
       },
-    ], ({ graphql, expected }) => {
-      const ast = parse(graphql)
+    ], ({ i, o }) => {
+      const ast = parse(i.graphql)
       const result = convertDocument(ast)
-      expect(E.isRight(result)).toBe(true)
-      if (E.isRight(result)) {
-        expect(result.right).toEqual(expected)
+      expect(Ei.isRight(result)).toBe(true)
+      if (Ei.isRight(result)) {
+        expect(result.right).toEqual(o.expected)
       }
     })
   })
 
   describe('variables', () => {
+    type VariableInput = { graphql: string }
+    type VariableOutput = { expectedError: { operationName: string; variableNames: string[] } }
+
     // dprint-ignore
-    Test.Table.suite<{ graphql: string; expectedError: { operationName: string; variableNames: string[] } }>('variable errors', [
+    Test.Table.suite<VariableInput, VariableOutput>('variable errors', [
       {
-        name: 'single variable',
-        graphql: `query GetUser($id: ID!) { user(id: $id) { name } }`,
-        expectedError: {
+        n: 'single variable',
+        i: { graphql: `query GetUser($id: ID!) { user(id: $id) { name } }` },
+        o: { expectedError: {
           operationName: 'GetUser',
           variableNames: ['id'],
-        },
+        } },
       },
       {
-        name: 'multiple variables',
-        graphql: `query SearchUsers($name: String!, $limit: Int) { users(name: $name, limit: $limit) { id } }`,
-        expectedError: {
+        n: 'multiple variables',
+        i: { graphql: `query SearchUsers($name: String!, $limit: Int) { users(name: $name, limit: $limit) { id } }` },
+        o: { expectedError: {
           operationName: 'SearchUsers',
           variableNames: ['name', 'limit'],
-        },
+        } },
       },
-    ], ({ graphql, expectedError }) => {
-      const ast = parse(graphql)
+    ], ({ i, o }) => {
+      const ast = parse(i.graphql)
       const result = convertDocument(ast)
-      expect(E.isLeft(result)).toBe(true)
-      if (E.isLeft(result)) {
+      expect(Ei.isLeft(result)).toBe(true)
+      if (Ei.isLeft(result)) {
         expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
         if (result.left instanceof GraffleVariablesNotSupportedError) {
-          expect(result.left.operationName).toBe(expectedError.operationName)
-          expect(result.left.variableNames).toEqual(expectedError.variableNames)
+          expect(result.left.operationName).toBe(o.expectedError.operationName)
+          expect(result.left.variableNames).toEqual(o.expectedError.variableNames)
         }
       }
     })
   })
 
   describe('aliases', () => {
+    type AliasInput = { graphql: string }
+    type AliasOutput = { expected: any }
+
     // dprint-ignore
-    Test.Table.suite<{ graphql: string; expected: any }>('aliases', [
+    Test.Table.suite<AliasInput, AliasOutput>('aliases', [
       {
-        name: 'field aliases',
-        graphql: `
+        n: 'field aliases',
+        i: { graphql: `
           query {
             admin: user(role: ADMIN) { name }
             regular: user(role: USER) { name }
           }
-        `,
-        expected: {
+        ` },
+        o: { expected: {
           query: {
             admin: [
               'user',
               {
                 $: { role: 'ADMIN' },
-                name: true,
+                n: true,
               },
             ],
             regular: [
               'user',
               {
                 $: { role: 'USER' },
-                name: true,
+                n: true,
               },
             ],
           },
-        },
+        } },
       },
       {
-        name: 'nested field aliases',
-        graphql: `
+        n: 'nested field aliases',
+        i: { graphql: `
           query {
             user {
               smallAvatar: avatar(size: 50)
               largeAvatar: avatar(size: 200)
             }
           }
-        `,
-        expected: {
+        ` },
+        o: { expected: {
           query: {
             user: {
               smallAvatar: [
@@ -253,14 +265,14 @@ describe('convertDocument', () => {
               ],
             },
           },
-        },
+        } },
       },
-    ], ({ graphql, expected }) => {
-      const ast = parse(graphql)
+    ], ({ i, o }) => {
+      const ast = parse(i.graphql)
       const result = convertDocument(ast)
-      expect(E.isRight(result)).toBe(true)
-      if (E.isRight(result)) {
-        expect(result.right).toEqual(expected)
+      expect(Ei.isRight(result)).toBe(true)
+      if (Ei.isRight(result)) {
+        expect(result.right).toEqual(o.expected)
       }
     })
   })
@@ -274,8 +286,8 @@ describe('convertDocument', () => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
-      expect(E.isLeft(result)).toBe(true)
-      if (E.isLeft(result)) {
+      expect(Ei.isLeft(result)).toBe(true)
+      if (Ei.isLeft(result)) {
         expect(result.left).toBeInstanceOf(GraffleFragmentsNotSupportedError)
         if (result.left instanceof GraffleFragmentsNotSupportedError) {
           expect(result.left.fragmentNames).toEqual(['UserInfo'])
@@ -295,17 +307,17 @@ describe('convertDocument', () => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
-      expect(E.isRight(result)).toBe(true)
-      if (E.isRight(result)) {
+      expect(Ei.isRight(result)).toBe(true)
+      if (Ei.isRight(result)) {
         expect(result.right).toEqual({
           query: {
             profile: {
               ___on_User: {
-                name: true,
+                n: true,
                 email: true,
               },
               ___on_Organization: {
-                name: true,
+                n: true,
                 members: true,
               },
             },
@@ -323,8 +335,8 @@ describe('convertDocument', () => {
       const ast = parse(graphql)
       const result = convertDocument(ast)
 
-      expect(E.isLeft(result)).toBe(true)
-      if (E.isLeft(result)) {
+      expect(Ei.isLeft(result)).toBe(true)
+      if (Ei.isLeft(result)) {
         expect(result.left).toBeInstanceOf(GraffleFragmentsNotSupportedError)
         if (result.left instanceof GraffleFragmentsNotSupportedError) {
           expect(result.left.fragmentNames).toEqual(['BasicInfo', 'ContactInfo'])
@@ -334,38 +346,40 @@ describe('convertDocument', () => {
   })
 
   describe('directives', () => {
+    type DirectiveInput = { graphql: string; expectError?: boolean }
+    type DirectiveOutput = { expected?: any; expectedError?: any }
+
     // dprint-ignore
-    Test.Table.suite<{ graphql: string; expected?: any; expectError?: boolean; expectedError?: any }>('directives', [
+    Test.Table.suite<DirectiveInput, DirectiveOutput>('directives', [
       {
-        name: '@include with variable',
-        graphql: `query GetUser($includeEmail: Boolean!) { user { name email @include(if: $includeEmail) } }`,
-        expectError: true,
-        expectedError: {
+        n: '@include with variable',
+        i: { graphql: `query GetUser($includeEmail: Boolean!) { user { name email @include(if: $includeEmail) } }`, expectError: true },
+        o: { expectedError: {
           operationName: 'GetUser',
           variableNames: ['includeEmail'],
-        },
+        } },
       },
       {
-        name: '@skip',
-        graphql: `query { user { name internalId @skip(if: true) } }`,
-        expected: {
+        n: '@skip',
+        i: { graphql: `query { user { name internalId @skip(if: true) } }` },
+        o: { expected: {
           query: {
             user: {
-              name: true,
+              n: true,
               internalId: {
                 $skip: { if: true },
               },
             },
           },
-        },
+        } },
       },
       {
-        name: 'custom directives',
-        graphql: `query { user { name @uppercase email @deprecated(reason: "Use emailAddress") } }`,
-        expected: {
+        n: 'custom directives',
+        i: { graphql: `query { user { name @uppercase email @deprecated(reason: "Use emailAddress") } }` },
+        o: { expected: {
           query: {
             user: {
-              name: {
+              n: {
                 $uppercase: true,
               },
               email: {
@@ -373,45 +387,48 @@ describe('convertDocument', () => {
               },
             },
           },
-        },
+        } },
       },
-    ], ({ graphql, expected, expectError, expectedError }) => {
-      const ast = parse(graphql)
+    ], ({ i, o }) => {
+      const ast = parse(i.graphql)
       const result = convertDocument(ast)
 
-      if (expectError) {
-        expect(E.isLeft(result)).toBe(true)
-        if (E.isLeft(result)) {
+      if (i.expectError) {
+        expect(Ei.isLeft(result)).toBe(true)
+        if (Ei.isLeft(result)) {
           expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
           if (result.left instanceof GraffleVariablesNotSupportedError) {
-            expect(result.left.operationName).toBe(expectedError.operationName)
-            expect(result.left.variableNames).toEqual(expectedError.variableNames)
+            expect(result.left.operationName).toBe(o.expectedError.operationName)
+            expect(result.left.variableNames).toEqual(o.expectedError.variableNames)
           }
         }
       } else {
-        expect(E.isRight(result)).toBe(true)
-        if (E.isRight(result)) {
-          expect(result.right).toEqual(expected)
+        expect(Ei.isRight(result)).toBe(true)
+        if (Ei.isRight(result)) {
+          expect(result.right).toEqual(o.expected)
         }
       }
     })
   })
 
   describe('mutations', () => {
+    type MutationInput = { graphql: string }
+    type MutationOutput = { expected?: any; expectedError?: any }
+
     // dprint-ignore
-    Test.Table.suite<{ graphql: string; expected?: any; expectedError?: any }>('mutations', [
+    Test.Table.suite<MutationInput, MutationOutput>('mutations', [
       {
-        name: 'named mutation with variable',
-        graphql: `mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name } }`,
-        expectedError: {
+        n: 'named mutation with variable',
+        i: { graphql: `mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name } }` },
+        o: { expectedError: {
           operationName: 'CreateUser',
           variableNames: ['input'],
-        },
+        } },
       },
       {
-        name: 'multiple mutations',
-        graphql: `mutation { createUser(name: "Alice") { id } createPost(title: "Hello") { id } }`,
-        expected: {
+        n: 'multiple mutations',
+        i: { graphql: `mutation { createUser(name: "Alice") { id } createPost(title: "Hello") { id } }` },
+        o: { expected: {
           mutation: {
             createUser: {
               $: { name: 'Alice' },
@@ -422,25 +439,25 @@ describe('convertDocument', () => {
               id: true,
             },
           },
-        },
+        } },
       },
-    ], ({ graphql, expected, expectedError }) => {
-      const ast = parse(graphql)
+    ], ({ i, o }) => {
+      const ast = parse(i.graphql)
       const result = convertDocument(ast)
 
-      if (expectedError) {
-        expect(E.isLeft(result)).toBe(true)
-        if (E.isLeft(result)) {
+      if (o.expectedError) {
+        expect(Ei.isLeft(result)).toBe(true)
+        if (Ei.isLeft(result)) {
           expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
           if (result.left instanceof GraffleVariablesNotSupportedError) {
-            expect(result.left.operationName).toBe(expectedError.operationName)
-            expect(result.left.variableNames).toEqual(expectedError.variableNames)
+            expect(result.left.operationName).toBe(o.expectedError.operationName)
+            expect(result.left.variableNames).toEqual(o.expectedError.variableNames)
           }
         }
       } else {
-        expect(E.isRight(result)).toBe(true)
-        if (E.isRight(result)) {
-          expect(result.right).toEqual(expected)
+        expect(Ei.isRight(result)).toBe(true)
+        if (Ei.isRight(result)) {
+          expect(result.right).toEqual(o.expected)
         }
       }
     })
@@ -459,8 +476,8 @@ describe('convertDocument', () => {
     const ast = parse(graphql)
     const result = convertDocument(ast)
 
-    expect(E.isLeft(result)).toBe(true)
-    if (E.isLeft(result)) {
+    expect(Ei.isLeft(result)).toBe(true)
+    if (Ei.isLeft(result)) {
       expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
       if (result.left instanceof GraffleVariablesNotSupportedError) {
         expect(result.left.operationName).toBe('OnCommentAdded')
@@ -479,8 +496,8 @@ describe('convertDocument', () => {
     const result = convertDocument(ast)
 
     // Should fail because UpdateUser has a variable
-    expect(E.isLeft(result)).toBe(true)
-    if (E.isLeft(result)) {
+    expect(Ei.isLeft(result)).toBe(true)
+    if (Ei.isLeft(result)) {
       expect(result.left).toBeInstanceOf(GraffleVariablesNotSupportedError)
       if (result.left instanceof GraffleVariablesNotSupportedError) {
         expect(result.left.operationName).toBe('UpdateUser')
@@ -515,8 +532,8 @@ describe('convertDocument', () => {
     const result = convertDocument(ast)
 
     // Should fail because of fragment (checked first)
-    expect(E.isLeft(result)).toBe(true)
-    if (E.isLeft(result)) {
+    expect(Ei.isLeft(result)).toBe(true)
+    if (Ei.isLeft(result)) {
       expect(result.left).toBeInstanceOf(GraffleFragmentsNotSupportedError)
       if (result.left instanceof GraffleFragmentsNotSupportedError) {
         expect(result.left.fragmentNames).toEqual(['PostFields'])
@@ -526,72 +543,74 @@ describe('convertDocument', () => {
 })
 
 describe('graffleDocumentToString', () => {
+  type CodeGenInput = { graphql: string; clientName?: string }
+  type CodeGenOutput = { expectedCode: string }
+
   // dprint-ignore
-  Test.Table.suite<{ graphql: string; clientName?: string; expectedCode: string }>('code generation', [
+  Test.Table.suite<CodeGenInput, CodeGenOutput>('code generation', [
     {
-      name: 'simple query',
-      graphql: `query { user { name } }`,
-      expectedCode: `await client.document({
+      n: 'simple query',
+      i: { graphql: `query { user { name } }` },
+      o: { expectedCode: `await client.document({
   query: {
     user: {
-      name: true
+      n: true
     }
   }
-}).run()`,
+}).run()` },
     },
     {
-      name: 'query with arguments no variables',
-      graphql: `query { user(id: "123") { name email } }`,
-      expectedCode: `await client.document({
+      n: 'query with arguments no variables',
+      i: { graphql: `query { user(id: "123") { name email } }` },
+      o: { expectedCode: `await client.document({
   query: {
     user: {
       '$': {
         id: '123'
       },
-      name: true,
+      n: true,
       email: true
     }
   }
-}).run()`,
+}).run()` },
     },
     {
-      name: 'named query with variable',
-      graphql: `query GetUser($id: ID!) { user(id: $id) { name } }`,
-      clientName: 'pokemon',
-      expectedCode: `await pokemon.document({
+      n: 'named query with variable',
+      i: { graphql: `query GetUser($id: ID!) { user(id: $id) { name } }`, clientName: 'pokemon' },
+      o: { expectedCode: `await pokemon.document({
   query: {
     GetUser: {
       user: {
         '$': {
           id: variables.id
         },
-        name: true
+        n: true
       }
     }
   }
-}).run('GetUser')`,
+}).run('GetUser')` },
     },
     {
-      name: 'mutation',
-      graphql: `mutation CreateUser($name: String!) { createUser(name: $name) { id name } }`,
-      expectedCode: `await client.document({
+      n: 'mutation',
+      i: { graphql: `mutation CreateUser($name: String!) { createUser(name: $name) { id name } }` },
+      o: { expectedCode: `await client.document({
   mutation: {
     CreateUser: {
       createUser: {
         '$': {
-          name: variables.name
+          n: variables.name
         },
         id: true,
-        name: true
+        n: true
       }
     }
   }
-}).run('CreateUser')`,
+}).run('CreateUser')` },
     },
     {
-      name: 'query with aliases',
-      graphql: `query { admin: user(role: ADMIN) { name } }`,
-      expectedCode: `await client.document({
+      n: 'query with aliases',
+      i: { graphql: `query { admin: user(role: ADMIN) { name } }` },
+      o: { expectedCode: `await client.document({
   query: {
     admin: ['user', {
     '$': {
@@ -600,15 +619,15 @@ describe('graffleDocumentToString', () => {
     name: true
   }]
   }
-}).run()`,
+}).run()` },
     },
     {
-      name: 'query with directives',
-      graphql: `query { user { name email @include(if: true) } }`,
-      expectedCode: `await client.document({
+      n: 'query with directives',
+      i: { graphql: `query { user { name email @include(if: true) } }` },
+      o: { expectedCode: `await client.document({
   query: {
     user: {
-      name: true,
+      n: true,
       email: {
         $include: {
           if: true
@@ -616,23 +635,24 @@ describe('graffleDocumentToString', () => {
       }
     }
   }
-}).run()`,
+}).run()` },
     },
-  ], ({ graphql, clientName = 'client', expectedCode }) => {
-    const ast = parse(graphql)
+  ], ({ i, o }) => {
+    const clientName = i.clientName || 'client'
+    const ast = parse(i.graphql)
     const result = convertDocument(ast)
 
     // These tests have variables so they should return errors
-    if (graphql.includes('$')) {
-      expect(E.isLeft(result)).toBe(true)
+    if (i.graphql.includes('$')) {
+      expect(Ei.isLeft(result)).toBe(true)
       // Skip code generation test for error cases
       return
     }
 
-    expect(E.isRight(result)).toBe(true)
-    if (E.isRight(result)) {
+    expect(Ei.isRight(result)).toBe(true)
+    if (Ei.isRight(result)) {
       const code = graffleDocumentToString(result.right, clientName)
-      expect(code).toBe(expectedCode)
+      expect(code).toBe(o.expectedCode)
     }
   })
 })

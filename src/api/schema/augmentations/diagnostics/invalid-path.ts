@@ -20,4 +20,4 @@ export const DiagnosticInvalidPath = Diagnostic.create({
 
 export const makeDiagnosticInvalidPath = Diagnostic.createMake(DiagnosticInvalidPath)
 
-export type DiagnosticInvalidPath = S.Schema.Type<typeof DiagnosticInvalidPath>
+export type DiagnosticInvalidPath = typeof DiagnosticInvalidPath.Type

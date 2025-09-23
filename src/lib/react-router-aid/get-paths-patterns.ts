@@ -1,4 +1,4 @@
-import { A } from '#dep/effect'
+import { Ar } from '#dep/effect'
 import type { ReactRouter } from '#dep/react-router/index'
 
 const sep = `/`
@@ -21,7 +21,7 @@ export const getRouteExpressions = (
 ): string[] => {
   const collectedPaths = new Set<string>()
   _getPathsRecurse(routes, EMPTY_PATH, collectedPaths)
-  return A.fromIterable(collectedPaths)
+  return Ar.fromIterable(collectedPaths)
 }
 
 /**

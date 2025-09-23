@@ -139,7 +139,7 @@ export const AugmentationInput = S.Struct({
   description: 'Configuration for augmenting GraphQL schema descriptions with version support',
 })
 
-export type AugmentationInput = S.Schema.Type<typeof AugmentationInput>
+export type AugmentationInput = typeof AugmentationInput.Type
 
 /**
  * Transform user-facing input to normalized internal representation.
@@ -170,7 +170,7 @@ export const normalizeAugmentationInput = (input: AugmentationInput): Augmentati
     return {
       versionAugmentations: HashMap.set(
         map,
-        VersionCoverage.unversioned(),
+        VersionCoverage.Unversioned.make(),
         unversionedConfig,
       ),
     }
@@ -197,7 +197,7 @@ export const normalizeAugmentationInput = (input: AugmentationInput): Augmentati
       content,
     }
     const version = Version.decodeSync(versionStr)
-    const coverage = VersionCoverage.single(version)
+    const coverage = VersionCoverage.One.make({ version })
 
     resultMap = HashMap.set(resultMap, coverage, config)
   }

@@ -1,22 +1,23 @@
+import { Ef } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import type { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Path } from '@wollybeard/kit'
-import { Cache, Effect } from 'effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
+import { Cache } from 'effect'
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface AssetReader<data, error = never, requirements = never> {
-  read: () => Effect.Effect<data, error, requirements>
-  clear: () => Effect.Effect<void, never, requirements>
+  read: () => Ef.Effect<data, error, requirements>
+  clear: () => Ef.Effect<void, never, requirements>
 }
 
 export const createAssetReader = <data, error = never, requirements = never>(
-  reader: () => Effect.Effect<data, error, requirements>,
+  reader: () => Ef.Effect<data, error, requirements>,
 ): AssetReader<data, error, requirements> => {
   // Use Cache for both caching and concurrent deduplication
   const cacheService = Cache.make({
@@ -27,12 +28,12 @@ export const createAssetReader = <data, error = never, requirements = never>(
 
   return {
     read: () =>
-      Effect.gen(function*() {
+      Ef.gen(function*() {
         const cache = yield* cacheService
         return yield* cache.get('__constant_key__')
       }),
     clear: () =>
-      Effect.gen(function*() {
+      Ef.gen(function*() {
         const cache = yield* cacheService
         yield* cache.invalidateAll
       }),
@@ -78,12 +79,12 @@ export interface ReactiveAssetPluginOptions<$Data, E = never, R = never> {
      * Serializer function that converts data to string content
      * Can return an Effect for async operations (must have FileSystem requirement if needed)
      */
-    serializer: (data: Exclude<$Data, null>) => Effect.Effect<string, any, FileSystem.FileSystem> | string
+    serializer: (data: Exclude<$Data, null>) => Ef.Effect<string, any, FileSystem.FileSystem> | string
     /**
      * Relative path for the emitted asset (e.g., 'schemas/catalog.json')
      * Used for both dev assets and build assets with appropriate base paths
      */
-    path: string
+    path: FsLoc.RelFile.RelFile
   }
   /**
    * Optional hooks for customization
@@ -127,20 +128,20 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
   }
 
   // Helper to run the Effect reader with the provided layer
-  const runReader = (reader: () => Effect.Effect<T, E, R>): Effect.Effect<T, E, never> => {
-    return reader().pipe(Effect.provide(NodeFileSystem.layer as any)) as Effect.Effect<T, E, never>
+  const runReader = (reader: () => Ef.Effect<T, E, R>): Ef.Effect<T, E, never> => {
+    return reader().pipe(Ef.provide(NodeFileSystem.layer as any)) as Ef.Effect<T, E, never>
   }
 
   const handleAssetChange = (
     file: string,
     event: 'add' | 'unlink' | 'change',
     server: Vite.ViteDevServer,
-  ): Effect.Effect<boolean, never, never> => {
-    if (!options.filePatterns.isRelevant(file)) return Effect.succeed(false)
+  ): Ef.Effect<boolean, never, never> => {
+    if (!options.filePatterns.isRelevant(file)) return Ef.succeed(false)
 
     debug(`${options.name} file ${event}: ${file}`)
 
-    return Effect.gen(function*() {
+    return Ef.gen(function*() {
       // Get old data if we need to compare
       let oldData: T | null = null
       if (options.hooks?.shouldFullReload) {
@@ -148,12 +149,12 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
       }
 
       // Clear cache and re-read
-      yield* options.reader.clear().pipe(Effect.provide(NodeFileSystem.layer as any))
+      yield* options.reader.clear().pipe(Ef.provide(NodeFileSystem.layer as any))
       const newData = yield* runReader(options.reader.read)
 
       // Run diagnostics hook if provided
       if (options.hooks?.onDiagnostics) {
-        yield* Effect.tryPromise({
+        yield* Ef.tryPromise({
           try: () => Promise.resolve(options.hooks!.onDiagnostics!(newData)),
           catch: (error) => new Error(`Diagnostics hook failed: ${String(error)}`),
         })
@@ -165,7 +166,7 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
       // Check if full reload is needed
       let needsFullReload = true
       if (options.hooks?.shouldFullReload) {
-        needsFullReload = yield* Effect.tryPromise({
+        needsFullReload = yield* Ef.tryPromise({
           try: () => Promise.resolve(options.hooks!.shouldFullReload!(oldData, newData)),
           catch: (error) => new Error(`shouldFullReload hook failed: ${String(error)}`),
         })
@@ -173,7 +174,7 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
 
       // Handle asset emission in dev mode
       if (options.emit && viteServer && newData) {
-        yield* Effect.gen(function*() {
+        yield* Ef.gen(function*() {
           // Run the serializer (could be Effect or plain string)
           const serializerResult = options.emit!.serializer(newData as Exclude<T, null>)
           const content = typeof serializerResult === 'string'
@@ -181,22 +182,20 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
             : yield* serializerResult
 
           // Write to dev assets directory (in Vite's cache dir)
-          const devAssetsPath = Path.join(viteConfig.cacheDir, 'assets', options.emit!.path)
-          const devAssetsDir = Path.dirname(devAssetsPath)
-
-          // Create directory and write file using Effect's FileSystem
-          const fs = yield* FileSystem.FileSystem
-          yield* fs.makeDirectory(devAssetsDir, { recursive: true })
-          yield* fs.writeFileString(devAssetsPath, content)
+          const cacheDir = FsLoc.AbsDir.decodeSync(viteConfig.cacheDir)
+          const assetsDir = FsLoc.join(cacheDir, FsLoc.fromString('assets/'))
+          const devAssetsPathLoc = FsLoc.join(assetsDir, options.emit!.path)
+          yield* Fs.write(assetsDir, { recursive: true })
+          yield* Fs.write(devAssetsPathLoc, content)
 
           debug(`Dev assets written: ${options.emit!.path}`)
         }).pipe(
-          Effect.provide(NodeFileSystem.layer),
+          Ef.provide(NodeFileSystem.layer),
         )
       }
 
       return needsFullReload
-    }) as Effect.Effect<boolean, never, never>
+    }) as Ef.Effect<boolean, never, never>
   }
 
   return {
@@ -221,9 +220,9 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
 
       // Handle file additions and deletions
       const handleFileStructureChange = (file: string, event: 'add' | 'unlink') => {
-        Effect.runPromise(
+        Ef.runPromise(
           handleAssetChange(file, event, server).pipe(
-            Effect.map((needsFullReload) => {
+            Ef.map((needsFullReload) => {
               if (needsFullReload) {
                 debug(`Triggering full reload due to ${event} event`)
                 server.ws.send({ type: 'full-reload' })
@@ -239,12 +238,13 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
       server.watcher.on('unlink', (file) => handleFileStructureChange(file, 'unlink'))
     },
 
+    // Framework boundary: Vite plugin buildStart hook expects Promise return type
     async buildStart() {
       // Handle asset emission in build mode
       if (options.emit && !viteServer) {
         const pluginContext = this
-        await Effect.runPromise(
-          Effect.gen(function*() {
+        await Ef.runPromise(
+          Ef.gen(function*() {
             // Read the data
             const data = yield* runReader(options.reader.read)
 
@@ -258,7 +258,7 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
             const content = typeof serializerResult === 'string'
               ? serializerResult
               : yield* serializerResult.pipe(
-                Effect.provide(NodeFileSystem.layer),
+                Ef.provide(NodeFileSystem.layer),
               )
 
             // Emit the asset (Vite will place it in the correct output directory)
@@ -274,8 +274,9 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
       }
     },
 
+    // Framework boundary: Vite plugin handleHotUpdate hook expects Promise return type
     async handleHotUpdate({ file, server, modules }) {
-      const needsFullReload = await Effect.runPromise(
+      const needsFullReload = await Ef.runPromise(
         handleAssetChange(file, 'change', server),
       )
 

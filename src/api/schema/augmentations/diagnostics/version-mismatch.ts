@@ -20,4 +20,4 @@ export const DiagnosticVersionMismatch = Diagnostic.create({
 
 export const makeDiagnosticVersionMismatch = Diagnostic.createMake(DiagnosticVersionMismatch)
 
-export type DiagnosticVersionMismatch = S.Schema.Type<typeof DiagnosticVersionMismatch>
+export type DiagnosticVersionMismatch = typeof DiagnosticVersionMismatch.Type

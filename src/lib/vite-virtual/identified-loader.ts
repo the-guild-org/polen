@@ -1,7 +1,7 @@
-import { O } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { StackProcessor } from '#lib/stack-processor'
-import { Effect } from 'effect'
 import { debug } from './debug.js'
 import type { Identifier } from './identifier.js'
 
@@ -14,13 +14,13 @@ export const toHookLoad = (
   identifiedLoader: IdentifiedLoader,
 ): (
   ...args: Parameters<Vite.HookLoadFnPure>
-) => Effect.Effect<O.Option<Awaited<ReturnType<Vite.HookLoadFnPure>>>, Error, never> => {
+) => Ef.Effect<Op.Option<Awaited<ReturnType<Vite.HookLoadFnPure>>>, Error, never> => {
   return (...args) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       // debug(`load candidate`, { virtualIdentifier, args })
       if (args[0] === identifiedLoader.identifier.resolved) {
         debug(`will load`, { identifier: identifiedLoader.identifier })
-        const result = yield* Effect.tryPromise({
+        const result = yield* Ef.tryPromise({
           try: () => {
             return Promise.resolve(identifiedLoader.loader(...args))
           },
@@ -31,11 +31,11 @@ export const toHookLoad = (
         debug(`did load`, { identifier: identifiedLoader.identifier, result })
         // Add moduleType for Rolldown compatibility
         if (result && typeof result === `string`) {
-          return O.some({ code: result, moduleType: `js` })
+          return Op.some({ code: result, moduleType: `js` })
         }
-        return O.some(result)
+        return Op.some(result)
       }
-      return O.none()
+      return Op.none()
     })
 }
 
@@ -43,12 +43,12 @@ export const toHookResolveId = (
   identifiedLoader: IdentifiedLoader,
 ): (
   ...args: Parameters<Vite.HookResolveIdFnPure>
-) => Effect.Effect<O.Option<ReturnType<Vite.HookResolveIdFnPure>>, never, never> => {
+) => Ef.Effect<Op.Option<ReturnType<Vite.HookResolveIdFnPure>>, never, never> => {
   return (id) =>
-    Effect.succeed(
+    Ef.succeed(
       id === identifiedLoader.identifier.id
-        ? O.some(identifiedLoader.identifier.resolved)
-        : O.none(),
+        ? Op.some(identifiedLoader.identifier.resolved)
+        : Op.none(),
     )
 }
 
@@ -67,13 +67,15 @@ export const toHooks = (
   )
 
   return {
+    // Framework boundary: Vite plugin resolveId hook expects Promise return type
     resolveId: async (...args) => {
-      const result = await Effect.runPromise(resolveIdEffect(...args))
-      return O.getOrUndefined(result)
+      const result = await Ef.runPromise(resolveIdEffect(...args))
+      return Op.getOrUndefined(result)
     },
+    // Framework boundary: Vite plugin load hook expects Promise return type
     load: async (...args) => {
-      const result = await Effect.runPromise(loadEffect(...args))
-      return O.getOrUndefined(result)
+      const result = await Ef.runPromise(loadEffect(...args))
+      return Op.getOrUndefined(result)
     },
   }
 }

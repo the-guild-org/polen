@@ -1,21 +1,27 @@
+import { FsLoc } from '@wollybeard/kit'
 import { describe, expect, it } from 'vitest'
 import { createNavbar } from './navbar.js'
 import type { Page } from './page.js'
 
-const createPage = (path: string[], fileName = 'index', hidden = false): Page => ({
-  route: {
-    id: path.join('/'),
-    parentId: path.length > 1 ? path.slice(0, -1).join('/') : null,
-    logical: { path },
-    file: {
-      path: {
-        absolute: { root: '/', dir: `/pages/${path.join('/')}`, base: `${fileName}.md`, ext: '.md', name: fileName },
-        relative: { root: '', dir: path.join('/'), base: `${fileName}.md`, ext: '.md', name: fileName },
+const createPage = (path: string[], fileName = 'index', hidden = false): Page => {
+  const relativePath = path.length > 0 ? `${path.join('/')}/${fileName}.md` : `${fileName}.md`
+  const absolutePath = `/pages/${relativePath}`
+
+  return {
+    route: {
+      id: path.join('/'),
+      parentId: path.length > 1 ? path.slice(0, -1).join('/') : null,
+      logical: { path },
+      file: {
+        path: {
+          absolute: FsLoc.AbsFile.decodeSync(absolutePath),
+          relative: FsLoc.RelFile.decodeSync(relativePath),
+        },
       },
     },
-  },
-  metadata: { description: undefined, hidden },
-})
+    metadata: { description: undefined, hidden },
+  }
+}
 
 describe('createNavbar', () => {
   it('returns empty for empty input', () => {

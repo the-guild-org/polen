@@ -1,6 +1,7 @@
 import { Typings } from '#api/typings/$'
+import { Ef } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
-import { Effect } from 'effect'
+import { FsLoc } from '@wollybeard/kit'
 import type { Catalog } from './schemas/catalog.js'
 
 /**
@@ -8,8 +9,8 @@ import type { Catalog } from './schemas/catalog.js'
  */
 export const generateExampleTypes = (
   catalog: Catalog,
-  projectRoot: string,
-): Effect.Effect<void, Error, FileSystem.FileSystem> => {
+  projectRoot: FsLoc.AbsDir.AbsDir,
+): Ef.Effect<void, Error, FileSystem.FileSystem> => {
   const exampleNames = catalog.examples.map(e => e.name)
   const typeDefinition = generateTypeDefinition(exampleNames)
   return Typings.write(

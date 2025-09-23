@@ -1,6 +1,6 @@
-import { A } from '#dep/effect'
+import { Ar } from '#dep/effect'
 import { FileRouter } from '#lib/file-router'
-import { Str } from '@wollybeard/kit'
+import { FsLoc, Str } from '@wollybeard/kit'
 import type { Page } from './page.js'
 import type { ScanResult } from './scan.js'
 
@@ -102,7 +102,8 @@ export type SidebarIndex = Record<string, Sidebar>
  *
  * @example
  * ```ts
- * const scanResult = await Effect.runPromise(Content.scan({ dir: './pages' }))
+ * // At application boundary (e.g., in Vite plugin)
+ * const scanResult = await Ef.runPromise(Content.scan({ dir: './pages' }))
  * const sidebars = buildSidebarIndex(scanResult)
  * // Returns: {
  * //   '/guide': { items: [...] },
@@ -130,7 +131,7 @@ export const buildSidebarIndex = (scanResult: ScanResult): SidebarIndex => {
 
   // Build sidebar for each directory that has an index page
   for (const [topLevelDir, pages] of pagesByTopLevelDir) {
-    const hasIndexPage = A.some(pages, page =>
+    const hasIndexPage = Ar.some(pages, page =>
       page.route.logical.path.length === 1
       && FileRouter.routeIsFromIndexFile(page.route))
 
@@ -178,8 +179,10 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
   // Sort pages by their directory order (extracted from file path)
   const sortedTopLevelPages = [...topLevelPages].sort((a, b) => {
     // For sections, we need to look at the directory name in the file path
-    const dirA = a.route.file.path.relative.dir.split(`/`).pop() ?? ``
-    const dirB = b.route.file.path.relative.dir.split(`/`).pop() ?? ``
+    const pathA = FsLoc.encodeSync(a.route.file.path.relative)
+    const pathB = FsLoc.encodeSync(b.route.file.path.relative)
+    const dirA = pathA.substring(0, pathA.lastIndexOf('/')).split(`/`).pop() ?? ``
+    const dirB = pathB.substring(0, pathB.lastIndexOf('/')).split(`/`).pop() ?? ``
 
     // Extract order from directory names like "10_b", "20_c"
     const orderMatchA = /^(\d+)[_-]/.exec(dirA)

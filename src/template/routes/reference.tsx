@@ -1,8 +1,8 @@
 import { Api } from '#api/iso'
-import { O, S } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { route, useLoaderData } from '#lib/react-router-effect/react-router-effect'
 import { Str } from '@wollybeard/kit'
-import { Effect, HashMap, Match } from 'effect'
+import { HashMap, Match } from 'effect'
 import { Catalog, Grafaid, GrafaidOld, Lifecycles, Schema, Version } from 'graphql-kit'
 import React from 'react'
 import { redirect, useParams } from 'react-router'
@@ -44,17 +44,17 @@ const referenceLoader = ({ params }: any) => {
 
   // This should never be called when schemasCatalog is null
   // because the route won't be added to the router
-  // But we return an Effect.fail for safety
+  // But we return an Ef.fail for safety
   if (!schemasCatalog) {
-    return Effect.fail(
+    return Ef.fail(
       new Error(
         'No schema catalog available. This page requires a GraphQL schema to be configured. '
           + 'Please ensure your Polen configuration includes a valid schema source.',
       ),
     )
   }
-  return Effect.succeed(schemasCatalog).pipe(
-    Effect.map(catalog => {
+  return Ef.succeed(schemasCatalog).pipe(
+    Ef.map(catalog => {
       // Resolve the actual schema based on catalog type and params
       const schema = Match.value(catalog).pipe(
         Match.tagsExhaustive({
@@ -64,11 +64,11 @@ const referenceLoader = ({ params }: any) => {
             if (params.version) {
               const requestedVersion = Version.decodeSync(params.version)
               const foundOption = HashMap.get(c.entries, requestedVersion)
-              if (O.isNone(foundOption)) {
+              if (Op.isNone(foundOption)) {
                 // TODO: Return 404 error
                 throw new Error(`Version ${params.version} not found`)
               }
-              return O.getOrThrow(foundOption)
+              return Op.getOrThrow(foundOption)
             }
             // No version param means "latest" - use the last entry
             const latest = Catalog.Versioned.getLatestOrThrow(c)

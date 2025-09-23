@@ -1,5 +1,5 @@
-import { O } from '#dep/effect'
-import { Effect, HashMap, HashSet } from 'effect'
+import { Ef, Op } from '#dep/effect'
+import { HashMap, HashSet } from 'effect'
 import { getNamedType, type GraphQLSchema, isInterfaceType, isObjectType, isUnionType, Kind, visit } from 'graphql'
 import { Catalog, Document, Grafaid, Schema, Version } from 'graphql-kit'
 import type { Example } from './schemas/example/example.js'
@@ -26,7 +26,7 @@ const extractTypesFromDocument = (
   const visitedTypes = new Set<string>() // Prevent infinite recursion
 
   // Use Effect to parse, but handle it synchronously since this function is synchronous
-  const ast = Effect.runSync(
+  const ast = Ef.runSync(
     Grafaid.Parse.parseDocument(documentString, { source: 'example' }),
   )
 
@@ -60,23 +60,23 @@ const extractTypesFromDocument = (
   const resolveFieldType = (
     fieldName: string,
     parentTypeName: string | null,
-  ): O.Option<string> => {
-    if (!parentTypeName) return O.none()
+  ): Op.Option<string> => {
+    if (!parentTypeName) return Op.none()
 
     const parentType = schema.getType(parentTypeName)
     if (!parentType || !isObjectType(parentType) && !isInterfaceType(parentType)) {
-      return O.none()
+      return Op.none()
     }
 
     const field = parentType.getFields()[fieldName]
-    if (!field) return O.none()
+    if (!field) return Op.none()
 
     const namedType = getNamedType(field.type)
-    return O.some(namedType.name)
+    return Op.some(namedType.name)
   }
 
   // Track the current type context as we traverse
-  let currentType: O.Option<string> = O.none()
+  let currentType: Op.Option<string> = Op.none()
 
   visit(ast, {
     [Kind.OPERATION_DEFINITION]: (node) => {
@@ -84,42 +84,42 @@ const extractTypesFromDocument = (
       switch (node.operation) {
         case 'query':
           const queryType = schema.getQueryType()?.name
-          currentType = queryType ? O.some(queryType) : O.none()
+          currentType = queryType ? Op.some(queryType) : Op.none()
           break
         case 'mutation':
           const mutationType = schema.getMutationType()?.name
-          currentType = mutationType ? O.some(mutationType) : O.none()
+          currentType = mutationType ? Op.some(mutationType) : Op.none()
           break
         case 'subscription':
           const subscriptionType = schema.getSubscriptionType()?.name
-          currentType = subscriptionType ? O.some(subscriptionType) : O.none()
+          currentType = subscriptionType ? Op.some(subscriptionType) : Op.none()
           break
       }
-      if (O.isSome(currentType)) {
+      if (Op.isSome(currentType)) {
         addType(currentType.value)
       }
     },
 
     [Kind.FIELD]: {
       enter(node) {
-        if (O.isNone(currentType)) return
+        if (Op.isNone(currentType)) return
 
         // Special handling for __typename
         if (node.name.value === '__typename') return
 
         const fieldTypeOption = resolveFieldType(node.name.value, currentType.value)
-        if (O.isSome(fieldTypeOption)) {
+        if (Op.isSome(fieldTypeOption)) {
           const fieldType = fieldTypeOption.value
           addType(fieldType)
           // Update context for nested selections
           if (node.selectionSet) {
-            currentType = O.some(fieldType)
+            currentType = Op.some(fieldType)
           }
         }
       },
       leave(node) {
         // Restore parent context when leaving field with selection set
-        if (node.selectionSet && O.isSome(currentType)) {
+        if (node.selectionSet && Op.isSome(currentType)) {
           // This is simplified - in production would need proper context stack
         }
       },
@@ -129,7 +129,7 @@ const extractTypesFromDocument = (
       if (node.typeCondition) {
         const typeName = node.typeCondition.name.value
         addType(typeName)
-        currentType = O.some(typeName)
+        currentType = Op.some(typeName)
       }
     },
 
@@ -141,7 +141,7 @@ const extractTypesFromDocument = (
     [Kind.FRAGMENT_DEFINITION]: (node) => {
       const typeName = node.typeCondition.name.value
       addType(typeName)
-      currentType = O.some(typeName)
+      currentType = Op.some(typeName)
     },
   })
 
@@ -216,13 +216,13 @@ export const createTypeUsageIndex = (
       const allVersions = Document.Versioned.getAllVersions(example.document)
 
       for (const version of allVersions) {
-        const schemaOption = O.liftThrowable(
+        const schemaOption = Op.liftThrowable(
           () => Catalog.resolveCatalogSchema(schemasCatalog, version),
         )()
-        if (O.isNone(schemaOption)) continue
+        if (Op.isNone(schemaOption)) continue
 
         const documentOption = Document.Versioned.getContentForVersion(example.document, version)
-        if (O.isNone(documentOption)) continue
+        if (Op.isNone(documentOption)) continue
 
         hashMap = processDocumentVersion(
           example,
@@ -248,12 +248,12 @@ const addExampleToIndex = (
 ): TypeUsageIndex => {
   // Get or create the version's type map
   const versionMap = HashMap.get(index, versionKey).pipe(
-    O.getOrElse(HashMap.empty<string, HashSet.HashSet<ExampleReference>>),
+    Op.getOrElse(HashMap.empty<string, HashSet.HashSet<ExampleReference>>),
   )
 
   // Get or create the type's example set
   const examples = HashMap.get(versionMap, typeName).pipe(
-    O.getOrElse(HashSet.empty<ExampleReference>),
+    Op.getOrElse(HashSet.empty<ExampleReference>),
   )
 
   // Add example reference to set (HashSet handles deduplication automatically)
@@ -284,7 +284,7 @@ export const getExampleReferencesForType = (
   const versionKey = version ?? UNVERSIONED_KEY
 
   return HashMap.get(typeUsageIndex, versionKey).pipe(
-    O.flatMap(versionMap => HashMap.get(versionMap, typeName)),
-    O.getOrElse(HashSet.empty<ExampleReference>),
+    Op.flatMap(versionMap => HashMap.get(versionMap, typeName)),
+    Op.getOrElse(HashSet.empty<ExampleReference>),
   )
 }

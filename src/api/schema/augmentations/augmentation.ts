@@ -1,6 +1,8 @@
 import { AugmentationConfig } from '#api/schema/augmentations/config'
 import { S } from '#dep/effect'
 import { VersionCoverage } from 'graphql-kit'
+import { GraphQLSchemaPath } from 'graphql-kit'
+GraphQLSchemaPath
 
 /**
  * Internal normalized schema for description augmentations.
@@ -21,4 +23,4 @@ export const Augmentation = S.Struct({
   description: 'Internal normalized description augmentation with version coverage support',
 })
 
-export type Augmentation = S.Schema.Type<typeof Augmentation>
+export type Augmentation = typeof Augmentation.Type

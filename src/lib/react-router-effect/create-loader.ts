@@ -1,4 +1,5 @@
-// import { Effect, Schema } from 'effect'
+import { Ef } from '#dep/effect'
+import { Schema } from 'effect'
 // import type { LoaderFunction } from 'react-router'
 
 // /**
@@ -9,7 +10,7 @@
 //  * ```typescript
 //  * const loader = createEffectLoaderFromEffect(
 //  *   UserSchema,
-//  *   ({ params }) => Effect.gen(function* () {
+//  *   ({ params }) => Ef.gen(function* () {
 //  *     const service = yield* UserService
 //  *     return yield* service.getUser(params.id)
 //  *   })
@@ -18,10 +19,10 @@
 //  */
 // export const createEffectLoaderFromEffect = <TSchema extends Schema.Schema.Any = Schema.Schema.Any>(
 //   schema: TSchema,
-//   loader: (args: Parameters<LoaderFunction>[0]) => Effect.Effect<Schema.Schema.Type<TSchema>, any, any>,
+//   loader: (args: Parameters<LoaderFunction>[0]) => Ef.Effect<Schema.Schema.Type<TSchema>, any, any>,
 // ): LoaderFunction => {
 //   return async (args) => {
-//     const decodedData = await Effect.runPromise(loader(args))
+//     const decodedData = await Ef.runPromise(loader(args))
 //     const encodedData = Schema.encodeSync(schema as any)(decodedData as any)
 //     return encodedData
 //   }
@@ -49,8 +50,8 @@
 // ): LoaderFunction => {
 //   return async (args) => {
 //     // Convert Promise to Effect for internal consistency
-//     const loaderEffect = Effect.tryPromise(() => loader(args))
-//     const decodedData = await Effect.runPromise(loaderEffect)
+//     const loaderEffect = Ef.tryPromise(() => loader(args))
+//     const decodedData = await Ef.runPromise(loaderEffect)
 //     const encodedData = Schema.encodeSync(schema as any)(decodedData as any)
 //     return encodedData
 //   }

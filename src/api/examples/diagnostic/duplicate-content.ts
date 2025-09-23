@@ -24,4 +24,4 @@ export const DiagnosticDuplicateContent = Diagnostic.create({
 
 export const makeDiagnosticDuplicateContent = Diagnostic.createMake(DiagnosticDuplicateContent)
 
-export type DiagnosticDuplicateContent = S.Schema.Type<typeof DiagnosticDuplicateContent>
+export type DiagnosticDuplicateContent = typeof DiagnosticDuplicateContent.Type

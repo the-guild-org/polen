@@ -1,6 +1,6 @@
-import { A, O } from '#dep/effect'
+import { Ar, Op, S } from '#dep/effect'
 import type { GraphQLFieldMap, GraphQLSchema } from 'graphql'
-import { Grafaid } from 'graphql-kit'
+import { Grafaid, Version } from 'graphql-kit'
 
 export interface PathValidation {
   version?: string
@@ -29,8 +29,8 @@ export const doesPathExist = (schema: GraphQLSchema, path: PathValidation): bool
   if (!path.argument) return true
 
   // Check if argument exists
-  const arg = A.findFirst(field.args, a => a.name === path.argument)
-  return O.isSome(arg)
+  const arg = Ar.findFirst(field.args, a => a.name === path.argument)
+  return Op.isSome(arg)
 }
 
 /**
@@ -112,14 +112,14 @@ export const getRedirectDescription = (
   targetSchema: GraphQLSchema,
   currentPath: PathValidation,
   fallbackPath: PathValidation,
-  targetVersion?: string,
+  targetVersion?: Version.Version,
 ): string | null => {
   if (!currentPath.type) return null
 
   const currentExists = doesPathExist(targetSchema, currentPath)
   if (currentExists) return null
 
-  const versionInfo = targetVersion ? ` in version ${targetVersion}` : ` in this version`
+  const versionInfo = targetVersion ? ` in version ${S.encodeSync(Version.Version)(targetVersion)}` : ` in this version`
 
   if (currentPath.argument && fallbackPath.field) {
     return `Argument "${currentPath.argument}" doesn't exist${versionInfo}. Redirecting to field "${fallbackPath.field}".`

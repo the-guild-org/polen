@@ -24,4 +24,4 @@ export const Diagnostic = S.Union(
   description: 'All diagnostics that can be generated for examples',
 })
 
-export type Diagnostic = S.Schema.Type<typeof Diagnostic>
+export type Diagnostic = typeof Diagnostic.Type

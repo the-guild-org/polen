@@ -75,16 +75,17 @@ describe('path transformation', () => {
 
   const file = { path: 'test.md' }
 
+  type TransformInput = { path: string }
+  type TransformOutput = {}
+
   // dprint-ignore
-  Test.Table.suite<{
-      path: string
-    }>('transforms gql: paths to GraphQLReference components', [
-      { name: 'simple type',       path: 'User' },
-      { name: 'field path',        path: 'User.posts' },
-      { name: 'query field',       path: 'Query.user' },
-      { name: 'nested field',      path: 'Post.author' },
-    ], ({ path }) => {
-      const tree = createTree(`gql:${path}`)
+  Test.Table.suite<TransformInput, TransformOutput>('transforms gql: paths to GraphQLReference components', [
+      { n: 'simple type',       i: { path: 'User' },         o: {} },
+      { n: 'field path',        i: { path: 'User.posts' },   o: {} },
+      { n: 'query field',       i: { path: 'Query.user' },   o: {} },
+      { n: 'nested field',      i: { path: 'Post.author' },  o: {} },
+    ], ({ i, o }) => {
+      const tree = createTree(`gql:${i.path}`)
 
       // Use runSync to process the tree synchronously
       const result = processor.runSync(tree, file) as Root
@@ -97,7 +98,7 @@ describe('path transformation', () => {
           {
             type: 'mdxJsxAttribute',
             name: 'path',
-            value: path,
+            value: i.path,
           },
         ]),
       })
@@ -116,21 +117,20 @@ describe('path validation', () => {
 
   const file = { path: 'test.md' }
 
+  type ValidateInput = { path: string }
+  type ValidateOutput = { shouldHaveDiagnostic: boolean; diagnosticType?: 'invalid-path' | 'invalid-syntax' }
+
   // dprint-ignore
-  Test.Table.suite<{
-      path: string
-      shouldHaveDiagnostic: boolean
-      diagnosticType?: 'invalid-path' | 'invalid-syntax'
-    }>('validates GraphQL paths', [
-      { name: 'valid type',         path: 'User',            shouldHaveDiagnostic: false },
-      { name: 'valid field',        path: 'User.name',       shouldHaveDiagnostic: false },
-      { name: 'invalid type',       path: 'InvalidType',     shouldHaveDiagnostic: true,  diagnosticType: 'invalid-path' },
-      { name: 'invalid field',      path: 'User.invalid',    shouldHaveDiagnostic: true,  diagnosticType: 'invalid-path' },
-      { name: 'double dots',        path: 'User..field',     shouldHaveDiagnostic: true,  diagnosticType: 'invalid-syntax' },
-      { name: 'empty segments',     path: '.User.',          shouldHaveDiagnostic: true,  diagnosticType: 'invalid-syntax' },
-    ], ({ path, shouldHaveDiagnostic, diagnosticType }) => {
+  Test.Table.suite<ValidateInput, ValidateOutput>('validates GraphQL paths', [
+      { n: 'valid type',         i: { path: 'User' },           o: { shouldHaveDiagnostic: false } },
+      { n: 'valid field',        i: { path: 'User.name' },      o: { shouldHaveDiagnostic: false } },
+      { n: 'invalid type',       i: { path: 'InvalidType' },    o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' } },
+      { n: 'invalid field',      i: { path: 'User.invalid' },   o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' } },
+      { n: 'double dots',        i: { path: 'User..field' },    o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' } },
+      { n: 'empty segments',     i: { path: '.User.' },         o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' } },
+    ], ({ i, o }) => {
       onDiagnostic.mockClear() // Clear the mock before each test case
-      const tree = createTree(`gql:${path}`)
+      const tree = createTree(`gql:${i.path}`)
 
       // Use runSync to process the tree
       const result = processor.runSync(tree, file) as Root
@@ -142,12 +142,12 @@ describe('path validation', () => {
         name: 'GraphQLReference',
       })
 
-      if (shouldHaveDiagnostic) {
+      if (o.shouldHaveDiagnostic) {
         expect(onDiagnostic).toHaveBeenCalledWith(
           expect.objectContaining({
             _tag: 'Diagnostic',
             source: 'mdx-graphql-references',
-            name: diagnosticType,
+            name: o.diagnosticType,
             severity: 'warning',
           }),
         )

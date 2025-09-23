@@ -18,4 +18,4 @@ export const DiagnosticInvalidFilename = Diagnostic.create({
 
 export const makeDiagnosticInvalidFilename = Diagnostic.createMake(DiagnosticInvalidFilename)
 
-export type DiagnosticInvalidFilename = S.Schema.Type<typeof DiagnosticInvalidFilename>
+export type DiagnosticInvalidFilename = typeof DiagnosticInvalidFilename.Type

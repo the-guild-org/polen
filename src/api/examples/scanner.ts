@@ -1,8 +1,7 @@
-import { A } from '#dep/effect'
-import { EffectGlob } from '#lib/effect-glob/$'
+import { Ar, Ef, Op } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
-import { Path, Str } from '@wollybeard/kit'
-import { Effect, HashMap, HashSet, Match } from 'effect'
+import { Fs, FsLoc, Str } from '@wollybeard/kit'
+import { HashMap, HashSet, Match } from 'effect'
 import { Catalog as SchemaCatalog, Document, Version, VersionCoverage } from 'graphql-kit'
 import type { Diagnostic } from './diagnostic/diagnostic.js'
 import {
@@ -24,7 +23,7 @@ export interface ScanResult {
 }
 
 export interface ScanOptions {
-  dir: string
+  dir: FsLoc.AbsDir.AbsDir
   extensions?: string[]
   schemaCatalog?: SchemaCatalog.Catalog
 }
@@ -45,38 +44,35 @@ const VERSIONED_FILE_PATTERN = Str.pattern<{ groups: ['name', 'version'] }>(
 // ============================================================================
 
 type ParsedExampleFile =
-  | { type: 'unversioned'; name: string; file: string }
-  | { type: 'versioned'; name: string; version: Version.Version; file: string }
+  | { type: 'unversioned'; name: string; file: FsLoc.RelFile.RelFile }
+  | { type: 'versioned'; name: string; version: Version.Version; file: FsLoc.RelFile.RelFile }
 
 type GroupedExampleFiles = Map<string, {
-  unversioned?: string
-  versioned: Map<Version.Version, string>
+  unversioned?: FsLoc.RelFile.RelFile
+  versioned: Map<Version.Version, FsLoc.RelFile.RelFile>
 }>
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-export const parseExampleFile = (filename: string): ParsedExampleFile => {
-  const parsed = Path.parse(filename)
-  const base = parsed.name
+export const parseExampleFile = (file: FsLoc.RelFile.RelFile): ParsedExampleFile => {
+  const base = FsLoc.name(file)
 
   // Try to match versioned pattern: <name>.<version>
-  const matchResult = Str.match(base, VERSIONED_FILE_PATTERN)
+  const opMatch = Str.match(base, VERSIONED_FILE_PATTERN)
 
-  if (matchResult) {
-    const match = matchResult
-    const { name, version: versionStr } = match.groups
-
+  if (Op.isSome(opMatch)) {
+    const { name, version: versionStr } = opMatch.value.groups
     const version = Version.decodeSync(versionStr)
-    return { type: 'versioned', name, version, file: filename }
+    return { type: 'versioned', name, version, file }
   }
 
   // No version found - this is an unversioned example
-  return { type: 'unversioned', name: base, file: filename }
+  return { type: 'unversioned', name: base, file }
 }
 
-const groupExampleFiles = (files: string[]): GroupedExampleFiles => {
+const groupExampleFiles = (files: FsLoc.RelFile.RelFile[]): GroupedExampleFiles => {
   const grouped: GroupedExampleFiles = new Map()
 
   for (const file of files) {
@@ -111,16 +107,16 @@ export const resolveDefaultFiles = (
   grouped: GroupedExampleFiles,
   schemaVersions: Version.Version[],
 ): Map<string, {
-  versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, string>
-  unversioned?: string
+  versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, FsLoc.RelFile.RelFile>
+  unversioned?: FsLoc.RelFile.RelFile
 }> => {
   const resolved = new Map<string, {
-    versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, string>
-    unversioned?: string
+    versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, FsLoc.RelFile.RelFile>
+    unversioned?: FsLoc.RelFile.RelFile
   }>()
 
   for (const [name, group] of grouped) {
-    let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, string>()
+    let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, FsLoc.RelFile.RelFile>()
 
     // Add explicit versions
     for (const [version, file] of group.versioned) {
@@ -177,9 +173,9 @@ const lintFileLayout = (
       DocumentVersioned: (doc) => {
         // Get all versions covered by this document
         const coveredVersions = Document.Versioned.getAllVersions(doc)
-        const missingVersions = A.filter(
+        const missingVersions = Ar.filter(
           schemaVersions,
-          sv => !A.some(coveredVersions, cv => Version.equivalence(sv, cv)),
+          sv => !Ar.some(coveredVersions, cv => Version.equivalence(sv, cv)),
         )
 
         if (missingVersions.length > 0) {
@@ -228,14 +224,12 @@ const lintFileLayout = (
 // ============================================================================
 
 export const scan = (
-  options: ScanOptions & { files?: string[] },
-): Effect.Effect<ScanResult, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
+  options: ScanOptions & { files?: FsLoc.RelFile.RelFile[] },
+): Ef.Effect<ScanResult, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
     const extensions = options.extensions ?? DEFAULT_EXTENSIONS
     const pattern = `**/*.{${extensions.join(',')}}`
-    const files = options.files ?? (yield* EffectGlob.glob(pattern, { cwd: options.dir }))
-
+    const files = options.files ?? (yield* Fs.glob(pattern, { cwd: options.dir }))
     // Get schema versions upfront for default file resolution
     const schemaVersions: Version.Version[] = options.schemaCatalog
       ? SchemaCatalog.fold(
@@ -262,16 +256,16 @@ export const scan = (
           : undefined)
       if (!firstFile) continue // No files for this example
 
-      const basePath = HashMap.size(resolved.versionDocuments) > 1 || resolved.unversioned
-        ? Path.dirname(firstFile)
-        : firstFile
+      // For now, use the encoded file path as the base path
+      // This will be a string path for the example
+      const basePath = FsLoc.RelFile.encodeSync(firstFile)
 
       let example: Example.Example | undefined
 
       if (resolved.unversioned) {
         // Unversioned example - single file with no version
-        const fullPath = Path.join(options.dir, resolved.unversioned)
-        const document = yield* fs.readFileString(fullPath)
+        const fullPathLoc = FsLoc.join(options.dir, resolved.unversioned)
+        const document = yield* Fs.readString(fullPathLoc)
 
         example = Example.make({
           name,
@@ -306,8 +300,8 @@ export const scan = (
             }
           }
 
-          const fullPath = Path.join(options.dir, filePath)
-          const fileContent = yield* fs.readFileString(fullPath)
+          const fullPathLoc = FsLoc.join(options.dir, filePath)
+          const fileContent = yield* Fs.readString(fullPathLoc)
 
           versionDocuments = HashMap.set(versionDocuments, versionCoverage, fileContent)
         }
@@ -329,13 +323,15 @@ export const scan = (
 
       if (example) {
         // Check for description.md or description.mdx file
-        const descriptionMdPath = Path.join(options.dir, `${name}.md`)
-        const descriptionMdxPath = Path.join(options.dir, `${name}.mdx`)
+        const descriptionMdFile = FsLoc.RelFile.decodeSync(`${name}.md`)
+        const descriptionMdxFile = FsLoc.RelFile.decodeSync(`${name}.mdx`)
+        const descriptionMdPathLoc = FsLoc.join(options.dir, descriptionMdFile)
+        const descriptionMdxPathLoc = FsLoc.join(options.dir, descriptionMdxFile)
 
-        const descriptionPath = (yield* fs.exists(descriptionMdPath))
-          ? descriptionMdPath
-          : (yield* fs.exists(descriptionMdxPath))
-          ? descriptionMdxPath
+        const descriptionPath = (yield* Fs.exists(descriptionMdPathLoc))
+          ? FsLoc.encodeSync(descriptionMdPathLoc)
+          : (yield* Fs.exists(descriptionMdxPathLoc))
+          ? FsLoc.encodeSync(descriptionMdxPathLoc)
           : null
 
         if (descriptionPath) {
@@ -355,14 +351,16 @@ export const scan = (
 
     // @claude create a utility for reading a file at variable paths
     // Check for index.md or index.mdx file
-    const indexMdPath = Path.join(options.dir, 'index.md')
-    const indexMdxPath = Path.join(options.dir, 'index.mdx')
+    const indexMdFile = FsLoc.fromString('index.md')
+    const indexMdxFile = FsLoc.fromString('index.mdx')
+    const indexMdPathLoc = FsLoc.join(options.dir, indexMdFile)
+    const indexMdxPathLoc = FsLoc.join(options.dir, indexMdxFile)
 
     // Try index.md first, then index.mdx
-    const indexPath = (yield* fs.exists(indexMdPath))
-      ? indexMdPath
-      : (yield* fs.exists(indexMdxPath))
-      ? indexMdxPath
+    const indexPath = (yield* Fs.exists(indexMdPathLoc))
+      ? FsLoc.encodeSync(indexMdPathLoc)
+      : (yield* Fs.exists(indexMdxPathLoc))
+      ? FsLoc.encodeSync(indexMdxPathLoc)
       : null
 
     const catalog = Catalog.make({

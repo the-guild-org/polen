@@ -1,6 +1,7 @@
+import { Ef } from '#dep/effect'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { React } from '#dep/react/index'
-import { Effect, Schema } from 'effect'
+import { Schema } from 'effect'
 import type { IsNever } from 'type-fest'
 import type { SchemaRoute, SchemaRouteConfig } from './types.js'
 
@@ -59,15 +60,16 @@ export function routeIndex<TSchema extends Schema.Schema.Any = never>(
   }
 
   if (loader) {
+    // Framework boundary: React Router expects loader to return Promise
     route.loader = async (args: any) => {
       // Call the loader function
       const result = loader(args)
 
       // Check if result is an Effect or a Promise
       let decodedData: any
-      if (Effect.isEffect(result)) {
+      if (Ef.isEffect(result)) {
         // It's an Effect, run it
-        decodedData = await Effect.runPromise(result as any)
+        decodedData = await Ef.runPromise(result as any)
       } else {
         // It's a Promise, await it
         decodedData = await result

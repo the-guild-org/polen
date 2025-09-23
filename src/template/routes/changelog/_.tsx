@@ -1,8 +1,8 @@
-import { O, S } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
 import { Http } from '@wollybeard/kit'
-import { Effect, HashMap } from 'effect'
+import { HashMap } from 'effect'
 import { Catalog, Schema, Version } from 'graphql-kit'
 import { redirect } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
@@ -37,24 +37,24 @@ const loader = ({ params }: { params: { version?: string } }) => {
   // If catalog is versioned and no version is provided in URL, redirect to latest version
   if (Catalog.Versioned.is(catalog) && !params.version) {
     const latestVersion = Catalog.getLatestVersion(catalog)
-    const urlVersion = Version.encodeSync(O.getOrThrow(latestVersion))
+    const urlVersion = Version.encodeSync(Op.getOrThrow(latestVersion))
     throw redirect(`/changelog/version/${urlVersion}`)
   }
 
-  const schemaMaybe = ((): O.Option<Schema.Schema> => {
+  const schemaMaybe = ((): Op.Option<Schema.Schema> => {
     if (Catalog.Versioned.is(catalog)) {
       const version = Version.decodeSync(params.version!)
       const schema = HashMap.get(catalog.entries, version)
       return schema
     }
-    return O.some(catalog.schema)
+    return Op.some(catalog.schema)
   })()
 
-  if (O.isNone(schemaMaybe)) {
+  if (Op.isNone(schemaMaybe)) {
     throw Http.Response.notFound
   }
 
-  return Effect.succeed({ catalog, schema: schemaMaybe.value })
+  return Ef.succeed({ catalog, schema: schemaMaybe.value })
 }
 
 //

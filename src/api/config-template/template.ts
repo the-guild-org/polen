@@ -71,7 +71,7 @@ export const TemplateConfig = S.extend(
   description: 'Fully resolved configuration for template consumption with all feature flags determined',
 })
 
-export type TemplateConfig = S.Schema.Type<typeof TemplateConfig>
+export type TemplateConfig = typeof TemplateConfig.Type
 
 // ============================================================================
 // Constructors

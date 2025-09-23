@@ -1,6 +1,6 @@
 // TODO: Review and replace inline styles with Tailwind classes
+import { Ef } from '#dep/effect'
 import { highlight } from 'codehike/code'
-import { Effect } from 'effect'
 import * as React from 'react'
 import { CodeBlock } from '../CodeBlock.js'
 import { Box, Card, Container, Heading, Tabs, Text } from '../ui/index.js'
@@ -75,10 +75,10 @@ export const QuickStartSection: React.FC<Props> = ({ examples = defaultExamples 
 
   React.useEffect(() => {
     const highlightExamples = async () => {
-      const highlighted = await Effect.runPromise(
-        Effect.all(
+      const highlighted = await Ef.runPromise(
+        Ef.all(
           examples.map((example) =>
-            Effect.tryPromise({
+            Ef.tryPromise({
               try: async () => ({
                 label: example.label,
                 codeblock: await highlight(

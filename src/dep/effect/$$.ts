@@ -1,1 +1,1 @@
-export { Array as A, Either as E, Option as O, ParseResult, Schema as S } from 'effect'
+export { Array as Ar, Effect as Ef, Either as Ei, HashMap, Option as Op, ParseResult, Schema as S } from 'effect'

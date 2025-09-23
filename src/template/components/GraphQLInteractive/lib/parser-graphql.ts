@@ -6,7 +6,8 @@
  */
 
 import { Api } from '#api/iso'
-import { E } from '#dep/effect'
+import { Ei } from '#dep/effect'
+import { FsLoc, Pro } from '@wollybeard/kit'
 import type { CodeAnnotation } from 'codehike/code'
 import {
   getNamedType,
@@ -542,16 +543,16 @@ export async function parseGraphQLWithTreeSitterEither(
   annotations: CodeAnnotation[] = [],
   schema?: GraphQLSchema,
   referenceEnabled = true,
-): Promise<E.Either<GraphQLToken[], ParseError>> {
+): Promise<Ei.Either<GraphQLToken[], ParseError>> {
   // Validate input
   if (!code || typeof code !== 'string') {
-    return E.left(makeParseError.invalidInput('Invalid GraphQL code: code must be a non-empty string'))
+    return Ei.left(makeParseError.invalidInput('Invalid GraphQL code: code must be a non-empty string'))
   }
 
   // Prevent parsing extremely large documents that could cause performance issues
   const maxSize = 100_000
   if (code.length > maxSize) {
-    return E.left(makeParseError.documentTooLarge(maxSize, code.length))
+    return Ei.left(makeParseError.documentTooLarge(maxSize, code.length))
   }
 
   // Step 1: Parse with tree-sitter
@@ -559,7 +560,7 @@ export async function parseGraphQLWithTreeSitterEither(
   try {
     parser = await getParser()
   } catch (error) {
-    return E.left(makeParseError.parserInitError(
+    return Ei.left(makeParseError.parserInitError(
       error instanceof Error ? error.message : 'Failed to initialize parser',
     ))
   }
@@ -567,7 +568,7 @@ export async function parseGraphQLWithTreeSitterEither(
   const tree = parser.parse(code)
 
   if (!tree) {
-    return E.left(makeParseError.treeSitterError('Tree-sitter failed to parse GraphQL code'))
+    return Ei.left(makeParseError.treeSitterError('Tree-sitter failed to parse GraphQL code'))
   }
 
   try {
@@ -577,9 +578,9 @@ export async function parseGraphQLWithTreeSitterEither(
     // Step 3: Add error hint tokens after invalid fields
     const tokensWithHints = addErrorHintTokens(tokens, code, annotations, referenceEnabled)
 
-    return E.right(tokensWithHints)
+    return Ei.right(tokensWithHints)
   } catch (error) {
-    return E.left(makeParseError.treeSitterError(
+    return Ei.left(makeParseError.treeSitterError(
       error instanceof Error ? error.message : 'Failed to process tokens',
     ))
   } finally {
@@ -605,7 +606,7 @@ export async function parseGraphQLWithTreeSitter(
 ): Promise<GraphQLToken[]> {
   const result = await parseGraphQLWithTreeSitterEither(code, annotations, schema, referenceEnabled)
 
-  if (E.isLeft(result)) {
+  if (Ei.isLeft(result)) {
     const error = result.left
     switch (error._tag) {
       case 'InvalidInput':
@@ -646,11 +647,16 @@ async function initializeTreeSitter(): Promise<WebTreeSitter.Parser> {
     if (isNode) {
       // Node.js environment (tests)
       const fs = await import('node:fs/promises')
-      const path = await import('node:path')
 
       // Find the actual WASM files in node_modules
-      const treeSitterWasmPath = path.join(process.cwd(), 'node_modules/web-tree-sitter/tree-sitter.wasm')
-      const graphqlWasmPath = path.join(process.cwd(), 'node_modules/tree-sitter-graphql-grammar-wasm/grammar.wasm')
+      const treeSitterWasmPath = FsLoc.join(
+        Pro.cwd(),
+        FsLoc.fromString('node_modules/web-tree-sitter/tree-sitter.wasm'),
+      )
+      const graphqlWasmPath = FsLoc.join(
+        Pro.cwd(),
+        FsLoc.fromString('node_modules/tree-sitter-graphql-grammar-wasm/grammar.wasm'),
+      )
 
       await WebTreeSitter.Parser.init({
         locateFile: (filename: string) => {
@@ -662,7 +668,7 @@ async function initializeTreeSitter(): Promise<WebTreeSitter.Parser> {
       })
 
       const parser = new WebTreeSitter.Parser()
-      const wasmBuffer = await fs.readFile(graphqlWasmPath)
+      const wasmBuffer = await fs.readFile(FsLoc.encodeSync(graphqlWasmPath))
       const GraphQL = await WebTreeSitter.Language.load(new Uint8Array(wasmBuffer))
       parser.setLanguage(GraphQL)
 

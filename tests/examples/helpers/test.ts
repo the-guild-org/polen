@@ -1,3 +1,5 @@
+import { Ef } from '#dep/effect'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import type { PackageManager } from '@wollybeard/kit'
 import { test as base } from 'playwright/test'
 import { type ProcessOutput } from 'zx'
@@ -22,11 +24,13 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   polenLink: [undefined, { option: true, scope: `worker` }],
   exampleName: [`hive`, { option: true, scope: `worker` }],
   project: [async ({ exampleName, polenLink }, use) => {
-    const project = await ExampleController.create({
-      exampleName,
-      polenLink,
-      debugMode: true,
-    })
+    const project = await Ef.runPromise(
+      ExampleController.create({
+        exampleName,
+        polenLink,
+        debugMode: true,
+      }).pipe(Ef.provide(NodeFileSystem.layer))
+    )
     await use(project)
   }, { scope: `worker` }],
   runDev: async ({ project }, use) => {

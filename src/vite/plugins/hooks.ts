@@ -1,6 +1,9 @@
 import { Api } from '#api/$'
+import { Ef, Op } from '#dep/effect'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { polenVirtual } from '#vite/vi'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import type * as Vite from 'vite'
 
 export const viProjectHooks = polenVirtual([`project`, `hooks`], { allowPluginProcessing: true })
@@ -18,31 +21,22 @@ export const Hooks = ({ config }: Options): Vite.Plugin => {
     ...ViteVirtual.IdentifiedLoader.toHooks({
       identifier: viProjectHooks,
       async loader() {
-        const fs = await import('node:fs/promises')
-        const path = await import('node:path')
+        // Framework boundary: Vite expects Promise return type
+        const hooksPathOption = await Ef.runPromise(
+          Fs.findFirstUnderDir(config.paths.project.rootDir)([
+            FsLoc.fromString('hooks.ts'),
+            FsLoc.fromString('hooks.tsx'),
+          ]).pipe(Ef.provide(NodeFileSystem.layer)),
+        )
 
-        const hooksPathTs = path.join(config.paths.project.rootDir, 'hooks.ts')
-        const hooksPathTsx = path.join(config.paths.project.rootDir, 'hooks.tsx')
-
-        let hooksPath = null
-        try {
-          await fs.access(hooksPathTsx)
-          hooksPath = hooksPathTsx
-        } catch {
-          try {
-            await fs.access(hooksPathTs)
-            hooksPath = hooksPathTs
-          } catch {
-            // No hooks file found
-          }
-        }
+        const hooksPath = Op.getOrUndefined(hooksPathOption)
 
         if (!hooksPath) {
           // Return an empty module if no hooks file exists
           return `// No hooks file found`
         }
 
-        return `export * from '${hooksPath}'`
+        return `export * from '${FsLoc.encodeSync(hooksPath)}'`
       },
     }),
   }

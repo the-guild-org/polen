@@ -3,9 +3,9 @@
  */
 
 import { Api } from '#api/$'
+import { Ef } from '#dep/effect'
 import { toViteUserConfig } from '#vite/config'
 import { NodeFileSystem } from '@effect/platform-node'
-import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
@@ -183,10 +183,10 @@ export default defineConfig({
 
 // GraphQL Document Tooltips Integration Tests
 test.skip('should show tooltip on hover after delay', async ({ page, vite, project }) => {
-  await project.layout.set(createTestFixture())
-  const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
-      Effect.provide(NodeFileSystem.layer),
+  await project.dir.set(createTestFixture())
+  const polenConfig = await Ef.runPromise(
+    Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+      Ef.provide(NodeFileSystem.layer),
     ),
   )
   const viteConfig = toViteUserConfig(polenConfig)

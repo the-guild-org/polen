@@ -1,6 +1,6 @@
 // TODO: Review and replace inline styles with Tailwind classes
 import type { HeroCallToAction } from '#api/config/home'
-import { A } from '#dep/effect'
+import { Ar } from '#dep/effect'
 import { Catalog, CatalogStatistics } from 'graphql-kit'
 import * as React from 'react'
 import { Link } from 'react-router'
@@ -57,7 +57,7 @@ export const Hero: React.FC<HeroProps> = ({
   // Process callToActions configuration
   let ctaButtons: HeroCallToAction[]
   if (callToActions) {
-    if (A.isArray(callToActions)) {
+    if (Ar.isArray(callToActions)) {
       ctaButtons = [...callToActions]
     } else {
       const ctaConfig = callToActions as {

@@ -7,18 +7,18 @@ describe('ExamplesConfig', () => {
   const decodeExamplesConfig = S.decodeSync(ExamplesConfig)
 
   describe('ExampleSelection', () => {
+    type DisplayInput = { input: 'all' | 'none' | { include: string[] } | { exclude: string[] } }
+    type DisplayOutput = { expected: 'all' | 'none' | { include: string[] } | { exclude: string[] } }
+
     // dprint-ignore
-    Test.Table.suite<{
-      input: 'all' | 'none' | { include: string[] } | { exclude: string[] }
-      expected: 'all' | 'none' | { include: string[] } | { exclude: string[] }
-    }>('display value acceptance', [
-      { name: 'all literal',      input: 'all',                                    expected: 'all' },
-      { name: 'none literal',     input: 'none',                                   expected: 'none' },
-      { name: 'include pattern',  input: { include: ['example1', 'example2'] },   expected: { include: ['example1', 'example2'] } },
-      { name: 'exclude pattern',  input: { exclude: ['example3'] },               expected: { exclude: ['example3'] } },
-    ], ({ input, expected }) => {
-      const result = decodeExamplesConfig({ display: input })
-      expect(result.display).toEqual(expected)
+    Test.Table.suite<DisplayInput, DisplayOutput>('display value acceptance', [
+      { n: 'all literal',      i: { input: 'all' },                                    o: { expected: 'all' } },
+      { n: 'none literal',     i: { input: 'none' },                                   o: { expected: 'none' } },
+      { n: 'include pattern',  i: { input: { include: ['example1', 'example2'] } },   o: { expected: { include: ['example1', 'example2'] } } },
+      { n: 'exclude pattern',  i: { input: { exclude: ['example3'] } },               o: { expected: { exclude: ['example3'] } } },
+    ], ({ i, o }) => {
+      const result = decodeExamplesConfig({ display: i.input })
+      expect(result.display).toEqual(o.expected)
     })
 
     test('undefined display is omitted', () => {
@@ -56,17 +56,18 @@ describe('ExamplesConfig', () => {
       expect(result).toEqual(input)
     })
 
+    type FullConfigInput = { config: { display?: 'all' | 'none' | { include: string[] } | { exclude: string[] } } }
+    type FullConfigOutput = {}
+
     // dprint-ignore
-    Test.Table.suite<{
-      config: { display?: 'all' | 'none' | { include: string[] } | { exclude: string[] } }
-    }>('full configuration', [
-      { name: 'include pattern',  config: { display: { include: ['get-user', 'create-post'] } } },
-      { name: 'exclude pattern',  config: { display: { exclude: ['advanced-filtering'] } } },
-      { name: 'all examples',     config: { display: 'all' } },
-      { name: 'no examples',      config: { display: 'none' } },
-    ], ({ config }) => {
-      const result = decodeExamplesConfig(config)
-      expect(result.display).toEqual(config.display)
+    Test.Table.suite<FullConfigInput, FullConfigOutput>('full configuration', [
+      { n: 'include pattern',  i: { config: { display: { include: ['get-user', 'create-post'] } } }, o: {} },
+      { n: 'exclude pattern',  i: { config: { display: { exclude: ['advanced-filtering'] } } },      o: {} },
+      { n: 'all examples',     i: { config: { display: 'all' } },                                     o: {} },
+      { n: 'no examples',      i: { config: { display: 'none' } },                                    o: {} },
+    ], ({ i, o }) => {
+      const result = decodeExamplesConfig(i.config)
+      expect(result.display).toEqual(i.config.display)
     })
   })
 

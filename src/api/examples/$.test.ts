@@ -1,18 +1,22 @@
+import { Ef } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { Test } from '@wollybeard/kit/test'
-import { Effect, HashMap } from 'effect'
+import { HashMap } from 'effect'
 import { buildSchema } from 'graphql'
 import { Catalog, Document, Schema, Version } from 'graphql-kit'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Examples } from './$.js'
 
 describe('Example', () => {
+  type ValidationInput = { example: Examples.Example.Example }
+  type ValidationOutput = { expected: boolean }
+
   // dprint-ignore
-  Test.Table.suite<{ example: Examples.Example.Example; expected: boolean }>('validation', [
-    { name: 'validates unversioned example', example: Examples.Example.Example.make({ name: 'list-users', path: 'examples/list-users.graphql', document: Document.Unversioned.make({ document: 'query ListUsers { users { id name } }' }) }), expected: true },
-    { name: 'validates versioned example',   example: Examples.Example.Example.make({ name: 'list-users', path: 'examples', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query ListUsers { users { id name } }'], [Version.fromString('v2'), 'query ListUsers { users { id email name } }']) }) }), expected: true },
-  ], ({ example, expected }) => {
-    expect(Examples.Example.is(example)).toBe(expected)
+  Test.Table.suite<ValidationInput, ValidationOutput>('validation', [
+    { n: 'validates unversioned example', i: { example: Examples.Example.Example.make({ name: 'list-users', path: 'examples/list-users.graphql', document: Document.Unversioned.make({ document: 'query ListUsers { users { id name } }' }) }) }, o: { expected: true } },
+    { n: 'validates versioned example',   i: { example: Examples.Example.Example.make({ name: 'list-users', path: 'examples', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query ListUsers { users { id name } }'], [Version.fromString('v2'), 'query ListUsers { users { id email name } }']) }) }) }, o: { expected: true } },
+  ], ({ i, o }) => {
+    expect(Examples.Example.is(i.example)).toBe(o.expected)
   })
 })
 
@@ -25,25 +29,28 @@ describe('ExampleScanner', () => {
     vi.clearAllMocks()
   })
 
+  type ScanningInput = { files: string[]; fileContents: Record<string, string> }
+  type ScanningOutput = { expectedExamples: number; expectedDiagnostics: number }
+
   // dprint-ignore
-  Test.Table.suite<{ files: string[]; fileContents: Record<string, string>; expectedExamples: number; expectedDiagnostics: number }>('scanning', [
-    { name: 'scans unversioned example', skip: true, files: ['get-users.graphql'],                         fileContents: { 'get-users.graphql': 'query GetUsers { users { id } }' },                                                                                 expectedExamples: 1, expectedDiagnostics: 0 },
-    { name: 'scans versioned examples',  skip: true, files: ['users/v1.graphql', 'users/v2.graphql'],    fileContents: { 'users/v1.graphql': 'query V1 { users { id } }', 'users/v2.graphql': 'query V2 { users { id email } }' },                                expectedExamples: 1, expectedDiagnostics: 0 },
-    { name: 'detects duplicate content', skip: true, files: ['users/v1.graphql', 'users/v2.graphql'],    fileContents: { 'users/v1.graphql': 'query Users { users { id } }', 'users/v2.graphql': 'query Users { users { id } }' },                                expectedExamples: 1, expectedDiagnostics: 1 },
-  ], async ({ files, fileContents, expectedExamples, expectedDiagnostics }) => {
+  Test.Table.suite<ScanningInput, ScanningOutput>('scanning', [
+    { n: 'scans unversioned example', skip: true, i: { files: ['get-users.graphql'], fileContents: { 'get-users.graphql': 'query GetUsers { users { id } }' } }, o: { expectedExamples: 1, expectedDiagnostics: 0 } },
+    { n: 'scans versioned examples',  skip: true, i: { files: ['users/v1.graphql', 'users/v2.graphql'], fileContents: { 'users/v1.graphql': 'query V1 { users { id } }', 'users/v2.graphql': 'query V2 { users { id email } }' } }, o: { expectedExamples: 1, expectedDiagnostics: 0 } },
+    { n: 'detects duplicate content', skip: true, i: { files: ['users/v1.graphql', 'users/v2.graphql'], fileContents: { 'users/v1.graphql': 'query Users { users { id } }', 'users/v2.graphql': 'query Users { users { id } }' } }, o: { expectedExamples: 1, expectedDiagnostics: 1 } },
+  ], async ({ i, o }) => {
     mockFs.readFileString.mockImplementation((path: string) => {
       const fileName = path.split('/').pop()!
-      const content = (fileContents )[files.find(f => f.endsWith(fileName!))!]
-      return Effect.succeed(content)
+      const content = (i.fileContents )[i.files.find(f => f.endsWith(fileName!))!]
+      return Ef.succeed(content)
     })
 
     // Skip this test for now - needs proper FileSystem mock setup
-    // const result = await Effect.runPromise(
+    // const result = await Ef.runPromise(
     //   Examples.scan({
     //     dir: '/examples',
     //     schemaVersions: ['v1', 'v2'],
     //     files,
-    //   }).pipe(Effect.provide({ FileSystem: mockFs } ) ),
+    //   }).pipe(Ef.provide({ FileSystem: mockFs } ) ),
     // )
 
     // expect((result ).examples).toHaveLength(expectedExamples)
@@ -59,14 +66,17 @@ describe('ExampleValidator', () => {
     }),
   })
 
+  type ValidationInput2 = { examples: Examples.Example.Example[] }
+  type ValidationOutput2 = { expectedErrors: number }
+
   // dprint-ignore
-  Test.Table.suite<{ examples: Examples.Example.Example[]; expectedErrors: number }>('validation', [
-    { name: 'validates unversioned example', examples: [Examples.Example.Example.make({ name: 'test', path: 'test.graphql', document: Document.Unversioned.make({ document: 'query Test { test }' }) })],                                                                                                                     expectedErrors: 0 },
-    { name: 'validates versioned example',   examples: [Examples.Example.Example.make({ name: 'test', path: 'test', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query Test { test }'], [Version.fromString('v2'), 'query Test { test { id } }']) }) })],                        expectedErrors: 0 },
-  ], ({ examples, expectedErrors }) => {
+  Test.Table.suite<ValidationInput2, ValidationOutput2>('validation', [
+    { n: 'validates unversioned example', i: { examples: [Examples.Example.Example.make({ name: 'test', path: 'test.graphql', document: Document.Unversioned.make({ document: 'query Test { test }' }) })] }, o: { expectedErrors: 0 } },
+    { n: 'validates versioned example',   i: { examples: [Examples.Example.Example.make({ name: 'test', path: 'test', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query Test { test }'], [Version.fromString('v2'), 'query Test { test { id } }']) }) })] }, o: { expectedErrors: 0 } },
+  ], ({ i, o }) => {
     // Note: This would need a real GraphQL schema to test properly
     // For now just ensure the function accepts the new Example types
-    const diagnostics = Examples.validateExamples(examples, mockCatalog)
+    const diagnostics = Examples.validateExamples(i.examples, mockCatalog)
     expect(diagnostics).toBeDefined()
   })
 })
@@ -90,15 +100,18 @@ describe('filterExamplesBySelection', () => {
     }),
   ]
 
+  type FilterInput = { selection: any }
+  type FilterOutput = { expected: string[] }
+
   // dprint-ignore
-  Test.Table.suite<{ selection: any; expected: string[] }>('selection filtering', [
-    { name: 'undefined returns all',     selection: undefined,                expected: ['a', 'b', 'c'] },
-    { name: 'all returns all',           selection: 'all',                    expected: ['a', 'b', 'c'] },
-    { name: 'none returns empty',        selection: 'none',                   expected: [] },
-    { name: 'include filters',           selection: { include: ['a', 'b'] }, expected: ['a', 'b'] },
-  ], ({ selection, expected }) => {
-    const result = Examples.filterExamplesBySelection(examples, selection )
-    expect(result.map(e => e.name)).toEqual(expected)
+  Test.Table.suite<FilterInput, FilterOutput>('selection filtering', [
+    { n: 'undefined returns all',     i: { selection: undefined },                o: { expected: ['a', 'b', 'c'] } },
+    { n: 'all returns all',           i: { selection: 'all' },                    o: { expected: ['a', 'b', 'c'] } },
+    { n: 'none returns empty',        i: { selection: 'none' },                   o: { expected: [] } },
+    { n: 'include filters',           i: { selection: { include: ['a', 'b'] } }, o: { expected: ['a', 'b'] } },
+  ], ({ i, o }) => {
+    const result = Examples.filterExamplesBySelection(examples, i.selection )
+    expect(result.map(e => e.name)).toEqual(o.expected)
   })
 })
 

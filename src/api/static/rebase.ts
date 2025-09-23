@@ -1,9 +1,7 @@
-import { O } from '#dep/effect'
-import { TinyGlobby } from '#dep/tiny-globby/index'
+import { Ef, Op } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
-import { NodeFileSystem } from '@effect/platform-node'
-import { Path } from '@wollybeard/kit'
-import { Data, Effect } from 'effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
+import { Data } from 'effect'
 import { buildManifest, type PolenBuildManifest } from './manifest.js'
 
 // Custom error types
@@ -32,19 +30,19 @@ export type RebasePlan = RebaseOverwritePlan | RebaseCopyPlan
 export interface RebaseOverwritePlan {
   changeMode: `mutate`
   newBasePath: string
-  sourcePath: string
+  sourcePath: FsLoc.AbsDir.AbsDir
 }
 
 export interface RebaseCopyPlan {
   changeMode: `copy`
   newBasePath: string
-  sourcePath: string
-  targetPath: string
+  sourcePath: FsLoc.AbsDir.AbsDir
+  targetPath: FsLoc.AbsDir.AbsDir
 }
 
 const validateBasePath = (path: string) =>
-  Effect.succeed(path).pipe(
-    Effect.filterOrFail(
+  Ef.succeed(path).pipe(
+    Ef.filterOrFail(
       isValidUrlPath,
       (path) =>
         new InvalidBasePathError({
@@ -62,18 +60,16 @@ const validateBasePath = (path: string) =>
  */
 export const rebase = (
   plan: RebasePlan,
-): Effect.Effect<void, RebaseError, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-
+): Ef.Effect<void, RebaseError, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
     // 1. Validate source is a Polen build
     const manifest = yield* buildManifest.read(plan.sourcePath).pipe(
-      Effect.flatMap(O.match({
+      Ef.flatMap(Op.match({
         onNone: () =>
-          Effect.fail(
-            new ManifestNotFoundError({ path: plan.sourcePath }),
+          Ef.fail(
+            new ManifestNotFoundError({ path: FsLoc.encodeSync(plan.sourcePath) }),
           ),
-        onSome: Effect.succeed,
+        onSome: Ef.succeed,
       })),
     )
 
@@ -81,14 +77,14 @@ export const rebase = (
     yield* validateBasePath(plan.newBasePath)
 
     // 3. Handle copy vs mutate
-    let workingPath: string
+    let workingPath: FsLoc.AbsDir.AbsDir
     if (plan.changeMode === `copy`) {
-      const targetExists = yield* fs.exists(plan.targetPath)
+      const targetExists = yield* Fs.exists(plan.targetPath)
       if (targetExists) {
         const isEmpty = yield* isEmptyDirectory(plan.targetPath)
         if (!isEmpty) {
-          return yield* Effect.fail(
-            new TargetExistsError({ path: plan.targetPath }),
+          return yield* Ef.fail(
+            new TargetExistsError({ path: FsLoc.encodeSync(plan.targetPath) }),
           )
         }
       }
@@ -113,43 +109,48 @@ export const rebase = (
 //
 //
 
-const isEmptyDirectory = (path: string): Effect.Effect<boolean, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const entries = yield* fs.readDirectory(path).pipe(
-      Effect.mapError((error) => new Error(`Failed to read directory: ${error}`)),
+const isEmptyDirectory = (path: FsLoc.AbsDir.AbsDir): Ef.Effect<boolean, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
+    const entries = yield* Fs.read(path).pipe(
+      Ef.mapError((error) => new Error(`Failed to read directory: ${error}`)),
     )
     return entries.length === 0
   })
 
-const copyDirectory = (from: string, to: string): Effect.Effect<void, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-
+const copyDirectory = (
+  from: FsLoc.AbsDir.AbsDir,
+  to: FsLoc.AbsDir.AbsDir,
+): Ef.Effect<void, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
     // Ensure target directory exists
-    yield* fs.makeDirectory(to, { recursive: true }).pipe(
-      Effect.mapError((error) => new Error(`Failed to create target directory: ${error}`)),
+    yield* Fs.write(to, undefined, { recursive: true }).pipe(
+      Ef.mapError((error) => new Error(`Failed to create target directory: ${error}`)),
     )
 
     // Read source directory
-    const entries = yield* fs.readDirectory(from).pipe(
-      Effect.mapError((error) => new Error(`Failed to read source directory: ${error}`)),
+    const entries = yield* Fs.read(from).pipe(
+      Ef.mapError((error) => new Error(`Failed to read source directory: ${error}`)),
     )
 
     // Copy each entry in parallel
-    yield* Effect.all(
-      entries.map(entry => {
-        const sourcePath = Path.join(from, entry)
-        const targetPath = Path.join(to, entry)
+    yield* Ef.all(
+      entries.map((entry: FsLoc.Groups.Abs.Abs) => {
+        // Build target path by joining with the entry's name
+        const entryName = FsLoc.name(entry)
 
-        return fs.stat(sourcePath).pipe(
-          Effect.flatMap(fileInfo =>
-            fileInfo.type === 'Directory'
-              ? copyDirectory(sourcePath, targetPath)
-              : fs.copyFile(sourcePath, targetPath)
-          ),
-          Effect.mapError((error) => new Error(`Failed to copy ${sourcePath}: ${error}`)),
-        )
+        // Check if entry is a directory or file using the tag
+        if (entry._tag === 'LocAbsDir') {
+          // It's a directory - recurse
+          const targetDir = FsLoc.join(to, FsLoc.RelDir.decodeSync(entryName + '/'))
+          return copyDirectory(entry as FsLoc.AbsDir.AbsDir, targetDir as FsLoc.AbsDir.AbsDir)
+        } else {
+          // It's a file - copy it
+          const targetFile = FsLoc.join(to, FsLoc.RelFile.decodeSync(entryName))
+          return Fs.copy(
+            entry as FsLoc.AbsFile.AbsFile,
+            targetFile as FsLoc.AbsFile.AbsFile,
+          )
+        }
       }),
       { concurrency: 'unbounded' },
     )
@@ -167,41 +168,37 @@ const isValidUrlPath = (path: string): boolean => {
 }
 
 const updateHtmlFiles = (
-  buildPath: string,
+  buildPath: FsLoc.AbsDir.AbsDir,
   oldBasePath: string,
   newBasePath: string,
-): Effect.Effect<void, Error, FileSystem.FileSystem> =>
+): Ef.Effect<void, Error, FileSystem.FileSystem> =>
   findHtmlFiles(buildPath).pipe(
-    Effect.flatMap(htmlFiles =>
-      Effect.all(
+    Ef.flatMap(htmlFiles =>
+      Ef.all(
         htmlFiles.map(htmlFile => updateHtmlFile(htmlFile, oldBasePath, newBasePath)),
         { concurrency: 'unbounded' },
       )
     ),
-    Effect.asVoid,
+    Ef.asVoid,
   )
 
-const findHtmlFiles = (dir: string): Effect.Effect<string[], Error, never> =>
-  Effect.tryPromise({
-    try: () =>
-      TinyGlobby.glob(`**/*.html`, {
-        absolute: true,
-        cwd: dir,
-        onlyFiles: true,
-      }),
-    catch: (error) => new Error(`Failed to find HTML files: ${error}`),
+const findHtmlFiles = (dir: FsLoc.AbsDir.AbsDir) =>
+  Fs.glob(`**/*.html`, {
+    absolute: true,
+    cwd: dir,
+    onlyFiles: true,
   })
 
 const updateHtmlFile = (
-  filePath: string,
+  filePath: FsLoc.AbsFile.AbsFile,
   oldBasePath: string,
   newBasePath: string,
-): Effect.Effect<void, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
+): Ef.Effect<void, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
+    const filePathStr = FsLoc.encodeSync(filePath)
 
-    const content = yield* fs.readFileString(filePath).pipe(
-      Effect.mapError((error) => new Error(`Could not read HTML file ${filePath}: ${error}`)),
+    const content = yield* Fs.readString(filePath).pipe(
+      Ef.mapError((error) => new Error(`Could not read HTML file ${filePathStr}: ${error}`)),
     )
 
     // Simple regex-based approach to update base tag
@@ -224,34 +221,34 @@ const updateHtmlFile = (
           + `\n  <base href="${newBasePath}">`
           + content.slice(insertPosition)
       } else {
-        return yield* Effect.fail(
+        return yield* Ef.fail(
           new HtmlProcessingError({
-            filePath,
+            filePath: filePathStr,
             reason: 'Could not find <head> tag in HTML file',
           }),
         )
       }
     }
 
-    yield* fs.writeFileString(filePath, updatedContent).pipe(
-      Effect.mapError((error) => new Error(`Failed to write HTML file ${filePath}: ${error}`)),
+    yield* Fs.write(filePath, updatedContent).pipe(
+      Ef.mapError((error) => new Error(`Failed to write HTML file ${filePathStr}: ${error}`)),
     )
   })
 
 const updateManifest = (
-  buildPath: string,
+  buildPath: FsLoc.AbsDir.AbsDir,
   updates: Partial<PolenBuildManifest>,
-): Effect.Effect<void, ManifestNotFoundError | Error, FileSystem.FileSystem> =>
+): Ef.Effect<void, ManifestNotFoundError | Error, FileSystem.FileSystem> =>
   buildManifest.read(buildPath).pipe(
-    Effect.flatMap(O.match({
+    Ef.flatMap(Op.match({
       onNone: () =>
-        Effect.fail(
-          new ManifestNotFoundError({ path: buildPath }),
+        Ef.fail(
+          new ManifestNotFoundError({ path: FsLoc.encodeSync(buildPath) }),
         ),
       onSome: (currentManifest) => {
         const updatedManifest = { ...currentManifest, ...updates }
         return buildManifest.write(updatedManifest, buildPath).pipe(
-          Effect.mapError((error) =>
+          Ef.mapError((error) =>
             error instanceof Error ? error : new Error(`Failed to write manifest: ${String(error)}`)
           ),
         )

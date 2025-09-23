@@ -23,4 +23,4 @@ export const DiagnosticMissingVersions = Diagnostic.create({
 
 export const makeDiagnosticMissingVersions = Diagnostic.createMake(DiagnosticMissingVersions)
 
-export type DiagnosticMissingVersions = S.Schema.Type<typeof DiagnosticMissingVersions>
+export type DiagnosticMissingVersions = typeof DiagnosticMissingVersions.Type

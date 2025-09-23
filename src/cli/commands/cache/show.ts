@@ -1,8 +1,9 @@
 import { Api } from '#api/$'
-import { O } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Command, Options } from '@effect/cli'
 import { NodeFileSystem } from '@effect/platform-node'
-import { Effect } from 'effect'
+import { FsLoc } from '@wollybeard/kit'
 import { allowGlobalParameter } from '../../_/parameters.js'
 
 const depth = Options.integer('depth').pipe(
@@ -29,12 +30,12 @@ const renderTree = (nodes: Api.Cache.TreeNode[], prefix = '', isLast = true): st
     const extension = isLastNode ? '  ' : '│ '
 
     let line = `${prefix}${connector} ${node.name}`
-    if (node.type === 'file' && O.isSome(node.size)) {
+    if (node.type === 'file' && Op.isSome(node.size)) {
       line += ` (${formatBytes(node.size.value)})`
     }
     lines.push(line)
 
-    if (O.isSome(node.children) && node.children.value.length > 0) {
+    if (Op.isSome(node.children) && node.children.value.length > 0) {
       const childLines = renderTree(node.children.value, prefix + extension, isLastNode)
       lines.push(...childLines)
     }
@@ -50,24 +51,27 @@ export const cacheShow = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ depth, allowGlobal }) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       // Get cache info
       const info = yield* Api.Cache.info({ depth }).pipe(
-        Effect.provide(NodeFileSystem.layer),
+        Ef.provide(NodeFileSystem.layer),
       )
 
-      console.log(`Root: ${info.rootPath}`)
+      const rootPathStr = FsLoc.encodeSync(info.rootPath)
+      console.log(`Root: ${rootPathStr}`)
       console.log()
 
       // Development assets
-      console.log(`Development assets: ${info.developmentAssets.path.replace(info.rootPath + '/', '')}`)
+      const devAssetsPathStr = FsLoc.encodeSync(info.developmentAssets.path)
+      const devAssetsRelative = devAssetsPathStr.replace(rootPathStr, '').replace(/^\//, '')
+      console.log(`Development assets: ${devAssetsRelative}`)
       if (info.developmentAssets.exists) {
-        const size = O.isSome(info.developmentAssets.size)
+        const size = Op.isSome(info.developmentAssets.size)
           ? ` (${formatBytes(info.developmentAssets.size.value)})`
           : ''
         console.log(`  Status: exists${size}`)
 
-        if (O.isSome(info.developmentAssets.tree) && info.developmentAssets.tree.value.length > 0) {
+        if (Op.isSome(info.developmentAssets.tree) && info.developmentAssets.tree.value.length > 0) {
           console.log('  Contents:')
           const treeLines = renderTree(info.developmentAssets.tree.value, '    ')
           treeLines.forEach(line => console.log(line))
@@ -81,12 +85,12 @@ export const cacheShow = Command.make(
       // Vite cache
       console.log('Vite:')
       if (info.vite.exists) {
-        const size = O.isSome(info.vite.size)
+        const size = Op.isSome(info.vite.size)
           ? ` (${formatBytes(info.vite.size.value)})`
           : ''
         console.log(`  Status: exists${size}`)
 
-        if (O.isSome(info.vite.optimizedDependencies) && info.vite.optimizedDependencies.value.length > 0) {
+        if (Op.isSome(info.vite.optimizedDependencies) && info.vite.optimizedDependencies.value.length > 0) {
           const deps = info.vite.optimizedDependencies.value
           const showing = Math.min(10, deps.length)
           const more = deps.length - showing

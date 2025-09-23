@@ -51,7 +51,7 @@ const versionedCatalogForTests = Catalog.Versioned.make({
 
 test.for([
   {
-    name: 'valid query returns no diagnostics',
+    n: 'valid query returns no diagnostics',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -62,7 +62,7 @@ test.for([
     expectedDiagnostics: 0,
   },
   {
-    name: 'field that does not exist',
+    n: 'field that does not exist',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -74,7 +74,7 @@ test.for([
     errorContains: 'Cannot query field',
   },
   {
-    name: 'missing required argument',
+    n: 'missing required argument',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -86,7 +86,7 @@ test.for([
     errorContains: 'argument "id" of type "ID!" is required',
   },
   {
-    name: 'invalid GraphQL syntax',
+    n: 'invalid GraphQL syntax',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -98,7 +98,7 @@ test.for([
     messageContains: 'invalid GraphQL syntax',
   },
   {
-    name: 'versioned example validates all versions',
+    n: 'versioned example validates all versions',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -113,7 +113,7 @@ test.for([
     version: 'v2',
   },
   {
-    name: 'multiple examples with mixed validity',
+    n: 'multiple examples with mixed validity',
     examples: [
       Example.make({
         name: 'valid',

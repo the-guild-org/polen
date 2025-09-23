@@ -1,11 +1,11 @@
 import { Api } from '#api/$'
-import { O } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import consola from 'consola'
-import { Effect } from 'effect'
 import { isInterfaceType, isObjectType } from 'graphql'
 import { Catalog, SchemaDefinition, Version } from 'graphql-kit'
 
@@ -29,26 +29,26 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
       routes.push('/changelog')
 
       // Check if schema exists using configured sources
-      const schemaExists = await Effect.runPromise(
+      const schemaExists = await Ef.runPromise(
         Api.Schema.hasSchema(config).pipe(
-          Effect.provide(NodeFileSystem.layer),
+          Ef.provide(NodeFileSystem.layer),
         ),
       )
 
       if (schemaExists) {
         // Load catalog data
-        const catalogData = await Effect.runPromise(
+        const catalogData = await Ef.runPromise(
           Api.Schema.loadOrThrow(config).pipe(
-            Effect.provide(NodeFileSystem.layer),
+            Ef.provide(NodeFileSystem.layer),
           ),
         )
 
-        if (O.isSome(catalogData)) {
+        if (Op.isSome(catalogData)) {
           const catalog = catalogData.value.data
           routes.push('/reference')
 
           // Process catalog using fold
-          if (O.isSome(catalog)) {
+          if (Op.isSome(catalog)) {
             Catalog.fold(
               (versioned) => processVersionedCatalog(versioned, routes),
               (unversioned) => processUnversionedCatalog(unversioned, routes),
@@ -58,10 +58,10 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
       }
 
       // Add arbitrary page routes
-      const pagesScaleResult = await Effect.runPromise(
+      const pagesScaleResult = await Ef.runPromise(
         Api.Content.scan({
           dir: config.paths.project.absolute.pages,
-        }).pipe(Effect.provide(NodeFileSystem.layer)),
+        }).pipe(Ef.provide(NodeFileSystem.layer)),
       )
 
       if (pagesScaleResult.list.length > 0) {
@@ -74,7 +74,7 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
       }
 
       // Write manifest using the new Routes API
-      await Effect.runPromise(
+      await Ef.runPromise(
         Api.Routes.Manifest.write(
           {
             version: `1.0.0`,
@@ -84,7 +84,7 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
           },
           config.paths.project.absolute.build.assets.root,
         ).pipe(
-          Effect.provide(NodeFileSystem.layer),
+          Ef.provide(NodeFileSystem.layer),
         ),
       )
 
@@ -98,7 +98,7 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
 }
 
 function processVersionedCatalog(
-  catalog: Catalog.Versioned.Versioned,
+  catalog: Catalog.Versioned,
   routes: string[],
 ): void {
   for (const schema of Catalog.Versioned.getAll(catalog)) {
@@ -116,7 +116,7 @@ function processVersionedCatalog(
 }
 
 function processUnversionedCatalog(
-  catalog: Catalog.Unversioned.Unversioned,
+  catalog: Catalog.Unversioned,
   routes: string[],
 ): void {
   // Process schema definition if it exists

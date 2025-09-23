@@ -1,6 +1,6 @@
+import { Ef } from '#dep/effect'
 import { Command } from '@effect/cli'
 import { consola } from 'consola'
-import { Effect } from 'effect'
 
 // Import subcommands
 import { configCreate } from './config/create.js'
@@ -10,7 +10,7 @@ const configDefault = Command.make(
   'config',
   {},
   () =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       consola.info('Available config commands:')
       console.log('')
       console.log('  polen config create    Create a Polen configuration file')

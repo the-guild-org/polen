@@ -1,4 +1,4 @@
-import { A, O } from '#dep/effect'
+import { Ar, Op } from '#dep/effect'
 import { Predicate } from 'effect'
 import { Grafaid, Schema, Version } from 'graphql-kit'
 
@@ -46,12 +46,12 @@ export const createReferenceVersionPath = (version?: Version.Version): string =>
 export const joinSegmentsAndPaths = (
   ...segmentsOrPaths: (string | undefined | null | (string | null | undefined)[])[]
 ): string => {
-  const segments = A.filterMap(
+  const segments = Ar.filterMap(
     segmentsOrPaths.flat(),
     (segment) => {
-      if (!Predicate.isNotNullable(segment)) return O.none()
+      if (!Predicate.isNotNullable(segment)) return Op.none()
       const cleaned = segment.replace(/^\//, '').replace(/\/$/, '')
-      return cleaned ? O.some(cleaned) : O.none()
+      return cleaned ? Op.some(cleaned) : Op.none()
     },
   )
   const path = '/' + segments.join('/')

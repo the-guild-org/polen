@@ -5,7 +5,8 @@ import * as Catalog from '#api/examples/schemas/catalog'
 import { Example } from '#api/examples/schemas/example/$'
 import { generateExampleTypes } from '#api/examples/type-generator'
 import { createTypeUsageIndex } from '#api/examples/type-usage-indexer'
-import { O } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -13,8 +14,7 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Path, Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { FsLoc, Str } from '@wollybeard/kit'
 import type * as Vite from 'vite'
 import { polenVirtual } from '../vi.js'
 
@@ -43,21 +43,21 @@ export const Examples = ({
   reader: AssetReader<ScanResult, Error, FileSystem.FileSystem>
 } => {
   const debug = debugPolen.sub(`vite-examples`)
-  const examplesDir = Path.join(config.paths.project.rootDir, 'examples')
+  const examplesDir = FsLoc.join(config.paths.project.rootDir, FsLoc.fromString('examples/'))
 
   // Track last generated example names to detect changes
   let lastGeneratedExampleNames: string[] | null = null
 
   const reader = createAssetReader<ScanResult, Error, FileSystem.FileSystem>(() => {
-    return Effect.gen(function*() {
+    return Ef.gen(function*() {
       const loadedCatalog = yield* schemaReader.read()
 
       const schemaCatalog = loadedCatalog
-        ? O.getOrUndefined(loadedCatalog.data)
+        ? Op.getOrUndefined(loadedCatalog.data)
         : undefined
 
       const scanExamplesResult = yield* scan({
-        dir: examplesDir,
+        dir: FsLoc.encodeSync(examplesDir),
         ...(schemaCatalog ? { schemaCatalog } : {}),
       })
 
@@ -79,8 +79,8 @@ export const Examples = ({
   })
 
   const scanExamples = async () => {
-    return await Effect.runPromise(
-      reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+    return await Ef.runPromise(
+      reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
     )
   }
 
@@ -157,13 +157,13 @@ export const Examples = ({
 
             // Generate type usage index if schemas are available
             let catalogWithIndex = scanExamplesResult.catalog
-            const schemaReaderResult = await Effect.runPromise(
-              schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+            const schemaReaderResult = await Ef.runPromise(
+              schemaReader.read().pipe(Ef.provide(NodeFileSystem.layer)),
             )
             // schemaReaderResult is LoadedCatalog | null
             // LoadedCatalog.data is O.Option<Catalog.Catalog>
             const schemasCatalog = schemaReaderResult
-              ? O.getOrNull(schemaReaderResult.data)
+              ? Op.getOrNull(schemaReaderResult.data)
               : null
             if (schemasCatalog) {
               const typeUsageIndex = createTypeUsageIndex(
@@ -178,13 +178,13 @@ export const Examples = ({
 
             // Generate the module code with both catalog and component exports
             const s = Str.Builder()
-            s`import { Effect } from 'effect'`
+            s`import { Ef } from '#dep/effect'`
             s`import * as Catalog from '#api/examples/schemas/catalog'`
 
             const indexFilePath = scanExamplesResult.catalog.index?.path
             if (indexFilePath) {
               s``
-              s`export { default as IndexComponent } from '${indexFilePath}'`
+              s`export { default as IndexComponent } from '${FsLoc.encodeSync(indexFilePath)}'`
             } else {
               s``
               s`export const IndexComponent = null`
@@ -206,7 +206,7 @@ export const Examples = ({
             s``
             s`const catalogData = ${JSON.stringify(encodedCatalog)}`
             s``
-            s`export const examplesCatalog = Effect.runSync(Catalog.decode(catalogData))`
+            s`export const examplesCatalog = Ef.runSync(Catalog.decode(catalogData))`
 
             return s.render()
           },

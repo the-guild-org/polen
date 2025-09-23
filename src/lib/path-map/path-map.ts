@@ -1,4 +1,4 @@
-import { Path } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 
 /**
  * Special key added to path objects to reference the directory itself
@@ -204,15 +204,18 @@ const processAbsolutePaths = (input: PathInput, base: string, currentPath: strin
 
   // Add $ property for directory
   const relativePath = currentPath.length > 0 ? currentPath.join(`/`) : ``
-  result[DIR_KEY] = relativePath ? Path.join(normalizedBase, relativePath) : normalizedBase
+  const baseLoc = FsLoc.decodeSync(normalizedBase)
+  const relativePathLoc = relativePath ? FsLoc.decodeSync(relativePath) : null
+  result[DIR_KEY] = relativePathLoc
+    ? FsLoc.encodeSync(FsLoc.join(baseLoc, relativePathLoc))
+    : normalizedBase
 
   for (const [key, value] of Object.entries(input)) {
     if (typeof value === `string`) {
       // File: join base + current path + filename
-      const fullPath = currentPath.length > 0
-        ? Path.join(normalizedBase, ...currentPath, value)
-        : Path.join(normalizedBase, value)
-      result[key] = fullPath
+      const pathParts = [...currentPath, value]
+      const fullPathLoc = FsLoc.join(baseLoc, FsLoc.decodeSync(pathParts.join('/')))
+      result[key] = FsLoc.encodeSync(fullPathLoc)
     } else {
       result[key] = processAbsolutePaths(value, normalizedBase, [...currentPath, key])
     }

@@ -1,9 +1,9 @@
-import { A } from '#dep/effect'
-import { Path } from '@wollybeard/kit'
+import { Ar } from '#dep/effect'
+import { FsLoc } from '@wollybeard/kit'
 import { Equivalence } from 'effect'
 
 // Create an equivalence for comparing string arrays (path segments)
-const pathSegmentArrayEquals = A.getEquivalence(Equivalence.string)
+const pathSegmentArrayEquals = Ar.getEquivalence(Equivalence.string)
 
 //
 //
@@ -51,8 +51,8 @@ export interface RouteLogical {
 
 export interface RouteFile {
   path: {
-    relative: Path.Parsed
-    absolute: Path.Parsed
+    relative: FsLoc.RelFile.RelFile
+    absolute: FsLoc.AbsFile.AbsFile
   }
 }
 
@@ -139,7 +139,7 @@ export const routeIsRootLevel = (route: Route): route is TopLevelRoute => {
 //
 
 export const routeIsFromIndexFile = (route: Route): boolean => {
-  return route.file.path.relative.name === conventions.index.name
+  return FsLoc.name(route.file.path.relative) === conventions.index.name
 }
 
 export const routeIsSubOf = (route: Route, potentialAncestorPath: PathSegment[]): boolean => {

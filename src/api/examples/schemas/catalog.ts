@@ -1,4 +1,6 @@
 import { S } from '#dep/effect'
+import { Document } from 'graphql-kit'
+Document
 import { Example } from './example/$.js'
 import { TypeUsageIndex } from './type-usage-index.js'
 
@@ -27,7 +29,7 @@ export const Catalog = S.Struct({
   description: 'A catalog of GraphQL examples with optional index file and type usage index',
 })
 
-export type Catalog = S.Schema.Type<typeof Catalog>
+export type Catalog = typeof Catalog.Type
 
 // ============================================================================
 // Constructors

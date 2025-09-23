@@ -537,7 +537,7 @@ export const HomeConfig = S.Struct({
   description: 'Configuration for your Polen developer portal home page.',
 })
 
-export type HomeConfig = S.Schema.Type<typeof HomeConfig>
-export type HeroConfig = S.Schema.Type<typeof HeroSection>
-export type HeroCallToAction = S.Schema.Type<typeof HeroCallToActionSchema>
-export type HeroCallToActionsConfig = S.Schema.Type<typeof HeroCallToActionsConfigSchema>
+export type HomeConfig = typeof HomeConfig.Type
+export type HeroConfig = typeof HeroSection.Type
+export type HeroCallToAction = typeof HeroCallToActionSchema.Type
+export type HeroCallToActionsConfig = typeof HeroCallToActionsConfigSchema.Type

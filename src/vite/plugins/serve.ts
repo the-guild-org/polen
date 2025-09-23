@@ -1,16 +1,14 @@
 import type { Api } from '#api/$'
 import { reportError } from '#api/server/report-error'
-import { O } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { debugPolen } from '#singletons/debug'
 import type { App, AppOptions } from '#template/server/app'
 import { NodeFileSystem } from '@effect/platform-node'
-import { FileSystem } from '@effect/platform/FileSystem'
 import * as HonoNodeServer from '@hono/node-server'
-import { Err, Http } from '@wollybeard/kit'
-import { Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Err, Fs, FsLoc, Http, Pro } from '@wollybeard/kit'
 
 interface AppServerModule {
   createApp: (options: AppOptions) => App
@@ -26,7 +24,7 @@ export const Serve = (
   const PLUGIN_SCOPE: PluginScope = {}
 
   const debug = debugPolen.sub(`serve`)
-  const appModulePath = config.paths.framework.template.absolute.server.app
+  const appModulePath = FsLoc.encodeSync(config.paths.framework.template.absolute.server.app)
 
   let appPromise: AppPromise
 
@@ -64,30 +62,33 @@ export const Serve = (
   const reloadApp = async (server: Vite.ViteDevServer): AppPromise => {
     debug(`reloadApp`)
 
-    const appOption = await ssrLoadModule<AppServerModule>(server, config.paths.framework.template.absolute.server.app)
+    const appOption = await ssrLoadModule<AppServerModule>(
+      server,
+      FsLoc.encodeSync(config.paths.framework.template.absolute.server.app),
+    )
 
-    return O.match(appOption, {
-      onNone: () => O.none<App | Error>(),
+    return Op.match(appOption, {
+      onNone: () => Op.none<App | Error>(),
       onSome: (appOrError) => {
         if (Err.is(appOrError)) {
-          return O.some<App | Error>(appOrError)
+          return Op.some<App | Error>(appOrError)
         }
 
-        return O.some(appOrError.createApp({
+        return Op.some(appOrError.createApp({
           hooks: {
             transformHtml: [
               // Inject entry client script for development
               createHtmlTransformer((html, ___ctx) => {
                 const entryClientPath = `/${config.paths.framework.template.relative.client.entrypoint}`
                 const entryClientScript = `<script type="module" src="${entryClientPath}"></script>`
-                return Effect.succeed(html.replace(`</body>`, `${entryClientScript}\n</body>`))
+                return Ef.succeed(html.replace(`</body>`, `${entryClientScript}\n</body>`))
               }),
               // Apply Vite's transformations
               createHtmlTransformer((html, ctx) => {
-                return Effect.tryPromise({
+                return Ef.tryPromise({
                   try: () => server.transformIndexHtml(ctx.req.url, html),
                   catch: (error) => new Error(`Failed to transform HTML: ${String(error)}`),
-                }).pipe(Effect.orDie)
+                }).pipe(Ef.orDie)
               }),
             ],
           },
@@ -97,10 +98,7 @@ export const Serve = (
               // Calculate relative path from CWD to Polen's assets
               // CWD is user's project directory where they run 'pnpm dev'
               // Assets are in Polen's dev assets directory
-              directory: Path.relative(
-                process.cwd(),
-                config.paths.framework.devAssets.absolute,
-              ),
+              directory: FsLoc.encodeSync(FsLoc.toRel(Pro.cwd(), config.paths.framework.devAssets.absolute)),
               route: config.server.routes.assets,
             },
           },
@@ -122,7 +120,7 @@ export const Serve = (
           fs: {
             strict: false, // bring back true, with the allow below might already work now
             allow: [
-              config.paths.project.rootDir,
+              FsLoc.encodeSync(config.paths.project.rootDir),
             ],
           },
         },
@@ -141,13 +139,10 @@ export const Serve = (
       // Ensure the dev assets directory exists before server starts
       // This prevents the serveStatic middleware from logging warnings
       const assetsDir = config.paths.framework.devAssets.absolute
-      await Effect.gen(function*() {
-        const fs = yield* FileSystem
-        yield* fs.makeDirectory(assetsDir, { recursive: true })
-        debug(`Ensured dev assets directory exists: ${assetsDir}`)
-      }).pipe(
-        Effect.provide(NodeFileSystem.layer),
-        Effect.runPromise,
+      await Fs.write(assetsDir, undefined, { recursive: true }).pipe(
+        Ef.tap(() => Ef.sync(() => debug(`Ensured dev assets directory exists: ${FsLoc.encodeSync(assetsDir)}`))),
+        Ef.provide(NodeFileSystem.layer),
+        Ef.runPromise,
       )
 
       return () => {
@@ -169,7 +164,7 @@ export const Serve = (
             // Always await the current app promise
             const appOption = await appPromise
 
-            return O.match(appOption, {
+            return Op.match(appOption, {
               onNone: () => Http.Response.internalServerError(),
               onSome: async (appOrError) => {
                 if (Err.is(appOrError)) {
@@ -204,7 +199,7 @@ const isFetchTransportDisconnectError = (error: Error): boolean => {
 /**
  * O.none() when dev server was closed/is closing making ssrLoadModule impossible to succeed.
  */
-type AppPromiseGeneric<$AppServerModule> = Promise<O.Option<$AppServerModule | Error>>
+type AppPromiseGeneric<$AppServerModule> = Promise<Op.Option<$AppServerModule | Error>>
 
 const ssrLoadModule = async <$AppServerModule>(
   server: Vite.ViteDevServer,
@@ -213,14 +208,14 @@ const ssrLoadModule = async <$AppServerModule>(
   return await server
     // .ssrLoadModule(config.paths.framework.template.absolute.server.app)
     .ssrLoadModule(appModulePath)
-    .then(module => O.some(module as $AppServerModule))
+    .then(module => Op.some(module as $AppServerModule))
     .catch(async (error) => {
-      if (isFetchTransportDisconnectError(error) && isServerClosing(server)) return O.none()
+      if (isFetchTransportDisconnectError(error) && isServerClosing(server)) return Op.none()
       if (Err.is(error)) {
         // ━ Clean Stack Trace
         server.ssrFixStacktrace(error)
         reportError(error)
-        return O.some(error)
+        return Op.some(error)
       }
       throw error
     })

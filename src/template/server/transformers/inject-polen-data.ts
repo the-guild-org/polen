@@ -1,7 +1,7 @@
+import { Ef } from '#dep/effect'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { injectGlobalDataIntoHTML } from '#lib/html-utils/inject-global-data'
 import * as Theme from '#lib/theme/theme'
-import { Effect } from 'effect'
 import type { PolenGlobalData } from '../../constants.js'
 
 /**
@@ -28,6 +28,6 @@ export const createPolenDataInjector = () => {
     }
 
     // Just inject the Polen data, no additional code
-    return Effect.succeed(injectGlobalDataIntoHTML(html, '__POLEN__', polenData))
+    return Ef.succeed(injectGlobalDataIntoHTML(html, '__POLEN__', polenData))
   })
 }

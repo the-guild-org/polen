@@ -1,6 +1,7 @@
+import { Ef } from '#dep/effect'
 import { Command } from '@effect/cli'
 import $ from 'ansis'
-import { Console, Effect } from 'effect'
+import { Console } from 'effect'
 
 // Import subcommands
 import { staticRebase } from './static/rebase.js'
@@ -19,7 +20,7 @@ const staticDefault = Command.make(
   'static',
   {},
   () =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       yield* Console.log(`${$.bold.redBright`POLEN 🌺`} ${$.dim(`static commands`)}`)
       yield* Console.log('Manage static builds and deployments.')
       yield* Console.log('')

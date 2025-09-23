@@ -1,8 +1,8 @@
+import { Ef } from '#dep/effect'
+import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
-import { FileSystem } from '@effect/platform/FileSystem'
 import { it } from '@effect/vitest'
-import { Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import { describe, expect } from 'vitest'
 import {
   HtmlProcessingError,
@@ -13,14 +13,10 @@ import {
   TargetExistsError,
 } from './rebase.js'
 
-const createTestBuild = (dir: string, basePath = '/') =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem
-    yield* fs.makeDirectory(dir, { recursive: true })
-
+const createTestBuild = (dir: FsLoc.AbsDir.AbsDir, basePath = '/') =>
+  Ef.gen(function*() {
     // Create Polen build manifest
-    const polenDir = Path.join(dir, '.polen')
-    yield* fs.makeDirectory(polenDir, { recursive: true })
+    const polenDir = FsLoc.join(dir, '.polen/')
 
     const manifest = {
       type: 'ssg' as const,
@@ -28,14 +24,14 @@ const createTestBuild = (dir: string, basePath = '/') =>
       basePath,
     }
 
-    yield* fs.writeFileString(
-      Path.join(polenDir, 'build.json'),
+    yield* Fs.write(
+      FsLoc.join(polenDir, 'build.json'),
       JSON.stringify(manifest, null, 2),
     )
 
     // Create some HTML files
-    yield* fs.writeFileString(
-      Path.join(dir, 'index.html'),
+    yield* Fs.write(
+      FsLoc.join(dir, 'index.html'),
       `<!DOCTYPE html>
 <html>
 <head>
@@ -49,11 +45,10 @@ const createTestBuild = (dir: string, basePath = '/') =>
     )
 
     // Create nested HTML file
-    const nestedDir = Path.join(dir, 'docs')
-    yield* fs.makeDirectory(nestedDir, { recursive: true })
+    const nestedDir = FsLoc.join(dir, 'docs/')
 
-    yield* fs.writeFileString(
-      Path.join(nestedDir, 'page.html'),
+    yield* Fs.write(
+      FsLoc.join(nestedDir, 'page.html'),
       `<!DOCTYPE html>
 <html>
 <head>
@@ -68,10 +63,9 @@ const createTestBuild = (dir: string, basePath = '/') =>
 
 describe('rebase', () => {
   it.scoped('mutate mode updates base paths in place', () =>
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const testDir = yield* fs.makeTempDirectoryScoped()
-      const buildDir = Path.join(testDir, 'build')
+    Ef.gen(function*() {
+      const testDir = yield* Fs.makeTempDirectory()
+      const buildDir = FsLoc.join(testDir, 'build/')
       yield* createTestBuild(buildDir, '/old/')
 
       const plan: RebasePlan = {
@@ -83,7 +77,11 @@ describe('rebase', () => {
       yield* rebase(plan)
 
       // Check updated manifest
-      const manifestContent = yield* fs.readFileString(Path.join(buildDir, '.polen', 'build.json'))
+      const manifestPath = FsLoc.join(
+        buildDir,
+        '.polen/build.json',
+      )
+      const manifestContent = yield* Fs.readString(manifestPath)
       const manifest = JSON.parse(manifestContent)
       expect(manifest).toMatchObject({
         type: 'ssg',
@@ -92,20 +90,22 @@ describe('rebase', () => {
       })
 
       // Check updated HTML file
-      const indexContent = yield* fs.readFileString(Path.join(buildDir, 'index.html'))
+      const indexPath = FsLoc.join(buildDir, 'index.html')
+      const indexContent = yield* Fs.readString(indexPath)
       expect(indexContent).toContain('<base href="/new/">')
 
       // Check nested HTML file (should have base tag inserted)
-      const nestedContent = yield* fs.readFileString(Path.join(buildDir, 'docs', 'page.html'))
+      const docsDir = FsLoc.join(buildDir, 'docs/')
+      const nestedPath = FsLoc.join(docsDir, 'page.html')
+      const nestedContent = yield* Fs.readString(nestedPath)
       expect(nestedContent).toContain('<base href="/new/">')
-    }).pipe(Effect.provide(NodeFileSystem.layer)))
+    }).pipe(Ef.provide(NodeFileSystem.layer)))
 
   it.scoped('copy mode creates new build with updated base paths', () =>
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const testDir = yield* fs.makeTempDirectoryScoped()
-      const buildDir = Path.join(testDir, 'build')
-      const copyDir = Path.join(testDir, 'copy')
+    Ef.gen(function*() {
+      const testDir = yield* Fs.makeTempDirectory()
+      const buildDir = FsLoc.join(testDir, 'build/')
+      const copyDir = FsLoc.join(testDir, 'copy/')
 
       yield* createTestBuild(buildDir, '/old/')
 
@@ -119,28 +119,34 @@ describe('rebase', () => {
       yield* rebase(plan)
 
       // Original should be unchanged
-      const originalManifestContent = yield* fs.readFileString(Path.join(buildDir, '.polen', 'build.json'))
+      const polenDir = FsLoc.join(buildDir, '.polen/')
+      const originalManifestPath = FsLoc.join(polenDir, 'build.json')
+      const originalManifestContent = yield* Fs.readString(originalManifestPath)
       const originalManifest = JSON.parse(originalManifestContent)
       expect(originalManifest).toMatchObject({
         basePath: '/old/',
       })
 
       // Copy should be updated
-      const copyManifestContent = yield* fs.readFileString(Path.join(copyDir, '.polen', 'build.json'))
+      const copyManifestPath = FsLoc.join(
+        copyDir,
+        '.polen/build.json',
+      )
+      const copyManifestContent = yield* Fs.readString(copyManifestPath)
       const copyManifest = JSON.parse(copyManifestContent)
       expect(copyManifest).toMatchObject({
         basePath: '/new/',
       })
 
-      const copyIndexContent = yield* fs.readFileString(Path.join(copyDir, 'index.html'))
+      const copyIndexPath = FsLoc.join(copyDir, 'index.html')
+      const copyIndexContent = yield* Fs.readString(copyIndexPath)
       expect(copyIndexContent).toContain('<base href="/new/">')
-    }).pipe(Effect.provide(NodeFileSystem.layer)))
+    }).pipe(Ef.provide(NodeFileSystem.layer)))
 
   it.scoped('throws error for invalid base path', () =>
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const testDir = yield* fs.makeTempDirectoryScoped()
-      const buildDir = Path.join(testDir, 'build')
+    Ef.gen(function*() {
+      const testDir = yield* Fs.makeTempDirectory()
+      const buildDir = FsLoc.join(testDir, 'build/')
       yield* createTestBuild(buildDir)
 
       const plan: RebasePlan = {
@@ -150,20 +156,18 @@ describe('rebase', () => {
       }
 
       yield* rebase(plan).pipe(
-        Effect.flip,
-        Effect.map((error) => {
+        Ef.flip,
+        Ef.map((error) => {
           expect(error).toBeInstanceOf(InvalidBasePathError)
           expect((error as InvalidBasePathError).path).toBe('invalid-path')
         }),
       )
-    }).pipe(Effect.provide(NodeFileSystem.layer)))
+    }).pipe(Ef.provide(NodeFileSystem.layer)))
 
   it.scoped('throws error when source is not a Polen build', () =>
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const testDir = yield* fs.makeTempDirectoryScoped()
-      const buildDir = Path.join(testDir, 'not-polen')
-      yield* fs.makeDirectory(buildDir, { recursive: true })
+    Ef.gen(function*() {
+      const testDir = yield* Fs.makeTempDirectoryScoped()
+      const buildDir = FsLoc.join(testDir, 'not-polen/')
 
       const plan: RebasePlan = {
         sourcePath: buildDir,
@@ -172,27 +176,25 @@ describe('rebase', () => {
       }
 
       yield* rebase(plan).pipe(
-        Effect.flip,
-        Effect.map((error) => {
+        Ef.flip,
+        Ef.map((error) => {
           expect(error).toBeInstanceOf(ManifestNotFoundError)
-          expect((error as ManifestNotFoundError).path).toBe(buildDir)
+          expect((error as ManifestNotFoundError).path).toBe(FsLoc.encodeSync(buildDir))
         }),
       )
-    }).pipe(Effect.provide(NodeFileSystem.layer)))
+    }).pipe(Ef.provide(NodeFileSystem.layer)))
 
   it.scoped('throws error when copy target exists and is not empty', () =>
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const testDir = yield* fs.makeTempDirectoryScoped()
-      const buildDir = Path.join(testDir, 'build')
-      const copyDir = Path.join(testDir, 'copy')
+    Ef.gen(function*() {
+      const testDir = yield* Fs.makeTempDirectoryScoped()
+      const buildDir = FsLoc.join(testDir, 'build/')
+      const copyDir = FsLoc.join(testDir, 'copy/')
 
       yield* createTestBuild(buildDir)
 
       // Create non-empty target
-      yield* fs.makeDirectory(copyDir, { recursive: true })
-      yield* fs.writeFileString(
-        Path.join(copyDir, 'existing.txt'),
+      yield* Fs.write(
+        FsLoc.join(copyDir, 'existing.txt'),
         'existing file',
       )
 
@@ -204,24 +206,23 @@ describe('rebase', () => {
       }
 
       yield* rebase(plan).pipe(
-        Effect.flip,
-        Effect.map((error) => {
+        Ef.flip,
+        Ef.map((error) => {
           expect(error).toBeInstanceOf(TargetExistsError)
-          expect((error as TargetExistsError).path).toBe(copyDir)
+          expect((error as TargetExistsError).path).toBe(FsLoc.encodeSync(copyDir))
         }),
       )
-    }).pipe(Effect.provide(NodeFileSystem.layer)))
+    }).pipe(Ef.provide(NodeFileSystem.layer)))
 
   it.scoped('handles HTML file without existing base tag', () =>
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const testDir = yield* fs.makeTempDirectoryScoped()
-      const buildDir = Path.join(testDir, 'build')
+    Ef.gen(function*() {
+      const testDir = yield* Fs.makeTempDirectory()
+      const buildDir = FsLoc.join(testDir, 'build/')
       yield* createTestBuild(buildDir)
 
       // Create HTML without base tag
-      yield* fs.writeFileString(
-        Path.join(buildDir, 'no-base.html'),
+      yield* Fs.write(
+        FsLoc.join(buildDir, 'no-base.html'),
         `<!DOCTYPE html>
 <html>
 <head>
@@ -241,20 +242,20 @@ describe('rebase', () => {
 
       yield* rebase(plan)
 
-      const content = yield* fs.readFileString(Path.join(buildDir, 'no-base.html'))
+      const noBasePath = FsLoc.join(buildDir, 'no-base.html')
+      const content = yield* Fs.readString(noBasePath)
       expect(content).toContain('<base href="/new/">')
-    }).pipe(Effect.provide(NodeFileSystem.layer)))
+    }).pipe(Ef.provide(NodeFileSystem.layer)))
 
   it.scoped('throws error for HTML file without head tag', () =>
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const testDir = yield* fs.makeTempDirectoryScoped()
-      const buildDir = Path.join(testDir, 'build')
+    Ef.gen(function*() {
+      const testDir = yield* Fs.makeTempDirectory()
+      const buildDir = FsLoc.join(testDir, 'build/')
       yield* createTestBuild(buildDir)
 
       // Create invalid HTML without head
-      yield* fs.writeFileString(
-        Path.join(buildDir, 'invalid.html'),
+      yield* Fs.write(
+        FsLoc.join(buildDir, 'invalid.html'),
         `<!DOCTYPE html>
 <html>
 <body>
@@ -270,11 +271,11 @@ describe('rebase', () => {
       }
 
       yield* rebase(plan).pipe(
-        Effect.flip,
-        Effect.map((error) => {
+        Ef.flip,
+        Ef.map((error) => {
           expect(error).toBeInstanceOf(HtmlProcessingError)
           expect((error as HtmlProcessingError).reason).toContain('Could not find <head> tag in HTML file')
         }),
       )
-    }).pipe(Effect.provide(NodeFileSystem.layer)))
+    }).pipe(Ef.provide(NodeFileSystem.layer)))
 })

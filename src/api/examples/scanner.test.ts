@@ -1,3 +1,4 @@
+import { FsLoc } from '@wollybeard/kit'
 import { Test } from '@wollybeard/kit/test'
 import { HashMap } from 'effect'
 import { Version } from 'graphql-kit'
@@ -5,13 +6,17 @@ import { describe, expect } from 'vitest'
 import * as scanner from './scanner.js'
 
 describe('parseExampleFile', () => {
+  type ParseInput = { input: string }
+  type ParseOutput = { expected: any }
+
   // dprint-ignore
-  Test.Table.suite<{ input: string; expected: any }>('parsing', [
-    { name: 'unversioned file',  input: 'get-user.graphql',         expected: { type: 'unversioned', name: 'get-user', file: 'get-user.graphql' } },
-    { name: 'versioned file',    input: 'get-user.1.graphql',      expected: { type: 'versioned', name: 'get-user', version: Version.decodeSync('1'), file: 'get-user.1.graphql' } },
-    { name: 'custom version',    input: 'get-user.default.graphql', expected: { type: 'versioned', name: 'get-user', version: expect.objectContaining({ _tag: 'VersionCustom', value: 'default' }), file: 'get-user.default.graphql' } },
-  ], ({ input, expected }) => {
-    expect(scanner.parseExampleFile(input)).toEqual(expected)
+  Test.Table.suite<ParseInput, ParseOutput>('parsing', [
+    { n: 'unversioned file',  i: { input: 'get-user.graphql' },         o: { expected: { type: 'unversioned', name: 'get-user', file: FsLoc.RelFile.decodeSync('get-user.graphql') } } },
+    { n: 'versioned file',    i: { input: 'get-user.1.graphql' },      o: { expected: { type: 'versioned', name: 'get-user', version: Version.decodeSync('1'), file: FsLoc.RelFile.decodeSync('get-user.1.graphql') } } },
+    { n: 'custom version',    i: { input: 'get-user.default.graphql' }, o: { expected: { type: 'versioned', name: 'get-user', version: expect.objectContaining({ _tag: 'VersionCustom', value: 'default' }), file: FsLoc.RelFile.decodeSync('get-user.default.graphql') } } },
+  ], ({ i, o }) => {
+    const inputLoc = FsLoc.RelFile.decodeSync(i.input)
+    expect(scanner.parseExampleFile(inputLoc)).toEqual(o.expected)
   })
 })
 
@@ -21,47 +26,51 @@ describe('resolveDefaultFiles', () => {
   const v3 = Version.decodeSync('3')
   const schemaVersions = [v1, v2, v3]
 
+  type DefaultFileInput = { grouped: any }
+  type DefaultFileOutput = { assertions: (resolved: ReturnType<typeof scanner.resolveDefaultFiles>) => void }
+
   // dprint-ignore
-  Test.Table.suite<{ grouped: any; assertions: (resolved: ReturnType<typeof scanner.resolveDefaultFiles>) => void }>('default file resolution', [
+  Test.Table.suite<DefaultFileInput, DefaultFileOutput>('default file resolution', [
     {
-      name: 'unversioned file alone remains unversioned',
-      grouped: new Map([['example', { unversioned: 'example.graphql', versioned: new Map() }]]),
-      assertions: (resolved) => {
+      n: 'unversioned file alone remains unversioned',
+      i: { grouped: new Map([['example', { unversioned: 'example.graphql', versioned: new Map() }]]) },
+      o: { assertions: (resolved: ReturnType<typeof scanner.resolveDefaultFiles>) => {
         const example = resolved.get('example')!
         expect(example.unversioned).toBe('example.graphql')
         expect(HashMap.size(example.versionDocuments)).toBe(0)
-      },
+      } },
     },
     {
-      name: 'unversioned file acts as default when versioned files exist',
-      grouped: new Map([['example', {
+      n: 'unversioned file acts as default when versioned files exist',
+      i: { grouped: new Map([['example', {
         unversioned: 'example.graphql',
         versioned: new Map([[v1, 'example.1.graphql']]),
-      }]]),
-      assertions: (resolved) => {
+      }]]) },
+      o: { assertions: (resolved: ReturnType<typeof scanner.resolveDefaultFiles>) => {
         const example = resolved.get('example')!
         expect(example.unversioned).toBeUndefined()
         expect(HashMap.size(example.versionDocuments)).toBe(2)
         expect(HashMap.has(example.versionDocuments, v1)).toBe(true)
 
         const entries = [...HashMap.entries(example.versionDocuments)]
-        const defaultEntry = entries.find(([_, value]) => value === 'example.graphql')
+        const defaultEntry = entries.find(([_, value]) => FsLoc.encodeSync(value) === 'example.graphql')
         expect(defaultEntry).toBeDefined()
-      },
+      } },
     },
     {
-      name: 'only versioned files when no unversioned exists',
-      grouped: new Map([['example', {
-        versioned: new Map([[v1, 'example.1.graphql'], [v2, 'example.2.graphql']]),
-      }]]),
-      assertions: (resolved) => {
+      n: 'only versioned files when no unversioned exists',
+      i: { grouped: new Map([['example', {
+        unversioned: undefined,
+        versioned: new Map([[v1, FsLoc.RelFile.decodeSync('example.1.graphql')], [v2, FsLoc.RelFile.decodeSync('example.2.graphql')]]),
+      }]]) },
+      o: { assertions: (resolved: ReturnType<typeof scanner.resolveDefaultFiles>) => {
         const example = resolved.get('example')!
         expect(example.unversioned).toBeUndefined()
         expect(HashMap.size(example.versionDocuments)).toBe(2)
-      },
+      } },
     },
-  ], ({ grouped, assertions }) => {
-    const resolved = scanner.resolveDefaultFiles(grouped, schemaVersions)
-    assertions(resolved)
+  ], ({ i, o }) => {
+    const resolved = scanner.resolveDefaultFiles(i.grouped, schemaVersions)
+    o.assertions(resolved)
   })
 })

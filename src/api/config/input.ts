@@ -3,7 +3,7 @@ import { ReferenceConfig } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { S } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
-import { Obj } from '@wollybeard/kit'
+import { FsLoc, Obj } from '@wollybeard/kit'
 import type { WritableDeep } from 'type-fest'
 import { HomeConfig } from './home.js'
 import { ThemeConfig } from './theme.js'
@@ -19,7 +19,7 @@ export const BuildArchitecture = S.Enums(
     ssr: 'ssr',
   } as const,
 )
-export type BuildArchitecture = S.Schema.Type<typeof BuildArchitecture>
+export type BuildArchitecture = typeof BuildArchitecture.Type
 
 // ============================================================================
 // Template Variables
@@ -50,7 +50,7 @@ const TemplateVariables = S.Struct({
   identifier: 'TemplateVariables',
   description: 'Template variables for customizing the developer portal.',
 })
-export type TemplateVariables = S.Schema.Type<typeof TemplateVariables>
+export type TemplateVariables = typeof TemplateVariables.Type
 
 // ============================================================================
 // Build Config
@@ -207,7 +207,11 @@ const BrandingConfig = S.Struct({
 // ============================================================================
 
 const AdvancedPaths = S.Struct({
-  devAssets: S.optional(S.String),
+  devAssets: S.optional(S.Union(
+    S.String,
+    FsLoc.AbsDir.AbsDir,
+    FsLoc.RelDir.RelDir,
+  )),
 })
 
 const AdvancedConfig = S.Struct({
@@ -324,7 +328,7 @@ export const ConfigInput = S.Struct({
   description: 'Configuration for your Polen developer portal. All options are optional with sensible defaults.',
 })
 
-export type ConfigInput = S.Schema.Type<typeof ConfigInput>
+export type ConfigInput = typeof ConfigInput.Type
 
 // ============================================================================
 // Codecs

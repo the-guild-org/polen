@@ -8,4 +8,4 @@ export const Placement = S.Enums(
   } as const,
 )
 
-export type Placement = S.Schema.Type<typeof Placement>
+export type Placement = typeof Placement.Type

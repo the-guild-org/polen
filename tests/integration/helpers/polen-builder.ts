@@ -1,4 +1,5 @@
 import type { Polen } from '#exports/index'
+import { FsLoc } from '@wollybeard/kit'
 import type { Page } from 'playwright/test'
 import { expect } from 'playwright/test'
 import type { WritableDeep } from 'type-fest'
@@ -16,12 +17,12 @@ interface PolenAssertions {
 export class PolenBuilder {
   private config: WritableDeep<Polen.ConfigInput> = {}
   private server?: ViteController.ViteDevServerPlus
-  private cwd: string
+  private cwd: FsLoc.AbsDir.AbsDir
 
   constructor(
     private page: Page,
     private vite: ViteController.ViteController,
-    cwd: string,
+    cwd: FsLoc.AbsDir.AbsDir,
   ) {
     this.cwd = cwd
   }
@@ -146,4 +147,4 @@ export class PolenBuilderWithPage {
 }
 
 // Factory function for tests
-export const polen = (page: Page, vite: ViteController.ViteController, cwd: string) => new PolenBuilder(page, vite, cwd)
+export const polen = (page: Page, vite: ViteController.ViteController, cwd: FsLoc.AbsDir.AbsDir) => new PolenBuilder(page, vite, cwd)

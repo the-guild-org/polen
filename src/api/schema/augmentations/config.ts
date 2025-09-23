@@ -8,4 +8,4 @@ export const AugmentationConfig = S.Struct({
   content: S.String,
 })
 
-export type AugmentationConfig = S.Schema.Type<typeof AugmentationConfig>
+export type AugmentationConfig = typeof AugmentationConfig.Type

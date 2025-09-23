@@ -41,7 +41,7 @@ export const Example = S.Struct({
 // Types
 // ============================================================================
 
-export type Example = S.Schema.Type<typeof Example>
+export type Example = typeof Example.Type
 
 // ============================================================================
 // Constructors

@@ -1,7 +1,8 @@
 import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { Idx, Path } from '@wollybeard/kit'
+import { Idx } from '@wollybeard/kit'
 import { Sch } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 import { type Route, routeIsFromIndexFile, routeToPathExpression } from './route.js'
 Sch
 
@@ -95,7 +96,7 @@ export const lint = (routes: Route[]): LintResult => {
     if (routeIsFromIndexFile(route) && route.logical.order !== undefined) {
       const diagnostic = makeDiagnosticNumberedPrefixOnIndex({
         message: `Numbered prefix on index file has no effect. The file:\n  ${
-          Path.format(route.file.path.relative)
+          FsLoc.encodeSync(route.file.path.relative)
         }\n\nhas a numbered prefix (${route.logical.order}_) which doesn't affect ordering since index files represent their parent directory.`,
         file: route.file,
         order: route.logical.order,
@@ -125,7 +126,7 @@ export const lint = (routes: Route[]): LintResult => {
 
         const diagnostic = makeDiagnosticNumberedPrefixConflict({
           // dprint-ignore
-          message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\n${orderMessage}`,
+          message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${FsLoc.encodeSync(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${FsLoc.encodeSync(dropped.file.path.relative)}.\n\n${orderMessage}`,
           kept: {
             file: kept.file,
             order: kept.logical.order!,
@@ -148,7 +149,7 @@ export const lint = (routes: Route[]): LintResult => {
       // Report
       const diagnostic = makeDiagnosticIndexConflict({
         // dprint-ignore
-        message: `Your files represent conflicting routes. This index file route:\n  ${Path.format(index.file.path.relative)}\n\nconflicts with this literal file route:\n\n  ${Path.format(literal.file.path.relative)}.\n\nYour index route is being ignored.`,
+        message: `Your files represent conflicting routes. This index file route:\n  ${FsLoc.encodeSync(index.file.path.relative)}\n\nconflicts with this literal file route:\n\n  ${FsLoc.encodeSync(literal.file.path.relative)}.\n\nYour index route is being ignored.`,
         literal: {
           file: literal.file,
         },

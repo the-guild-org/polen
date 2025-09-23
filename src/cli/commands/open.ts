@@ -1,12 +1,12 @@
 import { Api } from '#api/$'
-import { O } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig } from '#vite/config'
 import { Command, Options } from '@effect/cli'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Err, Json, Path, Rec } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Err, Fs, FsLoc, Json, Rec } from '@wollybeard/kit'
 import { Grafaid, GraphqlSchemaLoader } from 'graphql-kit'
 import { homedir } from 'node:os'
 import { allowGlobalParameter } from '../_/parameters.js'
@@ -50,7 +50,12 @@ const cache = Options.boolean('cache').pipe(
 )
 
 // Cache implementation
-const cacheDir = Path.join(homedir(), '.polen', 'cache', 'cli', 'open')
+const homeDirLoc = FsLoc.AbsDir.decodeSync(homedir())
+const cachePathLoc = FsLoc.join(
+  homeDirLoc,
+  FsLoc.fromString('.polen/cache/cli/open'),
+)
+const cacheDir = FsLoc.encodeSync(cachePathLoc)
 
 const base64Codec = {
   encode: (str: string) => Buffer.from(str).toString('base64'),
@@ -62,15 +67,15 @@ const cacheWrite = async (source: string, schema: Grafaid.Schema.Schema, useCach
 
   await Err.tryCatchIgnore(async () => {
     const fileName = base64Codec.encode(source)
-    const filePath = Path.join(cacheDir, fileName)
+    const fileNameLoc = FsLoc.RelFile.decodeSync(fileName)
+    const filePath = FsLoc.join(cachePathLoc, fileNameLoc)
     const sdl = Grafaid.Schema.print(schema)
-    await Effect.runPromise(
-      Effect.gen(function*() {
-        const fs = yield* FileSystem
+    await Ef.runPromise(
+      Ef.gen(function*() {
         // Ensure cache directory exists
-        yield* fs.makeDirectory(cacheDir, { recursive: true })
-        yield* fs.writeFileString(filePath, sdl)
-      }).pipe(Effect.provide(NodeFileSystem.layer)),
+        yield* Fs.write(cachePathLoc, { recursive: true })
+        yield* Fs.write(filePath, sdl)
+      }).pipe(Ef.provide(NodeFileSystem.layer)),
     )
   })
 }
@@ -80,26 +85,26 @@ const cacheRead = async (source: string, useCache: boolean) => {
 
   return Err.tryCatchIgnore(async () => {
     const fileName = base64Codec.encode(source)
-    const filePath = Path.join(cacheDir, fileName)
-    const sdl = await Effect.runPromise(
-      Effect.gen(function*() {
-        const fs = yield* FileSystem
-        const result = yield* Effect.either(fs.readFileString(filePath))
+    const fileNameLoc = FsLoc.RelFile.decodeSync(fileName)
+    const filePath = FsLoc.join(cachePathLoc, fileNameLoc)
+    const sdl = await Ef.runPromise(
+      Ef.gen(function*() {
+        const result = yield* Ef.either(Fs.readString(filePath))
         if (result._tag === 'Left') return null
         return result.right
-      }).pipe(Effect.provide(NodeFileSystem.layer)),
+      }).pipe(Ef.provide(NodeFileSystem.layer)),
     )
     if (!sdl) return null
-    const documentNode = await Effect.runPromise(Grafaid.Parse.parseSchema(sdl, { source: filePath }))
-    return await Effect.runPromise(Grafaid.Schema.fromAST(documentNode))
+    const documentNode = await Ef.runPromise(Grafaid.Parse.parseSchema(sdl, { source: FsLoc.encodeSync(filePath) }))
+    return await Ef.runPromise(Grafaid.Schema.fromAST(documentNode))
   })
 }
 
 const wrapCache = (fn: typeof GraphqlSchemaLoader.load, useCache: boolean) => {
   const wrapped = (...args: Parameters<typeof GraphqlSchemaLoader.load>) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       const cacheKey = JSON.stringify(args)
-      const cachedSchema = yield* Effect.tryPromise({
+      const cachedSchema = yield* Ef.tryPromise({
         try: () => cacheRead(cacheKey, useCache),
         catch: (error) => new Error(`Failed to read cache: ${String(error)}`),
       })
@@ -111,7 +116,7 @@ const wrapCache = (fn: typeof GraphqlSchemaLoader.load, useCache: boolean) => {
       // GraphqlSchemaLoader.load returns Effect<GraphQLSchema, Error, FileSystem>
       const value = yield* fn(...args)
 
-      yield* Effect.tryPromise({
+      yield* Ef.tryPromise({
         try: () => cacheWrite(cacheKey, value, useCache),
         catch: (error) => new Error(`Failed to write cache: ${String(error)}`),
       })
@@ -141,19 +146,19 @@ export const open = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ introspectionHeaders, introspectUrl, sdlPath, namedSchema, cache, allowGlobal }) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       // Validate that exactly one source option is provided
-      const introspectValue = O.getOrUndefined(introspectUrl)
-      const sdlValue = O.getOrUndefined(sdlPath)
-      const namedValue = O.getOrUndefined(namedSchema)
-      const headersValue = O.getOrUndefined(introspectionHeaders)
+      const introspectValue = Op.getOrUndefined(introspectUrl)
+      const sdlValue = Op.getOrUndefined(sdlPath)
+      const namedValue = Op.getOrUndefined(namedSchema)
+      const headersValue = Op.getOrUndefined(introspectionHeaders)
 
       const sources = [introspectValue, sdlValue, namedValue].filter(Boolean)
       if (sources.length === 0) {
-        return yield* Effect.fail(new Error('Must specify one of: --introspect, --sdl, or --name'))
+        return yield* Ef.fail(new Error('Must specify one of: --introspect, --sdl, or --name'))
       }
       if (sources.length > 1) {
-        return yield* Effect.fail(new Error('Cannot specify multiple source options'))
+        return yield* Ef.fail(new Error('Cannot specify multiple source options'))
       }
 
       // Determine source type and value
@@ -180,8 +185,8 @@ export const open = Command.make(
       const load = wrapCache(GraphqlSchemaLoader.load, cache)
       const schema = yield* load(sourceConfig)
 
-      const fs = yield* FileSystem
-      const tempDir = yield* fs.makeTempDirectoryScoped()
+      const tempDir = yield* Fs.makeTempDirectoryScoped()
+      const tempDirStr = FsLoc.AbsDir.encodeSync(tempDir)
       const config = yield* Api.ConfigResolver.fromMemory({
         schema: {
           sources: {
@@ -195,18 +200,18 @@ export const open = Command.make(
             },
           },
         },
-      }, tempDir)
+      }, tempDirStr)
 
       const viteConfig = toViteUserConfig(config)
-      const viteDevServer = yield* Effect.tryPromise({
+      const viteDevServer = yield* Ef.tryPromise({
         try: () => Vite.createServer(viteConfig),
         catch: (error) => new Error(`Failed to create Vite server: ${String(error)}`),
       })
 
-      yield* Effect.tryPromise({
+      yield* Ef.tryPromise({
         try: () => viteDevServer.listen(),
         catch: (error) => new Error(`Failed to start dev server: ${String(error)}`),
       })
       viteDevServer.printUrls()
-    }).pipe(Effect.provide(NodeFileSystem.layer)),
+    }).pipe(Ef.provide(NodeFileSystem.layer)),
 )

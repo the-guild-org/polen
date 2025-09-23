@@ -1,6 +1,6 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { A } from '#dep/effect'
-import { Effect } from 'effect'
+import { Ar } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import type { GraphQLSchema } from 'graphql'
 import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
 
@@ -57,11 +57,11 @@ export interface Options {
     | GraphQLSchema
     | GraphQLSchema[]
     | { date: Date; value: GraphQLSchema }[]
-    | Catalog.Unversioned.Unversioned
+    | Catalog.Unversioned
 }
 
 export interface Config {
-  revisions: { date: Date; value: string | GraphQLSchema }[] | Catalog.Unversioned.Unversioned
+  revisions: { date: Date; value: string | GraphQLSchema }[] | Catalog.Unversioned
 }
 
 // Type guard to check if value is a GraphQLSchema
@@ -85,10 +85,10 @@ export const normalize = (configInput: Options): Config => {
   }
 
   // Convert all other formats to normalized array format
-  const revisionsArray = A.isArray(configInput.revisions) ? configInput.revisions : [configInput.revisions]
+  const revisionsArray = Ar.isArray(configInput.revisions) ? configInput.revisions : [configInput.revisions]
 
   const config: Config = {
-    revisions: A.map(revisionsArray, (item) => {
+    revisions: Ar.map(revisionsArray, (item) => {
       // Handle string (SDL)
       if (typeof item === 'string') {
         return {
@@ -113,11 +113,11 @@ export const normalize = (configInput: Options): Config => {
   return config
 }
 
-const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema, InputSource.InputSourceError> =>
-  Effect.gen(function*() {
+const parseSchema = (value: string | GraphQLSchema): Ef.Effect<GraphQLSchema, InputSource.InputSourceError> =>
+  Ef.gen(function*() {
     if (typeof value === 'string') {
       const ast = yield* Grafaid.Parse.parseSchema(value, { source: 'memory' }).pipe(
-        Effect.mapError((error) =>
+        Ef.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'memory',
             message: error.message,
@@ -126,7 +126,7 @@ const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema
         ),
       )
       return yield* Grafaid.Schema.fromAST(ast).pipe(
-        Effect.mapError((error) =>
+        Ef.mapError((error) =>
           new InputSource.InputSourceError({
             source: 'memory',
             message: error.message,
@@ -140,11 +140,11 @@ const parseSchema = (value: string | GraphQLSchema): Effect.Effect<GraphQLSchema
 
 export const read = (
   options: Options,
-): Effect.Effect<
-  null | { schema: Schema.Unversioned.Unversioned; revisions: readonly Revision.Revision[] },
+): Ef.Effect<
+  null | { schema: Schema.Unversioned.Unversioned; revisions: readonly Revision[] },
   InputSource.InputSourceError
 > =>
-  Effect.gen(function*() {
+  Ef.gen(function*() {
     const config = normalize(options)
 
     // If it's already a Catalog, extract schema and revisions
@@ -155,13 +155,13 @@ export const read = (
       }
     }
 
-    if (!A.isNonEmptyArray(config.revisions)) {
+    if (!Ar.isNonEmptyArray(config.revisions)) {
       return null
     }
 
-    const parsedRevisions = yield* Effect.all(
-      A.map(config.revisions, (item) =>
-        Effect.gen(function*() {
+    const parsedRevisions = yield* Ef.all(
+      Ar.map(config.revisions, (item) =>
+        Ef.gen(function*() {
           const schema = yield* parseSchema(item.value)
           return {
             date: item.date,
@@ -174,9 +174,9 @@ export const read = (
     // Sort revisions newest first
     parsedRevisions.sort((a, b) => b.date.getTime() - a.date.getTime())
 
-    const revisions = yield* Effect.all(
-      A.map(parsedRevisions, (revision, index) =>
-        Effect.gen(function*() {
+    const revisions = yield* Ef.all(
+      Ar.map(parsedRevisions, (revision, index) =>
+        Ef.gen(function*() {
           const current = revision
           const previous = parsedRevisions[index - 1]
 
@@ -192,7 +192,7 @@ export const read = (
             const after = previous.schema // newer
 
             changes = yield* Change.calcChangeset({ before, after }).pipe(
-              Effect.mapError((error) =>
+              Ef.mapError((error) =>
                 new InputSource.InputSourceError({
                   source: 'memory',
                   message: `Failed to calculate changeset: ${error}`,
@@ -228,9 +228,9 @@ export const read = (
 export const loader = InputSource.create({
   name: 'memory',
   isApplicable: (options: Options, _context) =>
-    Effect.succeed(options.revisions !== undefined && options.revisions !== null),
+    Ef.succeed(options.revisions !== undefined && options.revisions !== null),
   readIfApplicableOrThrow: (options: Options, _context) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       const config = normalize(options)
 
       // If it's already a Catalog, return it directly
@@ -238,7 +238,7 @@ export const loader = InputSource.create({
         return config.revisions
       }
 
-      if (!A.isNonEmptyArray(config.revisions)) {
+      if (!Ar.isNonEmptyArray(config.revisions)) {
         return null
       }
 

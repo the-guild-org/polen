@@ -1,9 +1,9 @@
 import type { NavbarProps } from '#api/hooks/types'
-import { A } from '#dep/effect'
+import { Ar } from '#dep/effect'
 import type React from 'react'
 
 export const DefaultNavbar: React.FC<NavbarProps> = ({ items, Item, Logo, ThemeToggle }) => {
-  const [leftItems, rightItems] = A.partition(items, item => item.position === 'right')
+  const [leftItems, rightItems] = Ar.partition(items, item => item.position === 'right')
 
   return (
     <div className='flex items-center justify-between w-full'>

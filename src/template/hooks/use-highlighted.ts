@@ -1,6 +1,7 @@
+import { Ef } from '#dep/effect'
 import type { HighlightedCode } from 'codehike/code'
 import { highlight } from 'codehike/code'
-import { Duration, Effect } from 'effect'
+import { Duration } from 'effect'
 import * as React from 'react'
 
 /**
@@ -34,8 +35,8 @@ export const useHighlighted = (
 
     const highlightContent = async () => {
       try {
-        const highlighted = await Effect.runPromise(
-          Effect.tryPromise({
+        const highlighted = await Ef.runPromise(
+          Ef.tryPromise({
             try: () =>
               highlight(
                 {
@@ -49,10 +50,10 @@ export const useHighlighted = (
               ),
             catch: (error) => new Error(`Highlight failed: ${error}`),
           }).pipe(
-            Effect.timeout(HIGHLIGHT_TIMEOUT),
-            Effect.catchTag(
+            Ef.timeout(HIGHLIGHT_TIMEOUT),
+            Ef.catchTag(
               'TimeoutException',
-              () => Effect.fail(new Error(`Highlight timeout after ${Duration.toSeconds(HIGHLIGHT_TIMEOUT)} seconds`)),
+              () => Ef.fail(new Error(`Highlight timeout after ${Duration.toSeconds(HIGHLIGHT_TIMEOUT)} seconds`)),
             ),
           ),
         )

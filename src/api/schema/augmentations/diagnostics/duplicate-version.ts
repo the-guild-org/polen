@@ -19,4 +19,4 @@ export const DiagnosticDuplicateVersion = Diagnostic.create({
 
 export const makeDiagnosticDuplicateVersion = Diagnostic.createMake(DiagnosticDuplicateVersion)
 
-export type DiagnosticDuplicateVersion = S.Schema.Type<typeof DiagnosticDuplicateVersion>
+export type DiagnosticDuplicateVersion = typeof DiagnosticDuplicateVersion.Type

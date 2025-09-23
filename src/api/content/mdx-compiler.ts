@@ -1,6 +1,7 @@
+import { Ef } from '#dep/effect'
 import * as Mdx from '@mdx-js/mdx'
 import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
-import { Data, Effect } from 'effect'
+import { Data } from 'effect'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import type { Pluggable } from 'unified'
@@ -84,8 +85,8 @@ export class MdxCompilationError extends Data.TaggedError('MdxCompilationError')
 export const compileMdxToFunctionBody = (
   content: string,
   options?: MdxPluginOptions,
-): Effect.Effect<any, MdxCompilationError, never> =>
-  Effect.tryPromise({
+): Ef.Effect<any, MdxCompilationError, never> =>
+  Ef.tryPromise({
     try: () =>
       Mdx.compile(content, {
         ...MDX_CONFIG,

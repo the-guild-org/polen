@@ -1,9 +1,9 @@
 import type { Config } from '#api/config/$'
-import { O } from '#dep/effect'
-import { MemoryFilesystem } from '#lib/memory-filesystem/$'
+import { Ef, Op } from '#dep/effect'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { FsMemory } from '@wollybeard/kit'
 import { Test } from '@wollybeard/kit/test'
-import { Effect, HashMap } from 'effect'
+import { HashMap } from 'effect'
 import { Catalog, Grafaid, Schema as SchemaLib } from 'graphql-kit'
 import { expect } from 'vitest'
 import { Schema } from './$.js'
@@ -111,7 +111,7 @@ const createTestConfig = (overrides?: Partial<Config.Config>): Config.Config => 
 
 // Helper to build GraphQL schema using Grafaid to avoid realm issues
 const buildSchemaWithGrafaid = (sdl: string) =>
-  Effect.gen(function*() {
+  Ef.gen(function*() {
     const ast = yield* Grafaid.Parse.parseSchema(sdl, { source: 'test' })
     return yield* Grafaid.Schema.fromAST(ast)
   })
@@ -142,47 +142,53 @@ interface BaseTestCase {
 // Memory Input Source Tests
 // ============================================================================
 
-// dprint-ignore
-testWithFileSystem<BaseTestCase&{
+type MemorySourceInput = {
+  config: any
+}
+type MemorySourceOutput = {
   expected: {
+    isApplicable: boolean
     result: 'null' | 'unversioned' | 'versioned'
     revisionCount?: number
     latestRevisionDate?: string
   }
-}>('Memory Input Source', [
-  { name: 'undefined revisions',
-    config: {},
-    expected: { isApplicable: false, result: 'null' } },
+}
 
-  { name: 'null revisions',
-    config: { revisions: null },
-    expected: { isApplicable: false, result: 'null' } },
+// dprint-ignore
+testWithFileSystem<MemorySourceInput, MemorySourceOutput>('Memory Input Source', [
+  { n: 'undefined revisions',
+    i: { config: {} },
+    o: { expected: { isApplicable: false, result: 'null' } } },
 
-  { name: 'empty array',
-    config: { revisions: [] },
-    expected: { isApplicable: true, result: 'null' } },
+  { n: 'null revisions',
+    i: { config: { revisions: null } },
+    o: { expected: { isApplicable: false, result: 'null' } } },
 
-  { name: 'single SDL string',
-    config: { revisions: sdl1 },
-    expected: { isApplicable: true, result: 'unversioned', revisionCount: 1 } },
+  { n: 'empty array',
+    i: { config: { revisions: [] } },
+    o: { expected: { isApplicable: true, result: 'null' } } },
 
-  { name: 'GraphQLSchema objects',
-    config: { revisions: 'USE_EFFECT_SCHEMAS' }, // Will be replaced in test
-    expected: { isApplicable: true, result: 'unversioned', revisionCount: 1 } },
+  { n: 'single SDL string',
+    i: { config: { revisions: sdl1 } },
+    o: { expected: { isApplicable: true, result: 'unversioned', revisionCount: 1 } } },
 
-  { name: 'pre-built unversioned catalog',
-    config: { revisions: 'USE_EFFECT_CATALOG' }, // Will be replaced in test
-    expected: { isApplicable: true, result: 'unversioned' } },
-], ({ config, expected }) => Effect.gen(function* () {
+  { n: 'GraphQLSchema objects',
+    i: { config: { revisions: 'USE_EFFECT_SCHEMAS' } }, // Will be replaced in test
+    o: { expected: { isApplicable: true, result: 'unversioned', revisionCount: 1 } } },
+
+  { n: 'pre-built unversioned catalog',
+    i: { config: { revisions: 'USE_EFFECT_CATALOG' } }, // Will be replaced in test
+    o: { expected: { isApplicable: true, result: 'unversioned' } } },
+], ({ i, o }) => Ef.gen(function* () {
   const source = Schema.InputSources.Memory.loader
   const context = { paths: createTestConfig().paths }
 
   // Handle special effect-based cases
-  let testConfig = config
-  if (config.revisions === 'USE_EFFECT_SCHEMAS') {
+  let testConfig = i.config
+  if (i.config.revisions === 'USE_EFFECT_SCHEMAS') {
     const schema1 = yield* buildSchemaWithGrafaid(sdl1)
     testConfig = { revisions: [schema1] } // Use single schema to avoid changeset calculation
-  } else if (config.revisions === 'USE_EFFECT_CATALOG') {
+  } else if (i.config.revisions === 'USE_EFFECT_CATALOG') {
     const schema = yield* buildSchemaWithGrafaid(sdl1)
     testConfig = {
       revisions: Catalog.Unversioned.make({
@@ -195,28 +201,28 @@ testWithFileSystem<BaseTestCase&{
   }
 
   const isApplicable = yield* source.isApplicable(testConfig, context)
-  expect(isApplicable).toBe(expected.isApplicable)
+  expect(isApplicable).toBe(o.expected.isApplicable)
 
-  if (expected.isApplicable) {
+  if (o.expected.isApplicable) {
     const result = yield* source.readIfApplicableOrThrow(testConfig, context)
 
-    if (expected.result === 'null') {
+    if (o.expected.result === 'null') {
       expect(result).toBe(null)
     } else {
       expect(result).not.toBe(null)
       expect(Catalog.is(result!)).toBe(true)
 
-      if (expected.result === 'unversioned') {
+      if (o.expected.result === 'unversioned') {
         expect(result!._tag).toBe('CatalogUnversioned')
 
-        if (expected.revisionCount !== undefined) {
-          const unversioned = result as Catalog.Unversioned.Unversioned
-          expect(unversioned.schema.revisions.length).toBe(expected.revisionCount)
+        if (o.expected.revisionCount !== undefined) {
+          const unversioned = result as Catalog.Unversioned
+          expect(unversioned.schema.revisions.length).toBe(o.expected.revisionCount)
         }
 
-        if (expected.latestRevisionDate !== undefined) {
-          const unversioned = result as Catalog.Unversioned.Unversioned
-          expect(unversioned.schema.revisions[0]?.date).toBe(expected.latestRevisionDate)
+        if (o.expected.latestRevisionDate !== undefined) {
+          const unversioned = result as Catalog.Unversioned
+          expect(unversioned.schema.revisions[0]?.date).toBe(o.expected.latestRevisionDate)
         }
       }
     }
@@ -227,73 +233,78 @@ testWithFileSystem<BaseTestCase&{
 // Load Function Tests
 // ============================================================================
 
-// dprint-ignore
-testWithFileSystem<BaseTestCase & {
+type LoadFunctionInput = {
   config: Partial<Config.Config>
+}
+type LoadFunctionOutput = {
   expected: {
+    isApplicable: boolean
     loadOrNull: 'null' | 'catalog'
     loadOrThrow: 'null' | 'catalog' | 'throws'
     errorMessage?: string
   }
-}>('Schema.loadOrNull', [
-  { name: 'no schema configured',
-    config: {},
-    expected: { isApplicable: false, loadOrNull: 'null', loadOrThrow: 'throws', errorMessage: 'No applicable schema source found' } },
+}
 
-  { name: 'schema disabled',
-    config: { schema: { enabled: false } },
-    expected: { isApplicable: false, loadOrNull: 'null', loadOrThrow: 'null' } },
+// dprint-ignore
+testWithFileSystem<LoadFunctionInput, LoadFunctionOutput>('Schema.loadOrNull', [
+  { n: 'no schema configured',
+    i: { config: {} },
+    o: { expected: { isApplicable: false, loadOrNull: 'null', loadOrThrow: 'throws', errorMessage: 'No applicable schema source found' } } },
 
-  { name: 'memory source with SDL',
-    config: {
+  { n: 'schema disabled',
+    i: { config: { schema: { enabled: false } } },
+    o: { expected: { isApplicable: false, loadOrNull: 'null', loadOrThrow: 'null' } } },
+
+  { n: 'memory source with SDL',
+    i: { config: {
       schema: {
         sources: {
           memory: { revisions: sdl1 } // Single SDL to avoid changeset calculation
         }
       }
-    },
-    expected: { isApplicable: true, loadOrNull: 'catalog', loadOrThrow: 'catalog' } },
-], ({ config, expected }) => Effect.gen(function* () {
-  const fullConfig = createTestConfig(config)
+    } },
+    o: { expected: { isApplicable: true, loadOrNull: 'catalog', loadOrThrow: 'catalog' } } },
+], ({ i, o }) => Ef.gen(function* () {
+  const fullConfig = createTestConfig(i.config)
 
   // Test loadOrNull
   const nullResult = yield* Schema.loadOrNull(fullConfig)
 
-  if (expected.loadOrNull === 'null') {
-    expect(O.isNone(nullResult)).toBe(true)
+  if (o.expected.loadOrNull === 'null') {
+    expect(Op.isNone(nullResult)).toBe(true)
   } else {
-    expect(O.isSome(nullResult)).toBe(true)
-    if (O.isSome(nullResult)) {
+    expect(Op.isSome(nullResult)).toBe(true)
+    if (Op.isSome(nullResult)) {
       expect(nullResult.value.data).not.toBe(null)
       // The data is wrapped in an Option, so we need to unwrap it
-      if (O.isSome(nullResult.value.data)) {
+      if (Op.isSome(nullResult.value.data)) {
         expect(Catalog.is(nullResult.value.data.value)).toBe(true)
       } else {
-        expect(O.isSome(nullResult.value.data)).toBe(true) // This will fail if data is None
+        expect(Op.isSome(nullResult.value.data)).toBe(true) // This will fail if data is None
       }
     }
   }
 
   // Test loadOrThrow
-  if (expected.loadOrThrow === 'throws') {
-    const result = yield* Effect.either(Schema.loadOrThrow(fullConfig))
+  if (o.expected.loadOrThrow === 'throws') {
+    const result = yield* Ef.either(Schema.loadOrThrow(fullConfig))
     expect(result._tag).toBe('Left')
     if (result._tag === 'Left') {
-      expect(result.left.message).toContain(expected.errorMessage)
+      expect(result.left.message).toContain(o.expected.errorMessage)
     }
   } else {
     const result = yield* Schema.loadOrThrow(fullConfig)
-    if (expected.loadOrThrow === 'null') {
-      expect(O.isNone(result)).toBe(true)
+    if (o.expected.loadOrThrow === 'null') {
+      expect(Op.isNone(result)).toBe(true)
     } else {
-      expect(O.isSome(result)).toBe(true)
-      if (O.isSome(result)) {
+      expect(Op.isSome(result)).toBe(true)
+      if (Op.isSome(result)) {
         expect(result.value.data).not.toBe(null)
         // The data is wrapped in an Option, so we need to unwrap it
-        if (O.isSome(result.value.data)) {
+        if (Op.isSome(result.value.data)) {
           expect(Catalog.is(result.value.data.value)).toBe(true)
         } else {
-          expect(O.isSome(result.value.data)).toBe(true) // This will fail if data is None
+          expect(Op.isSome(result.value.data)).toBe(true) // This will fail if data is None
         }
       }
     }
@@ -305,215 +316,201 @@ testWithFileSystem<BaseTestCase & {
 // ============================================================================
 
 // These tests demonstrate what we'll test when Effect is implemented
-// dprint-ignore
-testWithFileSystem<BaseTestCase & {
+type FileSystemInput = {
   diskLayout: Record<string, string>
   sourceType: 'file' | 'directory' | 'versionedDirectory'
+  config: any
+}
+type FileSystemOutput = {
   expected: {
+    isApplicable: boolean
     catalogType?: 'unversioned' | 'versioned'
     versionCount?: number
     revisionCount?: number
   }
-}>('File System Input Sources (Future)', [
+}
+
+// dprint-ignore
+testWithFileSystem<FileSystemInput, FileSystemOutput>('File System Input Sources (Future)', [
   // File source cases
-  { name: 'file source - missing file',
-    diskLayout: {},
-    sourceType: 'file',
-    config: { path: '/project/schema.graphql' },
-    expected: { isApplicable: false },
+  { n: 'file source - missing file',
+    i: { diskLayout: {}, sourceType: 'file', config: { path: '/project/schema.graphql' } },
+    o: { expected: { isApplicable: false } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'file source - existing file',
-    diskLayout: { '/project/schema.graphql': sdl1 },
-    sourceType: 'file',
-    config: { path: '/project/schema.graphql' },
-    expected: { isApplicable: true, catalogType: 'unversioned', revisionCount: 1 },
+  { n: 'file source - existing file',
+    i: { diskLayout: { '/project/schema.graphql': sdl1 }, sourceType: 'file', config: { path: '/project/schema.graphql' } },
+    o: { expected: { isApplicable: true, catalogType: 'unversioned', revisionCount: 1 } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'file source - non-graphql file',
-    diskLayout: { '/project/schema.txt': sdl1 },
-    sourceType: 'file',
-    config: { path: '/project/schema.txt' },
-    expected: { isApplicable: false },
+  { n: 'file source - non-graphql file',
+    i: { diskLayout: { '/project/schema.txt': sdl1 }, sourceType: 'file', config: { path: '/project/schema.txt' } },
+    o: { expected: { isApplicable: false } },
     todo: 'Implement with Effect FileSystem' },
 
   // Directory source cases
-  { name: 'directory source - missing directory',
-    diskLayout: {},
-    sourceType: 'directory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: false },
+  { n: 'directory source - missing directory',
+    i: { diskLayout: {}, sourceType: 'directory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: false } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'directory source - empty directory',
-    diskLayout: { '/project/schema/.gitkeep': '' },
-    sourceType: 'directory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: false },
+  { n: 'directory source - empty directory',
+    i: { diskLayout: { '/project/schema/.gitkeep': '' }, sourceType: 'directory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: false } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'directory source - invalid file names',
-    diskLayout: {
+  { n: 'directory source - invalid file names',
+    i: { diskLayout: {
       '/project/schema/readme.md': '# Schema',
       '/project/schema/invalid.graphql': sdl1,
-    },
-    sourceType: 'directory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: false },
+    }, sourceType: 'directory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: false } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'directory source - valid date files',
-    diskLayout: {
+  { n: 'directory source - valid date files',
+    i: { diskLayout: {
       '/project/schema/2024-01-01.graphql': sdl1,
       '/project/schema/2024-02-01.graphql': sdl2,
-    },
-    sourceType: 'directory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: true, catalogType: 'unversioned', revisionCount: 2 },
+    }, sourceType: 'directory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: true, catalogType: 'unversioned', revisionCount: 2 } },
     todo: 'Implement with Effect FileSystem' },
 
   // Versioned directory cases
-  { name: 'versioned directory - missing directory',
-    diskLayout: {},
-    sourceType: 'versionedDirectory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: false },
+  { n: 'versioned directory - missing directory',
+    i: { diskLayout: {}, sourceType: 'versionedDirectory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: false } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'versioned directory - invalid version names',
-    diskLayout: {
+  { n: 'versioned directory - invalid version names',
+    i: { diskLayout: {
       '/project/schema/invalid/schema.graphql': sdl1,
       '/project/schema/readme.md': '# Schema',
-    },
-    sourceType: 'versionedDirectory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: false },
+    }, sourceType: 'versionedDirectory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: false } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'versioned directory - valid versions',
-    diskLayout: {
+  { n: 'versioned directory - valid versions',
+    i: { diskLayout: {
       '/project/schema/1.0.0/schema.graphql': sdl1,
       '/project/schema/2.0.0/schema.graphql': sdl2,
       '/project/schema/3.0.0/schema.graphql': sdl3,
-    },
-    sourceType: 'versionedDirectory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: true, catalogType: 'versioned', versionCount: 3 },
+    }, sourceType: 'versionedDirectory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: true, catalogType: 'versioned', versionCount: 3 } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'versioned directory - mixed valid/invalid',
-    diskLayout: {
+  { n: 'versioned directory - mixed valid/invalid',
+    i: { diskLayout: {
       '/project/schema/1.0.0/readme.md': '# Version 1',
       '/project/schema/2.0.0/schema.graphql': sdl2,
-    },
-    sourceType: 'versionedDirectory',
-    config: { path: '/project/schema' },
-    expected: { isApplicable: true, catalogType: 'versioned', versionCount: 1 },
+    }, sourceType: 'versionedDirectory', config: { path: '/project/schema' } },
+    o: { expected: { isApplicable: true, catalogType: 'versioned', versionCount: 1 } },
     todo: 'Implement with Effect FileSystem' },
-], ({ diskLayout, sourceType, config, expected }) => Effect.gen(function* () {
+], ({ i, o }) => Ef.gen(function* () {
   // Get the appropriate input source loader
   const sourceLoaders = {
     'file': Schema.InputSources.File.loader,
     'directory': Schema.InputSources.Directory.loader,
     'versionedDirectory': Schema.InputSources.VersionedDirectory.loader,
   }
-  const source = sourceLoaders[sourceType]
+  const source = sourceLoaders[i.sourceType]
   const context = { paths: createTestConfig().paths }
 
   // Test with memory file system
-  const program = Effect.gen(function* () {
-    const isApplicable = yield* source.isApplicable(config, context)
-    expect(isApplicable).toBe(expected.isApplicable)
+  const program = Ef.gen(function* () {
+    const isApplicable = yield* source.isApplicable(i.config, context)
+    expect(isApplicable).toBe(o.expected.isApplicable)
 
-    if (expected.isApplicable && expected.catalogType) {
-      const result = yield* source.readIfApplicableOrThrow(config, context)
+    if (o.expected.isApplicable && o.expected.catalogType) {
+      const result = yield* source.readIfApplicableOrThrow(i.config, context)
       expect(result).not.toBe(null)
       expect(Catalog.is(result!)).toBe(true)
 
-      if (expected.catalogType === 'versioned') {
+      if (o.expected.catalogType === 'versioned') {
         expect(result!._tag).toBe('CatalogVersioned')
-        if (expected.versionCount !== undefined) {
-          const versioned = result as Catalog.Versioned.Versioned
-          expect(HashMap.size(versioned.entries)).toBe(expected.versionCount)
+        if (o.expected.versionCount !== undefined) {
+          const versioned = result as Catalog.Versioned
+          expect(HashMap.size(versioned.entries)).toBe(o.expected.versionCount)
         }
       } else {
         expect(result!._tag).toBe('CatalogUnversioned')
-        if (expected.revisionCount !== undefined) {
-          const unversioned = result as Catalog.Unversioned.Unversioned
-          expect(unversioned.schema.revisions.length).toBe(expected.revisionCount)
+        if (o.expected.revisionCount !== undefined) {
+          const unversioned = result as Catalog.Unversioned
+          expect(unversioned.schema.revisions.length).toBe(o.expected.revisionCount)
         }
       }
     }
   })
 
-  yield* program.pipe(Effect.provide(MemoryFilesystem.layer(diskLayout)))
+  yield* program.pipe(Ef.provide(FsMemory.layer(i.diskLayout)))
 }))
 
 // ============================================================================
 // Source Priority Tests
 // ============================================================================
 
-// dprint-ignore
-testWithFileSystem<BaseTestCase & {
+type SourcePriorityInput = {
   diskLayout: Record<string, string>
   config: Partial<Config.Config>
+}
+type SourcePriorityOutput = {
   expected: {
+    isApplicable: boolean
     detectedSource: string
     catalogType: 'unversioned' | 'versioned'
   }
-}>('Source Priority (Future)', [
-  { name: 'default priority - file over directory',
-    diskLayout: {
+}
+
+// dprint-ignore
+testWithFileSystem<SourcePriorityInput, SourcePriorityOutput>('Source Priority (Future)', [
+  { n: 'default priority - file over directory',
+    i: { diskLayout: {
       '/project/schema.graphql': sdl1,
       '/project/schema/2024-01-01.graphql': sdl2,
-    },
-    config: { paths: { project: { rootDir: '/project' }  } },
-    expected: { isApplicable: true, detectedSource: 'file', catalogType: 'unversioned' },
+    }, config: createTestConfig() },
+    o: { expected: { isApplicable: true, detectedSource: 'file', catalogType: 'unversioned' } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'custom priority - directory first',
-    diskLayout: {
+  { n: 'custom priority - directory first',
+    i: { diskLayout: {
       '/project/schema.graphql': sdl1,
       '/project/schema/2024-01-01.graphql': sdl2,
-    },
-    config: {
-      paths: { project: { rootDir: '/project' }  },
+    }, config: {
+      ...createTestConfig(),
       schema: { useSources: ['directory', 'file'] }
-    },
-    expected: { isApplicable: true, detectedSource: 'directory', catalogType: 'unversioned' },
+    } },
+    o: { expected: { isApplicable: true, detectedSource: 'directory', catalogType: 'unversioned' } },
     todo: 'Implement with Effect FileSystem' },
 
-  { name: 'fallback when first not applicable',
-    diskLayout: {
+  { n: 'fallback when first not applicable',
+    i: { diskLayout: {
       '/project/schema/1.0.0/schema.graphql': sdl1,
-    },
-    config: {
-      paths: { project: { rootDir: '/project' }  },
+    }, config: {
+      ...createTestConfig(),
       schema: { useSources: ['file', 'versionedDirectory'] }
-    },
-    expected: { isApplicable: true, detectedSource: 'versionedDirectory', catalogType: 'versioned' },
+    } },
+    o: { expected: { isApplicable: true, detectedSource: 'versionedDirectory', catalogType: 'versioned' } },
     todo: 'Implement with Effect FileSystem' },
-], ({ diskLayout, config, expected }) => Effect.gen(function* () {
-  const fullConfig = createTestConfig(config)
+], ({ i, o }) => Ef.gen(function* () {
+  const fullConfig = createTestConfig(i.config)
 
   // Test with memory file system to simulate source priority
-  const program = Effect.gen(function* () {
+  const program = Ef.gen(function* () {
     const result = yield* Schema.loadOrNull(fullConfig)
-    expect(O.isSome(result)).toBe(true)
+    expect(Op.isSome(result)).toBe(true)
 
     // Note: This is a simplified test since we don't have access to which source was detected
     // In a full implementation, we would need the Schema.load function to return source info
-    if (O.isSome(result)) {
+    if (Op.isSome(result)) {
       expect(result.value.data).not.toBe(null)
       expect(Catalog.is(result.value.data!)).toBe(true)
     }
 
-    if (O.isSome(result) && expected.catalogType === 'versioned') {
+    if (Op.isSome(result) && o.expected.catalogType === 'versioned') {
       expect(result.value.data!._tag).toBe('CatalogVersioned')
-    } else if (O.isSome(result)) {
+    } else if (Op.isSome(result)) {
       expect(result.value.data!._tag).toBe('CatalogUnversioned')
     }
   })
 
-  yield* program.pipe(Effect.provide(MemoryFilesystem.layer(diskLayout)))
+  yield* program.pipe(Ef.provide(FsMemory.layer(i.diskLayout)))
 }))

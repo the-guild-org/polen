@@ -1,84 +1,90 @@
-import { Path } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 
 export interface PackagePaths {
   name: string
   isRunningFromSource: boolean
   static: {
-    source: string
-    build: string
+    source: FsLoc.AbsDir.AbsDir
+    build: FsLoc.AbsDir.AbsDir
   }
-  rootDir: string
-  sourceExtension: `.js` | `.ts`
-  sourceDir: string
+  rootDir: FsLoc.AbsDir.AbsDir
+  sourceExtension: typeof sourceExt
+  sourceDir: FsLoc.AbsDir.AbsDir
   template: {
     absolute: {
-      rootDir: string
+      rootDir: FsLoc.AbsDir.AbsDir
       server: {
-        app: string
-        entrypoint: string
+        app: FsLoc.AbsFile.AbsFile
+        entrypoint: FsLoc.AbsFile.AbsFile
       }
       client: {
-        entrypoint: string
+        entrypoint: FsLoc.AbsFile.AbsFile
       }
     }
     relative: {
-      rootDir: string
+      rootDir: FsLoc.RelDir.RelDir
       server: {
-        app: string
-        entrypoint: string
+        app: FsLoc.RelFile.RelFile
+        entrypoint: FsLoc.RelFile.RelFile
       }
       client: {
-        entrypoint: string
+        entrypoint: FsLoc.RelFile.RelFile
       }
     }
   }
 }
 
-const sourceDirRelativeExp = `src`
-const buildDirRelativeExp = `build`
+const l = FsLoc.fromString
+const j = FsLoc.join
+
+const buildDirRelativeExp = l(`build`)
 
 /**
  * Usually ./build but if running source then ./src
  */
-const sourceDir = import.meta.dirname
-const templateDir = Path.join(sourceDir, `template`)
-const rootDir = Path.join(sourceDir, `..`)
+const sourceDir = FsLoc.AbsDir.decodeSync(import.meta.dirname)
+const templateDir = FsLoc.join(sourceDir, l(`template`))
+const rootDir = FsLoc.up(sourceDir)
 
-const isRunningFromSource = sourceDir.endsWith(sourceDirRelativeExp)
+const isRunningFromSource = FsLoc.encodeSync(sourceDir).endsWith('src')
 
-const sourceKind = isRunningFromSource ? `.ts` : `.js`
+const sourceExt = isRunningFromSource ? `.ts` : `.js`
+const sourceExtJsx = isRunningFromSource ? `.tsx` : `.js`
 
-const templateDirRelative = isRunningFromSource ? `src/template` : `build/template`
+const templateDirRelative = l(isRunningFromSource ? `src/template` : `build/template`)
 
 export const packagePaths: PackagePaths = {
   name: `polen`,
   isRunningFromSource,
   static: {
     source: sourceDir,
-    build: buildDirRelativeExp,
+    build: j(rootDir, buildDirRelativeExp),
   },
-  sourceExtension: sourceKind,
+  sourceExtension: sourceExt,
   rootDir: rootDir,
-  sourceDir,
+  sourceDir: sourceDir,
   template: {
     absolute: {
       rootDir: templateDir,
       server: {
-        app: Path.join(templateDir, `server/app${sourceKind}`),
-        entrypoint: Path.join(templateDir, `server/main${sourceKind}`),
+        app: j(templateDir, l(`server/app${sourceExt}`)),
+        entrypoint: j(templateDir, l(`server/main${sourceExt}`)),
       },
       client: {
-        entrypoint: Path.join(templateDir, `entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
+        entrypoint: j(
+          templateDir,
+          FsLoc.RelFile.decodeSync(`entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
+        ),
       },
     },
     relative: {
       rootDir: templateDirRelative,
       server: {
-        app: `${templateDirRelative}/server/app${sourceKind}`,
-        entrypoint: `${templateDirRelative}/server/main${sourceKind}`,
+        app: j(templateDirRelative, l(`server/app${sourceExt}`)),
+        entrypoint: j(templateDirRelative, l(`server/main${sourceExt}`)),
       },
       client: {
-        entrypoint: `${templateDirRelative}/entry.client${isRunningFromSource ? `.tsx` : `.js`}`,
+        entrypoint: j(templateDirRelative, l(`entry.client${sourceExtJsx}`)),
       },
     },
   },

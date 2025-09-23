@@ -30,7 +30,7 @@ test('no reference or changelog when schema is omitted or disabled', async ({ pa
   }
   {
     // Use isolated project directory - no schema at all
-    const viteUserConfig = await pc({}, project.layout.cwd)
+    const viteUserConfig = await pc({}, project.dir.base)
     viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await tests()
     await vite.stopDevelopmentServer()
@@ -42,7 +42,7 @@ test('no reference or changelog when schema is omitted or disabled', async ({ pa
         ...configMemorySchema(sdl),
         enabled: false,
       },
-    }, project.layout.cwd)
+    }, project.dir.base)
     viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
     await tests()
     await vite.stopDevelopmentServer()
@@ -52,7 +52,7 @@ test('no reference or changelog when schema is omitted or disabled', async ({ pa
 test('can loads schema from memory data source', async ({ page, vite, project }) => {
   const viteUserConfig = await pc({
     schema: configMemorySchema(sdl),
-  }, project.layout.cwd)
+  }, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
@@ -64,10 +64,10 @@ test('can loads schema from memory data source', async ({ page, vite, project })
 })
 
 test('can loads schema from schema data source', async ({ page, vite, project }) => {
-  await project.layout.set({
+  await project.dir.set({
     'schema.graphql': sdl,
   })
-  const viteUserConfig = await pc({}, project.layout.cwd)
+  const viteUserConfig = await pc({}, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
@@ -76,10 +76,10 @@ test('can loads schema from schema data source', async ({ page, vite, project })
 })
 
 test('can loads schema from directory data source', async ({ page, vite, project }) => {
-  await project.layout.set({
+  await project.dir.set({
     'schema/2020-01-01.graphql': sdl,
   })
-  const viteUserConfig = await pc({}, project.layout.cwd)
+  const viteUserConfig = await pc({}, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
@@ -87,10 +87,10 @@ test('can loads schema from directory data source', async ({ page, vite, project
 })
 
 test('can loads schema from directory data source with single schema.graphql', async ({ page, vite, project }) => {
-  await project.layout.set({
+  await project.dir.set({
     'schema/schema.graphql': sdl,
   })
-  const viteUserConfig = await pc({}, project.layout.cwd)
+  const viteUserConfig = await pc({}, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
   await page.getByRole('link', { name: 'Reference', exact: true }).click()
@@ -103,7 +103,7 @@ test.skip('can loads schema from introspection data source', async ({ page, vite
       useSources: 'introspection',
       sources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
     },
-  }, project.layout.cwd)
+  }, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/reference').href)
   await expect(page.getByText('Query', { exact: true })).toBeVisible()
@@ -114,19 +114,19 @@ test.skip('introspection loads when no other sources exist', async ({ page, vite
     schema: {
       sources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
     },
-  }, project.layout.cwd)
+  }, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/reference').href)
   await expect(page.getByText('Query', { exact: true })).toBeVisible()
 })
 
 test('file source takes precedence over introspection by default', async ({ page, vite, project }) => {
-  await project.layout.set({ 'schema.graphql': sdl })
+  await project.dir.set({ 'schema.graphql': sdl })
   const viteUserConfig = await pc({
     schema: {
       sources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },
     },
-  }, project.layout.cwd)
+  }, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/reference').href)
   await expect(page.getByRole('link', { name: /Mutation/ })).toBeVisible()

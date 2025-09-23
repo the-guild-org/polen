@@ -2,9 +2,10 @@
  * Worker that runs a Polen server for SSG.
  * This is executed in a child process using Effect Worker API.
  */
+import { Ef } from '#dep/effect'
 import { WorkerRunner } from '@effect/platform'
 import { NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Duration, Effect, Layer, Ref } from 'effect'
+import { Duration, Layer, Ref } from 'effect'
 import { spawn } from 'node:child_process'
 import type { ChildProcess } from 'node:child_process'
 import { ServerMessage } from './worker-messages.js'
@@ -18,12 +19,12 @@ const serverProcessRef = Ref.unsafeMake<ChildProcess | null>(null)
 
 const handlers = {
   StartServer: ({ serverPath, port }: { serverPath: string; port: number }) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       // If there's already a server running, stop it first
       const existingProcess = yield* Ref.get(serverProcessRef)
       if (existingProcess) {
         existingProcess.kill('SIGTERM')
-        yield* Effect.sleep(Duration.millis(500))
+        yield* Ef.sleep(Duration.millis(500))
         if (!existingProcess.killed) {
           existingProcess.kill('SIGKILL')
         }
@@ -31,9 +32,9 @@ const handlers = {
       }
 
       // Start the server process
-      yield* Effect.logDebug(`Starting server with command: node ${serverPath}`)
+      yield* Ef.logDebug(`Starting server with command: node ${serverPath}`)
 
-      const proc = yield* Effect.sync(() => {
+      const proc = yield* Ef.sync(() => {
         const serverProc = spawn('node', [serverPath], {
           env: {
             ...process.env,
@@ -44,14 +45,14 @@ const handlers = {
 
         // Log server output
         serverProc.stdout?.on('data', (data) => {
-          Effect.logDebug(`[Server ${port}] stdout: ${data.toString().trim()}`).pipe(
-            Effect.runSync,
+          Ef.logDebug(`[Server ${port}] stdout: ${data.toString().trim()}`).pipe(
+            Ef.runSync,
           )
         })
 
         serverProc.stderr?.on('data', (data) => {
-          Effect.logDebug(`[Server ${port}] stderr: ${data.toString().trim()}`).pipe(
-            Effect.runSync,
+          Ef.logDebug(`[Server ${port}] stderr: ${data.toString().trim()}`).pipe(
+            Ef.runSync,
           )
         })
 
@@ -61,16 +62,16 @@ const handlers = {
       yield* Ref.set(serverProcessRef, proc)
 
       // Wait for server to be ready with proper interruption support
-      const waitForReady = Effect.async<void>((resume) => {
+      const waitForReady = Ef.async<void>((resume) => {
         // Handle process errors
         const errorHandler = (error: Error) => {
-          resume(Effect.die(new Error(`Server failed to start on port ${port}: ${error.message}`)))
+          resume(Ef.die(new Error(`Server failed to start on port ${port}: ${error.message}`)))
         }
 
         // Handle process exit
         const exitHandler = (code: number | null, signal: NodeJS.Signals | null) => {
           if (code !== 0 && code !== null) {
-            resume(Effect.die(new Error(`Server exited with code ${code} (signal: ${signal})`)))
+            resume(Ef.die(new Error(`Server exited with code ${code} (signal: ${signal})`)))
           }
         }
 
@@ -83,11 +84,11 @@ const handlers = {
           try {
             const response = await fetch(`http://localhost:${port}/`)
             if (response.ok || response.status === 404) {
-              Effect.logDebug(`[Server ${port}] Ready!`).pipe(Effect.runSync)
+              Ef.logDebug(`[Server ${port}] Ready!`).pipe(Ef.runSync)
               if (checkInterval) clearInterval(checkInterval)
               proc.removeListener('error', errorHandler)
               proc.removeListener('exit', exitHandler)
-              resume(Effect.succeed(undefined))
+              resume(Ef.succeed(undefined))
             }
           } catch (error) {
             // Server not ready yet, will retry on next interval
@@ -101,7 +102,7 @@ const handlers = {
         }, 500)
 
         // Return cleanup function for interruption
-        return Effect.sync(() => {
+        return Ef.sync(() => {
           if (checkInterval) {
             clearInterval(checkInterval)
           }
@@ -112,29 +113,29 @@ const handlers = {
 
       // Apply timeout with proper Effect interruption
       yield* waitForReady.pipe(
-        Effect.timeout(Duration.seconds(30)),
-        Effect.catchTag('TimeoutException', () =>
-          Effect.die(new Error(`Server on port ${port} failed to start within 30 seconds`))),
+        Ef.timeout(Duration.seconds(30)),
+        Ef.catchTag('TimeoutException', () =>
+          Ef.die(new Error(`Server on port ${port} failed to start within 30 seconds`))),
       )
 
-      yield* Effect.logDebug(`Server on port ${port} started successfully`)
+      yield* Ef.logDebug(`Server on port ${port} started successfully`)
     }),
   StopServer: ({ port }: { port?: number | undefined }) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       const serverProc = yield* Ref.get(serverProcessRef)
       if (serverProc) {
         if (port !== undefined) {
-          yield* Effect.logDebug(`Stopping server on port ${port}`)
+          yield* Ef.logDebug(`Stopping server on port ${port}`)
         }
         serverProc.kill('SIGTERM')
         // Give it time to shut down gracefully
-        yield* Effect.sleep(Duration.millis(500))
+        yield* Ef.sleep(Duration.millis(500))
         if (!serverProc.killed) {
           serverProc.kill('SIGKILL')
         }
         yield* Ref.set(serverProcessRef, null)
         if (port !== undefined) {
-          yield* Effect.logDebug(`Server on port ${port} stopped`)
+          yield* Ef.logDebug(`Server on port ${port} stopped`)
         }
       }
     }),

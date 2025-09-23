@@ -1,19 +1,22 @@
 import { InputSource } from '#api/schema/input-source/$'
 import { InputSourceError } from '#api/schema/input-source/errors'
-import { A } from '#dep/effect'
+import { mapToInputSourceError, normalizePathToAbs } from '#api/schema/input-source/helpers'
+import { Ar, Ef } from '#dep/effect'
 import { debugPolen } from '#singletons/debug'
+import type { FileSystem } from '@effect/platform'
 import { PlatformError } from '@effect/platform/Error'
-import { FileSystem } from '@effect/platform/FileSystem'
-import { Path } from '@wollybeard/kit'
-import { Effect, Order } from 'effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
+import { Order } from 'effect'
 import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
 
 // const debug = debugPolen.sub([`schema`, `data-source-schema-directory`])
 const debug = debugPolen.sub(`schema:data-source-schema-directory`)
 
+const l = FsLoc.fromString
+
 const defaultPaths = {
-  schemaDirectory: `./schema`,
-}
+  schemaDirectory: l(`./schema`),
+} as const
 
 /**
  * Configuration for loading schema(s) from a directory.
@@ -54,18 +57,16 @@ export interface Options {
    *   schema.graphql
    * ```
    */
-  path?: string
+  path?: string | FsLoc.AbsDir.AbsDir | FsLoc.RelDir.RelDir
 }
 
 export interface Config {
-  path: string
+  path: FsLoc.AbsDir.AbsDir
 }
 
-export const normalizeOptions = (options: Options, projectRoot: string): Config => {
+export const normalizeOptions = (options: Options, projectRoot: FsLoc.AbsDir.AbsDir): Config => {
   const config: Config = {
-    path: options.path
-      ? Path.ensureAbsolute(options.path, projectRoot)
-      : Path.join(projectRoot, defaultPaths.schemaDirectory),
+    path: normalizePathToAbs.dir(options.path, projectRoot, defaultPaths.schemaDirectory),
   }
 
   return config
@@ -74,12 +75,11 @@ export const normalizeOptions = (options: Options, projectRoot: string): Config 
 export const loader = InputSource.create({
   name: 'directory',
   isApplicable: (options: Options, context) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       const config = normalizeOptions(options, context.paths.project.rootDir)
 
       // Check if directory exists
-      const fs = yield* FileSystem
-      const dirStatsResult = yield* Effect.either(fs.stat(config.path))
+      const dirStatsResult = yield* Ef.either(Fs.stat(config.path))
       if (dirStatsResult._tag === 'Left') {
         return false
       }
@@ -90,48 +90,52 @@ export const loader = InputSource.create({
       }
 
       // Get all files in directory
-      const files = yield* fs.readDirectory(config.path)
+      const files = yield* Fs.read(config.path)
 
       // Check if we have either:
       // 1. A single schema.graphql file (non-versioned mode)
       // 2. Any .graphql files with valid date names (versioned mode)
-      const hasSchemaFile = A.some(files, file => file === 'schema.graphql')
-      const hasVersionedFiles = A.some(files, file => {
-        if (!file.endsWith('.graphql')) return false
-        const name = Path.basename(file, '.graphql')
+      const hasSchemaFile = Ar.some(files, entry => {
+        if (entry._tag !== 'LocAbsFile') return false
+        return FsLoc.name(entry) === 'schema.graphql'
+      })
+      const hasVersionedFiles = Ar.some(files, entry => {
+        if (entry._tag !== 'LocAbsFile') return false
+        const fileName = FsLoc.name(entry)
+        if (!fileName.endsWith('.graphql')) return false
+        const name = fileName.replace('.graphql', '')
         return /^\d{4}-\d{2}-\d{2}$/.test(name)
       })
 
       return hasSchemaFile || hasVersionedFiles
     }),
   readIfApplicableOrThrow: (options: Options, context) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       const config = normalizeOptions(options, context.paths.project.rootDir)
 
       debug(`will search`, config)
 
-      // Get FileSystem service
-      const fs = yield* FileSystem
-
       // Get all files in directory
-      const filesResult = yield* Effect.either(fs.readDirectory(config.path))
+      const filesResult = yield* Ef.either(Fs.read(config.path))
       if (filesResult._tag === 'Left') {
         debug(`error searching directory:`, filesResult.left)
         return null
       }
 
       const files = filesResult.right
-      const graphqlFiles = files.filter((file: string) => file.endsWith('.graphql'))
+      const graphqlFiles = files.filter((entry) => {
+        if (entry._tag !== 'LocAbsFile') return false
+        return FsLoc.name(entry).endsWith('.graphql')
+      }) as FsLoc.AbsFile.AbsFile[]
 
-      if (!A.isNonEmptyArray(graphqlFiles)) {
+      if (!Ar.isNonEmptyArray(graphqlFiles)) {
         return null
       }
 
-      const filePaths = graphqlFiles.map(file => Path.join(config.path, file))
-      debug(`did find`, filePaths)
+      debug(`did find`, graphqlFiles)
 
       // Check for single schema.graphql file (non-versioned mode)
-      const singleSchemaPath = filePaths.find(p => Path.basename(p) === 'schema.graphql')
+      const singleSchemaPath = graphqlFiles.find(p => FsLoc.name(p) === 'schema.graphql')
       if (singleSchemaPath) {
         // Use today's date for single schema file
         const today = DateOnly.fromDate(new Date())
@@ -147,8 +151,9 @@ export const loader = InputSource.create({
       }
 
       // Otherwise, look for versioned files with date prefixes
-      const revisionInputs = A.map(filePaths, (filePath) => {
-        const name = Path.basename(filePath, '.graphql')
+      const revisionInputs = Ar.map(graphqlFiles, (filePath) => {
+        const fileName = FsLoc.name(filePath)
+        const name = fileName.replace('.graphql', '')
         // Validate date format YYYY-MM-DD
         const dateMatch = name.match(/^\d{4}-\d{2}-\d{2}$/)
         if (!dateMatch) return null
@@ -158,7 +163,7 @@ export const loader = InputSource.create({
         }
       }).filter((x): x is NonNullable<typeof x> => x !== null)
 
-      if (!A.isNonEmptyArray(revisionInputs)) {
+      if (!Ar.isNonEmptyArray(revisionInputs)) {
         return null
       }
 
@@ -174,31 +179,19 @@ export const loader = InputSource.create({
 })
 
 const read = (
-  revisionInputs: { date: DateOnly.DateOnly; filePath: string }[],
-): Effect.Effect<Schema.Unversioned.Unversioned, InputSourceError | PlatformError, FileSystem> =>
-  Effect.gen(function*() {
-    const revisionInputsLoaded = yield* Effect.all(
-      A.map(revisionInputs, (revisionInput) =>
-        Effect.gen(function*() {
-          const fs = yield* FileSystem
-          const content = yield* fs.readFileString(revisionInput.filePath)
-          const ast = yield* Grafaid.Parse.parseSchema(content, { source: revisionInput.filePath }).pipe(
-            Effect.mapError((error) =>
-              new InputSourceError({
-                source: 'directory',
-                message: error.message,
-                cause: error,
-              })
-            ),
-          )
+  revisionInputs: { date: DateOnly.DateOnly; filePath: FsLoc.AbsFile.AbsFile }[],
+): Ef.Effect<Schema.Unversioned.Unversioned, InputSourceError | PlatformError, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
+    const revisionInputsLoaded = yield* Ef.all(
+      Ar.map(revisionInputs, (revisionInput) =>
+        Ef.gen(function*() {
+          const content = yield* Fs.readString(revisionInput.filePath)
+          const ast = yield* Grafaid.Parse.parseSchema(content, { source: FsLoc.encodeSync(revisionInput.filePath) })
+            .pipe(
+              Ef.mapError(mapToInputSourceError('directory')),
+            )
           const schema = yield* Grafaid.Schema.fromAST(ast).pipe(
-            Effect.mapError((error) =>
-              new InputSourceError({
-                source: 'directory',
-                message: error.message,
-                cause: error,
-              })
-            ),
+            Ef.mapError(mapToInputSourceError('directory')),
           )
 
           return {
@@ -211,14 +204,14 @@ const read = (
     debug(`read revisions`)
 
     // Sort by date descending (newest first for consistent catalog structure)
-    const revisionInputsSorted = A.sort(
+    const revisionInputsSorted = Ar.sort(
       revisionInputsLoaded,
       Order.mapInput(DateOnly.order, (item: typeof revisionInputsLoaded[0]) => item.date),
     )
 
-    const revisions = yield* Effect.all(
-      A.map(revisionInputsSorted, (item, index) =>
-        Effect.gen(function*() {
+    const revisions = yield* Ef.all(
+      Ar.map(revisionInputsSorted, (item, index) =>
+        Ef.gen(function*() {
           const current = item
           const previous = revisionInputsSorted[index - 1]
 
@@ -226,13 +219,7 @@ const read = (
           const after = current.schema
 
           const changes = yield* Change.calcChangeset({ before, after }).pipe(
-            Effect.mapError((error) =>
-              new InputSourceError({
-                source: 'directory',
-                message: `Failed to calculate changeset: ${error}`,
-                cause: error,
-              })
-            ),
+            Ef.mapError(mapToInputSourceError('directory')),
           )
 
           return Revision.make({
@@ -246,7 +233,7 @@ const read = (
     // Get the latest schema (first in the array after sorting newest first)
     const latestSchemaData = revisionInputsSorted[0]?.schema
     if (!latestSchemaData) {
-      return yield* Effect.fail(new InputSourceError({ source: 'directory', message: 'No schema files found' }))
+      return yield* Ef.fail(new InputSourceError({ source: 'directory', message: 'No schema files found' }))
     }
 
     // Create unversioned schema with full revisions

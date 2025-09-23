@@ -3,9 +3,9 @@
  */
 
 import { Api } from '#api/$'
+import { Ef } from '#dep/effect'
 import { toViteUserConfig } from '#vite/config'
 import { NodeFileSystem } from '@effect/platform-node'
-import { Effect } from 'effect'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
@@ -33,10 +33,10 @@ test.skip('GraphQL documents render with syntax highlighting', async ({ page, vi
     ].join('\n'),
   }
 
-  await project.layout.set(fixture)
-  const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
-      Effect.provide(NodeFileSystem.layer),
+  await project.dir.set(fixture)
+  const polenConfig = await Ef.runPromise(
+    Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+      Ef.provide(NodeFileSystem.layer),
     ),
   )
   const viteConfig = toViteUserConfig(polenConfig)
@@ -84,10 +84,10 @@ test.skip('GraphQL documents handle schema-less rendering gracefully', async ({ 
     ].join('\n'),
   }
 
-  await project.layout.set(fixture)
-  const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
-      Effect.provide(NodeFileSystem.layer),
+  await project.dir.set(fixture)
+  const polenConfig = await Ef.runPromise(
+    Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+      Ef.provide(NodeFileSystem.layer),
     ),
   )
   const viteConfig = toViteUserConfig(polenConfig)
@@ -140,10 +140,10 @@ test.skip('Multiple GraphQL documents on same page work correctly', async ({ pag
     ].join('\n'),
   }
 
-  await project.layout.set(fixture)
-  const polenConfig = await Effect.runPromise(
-    Api.ConfigResolver.fromMemory({}, project.layout.cwd).pipe(
-      Effect.provide(NodeFileSystem.layer),
+  await project.dir.set(fixture)
+  const polenConfig = await Ef.runPromise(
+    Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+      Ef.provide(NodeFileSystem.layer),
     ),
   )
   const viteConfig = toViteUserConfig(polenConfig)

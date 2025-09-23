@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
+import { Ef } from '#dep/effect'
 import { Command, HelpDoc, Span } from '@effect/cli'
 import { NodeContext, NodeRuntime } from '@effect/platform-node'
 import { NodeFileSystem } from '@effect/platform-node'
 import { PackageManager } from '@wollybeard/kit'
-import { Console, Effect, Layer } from 'effect'
+import { Console, Layer } from 'effect'
 import manifest from '../../package.json' with { type: 'json' }
 import { allowGlobalParameter } from './_/parameters.js'
 import { build } from './commands/build.js'
@@ -109,7 +110,7 @@ if (process.argv.includes('--version') || process.argv.includes('-v')) {
 const filteredArgv = process.argv.filter(arg => arg !== '--allow-global')
 
 // Create the main program with global vs local check
-const program = Effect.gen(function*() {
+const program = Ef.gen(function*() {
   // Check for global vs local Polen conflict
   yield* PackageManager.checkGlobalVsLocal({
     packageName: 'polen',
@@ -129,12 +130,12 @@ const program = Effect.gen(function*() {
   // Run the CLI after the check passes
   return yield* cli(filteredArgv)
 }).pipe(
-  Effect.catchAll((error) => {
+  Ef.catchAll((error) => {
     console.error('[POLEN DEBUG] CLI error:', error)
-    return Effect.die('CLI failed')
+    return Ef.die('CLI failed')
   }),
-  Effect.provide(Layer.merge(NodeContext.layer, NodeFileSystem.layer)),
-  Effect.scoped,
+  Ef.provide(Layer.merge(NodeContext.layer, NodeFileSystem.layer)),
+  Ef.scoped,
 )
 
 NodeRuntime.runMain(program)

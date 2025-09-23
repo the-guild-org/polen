@@ -1,7 +1,8 @@
-import { E, O } from '#dep/effect'
+import { Ef, Ei } from '#dep/effect'
 import { FileSystem } from '@effect/platform/FileSystem'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import consola from 'consola'
-import { Data, Effect } from 'effect'
+import { Data } from 'effect'
 
 // Custom error types
 export class ProjectNotFoundError extends Data.TaggedError('ProjectNotFoundError')<{
@@ -34,18 +35,17 @@ export interface ValidateProjectOptions {
  * @returns Effect yielding boolean indicating if directory is valid
  */
 export const validateProjectDirectory = (
-  dir: string,
+  dir: FsLoc.AbsDir.AbsDir,
   options: ValidateProjectOptions = {},
-): Effect.Effect<boolean, ProjectValidationError, FileSystem> => {
+): Ef.Effect<boolean, ProjectValidationError, FileSystem> => {
   const { mustExist = true, mustBeEmpty = false, silent = false } = options
 
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem
-    const statResult = yield* Effect.either(fs.stat(dir))
+  return Ef.gen(function*() {
+    const statResult = yield* Ef.either(Fs.stat(dir))
 
-    if (E.isLeft(statResult)) {
+    if (Ei.isLeft(statResult)) {
       if (mustExist) {
-        if (!silent) consola.error(`Project directory does not exist: ${dir}`)
+        if (!silent) consola.error(`Project directory does not exist: ${FsLoc.encodeSync(dir)}`)
         return false
       }
       return true
@@ -53,14 +53,14 @@ export const validateProjectDirectory = (
 
     const stat = statResult.right
     if (stat.type !== 'Directory') {
-      if (!silent) consola.error(`Project path is not a directory: ${dir}`)
+      if (!silent) consola.error(`Project path is not a directory: ${FsLoc.encodeSync(dir)}`)
       return false
     }
 
     if (mustBeEmpty) {
-      const files = yield* fs.readDirectory(dir)
+      const files = yield* Fs.read(dir)
       if (files.length > 0) {
-        if (!silent) consola.error(`Project directory is not empty: ${dir}`)
+        if (!silent) consola.error(`Project directory is not empty: ${FsLoc.encodeSync(dir)}`)
         return false
       }
     }

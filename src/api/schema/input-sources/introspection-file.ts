@@ -1,9 +1,14 @@
 import { InputSource } from '#api/schema/input-source/$'
+import {
+  createSingleRevisionCatalog,
+  mapToInputSourceError,
+  normalizePathToAbs,
+} from '#api/schema/input-source/helpers'
 import { S } from '#dep/effect'
-import { FileSystem } from '@effect/platform/FileSystem'
-import { Json, Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
-import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
+import { Ef } from '#dep/effect'
+import type { FileSystem } from '@effect/platform'
+import { Fs, FsLoc, Json } from '@wollybeard/kit'
+import { Catalog, Grafaid } from 'graphql-kit'
 import * as IntrospectionSchema from './introspection-schema.js'
 
 /**
@@ -40,18 +45,20 @@ export interface Options {
    *
    * @default './schema.introspection.json'
    */
-  path?: string
+  path?: string | FsLoc.AbsFile.AbsFile | FsLoc.RelFile.RelFile
 }
 
 export interface Config {
-  path: string
+  path: FsLoc.AbsFile.AbsFile
 }
 
-export const normalizeOptions = (options: Options, projectRoot: string): Config => {
+export const normalizeOptions = (options: Options, projectRoot: FsLoc.AbsDir.AbsDir): Config => {
   const config: Config = {
-    path: options.path
-      ? Path.ensureAbsolute(options.path, projectRoot)
-      : Path.join(projectRoot, INTROSPECTION_FILE_NAME),
+    path: normalizePathToAbs.file(
+      options.path,
+      projectRoot,
+      FsLoc.fromString(INTROSPECTION_FILE_NAME) as FsLoc.RelFile.RelFile,
+    ),
   }
 
   return config
@@ -63,39 +70,32 @@ const INTROSPECTION_FILE_NAME = `schema.introspection.json`
 
 export const read = (
   options: Options,
-  projectRoot: string,
-): Effect.Effect<Catalog.Unversioned.Unversioned | null, InputSource.InputSourceError, FileSystem> =>
-  Effect.gen(function*() {
+  projectRoot: FsLoc.AbsDir.AbsDir,
+): Ef.Effect<Catalog.Unversioned | null, InputSource.InputSourceError, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
     const config = normalizeOptions(options, projectRoot)
-    const fs = yield* FileSystem
 
     // Check if introspection file exists
-    const exists = yield* Effect.either(fs.exists(config.path))
+    const exists = yield* Ef.either(Fs.exists(config.path))
     if (exists._tag === 'Left' || !exists.right) {
       return null
     }
 
-    const introspectionFileContent = yield* fs.readFileString(config.path).pipe(
-      Effect.mapError((error) =>
-        new InputSource.InputSourceError({
-          source: 'introspectionFile',
-          message: `Failed to read file ${config.path}: ${error}`,
-          cause: error,
-        })
-      ),
+    const introspectionFileContent = yield* Fs.readString(config.path).pipe(
+      Ef.mapError(mapToInputSourceError('introspectionFile')),
     )
 
     let schema: Grafaid.Schema.Schema
 
     // Parse JSON
-    const jsonData = yield* Effect.try({
+    const jsonData = yield* Ef.try({
       try: () => Json.codec.decode(introspectionFileContent),
       catch: (error) => {
         if (error instanceof SyntaxError) {
           return new InputSource.InputSourceError(
             {
               source: 'introspectionFile',
-              message: `Invalid JSON in ${config.path}: ${error.message}`,
+              message: `Invalid JSON in ${FsLoc.encodeSync(config.path)}: ${error.message}`,
               cause: error,
             },
           )
@@ -103,7 +103,7 @@ export const read = (
         return new InputSource.InputSourceError(
           {
             source: 'introspectionFile',
-            message: `Failed to parse JSON in ${config.path}: ${error}`,
+            message: `Failed to parse JSON in ${FsLoc.encodeSync(config.path)}: ${error}`,
             cause: error,
           },
         )
@@ -111,7 +111,7 @@ export const read = (
     })
 
     // Validate using Effect Schema
-    const validatedData = yield* Effect.try({
+    const validatedData = yield* Ef.try({
       try: () => {
         return S.decodeUnknownSync(IntrospectionSchema.IntrospectionQuery)(jsonData)
       },
@@ -119,13 +119,15 @@ export const read = (
         if (IntrospectionSchema.isParseError(error)) {
           return new InputSource.InputSourceError({
             source: 'introspectionFile',
-            message: `Invalid introspection format in ${config.path}: ${IntrospectionSchema.formatError(error)}`,
+            message: `Invalid introspection format in ${FsLoc.encodeSync(config.path)}: ${
+              IntrospectionSchema.formatError(error)
+            }`,
             cause: error,
           })
         }
         return new InputSource.InputSourceError({
           source: 'introspectionFile',
-          message: `Validation failed for ${config.path}: ${error}`,
+          message: `Validation failed for ${FsLoc.encodeSync(config.path)}: ${error}`,
           cause: error,
         })
       },
@@ -133,59 +135,16 @@ export const read = (
 
     schema = Grafaid.Schema.fromIntrospectionQuery(validatedData as any)
 
-    return yield* createCatalogFromSchema(schema)
-  })
-
-/**
- * Create a catalog from a schema object.
- * This is the core logic for handling single (unversioned) schemas from introspection.
- */
-const createCatalogFromSchema = (
-  schemaData: Grafaid.Schema.Schema,
-): Effect.Effect<Catalog.Unversioned.Unversioned, InputSource.InputSourceError> =>
-  Effect.gen(function*() {
-    const date = new Date()
-    const dateString = date.toISOString().split('T')[0]!
-    const after = schemaData
-    const before = Grafaid.Schema.empty
-    const changes = yield* Change.calcChangeset({
-      before,
-      after,
-    }).pipe(
-      Effect.mapError((error) =>
-        new InputSource.InputSourceError({
-          source: 'introspectionFile',
-          message: `Failed to calculate changeset: ${error}`,
-          cause: error,
-        })
-      ),
-    )
-
-    const revision = Revision.make({
-      date: DateOnly.make(dateString),
-      changes,
-    })
-
-    // Create unversioned schema
-    const schema = Schema.Unversioned.make({
-      revisions: [revision],
-      definition: after, // GraphQLSchema object
-    })
-
-    // Return catalog
-    return Catalog.Unversioned.make({
-      schema,
-    })
+    return yield* createSingleRevisionCatalog(schema, 'introspectionFile')
   })
 
 export const loader = InputSource.create({
   name: 'introspectionFile',
   isApplicable: (options: Options, context) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       // Check if the introspection file exists
       const normalizedConfig = normalizeOptions(options, context.paths.project.rootDir)
-      const fs = yield* FileSystem
-      const exists = yield* Effect.either(fs.exists(normalizedConfig.path))
+      const exists = yield* Ef.either(Fs.exists(normalizedConfig.path))
       return exists._tag === 'Right' && exists.right
     }),
   readIfApplicableOrThrow: (options: Options, context) => read(options, context.paths.project.rootDir),

@@ -1,15 +1,29 @@
 // Note: This is adapted from `@mdx-js/mdx`
 
+import { Ef } from '#dep/effect'
 import type { CompileOptions } from '@mdx-js/mdx'
 import {
   createFormatAwareProcessors,
   type FormatAwareProcessors,
 } from '@mdx-js/mdx/internal-create-format-aware-processors'
 import { createFilter, type FilterPattern } from '@rollup/pluginutils'
+import { Data } from 'effect'
 import type { SourceDescription } from 'rolldown'
 import { SourceMapGenerator } from 'source-map'
 import { VFile } from 'vfile'
 import type { Plugin } from 'vite'
+
+/**
+ * Error type for MDX compilation failures
+ */
+export class MdxCompilationError extends Data.TaggedError('MdxCompilationError')<{
+  readonly filePath: string
+  readonly cause?: unknown
+}> {
+  override get message() {
+    return `Failed to compile MDX file: ${this.filePath}`
+  }
+}
 
 type ApplicableOptions = Omit<CompileOptions, `SourceMapGenerator`>
 
@@ -41,9 +55,46 @@ export const createConfig = (options?: Readonly<Options> | null | undefined): Op
 }
 
 /**
+ * Compile MDX content using Effects
+ * @internal
+ */
+const compileMdx = (
+  file: VFile,
+  processors: FormatAwareProcessors,
+): Ef.Effect<SourceDescription, MdxCompilationError> =>
+  Ef.tryPromise({
+    try: async () => {
+      const compiled = await processors.process(file)
+      const code = String(compiled.value)
+      const sourceDescription: SourceDescription = {
+        code,
+        moduleType: `jsx`,
+        // When MDX compiles to JS (not JSX), we don't need to set moduleType
+        // Cast to any because vfile's Map type is compatible with Rolldown's source map
+        // but has minor type differences with exactOptionalPropertyTypes
+        map: compiled.map as any,
+      }
+      return sourceDescription
+    },
+    catch: (error) =>
+      new MdxCompilationError({
+        filePath: file.path,
+        cause: error,
+      }),
+  })
+
+/**
  * Plugin to compile MDX.
  *
  * Uses Rolldown.
+ *
+ * @example
+ * ```ts
+ * // In Vite config
+ * export default {
+ *   plugins: [VitePluginMdx()]
+ * }
+ * ```
  */
 export const VitePluginMdx = (options?: Readonly<Options> | null): Plugin => {
   const config = createConfig(options)
@@ -63,6 +114,7 @@ export const VitePluginMdx = (options?: Readonly<Options> | null): Plugin => {
         ...config,
       })
     },
+    // Framework boundary: Vite plugin transform hook expects Promise return type
     async transform(value: string, id: string): Promise<SourceDescription | undefined> {
       const file = new VFile({ path: id, value })
 
@@ -71,18 +123,10 @@ export const VitePluginMdx = (options?: Readonly<Options> | null): Plugin => {
         && filter(file.path)
         && formatAwareProcessors.extnames.includes(file.extname)
       ) {
-        const compiled = await formatAwareProcessors.process(file)
-        const code = String(compiled.value)
-        const sourceDescription: SourceDescription = {
-          code,
-          moduleType: `jsx`,
-          // When MDX compiles to JS (not JSX), we don't need to set moduleType
-          // Cast to any because vfile's Map type is compatible with Rolldown's source map
-          // but has minor type differences with exactOptionalPropertyTypes
-          map: compiled.map as any,
-        }
-
-        return sourceDescription
+        // Use Effect internally, convert to Promise at Vite boundary
+        return await Ef.runPromise(
+          compileMdx(file, formatAwareProcessors),
+        )
       }
     },
   }

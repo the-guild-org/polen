@@ -1,4 +1,4 @@
-import { A } from '#dep/effect'
+import { Ar } from '#dep/effect'
 import type { Args, Command, CommandDescriptor, HelpDoc, Options, Primitive } from '@effect/cli'
 
 // ============================================================================
@@ -411,7 +411,7 @@ const extractSingleOption = (option: OptionsStructure): OptionInfo => {
   }
 
   // Extract aliases
-  const aliases = A.isArray(option.aliases) ? option.aliases : []
+  const aliases = Ar.isArray(option.aliases) ? option.aliases : []
   const alias = aliases.length > 0 ? aliases[0] : undefined
 
   // Extract default value
@@ -526,7 +526,7 @@ const extractSubcommandsFromDescriptor = (subcommands: unknown): SubcommandInfo[
 
   const result: SubcommandInfo[] = []
 
-  if (A.isArray(subcommands)) {
+  if (Ar.isArray(subcommands)) {
     for (const subcommand of subcommands) {
       if (subcommand && typeof subcommand === 'object' && 'name' in subcommand) {
         const info: SubcommandInfo = {

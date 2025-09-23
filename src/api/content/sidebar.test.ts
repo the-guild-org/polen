@@ -1,4 +1,5 @@
-import { A } from '#dep/effect'
+import { Ar } from '#dep/effect'
+import { FsLoc } from '@wollybeard/kit'
 import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import type { Page } from './page.js'
@@ -19,21 +20,14 @@ const pageArb: fc.Arbitrary<Page> = fc.record({
       order: fc.option(fc.integer({ min: 0, max: 100 }), { nil: undefined }),
     }),
     file: fc.record({
-      path: fc.record({
-        absolute: fc.record({
-          root: fc.constant('/'),
-          dir: fc.string(),
-          base: fc.string(),
-          ext: fc.constant('.md'),
-          name: fileNameArb,
-        }),
-        relative: fc.record({
-          root: fc.constant(''),
-          dir: fc.string(),
-          base: fc.string(),
-          ext: fc.constant('.md'),
-          name: fileNameArb,
-        }),
+      path: pathArb.chain(segments => {
+        const fileName = fc.sample(fileNameArb, 1)[0]
+        const relativePath = segments.length > 0 ? `${segments.join('/')}/${fileName}.md` : `${fileName}.md`
+        const absolutePath = `/pages/${relativePath}`
+        return fc.constant({
+          absolute: FsLoc.AbsFile.decodeSync(absolutePath),
+          relative: FsLoc.RelFile.decodeSync(relativePath),
+        })
       }),
     }),
   }),
@@ -97,7 +91,7 @@ describe('buildSidebarIndex properties', () => {
           const hasIndexPage = scanResult.list.some(page =>
             page.route.logical.path.length === 1
             && page.route.logical.path[0] === topLevelDir
-            && page.route.file.path.relative.name === 'index'
+            && FsLoc.name(page.route.file.path.relative) === 'index'
             && !page.metadata.hidden
           )
 
@@ -124,7 +118,7 @@ describe('buildSidebarIndex properties', () => {
 
             if (item.type === 'ItemSection') {
               expect(typeof item.isLinkToo).toBe('boolean')
-              expect(A.isArray(item.links)).toBe(true)
+              expect(Ar.isArray(item.links)).toBe(true)
 
               // Check all links in section
               for (const link of item.links) {
@@ -154,7 +148,7 @@ describe('buildSidebarIndex properties', () => {
               // This section should have an index page
               const hasIndexPage = scanResult.list.some(page =>
                 page.route.logical.path.join('/') === item.pathExp
-                && page.route.file.path.relative.name === 'index'
+                && FsLoc.name(page.route.file.path.relative) === 'index'
                 && !page.metadata.hidden
               )
 
@@ -242,20 +236,25 @@ describe('buildSidebarIndex properties', () => {
 
 // Keep a few specific scenario tests for regression
 describe('buildSidebarIndex specific scenarios', () => {
-  const createPage = (path: string[], fileName = 'index', hidden = false): Page => ({
-    route: {
-      id: path.join('/'),
-      parentId: path.length > 1 ? path.slice(0, -1).join('/') : null,
-      logical: { path },
-      file: {
-        path: {
-          absolute: { root: '/', dir: `/pages/${path.join('/')}`, base: `${fileName}.md`, ext: '.md', name: fileName },
-          relative: { root: '', dir: path.join('/'), base: `${fileName}.md`, ext: '.md', name: fileName },
+  const createPage = (path: string[], fileName = 'index', hidden = false): Page => {
+    const relativePath = path.length > 0 ? `${path.join('/')}/${fileName}.md` : `${fileName}.md`
+    const absolutePath = `/pages/${relativePath}`
+
+    return {
+      route: {
+        id: path.join('/'),
+        parentId: path.length > 1 ? path.slice(0, -1).join('/') : null,
+        logical: { path },
+        file: {
+          path: {
+            absolute: FsLoc.AbsFile.decodeSync(absolutePath),
+            relative: FsLoc.RelFile.decodeSync(relativePath),
+          },
         },
       },
-    },
-    metadata: { description: undefined, hidden },
-  })
+      metadata: { description: undefined, hidden },
+    }
+  }
 
   it('handles empty input', () => {
     const scanResult: ScanResult = {

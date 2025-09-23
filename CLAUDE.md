@@ -24,6 +24,42 @@
 - function contracts (public APIs) must be properly typed, but NEVER complicate internal implementations for type safety - use simple types or cast to `any` internally if needed
 - **CRITICAL: MUST CAPTURE FAILING TESTS BEFORE FIXING** - Before implementing any fix for a bug or issue, you MUST first create a failing unit test that reproduces the problem, confirm it fails, then implement the fix. This applies to ALL bug fixes except very complex integration scenarios like massive deep state in Playwright browser tests. No exceptions - TDD is mandatory for bug fixes.
 
+# Async/Await Usage Rules for src/api and src/lib
+
+## STRICT RULE: NO ASYNC FUNCTIONS
+
+**ABSOLUTELY NO `async` functions are allowed in `src/api` or `src/lib` EXCEPT:**
+
+1. **Framework Boundaries with MANDATORY Comment**
+   - Vite plugin hooks (transform, buildStart, handleHotUpdate, resolveId, load)
+   - React Router loaders
+   - **MUST have a comment explaining why async is needed**
+   ```typescript
+   // Framework boundary: Vite expects Promise return type
+   async transform(value: string, id: string): Promise<SourceDescription | undefined> {
+     return await Ef.runPromise(/* Effect code */)
+   }
+   ```
+
+2. **Within Ef.tryPromise or Ef.async**
+   ```typescript
+   Ef.tryPromise({
+     try: async () => {/* async allowed ONLY here */},
+     catch: (error) => {/* ... */},
+   })
+   ```
+
+3. **Test Files (.test.ts)**
+   - Test framework requires async functions
+
+## Enforcement
+
+- **Any async function WITHOUT a comment explaining the violation is a BUG**
+- Comments MUST start with "Framework boundary:" or "Test framework:"
+- Use Effects for ALL I/O, network, and file system operations
+- Convert to Promise ONLY at framework boundaries using Ef.runPromise
+- Pure functions should remain pure (no async, no Effects)
+
 # Project Layout
 
 ## Root

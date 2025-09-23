@@ -59,7 +59,7 @@ export const ExampleName = S.transform(
   },
 )
 
-export type ExampleName = S.Schema.Type<typeof ExampleName>
+export type ExampleName = typeof ExampleName.Type
 
 /**
  * Example selection configuration supporting both include and exclude patterns.
@@ -93,7 +93,7 @@ export const ExampleSelection = S.optional(
   description: 'Configuration for selecting which examples to display',
 })
 
-export type ExampleSelection = S.Schema.Type<typeof ExampleSelection>
+export type ExampleSelection = typeof ExampleSelection.Type
 
 // ============================================================================
 // Schema - Example Diagnostics
@@ -135,7 +135,7 @@ const ExampleDiagnostics = S.Struct({
   description: 'Diagnostic controls for example scanning and validation',
 })
 
-export type ExampleDiagnostics = S.Schema.Type<typeof ExampleDiagnostics>
+export type ExampleDiagnostics = typeof ExampleDiagnostics.Type
 
 // ============================================================================
 // Schema - Examples Config
@@ -251,7 +251,7 @@ export const ExamplesConfig = S.transform(
   description: 'Configuration for GraphQL examples - accepts boolean shorthand or detailed object',
 })
 
-export type ExamplesConfig = S.Schema.Type<typeof ExamplesConfig>
+export type ExamplesConfig = typeof ExamplesConfig.Type
 
 // ============================================================================
 // Constructors

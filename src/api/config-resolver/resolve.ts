@@ -1,6 +1,7 @@
+import { Ef } from '#dep/effect'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Effect } from 'effect'
+import { FsLoc, Pro } from '@wollybeard/kit'
 import type { ConfigInput } from '../config/$$.js'
 import { mergeInputs } from '../config/input.js'
 import { load, type LoadOptions } from '../config/load.js'
@@ -11,8 +12,8 @@ interface ResolveFromFileOptions extends LoadOptions {
   overrides?: ConfigInput | undefined
 }
 
-export const fromFile = (options: ResolveFromFileOptions): Effect.Effect<Config, Error, FileSystem> =>
-  Effect.gen(function*() {
+export const fromFile = (options: ResolveFromFileOptions): Ef.Effect<Config, Error, FileSystem> =>
+  Ef.gen(function*() {
     const configInput = yield* load(options)
     const configInputMerged = mergeInputs(configInput, options.overrides)
     const config = yield* fromMemory(configInputMerged, options.dir)
@@ -27,7 +28,8 @@ export const fromMemory = (
    *
    * @default `process.cwd()`
    */
-  baseRootDirPath?: string,
-): Effect.Effect<Config, Error, FileSystem> => {
-  return normalizeInput(input, baseRootDirPath ?? process.cwd())
+  baseRootDirPath?: FsLoc.AbsDir.AbsDir,
+): Ef.Effect<Config, Error, FileSystem> => {
+  const rootDir = baseRootDirPath ?? Pro.cwd()
+  return normalizeInput(input, rootDir)
 }

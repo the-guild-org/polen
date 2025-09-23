@@ -1,7 +1,7 @@
-import { O, S } from '#dep/effect'
+import { Op, S } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import type { FileSystem } from '@effect/platform/FileSystem'
-import { Resource } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { FsLoc, Resource } from '@wollybeard/kit'
 
 export const PolenBuildManifestSchema = S.Struct({
   type: S.Literal('ssg', 'ssr'),
@@ -9,7 +9,7 @@ export const PolenBuildManifestSchema = S.Struct({
   basePath: S.String,
 })
 
-export type PolenBuildManifest = S.Schema.Type<typeof PolenBuildManifestSchema>
+export type PolenBuildManifest = typeof PolenBuildManifestSchema.Type
 
 const buildManifestResource = Resource.createSchemaResource(
   '.polen/build.json',
@@ -28,7 +28,9 @@ export const buildManifest = {
    * @param directory - The directory containing the .polen/build.json file
    * @returns Effect yielding Option<PolenBuildManifest>
    */
-  read: (directory: string): Effect.Effect<O.Option<PolenBuildManifest>, Resource.ResourceError, FileSystem> =>
+  read: (
+    directory: FsLoc.AbsDir.AbsDir,
+  ): Ef.Effect<Op.Option<PolenBuildManifest>, Resource.ResourceError, FileSystem> =>
     buildManifestResource.read(directory),
 
   /**
@@ -37,6 +39,8 @@ export const buildManifest = {
    * @param directory - The directory where to write the .polen/build.json file
    * @returns Effect yielding void on success
    */
-  write: (data: PolenBuildManifest, directory: string): Effect.Effect<void, Resource.ResourceError, FileSystem> =>
-    buildManifestResource.write(data, directory),
+  write: (
+    data: PolenBuildManifest,
+    directory: FsLoc.AbsDir.AbsDir,
+  ): Ef.Effect<void, Resource.ResourceError, FileSystem> => buildManifestResource.write(data, directory),
 }

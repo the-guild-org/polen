@@ -1,5 +1,5 @@
+import { Ef } from '#dep/effect'
 import { Command, Options } from '@effect/cli'
-import { Effect } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { EffectCliHelpMarkdown } from './$.js'
 
@@ -7,7 +7,7 @@ describe('EffectCliHelpMarkdown', () => {
   describe('commandToMarkdown', () => {
     test('generates markdown for a simple command', () => {
       const command = Command.make('test').pipe(
-        Command.withHandler(() => Effect.succeed(undefined)),
+        Command.withHandler(() => Ef.succeed(undefined)),
       )
 
       const markdown = EffectCliHelpMarkdown.commandToMarkdown(command)
@@ -19,7 +19,7 @@ describe('EffectCliHelpMarkdown', () => {
 
     test('respects baseHeadingLevel option', () => {
       const command = Command.make('test').pipe(
-        Command.withHandler(() => Effect.succeed(undefined)),
+        Command.withHandler(() => Ef.succeed(undefined)),
       )
 
       const markdown = EffectCliHelpMarkdown.commandToMarkdown(command, {
@@ -35,7 +35,7 @@ describe('EffectCliHelpMarkdown', () => {
 
     test('excludes command name when includeCommandName is false', () => {
       const command = Command.make('test-command').pipe(
-        Command.withHandler(() => Effect.succeed(undefined)),
+        Command.withHandler(() => Ef.succeed(undefined)),
       )
 
       const markdown = EffectCliHelpMarkdown.commandToMarkdown(command, {

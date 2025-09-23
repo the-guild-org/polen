@@ -1,11 +1,11 @@
 import { reportError } from '#api/server/report-error'
+import { Ef } from '#dep/effect'
 import type { Hono } from '#dep/hono/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import { React } from '#dep/react/index'
 import type { RouteHandle } from '#lib/react-router-effect/react-router-effect'
 import * as Theme from '#lib/theme/theme'
 import { Http } from '@wollybeard/kit'
-import { Effect } from 'effect'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
@@ -13,7 +13,7 @@ import type { PolenGlobalData } from '../constants.js'
 import { view } from './view.js'
 
 interface RenderHooks {
-  transformHtml?: (html: string) => Effect.Effect<string, never, never>
+  transformHtml?: (html: string) => Ef.Effect<string, never, never>
 }
 
 export const createPageHtmlResponse = async (
@@ -75,7 +75,7 @@ export const createPageHtmlResponse = async (
 
   // Apply HTML transformation hook to the full document
   if (hooks?.transformHtml) {
-    html = await Effect.runPromise(hooks.transformHtml(html))
+    html = await Ef.runPromise(hooks.transformHtml(html))
   }
 
   const headers = getRouteHeaders(staticHandlerContext)

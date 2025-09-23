@@ -1,5 +1,5 @@
 import { Example } from '#api/examples/schemas/example/example'
-import { A, O } from '#dep/effect'
+import { Ar, Op } from '#dep/effect'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
 import { Str } from '@wollybeard/kit'
@@ -26,8 +26,8 @@ export const nameLoader = async ({ params }: any) => {
   }
 
   // Check if the example exists
-  const exampleOption = A.findFirst(examplesCatalog.examples, (e) => e.name === name)
-  if (O.isNone(exampleOption)) {
+  const exampleOption = Ar.findFirst(examplesCatalog.examples, (e) => e.name === name)
+  if (Op.isNone(exampleOption)) {
     throw new Response('Not Found', { status: 404 })
   }
   const example = exampleOption.value

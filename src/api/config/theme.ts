@@ -100,4 +100,4 @@ export const ThemeConfig = S.Struct({
   description: 'Theme configuration for customizing the look and feel of your developer portal.',
 })
 
-export type ThemeConfig = S.Schema.Type<typeof ThemeConfig>
+export type ThemeConfig = typeof ThemeConfig.Type

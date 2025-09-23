@@ -1,5 +1,5 @@
+import { Ef } from '#dep/effect'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
-import { Effect } from 'effect'
 
 /**
  * HTML transformer that injects theme initialization script
@@ -26,6 +26,6 @@ export const createThemeInitInjector = () => {
 
     // Inject the script right after the Polen data script
     // This ensures __POLEN__ is available when this script runs
-    return Effect.succeed(html.replace('</head>', `${themeInitScript}\n</head>`))
+    return Ef.succeed(html.replace('</head>', `${themeInitScript}\n</head>`))
   })
 }

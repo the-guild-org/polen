@@ -1,8 +1,8 @@
 import { InputSource } from '#api/schema/input-source/$'
 import type { InputSourceError } from '#api/schema/input-source/errors'
+import { Ef } from '#dep/effect'
 import type { PlatformError } from '@effect/platform/Error'
 import type { FileSystem } from '@effect/platform/FileSystem'
-import { Effect } from 'effect'
 import type { Catalog } from 'graphql-kit'
 
 type Options = object
@@ -16,15 +16,15 @@ export interface InputSource<
   isApplicable: (
     options: $Options,
     context: InputSource.Context,
-  ) => Effect.Effect<boolean, PlatformError | InputSourceError, FileSystem>
+  ) => Ef.Effect<boolean, PlatformError | InputSourceError, FileSystem>
   readIfApplicableOrThrow: (
     options: $Options,
     context: InputSource.Context,
-  ) => Effect.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
+  ) => Ef.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
   reCreate?: (
     options: $Options,
     context: InputSource.Context,
-  ) => Effect.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
+  ) => Ef.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
 }
 
 export const create = <
@@ -36,22 +36,22 @@ export const create = <
   isApplicable?: (
     options: $Options,
     context: InputSource.Context,
-  ) => Effect.Effect<boolean, PlatformError | InputSourceError, FileSystem>
+  ) => Ef.Effect<boolean, PlatformError | InputSourceError, FileSystem>
   readIfApplicableOrThrow: (
     options: $Options,
     context: InputSource.Context,
-  ) => Effect.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
+  ) => Ef.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
   reCreate?: (
     options: $Options,
     context: InputSource.Context,
-  ) => Effect.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
+  ) => Ef.Effect<null | $Catalog, PlatformError | InputSourceError, FileSystem>
 }): InputSource<$Name, $Options, $Catalog> => {
   const defaultIsApplicable = (
     options: $Options,
     context: InputSource.Context,
-  ): Effect.Effect<boolean, PlatformError | InputSourceError, FileSystem> =>
-    Effect.gen(function*() {
-      const result = yield* Effect.either(input.readIfApplicableOrThrow(options, context))
+  ): Ef.Effect<boolean, PlatformError | InputSourceError, FileSystem> =>
+    Ef.gen(function*() {
+      const result = yield* Ef.either(input.readIfApplicableOrThrow(options, context))
       return result._tag === 'Right' && result.right !== null
     })
 

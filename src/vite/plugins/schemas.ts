@@ -1,7 +1,8 @@
 import { Api } from '#api/$'
 import { Schema } from '#api/schema/$'
 import type { Diagnostic as AugmentationDiagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
-import { O } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -9,8 +10,7 @@ import { ViteVirtual } from '#lib/vite-virtual/$'
 import { debugPolen } from '#singletons/debug'
 import { polenVirtual } from '#vite/vi'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { FsLoc } from '@wollybeard/kit'
 import { Catalog } from 'graphql-kit'
 
 export const viProjectSchema = polenVirtual([`project`, `schemas`])
@@ -46,12 +46,12 @@ export const Schemas = ({
 
   const reader = createAssetReader(() =>
     Schema.loadOrNull(config).pipe(
-      Effect.map((result) => {
+      Ef.map((result) => {
         // Store diagnostics for reporting
-        if (O.isSome(result) && O.isSome(result.value.diagnostics)) {
+        if (Op.isSome(result) && Op.isSome(result.value.diagnostics)) {
           lastDiagnostics = result.value.diagnostics.value
         }
-        return O.isSome(result) ? result.value : null
+        return Op.isSome(result) ? result.value : null
       }),
     )
   )
@@ -81,33 +81,38 @@ export const Schemas = ({
   const isSchemaFile = (file: string): boolean => {
     if (!config.schema) return false
 
-    const absoluteFile = Path.resolve(file)
+    const fileLoc = FsLoc.decodeSync(file)
+    const absoluteFile = FsLoc.Groups.Abs.is(fileLoc)
+      ? fileLoc
+      : FsLoc.join(FsLoc.fromString(process.cwd() + '/'), fileLoc)
 
     // Check if file path matches the configured schema file
     if (config.schema.sources?.file?.path) {
-      const absoluteSchemaFile = Path.resolve(
-        config.paths.project.rootDir,
-        config.schema.sources.file.path,
-      )
-      if (absoluteFile === absoluteSchemaFile) return true
+      const schemaFileLoc = FsLoc.decodeSync(config.schema.sources.file.path)
+      const absoluteSchemaFile = FsLoc.Groups.Abs.is(schemaFileLoc)
+        ? schemaFileLoc
+        : FsLoc.join(config.paths.project.rootDir, schemaFileLoc)
+      if (FsLoc.encodeSync(absoluteFile) === FsLoc.encodeSync(absoluteSchemaFile)) return true
     }
 
     // Check if file path is within the configured schema directory
     if (config.schema.sources?.directory?.path) {
-      const absoluteSchemaDir = Path.resolve(
-        config.paths.project.rootDir,
-        config.schema.sources.directory.path,
-      )
-      if (absoluteFile.startsWith(absoluteSchemaDir + Path.sep)) return true
+      const schemaDirLoc = FsLoc.decodeSync(config.schema.sources.directory.path)
+      const absoluteSchemaDir = FsLoc.Groups.Abs.is(schemaDirLoc)
+        ? schemaDirLoc
+        : FsLoc.join(config.paths.project.rootDir, schemaDirLoc)
+      const absoluteFilePath = FsLoc.encodeSync(absoluteFile)
+      const absoluteSchemaDirPath = FsLoc.encodeSync(absoluteSchemaDir)
+      if (absoluteFilePath.startsWith(absoluteSchemaDirPath)) return true
     }
 
     // Check if file is the introspection file
     if (config.schema.sources?.introspection?.url) {
-      const absoluteIntrospectionFile = Path.resolve(
+      const absoluteIntrospectionFile = FsLoc.join(
         config.paths.project.rootDir,
-        `schema.introspection.json`,
+        FsLoc.fromString(`schema.introspection.json`),
       )
-      if (absoluteFile === absoluteIntrospectionFile) return true
+      if (FsLoc.encodeSync(absoluteFile) === FsLoc.encodeSync(absoluteIntrospectionFile)) return true
     }
 
     return false
@@ -124,7 +129,9 @@ export const Schemas = ({
       paths.push(config.schema.sources.file.path)
     }
     if (config.schema?.sources?.introspection?.url) {
-      paths.push(Path.join(config.paths.project.rootDir, `schema.introspection.json`))
+      paths.push(FsLoc.encodeSync(
+        FsLoc.join(config.paths.project.rootDir, FsLoc.fromString(`schema.introspection.json`)),
+      ))
     }
 
     return paths
@@ -137,8 +144,8 @@ export const Schemas = ({
       emit: {
         // @claude in what case can data be null?
         serializer: (loadedCatalog) =>
-          Effect.gen(function*() {
-            const data = O.getOrNull(loadedCatalog.data)
+          Ef.gen(function*() {
+            const data = Op.getOrNull(loadedCatalog.data)
             if (!data) throw new Error('No schema data to serialize')
             const encoded = yield* Catalog.encode(data)
             return JSON.stringify(encoded, null, 2)
@@ -153,7 +160,7 @@ export const Schemas = ({
       hooks: {
         async onDiagnostics(data) {
           // Report augmentation diagnostics
-          if (data?.diagnostics && O.isSome(data.diagnostics)) {
+          if (data?.diagnostics && Op.isSome(data.diagnostics)) {
             reportDiagnostics(data.diagnostics.value as AugmentationDiagnostic[], 'dev')
           }
         },
@@ -168,13 +175,13 @@ export const Schemas = ({
             const debug = debugPolen.sub(`module-project-schema`)
             debug(`load`, { id: viProjectSchema.id })
 
-            const schemaResult = await Effect.runPromise(
-              reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+            const schemaResult = await Ef.runPromise(
+              reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
             )
 
             // Report diagnostics if any
             if (
-              schemaResult?.diagnostics && O.isSome(schemaResult.diagnostics)
+              schemaResult?.diagnostics && Op.isSome(schemaResult.diagnostics)
               && schemaResult.diagnostics.value.length > 0
             ) {
               reportDiagnostics(schemaResult.diagnostics.value, 'dev')
@@ -185,7 +192,7 @@ export const Schemas = ({
             }
             return `
               import { Catalog } from 'graphql-kit'
-              const encoded = ${JSON.stringify(Catalog.encodeSync(O.getOrThrow(schemaResult.data)))}
+              const encoded = ${JSON.stringify(Catalog.encodeSync(Op.getOrThrow(schemaResult.data)))}
               export const schemasCatalog = Catalog.decodeSync(encoded)
             `
           },

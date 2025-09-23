@@ -1,81 +1,77 @@
-import { E, S } from '#dep/effect'
+import { Ei, S } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { FileSystem } from '@effect/platform/FileSystem'
-import { Path } from '@wollybeard/kit'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import { Test } from '@wollybeard/kit/test'
-import { Effect } from 'effect'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { Content } from './$.js'
 
-let testDir: string
+let testDir: FsLoc.AbsDir.AbsDir
 
 beforeEach(async () => {
-  testDir = await Effect.runPromise(
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      return yield* fs.makeTempDirectory()
-    }).pipe(Effect.provide(NodeFileSystem.layer)),
+  testDir = await Ef.runPromise(
+    Ef.gen(function*() {
+      return yield* Fs.makeTempDirectory()
+    }).pipe(Ef.provide(NodeFileSystem.layer)),
   )
 })
 
 afterEach(async () => {
-  const exists = await Effect.runPromise(
-    Effect.gen(function*() {
-      const fs = yield* FileSystem
-      const result = yield* Effect.either(fs.stat(testDir))
+  const exists = await Ef.runPromise(
+    Ef.gen(function*() {
+      const result = yield* Ef.either(Fs.stat(testDir))
       return result._tag === 'Right'
-    }).pipe(Effect.provide(NodeFileSystem.layer)),
+    }).pipe(Ef.provide(NodeFileSystem.layer)),
   )
   if (testDir && exists) {
-    await Effect.runPromise(
-      Effect.gen(function*() {
-        const fs = yield* FileSystem
-        yield* fs.remove(testDir, { recursive: true })
-      }).pipe(Effect.provide(NodeFileSystem.layer)),
+    await Ef.runPromise(
+      Fs.remove(testDir, { recursive: true }).pipe(Ef.provide(NodeFileSystem.layer)),
     )
   }
 })
 
-// dprint-ignore
-Test.Table.suite<{ input: unknown; isValid: boolean; expected?: { description?: string; hidden?: boolean } }>('MetadataSchema', [
-    { name: 'validates metadata correctly',                                                              input: { description: 'Test page description', hidden: true },                                     isValid: true,  expected: { description: 'Test page description', hidden: true } },
-    { name: 'applies default values',                                                                    input: { description: 'Just a description' },                                                      isValid: true,  expected: { description: 'Just a description', hidden: false } },
-    { name: 'rejects invalid values',                                                                    input: { hidden: 'not a boolean', invalid_field: 123 },                                           isValid: false },
-  ], ({ input, isValid, expected }) => {
-    const result = S.decodeUnknownEither(Content.MetadataSchema)(input)
+type MetadataInput = { input: unknown }
+type MetadataOutput = { isValid: boolean; expected?: { description?: string; hidden?: boolean } }
 
-    if (isValid) {
-      expect(E.isRight(result)).toBe(true)
-      if (E.isRight(result) && expected) {
-        expect(result.right).toEqual(expected)
+// dprint-ignore
+Test.Table.suite<MetadataInput, MetadataOutput>('MetadataSchema', [
+    { n: 'validates metadata correctly',          i: { input: { description: 'Test page description', hidden: true } },      o: { isValid: true, expected: { description: 'Test page description', hidden: true } } },
+    { n: 'applies default values',                i: { input: { description: 'Just a description' } },                       o: { isValid: true, expected: { description: 'Just a description', hidden: false } } },
+    { n: 'rejects invalid values',                i: { input: { hidden: 'not a boolean', invalid_field: 123 } as any },             o: { isValid: false } },
+  ], ({ i, o }) => {
+    const result = S.decodeUnknownEither(Content.MetadataSchema)(i.input)
+
+    if (o.isValid) {
+      expect(Ei.isRight(result)).toBe(true)
+      if (Ei.isRight(result) && o.expected) {
+        expect(result.right).toEqual(o.expected)
       }
     } else {
-      expect(E.isLeft(result)).toBe(true)
+      expect(Ei.isLeft(result)).toBe(true)
     }
   })
 
 describe('scan', () => {
   test('scans directory and extracts metadata', async () => {
-    const filePath = Path.join(testDir, 'page.md')
-    await Effect.runPromise(
-      Effect.gen(function*() {
-        const fs = yield* FileSystem
-        yield* fs.writeFileString(
-          filePath,
+    await Ef.runPromise(
+      Ef.gen(function*() {
+        const filePathLoc = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('page.md'))
+        yield* Fs.write(
+          filePathLoc,
           `---
 description: Page description
 ---
 Content`,
         )
-      }).pipe(Effect.provide(NodeFileSystem.layer)),
+      }).pipe(Ef.provide(NodeFileSystem.layer)),
     )
 
-    const result = await Effect.runPromise(
+    const result = await Ef.runPromise(
       Content.scan({
         dir: testDir,
         glob: '**/*.md',
       }).pipe(
-        Effect.provide(NodeFileSystem.layer),
+        Ef.provide(NodeFileSystem.layer),
       ),
     )
 

@@ -1,8 +1,8 @@
-import { E, O, S } from '#dep/effect'
+import { Ei, S } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { FileRouter } from '#lib/file-router'
 import { FileSystem } from '@effect/platform'
-import { Path, Tree } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Fs, FsLoc, Tree } from '@wollybeard/kit'
 import matter from 'gray-matter'
 import { MetadataSchema } from './metadata.js'
 import type { Page } from './page.js'
@@ -18,20 +18,22 @@ export interface ScanResult {
  * By default, hidden pages are filtered out from both the pages list and route tree.
  */
 export const scan = (options: {
-  dir: string
+  dir: FsLoc.AbsDir.AbsDir
   glob?: string
+  files?: FsLoc.RelFile.RelFile[]
   /** Include hidden pages in the result (useful for debugging or admin interfaces) */
   includeHidden?: boolean
-}): Effect.Effect<ScanResult, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
+}): Ef.Effect<ScanResult, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
     // Scan for routes
     const routeScanResult = yield* FileRouter.scan({
       dir: options.dir,
       glob: options.glob ?? `**/*.{md,mdx}`,
+      files: options.files,
     })
 
     // Create pages with metadata (id/parentId now come from route)
-    const allPages = yield* Effect.all(
+    const allPages = yield* Ef.all(
       routeScanResult.routes.map(route => readRoute(route)),
     )
 
@@ -61,8 +63,8 @@ export const scan = (options: {
           parentId: null,
           file: {
             path: {
-              absolute: Path.parse(``),
-              relative: Path.parse(``),
+              absolute: FsLoc.AbsFile.decodeSync('/__virtual_root__.md'),
+              relative: FsLoc.RelFile.decodeSync('__virtual_root__.md'),
             },
           },
           logical: {
@@ -95,12 +97,12 @@ export const scan = (options: {
 /**
  * Read a single route file and extract metadata from its front matter
  */
-const readRoute = (route: FileRouter.Route): Effect.Effect<Page, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const filePath = Path.format(route.file.path.absolute)
-    const fileContent = yield* fs.readFileString(filePath).pipe(
-      Effect.mapError(error => new Error(`Failed to read file ${filePath}: ${error}`)),
+const readRoute = (route: FileRouter.Route): Ef.Effect<Page, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
+    const filePath = FsLoc.encodeSync(route.file.path.absolute)
+    const filePathLoc = route.file.path.absolute
+    const fileContent = yield* Fs.readString(filePathLoc).pipe(
+      Ef.mapError(error => new Error(`Failed to read file ${filePath}: ${error}`)),
     )
 
     // Empty files still get default metadata (not hidden by default)
@@ -115,11 +117,11 @@ const readRoute = (route: FileRouter.Route): Effect.Effect<Page, Error, FileSyst
     // Validate and parse the data
     const parsed = S.decodeUnknownEither(MetadataSchema)(data)
 
-    if (E.isLeft(parsed)) {
+    if (Ei.isLeft(parsed)) {
       // Log warning but continue with defaults
       console.warn(`Invalid front matter in ${filePath}:`, parsed.left)
     }
 
-    const metadata = E.isRight(parsed) ? parsed.right : { hidden: false }
+    const metadata = Ei.isRight(parsed) ? parsed.right : { hidden: false }
     return { route, metadata }
   })

@@ -3,9 +3,10 @@
  * Manages Pollinations.ai image generation with caching
  */
 
-import { O } from '#dep/effect'
-import { Path } from '@wollybeard/kit'
-import { Data, Effect, pipe } from 'effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
+import { FsLoc } from '@wollybeard/kit'
+import { Data, pipe } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 import * as FS from 'node:fs/promises'
 import {
@@ -40,11 +41,11 @@ export class AiImageGenerationService {
    */
   generate(
     options: GenerateOptions,
-  ): Effect.Effect<O.Option<GeneratedImage>, Pollinations.ImageGenerationError, never> {
+  ): Ef.Effect<Op.Option<GeneratedImage>, Pollinations.ImageGenerationError, never> {
     const { config, schema, projectName, layout } = options
 
     if (!config.enabled) {
-      return Effect.succeed(O.none())
+      return Ef.succeed(Op.none())
     }
 
     const style = config.style || 'modern'
@@ -101,13 +102,13 @@ export class AiImageGenerationService {
         seed: finalSeed,
         nologo,
       }),
-      Effect.map(result => {
+      Ef.map(result => {
         // Skip caching for now to ensure fresh images
         // TODO: Consider adding timestamp to cache key
         // if (shouldCache) {
         //   await this.cacheImage(result)
         // }
-        return O.some(result)
+        return Op.some(result)
       }),
     )
   }
@@ -117,22 +118,24 @@ export class AiImageGenerationService {
    */
   private getCachedImage(
     prompt: string,
-  ): Effect.Effect<O.Option<GeneratedImage>, never, never> {
+  ): Ef.Effect<Op.Option<GeneratedImage>, never, never> {
     const self = this
-    return Effect.gen(function*() {
+    return Ef.gen(function*() {
       const cacheKey = self.getCacheKey(prompt)
-      const cachePath = Path.join(self.cacheDir, `${cacheKey}.json`)
+      const cacheDirLoc = FsLoc.decodeSync(self.cacheDir)
+      const cacheFileLoc = FsLoc.decodeSync(`${cacheKey}.json`)
+      const cachePath = FsLoc.encodeSync(FsLoc.join(cacheDirLoc, cacheFileLoc))
 
-      const exists = yield* Effect.tryPromise({
+      const exists = yield* Ef.tryPromise({
         try: () => FS.access(cachePath).then(() => true),
         catch: () => false,
       })
 
       if (!exists) {
-        return O.none()
+        return Op.none()
       }
 
-      const data = yield* Effect.tryPromise({
+      const data = yield* Ef.tryPromise({
         try: () => FS.readFile(cachePath, 'utf-8'),
         catch: (error) => {
           console.warn('Failed to read cached image:', error)
@@ -140,43 +143,45 @@ export class AiImageGenerationService {
         },
       })
 
-      if (!data) return O.none()
+      if (!data) return Op.none()
 
       const cached = JSON.parse(data) as GeneratedImage
       // Return with cached flag set to true
-      return O.some({
+      return Op.some({
         ...cached,
         cached: true,
       })
     }).pipe(
-      Effect.catchAll(() => Effect.succeed(O.none())),
+      Ef.catchAll(() => Ef.succeed(Op.none())),
     )
   }
 
   /**
    * Cache an image result
    */
-  private cacheImage(image: GeneratedImage): Effect.Effect<void, never, never> {
+  private cacheImage(image: GeneratedImage): Ef.Effect<void, never, never> {
     const self = this
-    return Effect.gen(function*() {
+    return Ef.gen(function*() {
       const cacheKey = self.getCacheKey(image.prompt)
-      const cachePath = Path.join(self.cacheDir, `${cacheKey}.json`)
+      const cacheDirLoc = FsLoc.decodeSync(self.cacheDir)
+      const cacheFileLoc = FsLoc.decodeSync(`${cacheKey}.json`)
+      const cachePath = FsLoc.encodeSync(FsLoc.join(cacheDirLoc, cacheFileLoc))
 
       // Ensure cache directory exists
-      yield* Effect.tryPromise({
+      yield* Ef.tryPromise({
         try: () => FS.mkdir(self.cacheDir, { recursive: true }),
         catch: () => undefined,
       })
 
       // Write cache file
-      yield* Effect.tryPromise({
+      yield* Ef.tryPromise({
         try: () => FS.writeFile(cachePath, JSON.stringify(image, null, 2)),
         catch: (error) => {
           console.warn('Failed to cache image:', error)
         },
       })
     }).pipe(
-      Effect.catchAll(() => Effect.void),
+      Ef.catchAll(() => Ef.void),
     )
   }
 
@@ -200,14 +205,14 @@ export class AiImageGenerationService {
   /**
    * Clear the cache
    */
-  clearCache(): Effect.Effect<void, never, never> {
-    return Effect.tryPromise({
+  clearCache(): Ef.Effect<void, never, never> {
+    return Ef.tryPromise({
       try: () => FS.rm(this.cacheDir, { recursive: true, force: true }),
       catch: (error) => {
         console.warn('Failed to clear cache:', error)
       },
     }).pipe(
-      Effect.catchAll(() => Effect.void),
+      Ef.catchAll(() => Ef.void),
     )
   }
 }

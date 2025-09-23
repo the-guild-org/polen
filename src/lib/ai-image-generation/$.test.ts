@@ -1,4 +1,4 @@
-import { Effect } from 'effect'
+import { Ef } from '#dep/effect'
 import { buildSchema } from 'graphql'
 import { describe, expect, test } from 'vitest'
 import { AiImageGeneration } from './$.js'
@@ -223,7 +223,7 @@ describe('AI Image Generation', () => {
       const { generateImage } = await import('./providers/pollinations.js')
       const { Effect } = await import('effect')
 
-      const result = await Effect.runPromise(
+      const result = await Ef.runPromise(
         generateImage({
           prompt: 'Abstract API visualization',
           width: 1200,
@@ -244,7 +244,7 @@ describe('AI Image Generation', () => {
       const { generateImage } = await import('./providers/pollinations.js')
       const { Effect } = await import('effect')
 
-      const result = await Effect.runPromise(
+      const result = await Ef.runPromise(
         generateImage({
           prompt: 'Test prompt',
           seed: 12345,
@@ -267,7 +267,7 @@ describe('AI Image Generation', () => {
         cache: true,
       }
 
-      const result = Effect.runSync(AiImageGeneration.decode(config))
+      const result = Ef.runSync(AiImageGeneration.decode(config))
       expect(result).toEqual(config)
     })
 
@@ -276,7 +276,7 @@ describe('AI Image Generation', () => {
         enabled: true,
       }
 
-      const result = Effect.runSync(AiImageGeneration.decode(config))
+      const result = Ef.runSync(AiImageGeneration.decode(config))
       expect(result).toEqual(config)
     })
 
@@ -286,7 +286,7 @@ describe('AI Image Generation', () => {
         seed: 42,
       }
 
-      const result = Effect.runSync(AiImageGeneration.decode(config))
+      const result = Ef.runSync(AiImageGeneration.decode(config))
       expect(result.seed).toBe(42)
     })
 
@@ -296,7 +296,7 @@ describe('AI Image Generation', () => {
         nologo: false,
       }
 
-      const result = Effect.runSync(AiImageGeneration.decode(config))
+      const result = Ef.runSync(AiImageGeneration.decode(config))
       expect(result.nologo).toBe(false)
     })
 
@@ -320,7 +320,7 @@ describe('AI Image Generation', () => {
           style: style as AiImageGeneration.ArtStyle,
         }
 
-        const result = Effect.runSync(AiImageGeneration.decode(config))
+        const result = Ef.runSync(AiImageGeneration.decode(config))
         expect(result.style).toBe(style)
       }
     })

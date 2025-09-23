@@ -1,6 +1,6 @@
+import { Ef } from '#dep/effect'
 import type { Hono } from '#dep/hono/index'
 import type { HtmlTransformer } from '#lib/html-utils/html-transformer'
-import { Effect } from 'effect'
 import { createPageHtmlResponse } from '../create-page-html-response.js'
 import { view } from '../view.js'
 
@@ -13,8 +13,8 @@ export const PageMiddleware = (transformers: HtmlTransformer[]) => {
     }
 
     // Create an Effect that reduces all transformers
-    const transformHtml = (html: string): Effect.Effect<string, never, never> =>
-      Effect.reduce(
+    const transformHtml = (html: string): Ef.Effect<string, never, never> =>
+      Ef.reduce(
         transformers,
         html,
         (accHtml, transformer) => transformer(accHtml, ctx),

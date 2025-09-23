@@ -28,7 +28,7 @@ test('shows changelog in navigation bar when multiple schema revisions are provi
   // Create Polen configuration with multiple schema revisions
   const viteUserConfig = await pc({
     schema: configMemorySchemaRevisions([olderSchema, newerSchema]),
-  }, project.layout.cwd)
+  }, project.dir.base)
 
   // Start the development server
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)

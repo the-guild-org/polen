@@ -1,5 +1,5 @@
-import { Fn } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { Ef } from '#dep/effect'
+import { Fn, FsLoc } from '@wollybeard/kit'
 import { describe, expect } from 'vitest'
 import { test } from '../../../tests/unit/helpers/test-with-fixtures.js'
 import { FileRouter } from './$.js'
@@ -13,12 +13,15 @@ absolute: { dir: expect.stringMatching(/^pages\/$/) },
 */
 
 const $ = Fn.$identityPartial<FileRouter.ScanResult> // subset data factory
-const scan = (path: string) => Effect.runPromise(FileRouter.scan({ dir: path + '/pages' }))
+const scan = (path: string) => {
+  const dir = FsLoc.AbsDir.decodeSync(path + '/pages/')
+  return Ef.runPromise(FileRouter.scan({ dir }))
+}
 
 describe('.scan', () => {
   describe('literal', () => {
     test('at root', async ({ project }) => {
-      await project.layout.set({ 'pages/a.md': '' })
+      await project.dir.set({ 'pages/a.md': '' })
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
@@ -28,7 +31,7 @@ describe('.scan', () => {
       }))
     })
     test('nested', async ({ project }) => {
-      await project.layout.set({ 'pages/a/b.md': '' })
+      await project.dir.set({ 'pages/a/b.md': '' })
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
@@ -40,7 +43,7 @@ describe('.scan', () => {
   })
   describe('index', () => {
     test('at root', async ({ project }) => {
-      await project.layout.set({ 'pages/index.md': '' })
+      await project.dir.set({ 'pages/index.md': '' })
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
@@ -50,7 +53,7 @@ describe('.scan', () => {
       }))
     })
     test('nested', async ({ project }) => {
-      await project.layout.set({ 'pages/a/index.md': '' })
+      await project.dir.set({ 'pages/a/index.md': '' })
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         routes: [{
@@ -62,7 +65,7 @@ describe('.scan', () => {
   })
   describe('diagnostic literal+index conflict', () => {
     test('catches literal+index file route conflict', async ({ project }) => {
-      await project.layout.set({ 'pages/a.md': '', 'pages/a/index.md': '' })
+      await project.dir.set({ 'pages/a.md': '', 'pages/a/index.md': '' })
       const routes = await scan(project.dir)
       expect(routes).toMatchObject($({
         diagnostics: [{}],

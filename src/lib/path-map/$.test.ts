@@ -1,4 +1,4 @@
-import { Path } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { PathMap } from './$.js'
@@ -210,8 +210,10 @@ describe('PathMap', () => {
     const buildAbsolutePath = (normalizedBase: string, segments: string[]): string => {
       if (segments.length === 0) return normalizedBase
 
-      // Use the same Path.join logic as the actual implementation
-      return Path.join(normalizedBase, ...segments)
+      // Use the same FsLoc.join logic as the actual implementation
+      const baseLoc = FsLoc.decodeSync(normalizedBase)
+      const pathLoc = segments.length > 0 ? FsLoc.decodeSync(segments.join('/')) : null
+      return pathLoc ? FsLoc.encodeSync(FsLoc.join(baseLoc, pathLoc)) : normalizedBase
     }
 
     // Arbitrary for valid path segments
@@ -262,7 +264,7 @@ describe('PathMap', () => {
           pathInput,
           fc.string({ minLength: 1 })
             .filter(s => s.startsWith('/'))
-            // Exclude paths with .. segments as Path.join will resolve them
+            // Exclude paths with .. segments as FsLoc.join will resolve them
             .filter(s => !s.includes('..')),
           (input, base) => {
             const paths = PathMap.create(input, base)
@@ -271,14 +273,11 @@ describe('PathMap', () => {
             function checkAbsolute(obj: any) {
               for (const [key, value] of Object.entries(obj)) {
                 if (typeof value === 'string') {
-                  // Path.join resolves .. segments, so we need to resolve the base too
-                  const resolvedBase = Path.resolve(normalizedBase)
-                  const resolvedValue = Path.resolve(value)
-                  // Check that the resolved absolute path starts with resolved base
-                  // or that both resolve to root
+                  // FsLoc operations handle path normalization
+                  // Check that the absolute path starts with base
                   expect(
-                    resolvedValue.startsWith(resolvedBase)
-                      || (resolvedBase === '/' && resolvedValue.startsWith('/')),
+                    value.startsWith(normalizedBase)
+                      || (normalizedBase === '/' && value.startsWith('/')),
                   ).toBe(true)
                 } else if (typeof value === 'object') {
                   checkAbsolute(value)

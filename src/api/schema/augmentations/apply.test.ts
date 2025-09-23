@@ -7,60 +7,66 @@ import type { AugmentationConfig } from './config.js'
 const on = GraphQLSchemaPath.Nodes.Root.make()
 
 describe('with empty existing description', () => {
+  type PlacementInput = { placement: 'before' | 'after' | 'over' }
+  type PlacementOutput = { expected: string }
+
   // dprint-ignore
-  Test.Table.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('placement without newlines', [
-      { name: 'before placement', placement: 'before' as const, expected: 'New content' },
-      { name: 'after placement',  placement: 'after' as const,  expected: 'New content' },
-      { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
-    ], ({ placement, expected }) => {
+  Test.Table.suite<PlacementInput, PlacementOutput>('placement without newlines', [
+      { n: 'before placement', i: { placement: 'before' as const }, o: { expected: 'New content' } },
+      { n: 'after placement',  i: { placement: 'after' as const },  o: { expected: 'New content' } },
+      { n: 'over placement',   i: { placement: 'over' as const },   o: { expected: 'New content' } },
+    ], ({ i, o }) => {
       const type = { description: undefined } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on,
         content: 'New content',
-        placement,
+        placement: i.placement,
       }
 
       mutateDescription(type, augmentation)
 
-      expect(type.description).toBe(expected)
+      expect(type.description).toBe(o.expected)
     })
 
   // dprint-ignore
-  Test.Table.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('empty string handling', [
-      { name: 'before placement', placement: 'before' as const, expected: 'New content' },
-      { name: 'after placement',  placement: 'after' as const,  expected: 'New content' },
-      { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
-    ], ({ placement, expected }) => {
+  Test.Table.suite<PlacementInput, PlacementOutput>('empty string handling', [
+      { n: 'before placement', i: { placement: 'before' as const }, o: { expected: 'New content' } },
+      { n: 'after placement',  i: { placement: 'after' as const },  o: { expected: 'New content' } },
+      { n: 'over placement',   i: { placement: 'over' as const },   o: { expected: 'New content' } },
+    ], ({ i, o }) => {
       const type = { description: '' } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on,
         content: 'New content',
-        placement,
+        placement: i.placement,
       }
 
       mutateDescription(type, augmentation)
 
-      expect(type.description).toBe(expected)
+      expect(type.description).toBe(o.expected)
     })
 })
 
 describe('with existing description', () => {
+  type ContentInput = { placement: 'before' | 'after' | 'over' }
+  type ContentOutput = { expected: string }
+
   // dprint-ignore
-  Test.Table.suite<{ placement: 'before' | 'after' | 'over'; expected: string }>('content combination', [
-      { name: 'before placement', placement: 'before' as const, expected: 'New content\n\nExisting description' },
-      { name: 'after placement',  placement: 'after' as const,  expected: 'Existing description\n\nNew content' },
-      { name: 'over placement',   placement: 'over' as const,   expected: 'New content' },
-    ], ({ placement, expected }) => {
+  Test.Table.suite<ContentInput, ContentOutput>('content combination', [
+      { n: 'before placement', i: { placement: 'before' as const }, o: { expected: 'New content\n\nExisting description' } },
+      { n: 'after placement',  i: { placement: 'after' as const },  o: { expected: 'Existing description\n\nNew content' } },
+      { n: 'over placement',   i: { placement: 'over' as const },   o: { expected: 'New content' } },
+    ], ({ i, o }) => {
       const type = { description: 'Existing description' } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on,
         content: 'New content',
-        placement,
+        placement: i.placement,
       }
 
       mutateDescription(type, augmentation)
 
-      expect(type.description).toBe(expected)
+      expect(type.description).toBe(o.expected)
     })
 })
 

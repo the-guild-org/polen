@@ -29,4 +29,4 @@ export const DiagnosticValidationError = Diagnostic.create({
 
 export const makeDiagnosticValidationError = Diagnostic.createMake(DiagnosticValidationError)
 
-export type DiagnosticValidationError = S.Schema.Type<typeof DiagnosticValidationError>
+export type DiagnosticValidationError = typeof DiagnosticValidationError.Type

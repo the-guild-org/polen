@@ -1,6 +1,7 @@
 import type { Api } from '#api/$'
 import * as ReferenceModule from '#api/reference/$'
 import * as Catalog from '#api/reference/catalog'
+import { Ef } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -8,8 +9,8 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { FsLoc } from '@wollybeard/kit'
 import { Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
 import type * as Vite from 'vite'
 import { polenVirtual } from '../vi.js'
 
@@ -40,8 +41,8 @@ export const Reference = ({
   })
 
   const scanReference = async () => {
-    return await Effect.runPromise(
-      reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+    return await Ef.runPromise(
+      reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
     )
   }
 
@@ -99,13 +100,13 @@ export const Reference = ({
 
             // Generate the module code with both catalog and component exports
             const s = Str.Builder()
-            s`import { Effect } from 'effect'`
+            s`import { Ef } from '#dep/effect'`
             s`import * as Catalog from '#api/reference/catalog'`
 
             const indexFilePath = scanReferenceResult.catalog.index?.path
             if (indexFilePath) {
               s``
-              s`export { default as IndexComponent } from '${indexFilePath}'`
+              s`export { default as IndexComponent } from '${FsLoc.encodeSync(indexFilePath)}'`
             } else {
               s``
               s`export const IndexComponent = null`

@@ -3,7 +3,8 @@
  * Free service, no API key required
  */
 
-import { Data, Effect } from 'effect'
+import { Ef } from '#dep/effect'
+import { Data } from 'effect'
 import type { GeneratedImage } from '../ai-image-generation.js'
 
 export interface PollinationsOptions {
@@ -33,8 +34,8 @@ export type PollinationsError = ImageGenerationError | ServiceUnavailableError
  */
 export const generateImage = (
   options: PollinationsOptions,
-): Effect.Effect<GeneratedImage, ImageGenerationError, never> =>
-  Effect.gen(function*() {
+): Ef.Effect<GeneratedImage, ImageGenerationError, never> =>
+  Ef.gen(function*() {
     const {
       prompt,
       width = 1200,
@@ -45,7 +46,7 @@ export const generateImage = (
 
     // Validate prompt
     if (!prompt || prompt.trim().length === 0) {
-      return yield* Effect.fail(
+      return yield* Ef.fail(
         new ImageGenerationError({
           prompt,
           reason: 'Prompt cannot be empty',
@@ -80,9 +81,9 @@ export const generateImage = (
 /**
  * Check if the Pollinations service is available
  */
-export const isAvailable = (): Effect.Effect<boolean, ServiceUnavailableError, never> =>
-  Effect.gen(function*() {
-    const result = yield* Effect.tryPromise({
+export const isAvailable = (): Ef.Effect<boolean, ServiceUnavailableError, never> =>
+  Ef.gen(function*() {
+    const result = yield* Ef.tryPromise({
       try: () =>
         fetch('https://image.pollinations.ai/prompt/test', {
           method: 'HEAD',

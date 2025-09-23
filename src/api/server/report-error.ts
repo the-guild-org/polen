@@ -1,6 +1,7 @@
+import { Ef } from '#dep/effect'
 import { Err } from '@wollybeard/kit'
 import cleanStack from 'clean-stack'
-import { Data, Effect } from 'effect'
+import { Data } from 'effect'
 import { ErrorParser } from 'youch-core'
 import type { ParsedError, StackFrame } from 'youch-core/types'
 
@@ -19,8 +20,8 @@ export type ReportErrorError = ErrorParsingError | Error
  * @param value - The error value to report
  * @returns Effect that reports the error with snippets
  */
-export const reportError = (value: unknown): Effect.Effect<void, ReportErrorError, never> =>
-  Effect.gen(function*() {
+export const reportError = (value: unknown): Ef.Effect<void, ReportErrorError, never> =>
+  Ef.gen(function*() {
     const error = Err.ensure(value)
 
     const excludeStackFramesPattern = /.*(?:rolldown-vite|rolldown|node_modules).*/
@@ -31,7 +32,7 @@ export const reportError = (value: unknown): Effect.Effect<void, ReportErrorErro
 
     const parser = new ErrorParser()
 
-    const parsedError = yield* Effect.tryPromise({
+    const parsedError = yield* Ef.tryPromise({
       try: () => parser.parse(error),
       catch: (parseError) =>
         new ErrorParsingError({

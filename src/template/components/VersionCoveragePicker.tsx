@@ -1,4 +1,4 @@
-import { A } from '#dep/effect'
+import { Ar } from '#dep/effect'
 import { HashMap } from 'effect'
 import { Catalog, Document, VersionCoverage } from 'graphql-kit'
 import type { FC } from 'react'
@@ -22,7 +22,7 @@ export const VersionCoveragePicker: FC<Props> = ({
 }) => {
   if (Document.Unversioned.is(document)) return null
 
-  const options = A.fromIterable(HashMap.keys(document.versionDocuments))
+  const options = Ar.fromIterable(HashMap.keys(document.versionDocuments))
   if (options.length === 0) return null
 
   // Helper to format labels with proper Version/Versions prefix

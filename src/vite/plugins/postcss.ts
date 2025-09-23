@@ -1,6 +1,6 @@
 import type { Api } from '#api/$'
 import type { Vite } from '#dep/vite/index'
-import { Path } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 import { existsSync } from 'node:fs'
 
 /**
@@ -14,8 +14,12 @@ export const PostCSS = (
     name: 'polen:postcss',
     config: (): Vite.UserConfig => {
       // Check if PostCSS config exists in project
-      const postcssConfigPath = Path.join(config.paths.project.rootDir, 'postcss.config.js')
-      const tailwindConfigPath = Path.join(config.paths.project.rootDir, 'tailwind.config.js')
+      const postcssConfigPath = FsLoc.encodeSync(
+        FsLoc.join(config.paths.project.rootDir, FsLoc.fromString('postcss.config.js')),
+      )
+      const tailwindConfigPath = FsLoc.encodeSync(
+        FsLoc.join(config.paths.project.rootDir, FsLoc.fromString('tailwind.config.js')),
+      )
 
       const hasPostCSS = existsSync(postcssConfigPath)
       const hasTailwind = existsSync(tailwindConfigPath)

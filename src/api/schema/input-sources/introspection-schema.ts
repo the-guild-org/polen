@@ -26,7 +26,7 @@ export const DirectiveLocation = S.Literal(
   'INPUT_FIELD_DEFINITION',
 )
 
-export type DirectiveLocation = S.Schema.Type<typeof DirectiveLocation>
+export type DirectiveLocation = typeof DirectiveLocation.Type
 
 // ============================================================================
 // Named Type References (specific for each context)
@@ -38,7 +38,7 @@ export const InterfaceRef = S.Struct({
   name: S.String,
 })
 
-export type InterfaceRef = S.Schema.Type<typeof InterfaceRef>
+export type InterfaceRef = typeof InterfaceRef.Type
 
 // For Interface/Union possible types and root operation types
 export const ObjectRef = S.Struct({
@@ -46,7 +46,7 @@ export const ObjectRef = S.Struct({
   name: S.String,
 })
 
-export type ObjectRef = S.Schema.Type<typeof ObjectRef>
+export type ObjectRef = typeof ObjectRef.Type
 
 // ============================================================================
 // Type References (recursive structures for wrapping types)
@@ -64,7 +64,7 @@ export const NamedOutputTypeRef = S.Struct({
   name: S.String,
 })
 
-export type NamedOutputTypeRef = S.Schema.Type<typeof NamedOutputTypeRef>
+export type NamedOutputTypeRef = typeof NamedOutputTypeRef.Type
 
 // Named input types
 export const NamedInputTypeRef = S.Struct({
@@ -76,7 +76,7 @@ export const NamedInputTypeRef = S.Struct({
   name: S.String,
 })
 
-export type NamedInputTypeRef = S.Schema.Type<typeof NamedInputTypeRef>
+export type NamedInputTypeRef = typeof NamedInputTypeRef.Type
 
 // List wrapper for output types
 export const ListOutputTypeRef = S.Struct({
@@ -165,7 +165,7 @@ export const InputValue = S.Struct({
   deprecationReason: S.optional(S.Union(S.String, S.Null)),
 })
 
-export type InputValue = S.Schema.Type<typeof InputValue>
+export type InputValue = typeof InputValue.Type
 
 // ============================================================================
 // Field (for object and interface fields)
@@ -180,7 +180,7 @@ export const Field = S.Struct({
   deprecationReason: S.Union(S.String, S.Null),
 })
 
-export type Field = S.Schema.Type<typeof Field>
+export type Field = typeof Field.Type
 
 // ============================================================================
 // Enum Value
@@ -193,7 +193,7 @@ export const EnumValue = S.Struct({
   deprecationReason: S.Union(S.String, S.Null),
 })
 
-export type EnumValue = S.Schema.Type<typeof EnumValue>
+export type EnumValue = typeof EnumValue.Type
 
 // ============================================================================
 // Directive
@@ -207,7 +207,7 @@ export const Directive = S.Struct({
   args: S.Array(InputValue),
 })
 
-export type Directive = S.Schema.Type<typeof Directive>
+export type Directive = typeof Directive.Type
 
 // ============================================================================
 // Introspection Types (discriminated union)
@@ -220,7 +220,7 @@ export const ScalarType = S.Struct({
   specifiedByURL: S.optional(S.Union(S.String, S.Null)),
 })
 
-export type ScalarType = S.Schema.Type<typeof ScalarType>
+export type ScalarType = typeof ScalarType.Type
 
 export const ObjectType = S.Struct({
   kind: S.Literal('OBJECT'),
@@ -230,7 +230,7 @@ export const ObjectType = S.Struct({
   interfaces: S.Array(InterfaceRef),
 })
 
-export type ObjectType = S.Schema.Type<typeof ObjectType>
+export type ObjectType = typeof ObjectType.Type
 
 export const InterfaceType = S.Struct({
   kind: S.Literal('INTERFACE'),
@@ -241,7 +241,7 @@ export const InterfaceType = S.Struct({
   possibleTypes: S.Array(ObjectRef),
 })
 
-export type InterfaceType = S.Schema.Type<typeof InterfaceType>
+export type InterfaceType = typeof InterfaceType.Type
 
 export const UnionType = S.Struct({
   kind: S.Literal('UNION'),
@@ -250,7 +250,7 @@ export const UnionType = S.Struct({
   possibleTypes: S.Array(ObjectRef),
 })
 
-export type UnionType = S.Schema.Type<typeof UnionType>
+export type UnionType = typeof UnionType.Type
 
 export const EnumType = S.Struct({
   kind: S.Literal('ENUM'),
@@ -259,7 +259,7 @@ export const EnumType = S.Struct({
   enumValues: S.Array(EnumValue),
 })
 
-export type EnumType = S.Schema.Type<typeof EnumType>
+export type EnumType = typeof EnumType.Type
 
 export const InputObjectType = S.Struct({
   kind: S.Literal('INPUT_OBJECT'),
@@ -269,7 +269,7 @@ export const InputObjectType = S.Struct({
   isOneOf: S.Boolean,
 })
 
-export type InputObjectType = S.Schema.Type<typeof InputObjectType>
+export type InputObjectType = typeof InputObjectType.Type
 
 // Complete IntrospectionType union
 export const IntrospectionType = S.Union(
@@ -281,7 +281,7 @@ export const IntrospectionType = S.Union(
   InputObjectType,
 )
 
-export type IntrospectionType = S.Schema.Type<typeof IntrospectionType>
+export type IntrospectionType = typeof IntrospectionType.Type
 
 // ============================================================================
 // Schema
@@ -296,7 +296,7 @@ export const Schema = S.Struct({
   directives: S.Array(Directive),
 })
 
-export type Schema = S.Schema.Type<typeof Schema>
+export type Schema = typeof Schema.Type
 
 // ============================================================================
 // IntrospectionQuery
@@ -310,7 +310,7 @@ export const IntrospectionQuery = S.Struct({
   __schema: Schema,
 })
 
-export type IntrospectionQuery = S.Schema.Type<typeof IntrospectionQuery>
+export type IntrospectionQuery = typeof IntrospectionQuery.Type
 
 // ============================================================================
 // Codec

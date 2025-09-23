@@ -4,7 +4,7 @@ import { Manifest } from '#vite/plugins/manifest'
 // TODO: Fix vite-plugin-ssr-css compatibility with Rolldown/virtual modules
 // import { vitePluginSsrCss } from '@hiogawa/vite-plugin-ssr-css'
 import ViteReact from '@vitejs/plugin-react'
-import { Path } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 import Inspect from 'vite-plugin-inspect'
 import { Branding } from './branding.js'
 import { Build } from './build.js'
@@ -20,7 +20,7 @@ export const Main = (
   // Optional Plugins based on config
 
   if (config.advanced.explorer) {
-    const outputDir = Path.join(config.paths.project.rootDir, `.bundle-explorer`)
+    const outputDir = FsLoc.encodeSync(FsLoc.join(config.paths.project.rootDir, FsLoc.fromString(`.bundle-explorer`)))
     const plugin = Inspect({
       build: true,
       outputDir,

@@ -91,7 +91,7 @@ describe('extending DiagnosticBase', () => {
     })
     const makeCustomDiagnostic = Diagnostic.createMake(CustomDiagnostic)
 
-    type CustomDiagnostic = S.Schema.Type<typeof CustomDiagnostic>
+    type CustomDiagnostic = typeof CustomDiagnostic.Type
 
     const diagnostic = makeCustomDiagnostic({
       message: 'Custom error occurred',

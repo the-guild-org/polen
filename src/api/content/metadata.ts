@@ -8,4 +8,4 @@ export const MetadataSchema = S.Struct({
   hidden: S.optionalWith(S.Boolean, { default: () => false }),
 })
 
-export type Metadata = S.Schema.Type<typeof MetadataSchema>
+export type Metadata = typeof MetadataSchema.Type

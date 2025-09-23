@@ -23,7 +23,7 @@ declare module 'virtual:polen/project/assets/hero' {
 }
 
 declare module 'virtual:polen/project/schemas' {
-  export const schemasCatalog: import('#lib/catalog/$').Catalog.Catalog | null
+  export const schemasCatalog: import('graphql-kit').Catalog.Catalog | null
 }
 
 declare module 'virtual:polen/project/pages' {

@@ -1,7 +1,7 @@
 import type { Api } from '#api/$'
 import { Vite } from '#dep/vite/index'
 import { ViteVirtual } from '#lib/vite-virtual'
-import { Path } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 import { polenVirtual } from '../vi.js'
 
 const viClientManifest = polenVirtual([`vite`, `client`, `manifest`])
@@ -23,7 +23,9 @@ export const Manifest = (config: Api.Config.Config): Vite.Plugin => {
             return `export default {}`
           }
 
-          const manifestPath = Path.join(config.paths.project.absolute.build.root, `.vite`, `manifest.json`)
+          const manifestPath = FsLoc.encodeSync(
+            FsLoc.join(config.paths.project.absolute.build.root, FsLoc.fromString(`.vite/manifest.json`)),
+          )
           const module = await import(manifestPath, { with: { type: `json` } }) as {
             default: Vite.Manifest
           }

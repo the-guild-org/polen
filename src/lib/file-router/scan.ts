@@ -1,7 +1,6 @@
-import { O } from '#dep/effect'
-import * as TinyGlobbyModule from '#dep/tiny-globby/index'
-import { Path, Str } from '@wollybeard/kit'
-import { Effect, String } from 'effect'
+import { Ef, Op } from '#dep/effect'
+import { Fs, FsLoc, Str } from '@wollybeard/kit'
+import { String } from 'effect'
 import { type Diagnostic, lint } from './linter.js'
 import { type Route, type RouteFile, type RouteLogical } from './route.js'
 
@@ -44,21 +43,29 @@ export interface ScanResult {
 //
 
 export const scan = (parameters: {
-  dir: string
-  glob?: string
-}): Effect.Effect<ScanResult, Error, never> =>
-  Effect.gen(function*() {
-    const { dir, glob = `**/*.{md,mdx}` } = parameters
+  dir: FsLoc.AbsDir.AbsDir
+  glob?: string | undefined
+  files?: FsLoc.RelFile.RelFile[] | undefined
+}): Ef.Effect<ScanResult, Error, never> =>
+  Ef.gen(function*() {
+    const { dir, glob = `**/*.{md,mdx}`, files } = parameters
 
-    // Get all files directly
-    const filePaths = yield* TinyGlobbyModule.EffectGlobby.glob(glob, {
-      absolute: true,
-      cwd: dir,
-      onlyFiles: true,
-    })
+    let absoluteFiles: FsLoc.AbsFile.AbsFile[]
+
+    if (files && files.length > 0) {
+      absoluteFiles = files.map(relFile => FsLoc.join(dir, relFile))
+    } else {
+      absoluteFiles = yield* Fs.glob(glob, {
+        absolute: true,
+        cwd: dir,
+        onlyFiles: true,
+      })
+    }
 
     // Convert to routes
-    const routes = filePaths.map((filePath: string) => filePathToRoute(filePath, dir))
+    const routes = absoluteFiles.map((filePathLoc) => {
+      return filePathToRoute(filePathLoc, dir)
+    })
 
     // Apply linting
     const lintResult = lint(routes)
@@ -69,20 +76,25 @@ export const scan = (parameters: {
     }
   })
 
-export const filePathToRoute = (filePathExpression: string, rootDir: string): Route => {
+export const filePathToRoute = (filePathExpression: FsLoc.AbsFile.AbsFile, rootDir: FsLoc.AbsDir.AbsDir): Route => {
+  const filePathStr = FsLoc.encodeSync(filePathExpression)
+  const rootDirStr = FsLoc.encodeSync(rootDir)
+
   const file: RouteFile = {
     path: {
-      absolute: Path.parse(filePathExpression),
-      relative: Path.parse(Path.relative(rootDir, filePathExpression)),
+      absolute: filePathExpression,
+      relative: FsLoc.toRel(filePathExpression, rootDir),
     },
   }
-  const logical = filePathToRouteLogical(file.path.relative)
+  const logical = filePathToRouteLogical(FsLoc.encodeSync(file.path.relative))
 
   // Generate id and parentId for tree building
-  const id = filePathExpression // Use absolute path as unique ID
-  const relativePath = Path.relative(rootDir, filePathExpression)
-  const parentDir = Path.dirname(relativePath)
-  const parentId = parentDir === `.` ? null : Path.join(rootDir, parentDir)
+  const id = filePathStr // Use absolute path as unique ID
+  const relativePath = FsLoc.encodeSync(FsLoc.toRel(filePathExpression, rootDir))
+  const parentDirLoc = FsLoc.up(filePathExpression)
+  const parentId = parentDirLoc && !FsLoc.equivalence(parentDirLoc, rootDir)
+    ? FsLoc.encodeSync(parentDirLoc)
+    : null
 
   return {
     logical,
@@ -92,38 +104,40 @@ export const filePathToRoute = (filePathExpression: string, rootDir: string): Ro
   }
 }
 
-export const filePathToRouteLogical = (filePath: Path.Parsed): RouteLogical => {
+export const filePathToRouteLogical = (relativePathStr: string): RouteLogical => {
+  // Parse the path to get directory and filename
+  const lastSlash = relativePathStr.lastIndexOf('/')
+  const dir = lastSlash >= 0 ? relativePathStr.slice(0, lastSlash) : ''
+  const fileName = lastSlash >= 0 ? relativePathStr.slice(lastSlash + 1) : relativePathStr
+  const nameWithoutExt = fileName.replace(/\.[^.]+$/, '')
+
   // Remove leading/trailing path separators and split by separator
-  const dirWithoutSeparators = Str.removeSurrounding(filePath.dir, Path.sep)
+  const dirWithoutSeparators = Str.removeSurrounding(dir, '/')
 
   // Handle empty directory case - should result in empty array, not ['']
   const dirSegments = dirWithoutSeparators === ''
     ? []
-    : String.split(Path.sep)(dirWithoutSeparators)
+    : String.split('/')(dirWithoutSeparators)
 
   // Parse numbered prefixes from directory segments
   const dirPath = dirSegments.map(segment => {
-    const matchResult = String.match(conventions.numberedPrefix.pattern)(segment)
-    if (O.isSome(matchResult)) {
-      const match = matchResult.value as any
-      return match.groups.name
-    }
-    return segment
+    const opMatch = Str.match(segment, conventions.numberedPrefix.pattern)
+    return Op.match(opMatch, {
+      onNone: () => segment,
+      onSome: (match) => match.groups.name,
+    })
   })
 
   // Parse numbered prefix from filename
-  const matchResult = String.match(conventions.numberedPrefix.pattern)(filePath.name)
-  let order: number | undefined
-  let nameWithoutPrefix: string
+  const matchResult = Str.match(nameWithoutExt, conventions.numberedPrefix.pattern)
 
-  if (O.isSome(matchResult)) {
-    const match = matchResult.value as any
-    order = parseInt(match.groups.order, 10)
-    nameWithoutPrefix = match.groups.name
-  } else {
-    order = undefined
-    nameWithoutPrefix = filePath.name
-  }
+  const { order, nameWithoutPrefix } = Op.match(matchResult, {
+    onNone: () => ({ order: undefined, nameWithoutPrefix: nameWithoutExt }),
+    onSome: (match) => ({
+      order: parseInt(match.groups.order, 10),
+      nameWithoutPrefix: match.groups.name,
+    }),
+  })
 
   if (nameWithoutPrefix === conventions.index.name) {
     const path = dirPath

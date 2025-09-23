@@ -13,7 +13,7 @@ export const VersionState = S.Struct({
   currentRevision: S.NullOr(Revision.Revision),
 })
 
-export type VersionState = S.Schema.Type<typeof VersionState>
+export type VersionState = typeof VersionState.Type
 
 /**
  * The changelog page state schema
@@ -27,7 +27,7 @@ export const State = S.Struct({
   }),
 })
 
-export type State = S.Schema.Type<typeof State>
+export type State = typeof State.Type
 
 // ============================================================================
 // Initial State

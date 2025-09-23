@@ -21,7 +21,7 @@ test('no schema causes navbar without refernce link', async ({ page, vite }) => 
 })
 
 test('schema pressence causes navbar with reference link', async ({ page, vite, project }) => {
-  await project.layout.set({
+  await project.dir.set({
     'schema.graphql': schemaFixtures.minimal.v1,
   })
   const svr = await vite.devPolen()
@@ -31,7 +31,7 @@ test('schema pressence causes navbar with reference link', async ({ page, vite, 
 })
 
 test('/reference loads unversioned schema without error', async ({ page, vite, project }) => {
-  await project.layout.set({
+  await project.dir.set({
     'schema.graphql': schemaFixtures.minimal.v1,
   })
   const svr = await vite.devPolen()
@@ -40,7 +40,7 @@ test('/reference loads unversioned schema without error', async ({ page, vite, p
 })
 
 test('/reference loads versioned schema without error', async ({ page, vite, project }) => {
-  await project.layout.set({
+  await project.dir.set({
     'schemas': {
       '3.0.0': schemaFixtures.minimal.v1,
       '2.0.0': schemaFixtures.minimal.v2,

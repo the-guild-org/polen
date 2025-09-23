@@ -2,17 +2,17 @@ import { Config as PolenConfig } from '#api/config/$'
 import type { Diagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
 import type { Config } from '#api/schema/config'
 import type { InputSource } from '#api/schema/input-source/input-source'
-import { O } from '#dep/effect'
-import { Data, Effect } from 'effect'
+import { Ef, Op } from '#dep/effect'
+import { Data } from 'effect'
 import type { Catalog } from 'graphql-kit'
 
 /**
  * Result of schema reading with provenance tracking for file watching and debugging.
  */
 export interface LoadedCatalog {
-  data: O.Option<Catalog.Catalog>
+  data: Op.Option<Catalog.Catalog>
   source: InputSource
-  diagnostics: O.Option<Diagnostic[]>
+  diagnostics: Op.Option<Diagnostic[]>
 }
 
 export interface Context {
@@ -36,21 +36,21 @@ type InputSourceName = string
 export const loadOrThrow = (
   params: {
     context: Context
-    config: O.Option<Config>
-    useFirst: O.Option<InputSourceName[]>
+    config: Op.Option<Config>
+    useFirst: Op.Option<InputSourceName[]>
     sources: InputSource[]
   },
-): Effect.Effect<LoadedCatalog, LoadError, import('@effect/platform/FileSystem').FileSystem> =>
-  Effect.gen(function*() {
+): Ef.Effect<LoadedCatalog, LoadError, import('@effect/platform/FileSystem').FileSystem> =>
+  Ef.gen(function*() {
     const getSourceConfig = (sourceName: InputSourceName) => {
-      const config = O.getOrUndefined(params.config)
+      const config = Op.getOrUndefined(params.config)
       const sourceConfigs = (config?.sources ?? {}) as Record<InputSourceName, object>
       const sourceConfig = sourceConfigs[sourceName] ?? {}
       return sourceConfig
     }
 
     // If useFirst is specified, try sources in that specific order
-    const sourcesToTry = O.match(params.useFirst, {
+    const sourcesToTry = Op.match(params.useFirst, {
       onNone: () => params.sources,
       onSome: (useFirst) => {
         const ordered: InputSource[] = []
@@ -66,7 +66,7 @@ export const loadOrThrow = (
     for (const source of sourcesToTry) {
       const sourceConfig = getSourceConfig(source.name)
       const result = yield* source.readIfApplicableOrThrow(sourceConfig, params.context).pipe(
-        Effect.mapError((error) =>
+        Ef.mapError((error) =>
           new SourceReadError({
             source: source.name,
             error,
@@ -76,14 +76,14 @@ export const loadOrThrow = (
 
       if (result) {
         return {
-          data: O.some(result),
+          data: Op.some(result),
           source,
-          diagnostics: O.none(),
+          diagnostics: Op.none(),
         }
       }
     }
 
-    return yield* Effect.fail(
+    return yield* Ef.fail(
       new NoApplicableSourceError({
         sources: params.sources.map(s => s.name),
       }),
