@@ -27,7 +27,7 @@ export const VersionCoveragePicker: FC<Props> = ({
 
   // Helper to format labels with proper Version/Versions prefix
   const formatLabel = (versionCoverage: VersionCoverage.VersionCoverage): string => {
-    const prefix = VersionCoverage.isSingle(versionCoverage) ? 'Version' : 'Versions'
+    const prefix = VersionCoverage.One.is(versionCoverage) ? 'Version' : 'Versions'
     return `${prefix} ${VersionCoverage.toLabel(versionCoverage)}`
   }
 

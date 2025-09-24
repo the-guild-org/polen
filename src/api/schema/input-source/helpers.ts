@@ -1,6 +1,7 @@
 import { InputSourceError } from '#api/schema/input-source/errors'
 import { Ef } from '#dep/effect'
-import { FsLoc } from '@wollybeard/kit'
+import type { FileSystem } from '@effect/platform'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import type { GraphQLSchema } from 'graphql'
 import { Catalog, Change, DateOnly, Grafaid, Revision, Schema } from 'graphql-kit'
 
@@ -97,3 +98,38 @@ export const createSingleRevisionCatalog = (
 
     return Catalog.Unversioned.make({ schema: schemaObj })
   })
+
+/**
+ * Find all GraphQL files (.graphql extension) in a directory.
+ * Returns just the file names, not full paths.
+ */
+export const findGraphQLFiles = (
+  directory: FsLoc.AbsDir.AbsDir,
+) =>
+  Fs.glob('*.graphql', { onlyFiles: true, cwd: directory }).pipe(
+    Ef.catchAll(() => Ef.succeed([])),
+  )
+
+/**
+ * Check if a file exists.
+ * Returns null if the file doesn't exist or an error occurs.
+ */
+export const fileExists = (
+  path: FsLoc.AbsFile.AbsFile,
+): Ef.Effect<boolean, never, FileSystem.FileSystem> =>
+  Fs.stat(path).pipe(
+    Ef.map(stats => stats.type === 'File'),
+    Ef.catchAll(() => Ef.succeed(false)),
+  )
+
+/**
+ * Check if a directory exists.
+ * Returns false if the directory doesn't exist or an error occurs.
+ */
+export const directoryExists = (
+  path: FsLoc.AbsDir.AbsDir,
+): Ef.Effect<boolean, never, FileSystem.FileSystem> =>
+  Fs.stat(path).pipe(
+    Ef.map(stats => stats.type === 'Directory'),
+    Ef.catchAll(() => Ef.succeed(false)),
+  )

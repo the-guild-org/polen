@@ -67,7 +67,7 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
       if (pagesScaleResult.list.length > 0) {
         debug('Processing arbitrary pages', { count: pagesScaleResult.list.length })
         for (const page of pagesScaleResult.list) {
-          const pathExp = FileRouter.routeToPathExpression(page.route)
+          const pathExp = page.route.toString()
           routes.push(pathExp)
           debug('added page route', { path: pathExp })
         }

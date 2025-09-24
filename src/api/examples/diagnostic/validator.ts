@@ -2,7 +2,7 @@ import { Ar, Ei } from '#dep/effect'
 import { Match, Schema as S } from 'effect'
 import type { DocumentNode, GraphQLError } from 'graphql'
 import { parse, specifiedRules, validate } from 'graphql'
-import { Catalog as SchemaCatalog, Document, Schema, Version } from 'graphql-kit'
+import { Catalog as SchemaCatalog, Document, Schema, Version, VersionCoverage } from 'graphql-kit'
 import { Example } from '../schemas/example/$.js'
 import type { DiagnosticValidationError } from './diagnostic.js'
 import { makeDiagnosticValidationError } from './diagnostic.js'
@@ -72,7 +72,7 @@ export const validateExamples = (
         const result = Document.resolveDocumentAndSchema(
           example.document,
           catalog,
-          version, // Pass each version as VersionCoverage
+          VersionCoverage.One.make({ version }), // Pass each version as VersionCoverage
         )
 
         Ei.match(result, {

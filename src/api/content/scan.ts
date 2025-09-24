@@ -1,6 +1,7 @@
 import { Ei, S } from '#dep/effect'
 import { Ef } from '#dep/effect'
 import { FileRouter } from '#lib/file-router'
+import { RouteLogical } from '#lib/file-router/models/route-logical'
 import { FileSystem } from '@effect/platform'
 import { Fs, FsLoc, Tree } from '@wollybeard/kit'
 import matter from 'gray-matter'
@@ -18,9 +19,8 @@ export interface ScanResult {
  * By default, hidden pages are filtered out from both the pages list and route tree.
  */
 export const scan = (options: {
-  dir: FsLoc.AbsDir.AbsDir
+  dir: FsLoc.AbsDir
   glob?: string
-  files?: FsLoc.RelFile.RelFile[]
   /** Include hidden pages in the result (useful for debugging or admin interfaces) */
   includeHidden?: boolean
 }): Ef.Effect<ScanResult, Error, FileSystem.FileSystem> =>
@@ -29,7 +29,6 @@ export const scan = (options: {
     const routeScanResult = yield* FileRouter.scan({
       dir: options.dir,
       glob: options.glob ?? `**/*.{md,mdx}`,
-      files: options.files,
     })
 
     // Create pages with metadata (id/parentId now come from route)
@@ -44,11 +43,22 @@ export const scan = (options: {
 
     // Build tree from pages using Tree.fromList
     // Transform pages to include id/parentId at the top level for Tree.fromList
-    const pagesWithIds = pages.map(page => ({
-      ...page,
-      id: page.route.id,
-      parentId: page.route.parentId,
-    }))
+    const pagesWithIds = pages.map(page => {
+      // Compute parentId from the logical path
+      const segments = page.route.logical.path.segments
+      const parentSegments = segments.slice(0, -1)
+      const parentId = parentSegments.length === 0
+        ? null
+        : S.encodeSync(FsLoc.Path.Abs.String)(
+          FsLoc.Path.Abs.make({ segments: parentSegments }),
+        )
+
+      return {
+        ...page,
+        id: page.route.id,
+        parentId,
+      }
+    })
 
     // Handle cases where there might be multiple root nodes
     // If all pages are at root level (no parentId), create a virtual root
@@ -57,20 +67,16 @@ export const scan = (options: {
     let tree: Tree.Tree<Page>
     if (hasMultipleRoots) {
       // Create a virtual root node to hold all root-level pages
+      const virtualRootRoute = new FileRouter.Route({
+        file: S.decodeSync(FsLoc.AbsFile.String)('/__virtual_root__.md'),
+        logical: RouteLogical.make({
+          path: FsLoc.Path.Abs.make({ segments: [] }),
+          order: undefined,
+        }),
+      })
+
       const virtualRoot: Page & { id: string; parentId: string | null } = {
-        route: {
-          id: `__virtual_root__`,
-          parentId: null,
-          file: {
-            path: {
-              absolute: FsLoc.AbsFile.decodeSync('/__virtual_root__.md'),
-              relative: FsLoc.RelFile.decodeSync('__virtual_root__.md'),
-            },
-          },
-          logical: {
-            path: [],
-          },
-        },
+        route: virtualRootRoute,
         metadata: { hidden: true },
         id: `__virtual_root__`,
         parentId: null,
@@ -99,8 +105,8 @@ export const scan = (options: {
  */
 const readRoute = (route: FileRouter.Route): Ef.Effect<Page, Error, FileSystem.FileSystem> =>
   Ef.gen(function*() {
-    const filePath = FsLoc.encodeSync(route.file.path.absolute)
-    const filePathLoc = route.file.path.absolute
+    const filePath = FsLoc.encodeSync(route.file)
+    const filePathLoc = route.file
     const fileContent = yield* Fs.readString(filePathLoc).pipe(
       Ef.mapError(error => new Error(`Failed to read file ${filePath}: ${error}`)),
     )

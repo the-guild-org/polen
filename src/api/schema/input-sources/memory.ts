@@ -141,7 +141,7 @@ const parseSchema = (value: string | GraphQLSchema): Ef.Effect<GraphQLSchema, In
 export const read = (
   options: Options,
 ): Ef.Effect<
-  null | { schema: Schema.Unversioned.Unversioned; revisions: readonly Revision[] },
+  null | { schema: Schema.Unversioned; revisions: readonly Revision[] },
   InputSource.InputSourceError
 > =>
   Ef.gen(function*() {

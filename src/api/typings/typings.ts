@@ -39,13 +39,13 @@ export interface WriterOptionsWithConfig {
 // Paths
 // ============================================================================
 
-export const relativePathGeneratedTypesDir = 'node_modules/@types/polen-generated'
+export const relativePathGeneratedTypesDir = FsLoc.fromString('node_modules/@types/polen-generated')
 
 /**
  * Get the output directory for generated type definitions.
  */
 export const getGeneratedTypesDir = (projectRoot: FsLoc.AbsDir.AbsDir): FsLoc.AbsDir.AbsDir => {
-  return FsLoc.join(projectRoot, `${relativePathGeneratedTypesDir}/`)
+  return FsLoc.join(projectRoot, relativePathGeneratedTypesDir)
 }
 
 /**
@@ -53,7 +53,7 @@ export const getGeneratedTypesDir = (projectRoot: FsLoc.AbsDir.AbsDir): FsLoc.Ab
  */
 export const getGeneratedTypePath = (projectRoot: FsLoc.AbsDir.AbsDir, name: string): FsLoc.AbsFile.AbsFile => {
   const dir = getGeneratedTypesDir(projectRoot)
-  return FsLoc.join(dir, `${name}.d.ts`)
+  return FsLoc.join(dir, FsLoc.RelFile.decodeSync(`${name}.d.ts`))
 }
 
 // ============================================================================
@@ -75,7 +75,7 @@ const ensurePackageStructure = (
 
   return Ef.gen(function*() {
     // Ensure output directory exists
-    yield* Fs.write(outputDirLoc, undefined, { recursive: true })
+    yield* Fs.write(outputDirLoc, { recursive: true })
 
     // Check if package.json exists
     const packageJsonExists = yield* Fs.exists(packageJsonPathLoc)

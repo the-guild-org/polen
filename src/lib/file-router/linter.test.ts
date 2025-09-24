@@ -1,62 +1,53 @@
+import { S } from '#dep/effect'
 import { FsLoc } from '@wollybeard/kit'
 import { Test } from '@wollybeard/kit/test'
 import { expect } from 'vitest'
 import { lint } from './linter.js'
-import type { Route } from './route.js'
+import { RouteLogical } from './models/route-logical.js'
+import { Route } from './models/route.js'
 
-const createRoute = (path: string[], order?: number, isIndex = false): Route => {
-  const name = isIndex ? 'index' : path[path.length - 1]!
-  const dir = path.slice(0, -1).join('/')
-  const relativePath = dir ? `${dir}/${name}.md` : `${name}.md`
-  const absolutePath = `/project/pages/${relativePath}`
+const l = FsLoc.fromString
 
-  return {
-    logical: {
-      path,
+const createRoute = (dir: FsLoc.RelDir, order?: number, isIndex = false): Route => {
+  const base = l('/project/pages/')
+  const segments = dir.path.segments
+  const name = isIndex ? 'index' : (segments[segments.length - 1] || 'root')
+  const relativePath = FsLoc.join(dir, S.decodeSync(FsLoc.RelFile.String)(`./${name}.md`))
+  const absolutePath = FsLoc.toAbs(relativePath, base)
+
+  return Route.make({
+    logical: RouteLogical.make({
+      path: FsLoc.Path.Abs.make({ segments: [...segments] }),
       order,
-    },
-    file: {
-      path: {
-        relative: FsLoc.decodeSync(relativePath),
-        absolute: FsLoc.decodeSync(absolutePath),
-      },
-    },
-    id: absolutePath,
-    parentId: path.length > 1 ? `/project/pages/${dir}` : null,
-  }
+    }),
+    file: absolutePath,
+  })
 }
 
-interface LinterTestInput {
-  routes: Array<{ path: string[]; order?: number; isIndex?: boolean }>
-}
-
-interface LinterTestOutput {
-  expectedDiagnosticCount: number
-  expectedMessage?: string
+Test.Table.suite<{
+  routes: { loc: FsLoc.RelDir; order?: number; isIndex?: boolean }[]
+}, {
+  diagnosticCount: number
+  message?: string
   checkDiagnostic?: (diagnostic: any) => void
-}
-
-// dprint-ignore
-Test.Table.suite<LinterTestInput, LinterTestOutput>('linter', [
+}>(
+  'linter', // dprint-ignore
+  [
   {
     n: 'warns about numbered prefix on index files',
     i: {
       routes: [
-        { path: ['docs'], order: 10, isIndex: true }, // 10_index.md
-        { path: ['docs', 'getting-started'] },
+        { loc: l('./docs/'), order: 10, isIndex: true }, // 10_index.md
+        { loc: l('./docs/getting-started/') },
       ],
     },
     o: {
-      expectedDiagnosticCount: 1,
-      expectedMessage: 'Numbered prefix on index file has no effect',
+      diagnosticCount: 1,
+      message: 'Numbered prefix on index file has no effect',
       checkDiagnostic: (diagnostic: any) => {
         expect(diagnostic).toMatchObject({
           message: expect.stringContaining('Numbered prefix on index file has no effect'),
-        file: expect.objectContaining({
-          path: expect.objectContaining({
-            relative: expect.any(Object),
-          }),
-          }),
+          file: expect.any(Object),
           order: 10,
         })
       },
@@ -66,25 +57,25 @@ Test.Table.suite<LinterTestInput, LinterTestOutput>('linter', [
     n: 'no warning for index files without numbered prefix',
     i: {
       routes: [
-        { path: ['docs'], isIndex: true }, // index.md
-        { path: ['docs', 'getting-started'] },
+        { loc: l('./docs/'), isIndex: true }, // index.md
+        { loc: l('./docs/getting-started/') },
       ],
     },
     o: {
-      expectedDiagnosticCount: 0,
+      diagnosticCount: 0,
     },
   },
   {
     n: 'warns about numbered prefix conflicts',
     i: {
       routes: [
-        { path: ['about'], order: 10 }, // 10_about.md
-        { path: ['about'], order: 20 }, // 20_about.md
+        { loc: l('./about/'), order: 10 }, // 10_about.md
+        { loc: l('./about/'), order: 20 }, // 20_about.md
       ],
     },
     o: {
-      expectedDiagnosticCount: 1,
-      expectedMessage: 'conflicting routes due to numbered prefixes',
+      diagnosticCount: 1,
+      message: 'conflicting routes due to numbered prefixes',
       checkDiagnostic: (diagnostic: any) => {
         expect(diagnostic).toMatchObject({
           message: expect.stringContaining('conflicting routes due to numbered prefixes'),
@@ -98,13 +89,13 @@ Test.Table.suite<LinterTestInput, LinterTestOutput>('linter', [
     n: 'warns about index/literal conflicts',
     i: {
       routes: [
-        { path: ['docs'], isIndex: true }, // docs/index.md
-        { path: ['docs'] }, // docs.md
+        { loc: l('./docs/'), isIndex: true }, // docs/index.md
+        { loc: l('./docs/') }, // docs.md - same logical path as docs/index.md
       ],
     },
     o: {
-      expectedDiagnosticCount: 1,
-      expectedMessage: 'conflicting routes',
+      diagnosticCount: 1,
+      message: 'conflicting routes',
       checkDiagnostic: (diagnostic: any) => {
         expect(diagnostic).toMatchObject({
           message: expect.stringContaining('conflicting routes'),
@@ -118,13 +109,13 @@ Test.Table.suite<LinterTestInput, LinterTestOutput>('linter', [
     n: 'warns about numbered prefix conflicts with same order number',
     i: {
       routes: [
-        { path: ['about'], order: 10 }, // 10_about.md
-        { path: ['about'], order: 10 }, // 10-about.md (same order)
+        { loc: l('./about/'), order: 10 }, // 10_about.md
+        { loc: l('./about/'), order: 10 }, // 10-about.md (same order)
       ],
     },
     o: {
-      expectedDiagnosticCount: 1,
-      expectedMessage: 'Both files have the same order number (10)',
+      diagnosticCount: 1,
+      message: 'Both files have the same order number (10)',
       checkDiagnostic: (diagnostic: any) => {
         expect(diagnostic).toMatchObject({
           message: expect.stringContaining('Both files have the same order number (10)'),
@@ -134,13 +125,15 @@ Test.Table.suite<LinterTestInput, LinterTestOutput>('linter', [
       },
     }
   },
-], ({ i, o }) => {
-  const routeObjects = i.routes.map(r => createRoute(r.path, r.order, r.isIndex))
-  const result = lint(routeObjects)
+],
+  ({ i, o }) => {
+    const routeObjects = i.routes.map(r => createRoute(r.loc, r.order, r.isIndex))
+    const result = lint(routeObjects)
 
-  expect(result.diagnostics).toHaveLength(o.expectedDiagnosticCount)
+    expect(result.diagnostics).toHaveLength(o.diagnosticCount)
 
-  if (o.expectedDiagnosticCount > 0 && o.checkDiagnostic) {
-    o.checkDiagnostic(result.diagnostics[0])
-  }
-})
+    if (o.diagnosticCount > 0 && o.checkDiagnostic) {
+      o.checkDiagnostic(result.diagnostics[0])
+    }
+  },
+)

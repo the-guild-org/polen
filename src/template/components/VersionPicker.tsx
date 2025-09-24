@@ -25,7 +25,7 @@ export const VersionPicker: React.FC<Props> = ({
 
   return (
     <Select.Root
-      value={Version.encodeSync(currentVersion)}
+      value={String(Version.encodeSync(currentVersion))}
       onValueChange={(versionEncoded) => onVersionChange(Version.fromString(versionEncoded))}
     >
       <Select.Trigger style={{ minWidth: '120px' }}>
@@ -33,7 +33,7 @@ export const VersionPicker: React.FC<Props> = ({
       </Select.Trigger>
       <Select.Content position='popper' sideOffset={5}>
         {versions.map(version => (
-          <Select.Item key={Version.encodeSync(version)} value={Version.encodeSync(version)}>
+          <Select.Item key={Version.encodeSync(version)} value={String(Version.encodeSync(version))}>
             Version {Version.encodeSync(version)}
           </Select.Item>
         ))}

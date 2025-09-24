@@ -15,14 +15,14 @@ const backupExistingHeroImage = (dir: FsLoc.AbsDir.AbsDir) =>
   Ef.gen(function*() {
     // const fs = yield* FileSystem.FileSystem
     const publicDir = FsLoc.join(dir, FsLoc.fromString('public/'))
-    const heroExtensions = ['svg', 'png', 'jpg', 'jpeg', 'webp']
+    const heroExtensions = ['svg', 'png', 'jpg', 'jpeg', 'webp'] as const
 
     // Find existing hero image
     let existingHeroPath: FsLoc.AbsFile.AbsFile | null = null
     let existingExt: string | null = null
 
     for (const ext of heroExtensions) {
-      const heroPath = FsLoc.join(publicDir, `hero.${ext}`)
+      const heroPath = FsLoc.join(publicDir, `hero.${ext}` as const)
       const exists = yield* Fs.exists(heroPath)
       if (exists) {
         existingHeroPath = heroPath
@@ -39,7 +39,7 @@ const backupExistingHeroImage = (dir: FsLoc.AbsDir.AbsDir) =>
     // Find next available backup number
     let backupNumber = 1
     while (true) {
-      const backupPath = FsLoc.join(publicDir, `hero-previous-${backupNumber}.${existingExt}`)
+      const backupPath = FsLoc.join(publicDir, `hero-previous-${backupNumber}.${existingExt}` as const)
       const backupExists = yield* Fs.exists(backupPath)
       if (backupExists) {
         // Backup file exists, try next number
@@ -266,7 +266,7 @@ export const heroImage = Command.make(
       const publicDir = FsLoc.join(dir, 'public/')
 
       // Ensure public directory exists
-      yield* Fs.write(publicDir, undefined, { recursive: true }).pipe(
+      yield* Fs.write(publicDir, { recursive: true }).pipe(
         Ef.catchIf(
           error => error._tag === 'SystemError' && error.reason === 'AlreadyExists',
           () => Ef.succeed(undefined),

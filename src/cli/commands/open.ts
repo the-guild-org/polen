@@ -5,7 +5,6 @@ import { Vite } from '#dep/vite/index'
 import { toViteUserConfig } from '#vite/config'
 import { Command, Options } from '@effect/cli'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { FileSystem } from '@effect/platform/FileSystem'
 import { Err, Fs, FsLoc, Json, Rec } from '@wollybeard/kit'
 import { Grafaid, GraphqlSchemaLoader } from 'graphql-kit'
 import { homedir } from 'node:os'
@@ -186,7 +185,6 @@ export const open = Command.make(
       const schema = yield* load(sourceConfig)
 
       const tempDir = yield* Fs.makeTempDirectoryScoped()
-      const tempDirStr = FsLoc.AbsDir.encodeSync(tempDir)
       const config = yield* Api.ConfigResolver.fromMemory({
         schema: {
           sources: {
@@ -200,7 +198,7 @@ export const open = Command.make(
             },
           },
         },
-      }, tempDirStr)
+      }, tempDir)
 
       const viteConfig = toViteUserConfig(config)
       const viteDevServer = yield* Ef.tryPromise({

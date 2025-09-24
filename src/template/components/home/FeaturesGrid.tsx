@@ -84,7 +84,10 @@ function getDefaultFeatures(): Feature[] {
 
       if (latestSchema && latestSchema.definition) {
         // Build stats from the schema definition
-        const versionStats = CatalogStatistics.analyzeSchema(latestSchema.definition, 'current')
+        const versionStats = CatalogStatistics.analyzeSchema(
+          latestSchema.definition,
+          latestSchema._tag === 'SchemaVersioned' ? latestSchema.version : undefined,
+        )
 
         features.push({
           title: 'Types',

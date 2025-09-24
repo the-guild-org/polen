@@ -3,7 +3,7 @@ import { Diagnostic } from '#lib/diagnostic/$'
 import { Test } from '@wollybeard/kit/test'
 import { HashMap } from 'effect'
 import { buildSchema } from 'graphql'
-import { Catalog, Document, Schema, Version } from 'graphql-kit'
+import { Catalog, Document, Schema, Version, VersionCoverage } from 'graphql-kit'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Examples } from './$.js'
 
@@ -14,7 +14,7 @@ describe('Example', () => {
   // dprint-ignore
   Test.Table.suite<ValidationInput, ValidationOutput>('validation', [
     { n: 'validates unversioned example', i: { example: Examples.Example.Example.make({ name: 'list-users', path: 'examples/list-users.graphql', document: Document.Unversioned.make({ document: 'query ListUsers { users { id name } }' }) }) }, o: { expected: true } },
-    { n: 'validates versioned example',   i: { example: Examples.Example.Example.make({ name: 'list-users', path: 'examples', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query ListUsers { users { id name } }'], [Version.fromString('v2'), 'query ListUsers { users { id email name } }']) }) }) }, o: { expected: true } },
+    { n: 'validates versioned example',   i: { example: Examples.Example.Example.make({ name: 'list-users', path: 'examples', document: Document.Versioned.make({ versionDocuments: HashMap.make([VersionCoverage.One.make({ version: Version.fromString('v1') }), 'query ListUsers { users { id name } }'], [VersionCoverage.One.make({ version: Version.fromString('v2') }), 'query ListUsers { users { id email name } }']) }) }) }, o: { expected: true } },
   ], ({ i, o }) => {
     expect(Examples.Example.is(i.example)).toBe(o.expected)
   })
@@ -72,7 +72,7 @@ describe('ExampleValidator', () => {
   // dprint-ignore
   Test.Table.suite<ValidationInput2, ValidationOutput2>('validation', [
     { n: 'validates unversioned example', i: { examples: [Examples.Example.Example.make({ name: 'test', path: 'test.graphql', document: Document.Unversioned.make({ document: 'query Test { test }' }) })] }, o: { expectedErrors: 0 } },
-    { n: 'validates versioned example',   i: { examples: [Examples.Example.Example.make({ name: 'test', path: 'test', document: Document.Versioned.make({ versionDocuments: HashMap.make([Version.fromString('v1'), 'query Test { test }'], [Version.fromString('v2'), 'query Test { test { id } }']) }) })] }, o: { expectedErrors: 0 } },
+    { n: 'validates versioned example',   i: { examples: [Examples.Example.Example.make({ name: 'test', path: 'test', document: Document.Versioned.make({ versionDocuments: HashMap.make([VersionCoverage.One.make({ version: Version.fromString('v1') }), 'query Test { test }'], [VersionCoverage.One.make({ version: Version.fromString('v2') }), 'query Test { test { id } }']) }) })] }, o: { expectedErrors: 0 } },
   ], ({ i, o }) => {
     // Note: This would need a real GraphQL schema to test properly
     // For now just ensure the function accepts the new Example types
@@ -122,7 +122,7 @@ describe('ExampleDiagnostics', () => {
       path: 'test',
       document: Document.Versioned.make({
         versionDocuments: HashMap.make(
-          [Version.fromString('v1'), 'content'],
+          [VersionCoverage.One.make({ version: Version.fromString('v1') }), 'content'],
         ),
       }),
     }),

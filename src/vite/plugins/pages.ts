@@ -59,7 +59,7 @@ export const Pages = ({
     // Generate imports and route objects
     for (const { route, metadata } of pages) {
       const filePathExp = FsLoc.encodeSync(route.file.path.absolute)
-      const pathExp = FileRouter.routeToPathExpression(route)
+      const pathExp = route.toString()
       const $$ = {
         ...$,
         Component: Str.Case.camel(`page ` + Str.titlizeSlug(pathExp)),

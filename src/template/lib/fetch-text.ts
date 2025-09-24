@@ -9,7 +9,7 @@ export class FetchError extends Data.TaggedError('FetchError')<{
   readonly status: number
   readonly statusText: string
 }> {
-  get message() {
+  override get message() {
     return `Failed to fetch: ${this.url} (${this.status} ${this.statusText})`
   }
 }

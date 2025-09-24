@@ -8,6 +8,7 @@ export default defineConfig({
     server: {
       deps: {
         inline: ['graphql-kit'],
+        external: ['@effect/platform'],
       },
     },
   },

@@ -1,5 +1,9 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { createSingleRevisionCatalog, mapToInputSourceError, normalizePathToAbs } from '#api/schema/input-source/helpers'
+import {
+  createSingleRevisionCatalog,
+  mapToInputSourceError,
+  normalizePathToAbs,
+} from '#api/schema/input-source/helpers'
 import { Ef } from '#dep/effect'
 import { Fs, FsLoc } from '@wollybeard/kit'
 import { Grafaid } from 'graphql-kit'
@@ -52,19 +56,19 @@ export const loader = InputSource.create({
       const config = normalizeConfig(options, context.paths.project.rootDir)
 
       // Check if file exists and is a .graphql file
-      const result = yield* Ef.either(Fs.stat(config.path))
-      if (result._tag === 'Left') {
-        return false
-      }
+      const stats = yield* Fs.stat(config.path).pipe(
+        Ef.catchAll(() => Ef.succeed(null)),
+      )
 
-      const stats = result.right
-      return stats.type === 'File' && FsLoc.encodeSync(config.path).endsWith('.graphql')
+      return stats !== null && stats.type === 'File' && FsLoc.encodeSync(config.path).endsWith('.graphql')
     }),
   readIfApplicableOrThrow: (options: Options, context) =>
     Ef.gen(function*() {
       const config = normalizeConfig(options, context.paths.project.rootDir)
 
-      const content = yield* Fs.readString(config.path)
+      const content = yield* Fs.readString(config.path).pipe(
+        Ef.mapError(mapToInputSourceError('file')),
+      )
 
       const ast = yield* Grafaid.Parse.parseSchema(content, { source: FsLoc.encodeSync(config.path) }).pipe(
         Ef.mapError(mapToInputSourceError('file')),

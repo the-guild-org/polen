@@ -1,5 +1,5 @@
 import { ConfigResolver } from '#api/config-resolver/index'
-import { Ef } from '#dep/effect'
+import { Ef, S } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig } from '#vite/config'
 import { FileSystem } from '@effect/platform/FileSystem'
@@ -15,7 +15,7 @@ interface BuildInput {
 
 export const build = (input: BuildInput): Ef.Effect<void, Error, FileSystem> =>
   Ef.gen(function*() {
-    const dir = FsLoc.AbsDir.decodeSync(input.dir.endsWith('/') ? input.dir : `${input.dir}/`)
+    const dir = S.decodeSync(FsLoc.AbsDir.String)(input.dir.endsWith('/') ? input.dir : `${input.dir}/`)
     const polenConfig = yield* ConfigResolver.fromFile({
       dir,
       overrides: input.overrides,

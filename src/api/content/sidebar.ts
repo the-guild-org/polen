@@ -133,7 +133,7 @@ export const buildSidebarIndex = (scanResult: ScanResult): SidebarIndex => {
   for (const [topLevelDir, pages] of pagesByTopLevelDir) {
     const hasIndexPage = Ar.some(pages, page =>
       page.route.logical.path.length === 1
-      && FileRouter.routeIsFromIndexFile(page.route))
+      && FileRouter.Route.isFromIndexFile(page.route))
 
     // Skip directories without index pages
     if (!hasIndexPage) continue
@@ -160,7 +160,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
 
   for (const page of pages) {
     // Skip the index page at the top level directory
-    if (page.route.logical.path.length === 1 && FileRouter.routeIsFromIndexFile(page.route)) {
+    if (page.route.logical.path.length === 1 && FileRouter.Route.isFromIndexFile(page.route)) {
       continue
     }
 
@@ -202,9 +202,9 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
     const childPath = page.route.logical.path.join(`/`)
     const childPages = pagesByParent.get(childPath) ?? []
 
-    if (childPages.length > 0 || FileRouter.routeIsFromIndexFile(page.route)) {
+    if (childPages.length > 0 || FileRouter.Route.isFromIndexFile(page.route)) {
       // This is a section (has children or is an index page for a subdirectory)
-      const hasIndex = FileRouter.routeIsFromIndexFile(page.route)
+      const hasIndex = FileRouter.Route.isFromIndexFile(page.route)
 
       const section: ItemSection = {
         type: `ItemSection`,
@@ -222,7 +222,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
       })
 
       for (const childPage of sortedChildPages) {
-        if (!FileRouter.routeIsFromIndexFile(childPage.route)) {
+        if (!FileRouter.Route.isFromIndexFile(childPage.route)) {
           section.links.push({
             type: `ItemLink`,
             title: Str.titlizeSlug(childPage.route.logical.path[childPage.route.logical.path.length - 1]!),
@@ -237,7 +237,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
         // Check if this path is a descendant (but not direct child)
         if (parentPath.startsWith(childPath + `/`)) {
           for (const descendantPage of pagesInParent) {
-            if (!FileRouter.routeIsFromIndexFile(descendantPage.route)) {
+            if (!FileRouter.Route.isFromIndexFile(descendantPage.route)) {
               allDescendants.push(descendantPage)
             }
           }

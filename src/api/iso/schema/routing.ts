@@ -1,4 +1,4 @@
-import { Ar, Op } from '#dep/effect'
+import { Ar, Op, S } from '#dep/effect'
 import { Predicate } from 'effect'
 import { Grafaid, Schema, Version } from 'graphql-kit'
 
@@ -152,7 +152,11 @@ export const createChangelogUrl = (revisionDate: string, schema: Schema.Schema):
   // Create base changelog path with version if needed
   const version = Schema.getVersion(schema)
   const changelogBase = version
-    ? joinSegmentsAndPaths(segmentLiterals.changelog, segmentLiterals.version, Version.encodeSync(version))
+    ? joinSegmentsAndPaths(
+      segmentLiterals.changelog,
+      segmentLiterals.version,
+      String(S.encodeSync(Version.Version)(version)),
+    )
     : `/${segmentLiterals.changelog}`
 
   // Add anchor for the specific date

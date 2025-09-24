@@ -456,7 +456,7 @@ const buildPaths = (
   }
   const devAssetsSchemasDir = j(devAssetsAbsolute, l(`schemas`))
 
-  const generatedTypesRelative = `${Typings.relativePathGeneratedTypesDir}/`
+  const generatedTypesRelative = Typings.relativePathGeneratedTypesDir
   const generatedTypesAbsolute = j(
     rootDir,
     Typings.relativePathGeneratedTypesDir,

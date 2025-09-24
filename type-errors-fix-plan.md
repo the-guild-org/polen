@@ -16,6 +16,7 @@
 **Problem:** Tests were accessing `project.layout.cwd` but the Projector interface no longer has a `layout` property
 **Solution:** ✅ Replaced `project.layout.cwd` with `project.dir.base` across all integration tests
 **Additional fixes:**
+
 - ✅ Updated PolenBuilder to use `FsLoc.AbsDir.AbsDir` instead of `string`
 - ✅ Fixed polen.ts `fromMemory` call to properly decode string paths
 - ✅ Updated test fixtures to pass all required dependencies
@@ -40,6 +41,7 @@
 
 **Problem:** Invalid `Fs.write` calls on directories with undefined content
 **Solution:** ✅ Removed all invalid directory write operations:
+
 - Removed 3 instances in `rebase.test.ts`
 - Fixed `page-generator.worker.ts` to directly write files without explicit directory creation
 
@@ -60,10 +62,11 @@
 **File affected:** `tests/examples/helpers/example-controller/example-controller.ts`
 **Problem:** Major API change - Projector now returns Effects instead of Promises
 **Issues:**
+
 - Template literal syntax no longer works with Effect-based shell/packageManager
 - `FsLoc.fromString` used with runtime strings (needs `FsLoc.decodeSync`)
 - ProcessPromise type mismatches with Effect returns
-**Solution:** Requires complete rewrite to work with new Effect-based Projector API
+  **Solution:** Requires complete rewrite to work with new Effect-based Projector API
 
 ## Implementation Steps
 
@@ -136,17 +139,20 @@ Update the example controller to properly type the run object with all required 
 ## Current Status
 
 ### Completed Fixes:
+
 - ✅ Projector layout issues (51 errors fixed)
 - ✅ Document schema type mismatches (14 errors fixed)
 - ✅ FsLoc directory operations (6 errors fixed)
 - ✅ Effect service providing in integration tests (2 errors fixed)
 
 ### Remaining Work:
+
 - 🔄 Example Controller rewrite for new Projector API (25+ errors)
 - ⏳ Paths Configuration Structure (complex nested types)
 - ⏳ Various type annotations needed
 
 ### Progress:
+
 - Initial errors: 259
 - After initial fixes: 168
 - After Projector layout fixes: 121

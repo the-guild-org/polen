@@ -54,7 +54,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     })
 
     const project = await Ef.runPromise(
-      program.pipe(Ef.provide(NodeFileSystem.layer))
+      program.pipe(Ef.provide(NodeFileSystem.layer)),
     )
     await use(project)
 

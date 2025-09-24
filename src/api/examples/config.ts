@@ -64,7 +64,7 @@ export type ExampleName = typeof ExampleName.Type
 /**
  * Example selection configuration supporting both include and exclude patterns.
  */
-export const ExampleSelection = S.optional(
+export const ExampleSelection = S.UndefinedOr(
   S.Union(
     S.Literal('all'),
     S.Literal('none'),

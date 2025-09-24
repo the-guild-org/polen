@@ -79,31 +79,28 @@ export const loader = InputSource.create({
       const config = normalizeOptions(options, context.paths.project.rootDir)
 
       // Check if directory exists
-      const dirStatsResult = yield* Ef.either(Fs.stat(config.path))
-      if (dirStatsResult._tag === 'Left') {
+      const dirStats = yield* Fs.stat(config.path).pipe(
+        Ef.catchAll(() => Ef.succeed(null)),
+      )
+      if (!dirStats || dirStats.type !== 'Directory') {
         return false
       }
 
-      const dirStats = dirStatsResult.right
-      if (dirStats.type !== 'Directory') {
+      // Get all .graphql files in directory
+      const graphqlFiles = yield* Fs.glob('*.graphql', { onlyFiles: true, cwd: config.path }).pipe(
+        Ef.catchAll(() => Ef.succeed([])),
+      )
+
+      if (graphqlFiles.length === 0) {
         return false
       }
-
-      // Get all files in directory
-      const files = yield* Fs.read(config.path)
 
       // Check if we have either:
       // 1. A single schema.graphql file (non-versioned mode)
       // 2. Any .graphql files with valid date names (versioned mode)
-      const hasSchemaFile = Ar.some(files, entry => {
-        if (entry._tag !== 'LocAbsFile') return false
-        return FsLoc.name(entry) === 'schema.graphql'
-      })
-      const hasVersionedFiles = Ar.some(files, entry => {
-        if (entry._tag !== 'LocAbsFile') return false
-        const fileName = FsLoc.name(entry)
-        if (!fileName.endsWith('.graphql')) return false
-        const name = fileName.replace('.graphql', '')
+      const hasSchemaFile = Ar.some(graphqlFiles, file => FsLoc.name(file) === 'schema.graphql')
+      const hasVersionedFiles = Ar.some(graphqlFiles, file => {
+        const name = FsLoc.name(file).replace('.graphql', '')
         return /^\d{4}-\d{2}-\d{2}$/.test(name)
       })
 
@@ -115,22 +112,17 @@ export const loader = InputSource.create({
 
       debug(`will search`, config)
 
-      // Get all files in directory
-      const filesResult = yield* Ef.either(Fs.read(config.path))
-      if (filesResult._tag === 'Left') {
-        debug(`error searching directory:`, filesResult.left)
+      // Get all .graphql files in directory
+      const graphqlFileNames = yield* Fs.glob('*.graphql', { onlyFiles: true, cwd: config.path }).pipe(
+        Ef.mapError(mapToInputSourceError('directory')),
+      )
+
+      if (!Ar.isNonEmptyArray(graphqlFileNames)) {
         return null
       }
 
-      const files = filesResult.right
-      const graphqlFiles = files.filter((entry) => {
-        if (entry._tag !== 'LocAbsFile') return false
-        return FsLoc.name(entry).endsWith('.graphql')
-      }) as FsLoc.AbsFile.AbsFile[]
-
-      if (!Ar.isNonEmptyArray(graphqlFiles)) {
-        return null
-      }
+      // Convert to absolute paths
+      const graphqlFiles = graphqlFileNames.map(fileName => FsLoc.join(config.path, fileName) as FsLoc.AbsFile.AbsFile)
 
       debug(`did find`, graphqlFiles)
 
@@ -180,7 +172,7 @@ export const loader = InputSource.create({
 
 const read = (
   revisionInputs: { date: DateOnly.DateOnly; filePath: FsLoc.AbsFile.AbsFile }[],
-): Ef.Effect<Schema.Unversioned.Unversioned, InputSourceError | PlatformError, FileSystem.FileSystem> =>
+): Ef.Effect<Schema.Unversioned, InputSourceError | PlatformError, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const revisionInputsLoaded = yield* Ef.all(
       Ar.map(revisionInputs, (revisionInput) =>

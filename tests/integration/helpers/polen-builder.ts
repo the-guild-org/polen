@@ -147,4 +147,5 @@ export class PolenBuilderWithPage {
 }
 
 // Factory function for tests
-export const polen = (page: Page, vite: ViteController.ViteController, cwd: FsLoc.AbsDir.AbsDir) => new PolenBuilder(page, vite, cwd)
+export const polen = (page: Page, vite: ViteController.ViteController, cwd: FsLoc.AbsDir.AbsDir) =>
+  new PolenBuilder(page, vite, cwd)

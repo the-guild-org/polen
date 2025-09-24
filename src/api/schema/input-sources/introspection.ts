@@ -115,7 +115,7 @@ const writeCache = (
     yield* Fs.write(cachePath, Json.codec.encode(entry as any))
   })
 
-const fetchIntrospection = (options: Options): Ef.Effect<Grafaid.Schema.Schema, Error> => {
+const fetchIntrospection = (options: Options): Ef.Effect<Grafaid.Schema.Schema, Error, FileSystem.FileSystem> => {
   if (!options.url) {
     return Ef.fail(new Error('URL is required for introspection'))
   }
@@ -125,7 +125,6 @@ const fetchIntrospection = (options: Options): Ef.Effect<Grafaid.Schema.Schema, 
     headers: options.headers,
   })
 }
-
 
 export const loader = InputSource.create({
   name: 'introspection',

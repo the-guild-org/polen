@@ -1,6 +1,6 @@
 import { Ef } from '#dep/effect'
-import { it } from '@effect/vitest'
 import { NodeFileSystem } from '@effect/platform-node'
+import { it } from '@effect/vitest'
 import { Projector } from '@wollybeard/projector'
 import { Context, Layer } from 'effect'
 
@@ -42,7 +42,6 @@ export { it }
 export const test = it.scoped('test with project', () =>
   Ef.map(ProjectorService, (projector) => ({
     project: {
-      dir: projector.dir
-    }
-  }))
-).pipe(it.provide(ProjectorLive))
+      dir: projector.dir,
+    },
+  }))).pipe(it.provide(ProjectorLive))

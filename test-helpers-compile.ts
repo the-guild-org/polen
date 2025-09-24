@@ -1,7 +1,11 @@
 // Test that our helpers module compiles correctly
-import { createSingleRevisionCatalog, mapToInputSourceError, normalizePathToAbs } from './src/api/schema/input-source/helpers.js'
 import { FsLoc } from '@wollybeard/kit'
 import { buildSchema } from 'graphql'
+import {
+  createSingleRevisionCatalog,
+  mapToInputSourceError,
+  normalizePathToAbs,
+} from './src/api/schema/input-source/helpers.js'
 
 // Test normalizePathToAbs
 const projectRoot = FsLoc.AbsDir.decodeSync('/project/')

@@ -29,7 +29,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         exampleName,
         polenLink,
         debugMode: true,
-      }).pipe(Ef.provide(NodeFileSystem.layer))
+      }).pipe(Ef.provide(NodeFileSystem.layer)),
     )
     await use(project)
   }, { scope: `worker` }],
