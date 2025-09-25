@@ -8,12 +8,10 @@ import {
 } from '#api/schema/augmentations/diagnostics/diagnostic'
 import type { AugmentationInput } from '#api/schema/augmentations/input'
 import { normalizeAugmentationInput } from '#api/schema/augmentations/input'
-import { Either, HashMap, Match, Option, pipe } from 'effect'
+import { Ar, Ei, Op } from '#dep/effect'
+import { HashMap, Match, pipe } from 'effect'
 import type { GraphQLSchema } from 'graphql'
-import { GrafaidOld } from 'graphql-kit'
-import { GraphQLSchemaPath } from 'graphql-kit'
-import { VersionCoverage } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { GrafaidOld, GraphQLSchemaPath, Version, VersionCoverage } from 'graphql-kit'
 
 /**
  * Apply version-aware augmentations to a schema.
@@ -60,15 +58,15 @@ const applyAugmentationToPath = (
   const resolve = GraphQLSchemaPath.Resolvers.GraphqlSchema.create({ schema })
   const result = resolve(path)
 
-  if (Either.isLeft(result)) {
+  if (Ei.isLeft(result)) {
     const error = result.left as unknown
     // Use rich error rendering if it's a TraversalError
     let message: string
     let errorString: string
 
     if (GraphQLSchemaPath.Errors.TraversalError.is(error)) {
-      message = GraphQLSchemaPath.Errors.TraversalError.print(error as any)
-      errorString = (error as any).message || String(error)
+      message = GraphQLSchemaPath.Errors.TraversalError.print(error)
+      errorString = error.message || String(error)
     } else if (error instanceof Error) {
       message = error.message
       errorString = error.message
@@ -169,9 +167,9 @@ export const applyVersioned = (
 
   if (version) {
     // First try exact version match
-    const versionCoverage = VersionCoverage.single(version)
+    const versionCoverage = VersionCoverage.One.make({ version })
     const maybeConfig = HashMap.get(augmentation.versionAugmentations, versionCoverage)
-    if (Option.isSome(maybeConfig)) {
+    if (Op.isSome(maybeConfig)) {
       config = maybeConfig.value
     }
 
@@ -186,9 +184,9 @@ export const applyVersioned = (
     }
   } else {
     // For unversioned schemas, only apply unversioned augmentations
-    const unversionedCoverage = VersionCoverage.unversioned()
+    const unversionedCoverage = VersionCoverage.Unversioned.make()
     const maybeConfig = HashMap.get(augmentation.versionAugmentations, unversionedCoverage)
-    if (Option.isSome(maybeConfig)) {
+    if (Op.isSome(maybeConfig)) {
       config = maybeConfig.value
     }
   }
@@ -202,7 +200,7 @@ export const applyVersioned = (
     const firstEntry = pipe(
       augmentation.versionAugmentations,
       HashMap.values,
-      (iter) => Array.from(iter)[0],
+      (iter) => Ar.fromIterable(iter)[0],
     )
 
     if (firstEntry) {
@@ -215,7 +213,7 @@ export const applyVersioned = (
         availableVersions: pipe(
           augmentation.versionAugmentations,
           HashMap.keys,
-          (iter) => Array.from(iter).map(VersionCoverage.toLabel),
+          (iter) => Ar.fromIterable(iter).map(VersionCoverage.toLabel),
         ),
       })]
     }

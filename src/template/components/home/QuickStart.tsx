@@ -1,8 +1,9 @@
-import { Box, Card, Heading, Section, Tabs, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Ef } from '#dep/effect'
 import { highlight } from 'codehike/code'
-import { Effect } from 'effect'
 import * as React from 'react'
 import { CodeBlock } from '../CodeBlock.js'
+import { Box, Card, Container, Heading, Tabs, Text } from '../ui/index.js'
 
 interface Props {
   examples?: Array<{
@@ -74,10 +75,10 @@ export const QuickStartSection: React.FC<Props> = ({ examples = defaultExamples 
 
   React.useEffect(() => {
     const highlightExamples = async () => {
-      const highlighted = await Effect.runPromise(
-        Effect.all(
+      const highlighted = await Ef.runPromise(
+        Ef.all(
           examples.map((example) =>
-            Effect.tryPromise({
+            Ef.tryPromise({
               try: async () => ({
                 label: example.label,
                 codeblock: await highlight(
@@ -98,16 +99,16 @@ export const QuickStartSection: React.FC<Props> = ({ examples = defaultExamples 
 
   if (highlightedExamples.length === 0) {
     return (
-      <Section size='3' pb='8'>
+      <Container size='lg' pb='8'>
         <Box style={{ textAlign: 'center' }}>
           <Text color='gray'>Loading examples...</Text>
         </Box>
-      </Section>
+      </Container>
     )
   }
 
   return (
-    <Section size='3' pb='8'>
+    <Container size='lg' pb='8'>
       <Box style={{ maxWidth: '900px', margin: '0 auto' }}>
         <Heading size='7' mb='2' style={{ textAlign: 'center' }}>
           Quick Start
@@ -136,6 +137,6 @@ export const QuickStartSection: React.FC<Props> = ({ examples = defaultExamples 
           </Tabs.Root>
         </Card>
       </Box>
-    </Section>
+    </Container>
   )
 }

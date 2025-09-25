@@ -1,4 +1,3 @@
-import { Arr } from '@wollybeard/kit'
 import { ContextualError } from './ContextualError.js'
 
 /**
@@ -24,7 +23,18 @@ export class ContextualAggregateError<
 export const partitionAndAggregateErrors = <Results>(
   results: Results[],
 ): [Exclude<Results, Error>[], null | ContextualAggregateError<Extract<Results, Error>>] => {
-  const [values, errors] = Arr.partitionErrors(results)
+  const { values, errors } = results.reduce(
+    (acc, result) => {
+      if (result instanceof Error) {
+        acc.errors.push(result as Extract<Results, Error>)
+      } else {
+        acc.values.push(result as Exclude<Results, Error>)
+      }
+      return acc
+    },
+    { values: [] as Exclude<Results, Error>[], errors: [] as Extract<Results, Error>[] },
+  )
+
   const error = errors.length > 0
     ? new ContextualAggregateError(`One or more extensions are invalid.`, {}, errors)
     : null

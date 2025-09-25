@@ -1,37 +1,33 @@
-import * as TinyGlobbyModule from '#dep/tiny-globby/index'
-import { Path, Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
-import { type Diagnostic, lint } from './linter.js'
-import { type Route, type RouteFile, type RouteLogical } from './route.js'
+import { Ef, S } from '#dep/effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
+import { Effect, pipe } from 'effect'
+import * as _ from 'effect/SchemaAST'
+import { FileRouterDiagnostic, lint } from './linter.js'
+import { Route, RouteContext, RouteFromAbsFile } from './models/route.js'
 
 //
 //
 //
 //
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Variables
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Constants
 //
 //
 
-const conventions = {
-  index: {
-    name: `index`,
-  },
-  numberedPrefix: {
-    pattern: Str.pattern<{ groups: [`order`, `name`] }>(/^(?<order>\d+)[_-](?<name>.+)$/),
-  },
-}
+const DEFAULT_GLOB = `**/*.{md,mdx}`
 
 //
 //
 //
 //
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Types
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ • Schema
 //
 //
 
-export interface ScanResult {
-  routes: Route[]
-  diagnostics: Diagnostic[]
+export class ScanResult extends S.Class<ScanResult>('ScanResult')({
+  routes: S.Array(Route),
+  diagnostics: S.Array(FileRouterDiagnostic),
+}) {
+  static is = S.is(ScanResult)
 }
 
 //
@@ -43,79 +39,29 @@ export interface ScanResult {
 //
 
 export const scan = (parameters: {
-  dir: string
-  glob?: string
-}): Effect.Effect<ScanResult, Error, never> =>
-  Effect.gen(function*() {
-    const { dir, glob = `**/*.{md,mdx}` } = parameters
+  dir: FsLoc.AbsDir
+  glob?: string | undefined
+}): Ef.Effect<ScanResult, Error, never> =>
+  Ef.gen(function*() {
+    const { dir, glob = DEFAULT_GLOB } = parameters
 
-    // Get all files directly
-    const filePaths = yield* TinyGlobbyModule.EffectGlobby.glob(glob, {
-      absolute: true,
+    // Discover files
+    const absoluteFiles = yield* Fs.glob(glob, {
       cwd: dir,
+      absolute: true,
       onlyFiles: true,
     })
 
-    // Convert to routes
-    const routes = filePaths.map((filePath: string) => filePathToRoute(filePath, dir))
+    const routes = yield* Effect.forEach(
+      absoluteFiles,
+      _ => pipe(_, S.decode(RouteFromAbsFile), Effect.provideService(RouteContext, { rootDir: dir })),
+    )
 
-    // Apply linting
+    // Lint and deduplicate routes
     const lintResult = lint(routes)
 
-    return {
+    return ScanResult.make({
       routes: lintResult.routes,
       diagnostics: lintResult.diagnostics,
-    }
+    })
   })
-
-export const filePathToRoute = (filePathExpression: string, rootDir: string): Route => {
-  const file: RouteFile = {
-    path: {
-      absolute: Path.parse(filePathExpression),
-      relative: Path.parse(Path.relative(rootDir, filePathExpression)),
-    },
-  }
-  const logical = filePathToRouteLogical(file.path.relative)
-
-  // Generate id and parentId for tree building
-  const id = filePathExpression // Use absolute path as unique ID
-  const relativePath = Path.relative(rootDir, filePathExpression)
-  const parentDir = Path.dirname(relativePath)
-  const parentId = parentDir === `.` ? null : Path.join(rootDir, parentDir)
-
-  return {
-    logical,
-    file,
-    id,
-    parentId,
-  }
-}
-
-export const filePathToRouteLogical = (filePath: Path.Parsed): RouteLogical => {
-  const dirSegments = Str.split(Str.removeSurrounding(filePath.dir, Path.sep), Path.sep)
-
-  // Parse numbered prefixes from directory segments
-  const dirPath = dirSegments.map(segment => {
-    const prefixMatch = Str.match(segment, conventions.numberedPrefix.pattern)
-    return prefixMatch?.groups.name ?? segment
-  })
-
-  // Parse numbered prefix from filename
-  const prefixMatch = Str.match(filePath.name, conventions.numberedPrefix.pattern)
-  const order = prefixMatch ? parseInt(prefixMatch.groups.order, 10) : undefined
-  const nameWithoutPrefix = prefixMatch?.groups.name ?? filePath.name
-
-  if (nameWithoutPrefix === conventions.index.name) {
-    const path = dirPath
-    return {
-      path,
-      order,
-    }
-  }
-
-  const path = dirPath.concat(nameWithoutPrefix)
-  return {
-    path,
-    order,
-  }
-}

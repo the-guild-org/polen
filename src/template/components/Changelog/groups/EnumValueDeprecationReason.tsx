@@ -1,9 +1,18 @@
-import { Code } from '@radix-ui/themes'
-import { Change as GraphqlChange } from 'graphql-kit'
+import { Change } from 'graphql-kit'
 import type React from 'react'
+import { Code } from '../../ui/index.js'
 import { ChangeBase } from '../ChangeBase.js'
 
-export const EnumValueDeprecationReason: React.FC<{ change: any }> = (
+type EnumValueDeprecationReasonChange =
+  | typeof Change.EnumValueDeprecationReasonChanged.Type
+  | typeof Change.EnumValueDeprecationReasonAdded.Type
+  | typeof Change.EnumValueDeprecationReasonRemoved.Type
+
+interface EnumValueDeprecationReasonProps {
+  change: EnumValueDeprecationReasonChange
+}
+
+export const EnumValueDeprecationReason: React.FC<EnumValueDeprecationReasonProps> = (
   { change },
 ) => {
   switch (change._tag) {

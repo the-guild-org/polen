@@ -1,13 +1,13 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { Api } from '#api/iso'
 import type { React } from '#dep/react/index'
-import type { BoxProps } from '@radix-ui/themes'
-import { Badge, Box, Card, Flex, HoverCard, Link, Text } from '@radix-ui/themes'
 import { isNonNullType } from 'graphql'
-import { GrafaidOld } from 'graphql-kit'
-import { Lifecycles } from 'graphql-kit'
+import { GrafaidOld, Lifecycles } from 'graphql-kit'
 import { useSchema } from '../../contexts/GraphqlLifecycleContext.js'
 import { useReferenceConfig } from '../../contexts/ReferenceConfigContext.js'
 import { useViewMode } from '../../contexts/ViewModeContext.js'
+import type { BoxProps } from '../ui/index.js'
+import { Badge, Box, Card, Flex, HoverCard, Link, Text } from '../ui/index.js'
 import { ArgumentListAnnotation } from './ArgumentListAnnotation.js'
 import { DeprecationReason } from './DeprecationReason.js'
 import { Description } from './Description.js'
@@ -173,7 +173,7 @@ export const Field: React.FC<
 
       {/* Arguments section below, with left border - only show if field has arguments */}
       {argumentList && GrafaidOld.isOutputField(data) && data.args.length > 0 && (
-        <Box mt='2' ml='3' pl='3' style={{ borderLeft: '2px solid var(--gray-4)' }}>
+        <Box mt='2' ml='3' pl='3' className='border-l-2 border-gray-300'>
           {argumentList}
         </Box>
       )}

@@ -1,9 +1,6 @@
 import { HashMap, HashSet } from 'effect'
 import { buildSchema } from 'graphql'
-import { Catalog } from 'graphql-kit'
-import { Document } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog, Document, Schema, Version, VersionCoverage } from 'graphql-kit'
 import { expect, test } from 'vitest'
 import { Example } from '../schemas/example/example.js'
 import { validateExamples } from './validator.js'
@@ -54,7 +51,7 @@ const versionedCatalogForTests = Catalog.Versioned.make({
 
 test.for([
   {
-    name: 'valid query returns no diagnostics',
+    n: 'valid query returns no diagnostics',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -65,7 +62,7 @@ test.for([
     expectedDiagnostics: 0,
   },
   {
-    name: 'field that does not exist',
+    n: 'field that does not exist',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -77,7 +74,7 @@ test.for([
     errorContains: 'Cannot query field',
   },
   {
-    name: 'missing required argument',
+    n: 'missing required argument',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -89,7 +86,7 @@ test.for([
     errorContains: 'argument "id" of type "ID!" is required',
   },
   {
-    name: 'invalid GraphQL syntax',
+    n: 'invalid GraphQL syntax',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
@@ -101,14 +98,17 @@ test.for([
     messageContains: 'invalid GraphQL syntax',
   },
   {
-    name: 'versioned example validates all versions',
+    n: 'versioned example validates all versions',
     examples: [Example.make({
       name: 'test',
       path: 'test.graphql',
       document: Document.Versioned.make({
         versionDocuments: HashMap.make(
-          [Version.fromString('v1'), 'query { user(id: "1") { id name } }'],
-          [Version.fromString('v2'), 'query { user(id: "1") { id name invalidField } }'],
+          [VersionCoverage.One.make({ version: Version.fromString('v1') }), 'query { user(id: "1") { id name } }'],
+          [
+            VersionCoverage.One.make({ version: Version.fromString('v2') }),
+            'query { user(id: "1") { id name invalidField } }',
+          ],
         ),
       }),
     })],
@@ -116,7 +116,7 @@ test.for([
     version: 'v2',
   },
   {
-    name: 'multiple examples with mixed validity',
+    n: 'multiple examples with mixed validity',
     examples: [
       Example.make({
         name: 'valid',
@@ -201,7 +201,7 @@ test('validates versioned catalog with multiple schemas', () => {
 
   const v1 = Version.fromString('1.0.0')
   const v2 = Version.fromString('2.0.0')
-  const defaultVersions = HashSet.make(v1)
+  const defaultVersions = VersionCoverage.Set.make({ versions: HashSet.make(v1) })
 
   const examples = [
     Example.make({
@@ -210,7 +210,7 @@ test('validates versioned catalog with multiple schemas', () => {
       document: Document.Versioned.make({
         versionDocuments: HashMap.make(
           [defaultVersions, 'query { user(id: "1") { id name } }'],
-          [v2, 'query { users { id name email } }'],
+          [VersionCoverage.One.make({ version: v2 }), 'query { users { id name email } }'],
         ),
       }),
     }),
@@ -238,7 +238,7 @@ test('validates examples against unversioned catalog', () => {
 test('validates examples with version sets', () => {
   const v1 = Version.fromString('v1')
   const v2 = Version.fromString('v2')
-  const versionSet = HashSet.make(v1, v2)
+  const versionSet = VersionCoverage.Set.make({ versions: HashSet.make(v1, v2) })
 
   const examples = [
     Example.make({
@@ -247,7 +247,10 @@ test('validates examples with version sets', () => {
       document: Document.Versioned.make({
         versionDocuments: HashMap.make(
           [versionSet, 'query { user(id: "1") { id name } }'],
-          [Version.fromString('v3'), 'query { user(id: "1") { id name invalidField } }'],
+          [
+            VersionCoverage.One.make({ version: Version.fromString('v3') }),
+            'query { user(id: "1") { id name invalidField } }',
+          ],
         ),
       }),
     }),
@@ -297,8 +300,8 @@ test('detects mismatch between versioned document and unversioned catalog', () =
 
   const versionedDocument = Document.Versioned.make({
     versionDocuments: HashMap.make(
-      [v1, 'query { user(id: "1") { id name } }'],
-      [v2, 'query { users { id name } }'],
+      [VersionCoverage.One.make({ version: v1 }), 'query { user(id: "1") { id name } }'],
+      [VersionCoverage.One.make({ version: v2 }), 'query { users { id name } }'],
     ),
   })
 

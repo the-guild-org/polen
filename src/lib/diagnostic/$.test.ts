@@ -1,5 +1,5 @@
+import { S } from '#dep/effect'
 import { Ts } from '@wollybeard/kit'
-import { S } from 'graphql-kit'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { Diagnostic } from './$.js'
 
@@ -91,7 +91,7 @@ describe('extending DiagnosticBase', () => {
     })
     const makeCustomDiagnostic = Diagnostic.createMake(CustomDiagnostic)
 
-    type CustomDiagnostic = S.Schema.Type<typeof CustomDiagnostic>
+    type CustomDiagnostic = typeof CustomDiagnostic.Type
 
     const diagnostic = makeCustomDiagnostic({
       message: 'Custom error occurred',

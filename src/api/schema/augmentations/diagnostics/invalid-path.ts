@@ -1,6 +1,8 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
+import { Sch } from '@wollybeard/kit'
 import { Version } from 'graphql-kit'
+Sch
 
 export const DiagnosticInvalidPath = Diagnostic.create({
   source: 'schema-augmentations',
@@ -18,4 +20,4 @@ export const DiagnosticInvalidPath = Diagnostic.create({
 
 export const makeDiagnosticInvalidPath = Diagnostic.createMake(DiagnosticInvalidPath)
 
-export type DiagnosticInvalidPath = S.Schema.Type<typeof DiagnosticInvalidPath>
+export type DiagnosticInvalidPath = typeof DiagnosticInvalidPath.Type

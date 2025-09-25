@@ -1,26 +1,25 @@
 import type { Config } from '#api/config/$'
 import { Routes } from '#api/routes/$'
+import { Ar, Ef, Ei, Op } from '#dep/effect'
 import { Worker } from '@effect/platform'
 import { NodeContext, NodeWorker } from '@effect/platform-node'
 import { FileSystem } from '@effect/platform/FileSystem'
-import { Path } from '@wollybeard/kit'
+import { FsLoc } from '@wollybeard/kit'
 import consola from 'consola'
-import { Array, Chunk, Duration, Effect, Either, Layer, Logger, Ref } from 'effect'
+import { Chunk, Duration, Layer, Ref } from 'effect'
 import getPort from 'get-port'
 import { cpus, totalmem } from 'node:os'
-import {
-  GeneratePagesMessage,
-  type GenerateResult,
-  PageMessage,
-  ServerMessage,
-  StartServerMessage,
-} from './worker-messages.js'
+import { GeneratePagesMessage, PageMessage, ServerMessage, StartServerMessage } from './worker-messages.js'
 import { createPageSpawner, createServerSpawner } from './worker-spawners.js'
 
-export const generate = (config: Config.Config): Effect.Effect<void, Error, FileSystem> =>
-  Effect.gen(function*() {
+export const generate = (config: Config.Config): Ef.Effect<void, Error, FileSystem> =>
+  Ef.gen(function*() {
     // Read routes from the manifest generated during build
-    const manifest = yield* Routes.Manifest.get(config.paths.project.absolute.build.assets.root)
+    const manifestOption = yield* Routes.Manifest.read(config.paths.project.absolute.build.assets.root)
+    const manifest = yield* Op.match(manifestOption, {
+      onNone: () => Ef.fail(new Error('Routes manifest not found. Ensure the build has completed successfully.')),
+      onSome: Ef.succeed,
+    })
     const routes = manifest.routes
 
     const totalRoutes = routes.length
@@ -52,8 +51,8 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
     consola.info(`   Distribution: ${batches.length} batches × ~${batchSize} pages each`)
     consola.info(`   System: ${cpuCount} CPUs, ${memoryGB.toFixed(1)}GB RAM`)
 
-    yield* Effect.logDebug(`SSG configuration`).pipe(
-      Effect.annotateLogs({
+    yield* Ef.logDebug(`SSG configuration`).pipe(
+      Ef.annotateLogs({
         totalRoutes,
         optimalWorkers,
         cpuCount,
@@ -64,27 +63,31 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
     )
 
     // Create worker spawner layers
-    const serverPath = config.paths.project.absolute.build.serverEntrypoint
-    const serverRunnerPath = Path.join(
-      config.paths.framework.sourceDir,
-      'api/builder/ssg/server-runner.worker' + config.paths.framework.sourceExtension,
+    const serverPath = FsLoc.encodeSync(config.paths.project.absolute.build.serverEntrypoint)
+    const serverRunnerPath = FsLoc.encodeSync(
+      FsLoc.join(
+        config.paths.framework.sourceDir,
+        FsLoc.fromString(`api/builder/ssg/server-runner.worker${config.paths.framework.sourceExtension}`),
+      ),
     )
 
-    const pageGeneratorPath = Path.join(
-      config.paths.framework.sourceDir,
-      'api/builder/ssg/page-generator.worker' + config.paths.framework.sourceExtension,
+    const pageGeneratorPath = FsLoc.encodeSync(
+      FsLoc.join(
+        config.paths.framework.sourceDir,
+        FsLoc.fromString(`api/builder/ssg/page-generator.worker${config.paths.framework.sourceExtension}`),
+      ),
     )
 
-    yield* Effect.logDebug(`Creating worker pools with ${optimalWorkers} workers each`)
+    yield* Ef.logDebug(`Creating worker pools with ${optimalWorkers} workers each`)
 
     // Create and use worker pools within a scoped context
-    yield* Effect.scoped(
-      Effect.gen(function*() {
+    yield* Ef.scoped(
+      Ef.gen(function*() {
         // Create the server pool with its spawner
         const serverPool = yield* Worker.makePoolSerialized<ServerMessage>({
           size: optimalWorkers,
         }).pipe(
-          Effect.provide(Layer.mergeAll(
+          Ef.provide(Layer.mergeAll(
             createServerSpawner(serverRunnerPath),
             NodeWorker.layerManager,
           )),
@@ -95,7 +98,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
           size: optimalWorkers,
           concurrency: 1, // One batch at a time per worker
         }).pipe(
-          Effect.provide(Layer.mergeAll(
+          Ef.provide(Layer.mergeAll(
             createPageSpawner(pageGeneratorPath),
             NodeWorker.layerManager,
           )),
@@ -105,20 +108,20 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
 
         consola.info(`\nStarting SSG infrastructure:`)
         consola.info(`   Launching ${optimalWorkers} Polen app instances...`)
-        yield* Effect.logDebug(`Finding available ports for servers`)
+        yield* Ef.logDebug(`Finding available ports for servers`)
 
         // Get available ports
         for (let i = 0; i < optimalWorkers; i++) {
-          const port = yield* Effect.tryPromise({
+          const port = yield* Ef.tryPromise({
             try: () => getPort(),
             catch: (error) => new Error(`Failed to get port: ${error}`),
           })
           serverPorts.push(port)
         }
-        yield* Effect.logDebug(`Using ports: ${serverPorts.join(', ')}`)
+        yield* Ef.logDebug(`Using ports: ${serverPorts.join(', ')}`)
 
         // Start servers using Effect
-        yield* Effect.all(
+        yield* Ef.all(
           serverPorts.map((port) =>
             serverPool.executeEffect(
               new StartServerMessage({
@@ -130,7 +133,7 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
           { concurrency: 'unbounded' },
         )
         consola.success(`   All ${optimalWorkers} app instances ready on ports: ${serverPorts.join(', ')}`)
-        yield* Effect.logDebug(`All servers started successfully`)
+        yield* Ef.logDebug(`All servers started successfully`)
 
         // Prepare page generation configs
         // Each batch is assigned to a server in round-robin fashion
@@ -152,47 +155,47 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
         const completedBatchesRef = yield* Ref.make(0)
         const totalPagesProcessedRef = yield* Ref.make(0)
 
-        // Process batches using Effect.all with timing
-        const [elapsedTime, results] = yield* Effect.all(
+        // Process batches using Ef.all with timing
+        const [elapsedTime, results] = yield* Ef.all(
           generateConfigs.map(({ batch, assignedPort, index }) =>
             pagePool
               .executeEffect(
                 new GeneratePagesMessage({
-                  routes: batch,
+                  routes: batch as readonly string[],
                   serverPort: assignedPort,
-                  outputDir: config.paths.project.absolute.build.root,
+                  outputDir: FsLoc.encodeSync(config.paths.project.absolute.build.root),
                   ...(config.build.base ? { basePath: config.build.base } : {}),
                 }),
               )
               .pipe(
-                Effect.tap((result) =>
-                  Effect.gen(function*() {
+                Ef.tap((result) =>
+                  Ef.gen(function*() {
                     const completedBatches = yield* Ref.updateAndGet(completedBatchesRef, n => n + 1)
                     const totalPagesProcessed = yield* Ref.updateAndGet(totalPagesProcessedRef, n =>
                       n + result.processedCount)
                     // Still use process.stdout.write for progress bar - this is UI, not logging
                     const progress = Math.floor((completedBatches / batches.length) * 100)
-                    yield* Effect.sync(() => {
+                    yield* Ef.sync(() => {
                       process.stdout.write(
                         `\r   Progress: ${completedBatches}/${batches.length} batches (${progress}%) • ${totalPagesProcessed}/${totalRoutes} pages`,
                       )
                     })
                   })
                 ),
-                Effect.tapError((error) =>
-                  Effect.logError(`Batch ${index} failed`).pipe(
-                    Effect.annotateLogs({ error: String(error), batch }),
+                Ef.tapError((error) =>
+                  Ef.logError(`Batch ${index} failed`).pipe(
+                    Ef.annotateLogs({ error: String(error), batch }),
                   )
                 ),
-                Effect.map((result) => ({ ...result, batchIndex: index })),
-                Effect.either, // Convert to Either to capture both success and failure
+                Ef.map((result) => ({ ...result, batchIndex: index })),
+                Ef.either, // Convert to Either to capture both success and failure
               )
           ),
           { concurrency: optimalWorkers },
-        ).pipe(Effect.timed)
+        ).pipe(Ef.timed)
 
         // Partition results into successes and failures
-        const [lefts, rights] = Array.partition(results, Either.isRight)
+        const [lefts, rights] = Ar.partition(results, Ei.isRight)
         const successfulResults = rights.map(r =>
           r.right
         )
@@ -206,8 +209,8 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
         const totalFailures = totalRoutes - actualPagesGenerated
 
         if (successfulResults.length > 0) {
-          const totalMemoryMB = Array.reduce(successfulResults, 0, (sum, r) => sum + r.memoryUsed) / (1024 * 1024)
-          const avgTimePerBatch = Array.reduce(successfulResults, 0, (sum, r) => sum + r.duration)
+          const totalMemoryMB = Ar.reduce(successfulResults, 0, (sum, r) => sum + r.memoryUsed) / (1024 * 1024)
+          const avgTimePerBatch = Ar.reduce(successfulResults, 0, (sum, r) => sum + r.duration)
             / successfulResults.length
             / 1000
 
@@ -239,32 +242,34 @@ export const generate = (config: Config.Config): Effect.Effect<void, Error, File
             }
 
             // Fail the effect to indicate error
-            yield* Effect.fail(new Error(`SSG failed: ${totalFailures} pages could not be generated`))
+            yield* Ef.fail(new Error(`SSG failed: ${totalFailures} pages could not be generated`))
           }
         } else {
           consola.error(`\n\nSSG Failed Completely`)
           consola.error(`   No pages were generated out of ${totalRoutes} total`)
-          yield* Effect.fail(new Error(`SSG failed: No pages could be generated`))
+          yield* Ef.fail(new Error(`SSG failed: No pages could be generated`))
         }
 
-        yield* Effect.logDebug(`SSG generation complete`).pipe(
-          Effect.annotateLogs({
+        yield* Ef.logDebug(`SSG generation complete`).pipe(
+          Ef.annotateLogs({
             totalTime,
             successfulBatches: successfulResults.length,
           }),
         )
       }).pipe(
         // Provide NodeContext for Path service used in page generator
-        Effect.provide(NodeContext.layer),
+        Ef.provide(NodeContext.layer),
       ),
     ).pipe(
       // After scoped resources are released
-      Effect.tap(() =>
-        Effect.sync(() => {
+      Ef.tap(() =>
+        Ef.sync(() => {
           consola.info('\nShutting down...')
           consola.success('Cleanup complete.')
         })
       ),
-      Effect.tap(() => Effect.logDebug(`All resources cleaned up`)),
+      Ef.tap(() => Ef.logDebug(`All resources cleaned up`)),
     )
-  })
+    // TODO: Properly type all error cases - can return ParseError | Error | WorkerError
+    // FIXME: Remove cast when @effect/platform versions are aligned
+  }) as any

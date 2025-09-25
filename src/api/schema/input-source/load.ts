@@ -2,76 +2,90 @@ import { Config as PolenConfig } from '#api/config/$'
 import type { Diagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
 import type { Config } from '#api/schema/config'
 import type { InputSource } from '#api/schema/input-source/input-source'
+import { Ef, Op } from '#dep/effect'
+import { Data } from 'effect'
 import type { Catalog } from 'graphql-kit'
 
 /**
  * Result of schema reading with provenance tracking for file watching and debugging.
  */
 export interface LoadedCatalog {
-  data: Catalog.Catalog | null
+  data: Op.Option<Catalog.Catalog>
   source: InputSource
-  diagnostics?: Diagnostic[]
-  // {
-  //   type: DataSourceType
-  //   /**
-  //    * Recreate the schema data and file after it has been deleted.
-  //    *
-  //    * This function re-fetches data from the original source and recreates
-  //    * the schema file on disk. Only called by file watchers after deletion.
-  //    *
-  //    * @returns Promise resolving to the recreated schema data, or null if recreation fails
-  //    */
-  //   reCreate?: () => Promise<Catalog.Catalog | null>
-  // }
+  diagnostics: Op.Option<Diagnostic[]>
 }
 
 export interface Context {
   paths: PolenConfig.Config['paths']
 }
 
+// Custom error types
+export class NoApplicableSourceError extends Data.TaggedError('NoApplicableSourceError')<{
+  readonly sources: string[]
+}> {}
+
+export class SourceReadError extends Data.TaggedError('SourceReadError')<{
+  readonly source: string
+  readonly error: unknown
+}> {}
+
+export type LoadError = NoApplicableSourceError | SourceReadError
+
 type InputSourceName = string
 
-export const loadOrThrow = async (
+export const loadOrThrow = (
   params: {
     context: Context
-    config: Config | null
-    useFirst: (InputSourceName[]) | null
+    config: Op.Option<Config>
+    useFirst: Op.Option<InputSourceName[]>
     sources: InputSource[]
   },
-): Promise<LoadedCatalog> => {
-  const getSourceConfig = (sourceName: InputSourceName) => {
-    const sourceConfigs = (params.config?.sources ?? {}) as Record<InputSourceName, object>
-    const sourceConfig = sourceConfigs[sourceName] ?? {}
-    return sourceConfig
-  }
-  // If useFirst is specified, try sources in that specific order
-  if (params.useFirst) {
-    for (const sourceName of params.useFirst) {
-      const source = params.sources.find(s => s.name === sourceName)
-      if (!source) continue
+): Ef.Effect<LoadedCatalog, LoadError, import('@effect/platform/FileSystem').FileSystem> =>
+  Ef.gen(function*() {
+    const getSourceConfig = (sourceName: InputSourceName) => {
+      const config = Op.getOrUndefined(params.config)
+      const sourceConfigs = (config?.sources ?? {}) as Record<InputSourceName, object>
+      const sourceConfig = sourceConfigs[sourceName] ?? {}
+      return sourceConfig
+    }
 
+    // If useFirst is specified, try sources in that specific order
+    const sourcesToTry = Op.match(params.useFirst, {
+      onNone: () => params.sources,
+      onSome: (useFirst) => {
+        const ordered: InputSource[] = []
+        for (const sourceName of useFirst) {
+          const source = params.sources.find(s => s.name === sourceName)
+          if (source) ordered.push(source)
+        }
+        return ordered
+      },
+    })
+
+    // Try each source
+    for (const source of sourcesToTry) {
       const sourceConfig = getSourceConfig(source.name)
-      const result = await source.readIfApplicableOrThrow(sourceConfig as any, params.context)
+      const result = yield* source.readIfApplicableOrThrow(sourceConfig, params.context).pipe(
+        Ef.mapError((error) =>
+          new SourceReadError({
+            source: source.name,
+            error,
+          })
+        ),
+      )
+
       if (result) {
         return {
-          data: result,
+          data: Op.some(result),
           source,
+          diagnostics: Op.none(),
         }
       }
     }
-  } else {
-    // Otherwise, try all sources in the order they were provided
-    for (const source of params.sources) {
-      const sourceConfig = getSourceConfig(source.name)
-      const result = await source.readIfApplicableOrThrow(sourceConfig as any, params.context)
-      if (result) {
-        return {
-          data: result,
-          source,
-        }
-      }
-    }
-  }
 
-  throw new Error(`No applicable schema source found. Please check your configuration.`)
-}
+    return yield* Ef.fail(
+      new NoApplicableSourceError({
+        sources: params.sources.map(s => s.name),
+      }),
+    )
+  })

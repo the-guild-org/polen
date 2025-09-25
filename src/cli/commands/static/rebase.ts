@@ -1,6 +1,8 @@
 import { Api } from '#api/$'
+import { Ef, Op, S } from '#dep/effect'
 import { Args, Command, Options } from '@effect/cli'
-import { Effect, Option } from 'effect'
+import { NodeFileSystem } from '@effect/platform-node'
+import { FsLoc } from '@wollybeard/kit'
 import { allowGlobalParameter } from '../../_/parameters.js'
 
 const source = Args.text({ name: 'source' }).pipe(
@@ -26,40 +28,41 @@ export const staticRebase = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ source, newBasePath, target, allowGlobal }) =>
-    Effect.gen(function*() {
-      const targetPath = Option.getOrUndefined(target)
+    Ef.gen(function*() {
+      const targetPath = Op.getOrUndefined(target)
+      const sourceDir = S.decodeSync(FsLoc.AbsDir.String)(source)
       const plan: Api.Static.RebasePlan = targetPath
         ? {
           changeMode: 'copy',
-          sourcePath: source,
-          targetPath: targetPath,
+          sourcePath: sourceDir,
+          targetPath: S.decodeSync(FsLoc.AbsDir.String)(targetPath),
           newBasePath,
         }
         : {
           changeMode: 'mutate',
-          sourcePath: source,
+          sourcePath: sourceDir,
           newBasePath,
         }
 
       // Direct Effect execution with timing and error handling
       const start = Date.now()
 
-      const result = yield* Effect.promise(() => Api.Static.rebase(plan))
-        .pipe(
-          Effect.tap(() => {
-            const duration = Date.now() - start
-            console.log(`Task: rebase`)
-            console.log(`Duration: ${duration}ms`)
-            console.log(`Input: ${JSON.stringify(plan, null, 2)}`)
-          }),
-          Effect.tapError((error) => {
-            const duration = Date.now() - start
-            console.error(`Task: rebase failed`)
-            console.error(`Duration: ${duration}ms`)
-            console.error(`Error:`, error)
-            return Effect.succeed(undefined)
-          }),
-        )
+      const result = yield* Api.Static.rebase(plan).pipe(
+        Ef.provide(NodeFileSystem.layer),
+        Ef.tap(() => {
+          const duration = Date.now() - start
+          console.log(`Task: rebase`)
+          console.log(`Duration: ${duration}ms`)
+          console.log(`Input: ${JSON.stringify(plan, null, 2)}`)
+        }),
+        Ef.tapError((error) => {
+          const duration = Date.now() - start
+          console.error(`Task: rebase failed`)
+          console.error(`Duration: ${duration}ms`)
+          console.error(`Error:`, error)
+          return Ef.succeed(undefined)
+        }),
+      )
 
       return result
     }),

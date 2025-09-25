@@ -1,6 +1,8 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
+import { Sch } from '@wollybeard/kit'
 import { Version } from 'graphql-kit'
+Sch
 
 export const DiagnosticMissingVersions = Diagnostic.create({
   source: 'examples-scanner',
@@ -21,4 +23,4 @@ export const DiagnosticMissingVersions = Diagnostic.create({
 
 export const makeDiagnosticMissingVersions = Diagnostic.createMake(DiagnosticMissingVersions)
 
-export type DiagnosticMissingVersions = S.Schema.Type<typeof DiagnosticMissingVersions>
+export type DiagnosticMissingVersions = typeof DiagnosticMissingVersions.Type

@@ -1,11 +1,12 @@
 import { Api } from '#api/$'
 import { createNavbar, type NavbarItem } from '#api/content/navbar'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import type { AssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { polenVirtual } from '#vite/vi'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Effect } from 'effect'
 import { Catalog } from 'graphql-kit'
 import type * as Vite from 'vite'
 
@@ -39,8 +40,8 @@ export const Navbar = ({
           const navbar: NavbarItem[] = []
 
           // ━ Schema presence causes adding some navbar items
-          const loadedSchemaCatalog = await Effect.runPromise(
-            schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as Effect.Effect<
+          const loadedSchemaCatalog = await Ef.runPromise(
+            schemaReader.read().pipe(Ef.provide(NodeFileSystem.layer)) as Ef.Effect<
               Api.Schema.InputSource.LoadedCatalog | null,
               never
             >,
@@ -59,17 +60,21 @@ export const Navbar = ({
 
             // Check if we have revisions to show changelog
             const catalog = loadedSchemaCatalog.data
-            const hasMultipleRevisions = Catalog.fold(
-              (versioned) => {
-                // For versioned catalogs, count total revisions across all entries
-                const totalRevisions = Catalog.Versioned.getAll(versioned).reduce(
-                  (sum: number, entry) => sum + entry.revisions.length,
-                  0,
-                )
-                return totalRevisions > 1
-              },
-              (unversioned) => unversioned.schema.revisions?.length > 1,
-            )(catalog)
+            const hasMultipleRevisions = Op.match(catalog, {
+              onNone: () => false,
+              onSome: (catalogValue) =>
+                Catalog.fold(
+                  (versioned) => {
+                    // For versioned catalogs, count total revisions across all entries
+                    const totalRevisions = Catalog.Versioned.getAll(versioned).reduce(
+                      (sum: number, entry) => sum + entry.revisions.length,
+                      0,
+                    )
+                    return totalRevisions > 1
+                  },
+                  (unversioned) => unversioned.schema.revisions?.length > 1,
+                )(catalogValue),
+            })
 
             if (hasMultipleRevisions) {
               navbar.push({ pathExp: `/changelog`, title: `Changelog`, position: 'right' })
@@ -77,8 +82,8 @@ export const Navbar = ({
           }
 
           // ━ Examples presence causes adding navbar item
-          const loadedExamplesCatalog = await Effect.runPromise(
-            examplesReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as Effect.Effect<any, never>,
+          const loadedExamplesCatalog = await Ef.runPromise(
+            examplesReader.read().pipe(Ef.provide(NodeFileSystem.layer)) as Ef.Effect<any, never>,
           )
 
           // Use config.examples.enabled if explicitly set, otherwise auto-detect
@@ -90,8 +95,8 @@ export const Navbar = ({
           }
 
           // ━━ Scan pages and add to navbar
-          const scanResult = await Effect.runPromise(
-            pagesReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as Effect.Effect<any, never>,
+          const scanResult = await Ef.runPromise(
+            pagesReader.read().pipe(Ef.provide(NodeFileSystem.layer)) as Ef.Effect<any, never>,
           )
           const data = createNavbar(scanResult.list)
           navbar.push(...data)

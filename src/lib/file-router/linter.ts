@@ -1,7 +1,9 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { Idx, Path } from '@wollybeard/kit'
-import { S } from 'graphql-kit'
-import { type Route, type RouteFile, routeIsFromIndexFile, routeToPathExpression } from './route.js'
+import { FsLoc } from '@wollybeard/kit'
+import * as _ from '@wollybeard/kit/sch'
+import { HashMap, Option, pipe } from 'effect'
+import { Route } from './models/route.js'
 
 // ============================================================================
 // Schema - File Router Diagnostics
@@ -13,10 +15,10 @@ export const DiagnosticIndexConflict = Diagnostic.create({
   severity: 'error',
   context: {
     literal: S.Struct({
-      file: S.Any, // RouteFile - using Any to avoid circular dependencies
+      file: FsLoc.AbsFile,
     }),
     index: S.Struct({
-      file: S.Any, // RouteFile
+      file: FsLoc.AbsFile,
     }),
   },
 }).annotations({
@@ -31,11 +33,11 @@ export const DiagnosticNumberedPrefixConflict = Diagnostic.create({
   severity: 'error',
   context: {
     kept: S.Struct({
-      file: S.Any, // RouteFile
+      file: FsLoc.AbsFile,
       order: S.Number,
     }),
     dropped: S.Struct({
-      file: S.Any, // RouteFile
+      file: FsLoc.AbsFile,
       order: S.Number,
     }),
   },
@@ -50,7 +52,7 @@ export const DiagnosticNumberedPrefixOnIndex = Diagnostic.create({
   name: 'numbered-prefix-on-index',
   severity: 'warning',
   context: {
-    file: S.Any, // RouteFile
+    file: FsLoc.AbsFile,
     order: S.Number,
   },
 })
@@ -86,14 +88,15 @@ export interface LintResult {
 export const lint = (routes: Route[]): LintResult => {
   const diagnostics: Diagnostic[] = []
 
-  const seen = Idx.create({ key: routeToPathExpression })
+  // Use HashMap with route.id as the key
+  let seen = HashMap.empty<string, Route>()
 
   // ━ Check for numbered prefix on index files
   for (const route of routes) {
-    if (routeIsFromIndexFile(route) && route.logical.order !== undefined) {
+    if (Route.isFromIndexFile(route) && route.logical.order !== undefined) {
       const diagnostic = makeDiagnosticNumberedPrefixOnIndex({
         message: `Numbered prefix on index file has no effect. The file:\n  ${
-          Path.format(route.file.path.relative)
+          FsLoc.encodeSync(route.file)
         }\n\nhas a numbered prefix (${route.logical.order}_) which doesn't affect ordering since index files represent their parent directory.`,
         file: route.file,
         order: route.logical.order,
@@ -105,16 +108,17 @@ export const lint = (routes: Route[]): LintResult => {
   // ━ Check for conflicts
   for (const route of routes) {
     // Detect
-    const seenRoute = seen.get(route)
+    const seenRouteOption = pipe(seen, HashMap.get(route.id))
+    const seenRoute = Option.getOrUndefined(seenRouteOption)
 
-    if (seenRoute) {
+    if (seenRoute !== undefined) {
       // Check if it's a numbered prefix conflict
       if (seenRoute.logical.order !== undefined && route.logical.order !== undefined) {
         // Handle numbered prefix conflict - keep the one with higher order
         const [kept, dropped] = seenRoute.logical.order > route.logical.order ? [seenRoute, route] : [route, seenRoute]
 
         if (dropped === seenRoute) {
-          seen.set(kept)
+          seen = pipe(seen, HashMap.set(kept.id, kept))
         }
 
         const orderMessage = kept.logical.order === dropped.logical.order
@@ -123,7 +127,7 @@ export const lint = (routes: Route[]): LintResult => {
 
         const diagnostic = makeDiagnosticNumberedPrefixConflict({
           // dprint-ignore
-          message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${Path.format(kept.file.path.relative)}\n\nconflicts with this file:\n\n  ${Path.format(dropped.file.path.relative)}.\n\n${orderMessage}`,
+          message: `Your files represent conflicting routes due to numbered prefixes. This file:\n  ${FsLoc.encodeSync(kept.file)}\n\nconflicts with this file:\n\n  ${FsLoc.encodeSync(dropped.file)}.\n\n${orderMessage}`,
           kept: {
             file: kept.file,
             order: kept.logical.order!,
@@ -138,15 +142,15 @@ export const lint = (routes: Route[]): LintResult => {
       }
 
       // Fix - ignore the index
-      const [index, literal] = routeIsFromIndexFile(route) ? [route, seenRoute] : [seenRoute, route]
+      const [index, literal] = Route.isFromIndexFile(route) ? [route, seenRoute] : [seenRoute, route]
       if (seenRoute === index) {
-        seen.set(route)
+        seen = pipe(seen, HashMap.set(route.id, route))
       }
 
       // Report
       const diagnostic = makeDiagnosticIndexConflict({
         // dprint-ignore
-        message: `Your files represent conflicting routes. This index file route:\n  ${Path.format(index.file.path.relative)}\n\nconflicts with this literal file route:\n\n  ${Path.format(literal.file.path.relative)}.\n\nYour index route is being ignored.`,
+        message: `Your files represent conflicting routes. This index file route:\n  ${FsLoc.encodeSync(index.file)}\n\nconflicts with this literal file route:\n\n  ${FsLoc.encodeSync(literal.file)}.\n\nYour index route is being ignored.`,
         literal: {
           file: literal.file,
         },
@@ -160,11 +164,11 @@ export const lint = (routes: Route[]): LintResult => {
     }
 
     // Continue
-    seen.set(route)
+    seen = pipe(seen, HashMap.set(route.id, route))
   }
 
   return {
     diagnostics,
-    routes: seen.toArray(),
+    routes: Array.from(HashMap.values(seen)),
   }
 }

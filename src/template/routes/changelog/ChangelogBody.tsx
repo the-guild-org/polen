@@ -1,21 +1,20 @@
-import { Change } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Change, Revision, Schema } from 'graphql-kit'
 const CRITICALITY_LEVELS = ['BREAKING', 'DANGEROUS', 'NON_BREAKING'] as const
 import type { CriticalityLevel } from '@graphql-inspector/core'
-import { Box, Heading } from '@radix-ui/themes'
 import React from 'react'
 import { useMemo } from 'react'
 import { CriticalitySection } from '../../components/Changelog/CriticalitySection.js'
 import * as Group from '../../components/Changelog/groups/index.js'
 import { ComponentDispatch } from '../../components/ComponentDispatch.js'
+import { Box, Heading } from '../../components/ui/index.js'
 import { renderDate } from './utils.js'
 
 export const ChangelogBody: React.FC<{ schema: Schema.Schema }> = ({ schema }) => {
   return (
     <Box>
       {/* Title bar - always shown */}
-      <Heading size='5' style={{ padding: '1rem 0', borderBottom: '1px solid var(--gray-4)', marginBottom: '1.5rem' }}>
+      <Heading size='5' className='py-4 border-b border-gray-300 mb-6'>
         Changelog
       </Heading>
 
@@ -31,7 +30,7 @@ export const ChangelogBody: React.FC<{ schema: Schema.Schema }> = ({ schema }) =
   )
 }
 
-const Changeset: React.FC<{ revision: Revision.Revision; schema: Schema.Schema | null }> = ({ revision, schema }) => {
+const Changeset: React.FC<{ revision: Revision; schema: Schema.Schema | null }> = ({ revision, schema }) => {
   // Group changes by criticality level
   const groupedChanges = useMemo(() => {
     const groups = {} as Record<CriticalityLevel, Change.Change[]>
@@ -59,15 +58,11 @@ const Changeset: React.FC<{ revision: Revision.Revision; schema: Schema.Schema |
   }, [revision])
 
   return (
-    <Box mb='6' id={revision.date} style={{ scrollMarginTop: '2rem' }}>
+    <Box mb='6' id={revision.date} className='scroll-mt-8'>
       <h1>
         <a
           href={`#${revision.date}`}
-          style={{
-            color: 'inherit',
-            textDecoration: 'none',
-            position: 'relative',
-          }}
+          className='text-inherit no-underline relative'
           onClick={(e) => {
             e.preventDefault()
             // Update URL hash

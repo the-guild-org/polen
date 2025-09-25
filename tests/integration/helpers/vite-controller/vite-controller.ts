@@ -1,9 +1,10 @@
 import { Api } from '#api/$'
+import { Ef } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig, type ViteUserConfigWithPolen } from '#vite/config'
 import { ViteMemoryLogger } from '#vite/logger'
-import { Obj, Url } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { NodeFileSystem } from '@effect/platform-node'
+import { FsLoc, Obj, Url } from '@wollybeard/kit'
 
 export type ViteDevServerPlus = Vite.ViteDevServer & {
   cannonicalUrl: URL
@@ -47,13 +48,15 @@ interface State {
   devLoggerStores: ViteMemoryLogger.Store[]
 }
 
-export const create = (
+export const create = <cwd extends string | FsLoc.AbsDir>(
   config?: {
-    cwd?: string
+    cwd?: FsLoc.Inputs.Input.AbsDir
     defaultConfigInput?: Api.Config.ConfigInput
     options?: TestOptions
   },
 ): ViteController => {
+  const cwd = config?.cwd ? FsLoc.normalizeInput(config.cwd) as FsLoc.AbsDir : undefined
+
   const state: State = {
     viteDevServer: null,
     devLoggerStores: [],
@@ -62,8 +65,10 @@ export const create = (
   const self: ViteController = {
     devPolen: async (configInput, testOptions) => {
       const configInputMerged = Api.Config.mergeInputs(config?.defaultConfigInput, configInput)
-      const appConfig = await Effect.runPromise(
-        Api.ConfigResolver.fromMemory(configInputMerged, config?.cwd),
+      const appConfig = await Ef.runPromise(
+        Api.ConfigResolver.fromMemory(configInputMerged, cwd).pipe(
+          Ef.provide(NodeFileSystem.layer),
+        ),
       )
       // dump(appConfig)
       const viteConfig = toViteUserConfig(appConfig)

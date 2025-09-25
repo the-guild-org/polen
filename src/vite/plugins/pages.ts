@@ -1,6 +1,7 @@
 import type { Api } from '#api/$'
 import { Content } from '#api/content/$'
 import type { LoadedCatalog } from '#api/schema/input-source/load'
+import { Ef } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { FileRouter } from '#lib/file-router'
@@ -11,8 +12,7 @@ import type { ViteVirtual } from '#lib/vite-virtual/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import mdx from '@mdx-js/rollup'
-import { Arr, Path, Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { FsLoc, Str } from '@wollybeard/kit'
 import { polenVirtual } from '../vi.js'
 import { MdxSchemaBridge } from './mdx-schema-bridge.js'
 
@@ -58,8 +58,8 @@ export const Pages = ({
 
     // Generate imports and route objects
     for (const { route, metadata } of pages) {
-      const filePathExp = Path.format(route.file.path.absolute)
-      const pathExp = FileRouter.routeToPathExpression(route)
+      const filePathExp = FsLoc.encodeSync(route.file)
+      const pathExp = route.toString()
       const $$ = {
         ...$,
         Component: Str.Case.camel(`page ` + Str.titlizeSlug(pathExp)),
@@ -102,8 +102,8 @@ export const Pages = ({
       name: 'pages',
       reader,
       filePatterns: {
-        watch: [config.paths.project.absolute.pages],
-        isRelevant: (file) => Content.isPageFile(file, config.paths.project.absolute.pages),
+        watch: [FsLoc.encodeSync(config.paths.project.absolute.pages)],
+        isRelevant: (file) => Content.isPageFile(file, FsLoc.encodeSync(config.paths.project.absolute.pages)),
       },
       dependentVirtualModules: [
         viProjectPages,
@@ -112,15 +112,24 @@ export const Pages = ({
       hooks: {
         async shouldFullReload(oldData, newData) {
           // Check if the visible pages list changed
-          const pageStructureChanged = !oldData || !Arr.equalShallowly(
-            oldData.list.map(p => Path.format(p.route.file.path.absolute)),
-            newData.list.map(p => Path.format(p.route.file.path.absolute)),
-          )
+          const oldPaths = oldData?.list.map(p => FsLoc.encodeSync(p.route.file)) || []
+          const newPaths = newData.list.map(p => FsLoc.encodeSync(p.route.file))
+          const pageStructureChanged = !oldData
+            || oldPaths.length !== newPaths.length
+            || !oldPaths.every((path, i) => path === newPaths[i])
           // Return true for full reload only if structure changed
           return pageStructureChanged
         },
         async onDiagnostics(data) {
-          Diagnostic.report(data.diagnostics)
+          // Map to base diagnostic type for reporting
+          const baseDiagnostics = data.diagnostics.map(d => ({
+            _tag: d._tag as 'Diagnostic',
+            source: d.source,
+            name: d.name,
+            severity: d.severity,
+            message: d.message,
+          }))
+          Diagnostic.report(baseDiagnostics)
         },
       },
     }) as Vite.Plugin,
@@ -138,10 +147,18 @@ export const Pages = ({
           if (id !== viProjectPages.resolved) return
           debug(`hook load`)
 
-          const loadedPages = await Effect.runPromise(
-            reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+          const loadedPages = await Ef.runPromise(
+            reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
           )
-          Diagnostic.report(loadedPages.diagnostics)
+          // Map to base diagnostic type for reporting
+          const baseDiagnostics = loadedPages.diagnostics.map(d => ({
+            _tag: d._tag as 'Diagnostic',
+            source: d.source,
+            name: d.name,
+            severity: d.severity,
+            message: d.message,
+          }))
+          Diagnostic.report(baseDiagnostics)
           debug(`found visible`, { count: loadedPages.list.length })
 
           //
@@ -177,10 +194,18 @@ export const Pages = ({
 
           debug(`Loading viProjectRoutes virtual module`)
 
-          const scanResult = await Effect.runPromise(
-            reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+          const scanResult = await Ef.runPromise(
+            reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
           )
-          Diagnostic.report(scanResult.diagnostics)
+          // Map to base diagnostic type for reporting
+          const baseDiagnostics = scanResult.diagnostics.map(d => ({
+            _tag: d._tag as 'Diagnostic',
+            source: d.source,
+            name: d.name,
+            severity: d.severity,
+            message: d.message,
+          }))
+          Diagnostic.report(baseDiagnostics)
           const code = generateRoutesModule(scanResult.list)
 
           // Generate the module code

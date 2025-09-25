@@ -1,4 +1,5 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
+import { FsLoc } from '@wollybeard/kit'
 
 // ============================================================================
 // Schema and Type
@@ -13,14 +14,14 @@ export const Catalog = S.Struct({
     /**
      * Path to the index.md or index.mdx file
      */
-    path: S.String,
+    path: FsLoc.AbsFile,
   })),
 }).annotations({
   identifier: 'ReferenceCatalog',
   description: 'A catalog of reference documentation metadata',
 })
 
-export type Catalog = S.Schema.Type<typeof Catalog>
+export type Catalog = typeof Catalog.Type
 
 // ============================================================================
 // Constructors
@@ -44,12 +45,3 @@ export const is = S.is(Catalog)
 export const hasIndex = (catalog: Catalog): boolean => {
   return catalog.index !== undefined
 }
-
-// ============================================================================
-// Codec
-// ============================================================================
-
-export const decode = S.decode(Catalog)
-export const decodeSync = S.decodeSync(Catalog)
-export const encode = S.encode(Catalog)
-export const encodeSync = S.encodeSync(Catalog)

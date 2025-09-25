@@ -1,9 +1,8 @@
-import { Select } from '@radix-ui/themes'
+import { Ar } from '#dep/effect'
 import { HashMap } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Document } from 'graphql-kit'
-import { VersionCoverage } from 'graphql-kit'
+import { Catalog, Document, VersionCoverage } from 'graphql-kit'
 import type { FC } from 'react'
+import { Select } from './ui/index.js'
 
 interface Props {
   document: Document.Document
@@ -23,12 +22,12 @@ export const VersionCoveragePicker: FC<Props> = ({
 }) => {
   if (Document.Unversioned.is(document)) return null
 
-  const options = Array.from(HashMap.keys(document.versionDocuments))
+  const options = Ar.fromIterable(HashMap.keys(document.versionDocuments))
   if (options.length === 0) return null
 
   // Helper to format labels with proper Version/Versions prefix
   const formatLabel = (versionCoverage: VersionCoverage.VersionCoverage): string => {
-    const prefix = VersionCoverage.isSingle(versionCoverage) ? 'Version' : 'Versions'
+    const prefix = VersionCoverage.One.is(versionCoverage) ? 'Version' : 'Versions'
     return `${prefix} ${VersionCoverage.toLabel(versionCoverage)}`
   }
 

@@ -1,10 +1,8 @@
-import { Swiss } from '#lib/swiss'
-import { Box, Text } from '@radix-ui/themes'
-import { Catalog } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Catalog, Schema, Version } from 'graphql-kit'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { Box, GridItem, Text } from '../../components/ui/index.js'
 import { VersionPicker } from '../../components/VersionPicker.js'
 import { ChangelogSidebarItem } from './ChangelogSidebarItem.js'
 
@@ -42,16 +40,9 @@ export const ChangelogSidebar: React.FC<{
     }, [])
 
     return (
-      <Swiss.Item
+      <GridItem
         cols={3}
-        style={{
-          position: 'sticky',
-          top: '2rem',
-          height: 'fit-content',
-          minWidth: '250px',
-          maxHeight: 'calc(100vh - 4rem)',
-          overflowY: 'auto',
-        }}
+        className='sticky top-8 h-fit min-w-[250px] max-h-[calc(100vh-4rem)] overflow-y-auto'
       >
         {Catalog.Versioned.is(catalog) && Schema.Versioned.is(schema) && (
           <Box mb='3'>
@@ -64,7 +55,7 @@ export const ChangelogSidebar: React.FC<{
             />
           </Box>
         )}
-        <Text size='2' weight='medium' mb='3' style={{ display: 'block' }}>
+        <Text size='2' weight='medium' mb='3' className='block'>
           Revisions
         </Text>
         {revisions.map((revision) => (
@@ -74,7 +65,7 @@ export const ChangelogSidebar: React.FC<{
             isActive={activeRevision === revision.date}
           />
         ))}
-      </Swiss.Item>
+      </GridItem>
     )
   }
 }

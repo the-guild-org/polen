@@ -1,5 +1,7 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
+import { Sch } from '@wollybeard/kit'
+Sch
 
 export const DiagnosticDuplicateContent = Diagnostic.create({
   source: 'examples-scanner',
@@ -22,4 +24,4 @@ export const DiagnosticDuplicateContent = Diagnostic.create({
 
 export const makeDiagnosticDuplicateContent = Diagnostic.createMake(DiagnosticDuplicateContent)
 
-export type DiagnosticDuplicateContent = S.Schema.Type<typeof DiagnosticDuplicateContent>
+export type DiagnosticDuplicateContent = typeof DiagnosticDuplicateContent.Type

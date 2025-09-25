@@ -1,10 +1,10 @@
-import { Box, Flex, Text } from '@radix-ui/themes'
-import { Change } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
+// TODO: Review and replace inline styles with Tailwind classes
+import { Change, Revision } from 'graphql-kit'
+import { Box, Flex, Text } from '../../components/ui/index.js'
 import { renderDate } from './utils.js'
 
 export const ChangelogSidebarItem: React.FC<{
-  revision: Revision.Revision
+  revision: Revision
   isActive: boolean
 }> = ({ revision, isActive }) => {
   const counts = calculateCounts(revision)
@@ -13,17 +13,9 @@ export const ChangelogSidebarItem: React.FC<{
     <Box mb='2'>
       <a
         href={`#${revision.date}`}
-        style={{
-          textDecoration: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0.5rem 0.75rem',
-          borderRadius: '4px',
-          backgroundColor: isActive ? 'var(--gray-a3)' : 'transparent',
-          color: 'inherit',
-          transition: 'background-color 0.2s',
-        }}
+        className={`no-underline flex items-center justify-between py-2 px-3 rounded text-inherit transition-colors ${
+          isActive ? 'bg-gray-200/50' : 'bg-transparent hover:bg-gray-100'
+        }`}
         onClick={(e) => {
           e.preventDefault()
           // Update URL hash
@@ -34,22 +26,22 @@ export const ChangelogSidebarItem: React.FC<{
           document.getElementById(revision.date)?.scrollIntoView({ behavior: 'smooth' })
         }}
       >
-        <Text size='2' weight={isActive ? 'medium' : 'regular'}>
+        <Text size='2' weight={isActive ? 'medium' : 'normal'}>
           {renderDate(revision.date)}
         </Text>
         <Flex gap='2' align='center'>
           {counts.breaking > 0 && (
-            <Text size='1' weight='medium' style={{ color: '#ef4444' }}>
+            <Text size='1' weight='medium' className='text-red-500'>
               {counts.breaking}
             </Text>
           )}
           {counts.dangerous > 0 && (
-            <Text size='1' weight='medium' style={{ color: '#f59e0b' }}>
+            <Text size='1' weight='medium' className='text-amber-500'>
               {counts.dangerous}
             </Text>
           )}
           {counts.safe > 0 && (
-            <Text size='1' weight='medium' style={{ color: '#10b981' }}>
+            <Text size='1' weight='medium' className='text-emerald-500'>
               {counts.safe}
             </Text>
           )}
@@ -59,7 +51,7 @@ export const ChangelogSidebarItem: React.FC<{
   )
 }
 
-export const calculateCounts = (revision: Revision.Revision) => {
+export const calculateCounts = (revision: Revision) => {
   return {
     breaking: revision.changes.filter(Change.isBreaking).length,
     dangerous: revision.changes.filter(Change.isDangerous).length,

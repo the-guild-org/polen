@@ -1,1 +1,1 @@
-export { Callout, Tabs } from '@radix-ui/themes'
+export { Callout, Tabs } from '../ui/index.js'

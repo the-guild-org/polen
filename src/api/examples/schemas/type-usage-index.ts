@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 import { Version } from 'graphql-kit'
 
 // ============================================================================
@@ -9,7 +9,7 @@ import { Version } from 'graphql-kit'
  * Sentinel type for unversioned schemas in the type usage index.
  */
 export const UnversionedKey = S.TaggedStruct('UnversionedKey', {})
-export type UnversionedKey = S.Schema.Type<typeof UnversionedKey>
+export type UnversionedKey = typeof UnversionedKey.Type
 
 /**
  * Singleton instance for unversioned key.
@@ -20,7 +20,7 @@ export const UNVERSIONED_KEY = UnversionedKey.make({})
  * Union type for version keys in the index.
  */
 export const VersionKey = S.Union(Version.Version, UnversionedKey)
-export type VersionKey = S.Schema.Type<typeof VersionKey>
+export type VersionKey = typeof VersionKey.Type
 
 // ============================================================================
 // Example Reference
@@ -71,5 +71,5 @@ export const TypeUsageIndex = S.HashMap({
   description: 'Index mapping versions to types to example references that use those types',
 })
 
-export type TypeUsageIndex = S.Schema.Type<typeof TypeUsageIndex>
-export type TypeUsageIndexEncoded = S.Schema.Encoded<typeof TypeUsageIndex>
+export type TypeUsageIndex = typeof TypeUsageIndex.Type
+export type TypeUsageIndexEncoded = typeof TypeUsageIndex.Encoded

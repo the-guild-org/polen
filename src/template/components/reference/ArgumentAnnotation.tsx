@@ -1,8 +1,9 @@
-import { Box, Flex, HoverCard, Text } from '@radix-ui/themes'
+// TODO: Review and replace inline styles with Tailwind classes
 import type { GraphQLArgument } from 'graphql'
 import { Grafaid } from 'graphql-kit'
 import type { FC } from 'react'
 import { useViewMode } from '../../contexts/ViewModeContext.js'
+import { Box, Flex, HoverCard, Text } from '../ui/index.js'
 import { Description } from './Description.js'
 import { TypeAnnotation } from './TypeAnnotation.js'
 

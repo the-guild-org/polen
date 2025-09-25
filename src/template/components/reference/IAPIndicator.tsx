@@ -1,8 +1,9 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { InfoCircledIcon } from '@radix-ui/react-icons'
-import { Box, Flex, HoverCard, Separator, Text } from '@radix-ui/themes'
 import type { GraphQLInputObjectType } from 'graphql'
 import type { FC } from 'react'
 import { TypeLink } from '../graphql/type-link.js'
+import { Box, Flex, HoverCard, Separator, Text } from '../ui/index.js'
 
 interface Props {
   inputObject: GraphQLInputObjectType
@@ -53,14 +54,9 @@ export const IAPIndicator: FC<Props> = ({ inputObject }) => {
               </Text>
               <Box
                 mt='1'
-                style={{
-                  padding: '8px',
-                  backgroundColor: 'var(--gray-2)',
-                  borderRadius: '4px',
-                  fontFamily: 'var(--code-font-family)',
-                }}
+                className='p-2 bg-gray-100 rounded font-mono'
               >
-                <Text size='1' style={{ whiteSpace: 'pre' }}>
+                <Text size='1' className='whitespace-pre'>
                   {`mutation {\n  fieldName(input: { a: 1, b: "value", ... }) {\n    ...\n  }\n}`}
                 </Text>
               </Box>

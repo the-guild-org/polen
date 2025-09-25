@@ -1,3 +1,4 @@
+import { Ar } from '#dep/effect'
 import type { GraphQLSchema } from 'graphql'
 
 // ============================================================================
@@ -99,7 +100,7 @@ export const processCategoriesWithVersion = (
   }
 
   // Check if it's versioned configuration
-  if (Array.isArray(categoriesConfig)) {
+  if (Ar.isArray(categoriesConfig)) {
     // Plain array - apply to all versions
     return processCategories(schema, categoriesConfig)
   } else {

@@ -1,13 +1,34 @@
 import { Api } from '#api/$'
+import { Ef } from '#dep/effect'
 import { toViteUserConfig } from '#vite/config'
-import type { FsLayout } from '@wollybeard/kit'
-import { Effect } from 'effect'
+import { NodeFileSystem } from '@effect/platform-node'
+import { Dir } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
+type FileTree = {
+  [path: string]: string | FileTree
+}
+
+const buildSpecFromFileTree = (spec: any, tree: FileTree): any => {
+  for (const [path, content] of Object.entries(tree)) {
+    if (typeof content === 'string') {
+      spec = spec.file(path, content)
+    } else {
+      // For nested directories, flatten them
+      for (const [subPath, subContent] of Object.entries(content)) {
+        if (typeof subContent === 'string') {
+          spec = spec.file(`${path}/${subPath}`, subContent)
+        }
+      }
+    }
+  }
+  return spec
+}
+
 interface TestCase {
   title?: string
-  fixture: FsLayout.Tree
+  fixture: FileTree
   result: {
     path: string
     navBarTitle?: string
@@ -170,9 +191,15 @@ export const Demo = () => <span>MDX works</span>
 
 testCases.forEach(({ fixture, result, title, additionalChecks }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
-    await project.layout.set(fixture)
-    const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    const spec = buildSpecFromFileTree(Dir.spec(project.dir.base), fixture)
+    await Ef.runPromise(
+      project.dir.merge(spec).commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
+    const polenConfig = await Ef.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)

@@ -1,9 +1,12 @@
-import { compile } from '@mdx-js/mdx'
+import { Ef } from '#dep/effect'
+import * as Mdx from '@mdx-js/mdx'
 import { recmaCodeHike, remarkCodeHike } from 'codehike/mdx'
+import { Data } from 'effect'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
+import type { Pluggable } from 'unified'
 import { getCurrentSchema } from '../../vite/plugins/mdx-schema-bridge.js'
-import { remarkGraphQLReferences } from './plugins/remark-graphql-references.js'
+import { type GraphQLReferenceOptions, remarkGraphQLReferences } from './plugins/remark-graphql-references.js'
 
 // ============================================================================
 // Configuration
@@ -30,32 +33,42 @@ export const MDX_CONFIG = {
 
 interface MdxPluginOptions {
   enableGraphQLReferences?: boolean
-  onDiagnostic?: (diagnostic: any) => void
+  onDiagnostic?: GraphQLReferenceOptions['onDiagnostic']
 }
 
 /**
  * Create standard remark and recma plugins configuration for MDX processing.
  * This ensures consistent plugin usage across all MDX compilation.
  */
-export const createMdxPlugins = (options: MdxPluginOptions = {}) => ({
-  remarkPlugins: [
-    remarkFrontmatter,
-    remarkGfm,
-    [remarkCodeHike, MDX_CONFIG.codeHike] as any,
-    // Conditionally add GraphQL references plugin
-    ...(options.enableGraphQLReferences
-      ? [
-        [remarkGraphQLReferences, {
-          schemaLoader: getCurrentSchema,
-          onDiagnostic: options.onDiagnostic,
-        }] as any,
-      ]
-      : []),
-  ],
-  recmaPlugins: [
-    [recmaCodeHike, MDX_CONFIG.codeHike] as any,
-  ],
-})
+export const resolveOptionsPlugins = (options: MdxPluginOptions = {}): Mdx.CompileOptions => {
+  const GraphQLReferences: Pluggable | null = options.enableGraphQLReferences
+    ? [remarkGraphQLReferences, {
+      schemaLoader: getCurrentSchema,
+      onDiagnostic: options.onDiagnostic,
+    }]
+    : null
+
+  return {
+    remarkPlugins: [
+      remarkFrontmatter,
+      remarkGfm,
+      [remarkCodeHike, MDX_CONFIG.codeHike],
+      ...(GraphQLReferences ? [GraphQLReferences] : []),
+    ],
+    recmaPlugins: [
+      [recmaCodeHike, MDX_CONFIG.codeHike],
+    ],
+  }
+}
+
+// ============================================================================
+// Error Types
+// ============================================================================
+
+export class MdxCompilationError extends Data.TaggedError('MdxCompilationError')<{
+  readonly content: string
+  readonly error: unknown
+}> {}
 
 // ============================================================================
 // Compilation Functions
@@ -67,19 +80,26 @@ export const createMdxPlugins = (options: MdxPluginOptions = {}) => ({
  *
  * @param content - The MDX content to compile
  * @param options - Optional plugin configuration
- * @returns Compiled MDX as a function body string
+ * @returns Effect that compiles MDX as a function body string
  */
-export const compileMdxToFunctionBody = async (
+export const compileMdxToFunctionBody = (
   content: string,
   options?: MdxPluginOptions,
-) => {
-  return compile(content, {
-    ...MDX_CONFIG,
-    ...createMdxPlugins(options),
-    outputFormat: 'function-body',
-    development: false,
+): Ef.Effect<any, MdxCompilationError, never> =>
+  Ef.tryPromise({
+    try: () =>
+      Mdx.compile(content, {
+        ...MDX_CONFIG,
+        ...resolveOptionsPlugins(options),
+        outputFormat: 'function-body',
+        development: false,
+      }),
+    catch: (error) =>
+      new MdxCompilationError({
+        content,
+        error,
+      }),
   })
-}
 
 /**
  * Get configuration for @mdx-js/rollup plugin.
@@ -88,10 +108,11 @@ export const compileMdxToFunctionBody = async (
  * @param options - Optional plugin configuration
  * @returns Configuration object for mdx rollup plugin
  */
-export const getMdxRollupConfig = (options?: MdxPluginOptions) => {
-  const plugins = createMdxPlugins(options)
+export const getMdxRollupConfig = (options?: MdxPluginOptions): Mdx.CompileOptions => {
+  const plugins = resolveOptionsPlugins(options)
+  const { codeHike: _, ...mdxConfigWithoutCodeHike } = MDX_CONFIG
   return {
-    ...MDX_CONFIG,
+    ...mdxConfigWithoutCodeHike,
     ...plugins,
     // Don't override rehypePlugins - keep the ones from createMdxPlugins
   }

@@ -3,7 +3,7 @@ import { DiagnosticInvalidFilename } from '#api/examples/diagnostic/invalid-file
 import { DiagnosticMissingVersions } from '#api/examples/diagnostic/missing-versions'
 import { DiagnosticUnknownVersion } from '#api/examples/diagnostic/unknown-version'
 import { DiagnosticValidationError } from '#api/examples/diagnostic/validation-error'
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 
 // Re-export all individual diagnostics
 export * from './duplicate-content.js'
@@ -24,4 +24,4 @@ export const Diagnostic = S.Union(
   description: 'All diagnostics that can be generated for examples',
 })
 
-export type Diagnostic = S.Schema.Type<typeof Diagnostic>
+export type Diagnostic = typeof Diagnostic.Type

@@ -1,7 +1,6 @@
-import { Array, Option, Predicate } from 'effect'
-import { Grafaid } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Ar, Op, S } from '#dep/effect'
+import { Predicate } from 'effect'
+import { Grafaid, Schema, Version } from 'graphql-kit'
 
 export interface ReferencePathParts {
   version?: Version.Version
@@ -47,12 +46,12 @@ export const createReferenceVersionPath = (version?: Version.Version): string =>
 export const joinSegmentsAndPaths = (
   ...segmentsOrPaths: (string | undefined | null | (string | null | undefined)[])[]
 ): string => {
-  const segments = Array.filterMap(
+  const segments = Ar.filterMap(
     segmentsOrPaths.flat(),
     (segment) => {
-      if (!Predicate.isNotNullable(segment)) return Option.none()
+      if (!Predicate.isNotNullable(segment)) return Op.none()
       const cleaned = segment.replace(/^\//, '').replace(/\/$/, '')
-      return cleaned ? Option.some(cleaned) : Option.none()
+      return cleaned ? Op.some(cleaned) : Op.none()
     },
   )
   const path = '/' + segments.join('/')
@@ -153,7 +152,11 @@ export const createChangelogUrl = (revisionDate: string, schema: Schema.Schema):
   // Create base changelog path with version if needed
   const version = Schema.getVersion(schema)
   const changelogBase = version
-    ? joinSegmentsAndPaths(segmentLiterals.changelog, segmentLiterals.version, Version.encodeSync(version))
+    ? joinSegmentsAndPaths(
+      segmentLiterals.changelog,
+      segmentLiterals.version,
+      String(S.encodeSync(Version.Version)(version)),
+    )
     : `/${segmentLiterals.changelog}`
 
   // Add anchor for the specific date

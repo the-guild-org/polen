@@ -1,9 +1,11 @@
+import { Test } from '@wollybeard/kit/test'
 import { buildSchema } from 'graphql'
+import type { Root } from 'mdast'
+import { unified } from 'unified'
 import { beforeEach, describe, expect, vi } from 'vitest'
-import { Test } from '../../../../tests/unit/helpers/test.js'
 import { remarkGraphQLReferences } from './remark-graphql-references.js'
 
-const createTree = (inlineCodeValue: string) => ({
+const createTree = (inlineCodeValue: string): Root => ({
   type: 'root',
   children: [
     {
@@ -41,10 +43,19 @@ const testSchema = buildSchema(`
   `)
 
 const mockSchemaLoader = () => ({
-  data: {
-    _tag: 'CatalogUnversioned' as const,
-    schema: {
-      definition: testSchema,
+  _id: 'Option',
+  _tag: 'Some',
+  value: {
+    data: {
+      _id: 'Option',
+      _tag: 'Some',
+      value: {
+        _tag: 'CatalogUnversioned' as const,
+        schema: {
+          definition: testSchema,
+          revisions: [], // Add revisions field to match the full structure
+        },
+      },
     },
   },
 })
@@ -55,33 +66,40 @@ beforeEach(() => {
 })
 
 describe('path transformation', () => {
-  const transformer = (remarkGraphQLReferences as any)({
-    schemaLoader: mockSchemaLoader,
-    onDiagnostic,
-  })
+  // Create a unified processor with the plugin
+  const processor = unified()
+    .use(remarkGraphQLReferences as any, {
+      schemaLoader: mockSchemaLoader,
+      onDiagnostic,
+    })
+
   const file = { path: 'test.md' }
 
   // dprint-ignore
-  Test.suite<{
-      path: string
-    }>('transforms gql: paths to GraphQLReference components', [
-      { name: 'simple type',       path: 'User' },
-      { name: 'field path',        path: 'User.posts' },
-      { name: 'query field',       path: 'Query.user' },
-      { name: 'nested field',      path: 'Post.author' },
-    ], ({ path }) => {
-      const tree = createTree(`gql:${path}`)
-      transformer(tree, file)
+  Test.describe('transforms gql: paths to GraphQLReference components')
+    .i<{ path: string }>()
+    .o<{}>()
+    .cases(
+      ['simple type',       [{ path: 'User' }],         {}],
+      ['field path',        [{ path: 'User.posts' }],   {}],
+      ['query field',       [{ path: 'Query.user' }],   {}],
+      ['nested field',      [{ path: 'Post.author' }],  {}],
+    )
+    .test((i, o) => {
+      const tree = createTree(`gql:${i.path}`)
 
-      const paragraph = tree.children[0] as any
-      expect(paragraph?.children[0]).toMatchObject({
+      // Use runSync to process the tree synchronously
+      const result = processor.runSync(tree, file) as Root
+
+      const paragraph = result.children[0] as any
+      expect(paragraph?.children?.[0]).toMatchObject({
         type: 'mdxJsxTextElement',
         name: 'GraphQLReference',
         attributes: expect.arrayContaining([
           {
             type: 'mdxJsxAttribute',
             name: 'path',
-            value: path,
+            value: i.path,
           },
         ]),
       })
@@ -91,41 +109,47 @@ describe('path transformation', () => {
 })
 
 describe('path validation', () => {
-  const transformer = (remarkGraphQLReferences as any)({
-    schemaLoader: mockSchemaLoader as any,
-    onDiagnostic,
-  })
+  // Create a new processor for this test suite
+  const processor = unified()
+    .use(remarkGraphQLReferences as any, {
+      schemaLoader: mockSchemaLoader,
+      onDiagnostic,
+    })
+
   const file = { path: 'test.md' }
 
   // dprint-ignore
-  Test.suite<{
-      path: string
-      shouldHaveDiagnostic: boolean
-      diagnosticType?: 'invalid-path' | 'invalid-syntax'
-    }>('validates GraphQL paths', [
-      { name: 'valid type',         path: 'User',            shouldHaveDiagnostic: false },
-      { name: 'valid field',        path: 'User.name',       shouldHaveDiagnostic: false },
-      { name: 'invalid type',       path: 'InvalidType',     shouldHaveDiagnostic: true,  diagnosticType: 'invalid-path' },
-      { name: 'invalid field',      path: 'User.invalid',    shouldHaveDiagnostic: true,  diagnosticType: 'invalid-path' },
-      { name: 'double dots',        path: 'User..field',     shouldHaveDiagnostic: true,  diagnosticType: 'invalid-syntax' },
-      { name: 'empty segments',     path: '.User.',          shouldHaveDiagnostic: true,  diagnosticType: 'invalid-syntax' },
-    ], ({ path, shouldHaveDiagnostic, diagnosticType }) => {
-      const tree = createTree(`gql:${path}`)
-      transformer(tree, file)
+  Test.describe('validates GraphQL paths')
+    .i<{ path: string }>()
+    .o<{ shouldHaveDiagnostic: boolean; diagnosticType?: 'invalid-path' | 'invalid-syntax' }>()
+    .cases(
+      ['valid type',         [{ path: 'User' }],           { shouldHaveDiagnostic: false }],
+      ['valid field',        [{ path: 'User.name' }],      { shouldHaveDiagnostic: false }],
+      ['invalid type',       [{ path: 'InvalidType' }],    { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' }],
+      ['invalid field',      [{ path: 'User.invalid' }],   { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' }],
+      ['double dots',        [{ path: 'User..field' }],    { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' }],
+      ['empty segments',     [{ path: '.User.' }],         { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' }],
+    )
+    .test((i, o) => {
+      onDiagnostic.mockClear() // Clear the mock before each test case
+      const tree = createTree(`gql:${i.path}`)
+
+      // Use runSync to process the tree
+      const result = processor.runSync(tree, file) as Root
 
       // Should always transform to GraphQLReference regardless of validity
-      const paragraph = tree.children[0] as any
-      expect(paragraph?.children[0]).toMatchObject({
+      const paragraph = result.children[0] as any
+      expect(paragraph?.children?.[0]).toMatchObject({
         type: 'mdxJsxTextElement',
         name: 'GraphQLReference',
       })
 
-      if (shouldHaveDiagnostic) {
+      if (o.shouldHaveDiagnostic) {
         expect(onDiagnostic).toHaveBeenCalledWith(
           expect.objectContaining({
             _tag: 'Diagnostic',
             source: 'mdx-graphql-references',
-            name: diagnosticType,
+            name: o.diagnosticType,
             severity: 'warning',
           }),
         )

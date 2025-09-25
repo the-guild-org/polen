@@ -1,4 +1,4 @@
-import { Str } from '@wollybeard/kit'
+import { FsLoc, Str } from '@wollybeard/kit'
 import type { Page } from './page.js'
 
 export interface NavbarItem {
@@ -20,7 +20,7 @@ export const createNavbar = (pages: Page[]): NavbarItem[] => {
     // Skip hidden pages
     if (page.metadata.hidden) return
 
-    const firstSegment = page.route.logical.path[0]
+    const firstSegment = page.route.logical.path.segments[0]
     if (firstSegment) {
       if (!topLevelGroups.has(firstSegment)) {
         topLevelGroups.set(firstSegment, [])
@@ -33,13 +33,13 @@ export const createNavbar = (pages: Page[]): NavbarItem[] => {
   topLevelGroups.forEach((pages, segment) => {
     // For directories, check if there's an index page
     const indexPage = pages.find(p =>
-      p.route.logical.path.length === 1
-      && p.route.file.path.relative.name === `index`
+      p.route.logical.path.segments.length === 1
+      && FsLoc.name(p.route.file) === `index`
     )
 
     // For single non-index files at top level
-    const singlePage = pages.length === 1 && pages[0]!.route.logical.path.length === 1
-      && pages[0]!.route.file.path.relative.name !== `index`
+    const singlePage = pages.length === 1 && pages[0]!.route.logical.path.segments.length === 1
+      && FsLoc.name(pages[0]!.route.file) !== `index`
 
     // Include in navbar if:
     // 1. It's a directory with an index page, OR

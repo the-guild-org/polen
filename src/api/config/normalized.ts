@@ -2,15 +2,23 @@ import { ExamplesConfig } from '#api/examples/config'
 import { ReferenceConfigObject } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
 import { Typings } from '#api/typings/$'
+import { S } from '#dep/effect'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { DirectedFilter } from '#lib/directed-filter/$'
-import { FilePath } from '#lib/file-path/$'
 import { packagePaths } from '#package-paths'
-import { Manifest, Path, Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
-import { S } from 'graphql-kit'
-import { assertPathAbsolute } from 'graphql-kit'
+import { FileSystem } from '@effect/platform'
+import { FsLoc, Manifest, Str } from '@wollybeard/kit'
 import type { WritableDeep } from 'type-fest'
 import { BuildArchitecture, ConfigInput } from './input.js'
+
+/**
+ * Identity function that casts a value to WritableDeep.
+ * Used to convert readonly structures to mutable ones for config assignment.
+ */
+const writeable = <T>(value: T): WritableDeep<T> => {
+  return value as WritableDeep<T>
+}
 
 // ============================================================================
 // Normalized Reference Config
@@ -59,12 +67,14 @@ const HomeConfig = S.Struct({
     title: S.optional(S.String),
     tagline: S.optional(S.String),
     callToActions: S.optional(S.Unknown), // Complex type, using Unknown for now
-    layout: S.optional(S.Union(
-      S.Literal('asymmetric'),
-      S.Literal('cinematic'),
-      S.Literal('auto'),
+    layout: S.optional(S.Enums(
+      {
+        asymmetric: 'asymmetric',
+        cinematic: 'cinematic',
+        auto: 'auto',
+      } as const,
     )),
-    heroImage: S.optional(FilePath.FilePath),
+    heroImage: S.optional(FsLoc.RelFile),
   }),
 
   /**
@@ -154,7 +164,7 @@ const HomeConfig = S.Struct({
   description: 'Normalized home configuration with all boolean shortcuts expanded to their object forms.',
 })
 
-export type HomeConfig = S.Schema.Type<typeof HomeConfig>
+export type HomeConfig = typeof HomeConfig.Type
 
 // ============================================================================
 // Template Variables
@@ -167,7 +177,7 @@ const TemplateVariables = S.Struct({
   description: 'Normalized template variables with resolved defaults.',
 })
 
-export type TemplateVariables = S.Schema.Type<typeof TemplateVariables>
+export type TemplateVariables = typeof TemplateVariables.Type
 
 // ============================================================================
 // Package Paths
@@ -177,31 +187,31 @@ const PackagePaths = S.Struct({
   name: S.String,
   isRunningFromSource: S.Boolean,
   static: S.Struct({
-    source: S.String,
-    build: S.String,
+    source: FsLoc.AbsDir,
+    build: FsLoc.AbsDir,
   }),
-  rootDir: S.String,
+  rootDir: FsLoc.AbsDir,
   sourceExtension: S.Union(S.Literal('.js'), S.Literal('.ts')),
-  sourceDir: S.String,
+  sourceDir: FsLoc.AbsDir,
   template: S.Struct({
     absolute: S.Struct({
-      rootDir: S.String,
+      rootDir: FsLoc.AbsDir,
       server: S.Struct({
-        app: S.String,
-        entrypoint: S.String,
+        app: FsLoc.AbsFile,
+        entrypoint: FsLoc.AbsFile,
       }),
       client: S.Struct({
-        entrypoint: S.String,
+        entrypoint: FsLoc.AbsFile,
       }),
     }),
     relative: S.Struct({
-      rootDir: S.String,
+      rootDir: FsLoc.RelDir,
       server: S.Struct({
-        app: S.String,
-        entrypoint: S.String,
+        app: FsLoc.RelFile,
+        entrypoint: FsLoc.RelFile,
       }),
       client: S.Struct({
-        entrypoint: S.String,
+        entrypoint: FsLoc.RelFile,
       }),
     }),
   }),
@@ -215,39 +225,39 @@ const PackagePaths = S.Struct({
 // ============================================================================
 
 const ProjectPaths = S.Struct({
-  rootDir: S.String,
+  rootDir: FsLoc.AbsDir,
   relative: S.Struct({
     build: S.Struct({
-      root: S.String,
+      root: FsLoc.RelDir,
       relative: S.Struct({
         assets: S.Struct({
-          root: S.String,
+          root: FsLoc.RelDir,
           relative: S.Struct({
-            schemas: S.String,
+            schemas: FsLoc.RelDir,
           }),
         }),
-        serverEntrypoint: S.String,
+        serverEntrypoint: FsLoc.RelFile,
       }),
     }),
-    pages: S.String,
+    pages: FsLoc.RelDir,
     public: S.Struct({
-      root: S.String,
-      logo: S.String,
+      root: FsLoc.RelDir,
+      logo: FsLoc.RelFile,
     }),
   }),
   absolute: S.Struct({
     build: S.Struct({
-      root: S.String,
+      root: FsLoc.AbsDir,
       assets: S.Struct({
-        root: S.String,
-        schemas: S.String,
+        root: FsLoc.AbsDir,
+        schemas: FsLoc.AbsDir,
       }),
-      serverEntrypoint: S.String,
+      serverEntrypoint: FsLoc.AbsFile,
     }),
-    pages: S.String,
+    pages: FsLoc.AbsDir,
     public: S.Struct({
-      root: S.String,
-      logo: S.String,
+      root: FsLoc.AbsDir,
+      logo: FsLoc.AbsFile,
     }),
   }),
 }).annotations({
@@ -259,13 +269,13 @@ const FrameworkPaths = S.extend(
   PackagePaths,
   S.Struct({
     devAssets: S.Struct({
-      relative: S.String,
-      absolute: S.String,
-      schemas: S.String,
+      relative: FsLoc.RelDir,
+      absolute: FsLoc.AbsDir,
+      schemas: FsLoc.AbsDir,
     }),
     generatedTypes: S.Struct({
-      relative: S.String,
-      absolute: S.String,
+      relative: FsLoc.RelDir,
+      absolute: FsLoc.AbsDir,
     }),
   }),
 ).annotations({
@@ -404,7 +414,7 @@ export const Config = S.Struct({
 /**
  * The normalized configuration type derived from the schema.
  */
-export type Config = S.Schema.Type<typeof Config>
+export type Config = typeof Config.Type
 
 // ============================================================================
 // Codecs
@@ -417,64 +427,84 @@ export const validate = S.validate(Config)
 // -------------
 
 export interface ConfigAdvancedPathsInput {
-  devAssets?: string | undefined
+  devAssets?: string | FsLoc.AbsDir | FsLoc.RelDir | undefined
 }
 
-const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | undefined): Config[`paths`] => {
-  if (!Path.isAbsolute(rootDir)) throw new Error(`Root dir path must be absolute: ${rootDir}`)
-  const rootAbsolute = Path.ensureAbsoluteWith(rootDir)
+const l = FsLoc.fromString
+const j = FsLoc.join
 
-  const buildAbsolutePath = rootAbsolute(`build`)
-  const buildAbsolute = Path.ensureAbsoluteWith(buildAbsolutePath)
-
-  const publicAbsolutePath = rootAbsolute(`public`)
-  const publicAbsolute = Path.ensureAbsoluteWith(publicAbsolutePath)
-
-  const assetsAbsolute = Path.ensureAbsoluteWith(buildAbsolute(`assets`))
+const buildPaths = (
+  rootDir: FsLoc.AbsDir,
+  overrides?: ConfigAdvancedPathsInput | undefined,
+): Config[`paths`] => {
+  const buildDir = j(rootDir, l(`build`))
+  const publicDir = j(rootDir, l(`public`))
+  const pagesDir = j(rootDir, l(`pages`))
+  const assetsDir = j(rootDir, l(`build/assets`))
+  const schemasDir = j(rootDir, l(`build/assets/schemas`))
 
   // Dev assets paths
-  let devAssetsRelative = 'node_modules/.vite/assets'
-  let devAssetsAbsolute = Path.join(rootDir, devAssetsRelative)
+  let devAssetsRelative = l('node_modules/.vite/assets/')
+  let devAssetsAbsolute = j(rootDir, l(`node_modules/.vite/assets`))
   if (overrides?.devAssets) {
-    devAssetsRelative = Path.relative(rootDir, overrides?.devAssets)
-    devAssetsAbsolute = overrides?.devAssets
+    const normalized = FsLoc.normalizeInput(overrides.devAssets)
+    // Check if it's already absolute
+    if (FsLoc.Groups.Abs.is(normalized)) {
+      devAssetsAbsolute = FsLoc.Groups.Dir.is(normalized)
+        ? normalized as FsLoc.AbsDir
+        : FsLoc.dirOf(normalized as FsLoc.AbsFile)
+      devAssetsRelative = FsLoc.toRel(devAssetsAbsolute, rootDir) as FsLoc.RelDir
+    } else {
+      // It's relative, join with root
+      devAssetsRelative = FsLoc.Groups.Dir.is(normalized)
+        ? normalized as FsLoc.RelDir
+        : FsLoc.dirOf(normalized as FsLoc.RelFile)
+      devAssetsAbsolute = j(rootDir, devAssetsRelative)
+    }
   }
+  const devAssetsSchemasDir = j(devAssetsAbsolute, l(`schemas`))
+
+  const generatedTypesRelative = Typings.relativePathGeneratedTypesDir
+  const generatedTypesAbsolute = j(
+    rootDir,
+    Typings.relativePathGeneratedTypesDir,
+  )
 
   return {
     project: {
       rootDir,
       relative: {
         build: {
-          root: `build`,
+          root: l(`build/`),
           relative: {
-            serverEntrypoint: `app.js`,
+            serverEntrypoint: l(`app.js`),
             assets: {
-              root: `assets`,
+              root: l(`assets/`),
               relative: {
-                schemas: `schemas`,
+                schemas: l(`schemas/`),
               },
             },
           },
         },
-        pages: `pages`,
+        pages: l(`pages/`),
         public: {
-          root: `public`,
-          logo: `logo.svg`,
+          root: l(`public/`),
+          logo: l(`logo.svg`),
         },
       },
       absolute: {
-        pages: rootAbsolute(`pages`),
+        pages: pagesDir,
         build: {
-          root: buildAbsolute(`.`),
-          serverEntrypoint: buildAbsolute(`app.js`),
+          root: buildDir,
+          serverEntrypoint: j(rootDir, l(`build/app.js`)),
           assets: {
-            root: buildAbsolute(`assets`),
-            schemas: assetsAbsolute(`schemas`),
+            root: assetsDir,
+            schemas: schemasDir,
           },
         },
         public: {
-          root: publicAbsolute(`.`),
-          logo: publicAbsolute(`logo.svg`),
+          root: publicDir,
+          logo: j(rootDir, l(`public/logo.svg`)),
         },
       },
     },
@@ -483,17 +513,17 @@ const buildPaths = (rootDir: string, overrides?: ConfigAdvancedPathsInput | unde
       devAssets: {
         relative: devAssetsRelative,
         absolute: devAssetsAbsolute,
-        schemas: Path.join(devAssetsAbsolute, 'schemas'),
+        schemas: devAssetsSchemasDir,
       },
       generatedTypes: {
-        relative: Typings.relativePathGeneratedTypesDir,
-        absolute: rootAbsolute(Typings.relativePathGeneratedTypesDir),
+        relative: generatedTypesRelative,
+        absolute: generatedTypesAbsolute,
       },
     },
   }
 }
 
-const getConfigInputDefaults = (baseRootDirPath: string): Config => ({
+const getConfigInputDefaults = (baseRootDir: FsLoc.AbsDir): Config => ({
   _input: {},
   name: `My Developer Portal`,
   description: `Explore and integrate with our GraphQL API`,
@@ -556,7 +586,7 @@ const getConfigInputDefaults = (baseRootDirPath: string): Config => ({
       enabled: true,
     },
   },
-  paths: buildPaths(baseRootDirPath),
+  paths: buildPaths(baseRootDir),
   advanced: {
     isSelfContainedMode: false,
     debug: false,
@@ -574,13 +604,11 @@ export const normalizeInput = (
    *
    * If this is omitted, then relative root paths will throw an error.
    */
-  baseRootDirPath: string,
-): Effect.Effect<Config, Error, never> =>
-  Effect.gen(function*() {
-    assertPathAbsolute(baseRootDirPath)
-
+  baseRootDirFs: FsLoc.AbsDir,
+): Ef.Effect<Config, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
     const configInput_as_writeable = configInput as WritableDeep<ConfigInput> | undefined
-    const config = structuredClone(getConfigInputDefaults(baseRootDirPath)) as WritableDeep<Config>
+    const config = structuredClone(getConfigInputDefaults(baseRootDirFs)) as WritableDeep<Config>
 
     if (configInput_as_writeable) {
       config._input = configInput_as_writeable
@@ -606,9 +634,11 @@ export const normalizeInput = (
       config.advanced.debug = configInput_as_writeable.advanced.debug
     }
 
-    // Always use the baseRootDirPath as the project root
+    // Always use the baseRootDirFs as the project root
     // This is either the --project directory or the config file directory
-    config.paths = buildPaths(baseRootDirPath, configInput_as_writeable?.advanced?.paths)
+    config.paths = buildPaths(baseRootDirFs, configInput_as_writeable?.advanced?.paths) as WritableDeep<
+      Config['paths']
+    >
 
     // Handle the top-level name property
     if (configInput_as_writeable?.name !== undefined) {
@@ -626,31 +656,25 @@ export const normalizeInput = (
 
     // Try to read package.json name as fallback for title and name
     if (!configInput_as_writeable?.templateVariables?.title || !configInput_as_writeable?.name) {
-      const packageJsonResult = yield* Effect.tryPromise({
-        try: async () => {
-          const result = await Manifest.resource.read(config.paths.project.rootDir)
-          if (result instanceof Error) {
-            throw result
-          }
-          return result
-        },
-        catch: (error) => new Error(`Failed to read package.json: ${error}`),
-      }).pipe(
-        Effect.either, // Convert failure to Either.Left, success to Either.Right
+      const packageJsonResult = yield* Manifest.resource.read(config.paths.project.rootDir).pipe(
+        Ef.either, // Convert failure to E.Left, success to E.Right
       )
 
       // If we successfully read package.json and it has a name, use it
-      if (packageJsonResult._tag === 'Right' && packageJsonResult.right.name) {
-        const titleCasedName = Str.Case.title(packageJsonResult.right.name)
+      if (packageJsonResult._tag === 'Right' && Op.isSome(packageJsonResult.right)) {
+        const manifest = packageJsonResult.right.value
+        if (manifest.name) {
+          const titleCasedName = Str.Case.title(manifest.name)
 
-        // Use for title if not already set
-        if (!configInput_as_writeable?.templateVariables?.title) {
-          config.templateVariables.title = titleCasedName
-        }
+          // Use for title if not already set
+          if (!configInput_as_writeable?.templateVariables?.title) {
+            config.templateVariables.title = titleCasedName
+          }
 
-        // Use for name if not already set
-        if (!configInput_as_writeable?.name) {
-          config.name = titleCasedName
+          // Use for name if not already set
+          if (!configInput_as_writeable?.name) {
+            config.name = titleCasedName
+          }
         }
       }
       // Otherwise, the defaults from getConfigInputDefaults() will be used
@@ -778,13 +802,13 @@ export const normalizeInput = (
           if (homeInput.hero.heroImage) {
             if (typeof homeInput.hero.heroImage === 'string') {
               // Parse string to FilePath, validating against data URLs
-              heroImageValue = FilePath.decodeSync(homeInput.hero.heroImage)
+              heroImageValue = S.decodeSync(FsLoc.RelFile.String)(homeInput.hero.heroImage)
             } else if (
               typeof homeInput.hero.heroImage === 'object' && 'src' in homeInput.hero.heroImage
               && homeInput.hero.heroImage.src
             ) {
               // Parse src string to FilePath
-              heroImageValue = FilePath.decodeSync(homeInput.hero.heroImage.src)
+              heroImageValue = S.decodeSync(FsLoc.RelFile.String)(homeInput.hero.heroImage.src)
             }
             // If it's an object with AI config but no src, leave as undefined for now
             // (future: generate during build process)
@@ -796,7 +820,7 @@ export const normalizeInput = (
             tagline: homeInput.hero.tagline ?? config.description,
             callToActions: homeInput.hero.callToActions,
             layout: homeInput.hero.layout ?? 'asymmetric',
-            heroImage: heroImageValue as any,
+            heroImage: heroImageValue,
           }
         }
       } else {
@@ -845,7 +869,7 @@ export const normalizeInput = (
             title: undefined,
             description: undefined,
             maxExamples: 3,
-            filter: DirectedFilter.AllowAll,
+            filter: writeable(DirectedFilter.AllowAll),
           }
         } else if (homeInput.examples === true) {
           config.home.examples = {
@@ -853,7 +877,7 @@ export const normalizeInput = (
             title: undefined,
             description: undefined,
             maxExamples: 3,
-            filter: DirectedFilter.AllowAll,
+            filter: writeable(DirectedFilter.AllowAll),
           }
         } else {
           // Create DirectedFilter from only/exclude pattern (never returns null now)
@@ -866,7 +890,7 @@ export const normalizeInput = (
             title: homeInput.examples.title,
             description: homeInput.examples.description,
             maxExamples: homeInput.examples.maxExamples ?? 3,
-            filter: filter as any,
+            filter: writeable(filter),
           }
         }
       }

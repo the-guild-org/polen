@@ -1,7 +1,7 @@
 import type { Config } from '#api/config/normalized'
+import { Ef, S } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
-import { Effect } from 'effect'
-import * as Path from 'node:path'
+import { Fs, FsLoc } from '@wollybeard/kit'
 
 // ============================================================================
 // Types
@@ -24,7 +24,7 @@ export interface WriterOptions {
    * The root directory where node_modules exists.
    * Usually the project root.
    */
-  projectRoot: string
+  projectRoot: FsLoc.AbsDir
 }
 
 export interface WriterOptionsWithConfig {
@@ -39,20 +39,21 @@ export interface WriterOptionsWithConfig {
 // Paths
 // ============================================================================
 
-export const relativePathGeneratedTypesDir = 'node_modules/@types/polen-generated'
+export const relativePathGeneratedTypesDir = FsLoc.fromString('node_modules/@types/polen-generated')
 
 /**
  * Get the output directory for generated type definitions.
  */
-export const getGeneratedTypesDir = (projectRoot: string): string => {
-  return Path.join(projectRoot, relativePathGeneratedTypesDir)
+export const getGeneratedTypesDir = (projectRoot: FsLoc.AbsDir): FsLoc.AbsDir => {
+  return FsLoc.join(projectRoot, relativePathGeneratedTypesDir)
 }
 
 /**
  * Get the full path for a generated type definition file.
  */
-export const getGeneratedTypePath = (projectRoot: string, name: string): string => {
-  return Path.join(getGeneratedTypesDir(projectRoot), `${name}.d.ts`)
+export const getGeneratedTypePath = (projectRoot: FsLoc.AbsDir, name: string): FsLoc.AbsFile => {
+  const dir = getGeneratedTypesDir(projectRoot)
+  return FsLoc.join(dir, S.decodeSync(FsLoc.RelFile.String)(`${name}.d.ts`))
 }
 
 // ============================================================================
@@ -65,19 +66,19 @@ export const getGeneratedTypePath = (projectRoot: string, name: string): string 
  */
 const ensurePackageStructure = (
   options: WriterOptions,
-): Effect.Effect<void, Error, FileSystem.FileSystem> => {
-  const outputDir = getGeneratedTypesDir(options.projectRoot)
-  const packageJsonPath = Path.join(outputDir, 'package.json')
-  const indexPath = Path.join(outputDir, 'index.d.ts')
+): Ef.Effect<void, Error, FileSystem.FileSystem> => {
+  const outputDirLoc = getGeneratedTypesDir(options.projectRoot)
+  const packageJsonFile = FsLoc.fromString('package.json')
+  const packageJsonPathLoc = FsLoc.join(outputDirLoc, packageJsonFile)
+  const indexFile = FsLoc.fromString('index.d.ts')
+  const indexPathLoc = FsLoc.join(outputDirLoc, indexFile)
 
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-
+  return Ef.gen(function*() {
     // Ensure output directory exists
-    yield* fs.makeDirectory(outputDir, { recursive: true })
+    yield* Fs.write(outputDirLoc, { recursive: true })
 
     // Check if package.json exists
-    const packageJsonExists = yield* fs.exists(packageJsonPath)
+    const packageJsonExists = yield* Fs.exists(packageJsonPathLoc)
 
     if (!packageJsonExists) {
       const packageJson = {
@@ -90,11 +91,11 @@ const ensurePackageStructure = (
           },
         },
       }
-      yield* fs.writeFileString(packageJsonPath, JSON.stringify(packageJson, null, 2))
+      yield* Fs.write(packageJsonPathLoc, JSON.stringify(packageJson, null, 2))
     }
 
     // Check if index.d.ts exists
-    const indexExists = yield* fs.exists(indexPath)
+    const indexExists = yield* Fs.exists(indexPathLoc)
 
     if (!indexExists) {
       const indexContent = `// Auto-generated index file for @types/polen-generated
@@ -105,7 +106,7 @@ const ensurePackageStructure = (
 // Individual type definition files are placed alongside this index
 export {}
 `
-      yield* fs.writeFileString(indexPath, indexContent)
+      yield* Fs.write(indexPathLoc, indexContent)
     }
   })
 }
@@ -119,29 +120,27 @@ export {}
  *
  * @example
  * ```ts
- * await Effect.runPromise(
+ * // At application boundary (e.g., in Vite plugin)
+ * await Ef.runPromise(
  *   Typings.write(
  *     { name: 'config.examples', content: 'declare global { ... }' },
  *     { projectRoot: '/path/to/project' }
- *   ).pipe(Effect.provide(FileSystem.layer))
+ *   ).pipe(Ef.provide(FileSystem.layer))
  * )
  * ```
  */
 export const write = (
   definition: TypeDefinition,
   options: WriterOptions,
-): Effect.Effect<void, Error, FileSystem.FileSystem> => {
-  const outputDir = getGeneratedTypesDir(options.projectRoot)
-  const outputFile = getGeneratedTypePath(options.projectRoot, definition.name)
+): Ef.Effect<void, Error, FileSystem.FileSystem> => {
+  const outputFileLoc = getGeneratedTypePath(options.projectRoot, definition.name)
 
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-
+  return Ef.gen(function*() {
     // Ensure package structure exists (package.json and index.d.ts)
     yield* ensurePackageStructure(options)
 
     // Write the type definition file
-    yield* fs.writeFileString(outputFile, definition.content)
+    yield* Fs.write(outputFileLoc, definition.content)
   })
 }
 
@@ -151,17 +150,15 @@ export const write = (
 export const writeMany = (
   definitions: TypeDefinition[],
   options: WriterOptions,
-): Effect.Effect<void, Error, FileSystem.FileSystem> => {
-  return Effect.gen(function*() {
+): Ef.Effect<void, Error, FileSystem.FileSystem> => {
+  return Ef.gen(function*() {
     // Ensure package structure once before writing all definitions
     yield* ensurePackageStructure(options)
 
     // Write all definitions without re-checking package structure
-    const fs = yield* FileSystem.FileSystem
-
     for (const definition of definitions) {
-      const outputFile = getGeneratedTypePath(options.projectRoot, definition.name)
-      yield* fs.writeFileString(outputFile, definition.content)
+      const outputFileLoc = getGeneratedTypePath(options.projectRoot, definition.name)
+      yield* Fs.write(outputFileLoc, definition.content)
     }
   })
 }
@@ -172,17 +169,15 @@ export const writeMany = (
 export const remove = (
   name: string,
   options: WriterOptions,
-): Effect.Effect<void, Error, FileSystem.FileSystem> => {
+): Ef.Effect<void, Error, FileSystem.FileSystem> => {
   const outputFile = getGeneratedTypePath(options.projectRoot, name)
 
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-
+  return Ef.gen(function*() {
     // Try to remove the file, ignore if it doesn't exist
-    yield* fs.remove(outputFile).pipe(
-      Effect.catchIf(
-        error => (error as any).code === 'ENOENT',
-        () => Effect.void,
+    yield* Fs.remove(outputFile).pipe(
+      Ef.catchIf(
+        error => 'code' in error && (error as any).code === 'ENOENT',
+        () => Ef.void,
       ),
     )
   })
@@ -193,17 +188,15 @@ export const remove = (
  */
 export const clear = (
   options: WriterOptions,
-): Effect.Effect<void, Error, FileSystem.FileSystem> => {
+): Ef.Effect<void, Error, FileSystem.FileSystem> => {
   const outputDir = getGeneratedTypesDir(options.projectRoot)
 
-  return Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-
+  return Ef.gen(function*() {
     // Try to remove the directory, ignore if it doesn't exist
-    yield* fs.remove(outputDir, { recursive: true }).pipe(
-      Effect.catchIf(
-        error => (error as any).code === 'ENOENT',
-        () => Effect.void,
+    yield* Fs.remove(outputDir, { recursive: true }).pipe(
+      Ef.catchIf(
+        error => 'code' in error && (error as any).code === 'ENOENT',
+        () => Ef.void,
       ),
     )
   })

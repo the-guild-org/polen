@@ -1,5 +1,5 @@
 import { Url } from '#dep/url/index'
-import { Path } from '@wollybeard/kit'
+import * as Path from 'node:path'
 import { ExampleName } from './example-name.js'
 import type { WorkerFixtures } from './test.js'
 

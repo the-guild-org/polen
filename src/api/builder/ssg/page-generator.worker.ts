@@ -2,9 +2,12 @@
  * Worker that generates static pages by fetching from servers.
  * This is executed in a worker thread using Effect Worker API.
  */
-import { FileSystem, Path, WorkerRunner } from '@effect/platform'
+import { Ar, Ei, S } from '#dep/effect'
+import { Ef } from '#dep/effect'
+import { FileSystem, WorkerRunner } from '@effect/platform'
 import { NodeContext, NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
-import { Array, Data, Duration, Effect, Either, Layer } from 'effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
+import { Data, Duration, Layer } from 'effect'
 import { type GenerateResult, PageMessage } from './worker-messages.js'
 
 // ============================================================================
@@ -29,62 +32,55 @@ class RouteProcessingError extends Data.Error<{
 
 // Fetch HTML from server using Effect patterns
 const fetchPage = (url: string) =>
-  Effect.gen(function*() {
-    const response = yield* Effect.tryPromise({
+  Ef.gen(function*() {
+    const response = yield* Ef.tryPromise({
       try: () => fetch(url),
       catch: (error) => new Error(`Network error: ${error}`),
     })
 
     if (!response.ok) {
-      return yield* Effect.fail(
+      return yield* Ef.fail(
         new Error(`HTTP ${response.status}: ${response.statusText}`),
       )
     }
 
-    return yield* Effect.tryPromise({
+    return yield* Ef.tryPromise({
       try: () => response.text(),
       catch: (error) => new Error(`Failed to read response: ${error}`),
     })
   })
 
 // Write HTML to file system
-const writeHtmlFile = (outputPath: string, html: string) =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const path = yield* Path.Path
-
-    const dir = path.dirname(outputPath)
-    yield* fs.makeDirectory(dir, { recursive: true })
-    yield* fs.writeFileString(outputPath, html)
-  })
+const writeHtmlFile = (outputPath: FsLoc.AbsFile, html: string) =>
+  // Directories are automatically created when writing files
+  Fs.write(outputPath, html)
 
 // Process a single route
 const processRoute = (
   route: string,
   serverPort: number,
-  outputDir: string,
+  outputDir: FsLoc.AbsDir,
   basePath?: string,
 ) =>
-  Effect.gen(function*() {
-    const path = yield* Path.Path
-
+  Ef.gen(function*() {
     // Fetch the page from the server
     // Construct URL with base path if provided
     const basePathNormalized = basePath ? basePath.replace(/\/$/, '') : ''
     const url = `http://localhost:${serverPort}${basePathNormalized}${route}`
     const html = yield* fetchPage(url).pipe(
-      Effect.mapError(error => new RouteProcessingError({ route, cause: error })),
+      Ef.mapError(error => new RouteProcessingError({ route, cause: error })),
     )
 
     // Determine output file path
-    const outputPath = path.join(
-      outputDir,
-      route === '/' ? 'index.html' : `${route.slice(1)}/index.html`,
+    const outputDirStr = S.encodeSync(FsLoc.AbsDir.String)(outputDir)
+    const outputFileName = route === '/' ? 'index.html' : `${route.slice(1)}/index.html`
+    const outputPath = S.decodeSync(FsLoc.AbsFile.String)(
+      `${outputDirStr}${outputDirStr.endsWith('/') ? '' : '/'}${outputFileName}`,
     )
 
     // Write the HTML file
     yield* writeHtmlFile(outputPath, html).pipe(
-      Effect.mapError(error => new RouteProcessingError({ route, cause: error })),
+      Ef.mapError(error => new RouteProcessingError({ route, cause: error })),
     )
 
     return route
@@ -99,9 +95,12 @@ const handlers = {
       basePath?: string | undefined
     },
   ) =>
-    Effect.gen(function*() {
-      yield* Effect.logDebug(`Starting batch generation`).pipe(
-        Effect.annotateLogs({
+    Ef.gen(function*() {
+      // Convert outputDir string to FsLoc.AbsDir
+      const outputDirPath = S.decodeSync(FsLoc.AbsDir.String)(outputDir)
+
+      yield* Ef.logDebug(`Starting batch generation`).pipe(
+        Ef.annotateLogs({
           totalRoutes: routes.length,
           serverPort,
           basePath: basePath || 'none',
@@ -109,23 +108,23 @@ const handlers = {
       )
 
       // Process all routes with timing, collecting both successes and failures
-      const [duration, results] = yield* Effect.forEach(
+      const [duration, results] = yield* Ef.forEach(
         routes,
         (route, index) =>
-          processRoute(route, serverPort, outputDir, basePath).pipe(
-            Effect.tap(() =>
+          processRoute(route, serverPort, outputDirPath, basePath).pipe(
+            Ef.tap(() =>
               // Log progress every 5 routes
               (index + 1) % 5 === 0 || index === routes.length - 1
-                ? Effect.logDebug(`Progress: ${index + 1}/${routes.length} routes processed`)
-                : Effect.void
+                ? Ef.logDebug(`Progress: ${index + 1}/${routes.length} routes processed`)
+                : Ef.void
             ),
-            Effect.either, // Convert to Either to capture both success and failure
+            Ef.either, // Convert to Either to capture both success and failure
           ),
         { concurrency: 1 }, // Process sequentially to avoid overwhelming the server
-      ).pipe(Effect.timed)
+      ).pipe(Ef.timed)
 
       // Partition results into successes and failures
-      const [failures, successes] = Array.partition(results, Either.isRight)
+      const [failures, successes] = Ar.partition(results, Ei.isRight)
       const processedCount = successes.length
 
       const result: GenerateResult = {
@@ -142,8 +141,8 @@ const handlers = {
         }),
       }
 
-      yield* Effect.logDebug(`Batch generation complete`).pipe(
-        Effect.annotateLogs(result),
+      yield* Ef.logDebug(`Batch generation complete`).pipe(
+        Ef.annotateLogs(result),
       )
 
       return result

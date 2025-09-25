@@ -1,4 +1,4 @@
-import { Effect } from 'effect'
+import { Ef } from '#dep/effect'
 import rehypeStringify from 'rehype-stringify'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
@@ -14,9 +14,12 @@ const createProcessor = () => {
     .use(rehypeStringify)
 }
 
-export const parse = (content: string): Effect.Effect<string, Error> =>
-  Effect.gen(function*() {
-    const result = yield* Effect.promise(() => createProcessor().process(content))
+export const parse = (content: string): Ef.Effect<string, Error> =>
+  Ef.gen(function*() {
+    const result = yield* Ef.tryPromise({
+      try: () => createProcessor().process(content),
+      catch: (error) => new Error(`Failed to parse markdown: ${String(error)}`),
+    })
     return String(result)
   })
 

@@ -55,8 +55,6 @@
       "#lib/revision-date": ["./src/lib/revision-date/revision-date.ts"],
       "#lib/mask": ["./src/lib/mask/$.ts"],
       "#lib/mask/*": ["./src/lib/mask/*.ts"],
-      "#lib/path-map": ["./src/lib/path-map/$.ts"],
-      "#lib/path-map/*": ["./src/lib/path-map/*.ts"],
       "#lib/react-router-loader": ["./src/lib/react-router-loader/$.ts"],
       "#lib/react-router-loader/react-router-loader": ["./src/lib/react-router-loader/$$.ts"],
       "#lib/react-router-loader/*": ["./src/lib/react-router-loader/*.ts"],
@@ -93,7 +91,9 @@
       "#lib/vite-plugins/*": ["./src/lib/vite-plugins/*.ts"],
       "#lib/vite-virtual": ["./src/lib/vite-virtual/$.ts"],
       "#lib/vite-virtual/*": ["./src/lib/vite-virtual/*.ts"],
-      "#*": ["./src/*.ts"]
+      "#dep/effect": ["./src/dep/effect/$$.ts"],
+      "#*": ["./src/*.ts"],
+      "@/*": ["./src/template/*"]
     },
 
     // todo

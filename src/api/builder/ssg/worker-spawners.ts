@@ -1,5 +1,4 @@
 import { NodeWorker } from '@effect/platform-node'
-import { Path } from '@wollybeard/kit'
 import { Worker as NodeWorkerThread } from 'node:worker_threads'
 
 // ============================================================================

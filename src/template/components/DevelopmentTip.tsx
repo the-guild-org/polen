@@ -1,6 +1,7 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { React } from '#dep/react/index'
 import { InfoCircledIcon } from '@radix-ui/react-icons'
-import { Badge, Box, Callout, Flex, Text } from '@radix-ui/themes'
+import { Badge, Box, Callout, Flex, Text } from './ui/index.js'
 
 interface Props {
   title?: string
@@ -25,7 +26,7 @@ export const DevelopmentTip: React.FC<Props> = ({
   const color = variant === 'warning' ? 'amber' : 'blue'
 
   return (
-    <Callout.Root color={color} variant='surface' style={{ marginBottom: 'var(--space-4)' }}>
+    <Callout.Root color={color} variant='surface' className='mb-4'>
       <Callout.Icon>
         <InfoCircledIcon />
       </Callout.Icon>

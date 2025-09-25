@@ -1,10 +1,8 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { Api } from '#api/iso'
-import { Badge, Box, Card, Heading, Section, Separator, Text } from '@radix-ui/themes'
 import { HashSet } from 'effect'
 import { type GraphQLNamedType } from 'graphql'
-import { Lifecycles } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Lifecycles, Schema, Version } from 'graphql-kit'
 import type { FC } from 'react'
 import { useSchema } from '../../contexts/GraphqlLifecycleContext.js'
 import { useViewMode } from '../../contexts/ViewModeContext.js'
@@ -12,6 +10,7 @@ import { useExamplesForType } from '../../hooks/use-examples.js'
 import { ExampleLink } from '../ExampleLink.js'
 import { TypeLink } from '../graphql/graphql.js'
 import { Markdown } from '../Markdown.js'
+import { Badge, Box, Card, Container, Heading, Separator, Text } from '../ui/index.js'
 import { FieldListSection } from './FieldListSection.js'
 import { SinceBadge } from './SinceBadge.js'
 
@@ -47,7 +46,7 @@ export const NamedType: FC<Props> = ({ data }) => {
   return (
     <Box>
       {/* Type header section */}
-      <Section size='1'>
+      <Box>
         <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Heading size='7' weight='bold'>
             <TypeLink type={data} />
@@ -66,13 +65,13 @@ export const NamedType: FC<Props> = ({ data }) => {
             {description}
           </Box>
         )}
-      </Section>
+      </Box>
 
       {/* Examples section with separator */}
       {HashSet.size(examples) > 0 && (
         <>
           <Separator size='4' my='4' />
-          <Section size='1'>
+          <Box>
             <Heading size='5' mb='3' weight='medium'>Used in Examples</Heading>
             <Card variant='surface'>
               <Box style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -86,15 +85,15 @@ export const NamedType: FC<Props> = ({ data }) => {
                 ))}
               </Box>
             </Card>
-          </Section>
+          </Box>
         </>
       )}
 
       {/* Fields section with separator */}
       <Separator size='4' my='4' />
-      <Section size='1'>
+      <Box>
         <FieldListSection data={data} />
-      </Section>
+      </Box>
     </Box>
   )
 }

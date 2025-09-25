@@ -1,30 +1,29 @@
 import { Api } from '#api/$'
+import { Ef, Op, S } from '#dep/effect'
 import { AiImageGeneration } from '#lib/ai-image-generation/$'
 import { Command, Options } from '@effect/cli'
-import { FileSystem } from '@effect/platform'
 import { NodeFileSystem } from '@effect/platform-node'
-import { Console, Effect, Option } from 'effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
+import { Console } from 'effect'
 import { Catalog } from 'graphql-kit'
-import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
-import * as Path from 'node:path'
 import { projectParameter } from '../_/parameters.js'
 
 /**
  * Backup existing hero image to hero-previous-{number}.{ext}
  */
-const backupExistingHeroImage = (dir: string) =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const publicDir = Path.join(dir, 'public')
-    const heroExtensions = ['svg', 'png', 'jpg', 'jpeg', 'webp']
+const backupExistingHeroImage = (dir: FsLoc.AbsDir) =>
+  Ef.gen(function*() {
+    // const fs = yield* FileSystem.FileSystem
+    const publicDir = FsLoc.join(dir, FsLoc.fromString('public/'))
+    const heroExtensions = ['svg', 'png', 'jpg', 'jpeg', 'webp'] as const
 
     // Find existing hero image
-    let existingHeroPath: string | null = null
+    let existingHeroPath: FsLoc.AbsFile | null = null
     let existingExt: string | null = null
 
     for (const ext of heroExtensions) {
-      const heroPath = Path.join(publicDir, `hero.${ext}`)
-      const exists = yield* fs.exists(heroPath)
+      const heroPath = FsLoc.join(publicDir, `hero.${ext}` as const)
+      const exists = yield* Fs.exists(heroPath)
       if (exists) {
         existingHeroPath = heroPath
         existingExt = ext
@@ -40,14 +39,14 @@ const backupExistingHeroImage = (dir: string) =>
     // Find next available backup number
     let backupNumber = 1
     while (true) {
-      const backupPath = Path.join(publicDir, `hero-previous-${backupNumber}.${existingExt}`)
-      const backupExists = yield* fs.exists(backupPath)
+      const backupPath = FsLoc.join(publicDir, `hero-previous-${backupNumber}.${existingExt}` as const)
+      const backupExists = yield* Fs.exists(backupPath)
       if (backupExists) {
         // Backup file exists, try next number
         backupNumber++
       } else {
         // This backup slot is available
-        yield* fs.rename(existingHeroPath, backupPath)
+        yield* Fs.rename(existingHeroPath, backupPath)
         yield* Console.log(`📦 Backed up existing hero.${existingExt} to hero-previous-${backupNumber}.${existingExt}`)
         break
       }
@@ -64,9 +63,13 @@ export const heroImage = Command.make(
     ),
   },
   ({ project, overwrite }) =>
-    Effect.gen(function*() {
-      // Get project directory
-      const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
+    Ef.gen(function*() {
+      // @claude remind me that we need to make decoders for loc types be more permissive but then the union level one more strict
+      // since its more ambiguous what is being dealt with
+      const dir = Op.getOrElse(
+        Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)),
+        () => S.decodeSync(FsLoc.AbsDir.String)(process.cwd()),
+      )
 
       // Load config
       const configInput = yield* Api.Config.load({ dir })
@@ -131,9 +134,10 @@ export const heroImage = Command.make(
       // Load and analyze schema if available
       let schema = undefined
       const schemaResult = yield* Api.Schema.loadOrNull(config)
-      if (schemaResult?.data) {
+      if (Op.isSome(schemaResult) && Op.isSome(schemaResult.value.data)) {
         try {
-          const latestSchema = Catalog.getLatest(schemaResult.data)
+          const catalogData = schemaResult.value.data.value
+          const latestSchema = Catalog.getLatest(catalogData)
           if (latestSchema?.definition) {
             schema = latestSchema.definition
             const context = AiImageGeneration.analyzeSchema(schema)
@@ -222,8 +226,9 @@ export const heroImage = Command.make(
       yield* Console.log(`📝 Prompt: ${finalPrompt.substring(0, 150)}...`)
 
       // Let errors bubble up naturally
-      const image = yield* Effect.promise(() => service.generate(generationConfig))
+      const imageOption = yield* service.generate(generationConfig)
 
+      const image = Op.getOrNull(imageOption)
       if (!image) {
         yield* Console.log('❌ Failed to generate image')
         return
@@ -234,16 +239,22 @@ export const heroImage = Command.make(
       yield* Console.log(`   Pollinations URL: ${image.url}`)
 
       // Wait a moment for Pollinations to generate the image on-demand
-      yield* Effect.sleep('2 seconds')
+      yield* Ef.sleep('2 seconds')
 
-      const response = yield* Effect.promise(() => fetch(image.url))
+      const response = yield* Ef.tryPromise({
+        try: () => fetch(image.url),
+        catch: (error) => new Error(`Failed to fetch image: ${String(error)}`),
+      })
 
       if (!response.ok) {
         yield* Console.log(`❌ Failed to download image: ${response.statusText}`)
         return
       }
 
-      const buffer = yield* Effect.promise(() => response.arrayBuffer())
+      const buffer = yield* Ef.tryPromise({
+        try: () => response.arrayBuffer(),
+        catch: (error) => new Error(`Failed to read response buffer: ${String(error)}`),
+      })
 
       // Backup existing hero image unless --overwrite is specified
       if (!overwrite) {
@@ -251,20 +262,19 @@ export const heroImage = Command.make(
       }
 
       // Save to public directory
-      const fs = yield* FileSystem.FileSystem
-      const outputPath = Path.join(dir, 'public', 'hero.png')
-      const publicDir = Path.join(dir, 'public')
+      const outputPath = FsLoc.join(dir, 'public/hero.png')
+      const publicDir = FsLoc.join(dir, 'public/')
 
       // Ensure public directory exists
-      yield* fs.makeDirectory(publicDir, { recursive: true }).pipe(
-        Effect.catchIf(
+      yield* Fs.write(publicDir, { recursive: true }).pipe(
+        Ef.catchIf(
           error => error._tag === 'SystemError' && error.reason === 'AlreadyExists',
-          () => Effect.succeed(undefined),
+          () => Ef.succeed(undefined),
         ),
       )
 
       // Write the image file
-      yield* fs.writeFile(outputPath, new Uint8Array(buffer))
+      yield* Fs.write(outputPath, new Uint8Array(buffer))
 
       yield* Console.log(`✅ Saved to: public/hero.png`)
       yield* Console.log(`\n📝 Polen will automatically use this Pollinations-generated image.`)
@@ -276,7 +286,7 @@ export const heroImage = Command.make(
       heroImage: '/custom-hero.png'
     }
   }`)
-    }).pipe(Effect.provide(NodeFileSystem.layer)),
+    }).pipe(Ef.provide(NodeFileSystem.layer)),
 ).pipe(
   Command.withDescription('Generate AI hero image using Pollinations.ai'),
 )

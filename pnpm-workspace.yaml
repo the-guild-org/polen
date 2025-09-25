@@ -1,7 +1,8 @@
 packages:
   - examples/*
   - website
+
 onlyBuiltDependencies:
   - dprint
-  - '@playwright/browser-chromium'
+  - "@playwright/browser-chromium"
   - lightningcss

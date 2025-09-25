@@ -1,6 +1,6 @@
 import { serve } from '@hono/node-server' // TODO: support non-node platforms.
-import { Path } from '@wollybeard/kit'
-import { neverCase } from '@wollybeard/kit/language'
+import { FsLoc } from '@wollybeard/kit'
+import { Match } from 'effect'
 import { templateConfig } from 'virtual:polen/project/config'
 import { createApp } from './app.js'
 
@@ -12,9 +12,11 @@ if (__BUILDING__) {
       const app = createApp({
         paths: {
           assets: {
-            directory: Path.join(
-              templateConfig.paths.project.relative.build.root,
-              templateConfig.paths.project.relative.build.relative.assets.root,
+            directory: FsLoc.encodeSync(
+              FsLoc.join(
+                templateConfig.paths.project.relative.build.root,
+                templateConfig.paths.project.relative.build.relative.assets.root,
+              ),
             ),
             route: templateConfig.server.routes.assets,
           },
@@ -26,6 +28,6 @@ if (__BUILDING__) {
     case `spa`:
       throw new Error(`SPA build type not yet supported.`)
     default:
-      neverCase(__BUILD_ARCHITECTURE__)
+      Match.value(__BUILD_ARCHITECTURE__).pipe(Match.exhaustive)
   }
 }

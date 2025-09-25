@@ -1,109 +1,128 @@
-import { Fs, Path } from '@wollybeard/kit'
-import { Exit } from 'effect'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { Ei, Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
+import { NodeFileSystem } from '@effect/platform-node'
+import { it } from '@effect/vitest'
+import { Fs, FsLoc } from '@wollybeard/kit'
+import { describe, expect } from 'vitest'
 import { buildManifest, type PolenBuildManifest } from './manifest.js'
 
 describe('validate-build', () => {
-  let testDir: string
-  let manifestPath: string
-
-  beforeEach(async () => {
-    testDir = await Fs.makeTemporaryDirectory()
-    manifestPath = Path.join(testDir, '.polen', 'build.json')
-  })
-
-  afterEach(async () => {
-    if (testDir && await Fs.exists(testDir)) {
-      await Fs.remove(testDir)
-    }
-  })
-
   describe('readBuildManifest', () => {
-    test('reads valid manifest', async () => {
-      const manifest: PolenBuildManifest = {
-        type: 'ssr',
-        version: '2.1.0',
-        basePath: '/docs/',
-      }
-      await Fs.write({
-        path: manifestPath,
-        content: JSON.stringify(manifest, null, 2),
-      })
+    it.scoped('reads valid manifest', () =>
+      Ef.gen(function*() {
+        const testDir = yield* Fs.makeTempDirectoryScoped()
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
-      const result = await buildManifest.read(testDir)
-      expect(Exit.isSuccess(result)).toBe(true)
-      if (Exit.isSuccess(result)) {
-        expect(result.value).toEqual(manifest)
-      }
-    })
+        const manifest: PolenBuildManifest = {
+          type: 'ssr',
+          version: '2.1.0',
+          basePath: '/docs/',
+        }
 
-    test('returns error when manifest does not exist', async () => {
-      // Verify the file doesn't exist
-      const manifestExists = await Fs.exists(manifestPath)
-      expect(manifestExists).toBe(false)
+        yield* Fs.write(manifestPath, JSON.stringify(manifest, null, 2))
 
-      const result = await buildManifest.read(testDir)
-      expect(Exit.isFailure(result)).toBe(true)
-    })
+        yield* buildManifest.read(testDir).pipe(
+          Ef.flatMap(Op.match({
+            onNone: () => Ef.fail('Expected manifest to exist'),
+            onSome: (readManifest) =>
+              Ef.sync(() => {
+                expect(readManifest).toEqual(manifest)
+              }),
+          })),
+        )
+      }).pipe(Ef.provide(NodeFileSystem.layer)))
 
-    test('returns error for invalid manifest structure', async () => {
-      await Fs.write({
-        path: manifestPath,
-        content: JSON.stringify({ invalid: 'data' }, null, 2),
-      })
-      const result = await buildManifest.read(testDir)
-      expect(Exit.isFailure(result)).toBe(true)
-    })
+    it.scoped('returns None when manifest does not exist', () =>
+      Ef.gen(function*() {
+        const testDir = yield* Fs.makeTempDirectoryScoped()
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
-    test('returns error for invalid build type', async () => {
-      await Fs.write({
-        path: manifestPath,
-        content: JSON.stringify(
-          {
-            type: 'invalid',
-            version: '1.0.0',
-            basePath: '/',
-          },
-          null,
-          2,
-        ),
-      })
-      const result = await buildManifest.read(testDir)
-      expect(Exit.isFailure(result)).toBe(true)
-    })
+        // Verify the file doesn't exist
+        const manifestExists = yield* Fs.exists(manifestPath)
+        expect(manifestExists).toBe(false)
 
-    test('returns error when version is not a string', async () => {
-      await Fs.write({
-        path: manifestPath,
-        content: JSON.stringify(
-          {
-            type: 'ssg',
-            version: 123,
-            basePath: '/',
-          },
-          null,
-          2,
-        ),
-      })
-      const result = await buildManifest.read(testDir)
-      expect(Exit.isFailure(result)).toBe(true)
-    })
+        yield* buildManifest.read(testDir).pipe(
+          Ef.map((result) => {
+            expect(Op.isNone(result)).toBe(true)
+          }),
+        )
+      }).pipe(Ef.provide(NodeFileSystem.layer)))
 
-    test('returns error when basePath is not a string', async () => {
-      await Fs.write({
-        path: manifestPath,
-        content: JSON.stringify(
-          {
-            type: 'ssg',
-            version: '1.0.0',
-            basePath: null,
-          },
-          null,
-          2,
-        ),
-      })
-      const result = await buildManifest.read(testDir)
-      expect(Exit.isFailure(result)).toBe(true)
-    })
+    it.scoped('returns error for invalid manifest structure', () =>
+      Ef.gen(function*() {
+        const testDir = yield* Fs.makeTempDirectoryScoped()
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
+
+        yield* Fs.write(manifestPath, JSON.stringify({ invalid: 'data' }, null, 2))
+
+        const result = yield* buildManifest.read(testDir).pipe(Ef.either)
+        expect(Ei.isLeft(result)).toBe(true)
+      }).pipe(Ef.provide(NodeFileSystem.layer)))
+
+    it.scoped('returns error for invalid build type', () =>
+      Ef.gen(function*() {
+        const testDir = yield* Fs.makeTempDirectoryScoped()
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
+
+        yield* Fs.write(
+          manifestPath,
+          JSON.stringify(
+            {
+              type: 'invalid',
+              version: '1.0.0',
+              basePath: '/',
+            },
+            null,
+            2,
+          ),
+        )
+
+        const result = yield* buildManifest.read(testDir).pipe(Ef.either)
+        expect(Ei.isLeft(result)).toBe(true)
+      }).pipe(Ef.provide(NodeFileSystem.layer)))
+
+    it.scoped('returns error when version is not a string', () =>
+      Ef.gen(function*() {
+        const testDir = yield* Fs.makeTempDirectoryScoped()
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
+
+        yield* Fs.write(
+          manifestPath,
+          JSON.stringify(
+            {
+              type: 'ssg',
+              version: 123,
+              basePath: '/',
+            },
+            null,
+            2,
+          ),
+        )
+
+        const result = yield* buildManifest.read(testDir).pipe(Ef.either)
+        expect(Ei.isLeft(result)).toBe(true)
+      }).pipe(Ef.provide(NodeFileSystem.layer)))
+
+    it.scoped('returns error when basePath is not a string', () =>
+      Ef.gen(function*() {
+        const testDir = yield* Fs.makeTempDirectoryScoped()
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
+
+        yield* Fs.write(
+          manifestPath,
+          JSON.stringify(
+            {
+              type: 'ssg',
+              version: '1.0.0',
+              basePath: null,
+            },
+            null,
+            2,
+          ),
+        )
+
+        const result = yield* buildManifest.read(testDir).pipe(Ef.either)
+        expect(Ei.isLeft(result)).toBe(true)
+      }).pipe(Ef.provide(NodeFileSystem.layer)))
   })
 })

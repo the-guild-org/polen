@@ -1,6 +1,6 @@
+import { Test } from '@wollybeard/kit/test'
 import { Document } from 'graphql-kit'
 import { describe, expect } from 'vitest'
-import { Test } from '../../../tests/unit/helpers/test.js'
 import type { ExampleName, ExampleSelection } from './config.js'
 import { filterExamplesBySelection, shouldDisplayExample } from './filter.js'
 import { Example } from './schemas/example/$.js'
@@ -25,35 +25,43 @@ describe('filterExamplesBySelection', () => {
   ]
 
   // dprint-ignore
-  Test.suite<{ selection: ExampleSelection | undefined; expected: string[] }>('selection filtering', [
-    { name: 'undefined returns all',        selection: undefined,                           expected: ['a', 'b', 'c'] },
-    { name: 'all returns all',              selection: 'all',                               expected: ['a', 'b', 'c'] },
-    { name: 'none returns empty',           selection: 'none',                              expected: [] },
-    { name: 'include filters',              selection: { include: ['a', 'b'] },            expected: ['a', 'b'] },
-    { name: 'empty include returns empty',  selection: { include: [] },                    expected: [] },
-    { name: 'exclude filters',              selection: { exclude: ['c'] },                 expected: ['a', 'b'] },
-    { name: 'empty exclude returns all',    selection: { exclude: [] },                    expected: ['a', 'b', 'c'] },
-    { name: 'include ignores non-existent', selection: { include: ['a', 'non-existent'] }, expected: ['a'] },
-    { name: 'exclude ignores non-existent', selection: { exclude: ['c', 'non-existent'] }, expected: ['a', 'b'] },
-  ], ({ selection, expected }) => {
-    const result = filterExamplesBySelection(examples, selection as ExampleSelection)
-    expect(result.map(e => e.name)).toEqual(expected)
-  })
+  Test.describe('selection filtering')
+    .i<{ selection: ExampleSelection | undefined }>()
+    .o<string[]>()
+    .cases(
+      ['undefined returns all',        [{ selection: undefined }],                           ['a', 'b', 'c']],
+      ['all returns all',              [{ selection: 'all' }],                               ['a', 'b', 'c']],
+      ['none returns empty',           [{ selection: 'none' }],                              []],
+      ['include filters',              [{ selection: { include: ['a', 'b'] } }],            ['a', 'b']],
+      ['empty include returns empty',  [{ selection: { include: [] } }],                    []],
+      ['exclude filters',              [{ selection: { exclude: ['c'] } }],                 ['a', 'b']],
+      ['empty exclude returns all',    [{ selection: { exclude: [] } }],                    ['a', 'b', 'c']],
+      ['include ignores non-existent', [{ selection: { include: ['a', 'non-existent'] } }], ['a']],
+      ['exclude ignores non-existent', [{ selection: { exclude: ['c', 'non-existent'] } }], ['a', 'b']],
+    )
+    .test((i, o) => {
+      const result = filterExamplesBySelection(examples, i.selection as ExampleSelection)
+      expect(result.map(e => e.name)).toEqual(o)
+    })
 })
 
 describe('shouldDisplayExample', () => {
   // dprint-ignore
-  Test.suite<{ exampleName: ExampleName; selection: ExampleSelection | undefined; expected: boolean }>('display logic', [
-    { name: 'undefined displays',       exampleName: 'x' as ExampleName, selection: undefined,               expected: true },
-    { name: 'all displays',             exampleName: 'x' as ExampleName, selection: 'all',                   expected: true },
-    { name: 'none hides',               exampleName: 'x' as ExampleName, selection: 'none',                  expected: false },
-    { name: 'include match displays',   exampleName: 'x' as ExampleName, selection: { include: ['x'] },     expected: true },
-    { name: 'include miss hides',       exampleName: 'x' as ExampleName, selection: { include: ['y'] },     expected: false },
-    { name: 'empty include hides',      exampleName: 'x' as ExampleName, selection: { include: [] },        expected: false },
-    { name: 'exclude match hides',      exampleName: 'x' as ExampleName, selection: { exclude: ['x'] },     expected: false },
-    { name: 'exclude miss displays',    exampleName: 'x' as ExampleName, selection: { exclude: ['y'] },     expected: true },
-    { name: 'empty exclude displays',   exampleName: 'x' as ExampleName, selection: { exclude: [] },        expected: true },
-  ], ({ exampleName, selection, expected }) => {
-    expect(shouldDisplayExample(exampleName, selection as ExampleSelection)).toBe(expected)
-  })
+  Test.describe('display logic')
+    .i<{ exampleName: ExampleName; selection: ExampleSelection | undefined }>()
+    .o<boolean>()
+    .cases(
+      ['undefined displays',       [{ exampleName: 'x' as ExampleName, selection: undefined }],               true],
+      ['all displays',             [{ exampleName: 'x' as ExampleName, selection: 'all' }],                   true],
+      ['none hides',               [{ exampleName: 'x' as ExampleName, selection: 'none' }],                  false],
+      ['include match displays',   [{ exampleName: 'x' as ExampleName, selection: { include: ['x'] } }],     true],
+      ['include miss hides',       [{ exampleName: 'x' as ExampleName, selection: { include: ['y'] } }],     false],
+      ['empty include hides',      [{ exampleName: 'x' as ExampleName, selection: { include: [] } }],        false],
+      ['exclude match hides',      [{ exampleName: 'x' as ExampleName, selection: { exclude: ['x'] } }],     false],
+      ['exclude miss displays',    [{ exampleName: 'x' as ExampleName, selection: { exclude: ['y'] } }],     true],
+      ['empty exclude displays',   [{ exampleName: 'x' as ExampleName, selection: { exclude: [] } }],        true],
+    )
+    .test((i, o) => {
+      expect(shouldDisplayExample(i.exampleName, i.selection as ExampleSelection)).toBe(o)
+    })
 })

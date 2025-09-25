@@ -1,9 +1,11 @@
 import type { Api } from '#api/$'
+import { Ef, S } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { type ExistenceDiff, getMutationType, MutationType } from '#lib/mutation-type'
 import { debugPolen } from '#singletons/debug'
-import { Fs } from '@wollybeard/kit'
-import * as Path from 'node:path'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { FileSystem } from '@effect/platform/FileSystem'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import type { Plugin } from 'vite'
 import { polenVirtual } from '../vi.js'
 
@@ -16,18 +18,25 @@ const generateDefaultLogo = async () => {
 </svg>`
 }
 
-const findLogoPath = async (publicDir: string, filename: string): Promise<string | null> => {
+const findLogoPath = async (publicDir: FsLoc.AbsDir, filename: string): Promise<string | null> => {
   const extensions = ['svg', 'png', 'jpg', 'jpeg', 'webp']
   for (const ext of extensions) {
-    const path = Path.join(publicDir, `${filename}.${ext}`)
-    if (await Fs.exists(path)) {
-      return path
+    const fileLoc = FsLoc.join(publicDir, S.decodeSync(FsLoc.RelFile.String)(`${filename}.${ext}`))
+    const exists = await Ef.runPromise(
+      Ef.gen(function*() {
+        const result = yield* Ef.either(Fs.stat(fileLoc))
+        return result._tag === 'Right'
+        // FIXME: Remove cast when @effect/platform versions are aligned
+      }).pipe(Ef.provide(NodeFileSystem.layer)) as any,
+    )
+    if (exists) {
+      return FsLoc.encodeSync(fileLoc)
     }
   }
   return null
 }
 
-const findHeroImagePath = async (publicDir: string): Promise<string | null> => {
+const findHeroImagePath = async (publicDir: FsLoc.AbsDir): Promise<string | null> => {
   const heroImageNames = [
     'hero.svg',
     'hero.png',
@@ -37,9 +46,16 @@ const findHeroImagePath = async (publicDir: string): Promise<string | null> => {
   ]
 
   for (const imageName of heroImageNames) {
-    const imagePath = Path.join(publicDir, imageName)
-    if (await Fs.exists(imagePath)) {
-      return imagePath
+    const fileLoc = FsLoc.join(publicDir, S.decodeSync(FsLoc.RelFile.String)(imageName))
+    const exists = await Ef.runPromise(
+      Ef.gen(function*() {
+        const result = yield* Ef.either(Fs.stat(fileLoc))
+        return result._tag === 'Right'
+        // FIXME: Remove cast when @effect/platform versions are aligned
+      }).pipe(Ef.provide(NodeFileSystem.layer)) as any,
+    )
+    if (exists) {
+      return FsLoc.encodeSync(fileLoc)
     }
   }
 
@@ -78,7 +94,7 @@ export function Branding(config: Api.Config.Config): Plugin {
       if (logoDarkPath) this.addWatchFile(logoDarkPath)
       if (logoSinglePath) this.addWatchFile(logoSinglePath)
       // Also watch the default logo path for compatibility
-      this.addWatchFile(config.paths.project.absolute.public.logo)
+      this.addWatchFile(FsLoc.encodeSync(config.paths.project.absolute.public.logo))
 
       // Watch for hero image files
       const heroImagePath = await findHeroImagePath(config.paths.project.absolute.public.root)
@@ -94,7 +110,7 @@ export function Branding(config: Api.Config.Config): Plugin {
         (logoLightPath && file === logoLightPath)
         || (logoDarkPath && file === logoDarkPath)
         || (logoSinglePath && file === logoSinglePath)
-        || file === config.paths.project.absolute.public.logo
+        || file === FsLoc.encodeSync(config.paths.project.absolute.public.logo)
       ) {
         // Invalidate the logo module when any logo file changes
         const module = server.moduleGraph.getModuleById(viLogo.resolved)
@@ -137,8 +153,12 @@ export function Branding(config: Api.Config.Config): Plugin {
         // Dual mode: both logo-light and logo-dark exist
         if (lightPath && darkPath) {
           const basePath = config.build.base || '/'
-          const lightUrl = basePath === '/' ? `/${Path.basename(lightPath)}` : `${basePath}/${Path.basename(lightPath)}`
-          const darkUrl = basePath === '/' ? `/${Path.basename(darkPath)}` : `${basePath}/${Path.basename(darkPath)}`
+          const lightUrl = basePath === '/'
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(lightPath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(lightPath))}`
+          const darkUrl = basePath === '/'
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(darkPath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(darkPath))}`
           return `export default {
             light: ${JSON.stringify(lightUrl)},
             dark: ${JSON.stringify(darkUrl)},
@@ -150,7 +170,9 @@ export function Branding(config: Api.Config.Config): Plugin {
         // Single mode: only logo.* exists
         if (singlePath) {
           const basePath = config.build.base || '/'
-          const url = basePath === '/' ? `/${Path.basename(singlePath)}` : `${basePath}/${Path.basename(singlePath)}`
+          const url = basePath === '/'
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(singlePath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(singlePath))}`
           return `export default {
             light: ${JSON.stringify(url)},
             dark: ${JSON.stringify(url)},
@@ -177,8 +199,8 @@ export function Branding(config: Api.Config.Config): Plugin {
           // Just return the public URL path, let Vite handle the asset
           const basePath = config.build.base || '/'
           const publicPath = basePath === '/'
-            ? `/${Path.basename(heroImagePath)}`
-            : `${basePath}/${Path.basename(heroImagePath)}`
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(heroImagePath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(heroImagePath))}`
           return `export default ${JSON.stringify(publicPath)}`
         }
         return `export default null`
@@ -204,7 +226,14 @@ const handleWatchedFileChange = async (
   if (changedFile !== watchedFile) return
 
   // Check current existence
-  const existsNow = await Fs.exists(watchedFile)
+  const watchedFileLoc = S.decodeSync(FsLoc.AbsFile.String)(watchedFile)
+  const existsNow = await Ef.runPromise(
+    Ef.gen(function*() {
+      const result = yield* Ef.either(Fs.stat(watchedFileLoc))
+      return result._tag === 'Right'
+      // FIXME: Remove cast when @effect/platform versions are aligned
+    }).pipe(Ef.provide(NodeFileSystem.layer)) as any,
+  )
 
   // Check previous existence via module graph
   const module = server.moduleGraph.getModuleById(moduleId)

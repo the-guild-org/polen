@@ -1,3 +1,4 @@
+import { Ef } from '#dep/effect'
 import { Hono } from '#dep/hono/index'
 import { createHtmlTransformer, type HtmlTransformer } from '#lib/html-utils/html-transformer'
 import { serveStatic } from '@hono/node-server/serve-static'
@@ -75,7 +76,7 @@ export const createApp = (options: AppOptions) => {
   if (__BUILDING__) {
     // Add manifest transformer
     htmlTransformers.push(createHtmlTransformer((html, ___ctx) => {
-      return injectManifestIntoHtml(html, viteClientAssetManifest, options.paths.base)
+      return Ef.succeed(injectManifestIntoHtml(html, viteClientAssetManifest, options.paths.base))
     }))
   }
 

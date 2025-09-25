@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
+import { Ef } from '#dep/effect'
 import { Command, HelpDoc, Span } from '@effect/cli'
 import { NodeContext, NodeRuntime } from '@effect/platform-node'
-import { Console, Effect } from 'effect'
-import { checkGlobalVsLocal } from 'graphql-kit'
+import { NodeFileSystem } from '@effect/platform-node'
+import { PackageManager } from '@wollybeard/kit'
+import { Console, Layer } from 'effect'
 import manifest from '../../package.json' with { type: 'json' }
 import { allowGlobalParameter } from './_/parameters.js'
-
-// Import all commands
 import { build } from './commands/build.js'
 import { cache } from './commands/cache.js'
 import { config } from './commands/config.js'
@@ -105,9 +105,14 @@ if (process.argv.includes('--version') || process.argv.includes('-v')) {
   process.exit(0)
 }
 
-// Check for global vs local Polen conflict
-try {
-  await checkGlobalVsLocal({
+// Remove --allow-global from argv before dispatching to commands
+// This prevents "Unknown flag" errors in individual commands
+const filteredArgv = process.argv.filter(arg => arg !== '--allow-global')
+
+// Create the main program with global vs local check
+const program = Ef.gen(function*() {
+  // Check for global vs local Polen conflict
+  yield* PackageManager.checkGlobalVsLocal({
     packageName: 'polen',
     currentExecutablePath: process.argv[1] ?? '',
     errorMessageTemplate: {
@@ -121,16 +126,16 @@ try {
       ],
     },
   })
-} catch (error) {
-  process.exit(1)
-}
 
-// Remove --allow-global from argv before dispatching to commands
-// This prevents "Unknown flag" errors in individual commands
-const filteredArgv = process.argv.filter(arg => arg !== '--allow-global')
-
-NodeRuntime.runMain(
-  cli(filteredArgv).pipe(
-    Effect.provide(NodeContext.layer),
-  ),
+  // Run the CLI after the check passes
+  return yield* cli(filteredArgv)
+}).pipe(
+  Ef.catchAll((error) => {
+    console.error('[POLEN DEBUG] CLI error:', error)
+    return Ef.die('CLI failed')
+  }),
+  Ef.provide(Layer.merge(NodeContext.layer, NodeFileSystem.layer)),
+  Ef.scoped,
 )
+
+NodeRuntime.runMain(program)

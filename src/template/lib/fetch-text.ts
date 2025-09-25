@@ -1,54 +1,64 @@
-import { Either } from 'effect'
+import { Ef } from '#dep/effect'
+import { Data } from 'effect'
 
 /**
  * Error type for fetch failures
  */
-export interface FetchError {
-  readonly _tag: 'FetchError'
+export class FetchError extends Data.TaggedError('FetchError')<{
   readonly url: string
   readonly status: number
   readonly statusText: string
-  readonly message: string
+}> {
+  override get message() {
+    return `Failed to fetch: ${this.url} (${this.status} ${this.statusText})`
+  }
 }
-
-const makeFetchError = (url: string, status: number, statusText: string): FetchError => ({
-  _tag: 'FetchError',
-  url,
-  status,
-  statusText,
-  message: `Failed to fetch: ${url} (${status} ${statusText})`,
-})
 
 /**
  * Fetch text content from a URL
  * @param url - The URL to fetch from
- * @returns Either with text content on right or FetchError on left
+ * @returns Effect with text content or FetchError
+ *
+ * @example
+ * ```ts
+ * // At application boundary (e.g., in React components)
+ * const text = await Ef.runPromise(fetchText('https://api.example.com/data'))
+ * ```
  */
-export const fetchTextEither = async (url: string): Promise<Either.Either<string, FetchError>> => {
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      return Either.left(makeFetchError(url, response.status, response.statusText))
-    }
-    const text = await response.text()
-    return Either.right(text)
-  } catch (error) {
-    // Network errors or other exceptions
-    return Either.left(makeFetchError(url, 0, 'Network Error'))
-  }
-}
+export const fetchText = (url: string): Ef.Effect<string, FetchError> =>
+  Ef.tryPromise({
+    try: async () => {
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new FetchError({
+          url,
+          status: response.status,
+          statusText: response.statusText,
+        })
+      }
+      return await response.text()
+    },
+    catch: (error) => {
+      // If it's already a FetchError, return it
+      if (error instanceof FetchError) {
+        return error
+      }
+      // Network errors or other exceptions
+      return new FetchError({
+        url,
+        status: 0,
+        statusText: 'Network Error',
+      })
+    },
+  })
 
 /**
- * Fetch text content from a URL (legacy throwing version)
+ * Fetch text content from a URL (legacy Promise version for React boundaries)
  * @param url - The URL to fetch from
  * @returns Promise that resolves to the text content
- * @throws Error if the request fails
- * @deprecated Use fetchTextEither for better error handling
+ * @throws FetchError if the request fails
+ * @deprecated Prefer using fetchText with Ef.runPromise at application boundaries
  */
-export const fetchText = async (url: string): Promise<string> => {
-  const result = await fetchTextEither(url)
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.message)
-  }
-  return result.right
+export const fetchTextPromise = async (url: string): Promise<string> => {
+  return Ef.runPromise(fetchText(url))
 }

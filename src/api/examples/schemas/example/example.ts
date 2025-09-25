@@ -1,5 +1,5 @@
+import { S } from '#dep/effect'
 import { Order } from 'effect'
-import { S } from 'graphql-kit'
 import { Document } from 'graphql-kit'
 
 // ============================================================================
@@ -41,7 +41,7 @@ export const Example = S.Struct({
 // Types
 // ============================================================================
 
-export type Example = S.Schema.Type<typeof Example>
+export type Example = typeof Example.Type
 
 // ============================================================================
 // Constructors

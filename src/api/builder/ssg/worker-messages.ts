@@ -1,4 +1,4 @@
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
 
 // ============================================================================
 // Route Schema
@@ -26,7 +26,7 @@ const GenerateResultSchema = S.Struct({
   ),
 })
 
-export type GenerateResult = S.Schema.Type<typeof GenerateResultSchema>
+export type GenerateResult = typeof GenerateResultSchema.Type
 
 // ============================================================================
 // Server Messages

@@ -1,12 +1,10 @@
 import type { SelfContainedModeHooksData } from '#cli/_/self-contained-mode'
+import { Ef, Op, S } from '#dep/effect'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
-import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { FileSystem } from '@effect/platform/FileSystem'
-import type { Prom } from '@wollybeard/kit'
-import { Path } from '@wollybeard/kit'
-import { Effect, ParseResult } from 'effect'
-import { assertOptionalPathAbsolute, pickFirstPathExisting } from 'graphql-kit'
+import { Fs, FsLoc, Prom } from '@wollybeard/kit'
+import { ParseResult } from 'effect'
 import * as Module from 'node:module'
 import type { WritableDeep } from 'type-fest'
 import type { ConfigInput } from './input.js'
@@ -19,15 +17,15 @@ export const fileNameExtensions = [...fileNameExtensionsTypeScript, ...fileNameE
 export const fileNames = fileNameBases.flatMap(base => fileNameExtensions.map(ext => `${base}${ext}`))
 
 export interface LoadOptions {
-  dir: string
+  dir: FsLoc.AbsDir
 }
 
 let isSelfContainedModeRegistered = false
 
-export const load = (options: LoadOptions): Effect.Effect<ConfigInput, Error, FileSystem> =>
-  Effect.gen(function*() {
+export const load = (options: LoadOptions): Ef.Effect<ConfigInput, Error, FileSystem> =>
+  Ef.gen(function*() {
     const debug = debugPolen.sub(`load`)
-    assertOptionalPathAbsolute(options.dir)
+    const dirStr = FsLoc.encodeSync(options.dir)
 
     //
     // ━━ Enable Self-Contained Mode
@@ -39,7 +37,7 @@ export const load = (options: LoadOptions): Effect.Effect<ConfigInput, Error, Fi
     const isSelfContainedModeEnabled = packagePaths.isRunningFromSource
     if (isSelfContainedModeEnabled && !isSelfContainedModeRegistered) {
       const initializeData: SelfContainedModeHooksData = {
-        projectDirPathExp: options.dir,
+        projectDirPathExp: dirStr,
       }
       debug(`register node module hooks`, { data: initializeData })
       // TODO: would be simpler to use sync hooks
@@ -53,43 +51,45 @@ export const load = (options: LoadOptions): Effect.Effect<ConfigInput, Error, Fi
     // ━━ Fetch the Config
     //
 
-    const filePaths = fileNames.map(fileName => Path.join(options.dir, fileName))
-    const filePath = yield* pickFirstPathExisting(filePaths)
+    const fileRelPaths = fileNames.map(fileName => S.decodeSync(FsLoc.RelFile.String)(fileName))
+    const filePathOption = yield* Fs.findFirstUnderDir(options.dir)(fileRelPaths)
 
     let configInput: ConfigInput
+    const filePath = Op.getOrUndefined(filePathOption)
     if (!filePath) {
       // No config file found, use empty config (will use all defaults)
       configInput = validateConfigInput({})
     } else {
       // If the user's config is a TypeScript file, we will use TSX to import it.
 
-      const module = yield* Effect.tryPromise({
+      const module = yield* Ef.tryPromise({
         try: async () => {
-          if (fileNameExtensionsTypeScript.some(_ => filePath.endsWith(_))) {
+          const filePathStr = FsLoc.encodeSync(filePath)
+          if (fileNameExtensionsTypeScript.some(_ => filePathStr.endsWith(_))) {
             // @see https://tsx.is/dev-api/ts-import#usage
             const { tsImport } = await import(`tsx/esm/api`)
-            return await tsImport(filePath, import.meta.url) as {
+            return await tsImport(filePathStr, import.meta.url) as {
               default?: Prom.Maybe<ConfigInput>
               config?: Prom.Maybe<ConfigInput>
             }
           } else {
-            return await import(filePath) as { default?: Prom.Maybe<ConfigInput>; config?: Prom.Maybe<ConfigInput> }
+            return await import(filePathStr) as { default?: Prom.Maybe<ConfigInput>; config?: Prom.Maybe<ConfigInput> }
           }
         },
-        catch: (error) => new Error(`Failed to import config module from ${filePath}: ${error}`),
+        catch: (error) => new Error(`Failed to import config module from ${FsLoc.encodeSync(filePath)}: ${error}`),
       })
       debug(`imported config module`)
 
       //       // Use dynamic import with file URL to support Windows
       //       const configUrl = pathToFileURL(configPath).href
 
-      const configInputFromFile = yield* Effect.tryPromise({
+      const configInputFromFile = yield* Ef.tryPromise({
         try: async () => await (module.default ?? module.config),
         catch: (error) => new Error(`Failed to resolve config from module: ${error}`),
       })
 
       if (!configInputFromFile) {
-        return yield* Effect.fail(
+        return yield* Ef.fail(
           new Error(
             `Your Polen config module (${filePath}) must export a config. You can use a default export or named export of \`config\`.`,
           ),
@@ -98,7 +98,7 @@ export const load = (options: LoadOptions): Effect.Effect<ConfigInput, Error, Fi
 
       // Validate the config against the schema using Effect
       configInput = yield* validateConfigInputEffect(configInputFromFile).pipe(
-        Effect.mapError((parseError) =>
+        Ef.mapError((parseError) =>
           new Error(
             `Invalid Polen configuration in ${filePath}:\n${ParseResult.TreeFormatter.formatErrorSync(parseError)}`,
           )

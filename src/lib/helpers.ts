@@ -1,7 +1,7 @@
+import { S } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
-import { Effect } from 'effect'
-import { S } from 'graphql-kit'
-import * as Path from 'node:path'
+import { Fs, FsLoc } from '@wollybeard/kit'
 
 // ============================================================================
 // Error Types
@@ -32,48 +32,47 @@ export type PackageInstallationError = PackageJsonNotFound | PackageJsonReadErro
  * Check if a project has a package installed by examining its package.json
  */
 export const checkIsProjectHasPackageInstalled = (
-  projectRoot: string,
+  projectRoot: FsLoc.AbsDir,
   packageName: string,
-): Effect.Effect<boolean, PackageInstallationError, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-    const packageJsonPath = Path.join(projectRoot, 'package.json')
+): Ef.Effect<boolean, PackageInstallationError, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
+    const packageJsonPath = FsLoc.join(projectRoot, FsLoc.fromString('package.json'))
 
     // Check if package.json exists
-    const exists = yield* fs.exists(packageJsonPath).pipe(
-      Effect.mapError((error) =>
+    const exists = yield* Fs.exists(packageJsonPath).pipe(
+      Ef.mapError((error) =>
         new PackageJsonReadError({
-          projectRoot,
+          projectRoot: FsLoc.encodeSync(projectRoot),
           message: `Failed to check if package.json exists: ${(error as any).message || String(error)}`,
         })
       ),
     )
 
     if (!exists) {
-      return yield* Effect.fail(
+      return yield* Ef.fail(
         new PackageJsonNotFound({
-          projectRoot,
-          message: `package.json not found in ${projectRoot}`,
+          projectRoot: FsLoc.encodeSync(projectRoot),
+          message: `package.json not found in ${FsLoc.encodeSync(projectRoot)}`,
         }),
       )
     }
 
     // Read package.json content
-    const content = yield* fs.readFileString(packageJsonPath).pipe(
-      Effect.mapError((error) =>
+    const content = yield* Fs.readString(packageJsonPath).pipe(
+      Ef.mapError((error) =>
         new PackageJsonReadError({
-          projectRoot,
+          projectRoot: FsLoc.encodeSync(projectRoot),
           message: `Failed to read package.json: ${(error as any).message || String(error)}`,
         })
       ),
     )
 
     // Parse JSON
-    const packageJson = yield* Effect.try({
+    const packageJson = yield* Ef.try({
       try: () => JSON.parse(content),
       catch: (error) =>
         new PackageJsonParseError({
-          projectRoot,
+          projectRoot: FsLoc.encodeSync(projectRoot),
           message: `Invalid JSON in package.json: ${error instanceof Error ? error.message : String(error)}`,
         }),
     })
@@ -81,4 +80,4 @@ export const checkIsProjectHasPackageInstalled = (
     // Check if package is in dependencies or devDependencies
     return !!(packageJson.dependencies?.[packageName]
       ?? packageJson.devDependencies?.[packageName])
-  })
+  }) as any

@@ -1,5 +1,6 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import type { React } from '#dep/react/index'
-import { Text, type TextProps } from '@radix-ui/themes'
+import { Text, type TextProps } from '../ui/index.js'
 
 export const MinorHeading: React.FC<TextProps> = (props) => {
   return (

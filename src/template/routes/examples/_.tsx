@@ -1,12 +1,13 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { Catalog } from '#api/examples/schemas/catalog'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
-import { Swiss } from '#lib/swiss'
-import { Heading } from '@radix-ui/themes'
 import { Str } from '@wollybeard/kit'
+import * as _ from 'graphql-kit'
 import { Outlet } from 'react-router'
 import { examplesCatalog } from 'virtual:polen/project/examples'
 import { Sidebar } from '../../components/sidebar/Sidebar.js'
+import { Container, Grid, GridItem, Heading } from '../../components/ui/index.js'
 import { examplesIndexRoute } from './_index.js'
 import { nameRoute } from './name.js'
 
@@ -48,29 +49,23 @@ export const LayoutComponent = () => {
   })) ?? []
 
   return (
-    <Swiss.Body subgrid>
-      {/* Sidebar */}
-      <Swiss.Item
-        cols={4}
-        style={{
-          // width: '250px',
-          // borderRight: '1px solid var(--gray-a5)',
-          // padding: '1rem',
-          overflowY: 'auto',
-          position: 'sticky',
-          top: 0,
-          // height: '100vh',
-        }}
-      >
-        <Heading size='4' mb='4' style={{ paddingLeft: '1rem' }}>Examples</Heading>
-        <Sidebar data={sidebarData as any} basePath='/examples' />
-      </Swiss.Item>
+    <Container>
+      <Grid cols={12} gap='lg'>
+        {/* Sidebar */}
+        <GridItem
+          span={4}
+          className='overflow-y-auto sticky top-0'
+        >
+          <Heading size='4' className='mb-4 pl-4'>Examples</Heading>
+          <Sidebar data={sidebarData as any} basePath='/examples' />
+        </GridItem>
 
-      {/* Main content */}
-      <Swiss.Item cols={8}>
-        <Outlet />
-      </Swiss.Item>
-    </Swiss.Body>
+        {/* Main content */}
+        <GridItem span={8}>
+          <Outlet />
+        </GridItem>
+      </Grid>
+    </Container>
   )
 }
 

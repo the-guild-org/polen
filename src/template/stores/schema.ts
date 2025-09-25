@@ -18,7 +18,7 @@ export const State = S.Struct({
   currentSchema: S.NullOr(S.Any), // GraphQL schema is too complex to model
 })
 
-export type State = S.Schema.Type<typeof State>
+export type State = typeof State.Type
 
 // ============================================================================
 // Initial State

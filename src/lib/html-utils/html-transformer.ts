@@ -1,6 +1,6 @@
+import { Ef } from '#dep/effect'
 import type { Hono } from '#dep/hono/index'
-import { Fn } from '@wollybeard/kit'
 
-export type HtmlTransformer = (html: string, ctx: Hono.Context) => Promise<string> | string
+export type HtmlTransformer = (html: string, ctx: Hono.Context) => Ef.Effect<string, never, never>
 
-export const createHtmlTransformer = Fn.identity<HtmlTransformer>
+export const createHtmlTransformer = <T extends HtmlTransformer>(transformer: T): T => transformer

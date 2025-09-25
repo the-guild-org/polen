@@ -1,6 +1,8 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
+import { Sch } from '@wollybeard/kit'
 import { Version } from 'graphql-kit'
+Sch
 
 export const DiagnosticValidationError = Diagnostic.create({
   source: 'examples-validation',
@@ -27,4 +29,4 @@ export const DiagnosticValidationError = Diagnostic.create({
 
 export const makeDiagnosticValidationError = Diagnostic.createMake(DiagnosticValidationError)
 
-export type DiagnosticValidationError = S.Schema.Type<typeof DiagnosticValidationError>
+export type DiagnosticValidationError = typeof DiagnosticValidationError.Type

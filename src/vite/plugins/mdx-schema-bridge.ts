@@ -1,8 +1,8 @@
 import type { LoadedCatalog } from '#api/schema/input-source/load'
+import { Ef } from '#dep/effect'
 import type { AssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Effect } from 'effect'
 import type { Plugin } from 'vite'
 
 // Module-level storage for schema catalog during build
@@ -32,8 +32,8 @@ export const MdxSchemaBridge = ({ schemaReader }: MdxSchemaBridgeOptions): Plugi
     async buildStart() {
       // Load schema at build start
       try {
-        const result = await Effect.runPromise(
-          schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+        const result = await Ef.runPromise(
+          schemaReader.read().pipe(Ef.provide(NodeFileSystem.layer)),
         )
         // The result IS the LoadedCatalog
         setCurrentSchema(result)
@@ -47,8 +47,8 @@ export const MdxSchemaBridge = ({ schemaReader }: MdxSchemaBridgeOptions): Plugi
       // Check if this is a schema file change
       if (file.includes('schema') || file.endsWith('.graphql') || file.endsWith('.gql')) {
         try {
-          const result = await Effect.runPromise(
-            schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+          const result = await Ef.runPromise(
+            schemaReader.read().pipe(Ef.provide(NodeFileSystem.layer)),
           )
           // The result IS the LoadedCatalog
           setCurrentSchema(result)

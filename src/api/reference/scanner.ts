@@ -1,14 +1,14 @@
+import { Ef } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { FileSystem } from '@effect/platform'
-import { Effect } from 'effect'
-import * as Path from 'node:path'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import * as Catalog from './catalog.js'
 
-export interface ScanOptions {
+export interface ScanParams {
   /**
    * The directory to scan for reference content
    */
-  dir: string
+  dir: FsLoc.AbsDir
 }
 
 export interface ScanResult {
@@ -27,22 +27,21 @@ export interface ScanResult {
  * Currently looks for index.md or index.mdx files for custom landing pages.
  */
 export const scan = (
-  options: ScanOptions,
-): Effect.Effect<ScanResult, Error, FileSystem.FileSystem> =>
-  Effect.gen(function*() {
-    const fs = yield* FileSystem.FileSystem
-
+  params: ScanParams,
+): Ef.Effect<ScanResult, Error, FileSystem.FileSystem> =>
+  Ef.gen(function*() {
     const diagnostics: Diagnostic.Diagnostic[] = []
 
     // Check for index.md or index.mdx file
-    const indexMdPath = Path.join(options.dir, 'reference', 'index.md')
-    const indexMdxPath = Path.join(options.dir, 'reference', 'index.mdx')
+    const referenceDir = FsLoc.join(params.dir, 'reference/')
+    const indexMdPathLoc = FsLoc.join(referenceDir, 'index.md')
+    const indexMdxPathLoc = FsLoc.join(referenceDir, 'index.mdx')
 
     // Try index.md first, then index.mdx
-    const indexPath = (yield* fs.exists(indexMdPath))
-      ? indexMdPath
-      : (yield* fs.exists(indexMdxPath))
-      ? indexMdxPath
+    const indexPath = (yield* Fs.exists(indexMdPathLoc))
+      ? indexMdPathLoc
+      : (yield* Fs.exists(indexMdxPathLoc))
+      ? indexMdxPathLoc
       : null
 
     const catalog = Catalog.make({

@@ -1,14 +1,21 @@
 import { Api } from '#api/$'
+import { Ef } from '#dep/effect'
 import { toViteUserConfig } from '#vite/config'
-import { Effect } from 'effect'
+import { NodeFileSystem } from '@effect/platform-node'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
 test.describe('Theme functionality', () => {
   test('starts with system theme preference', async ({ page, vite, project }) => {
-    await project.layout.set({ 'pages/index.md': '# Hello' })
-    const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    await Ef.runPromise(
+      project.dir.file('pages/index.md', '# Hello')
+        .commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
+    const polenConfig = await Ef.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -28,9 +35,15 @@ test.describe('Theme functionality', () => {
   })
 
   test('theme toggle creates cookie and persists on reload', async ({ page, vite, project }) => {
-    await project.layout.set({ 'pages/index.md': '# Hello' })
-    const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    await Ef.runPromise(
+      project.dir.file('pages/index.md', '# Hello')
+        .commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
+    const polenConfig = await Ef.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -74,9 +87,15 @@ test.describe('Theme functionality', () => {
   })
 
   test('theme toggle cycles through system, light, dark', async ({ page, vite, project }) => {
-    await project.layout.set({ 'pages/index.md': '# Hello' })
-    const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    await Ef.runPromise(
+      project.dir.file('pages/index.md', '# Hello')
+        .commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
+    const polenConfig = await Ef.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -130,9 +149,15 @@ test.describe('Theme functionality', () => {
   })
 
   test('theme toggle updates cookie on subsequent clicks', async ({ page, vite, project }) => {
-    await project.layout.set({ 'pages/index.md': '# Hello' })
-    const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    await Ef.runPromise(
+      project.dir.file('pages/index.md', '# Hello')
+        .commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
+    const polenConfig = await Ef.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)
@@ -181,13 +206,18 @@ test.describe('Theme functionality', () => {
   })
 
   test('theme persists across different pages', async ({ page, vite, project }) => {
-    await project.layout.set({
-      'pages/index.md': '# Home',
-      'pages/about.md': '# About',
-      'pages/contact.md': '# Contact',
-    })
-    const polenConfig = await Effect.runPromise(
-      Api.ConfigResolver.fromMemory({}, project.layout.cwd),
+    await Ef.runPromise(
+      project.dir.file('pages/index.md', '# Home').file('pages/about.md', '# About').file(
+        'pages/contact.md',
+        '# Contact',
+      )
+        .commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
+    const polenConfig = await Ef.runPromise(
+      Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
     )
     const viteConfig = toViteUserConfig(polenConfig)
     const viteDevServer = await vite.startDevelopmentServer(viteConfig)

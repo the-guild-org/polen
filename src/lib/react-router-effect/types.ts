@@ -1,5 +1,6 @@
+import { Ef } from '#dep/effect'
 import type { Http } from '@wollybeard/kit'
-import type { Effect, Schema } from 'effect'
+import type { Schema } from 'effect'
 import type React from 'react'
 import type { RouteObject } from 'react-router'
 
@@ -67,7 +68,7 @@ export interface SchemaRouteConfig<TSchema extends Schema.Schema.Any> {
    */
   loader?:
     | ((args: any) => Promise<Schema.Schema.Type<TSchema>>)
-    | ((args: any) => Effect.Effect<Schema.Schema.Type<TSchema>, any, any>)
+    | ((args: any) => Ef.Effect<Schema.Schema.Type<TSchema>, any, any>)
   /**
    * Additional handle properties beyond the schema.
    */

@@ -1,4 +1,9 @@
+// TODO: Review and replace inline styles with Tailwind classes
 import { MDXProvider } from '@mdx-js/react'
+import type { GraphQLSchema } from 'graphql'
+import type * as React from 'react'
+import { CodeBlock } from '../components/CodeBlock.js'
+import { GraphQLReference } from '../components/graphql/GraphQLReference.js'
 import {
   Badge,
   Box,
@@ -10,6 +15,7 @@ import {
   Em,
   Heading,
   Link,
+  MDXComponents,
   Quote,
   Separator,
   Strong,
@@ -17,11 +23,7 @@ import {
   Tabs,
   Text,
   Tooltip,
-} from '@radix-ui/themes'
-import type { GraphQLSchema } from 'graphql'
-import type * as React from 'react'
-import { CodeBlock } from '../components/CodeBlock.js'
-import { GraphQLReference } from '../components/graphql/GraphQLReference.js'
+} from '../components/ui/index.js'
 
 interface MdxProviderProps extends React.PropsWithChildren {
   schema?: GraphQLSchema | null
@@ -51,21 +53,28 @@ export const MdxProvider: React.FC<MdxProviderProps> = ({ children, schema }) =>
       th: Table.ColumnHeaderCell,
       td: Table.Cell,
       // Lists need spacing too
-      ul: (props) => <Box as='ul' mb='4' style={{ paddingLeft: '1.5rem' }} {...props} />,
-      ol: (props) => <Box as='ol' mb='4' style={{ paddingLeft: '1.5rem' }} {...props} />,
+      ul: (props) => <Box as='ul' mb='4' className='pl-6' {...props} />,
+      ol: (props) => <Box as='ol' mb='4' className='pl-6' {...props} />,
       li: (props) => <Box as='li' mb='2' {...props} />,
 
-      // Direct Radix components for MDX
+      // Direct components for MDX
       Badge,
       Button,
-      // @ts-expect-error
-      Callout,
       Card,
-      // @ts-expect-error
-      DataList,
-      // @ts-expect-error
-      Tabs,
-      Tooltip,
+      Callout: MDXComponents.Callout,
+      CalloutIcon: MDXComponents.CalloutIcon,
+      CalloutText: MDXComponents.CalloutText,
+      DataList: MDXComponents.DataList,
+      DataListItem: MDXComponents.DataListItem,
+      DataListLabel: MDXComponents.DataListLabel,
+      DataListValue: MDXComponents.DataListValue,
+      Tabs: MDXComponents.Tabs,
+      TabsList: MDXComponents.TabsList,
+      TabsTrigger: MDXComponents.TabsTrigger,
+      TabsContent: MDXComponents.TabsContent,
+      Tooltip: MDXComponents.Tooltip,
+      TooltipTrigger: MDXComponents.TooltipTrigger,
+      TooltipContent: MDXComponents.TooltipContent,
 
       // GraphQL reference component for MDX usage
       GraphQLReference,

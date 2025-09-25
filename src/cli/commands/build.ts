@@ -1,7 +1,9 @@
 import { Api } from '#api/$'
+import { Op, S } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Command, Options } from '@effect/cli'
-import { Effect, Option } from 'effect'
-import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
+import { NodeFileSystem } from '@effect/platform-node'
+import { FsLoc } from '@wollybeard/kit'
 import { allowGlobalParameter, projectParameter } from '../_/parameters.js'
 
 // Define all the options exactly matching the original
@@ -39,23 +41,28 @@ export const build = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ debug, project, architecture, base, port, allowGlobal }) =>
-    Effect.gen(function*() {
-      const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
+    Ef.gen(function*() {
+      const dir = Op.getOrElse(
+        Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)),
+        () => S.decodeSync(FsLoc.AbsDir.String)(process.cwd()),
+      )
 
-      const isValidProject = yield* Effect.promise(() => Api.Project.validateProjectDirectory(dir))
+      const isValidProject = yield* Api.Project.validateProjectDirectory(dir).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      )
       if (!isValidProject) {
-        return yield* Effect.fail(new Error('Invalid project directory'))
+        return yield* Ef.fail(new Error('Invalid project directory'))
       }
 
       yield* Api.Builder.build({
-        dir,
+        dir: FsLoc.encodeSync(dir),
         overrides: {
           build: {
             architecture,
-            base: Option.getOrUndefined(base),
+            base: Op.getOrUndefined(base),
           },
           server: {
-            port: Option.getOrUndefined(port),
+            port: Op.getOrUndefined(port),
           },
           advanced: {
             debug,

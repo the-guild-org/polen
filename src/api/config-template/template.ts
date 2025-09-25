@@ -2,8 +2,8 @@ import type { Api } from '#api/$'
 import { ExamplesConfigObject } from '#api/examples/config'
 import { ReferenceConfigObject } from '#api/reference/config'
 import { ConfigSchema } from '#api/schema/config-schema'
+import { S } from '#dep/effect'
 import { Fn, Obj } from '@wollybeard/kit'
-import { S } from 'graphql-kit'
 import type { Catalog } from 'graphql-kit'
 import { Config } from '../config/normalized.js'
 
@@ -71,7 +71,7 @@ export const TemplateConfig = S.extend(
   description: 'Fully resolved configuration for template consumption with all feature flags determined',
 })
 
-export type TemplateConfig = S.Schema.Type<typeof TemplateConfig>
+export type TemplateConfig = typeof TemplateConfig.Type
 
 // ============================================================================
 // Constructors

@@ -1,7 +1,5 @@
-import { Either, Option } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Document } from 'graphql-kit'
-import { VersionCoverage } from 'graphql-kit'
+import { Ei, Op } from '#dep/effect'
+import { Catalog, Document, VersionCoverage } from 'graphql-kit'
 import * as React from 'react'
 import { templateConfig } from 'virtual:polen/project/config'
 import { useHighlighted } from '../hooks/use-highlighted.js'
@@ -43,7 +41,9 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   /// ━ VERSION MANAGEMENT
   const isControlled = controlledVersionCoverage !== undefined
   const [internalVersionCoverage, setInternalVersionCoverage] = React.useState<VersionCoverage.VersionCoverage | null>(
-    Option.getOrNull(Catalog.getLatestVersion(schemaCatalog)),
+    Op.map(Catalog.getLatestVersion(schemaCatalog), (version) => VersionCoverage.One.make({ version })).pipe(
+      Op.getOrNull,
+    ),
   )
   const selectedVersionCoverage = isControlled ? controlledVersionCoverage : internalVersionCoverage
   const internalOnVersionChange = (version: VersionCoverage.VersionCoverage) => {
@@ -57,7 +57,7 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   const result = Document.resolveDocumentAndSchema(document, schemaCatalog, selectedVersionCoverage)
 
   // Handle resolution errors gracefully
-  if (Either.isLeft(result)) {
+  if (Ei.isLeft(result)) {
     console.error('Failed to resolve document and schema:', result.left.message)
     return null
   }

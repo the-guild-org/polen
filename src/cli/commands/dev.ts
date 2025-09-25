@@ -1,10 +1,11 @@
 import { Api } from '#api/$'
+import { Op, S } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig } from '#vite/config'
 import { Command, Options } from '@effect/cli'
-import { Err } from '@wollybeard/kit'
-import { Effect, Option } from 'effect'
-import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
+import { NodeFileSystem } from '@effect/platform-node'
+import { Err, FsLoc } from '@wollybeard/kit'
 import { allowGlobalParameter, projectParameter } from '../_/parameters.js'
 
 // Define all the options exactly matching the original
@@ -35,38 +36,47 @@ export const dev = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ debug, project, base, port, allowGlobal }) =>
-    Effect.gen(function*() {
-      const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
+    Ef.gen(function*() {
+      const dir = Op.getOrElse(
+        Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)),
+        () => S.decodeSync(FsLoc.AbsDir.String)(process.cwd()),
+      )
 
-      const isValidProject = yield* Effect.promise(() => Api.Project.validateProjectDirectory(dir))
+      const isValidProject = yield* Api.Project.validateProjectDirectory(dir).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      )
       if (!isValidProject) {
-        return yield* Effect.fail(new Error('Invalid project directory'))
+        return yield* Ef.fail(new Error('Invalid project directory'))
       }
 
       const polenConfig = yield* Api.ConfigResolver.fromFile({
         dir,
         overrides: {
           build: {
-            base: Option.getOrUndefined(base),
+            base: Op.getOrUndefined(base),
           },
           server: {
-            port: Option.getOrUndefined(port),
+            port: Op.getOrUndefined(port),
           },
           advanced: {
-            debug: Option.getOrUndefined(debug),
+            debug: Op.getOrUndefined(debug),
           },
         },
       })
 
       const viteUserConfig = toViteUserConfig(polenConfig)
-      const viteDevServerResult = yield* Effect.promise(() => Err.tryCatch(() => Vite.createServer(viteUserConfig)))
+      const viteDevServer = yield* Ef.tryPromise({
+        try: () => Vite.createServer(viteUserConfig),
+        catch: (error) => {
+          console.error('Failed to create Vite dev server:', error)
+          return new Error(`Failed to create Vite server: ${String(error)}`)
+        },
+      })
 
-      if (Err.is(viteDevServerResult)) {
-        Err.log(viteDevServerResult)
-        return yield* Effect.fail(new Error('Failed to create Vite dev server'))
-      }
-
-      yield* Effect.promise(() => viteDevServerResult.listen())
-      viteDevServerResult.printUrls()
+      yield* Ef.tryPromise({
+        try: () => viteDevServer.listen(),
+        catch: (error) => new Error(`Failed to start dev server: ${String(error)}`),
+      })
+      viteDevServer.printUrls()
     }),
 )

@@ -16,7 +16,7 @@ export const Type = S.Enums(
     Error: 'error',
   } as const,
 )
-export type Type = S.Schema.Type<typeof Type>
+export type Type = typeof Type.Type
 
 /**
  * Toast action schema
@@ -28,7 +28,7 @@ export const ToastAction = S.Struct({
   onClick: S.Any, // Functions can't be validated
 })
 
-export type ToastAction = S.Schema.Type<typeof ToastAction>
+export type ToastAction = typeof ToastAction.Type
 
 /**
  * Toast notification schema
@@ -48,7 +48,7 @@ export const Toast = S.Struct({
   actions: S.Array(ToastAction),
 })
 
-export type Toast = S.Schema.Type<typeof Toast>
+export type Toast = typeof Toast.Type
 
 /**
  * Toast store state
@@ -58,7 +58,7 @@ export const State = S.Struct({
   toasts: S.mutable(S.Array(Toast)),
 })
 
-export type State = S.Schema.Type<typeof State>
+export type State = typeof State.Type
 
 // ============================================================================
 // Initial State & Defaults

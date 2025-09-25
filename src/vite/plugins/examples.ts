@@ -1,8 +1,12 @@
 import type { Api } from '#api/$'
-import { Examples as ExamplesModule } from '#api/examples/$'
+import { type Diagnostic as ExampleDiagnostic } from '#api/examples/diagnostic/diagnostic'
+import { scan, type ScanResult } from '#api/examples/scanner'
 import * as Catalog from '#api/examples/schemas/catalog'
+import { Example } from '#api/examples/schemas/example/$'
 import { generateExampleTypes } from '#api/examples/type-generator'
 import { createTypeUsageIndex } from '#api/examples/type-usage-indexer'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -10,9 +14,7 @@ import { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
-import { Str } from '@wollybeard/kit'
-import { Effect } from 'effect'
-import * as Path from 'node:path'
+import { FsLoc, Str } from '@wollybeard/kit'
 import type * as Vite from 'vite'
 import { polenVirtual } from '../vi.js'
 
@@ -21,13 +23,12 @@ export const viProjectExamples = polenVirtual([`project`, `examples`])
 
 export interface Options {
   config: Api.Config.Config
-  // todo: get type ref via import from SOT
-  schemaReader: AssetReader<Api.Schema.InputSource.LoadedCatalog | null, any, any>
+  schemaReader: AssetReader<Api.Schema.InputSource.LoadedCatalog | null, any, FileSystem.FileSystem>
   dependentVirtualModules?: ViteVirtual.Identifier.Identifier[]
 }
 
 export interface ProjectExamplesCatalog {
-  examples: ExamplesModule.Example.Example[]
+  examples: Example.Example[]
 }
 
 /**
@@ -39,21 +40,25 @@ export const Examples = ({
   dependentVirtualModules = [],
 }: Options): {
   plugins: Vite.Plugin[]
-  reader: AssetReader<ExamplesModule.ScanResult, Error, FileSystem.FileSystem>
+  reader: AssetReader<ScanResult, Error, FileSystem.FileSystem>
 } => {
   const debug = debugPolen.sub(`vite-examples`)
-  const examplesDir = Path.join(config.paths.project.rootDir, 'examples')
+  const examplesDir = FsLoc.join(config.paths.project.rootDir, FsLoc.fromString('examples/'))
 
   // Track last generated example names to detect changes
   let lastGeneratedExampleNames: string[] | null = null
 
-  const reader = createAssetReader<ExamplesModule.ScanResult, Error, FileSystem.FileSystem>(() => {
-    return Effect.gen(function*() {
+  const reader = createAssetReader<ScanResult, Error, FileSystem.FileSystem>(() => {
+    return Ef.gen(function*() {
       const loadedCatalog = yield* schemaReader.read()
 
-      const scanExamplesResult = yield* ExamplesModule.scan({
+      const schemaCatalog = loadedCatalog
+        ? Op.getOrUndefined(loadedCatalog.data)
+        : undefined
+
+      const scanExamplesResult = yield* scan({
         dir: examplesDir,
-        schemaCatalog: loadedCatalog?.data as any ?? undefined,
+        ...(schemaCatalog ? { schemaCatalog } : {}),
       })
 
       // Generate TypeScript types if examples have changed
@@ -74,13 +79,13 @@ export const Examples = ({
   })
 
   const scanExamples = async () => {
-    return await Effect.runPromise(
-      reader.read().pipe(Effect.provide(NodeFileSystem.layer)),
+    return await Ef.runPromise(
+      reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
     )
   }
 
   // Map diagnostic to its control configuration
-  const getControlForDiagnostic = (diagnostic: ExamplesModule.Diagnostic) => {
+  const getControlForDiagnostic = (diagnostic: ExampleDiagnostic) => {
     if (diagnostic.source === 'examples-scanner') {
       switch (diagnostic.name) {
         case 'duplicate-content':
@@ -103,7 +108,7 @@ export const Examples = ({
 
   // Apply DiagnosticControl filtering and report diagnostics
   const reportDiagnostics = (
-    diagnostics: ExamplesModule.Diagnostic[],
+    diagnostics: ExampleDiagnostic[],
     phase: 'dev' | 'build' = 'dev',
   ) => {
     Diagnostic.filterAndReport(diagnostics, getControlForDiagnostic, phase)
@@ -114,9 +119,9 @@ export const Examples = ({
       name: 'examples',
       reader,
       filePatterns: {
-        watch: [examplesDir],
+        watch: [FsLoc.encodeSync(examplesDir)],
         isRelevant: (file) => {
-          return file.includes(examplesDir) && (
+          return file.includes(FsLoc.encodeSync(examplesDir)) && (
             file.endsWith('.graphql')
             || file.endsWith('.gql')
             || file.endsWith('index.md')
@@ -152,10 +157,14 @@ export const Examples = ({
 
             // Generate type usage index if schemas are available
             let catalogWithIndex = scanExamplesResult.catalog
-            const schemaReaderResult = await Effect.runPromise(
-              schemaReader.read().pipe(Effect.provide(NodeFileSystem.layer)) as any,
+            const schemaReaderResult = await Ef.runPromise(
+              schemaReader.read().pipe(Ef.provide(NodeFileSystem.layer)),
             )
-            const schemasCatalog = (schemaReaderResult as any)?.data
+            // schemaReaderResult is LoadedCatalog | null
+            // LoadedCatalog.data is O.Option<Catalog.Catalog>
+            const schemasCatalog = schemaReaderResult
+              ? Op.getOrNull(schemaReaderResult.data)
+              : null
             if (schemasCatalog) {
               const typeUsageIndex = createTypeUsageIndex(
                 scanExamplesResult.catalog.examples,
@@ -169,7 +178,7 @@ export const Examples = ({
 
             // Generate the module code with both catalog and component exports
             const s = Str.Builder()
-            s`import { Effect } from 'effect'`
+            s`import { Ef } from '#dep/effect'`
             s`import * as Catalog from '#api/examples/schemas/catalog'`
 
             const indexFilePath = scanExamplesResult.catalog.index?.path
@@ -197,7 +206,7 @@ export const Examples = ({
             s``
             s`const catalogData = ${JSON.stringify(encodedCatalog)}`
             s``
-            s`export const examplesCatalog = Effect.runSync(Catalog.decode(catalogData))`
+            s`export const examplesCatalog = Ef.runSync(Catalog.decode(catalogData))`
 
             return s.render()
           },

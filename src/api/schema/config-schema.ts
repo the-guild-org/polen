@@ -1,5 +1,6 @@
 import { Augmentations } from '#api/schema/augmentations/$'
-import { S } from 'graphql-kit'
+import { S } from '#dep/effect'
+import { FsLoc } from '@wollybeard/kit'
 
 // ============================================================================
 // Schema - Input Source Names
@@ -16,7 +17,7 @@ export const InputSourceNameSchema = S.Enums(
   } as const,
 )
 
-export type InputSourceName = S.Schema.Type<typeof InputSourceNameSchema>
+export type InputSourceName = typeof InputSourceNameSchema.Type
 
 // ============================================================================
 // Schema - Input Sources
@@ -39,7 +40,11 @@ const FileOptionsSchema = S.Struct({
    * path: './src/graphql/schema.sdl'
    * ```
    */
-  path: S.optional(S.String),
+  path: S.optional(S.Union(
+    S.String,
+    FsLoc.AbsFile,
+    FsLoc.RelFile,
+  )),
 }).annotations({
   identifier: 'FileOptions',
   description: 'Configuration for loading schema from a single SDL file.',
@@ -77,7 +82,11 @@ const DirectoryOptionsSchema = S.Struct({
    *   schema.graphql
    * ```
    */
-  path: S.optional(S.String),
+  path: S.optional(S.Union(
+    S.String,
+    FsLoc.AbsDir,
+    FsLoc.RelDir,
+  )),
 }).annotations({
   identifier: 'DirectoryOptions',
   description: 'Configuration for loading multiple schema versions from a directory.',
@@ -89,7 +98,11 @@ const VersionedDirectoryOptionsSchema = S.Struct({
    *
    * @default './schema'
    */
-  path: S.optional(S.String),
+  path: S.optional(S.Union(
+    S.String,
+    FsLoc.AbsDir,
+    FsLoc.RelDir,
+  )),
 }).annotations({
   identifier: 'VersionedDirectoryOptions',
   description: 'Configuration for loading versioned schemas from subdirectories.',
@@ -135,7 +148,11 @@ const IntrospectionFileOptionsSchema = S.Struct({
    *
    * @default './schema.introspection.json'
    */
-  path: S.optional(S.String),
+  path: S.optional(S.Union(
+    S.String,
+    FsLoc.AbsFile,
+    FsLoc.RelFile,
+  )),
 }).annotations({
   identifier: 'IntrospectionFileOptions',
   description: 'Configuration for loading schema from an existing introspection file.',
@@ -495,7 +512,7 @@ export const ConfigSchema = S.Struct({
   description: 'Configuration for how Polen loads your GraphQL schema.',
 })
 
-export type ConfigInput = S.Schema.Type<typeof ConfigSchema>
+export type ConfigInput = typeof ConfigSchema.Type
 
 // For backward compatibility during migration
 export type Config = ConfigInput

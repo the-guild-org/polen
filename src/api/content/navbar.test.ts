@@ -1,21 +1,28 @@
+import { S } from '#dep/effect'
+import { FileRouter } from '#lib/file-router'
+import { RouteLogical } from '#lib/file-router/models/route-logical'
+import { FsLoc } from '@wollybeard/kit'
 import { describe, expect, it } from 'vitest'
 import { createNavbar } from './navbar.js'
 import type { Page } from './page.js'
 
-const createPage = (path: string[], fileName = 'index', hidden = false): Page => ({
-  route: {
-    id: path.join('/'),
-    parentId: path.length > 1 ? path.slice(0, -1).join('/') : null,
-    logical: { path },
-    file: {
-      path: {
-        absolute: { root: '/', dir: `/pages/${path.join('/')}`, base: `${fileName}.md`, ext: '.md', name: fileName },
-        relative: { root: '', dir: path.join('/'), base: `${fileName}.md`, ext: '.md', name: fileName },
-      },
-    },
-  },
-  metadata: { description: undefined, hidden },
-})
+const createPage = (pathSegments: string[], fileName = 'index', hidden = false): Page => {
+  const relativePath = pathSegments.length > 0 ? `${pathSegments.join('/')}/${fileName}.md` : `${fileName}.md`
+  const absolutePath = `/pages/${relativePath}`
+
+  const route = new FileRouter.Route({
+    logical: RouteLogical.make({
+      path: FsLoc.Path.Abs.make({ segments: pathSegments }),
+      order: undefined,
+    }),
+    file: S.decodeSync(FsLoc.AbsFile.String)(absolutePath),
+  })
+
+  return {
+    route,
+    metadata: { hidden },
+  }
+}
 
 describe('createNavbar', () => {
   it('returns empty for empty input', () => {

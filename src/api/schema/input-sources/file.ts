@@ -1,17 +1,18 @@
 import { InputSource } from '#api/schema/input-source/$'
-import { FileSystem } from '@effect/platform/FileSystem'
-import { Path } from '@wollybeard/kit'
-import { Effect } from 'effect'
-import { Catalog } from 'graphql-kit'
-import { Change } from 'graphql-kit'
-import { DateOnly } from 'graphql-kit'
+import {
+  createSingleRevisionCatalog,
+  mapToInputSourceError,
+  normalizePathToAbs,
+} from '#api/schema/input-source/helpers'
+import { Ef } from '#dep/effect'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import { Grafaid } from 'graphql-kit'
-import { Revision } from 'graphql-kit'
-import { Schema } from 'graphql-kit'
+
+const l = FsLoc.fromString
 
 const defaultPaths = {
-  schemaFile: `./schema.graphql`,
-}
+  schemaFile: l(`./schema.graphql`),
+} as const
 
 /**
  * Configuration for loading schema from a single SDL file.
@@ -33,94 +34,49 @@ export interface Options {
    * path: './src/graphql/schema.sdl'
    * ```
    */
-  path?: string
+  path?: string | FsLoc.AbsFile | FsLoc.RelFile
 }
 
 export interface Config {
-  path: string
+  path: FsLoc.AbsFile
 }
 
-export const normalizeConfig = (options: Options, projectRoot: string): Config => {
+export const normalizeConfig = (options: Options, projectRoot: FsLoc.AbsDir): Config => {
   const config: Config = {
-    path: options.path
-      ? Path.ensureAbsolute(options.path, projectRoot)
-      : Path.join(projectRoot, defaultPaths.schemaFile),
+    path: normalizePathToAbs.file(options.path, projectRoot, defaultPaths.schemaFile),
   }
 
   return config
 }
 
-export const loader = InputSource.createEffect({
+export const loader = InputSource.create({
   name: 'file',
   isApplicable: (options: Options, context) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       const config = normalizeConfig(options, context.paths.project.rootDir)
 
       // Check if file exists and is a .graphql file
-      const fs = yield* FileSystem
-      const result = yield* Effect.either(fs.stat(config.path))
-      if (result._tag === 'Left') {
-        return false
-      }
+      const stats = yield* Fs.stat(config.path).pipe(
+        Ef.catchAll(() => Ef.succeed(null)),
+      )
 
-      const stats = result.right
-      return stats.type === 'File' && config.path.endsWith('.graphql')
+      return stats !== null && stats.type === 'File' && FsLoc.encodeSync(config.path).endsWith('.graphql')
     }),
   readIfApplicableOrThrow: (options: Options, context) =>
-    Effect.gen(function*() {
+    Ef.gen(function*() {
       const config = normalizeConfig(options, context.paths.project.rootDir)
 
-      const fs = yield* FileSystem
-      const content = yield* fs.readFileString(config.path)
-
-      const ast = yield* Grafaid.Parse.parseSchema(content, { source: config.path }).pipe(
-        Effect.mapError((error) =>
-          new InputSource.InputSourceError({
-            source: 'file',
-            message: error.message,
-            cause: error,
-          })
-        ),
-      )
-      const after = yield* Grafaid.Schema.fromAST(ast).pipe(
-        Effect.mapError((error) =>
-          new InputSource.InputSourceError({
-            source: 'file',
-            message: error.message,
-            cause: error,
-          })
-        ),
+      const content = yield* Fs.readString(config.path).pipe(
+        Ef.mapError(mapToInputSourceError('file')),
       )
 
-      const date = new Date()
-      const before = Grafaid.Schema.empty
-      const changes = yield* Change.calcChangeset({ before, after }).pipe(
-        Effect.mapError((error) =>
-          new InputSource.InputSourceError({
-            source: 'file',
-            message: `Failed to calculate changeset: ${error}`,
-            cause: error,
-          })
-        ),
+      const ast = yield* Grafaid.Parse.parseSchema(content, { source: FsLoc.encodeSync(config.path) }).pipe(
+        Ef.mapError(mapToInputSourceError('file')),
+      )
+      const schema = yield* Grafaid.Schema.fromAST(ast).pipe(
+        Ef.mapError(mapToInputSourceError('file')),
       )
 
-      // Create the date string for revision
-      const dateString = date.toISOString().split('T')[0]!
-
-      const revision = Revision.make({
-        date: DateOnly.make(dateString),
-        changes,
-      })
-
-      // Create the unversioned schema with full revision
-      const schema = Schema.Unversioned.make({
-        revisions: [revision],
-        definition: after, // GraphQLSchema object
-      })
-
-      // Return the unversioned catalog
-      return Catalog.Unversioned.make({
-        schema,
-      })
+      return yield* createSingleRevisionCatalog(schema, 'file')
     }),
 })

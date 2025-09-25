@@ -1,8 +1,10 @@
 import { Api } from '#api/$'
 import { VitePluginSelfContainedMode } from '#cli/_/self-contained-mode'
+import { Op } from '#dep/effect'
 import type { ReactRouter } from '#dep/react-router/index'
 import type { Vite } from '#dep/vite/index'
-import { Json, Str } from '@wollybeard/kit'
+import { FsLoc, Json, Str } from '@wollybeard/kit'
+import { String } from 'effect'
 import { fileURLToPath } from 'node:url'
 import { polenVirtual } from '../vi.js'
 import { Config as ConfigPlugin, viProjectConfig } from './config.js'
@@ -27,7 +29,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
   //
   if (config.advanced.isSelfContainedMode) {
     conditionalPlugins.push(VitePluginSelfContainedMode({
-      projectDirPathExp: config.paths.project.rootDir,
+      projectDirPathExp: FsLoc.encodeSync(config.paths.project.rootDir),
     }))
   }
 
@@ -93,9 +95,10 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
         const isPolenImporter = Boolean(
           importer
             && (
-              importer.startsWith(config.paths.framework.sourceDir)
+              importer.startsWith(FsLoc.encodeSync(config.paths.framework.sourceDir))
               || polenVirtual.includes(importer)
-              || (importer.startsWith(config.paths.framework.rootDir) && importer.endsWith(`index.html`))
+              || (importer.startsWith(FsLoc.encodeSync(config.paths.framework.rootDir))
+                && importer.endsWith(`index.html`))
             ),
         )
 
@@ -103,8 +106,9 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
         // debug(`check candidate`, { id, importer, isPolenImporter })
 
         const find = Str.pattern<{ groups: [`path`] }>(/^#(?<path>.+)/)
-        const match = Str.match(id, find)
-        if (!match) return null
+        const matchResult = String.match(find)(id)
+        if (Op.isNone(matchResult)) return null
+        const match = matchResult.value
 
         // Use Node's resolver to handle package.json imports correctly
         try {
@@ -122,8 +126,8 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
       name: `polen:core`,
       config(_, { command }) {
         return {
-          root: config.paths.framework.rootDir,
-          publicDir: config.paths.project.absolute.public.root,
+          root: FsLoc.encodeSync(config.paths.framework.rootDir),
+          publicDir: FsLoc.encodeSync(config.paths.project.absolute.public.root),
           // todo
           // future: {
           //   removePluginHookHandleHotUpdate: 'warn',
@@ -144,7 +148,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
           // customLogger: createLogger(config),
           build: {
             target: `esnext`,
-            assetsDir: config.paths.project.relative.build.relative.assets.root,
+            assetsDir: FsLoc.encodeSync(config.paths.project.relative.build.relative.assets.root),
             rollupOptions: {
               treeshake: {
                 // Aggressive tree-shaking for smallest bundles
@@ -154,7 +158,7 @@ export const Core = (config: Api.Config.Config): Vite.PluginOption[] => {
               },
             },
             minify: !config.advanced.debug,
-            outDir: config.paths.project.absolute.build.root,
+            outDir: FsLoc.encodeSync(config.paths.project.absolute.build.root),
             emptyOutDir: true, // disables warning that build dir not in root dir; expected b/c root dir = framework package
           },
         }

@@ -1,9 +1,10 @@
 import { Api } from '#api/$'
+import { Ef, Op, S } from '#dep/effect'
 import { Command } from '@effect/cli'
-import { Fs, Path } from '@wollybeard/kit'
+import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
+import { Fs, FsLoc } from '@wollybeard/kit'
 import consola from 'consola'
-import { Effect, Option } from 'effect'
-import { ensureOptionalAbsoluteWithCwd } from 'graphql-kit'
+
 import { allowGlobalParameter, projectParameter } from '../../_/parameters.js'
 
 export const configCreate = Command.make(
@@ -13,15 +14,19 @@ export const configCreate = Command.make(
     allowGlobal: allowGlobalParameter,
   },
   ({ project, allowGlobal }) =>
-    Effect.gen(function*() {
-      const dir = ensureOptionalAbsoluteWithCwd(Option.getOrUndefined(project))
+    Ef.gen(function*() {
+      const dir = Op.getOrElse(Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)), () =>
+        S.decodeSync(FsLoc.AbsDir.String)(process.cwd()))
+      // const dir = Path.ensureOptionalAbsoluteWithCwd(Op.getOrUndefined(project))
 
-      const isValidProject = yield* Effect.promise(() => Api.Project.validateProjectDirectory(dir))
+      const isValidProject = yield* Api.Project.validateProjectDirectory(dir).pipe(
+        Ef.provide(NodeFileSystem.layer),
+      )
       if (!isValidProject) {
-        return yield* Effect.fail(new Error('Invalid project directory'))
+        return yield* Ef.fail(new Error('Invalid project directory'))
       }
 
-      const fileName = 'polen.config.ts'
+      const fileName = FsLoc.fromString('polen.config.ts')
       const fileContent = `import { Polen } from 'polen'
 
 export default Polen.defineConfig({
@@ -29,21 +34,16 @@ export default Polen.defineConfig({
 })
 `
 
-      const filePath = Path.join(dir, fileName)
+      const filePath = FsLoc.join(dir, fileName)
 
-      const exists = yield* Effect.promise(() => Fs.exists(filePath))
-      if (exists) {
+      const existsResult = yield* Ef.either(Fs.stat(filePath))
+      if (existsResult._tag === 'Right') {
         consola.info(`Polen configuration file already exists at ${fileName}`)
         return
       }
 
-      yield* Effect.promise(() =>
-        Fs.write({
-          path: filePath,
-          content: fileContent,
-        })
-      )
+      yield* Fs.write(filePath, fileContent)
 
       consola.success(`Created Polen configuration file at ${fileName}`)
-    }),
+    }).pipe(Ef.provide(NodeFileSystem.layer)),
 )

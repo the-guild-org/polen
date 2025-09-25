@@ -1,5 +1,7 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
+import { Sch } from '@wollybeard/kit'
+Sch
 
 export const DiagnosticDuplicateVersion = Diagnostic.create({
   source: 'schema-augmentations',
@@ -17,4 +19,4 @@ export const DiagnosticDuplicateVersion = Diagnostic.create({
 
 export const makeDiagnosticDuplicateVersion = Diagnostic.createMake(DiagnosticDuplicateVersion)
 
-export type DiagnosticDuplicateVersion = S.Schema.Type<typeof DiagnosticDuplicateVersion>
+export type DiagnosticDuplicateVersion = typeof DiagnosticDuplicateVersion.Type

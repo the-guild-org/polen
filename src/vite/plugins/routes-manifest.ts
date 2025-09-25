@@ -1,14 +1,13 @@
 import { Api } from '#api/$'
+import { Op } from '#dep/effect'
+import { Ef } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { FileRouter } from '#lib/file-router/$'
 import { debugPolen } from '#singletons/debug'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import consola from 'consola'
-import { Effect } from 'effect'
 import { isInterfaceType, isObjectType } from 'graphql'
-import { Catalog } from 'graphql-kit'
-import { SchemaDefinition } from 'graphql-kit'
-import { Version } from 'graphql-kit'
+import { Catalog, SchemaDefinition, Version } from 'graphql-kit'
 
 /**
  * Vite plugin that generates a routes manifest during build for SSG.
@@ -30,51 +29,52 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
       routes.push('/changelog')
 
       // Check if schema exists using configured sources
-      const schemaExists = await Effect.runPromise(
+      const schemaExists = await Ef.runPromise(
         Api.Schema.hasSchema(config).pipe(
-          Effect.provide(NodeFileSystem.layer),
+          Ef.provide(NodeFileSystem.layer),
         ),
       )
 
       if (schemaExists) {
         // Load catalog data
-        const catalogData = await Effect.runPromise(
+        const catalogData = await Ef.runPromise(
           Api.Schema.loadOrThrow(config).pipe(
-            Effect.provide(NodeFileSystem.layer),
+            Ef.provide(NodeFileSystem.layer),
           ),
         )
 
-        const catalog = catalogData?.data
-
-        if (catalog) {
+        if (Op.isSome(catalogData)) {
+          const catalog = catalogData.value.data
           routes.push('/reference')
 
           // Process catalog using fold
-          Catalog.fold(
-            (versioned) => processVersionedCatalog(versioned, routes),
-            (unversioned) => processUnversionedCatalog(unversioned, routes),
-          )(catalog)
+          if (Op.isSome(catalog)) {
+            Catalog.fold(
+              (versioned) => processVersionedCatalog(versioned, routes),
+              (unversioned) => processUnversionedCatalog(unversioned, routes),
+            )(catalog.value)
+          }
         }
       }
 
       // Add arbitrary page routes
-      const pagesScaleResult = await Effect.runPromise(
+      const pagesScaleResult = await Ef.runPromise(
         Api.Content.scan({
           dir: config.paths.project.absolute.pages,
-        }).pipe(Effect.provide(NodeFileSystem.layer)),
+        }).pipe(Ef.provide(NodeFileSystem.layer)),
       )
 
       if (pagesScaleResult.list.length > 0) {
         debug('Processing arbitrary pages', { count: pagesScaleResult.list.length })
         for (const page of pagesScaleResult.list) {
-          const pathExp = FileRouter.routeToPathExpression(page.route)
+          const pathExp = page.route.toString()
           routes.push(pathExp)
           debug('added page route', { path: pathExp })
         }
       }
 
       // Write manifest using the new Routes API
-      await Effect.runPromise(
+      await Ef.runPromise(
         Api.Routes.Manifest.write(
           {
             version: `1.0.0`,
@@ -84,8 +84,9 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
           },
           config.paths.project.absolute.build.assets.root,
         ).pipe(
-          Effect.provide(NodeFileSystem.layer),
-        ),
+          Ef.provide(NodeFileSystem.layer),
+          // FIXME: Remove cast when @effect/platform versions are aligned
+        ) as any,
       )
 
       consola.success(`Generated routes manifest with ${routes.length} routes`)
@@ -98,7 +99,7 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
 }
 
 function processVersionedCatalog(
-  catalog: Catalog.Versioned.Versioned,
+  catalog: Catalog.Versioned,
   routes: string[],
 ): void {
   for (const schema of Catalog.Versioned.getAll(catalog)) {
@@ -116,7 +117,7 @@ function processVersionedCatalog(
 }
 
 function processUnversionedCatalog(
-  catalog: Catalog.Unversioned.Unversioned,
+  catalog: Catalog.Unversioned,
   routes: string[],
 ): void {
   // Process schema definition if it exists

@@ -1,6 +1,8 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
+import { Sch } from '@wollybeard/kit'
 import { Version } from 'graphql-kit'
+Sch
 
 export const DiagnosticUnknownVersion = Diagnostic.create({
   source: 'examples-scanner',
@@ -21,4 +23,4 @@ export const DiagnosticUnknownVersion = Diagnostic.create({
 
 export const makeDiagnosticUnknownVersion = Diagnostic.createMake(DiagnosticUnknownVersion)
 
-export type DiagnosticUnknownVersion = S.Schema.Type<typeof DiagnosticUnknownVersion>
+export type DiagnosticUnknownVersion = typeof DiagnosticUnknownVersion.Type

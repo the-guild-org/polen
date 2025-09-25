@@ -1,11 +1,11 @@
 import { reportError } from '#api/server/report-error'
+import { Ef } from '#dep/effect'
 import type { Hono } from '#dep/hono/index'
 import type { ReactRouter } from '#dep/react-router/index'
 import { React } from '#dep/react/index'
 import type { RouteHandle } from '#lib/react-router-effect/react-router-effect'
 import * as Theme from '#lib/theme/theme'
-import { Arr } from '@wollybeard/kit'
-import { ResponseInternalServerError } from 'graphql-kit'
+import { Http } from '@wollybeard/kit'
 import * as ReactDomServer from 'react-dom/server'
 import { createStaticRouter, StaticRouterProvider } from 'react-router'
 import { templateConfig } from 'virtual:polen/project/config'
@@ -13,7 +13,7 @@ import type { PolenGlobalData } from '../constants.js'
 import { view } from './view.js'
 
 interface RenderHooks {
-  transformHtml?: (html: string) => Promise<string> | string
+  transformHtml?: (html: string) => Ef.Effect<string, never, never>
 }
 
 export const createPageHtmlResponse = async (
@@ -56,7 +56,7 @@ export const createPageHtmlResponse = async (
     )
   } catch (cause) {
     reportError(new Error(`Failed to server side render the HTML`, { cause }))
-    return ResponseInternalServerError()
+    return Http.Response.internalServerError()
   }
 
   // Create the base HTML document
@@ -75,7 +75,7 @@ export const createPageHtmlResponse = async (
 
   // Apply HTML transformation hook to the full document
   if (hooks?.transformHtml) {
-    html = await hooks.transformHtml(html)
+    html = await Ef.runPromise(hooks.transformHtml(html))
   }
 
   const headers = getRouteHeaders(staticHandlerContext)
@@ -99,7 +99,7 @@ const getStatusCode = (
   }
 
   // Then check for custom status in route handle
-  const handle = Arr.getLast(context.matches)?.route.handle as RouteHandle | undefined
+  const handle = context.matches.at(-1)?.route.handle as RouteHandle | undefined
   if (handle?.statusCode) {
     return handle.statusCode
   }

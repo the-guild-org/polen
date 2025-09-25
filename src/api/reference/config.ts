@@ -1,5 +1,5 @@
+import { S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
-import { S } from 'graphql-kit'
 
 // ============================================================================
 // Schema - Reference Diagnostics
@@ -20,7 +20,7 @@ export const ReferenceDiagnostics = S.Struct({
   description: 'Diagnostic controls for reference documentation',
 })
 
-export type ReferenceDiagnostics = S.Schema.Type<typeof ReferenceDiagnostics>
+export type ReferenceDiagnostics = typeof ReferenceDiagnostics.Type
 
 // ============================================================================
 // Schema - Descriptions View
@@ -51,7 +51,7 @@ export const DescriptionsView = S.Struct({
   description: 'Configuration for descriptions display in reference documentation',
 })
 
-export type DescriptionsView = S.Schema.Type<typeof DescriptionsView>
+export type DescriptionsView = typeof DescriptionsView.Type
 
 // ============================================================================
 // Schema - Reference Config
@@ -134,7 +134,7 @@ export const ReferenceConfigObject = S.Struct({
   description: 'Configuration for reference documentation feature',
 })
 
-export type ReferenceConfigObject = S.Schema.Type<typeof ReferenceConfigObject>
+export type ReferenceConfigObject = typeof ReferenceConfigObject.Type
 
 /**
  * Reference configuration with boolean shorthand support.
@@ -169,7 +169,7 @@ export const ReferenceConfig = S.transform(
   description: 'Reference documentation configuration with boolean shortcuts',
 })
 
-export type ReferenceConfig = S.Schema.Type<typeof ReferenceConfig>
+export type ReferenceConfig = typeof ReferenceConfig.Type
 
 // ============================================================================
 // Constructors

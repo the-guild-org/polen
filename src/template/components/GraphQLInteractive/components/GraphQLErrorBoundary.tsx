@@ -1,3 +1,4 @@
+// TODO: Review and replace inline styles with Tailwind classes
 /**
  * Error boundary for GraphQL Interactive components
  *
@@ -7,7 +8,7 @@
 
 import type { React } from '#dep/react/index'
 import { React as ReactHooks } from '#dep/react/index'
-import { Box } from '@radix-ui/themes'
+import { Box } from '../../ui/index.js'
 
 interface GraphQLErrorBoundaryProps {
   /** Child components to protect */

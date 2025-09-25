@@ -1,3 +1,4 @@
+// TODO: Review and replace inline styles with Tailwind classes
 /**
  * Interactive GraphQL code block with tree-sitter parsing
  *
@@ -11,9 +12,9 @@
 
 import type { React } from '#dep/react/index'
 import { React as ReactHooks } from '#dep/react/index'
-import { Box } from '@radix-ui/themes'
 import type { HighlightedCode } from 'codehike/code'
 import type { GraphQLSchema } from 'graphql'
+import { Box } from '../ui/index.js'
 import { GraphQLErrorBoundary } from './components/GraphQLErrorBoundary.js'
 import { GraphQLTokenPopover } from './components/GraphQLTokenPopover.js'
 import { usePopoverState } from './hooks/use-popover-state.js'
