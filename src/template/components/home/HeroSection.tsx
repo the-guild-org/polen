@@ -1,7 +1,7 @@
 // TODO: Review and replace inline styles with Tailwind classes
 import type { HeroCallToAction } from '#api/config/home'
 import { Ar } from '#dep/effect'
-import { Catalog, CatalogStatistics } from 'graphql-kit'
+import { Catalog, CatalogStatistics, Schema, Version } from 'graphql-kit'
 import * as React from 'react'
 import { Link } from 'react-router'
 import heroImageSrc from 'virtual:polen/project/assets/hero'
@@ -86,7 +86,8 @@ export const Hero: React.FC<HeroProps> = ({
     try {
       const latestSchema = Catalog.getLatest(schemasCatalog)
       if (latestSchema && latestSchema.definition) {
-        const versionStats = CatalogStatistics.analyzeSchema(latestSchema.definition, 'current')
+        const version = Schema.getVersion(latestSchema) ?? Version.Custom.make({ value: 'current' })
+        const versionStats = CatalogStatistics.analyzeSchema(latestSchema.definition, version)
         schemaStats = {
           types: versionStats.totalTypes,
           queries: versionStats.queries,

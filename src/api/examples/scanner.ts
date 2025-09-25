@@ -1,4 +1,4 @@
-import { Ar, Ef, Op } from '#dep/effect'
+import { Ar, Ef, Op, S } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
 import { Fs, FsLoc, Str } from '@wollybeard/kit'
 import { HashMap, HashSet, Match } from 'effect'
@@ -23,7 +23,7 @@ export interface ScanResult {
 }
 
 export interface ScanOptions {
-  dir: FsLoc.AbsDir.AbsDir
+  dir: FsLoc.AbsDir
   extensions?: string[]
   schemaCatalog?: SchemaCatalog.Catalog
 }
@@ -44,20 +44,26 @@ const VERSIONED_FILE_PATTERN = Str.pattern<{ groups: ['name', 'version'] }>(
 // ============================================================================
 
 type ParsedExampleFile =
-  | { type: 'unversioned'; name: string; file: FsLoc.RelFile.RelFile }
-  | { type: 'versioned'; name: string; version: Version.Version; file: FsLoc.RelFile.RelFile }
+  | { type: 'unversioned'; name: string; file: FsLoc.RelFile }
+  | { type: 'versioned'; name: string; version: Version.Version; file: FsLoc.RelFile }
 
 type GroupedExampleFiles = Map<string, {
-  unversioned?: FsLoc.RelFile.RelFile
-  versioned: Map<Version.Version, FsLoc.RelFile.RelFile>
+  unversioned?: FsLoc.RelFile
+  versioned: Map<Version.Version, FsLoc.RelFile>
 }>
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
-export const parseExampleFile = (file: FsLoc.RelFile.RelFile): ParsedExampleFile => {
-  const base = FsLoc.name(file)
+export const parseExampleFile = (file: FsLoc.RelFile): ParsedExampleFile => {
+  const fullName = FsLoc.name(file)
+
+  // TODO: Replace with FsLoc.stem(file) when available
+  // Currently FsLoc.name() returns the full filename including extension
+  // We need to strip the extension to correctly parse versioned files
+  const lastDotIndex = fullName.lastIndexOf('.')
+  const base = lastDotIndex > 0 ? fullName.substring(0, lastDotIndex) : fullName
 
   // Try to match versioned pattern: <name>.<version>
   const opMatch = Str.match(base, VERSIONED_FILE_PATTERN)
@@ -72,7 +78,7 @@ export const parseExampleFile = (file: FsLoc.RelFile.RelFile): ParsedExampleFile
   return { type: 'unversioned', name: base, file }
 }
 
-const groupExampleFiles = (files: FsLoc.RelFile.RelFile[]): GroupedExampleFiles => {
+const groupExampleFiles = (files: FsLoc.RelFile[]): GroupedExampleFiles => {
   const grouped: GroupedExampleFiles = new Map()
 
   for (const file of files) {
@@ -107,20 +113,21 @@ export const resolveDefaultFiles = (
   grouped: GroupedExampleFiles,
   schemaVersions: Version.Version[],
 ): Map<string, {
-  versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, FsLoc.RelFile.RelFile>
-  unversioned?: FsLoc.RelFile.RelFile
+  versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, FsLoc.RelFile>
+  unversioned?: FsLoc.RelFile
 }> => {
   const resolved = new Map<string, {
-    versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, FsLoc.RelFile.RelFile>
-    unversioned?: FsLoc.RelFile.RelFile
+    versionDocuments: HashMap.HashMap<VersionCoverage.VersionCoverage, FsLoc.RelFile>
+    unversioned?: FsLoc.RelFile
   }>()
 
   for (const [name, group] of grouped) {
-    let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, FsLoc.RelFile.RelFile>()
+    let versionDocuments = HashMap.empty<VersionCoverage.VersionCoverage, FsLoc.RelFile>()
 
     // Add explicit versions
     for (const [version, file] of group.versioned) {
-      versionDocuments = HashMap.set(versionDocuments, version, file)
+      const vercov = VersionCoverage.One.make({ version })
+      versionDocuments = HashMap.set(versionDocuments, vercov, file)
     }
 
     // Handle unversioned file
@@ -132,8 +139,8 @@ export const resolveDefaultFiles = (
       if (defaultVersions.length > 0) {
         // Create version coverage for default
         const defaultCoverage = defaultVersions.length === 1
-          ? defaultVersions[0]! // Single version
-          : HashSet.fromIterable(defaultVersions) // Version set
+          ? VersionCoverage.One.make({ version: defaultVersions[0]! }) // Single version
+          : VersionCoverage.Set.make({ versions: HashSet.fromIterable(defaultVersions) }) // Version set
 
         versionDocuments = HashMap.set(versionDocuments, defaultCoverage, group.unversioned)
       }
@@ -224,7 +231,7 @@ const lintFileLayout = (
 // ============================================================================
 
 export const scan = (
-  options: ScanOptions & { files?: FsLoc.RelFile.RelFile[] },
+  options: ScanOptions & { files?: FsLoc.RelFile[] },
 ): Ef.Effect<ScanResult, Error, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const extensions = options.extensions ?? DEFAULT_EXTENSIONS
@@ -258,7 +265,7 @@ export const scan = (
 
       // For now, use the encoded file path as the base path
       // This will be a string path for the example
-      const basePath = FsLoc.RelFile.encodeSync(firstFile)
+      const basePath = S.encodeSync(FsLoc.RelFile.String)(firstFile)
 
       let example: Example.Example | undefined
 
@@ -282,17 +289,17 @@ export const scan = (
 
         for (const [versionCoverage, filePath] of HashMap.entries(resolved.versionDocuments)) {
           // Check if version is known (only for single versions, not sets)
-          if (Version.is(versionCoverage)) {
-            const versionExists = HashSet.has(schemaVersionsSet, versionCoverage)
+          if (VersionCoverage.isOne(versionCoverage)) {
+            const versionExists = HashSet.has(schemaVersionsSet, versionCoverage.version)
             if (options.schemaCatalog && schemaVersions.length > 0 && !versionExists) {
-              unknownVersions.push(versionCoverage)
+              unknownVersions.push(versionCoverage.version)
               // Create diagnostic for unknown version
               diagnostics.push(makeDiagnosticUnknownVersion({
                 message: `Example "${name}" specifies version "${
-                  Version.encodeSync(versionCoverage)
+                  Version.encodeSync(versionCoverage.version)
                 }" which does not exist in the schema`,
                 example: { name, path: basePath },
-                version: versionCoverage,
+                version: versionCoverage.version,
                 availableVersions: schemaVersions,
               }))
               // Skip this version - don't include it in the example
@@ -323,8 +330,8 @@ export const scan = (
 
       if (example) {
         // Check for description.md or description.mdx file
-        const descriptionMdFile = FsLoc.RelFile.decodeSync(`${name}.md`)
-        const descriptionMdxFile = FsLoc.RelFile.decodeSync(`${name}.mdx`)
+        const descriptionMdFile = S.decodeSync(FsLoc.RelFile.String)(`${name}.md`)
+        const descriptionMdxFile = S.decodeSync(FsLoc.RelFile.String)(`${name}.mdx`)
         const descriptionMdPathLoc = FsLoc.join(options.dir, descriptionMdFile)
         const descriptionMdxPathLoc = FsLoc.join(options.dir, descriptionMdxFile)
 

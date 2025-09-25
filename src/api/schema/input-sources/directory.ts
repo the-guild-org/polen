@@ -57,14 +57,14 @@ export interface Options {
    *   schema.graphql
    * ```
    */
-  path?: string | FsLoc.AbsDir.AbsDir | FsLoc.RelDir.RelDir
+  path?: string | FsLoc.AbsDir | FsLoc.RelDir
 }
 
 export interface Config {
-  path: FsLoc.AbsDir.AbsDir
+  path: FsLoc.AbsDir
 }
 
-export const normalizeOptions = (options: Options, projectRoot: FsLoc.AbsDir.AbsDir): Config => {
+export const normalizeOptions = (options: Options, projectRoot: FsLoc.AbsDir): Config => {
   const config: Config = {
     path: normalizePathToAbs.dir(options.path, projectRoot, defaultPaths.schemaDirectory),
   }
@@ -122,7 +122,7 @@ export const loader = InputSource.create({
       }
 
       // Convert to absolute paths
-      const graphqlFiles = graphqlFileNames.map(fileName => FsLoc.join(config.path, fileName) as FsLoc.AbsFile.AbsFile)
+      const graphqlFiles = graphqlFileNames.map(fileName => FsLoc.join(config.path, fileName) as FsLoc.AbsFile)
 
       debug(`did find`, graphqlFiles)
 
@@ -171,7 +171,7 @@ export const loader = InputSource.create({
 })
 
 const read = (
-  revisionInputs: { date: DateOnly.DateOnly; filePath: FsLoc.AbsFile.AbsFile }[],
+  revisionInputs: { date: DateOnly.DateOnly; filePath: FsLoc.AbsFile }[],
 ): Ef.Effect<Schema.Unversioned, InputSourceError | PlatformError, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const revisionInputsLoaded = yield* Ef.all(

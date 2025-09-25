@@ -1,7 +1,7 @@
 import { Api } from '#api/$'
 import { Schema } from '#api/schema/$'
 import type { Diagnostic as AugmentationDiagnostic } from '#api/schema/augmentations/diagnostics/diagnostic'
-import { Op } from '#dep/effect'
+import { Op, S } from '#dep/effect'
 import { Ef } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
@@ -81,14 +81,14 @@ export const Schemas = ({
   const isSchemaFile = (file: string): boolean => {
     if (!config.schema) return false
 
-    const fileLoc = FsLoc.decodeSync(file)
+    const fileLoc = FsLoc.normalizeInput(file)
     const absoluteFile = FsLoc.Groups.Abs.is(fileLoc)
       ? fileLoc
-      : FsLoc.join(FsLoc.fromString(process.cwd() + '/'), fileLoc)
+      : FsLoc.join(S.decodeSync(FsLoc.AbsDir.String)(process.cwd() + '/'), fileLoc)
 
     // Check if file path matches the configured schema file
     if (config.schema.sources?.file?.path) {
-      const schemaFileLoc = FsLoc.decodeSync(config.schema.sources.file.path)
+      const schemaFileLoc = FsLoc.normalizeInput(config.schema.sources.file.path)
       const absoluteSchemaFile = FsLoc.Groups.Abs.is(schemaFileLoc)
         ? schemaFileLoc
         : FsLoc.join(config.paths.project.rootDir, schemaFileLoc)
@@ -97,7 +97,7 @@ export const Schemas = ({
 
     // Check if file path is within the configured schema directory
     if (config.schema.sources?.directory?.path) {
-      const schemaDirLoc = FsLoc.decodeSync(config.schema.sources.directory.path)
+      const schemaDirLoc = FsLoc.normalizeInput(config.schema.sources.directory.path)
       const absoluteSchemaDir = FsLoc.Groups.Abs.is(schemaDirLoc)
         ? schemaDirLoc
         : FsLoc.join(config.paths.project.rootDir, schemaDirLoc)
@@ -123,10 +123,12 @@ export const Schemas = ({
     const paths: string[] = []
 
     if (config.schema?.sources?.directory?.path) {
-      paths.push(config.schema.sources.directory.path)
+      const dirLoc = FsLoc.normalizeInput(config.schema.sources.directory.path)
+      paths.push(FsLoc.encodeSync(dirLoc))
     }
     if (config.schema?.sources?.file?.path) {
-      paths.push(config.schema.sources.file.path)
+      const fileLoc = FsLoc.normalizeInput(config.schema.sources.file.path)
+      paths.push(FsLoc.encodeSync(fileLoc))
     }
     if (config.schema?.sources?.introspection?.url) {
       paths.push(FsLoc.encodeSync(
@@ -150,7 +152,7 @@ export const Schemas = ({
             const encoded = yield* Catalog.encode(data)
             return JSON.stringify(encoded, null, 2)
           }),
-        path: 'schemas/catalog.json',
+        path: S.decodeSync(FsLoc.RelFile.String)('schemas/catalog.json'),
       },
       filePatterns: {
         watch: getWatchPaths,

@@ -11,7 +11,7 @@ import type { Page } from './page.js'
 export interface ScanResult {
   list: Page[]
   tree: Tree.Tree<Page>
-  diagnostics: FileRouter.Diagnostic[]
+  diagnostics: readonly FileRouter.Diagnostic[]
 }
 
 /**

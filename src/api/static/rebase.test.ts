@@ -13,7 +13,7 @@ import {
   TargetExistsError,
 } from './rebase.js'
 
-const createTestBuild = (dir: FsLoc.AbsDir.AbsDir, basePath = '/') =>
+const createTestBuild = (dir: FsLoc.AbsDir, basePath = '/') =>
   Ef.gen(function*() {
     // Create Polen build manifest
     const polenDir = FsLoc.join(dir, '.polen/')

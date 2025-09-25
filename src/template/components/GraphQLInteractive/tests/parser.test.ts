@@ -17,71 +17,72 @@ describe('parseGraphQLWithTreeSitter', () => {
     }>
   }
 
-  type ArgumentParsingInput = ArgumentParsingCase
-  type ArgumentParsingOutput = {}
-
   // dprint-ignore
-  Test.Table.suite<ArgumentParsingInput, ArgumentParsingOutput>('argument parsing', [
-    {
-      n: 'should recognize argument names as interactive tokens',
-      i: {
-        schemaSDL: `
+  Test.describe('argument parsing')
+    .i<ArgumentParsingCase>()
+    .o<{}>()
+    .cases(
+      [
+        'should recognize argument names as interactive tokens',
+        [{
+          schemaSDL: `
         type Query {
           pokemon(id: ID!): String
         }
       `,
-        code: `query {
+          code: `query {
         pokemon(id: "123") {
           __typename
         }
       }`,
-        checks: [
-          { tokenText: 'id', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#pokemon__id' },
-        ],
-      },
-      o: {}
-    },
-    {
-      n: 'should handle multiple arguments',
-      i: {
-        schemaSDL: `
+          checks: [
+            { tokenText: 'id', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#pokemon__id' },
+          ],
+        }],
+        {}
+      ],
+      [
+        'should handle multiple arguments',
+        [{
+          schemaSDL: `
         type Query {
           search(query: String!, limit: Int, offset: Int): [String!]!
         }
       `,
-        code: `query {
+          code: `query {
         search(query: "test", limit: 10) {
           __typename
         }
       }`,
-        checks: [
-          { tokenText: 'query', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#search__query' },
-          { tokenText: 'limit', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#search__limit' },
-        ],
-      },
-      o: {}
-    },
-    {
-      n: 'should handle arguments with variables',
-      i: {
-        schemaSDL: `
+          checks: [
+            { tokenText: 'query', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#search__query' },
+            { tokenText: 'limit', isArgument: true, expectedInteractive: true, expectedUrl: '/reference/Query#search__limit' },
+          ],
+        }],
+        {}
+      ],
+      [
+        'should handle arguments with variables',
+        [{
+          schemaSDL: `
         type Query {
           pokemon(id: ID!): String
         }
       `,
-        code: `query GetPokemon($pokemonId: ID!) {
+          code: `query GetPokemon($pokemonId: ID!) {
         pokemon(id: $pokemonId) {
           __typename
         }
       }`,
-        checks: [
-          { tokenText: 'id', isArgument: true, expectedInteractive: true },
-          { tokenText: '$pokemonId', isArgument: false, checkVariable: true },
-        ],
-      },
-      o: {}
-    },
-  ], async ({ i, o }) => {
+          checks: [
+            { tokenText: 'id', isArgument: true, expectedInteractive: true },
+            { tokenText: '$pokemonId', isArgument: false, checkVariable: true },
+          ],
+        }],
+        {}
+      ],
+    )
+    .test(async (i, o) => {
     const schema = buildSchema(i.schemaSDL)
     const tokens = await parseGraphQLWithTreeSitter(i.code, [], schema)
 

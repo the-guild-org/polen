@@ -1,6 +1,5 @@
 import { Api } from '#api/$'
-import { Op } from '#dep/effect'
-import { Ef } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { Args, Command, Options } from '@effect/cli'
 import { NodeFileSystem } from '@effect/platform-node'
 import { FsLoc } from '@wollybeard/kit'
@@ -31,12 +30,12 @@ export const staticRebase = Command.make(
   ({ source, newBasePath, target, allowGlobal }) =>
     Ef.gen(function*() {
       const targetPath = Op.getOrUndefined(target)
-      const sourceDir = FsLoc.AbsDir.decodeSync(source.endsWith('/') ? source : `${source}/`)
+      const sourceDir = S.decodeSync(FsLoc.AbsDir.String)(source)
       const plan: Api.Static.RebasePlan = targetPath
         ? {
           changeMode: 'copy',
           sourcePath: sourceDir,
-          targetPath: FsLoc.AbsDir.decodeSync(targetPath.endsWith('/') ? targetPath : `${targetPath}/`),
+          targetPath: S.decodeSync(FsLoc.AbsDir.String)(targetPath),
           newBasePath,
         }
         : {

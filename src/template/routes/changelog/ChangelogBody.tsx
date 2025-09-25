@@ -30,7 +30,7 @@ export const ChangelogBody: React.FC<{ schema: Schema.Schema }> = ({ schema }) =
   )
 }
 
-const Changeset: React.FC<{ revision: Revision.Revision; schema: Schema.Schema | null }> = ({ revision, schema }) => {
+const Changeset: React.FC<{ revision: Revision; schema: Schema.Schema | null }> = ({ revision, schema }) => {
   // Group changes by criticality level
   const groupedChanges = useMemo(() => {
     const groups = {} as Record<CriticalityLevel, Change.Change[]>

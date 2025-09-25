@@ -9,7 +9,7 @@ import type { Catalog } from './schemas/catalog.js'
  */
 export const generateExampleTypes = (
   catalog: Catalog,
-  projectRoot: FsLoc.AbsDir.AbsDir,
+  projectRoot: FsLoc.AbsDir,
 ): Ef.Effect<void, Error, FileSystem.FileSystem> => {
   const exampleNames = catalog.examples.map(e => e.name)
   const typeDefinition = generateTypeDefinition(exampleNames)

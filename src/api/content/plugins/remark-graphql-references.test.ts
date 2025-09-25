@@ -75,16 +75,17 @@ describe('path transformation', () => {
 
   const file = { path: 'test.md' }
 
-  type TransformInput = { path: string }
-  type TransformOutput = {}
-
   // dprint-ignore
-  Test.Table.suite<TransformInput, TransformOutput>('transforms gql: paths to GraphQLReference components', [
-      { n: 'simple type',       i: { path: 'User' },         o: {} },
-      { n: 'field path',        i: { path: 'User.posts' },   o: {} },
-      { n: 'query field',       i: { path: 'Query.user' },   o: {} },
-      { n: 'nested field',      i: { path: 'Post.author' },  o: {} },
-    ], ({ i, o }) => {
+  Test.describe('transforms gql: paths to GraphQLReference components')
+    .i<{ path: string }>()
+    .o<{}>()
+    .cases(
+      ['simple type',       [{ path: 'User' }],         {}],
+      ['field path',        [{ path: 'User.posts' }],   {}],
+      ['query field',       [{ path: 'Query.user' }],   {}],
+      ['nested field',      [{ path: 'Post.author' }],  {}],
+    )
+    .test((i, o) => {
       const tree = createTree(`gql:${i.path}`)
 
       // Use runSync to process the tree synchronously
@@ -117,18 +118,19 @@ describe('path validation', () => {
 
   const file = { path: 'test.md' }
 
-  type ValidateInput = { path: string }
-  type ValidateOutput = { shouldHaveDiagnostic: boolean; diagnosticType?: 'invalid-path' | 'invalid-syntax' }
-
   // dprint-ignore
-  Test.Table.suite<ValidateInput, ValidateOutput>('validates GraphQL paths', [
-      { n: 'valid type',         i: { path: 'User' },           o: { shouldHaveDiagnostic: false } },
-      { n: 'valid field',        i: { path: 'User.name' },      o: { shouldHaveDiagnostic: false } },
-      { n: 'invalid type',       i: { path: 'InvalidType' },    o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' } },
-      { n: 'invalid field',      i: { path: 'User.invalid' },   o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' } },
-      { n: 'double dots',        i: { path: 'User..field' },    o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' } },
-      { n: 'empty segments',     i: { path: '.User.' },         o: { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' } },
-    ], ({ i, o }) => {
+  Test.describe('validates GraphQL paths')
+    .i<{ path: string }>()
+    .o<{ shouldHaveDiagnostic: boolean; diagnosticType?: 'invalid-path' | 'invalid-syntax' }>()
+    .cases(
+      ['valid type',         [{ path: 'User' }],           { shouldHaveDiagnostic: false }],
+      ['valid field',        [{ path: 'User.name' }],      { shouldHaveDiagnostic: false }],
+      ['invalid type',       [{ path: 'InvalidType' }],    { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' }],
+      ['invalid field',      [{ path: 'User.invalid' }],   { shouldHaveDiagnostic: true, diagnosticType: 'invalid-path' }],
+      ['double dots',        [{ path: 'User..field' }],    { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' }],
+      ['empty segments',     [{ path: '.User.' }],         { shouldHaveDiagnostic: true, diagnosticType: 'invalid-syntax' }],
+    )
+    .test((i, o) => {
       onDiagnostic.mockClear() // Clear the mock before each test case
       const tree = createTree(`gql:${i.path}`)
 

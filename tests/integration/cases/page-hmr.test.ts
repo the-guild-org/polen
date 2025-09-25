@@ -9,7 +9,11 @@ test.describe('HMR', () => {
   // Skipped: Flaky in CI - HMR timing is inconsistent across environments
   // TODO: Find a more reliable way to test HMR functionality
   test.skip('auto-refresh on content change', async ({ page, vite, project }) => {
-    await project.dir.set({ 'pages/test.md': '# Initial' })
+    await Ef.runPromise(
+      project.dir.file('pages/test.md', '# Initial').commit().pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
+    )
     const polenConfig = await Ef.runPromise(
       Api.ConfigResolver.fromMemory(
         { advanced: { isSelfContainedMode: true } },
@@ -24,14 +28,22 @@ test.describe('HMR', () => {
     await expect(page.getByRole('heading', { name: 'Initial' })).toBeVisible()
 
     // Update the file
-    await project.dir.set({ 'pages/test.md': '# Updated' })
+    await Ef.runPromise(
+      project.dir.file('pages/test.md', '# Updated').commit().pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
+    )
 
     // Wait for the content to update (HMR might not trigger a full page reload)
     await expect(page.getByRole('heading', { name: 'Updated' })).toBeVisible({ timeout: 10000 })
   })
 
   test.skip('add new page', async ({ page, vite, project }) => {
-    await project.dir.set({ 'pages/home.md': '# Home' })
+    await Ef.runPromise(
+      project.dir.file('pages/home.md', '# Home').commit().pipe(
+        Ef.provide(NodeFileSystem.layer),
+      ),
+    )
     const polenConfig = await Ef.runPromise(
       Api.ConfigResolver.fromMemory(
         { advanced: { isSelfContainedMode: true } },
@@ -47,10 +59,13 @@ test.describe('HMR', () => {
     await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible()
 
     // Create the new page
-    await project.dir.set({
-      'pages/home.md': '# Home',
-      'pages/new.md': '# New Page Content',
-    })
+    await Ef.runPromise(
+      project.dir
+        .file('pages/home.md', '# Home')
+        .file('pages/new.md', '# New Page Content')
+        .commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
 
     // Wait for Vite to process the new file
     await page.waitForTimeout(3000)

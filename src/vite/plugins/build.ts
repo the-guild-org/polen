@@ -122,7 +122,8 @@ export const Build = (config: Api.Config.Config): Vite.Plugin[] => {
         if (!config.advanced.debug) {
           const viteDir = FsLoc.join(config.paths.project.absolute.build.root, FsLoc.fromString('.vite/'))
           await Ef.runPromise(
-            Fs.remove(viteDir, { recursive: true }).pipe(Ef.provide(NodeFileSystem.layer)),
+            // FIXME: Remove cast when @effect/platform versions are aligned
+            Fs.remove(viteDir, { recursive: true }).pipe(Ef.provide(NodeFileSystem.layer)) as any,
           )
         }
       },

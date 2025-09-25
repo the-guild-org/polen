@@ -32,7 +32,7 @@ export type PackageInstallationError = PackageJsonNotFound | PackageJsonReadErro
  * Check if a project has a package installed by examining its package.json
  */
 export const checkIsProjectHasPackageInstalled = (
-  projectRoot: FsLoc.AbsDir.AbsDir,
+  projectRoot: FsLoc.AbsDir,
   packageName: string,
 ): Ef.Effect<boolean, PackageInstallationError, FileSystem.FileSystem> =>
   Ef.gen(function*() {
@@ -80,4 +80,4 @@ export const checkIsProjectHasPackageInstalled = (
     // Check if package is in dependencies or devDependencies
     return !!(packageJson.dependencies?.[packageName]
       ?? packageJson.devDependencies?.[packageName])
-  })
+  }) as any

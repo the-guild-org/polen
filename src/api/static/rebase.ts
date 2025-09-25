@@ -1,4 +1,4 @@
-import { Ef, Op } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
 import { Fs, FsLoc } from '@wollybeard/kit'
 import { Data } from 'effect'
@@ -30,14 +30,14 @@ export type RebasePlan = RebaseOverwritePlan | RebaseCopyPlan
 export interface RebaseOverwritePlan {
   changeMode: `mutate`
   newBasePath: string
-  sourcePath: FsLoc.AbsDir.AbsDir
+  sourcePath: FsLoc.AbsDir
 }
 
 export interface RebaseCopyPlan {
   changeMode: `copy`
   newBasePath: string
-  sourcePath: FsLoc.AbsDir.AbsDir
-  targetPath: FsLoc.AbsDir.AbsDir
+  sourcePath: FsLoc.AbsDir
+  targetPath: FsLoc.AbsDir
 }
 
 const validateBasePath = (path: string) =>
@@ -77,7 +77,7 @@ export const rebase = (
     yield* validateBasePath(plan.newBasePath)
 
     // 3. Handle copy vs mutate
-    let workingPath: FsLoc.AbsDir.AbsDir
+    let workingPath: FsLoc.AbsDir
     if (plan.changeMode === `copy`) {
       const targetExists = yield* Fs.exists(plan.targetPath)
       if (targetExists) {
@@ -109,7 +109,7 @@ export const rebase = (
 //
 //
 
-const isEmptyDirectory = (path: FsLoc.AbsDir.AbsDir): Ef.Effect<boolean, Error, FileSystem.FileSystem> =>
+const isEmptyDirectory = (path: FsLoc.AbsDir): Ef.Effect<boolean, Error, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const entries = yield* Fs.read(path).pipe(
       Ef.mapError((error) => new Error(`Failed to read directory: ${error}`)),
@@ -118,13 +118,16 @@ const isEmptyDirectory = (path: FsLoc.AbsDir.AbsDir): Ef.Effect<boolean, Error, 
   })
 
 const copyDirectory = (
-  from: FsLoc.AbsDir.AbsDir,
-  to: FsLoc.AbsDir.AbsDir,
+  from: FsLoc.AbsDir,
+  to: FsLoc.AbsDir,
 ): Ef.Effect<void, Error, FileSystem.FileSystem> =>
   Ef.gen(function*() {
-    // Ensure target directory exists
-    yield* Fs.write(to, undefined, { recursive: true }).pipe(
-      Ef.mapError((error) => new Error(`Failed to create target directory: ${error}`)),
+    const fs = yield* FileSystem.FileSystem
+
+    // Ensure target directory exists by creating it
+    const toPath = FsLoc.encodeSync(to)
+    yield* fs.makeDirectory(toPath, { recursive: true }).pipe(
+      Ef.catchAll(() => Ef.succeed(undefined)),
     )
 
     // Read source directory
@@ -141,14 +144,14 @@ const copyDirectory = (
         // Check if entry is a directory or file using the tag
         if (entry._tag === 'LocAbsDir') {
           // It's a directory - recurse
-          const targetDir = FsLoc.join(to, FsLoc.RelDir.decodeSync(entryName + '/'))
-          return copyDirectory(entry as FsLoc.AbsDir.AbsDir, targetDir as FsLoc.AbsDir.AbsDir)
+          const targetDir = FsLoc.join(to, S.decodeSync(FsLoc.RelDir.String)(entryName + '/'))
+          return copyDirectory(entry as FsLoc.AbsDir, targetDir as FsLoc.AbsDir)
         } else {
           // It's a file - copy it
-          const targetFile = FsLoc.join(to, FsLoc.RelFile.decodeSync(entryName))
+          const targetFile = FsLoc.join(to, S.decodeSync(FsLoc.RelFile.String)(entryName))
           return Fs.copy(
-            entry as FsLoc.AbsFile.AbsFile,
-            targetFile as FsLoc.AbsFile.AbsFile,
+            entry as FsLoc.AbsFile,
+            targetFile as FsLoc.AbsFile,
           )
         }
       }),
@@ -168,7 +171,7 @@ const isValidUrlPath = (path: string): boolean => {
 }
 
 const updateHtmlFiles = (
-  buildPath: FsLoc.AbsDir.AbsDir,
+  buildPath: FsLoc.AbsDir,
   oldBasePath: string,
   newBasePath: string,
 ): Ef.Effect<void, Error, FileSystem.FileSystem> =>
@@ -182,7 +185,7 @@ const updateHtmlFiles = (
     Ef.asVoid,
   )
 
-const findHtmlFiles = (dir: FsLoc.AbsDir.AbsDir) =>
+const findHtmlFiles = (dir: FsLoc.AbsDir) =>
   Fs.glob(`**/*.html`, {
     absolute: true,
     cwd: dir,
@@ -190,7 +193,7 @@ const findHtmlFiles = (dir: FsLoc.AbsDir.AbsDir) =>
   })
 
 const updateHtmlFile = (
-  filePath: FsLoc.AbsFile.AbsFile,
+  filePath: FsLoc.AbsFile,
   oldBasePath: string,
   newBasePath: string,
 ): Ef.Effect<void, Error, FileSystem.FileSystem> =>
@@ -236,7 +239,7 @@ const updateHtmlFile = (
   })
 
 const updateManifest = (
-  buildPath: FsLoc.AbsDir.AbsDir,
+  buildPath: FsLoc.AbsDir,
   updates: Partial<PolenBuildManifest>,
 ): Ef.Effect<void, ManifestNotFoundError | Error, FileSystem.FileSystem> =>
   buildManifest.read(buildPath).pipe(

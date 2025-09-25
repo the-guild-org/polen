@@ -6,7 +6,7 @@ import { Test } from '@wollybeard/kit/test'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { Content } from './$.js'
 
-let testDir: FsLoc.AbsDir.AbsDir
+let testDir: FsLoc.AbsDir
 
 beforeEach(async () => {
   testDir = await Ef.runPromise(
@@ -30,15 +30,16 @@ afterEach(async () => {
   }
 })
 
-type MetadataInput = { input: unknown }
-type MetadataOutput = { isValid: boolean; expected?: { description?: string; hidden?: boolean } }
-
 // dprint-ignore
-Test.Table.suite<MetadataInput, MetadataOutput>('MetadataSchema', [
-    { n: 'validates metadata correctly',          i: { input: { description: 'Test page description', hidden: true } },      o: { isValid: true, expected: { description: 'Test page description', hidden: true } } },
-    { n: 'applies default values',                i: { input: { description: 'Just a description' } },                       o: { isValid: true, expected: { description: 'Just a description', hidden: false } } },
-    { n: 'rejects invalid values',                i: { input: { hidden: 'not a boolean', invalid_field: 123 } as any },             o: { isValid: false } },
-  ], ({ i, o }) => {
+Test.describe('MetadataSchema')
+  .i<{ input: unknown }>()
+  .o<{ isValid: boolean; expected?: { description?: string; hidden?: boolean } }>()
+  .cases(
+    ['validates metadata correctly',          [{ input: { description: 'Test page description', hidden: true } }],      { isValid: true, expected: { description: 'Test page description', hidden: true } }],
+    ['applies default values',                [{ input: { description: 'Just a description' } }],                       { isValid: true, expected: { description: 'Just a description', hidden: false } }],
+    ['rejects invalid values',                [{ input: { hidden: 'not a boolean', invalid_field: 123 } as any }],             { isValid: false }],
+  )
+  .test((i, o) => {
     const result = S.decodeUnknownEither(Content.MetadataSchema)(i.input)
 
     if (o.isValid) {
@@ -55,7 +56,7 @@ describe('scan', () => {
   test('scans directory and extracts metadata', async () => {
     await Ef.runPromise(
       Ef.gen(function*() {
-        const filePathLoc = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('page.md'))
+        const filePathLoc = FsLoc.join(testDir, 'page.md')
         yield* Fs.write(
           filePathLoc,
           `---

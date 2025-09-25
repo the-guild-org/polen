@@ -1,6 +1,6 @@
 import { HashMap, HashSet } from 'effect'
 import { buildSchema, type GraphQLSchema } from 'graphql'
-import { Catalog, Document, Schema, Version } from 'graphql-kit'
+import { Catalog, Document, Schema, Version, VersionCoverage } from 'graphql-kit'
 import { describe, expect, test } from 'vitest'
 import { Example } from './schemas/example/example.js'
 import { ExampleReference } from './schemas/type-usage-index.js'
@@ -88,8 +88,8 @@ describe('createTypeUsageIndex', () => {
         path: 'examples/get-user-versioned.graphql',
         document: Document.Versioned.make({
           versionDocuments: HashMap.make(
-            [version1, 'query { user(id: "1") { id } }'],
-            [version2, 'query { user(id: "1") { id name email } }'],
+            [VersionCoverage.One.make({ version: version1 }), 'query { user(id: "1") { id } }'],
+            [VersionCoverage.One.make({ version: version2 }), 'query { user(id: "1") { id name email } }'],
           ),
         }),
       })
@@ -141,7 +141,7 @@ describe('createTypeUsageIndex', () => {
   })
 
   test('indexes examples with version sets', () => {
-    const versionSet = HashSet.make(version1, version2)
+    const versionSet = VersionCoverage.Set.make({ versions: HashSet.make(version1, version2) })
     const example = Example.make({
       name: 'shared-example',
       path: 'examples/shared.graphql',

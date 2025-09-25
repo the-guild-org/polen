@@ -34,25 +34,35 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     await use(project)
   }, { scope: `worker` }],
   runDev: async ({ project }, use) => {
-    const server = await project.run.dev()
+    const server = await Ef.runPromise(
+      project.run.dev().pipe(Ef.provide(NodeFileSystem.layer)),
+    )
     await use(server)
     await server.stop()
   },
   runBuild: async ({ project }, use) => {
-    const output = await project.run.build()
+    const output = await Ef.runPromise(
+      project.run.build().pipe(Ef.provide(NodeFileSystem.layer)),
+    )
     await use(output)
   },
   runStart: async ({ project, runBuild: ___ }, use) => {
-    const server = await project.run.start()
+    const server = await Ef.runPromise(
+      project.run.start().pipe(Ef.provide(NodeFileSystem.layer)),
+    )
     await use(server)
     await server.stop()
   },
   runBuildSsg: async ({ project }, use) => {
-    const output = await project.run.buildSsg()
+    const output = await Ef.runPromise(
+      project.run.buildSsg().pipe(Ef.provide(NodeFileSystem.layer)),
+    )
     await use(output)
   },
   runServeSsg: async ({ project, runBuildSsg: ___ }, use) => {
-    const server = await project.run.serveSsg()
+    const server = await Ef.runPromise(
+      project.run.serveSsg().pipe(Ef.provide(NodeFileSystem.layer)),
+    )
     await use(server)
     await server.stop()
   },

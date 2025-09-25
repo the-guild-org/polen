@@ -8,7 +8,7 @@ export interface ScanParams {
   /**
    * The directory to scan for reference content
    */
-  dir: FsLoc.AbsDir.AbsDir
+  dir: FsLoc.AbsDir
 }
 
 export interface ScanResult {

@@ -1,6 +1,5 @@
 import { Api } from '#api/$'
-import { Op } from '#dep/effect'
-import { Ef } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { Command } from '@effect/cli'
 import { NodeFileSystem } from '@effect/platform-node'
 import { FsLoc } from '@wollybeard/kit'
@@ -16,8 +15,8 @@ export const cacheDelete = Command.make(
   ({ project, allowGlobal }) =>
     Ef.gen(function*() {
       const dir = Op.getOrElse(
-        Op.map(project, FsLoc.AbsDir.decodeSync),
-        () => FsLoc.AbsDir.decodeSync(process.cwd()),
+        Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)),
+        () => S.decodeSync(FsLoc.AbsDir.String)(process.cwd()),
       )
 
       yield* Api.Cache.deleteAll(dir).pipe(

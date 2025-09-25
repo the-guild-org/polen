@@ -17,12 +17,12 @@ interface PolenAssertions {
 export class PolenBuilder {
   private config: WritableDeep<Polen.ConfigInput> = {}
   private server?: ViteController.ViteDevServerPlus
-  private cwd: FsLoc.AbsDir.AbsDir
+  private cwd: FsLoc.AbsDir
 
   constructor(
     private page: Page,
     private vite: ViteController.ViteController,
-    cwd: FsLoc.AbsDir.AbsDir,
+    cwd: FsLoc.AbsDir,
   ) {
     this.cwd = cwd
   }
@@ -147,5 +147,5 @@ export class PolenBuilderWithPage {
 }
 
 // Factory function for tests
-export const polen = (page: Page, vite: ViteController.ViteController, cwd: FsLoc.AbsDir.AbsDir) =>
+export const polen = (page: Page, vite: ViteController.ViteController, cwd: FsLoc.AbsDir) =>
   new PolenBuilder(page, vite, cwd)

@@ -1,6 +1,6 @@
 import { InputSource } from '#api/schema/input-source/$'
 import { mapToInputSourceError, normalizePathToAbs } from '#api/schema/input-source/helpers'
-import { Ar, Ef, Op } from '#dep/effect'
+import { Ar, Ef, Op, S } from '#dep/effect'
 import { debugPolen } from '#singletons/debug'
 import type { FileSystem } from '@effect/platform'
 import { PlatformError } from '@effect/platform/Error'
@@ -52,14 +52,14 @@ export interface ConfigInput {
    *     schema.graphql
    * ```
    */
-  path?: string | FsLoc.AbsDir.AbsDir | FsLoc.RelDir.RelDir
+  path?: string | FsLoc.AbsDir | FsLoc.RelDir
 }
 
 export interface Config {
-  path: FsLoc.AbsDir.AbsDir
+  path: FsLoc.AbsDir
 }
 
-export const normalizeConfig = (configInput: ConfigInput, projectRoot: FsLoc.AbsDir.AbsDir): Config => {
+export const normalizeConfig = (configInput: ConfigInput, projectRoot: FsLoc.AbsDir): Config => {
   const config: Config = {
     path: normalizePathToAbs.dir(configInput.path, projectRoot, defaultPaths.schemaDirectory),
   }
@@ -69,7 +69,7 @@ export const normalizeConfig = (configInput: ConfigInput, projectRoot: FsLoc.Abs
 
 interface VersionInfo {
   name: string
-  path: FsLoc.AbsDir.AbsDir
+  path: FsLoc.AbsDir
   version: Version.Version
   parentVersion: Op.Option<Version.Version>
   branchDate: Op.Option<string>
@@ -134,7 +134,7 @@ const parseVersionFromDirName = (
  * or falls back to schema.graphql if no revision files exist.
  */
 const findSchemaFiles = (
-  versionPath: FsLoc.AbsDir.AbsDir,
+  versionPath: FsLoc.AbsDir,
 ): Ef.Effect<string[], never, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const dirFiles = yield* Fs.glob('*.graphql', { onlyFiles: true, cwd: versionPath }).pipe(
@@ -163,7 +163,7 @@ const findSchemaFiles = (
  * Load and parse a single GraphQL schema revision file.
  */
 const loadRevision = (
-  filePath: FsLoc.AbsFile.AbsFile,
+  filePath: FsLoc.AbsFile,
   revisionFileName: string,
 ): Ef.Effect<{ date: string; schema: GraphQLSchema }, InputSource.InputSourceError, FileSystem.FileSystem> =>
   Ef.gen(function*() {
@@ -193,7 +193,7 @@ const loadRevision = (
  * Check if a directory is a valid version directory with schema files.
  */
 const isValidVersionDirectory = (
-  dirPath: FsLoc.AbsDir.AbsDir,
+  dirPath: FsLoc.AbsDir,
 ): Ef.Effect<boolean, never, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const schemaFiles = yield* findSchemaFiles(dirPath)
@@ -202,7 +202,7 @@ const isValidVersionDirectory = (
 
 export const readOrThrow = (
   configInput: ConfigInput,
-  projectRoot: FsLoc.AbsDir.AbsDir,
+  projectRoot: FsLoc.AbsDir,
 ): Ef.Effect<
   null | Catalog.Versioned,
   InputSource.InputSourceError | PlatformError,
@@ -266,7 +266,7 @@ export const readOrThrow = (
           // Load all revision files for this version
           const revisionData = yield* Ef.all(
             Ar.map(versionInfo.revisionFiles, (revisionFile) => {
-              const filePath = FsLoc.join(versionInfo.path, FsLoc.RelFile.decodeSync(revisionFile))
+              const filePath = FsLoc.join(versionInfo.path, S.decodeSync(FsLoc.RelFile.String)(revisionFile))
               return loadRevision(filePath, revisionFile)
             }),
             { concurrency: 'unbounded' },

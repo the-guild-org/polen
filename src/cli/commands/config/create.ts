@@ -1,6 +1,5 @@
 import { Api } from '#api/$'
-import { Op } from '#dep/effect'
-import { Ef } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { Command } from '@effect/cli'
 import * as NodeFileSystem from '@effect/platform-node/NodeFileSystem'
 import { Fs, FsLoc } from '@wollybeard/kit'
@@ -16,7 +15,8 @@ export const configCreate = Command.make(
   },
   ({ project, allowGlobal }) =>
     Ef.gen(function*() {
-      const dir = Op.getOrElse(Op.map(project, FsLoc.AbsDir.decodeSync), () => FsLoc.AbsDir.decodeSync(process.cwd()))
+      const dir = Op.getOrElse(Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)), () =>
+        S.decodeSync(FsLoc.AbsDir.String)(process.cwd()))
       // const dir = Path.ensureOptionalAbsoluteWithCwd(Op.getOrUndefined(project))
 
       const isValidProject = yield* Api.Project.validateProjectDirectory(dir).pipe(

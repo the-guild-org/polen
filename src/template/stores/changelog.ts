@@ -10,7 +10,7 @@ import { proxy } from 'valtio'
  * State for each version - what revision is currently selected
  */
 export const VersionState = S.Struct({
-  currentRevision: S.NullOr(Revision.Revision),
+  currentRevision: S.NullOr(Revision),
 })
 
 export type VersionState = typeof VersionState.Type
@@ -53,7 +53,7 @@ export const store = proxy({
   /**
    * Remember the current revision for a version
    */
-  rememberRevision(schema: SchemaLib.Versioned.Versioned, revision: Revision.Revision | null) {
+  rememberRevision(schema: SchemaLib.Versioned, revision: Revision | null) {
     const versionKey = Version.encodeSync(schema.version)
     store.versionMemory = {
       ...store.versionMemory,
@@ -64,7 +64,7 @@ export const store = proxy({
   /**
    * Get the remembered revision for a version
    */
-  getRememberedRevision(schema: SchemaLib.Versioned.Versioned): Revision.Revision | null {
+  getRememberedRevision(schema: SchemaLib.Versioned): Revision | null {
     const versionKey = Version.encodeSync(schema.version)
     return store.versionMemory[versionKey]?.currentRevision ?? null
   },

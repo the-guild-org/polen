@@ -1,5 +1,5 @@
 import type { Api } from '#api/$'
-import { Ef } from '#dep/effect'
+import { Ef, S } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { type ExistenceDiff, getMutationType, MutationType } from '#lib/mutation-type'
 import { debugPolen } from '#singletons/debug'
@@ -18,15 +18,16 @@ const generateDefaultLogo = async () => {
 </svg>`
 }
 
-const findLogoPath = async (publicDir: FsLoc.AbsDir.AbsDir, filename: string): Promise<string | null> => {
+const findLogoPath = async (publicDir: FsLoc.AbsDir, filename: string): Promise<string | null> => {
   const extensions = ['svg', 'png', 'jpg', 'jpeg', 'webp']
   for (const ext of extensions) {
-    const fileLoc = FsLoc.join(publicDir, FsLoc.RelFile.decodeSync(`${filename}.${ext}`))
+    const fileLoc = FsLoc.join(publicDir, S.decodeSync(FsLoc.RelFile.String)(`${filename}.${ext}`))
     const exists = await Ef.runPromise(
       Ef.gen(function*() {
         const result = yield* Ef.either(Fs.stat(fileLoc))
         return result._tag === 'Right'
-      }).pipe(Ef.provide(NodeFileSystem.layer)),
+        // FIXME: Remove cast when @effect/platform versions are aligned
+      }).pipe(Ef.provide(NodeFileSystem.layer)) as any,
     )
     if (exists) {
       return FsLoc.encodeSync(fileLoc)
@@ -35,7 +36,7 @@ const findLogoPath = async (publicDir: FsLoc.AbsDir.AbsDir, filename: string): P
   return null
 }
 
-const findHeroImagePath = async (publicDir: FsLoc.AbsDir.AbsDir): Promise<string | null> => {
+const findHeroImagePath = async (publicDir: FsLoc.AbsDir): Promise<string | null> => {
   const heroImageNames = [
     'hero.svg',
     'hero.png',
@@ -45,12 +46,13 @@ const findHeroImagePath = async (publicDir: FsLoc.AbsDir.AbsDir): Promise<string
   ]
 
   for (const imageName of heroImageNames) {
-    const fileLoc = FsLoc.join(publicDir, FsLoc.RelFile.decodeSync(imageName))
+    const fileLoc = FsLoc.join(publicDir, S.decodeSync(FsLoc.RelFile.String)(imageName))
     const exists = await Ef.runPromise(
       Ef.gen(function*() {
         const result = yield* Ef.either(Fs.stat(fileLoc))
         return result._tag === 'Right'
-      }).pipe(Ef.provide(NodeFileSystem.layer)),
+        // FIXME: Remove cast when @effect/platform versions are aligned
+      }).pipe(Ef.provide(NodeFileSystem.layer)) as any,
     )
     if (exists) {
       return FsLoc.encodeSync(fileLoc)
@@ -152,11 +154,11 @@ export function Branding(config: Api.Config.Config): Plugin {
         if (lightPath && darkPath) {
           const basePath = config.build.base || '/'
           const lightUrl = basePath === '/'
-            ? `/${FsLoc.name(FsLoc.AbsFile.decodeSync(lightPath))}`
-            : `${basePath}/${FsLoc.name(FsLoc.AbsFile.decodeSync(lightPath))}`
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(lightPath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(lightPath))}`
           const darkUrl = basePath === '/'
-            ? `/${FsLoc.name(FsLoc.AbsFile.decodeSync(darkPath))}`
-            : `${basePath}/${FsLoc.name(FsLoc.AbsFile.decodeSync(darkPath))}`
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(darkPath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(darkPath))}`
           return `export default {
             light: ${JSON.stringify(lightUrl)},
             dark: ${JSON.stringify(darkUrl)},
@@ -169,8 +171,8 @@ export function Branding(config: Api.Config.Config): Plugin {
         if (singlePath) {
           const basePath = config.build.base || '/'
           const url = basePath === '/'
-            ? `/${FsLoc.name(FsLoc.AbsFile.decodeSync(singlePath))}`
-            : `${basePath}/${FsLoc.name(FsLoc.AbsFile.decodeSync(singlePath))}`
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(singlePath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(singlePath))}`
           return `export default {
             light: ${JSON.stringify(url)},
             dark: ${JSON.stringify(url)},
@@ -197,8 +199,8 @@ export function Branding(config: Api.Config.Config): Plugin {
           // Just return the public URL path, let Vite handle the asset
           const basePath = config.build.base || '/'
           const publicPath = basePath === '/'
-            ? `/${FsLoc.name(FsLoc.AbsFile.decodeSync(heroImagePath))}`
-            : `${basePath}/${FsLoc.name(FsLoc.AbsFile.decodeSync(heroImagePath))}`
+            ? `/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(heroImagePath))}`
+            : `${basePath}/${FsLoc.name(S.decodeSync(FsLoc.AbsFile.String)(heroImagePath))}`
           return `export default ${JSON.stringify(publicPath)}`
         }
         return `export default null`
@@ -224,12 +226,13 @@ const handleWatchedFileChange = async (
   if (changedFile !== watchedFile) return
 
   // Check current existence
-  const watchedFileLoc = FsLoc.AbsFile.decodeSync(watchedFile)
+  const watchedFileLoc = S.decodeSync(FsLoc.AbsFile.String)(watchedFile)
   const existsNow = await Ef.runPromise(
     Ef.gen(function*() {
       const result = yield* Ef.either(Fs.stat(watchedFileLoc))
       return result._tag === 'Right'
-    }).pipe(Ef.provide(NodeFileSystem.layer)),
+      // FIXME: Remove cast when @effect/platform versions are aligned
+    }).pipe(Ef.provide(NodeFileSystem.layer)) as any,
   )
 
   // Check previous existence via module graph

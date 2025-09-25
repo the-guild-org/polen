@@ -1,5 +1,5 @@
 import { Api } from '#api/$'
-import { Ef, Op } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { AiImageGeneration } from '#lib/ai-image-generation/$'
 import { Command, Options } from '@effect/cli'
 import { NodeFileSystem } from '@effect/platform-node'
@@ -11,14 +11,14 @@ import { projectParameter } from '../_/parameters.js'
 /**
  * Backup existing hero image to hero-previous-{number}.{ext}
  */
-const backupExistingHeroImage = (dir: FsLoc.AbsDir.AbsDir) =>
+const backupExistingHeroImage = (dir: FsLoc.AbsDir) =>
   Ef.gen(function*() {
     // const fs = yield* FileSystem.FileSystem
     const publicDir = FsLoc.join(dir, FsLoc.fromString('public/'))
     const heroExtensions = ['svg', 'png', 'jpg', 'jpeg', 'webp'] as const
 
     // Find existing hero image
-    let existingHeroPath: FsLoc.AbsFile.AbsFile | null = null
+    let existingHeroPath: FsLoc.AbsFile | null = null
     let existingExt: string | null = null
 
     for (const ext of heroExtensions) {
@@ -67,8 +67,8 @@ export const heroImage = Command.make(
       // @claude remind me that we need to make decoders for loc types be more permissive but then the union level one more strict
       // since its more ambiguous what is being dealt with
       const dir = Op.getOrElse(
-        Op.map(project, FsLoc.AbsDir.decodeSync),
-        () => FsLoc.AbsDir.decodeSync(process.cwd()),
+        Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)),
+        () => S.decodeSync(FsLoc.AbsDir.String)(process.cwd()),
       )
 
       // Load config

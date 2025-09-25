@@ -2,7 +2,7 @@
  * Worker that generates static pages by fetching from servers.
  * This is executed in a worker thread using Effect Worker API.
  */
-import { Ar, Ei } from '#dep/effect'
+import { Ar, Ei, S } from '#dep/effect'
 import { Ef } from '#dep/effect'
 import { FileSystem, WorkerRunner } from '@effect/platform'
 import { NodeContext, NodeRuntime, NodeWorkerRunner } from '@effect/platform-node'
@@ -51,7 +51,7 @@ const fetchPage = (url: string) =>
   })
 
 // Write HTML to file system
-const writeHtmlFile = (outputPath: FsLoc.AbsFile.AbsFile, html: string) =>
+const writeHtmlFile = (outputPath: FsLoc.AbsFile, html: string) =>
   // Directories are automatically created when writing files
   Fs.write(outputPath, html)
 
@@ -59,7 +59,7 @@ const writeHtmlFile = (outputPath: FsLoc.AbsFile.AbsFile, html: string) =>
 const processRoute = (
   route: string,
   serverPort: number,
-  outputDir: FsLoc.AbsDir.AbsDir,
+  outputDir: FsLoc.AbsDir,
   basePath?: string,
 ) =>
   Ef.gen(function*() {
@@ -72,9 +72,9 @@ const processRoute = (
     )
 
     // Determine output file path
-    const outputDirStr = FsLoc.encodeSync(outputDir)
+    const outputDirStr = S.encodeSync(FsLoc.AbsDir.String)(outputDir)
     const outputFileName = route === '/' ? 'index.html' : `${route.slice(1)}/index.html`
-    const outputPath = FsLoc.AbsFile.decodeSync(
+    const outputPath = S.decodeSync(FsLoc.AbsFile.String)(
       `${outputDirStr}${outputDirStr.endsWith('/') ? '' : '/'}${outputFileName}`,
     )
 
@@ -97,9 +97,7 @@ const handlers = {
   ) =>
     Ef.gen(function*() {
       // Convert outputDir string to FsLoc.AbsDir
-      const outputDirPath = FsLoc.AbsDir.decodeSync(
-        outputDir.endsWith('/') ? outputDir : `${outputDir}/`,
-      )
+      const outputDirPath = S.decodeSync(FsLoc.AbsDir.String)(outputDir)
 
       yield* Ef.logDebug(`Starting batch generation`).pipe(
         Ef.annotateLogs({

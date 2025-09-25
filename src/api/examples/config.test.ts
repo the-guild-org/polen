@@ -3,97 +3,98 @@ import { Test } from '@wollybeard/kit/test'
 import { describe, expect, test } from 'vitest'
 import { ExamplesConfig } from './config.js'
 
-describe('ExamplesConfig', () => {
-  const decodeExamplesConfig = S.decodeSync(ExamplesConfig)
+const decodeExamplesConfig = S.decodeSync(ExamplesConfig)
 
-  describe('ExampleSelection', () => {
-    type DisplayInput = { input: 'all' | 'none' | { include: string[] } | { exclude: string[] } }
-    type DisplayOutput = { expected: 'all' | 'none' | { include: string[] } | { exclude: string[] } }
-
-    // dprint-ignore
-    Test.Table.suite<DisplayInput, DisplayOutput>('display value acceptance', [
-      { n: 'all literal',      i: { input: 'all' },                                    o: { expected: 'all' } },
-      { n: 'none literal',     i: { input: 'none' },                                   o: { expected: 'none' } },
-      { n: 'include pattern',  i: { input: { include: ['example1', 'example2'] } },   o: { expected: { include: ['example1', 'example2'] } } },
-      { n: 'exclude pattern',  i: { input: { exclude: ['example3'] } },               o: { expected: { exclude: ['example3'] } } },
-    ], ({ i, o }) => {
+describe('ExampleSelection', () => {
+  // dprint-ignore
+  Test.describe('display value acceptance')
+    .i<{ input: 'all' | 'none' | { include: string[] } | { exclude: string[] } }>()
+    .o<'all' | 'none' | { include: string[] } | { exclude: string[] }>()
+    .cases(
+      ['all literal',      [{ input: 'all' }],                                    'all'],
+      ['none literal',     [{ input: 'none' }],                                   'none'],
+      ['include pattern',  [{ input: { include: ['example1', 'example2'] } }],   { include: ['example1', 'example2'] }],
+      ['exclude pattern',  [{ input: { exclude: ['example3'] } }],               { exclude: ['example3'] }],
+    )
+    .test((i, o) => {
       const result = decodeExamplesConfig({ display: i.input })
-      expect(result.display).toEqual(o.expected)
+      expect(result.display).toEqual(o)
     })
 
-    test('undefined display is omitted', () => {
-      const result = decodeExamplesConfig({})
-      expect('display' in result).toBe(false)
-    })
+  test('undefined display is omitted', () => {
+    const result = decodeExamplesConfig(true)
+    expect('display' in result).toBe(false)
+  })
+})
+
+describe('ExamplesConfigSchema', () => {
+  test('decodes with defaults', () => {
+    const result = decodeExamplesConfig(true)
+    expect(result).toEqual({})
   })
 
-  describe('ExamplesConfigSchema', () => {
-    test('decodes with defaults', () => {
-      const result = decodeExamplesConfig({})
-      expect(result).toEqual({})
-    })
+  test('boolean shorthand: false disables examples', () => {
+    const result = decodeExamplesConfig(false)
+    expect(result).toEqual({ enabled: false })
+  })
 
-    test('boolean shorthand: false disables examples', () => {
-      const result = decodeExamplesConfig(false)
-      expect(result).toEqual({ enabled: false })
-    })
+  test('boolean shorthand: true uses defaults', () => {
+    const result = decodeExamplesConfig(true)
+    expect(result).toEqual({})
+  })
 
-    test('boolean shorthand: true uses defaults', () => {
-      const result = decodeExamplesConfig(true)
-      expect(result).toEqual({})
-    })
+  test('decodes full config', () => {
+    const input = {
+      display: { include: ['example1', 'example2'] },
+      diagnostics: {
+        validation: true,
+        unusedVersions: false,
+      },
+    }
 
-    test('decodes full config', () => {
-      const input = {
-        display: { include: ['example1', 'example2'] },
-        diagnostics: {
-          validation: true,
-          unusedVersions: false,
-        },
-      }
+    const result = decodeExamplesConfig(input)
+    expect(result).toEqual(input)
+  })
 
-      const result = decodeExamplesConfig(input)
-      expect(result).toEqual(input)
-    })
-
-    type FullConfigInput = { config: { display?: 'all' | 'none' | { include: string[] } | { exclude: string[] } } }
-    type FullConfigOutput = {}
-
-    // dprint-ignore
-    Test.Table.suite<FullConfigInput, FullConfigOutput>('full configuration', [
-      { n: 'include pattern',  i: { config: { display: { include: ['get-user', 'create-post'] } } }, o: {} },
-      { n: 'exclude pattern',  i: { config: { display: { exclude: ['advanced-filtering'] } } },      o: {} },
-      { n: 'all examples',     i: { config: { display: 'all' } },                                     o: {} },
-      { n: 'no examples',      i: { config: { display: 'none' } },                                    o: {} },
-    ], ({ i, o }) => {
+  // dprint-ignore
+  Test.describe('full configuration')
+    .i<{ config: { display: 'all' | 'none' | { include: string[] } | { exclude: string[] } | undefined } }>()
+    .o<{}>()
+    .cases(
+      ['include pattern',  [{ config: { display: { include: ['get-user', 'create-post'] } } }], {}],
+      ['exclude pattern',  [{ config: { display: { exclude: ['advanced-filtering'] } } }],      {}],
+      ['all examples',     [{ config: { display: 'all' } }],                                     {}],
+      ['no examples',      [{ config: { display: 'none' } }],                                    {}],
+      ['undefined display', [{ config: { display: undefined } }],                                {}],
+    )
+    .test((i, o) => {
       const result = decodeExamplesConfig(i.config)
       expect(result.display).toEqual(i.config.display)
     })
-  })
+})
 
-  describe('Type safety demonstration', () => {
-    test('example selection type safety', () => {
-      // This demonstrates the type-safe API
-      // In real usage, the types would be augmented by the generator
+describe('Type safety demonstration', () => {
+  test('example selection type safety', () => {
+    // This demonstrates the type-safe API
+    // In real usage, the types would be augmented by the generator
 
-      type TestExampleNames = 'get-user' | 'create-post' | 'update-user'
+    type TestExampleNames = 'get-user' | 'create-post' | 'update-user'
 
-      interface TestExampleSelection {
-        include?: TestExampleNames[]
-        exclude?: TestExampleNames[]
-      }
+    interface TestExampleSelection {
+      include?: TestExampleNames[]
+      exclude?: TestExampleNames[]
+    }
 
-      const validInclude: TestExampleSelection = {
-        include: ['get-user', 'create-post'],
-      }
+    const validInclude: TestExampleSelection = {
+      include: ['get-user', 'create-post'],
+    }
 
-      const validExclude: TestExampleSelection = {
-        exclude: ['update-user'],
-      }
+    const validExclude: TestExampleSelection = {
+      exclude: ['update-user'],
+    }
 
-      // Type assertions to ensure the structure is correct
-      expect(validInclude.include).toBeDefined()
-      expect(validExclude.exclude).toBeDefined()
-    })
+    // Type assertions to ensure the structure is correct
+    expect(validInclude.include).toBeDefined()
+    expect(validExclude.exclude).toBeDefined()
   })
 })

@@ -58,7 +58,7 @@ export const Pages = ({
 
     // Generate imports and route objects
     for (const { route, metadata } of pages) {
-      const filePathExp = FsLoc.encodeSync(route.file.path.absolute)
+      const filePathExp = FsLoc.encodeSync(route.file)
       const pathExp = route.toString()
       const $$ = {
         ...$,
@@ -112,8 +112,8 @@ export const Pages = ({
       hooks: {
         async shouldFullReload(oldData, newData) {
           // Check if the visible pages list changed
-          const oldPaths = oldData?.list.map(p => FsLoc.encodeSync(p.route.file.path.absolute)) || []
-          const newPaths = newData.list.map(p => FsLoc.encodeSync(p.route.file.path.absolute))
+          const oldPaths = oldData?.list.map(p => FsLoc.encodeSync(p.route.file)) || []
+          const newPaths = newData.list.map(p => FsLoc.encodeSync(p.route.file))
           const pageStructureChanged = !oldData
             || oldPaths.length !== newPaths.length
             || !oldPaths.every((path, i) => path === newPaths[i])
@@ -121,7 +121,15 @@ export const Pages = ({
           return pageStructureChanged
         },
         async onDiagnostics(data) {
-          Diagnostic.report(data.diagnostics)
+          // Map to base diagnostic type for reporting
+          const baseDiagnostics = data.diagnostics.map(d => ({
+            _tag: d._tag as 'Diagnostic',
+            source: d.source,
+            name: d.name,
+            severity: d.severity,
+            message: d.message,
+          }))
+          Diagnostic.report(baseDiagnostics)
         },
       },
     }) as Vite.Plugin,
@@ -142,7 +150,15 @@ export const Pages = ({
           const loadedPages = await Ef.runPromise(
             reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
           )
-          Diagnostic.report(loadedPages.diagnostics)
+          // Map to base diagnostic type for reporting
+          const baseDiagnostics = loadedPages.diagnostics.map(d => ({
+            _tag: d._tag as 'Diagnostic',
+            source: d.source,
+            name: d.name,
+            severity: d.severity,
+            message: d.message,
+          }))
+          Diagnostic.report(baseDiagnostics)
           debug(`found visible`, { count: loadedPages.list.length })
 
           //
@@ -181,7 +197,15 @@ export const Pages = ({
           const scanResult = await Ef.runPromise(
             reader.read().pipe(Ef.provide(NodeFileSystem.layer)),
           )
-          Diagnostic.report(scanResult.diagnostics)
+          // Map to base diagnostic type for reporting
+          const baseDiagnostics = scanResult.diagnostics.map(d => ({
+            _tag: d._tag as 'Diagnostic',
+            source: d.source,
+            name: d.name,
+            severity: d.severity,
+            message: d.message,
+          }))
+          Diagnostic.report(baseDiagnostics)
           const code = generateRoutesModule(scanResult.list)
 
           // Generate the module code

@@ -11,7 +11,7 @@ describe('validate-build', () => {
     it.scoped('reads valid manifest', () =>
       Ef.gen(function*() {
         const testDir = yield* Fs.makeTempDirectoryScoped()
-        const manifestPath = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('.polen/build.json'))
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
         const manifest: PolenBuildManifest = {
           type: 'ssr',
@@ -35,7 +35,7 @@ describe('validate-build', () => {
     it.scoped('returns None when manifest does not exist', () =>
       Ef.gen(function*() {
         const testDir = yield* Fs.makeTempDirectoryScoped()
-        const manifestPath = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('.polen/build.json'))
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
         // Verify the file doesn't exist
         const manifestExists = yield* Fs.exists(manifestPath)
@@ -51,7 +51,7 @@ describe('validate-build', () => {
     it.scoped('returns error for invalid manifest structure', () =>
       Ef.gen(function*() {
         const testDir = yield* Fs.makeTempDirectoryScoped()
-        const manifestPath = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('.polen/build.json'))
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
         yield* Fs.write(manifestPath, JSON.stringify({ invalid: 'data' }, null, 2))
 
@@ -62,7 +62,7 @@ describe('validate-build', () => {
     it.scoped('returns error for invalid build type', () =>
       Ef.gen(function*() {
         const testDir = yield* Fs.makeTempDirectoryScoped()
-        const manifestPath = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('.polen/build.json'))
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
         yield* Fs.write(
           manifestPath,
@@ -84,7 +84,7 @@ describe('validate-build', () => {
     it.scoped('returns error when version is not a string', () =>
       Ef.gen(function*() {
         const testDir = yield* Fs.makeTempDirectoryScoped()
-        const manifestPath = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('.polen/build.json'))
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
         yield* Fs.write(
           manifestPath,
@@ -106,7 +106,7 @@ describe('validate-build', () => {
     it.scoped('returns error when basePath is not a string', () =>
       Ef.gen(function*() {
         const testDir = yield* Fs.makeTempDirectoryScoped()
-        const manifestPath = FsLoc.join(testDir, FsLoc.RelFile.decodeSync('.polen/build.json'))
+        const manifestPath = FsLoc.join(testDir, FsLoc.fromString('.polen/build.json'))
 
         yield* Fs.write(
           manifestPath,

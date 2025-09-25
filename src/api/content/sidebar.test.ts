@@ -1,4 +1,6 @@
-import { Ar } from '#dep/effect'
+import { Ar, S } from '#dep/effect'
+import { FileRouter } from '#lib/file-router'
+import { RouteLogical } from '#lib/file-router/models/route-logical'
 import { FsLoc } from '@wollybeard/kit'
 import * as fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
@@ -11,30 +13,25 @@ const pathSegmentArb = fc.stringMatching(/^[a-z][a-z0-9-]{0,19}$/)
 const fileNameArb = fc.oneof(fc.constant('index'), pathSegmentArb)
 const pathArb = fc.array(pathSegmentArb, { minLength: 1, maxLength: 4 })
 
-const pageArb: fc.Arbitrary<Page> = fc.record({
-  route: fc.record({
-    id: fc.string(),
-    parentId: fc.oneof(fc.constant(null), fc.string()),
-    logical: fc.record({
-      path: pathArb,
-      order: fc.option(fc.integer({ min: 0, max: 100 }), { nil: undefined }),
-    }),
-    file: fc.record({
-      path: pathArb.chain(segments => {
-        const fileName = fc.sample(fileNameArb, 1)[0]
-        const relativePath = segments.length > 0 ? `${segments.join('/')}/${fileName}.md` : `${fileName}.md`
-        const absolutePath = `/pages/${relativePath}`
-        return fc.constant({
-          absolute: FsLoc.AbsFile.decodeSync(absolutePath),
-          relative: FsLoc.RelFile.decodeSync(relativePath),
-        })
+const pageArb: fc.Arbitrary<Page> = pathArb.chain(segments => {
+  const fileName = fc.sample(fileNameArb, 1)[0]
+  const relativePath = segments.length > 0 ? `${segments.join('/')}/${fileName}.md` : `${fileName}.md`
+  const absolutePath = `/pages/${relativePath}`
+
+  return fc.record({
+    route: fc.constant(
+      new FileRouter.Route({
+        logical: RouteLogical.make({
+          path: FsLoc.Path.Abs.make({ segments }),
+          order: undefined,
+        }),
+        file: S.decodeSync(FsLoc.AbsFile.String)(absolutePath),
       }),
+    ),
+    metadata: fc.record({
+      hidden: fc.boolean(),
     }),
-  }),
-  metadata: fc.record({
-    description: fc.option(fc.string(), { nil: undefined }),
-    hidden: fc.boolean(),
-  }),
+  })
 })
 
 const scanResultArb: fc.Arbitrary<ScanResult> = fc.record({
@@ -68,7 +65,7 @@ describe('buildSidebarIndex properties', () => {
         // Check that no hidden page appears in sidebars
         const hiddenPagePaths = scanResult.list
           .filter(page => page.metadata.hidden)
-          .map(page => page.route.logical.path.join('/'))
+          .map(page => page.route.logical.path.segments.join('/'))
 
         for (const hiddenPath of hiddenPagePaths) {
           expect(allSidebarPaths.has(hiddenPath)).toBe(false)
@@ -89,9 +86,9 @@ describe('buildSidebarIndex properties', () => {
           const topLevelDir = sidebarPath.slice(1) // Remove leading '/'
 
           const hasIndexPage = scanResult.list.some(page =>
-            page.route.logical.path.length === 1
-            && page.route.logical.path[0] === topLevelDir
-            && FsLoc.name(page.route.file.path.relative) === 'index'
+            page.route.logical.path.segments.length === 1
+            && page.route.logical.path.segments[0] === topLevelDir
+            && FsLoc.name(page.route.file).replace(/\.[^.]+$/, '') === 'index'
             && !page.metadata.hidden
           )
 
@@ -147,8 +144,8 @@ describe('buildSidebarIndex properties', () => {
             if (item.type === 'ItemSection' && item.isLinkToo) {
               // This section should have an index page
               const hasIndexPage = scanResult.list.some(page =>
-                page.route.logical.path.join('/') === item.pathExp
-                && FsLoc.name(page.route.file.path.relative) === 'index'
+                page.route.logical.path.segments.join('/') === item.pathExp
+                && FsLoc.name(page.route.file) === 'index'
                 && !page.metadata.hidden
               )
 
@@ -236,23 +233,21 @@ describe('buildSidebarIndex properties', () => {
 
 // Keep a few specific scenario tests for regression
 describe('buildSidebarIndex specific scenarios', () => {
-  const createPage = (path: string[], fileName = 'index', hidden = false): Page => {
-    const relativePath = path.length > 0 ? `${path.join('/')}/${fileName}.md` : `${fileName}.md`
+  const createPage = (pathSegments: string[], fileName = 'index', hidden = false): Page => {
+    const relativePath = pathSegments.length > 0 ? `${pathSegments.join('/')}/${fileName}.md` : `${fileName}.md`
     const absolutePath = `/pages/${relativePath}`
 
+    const route = new FileRouter.Route({
+      logical: RouteLogical.make({
+        path: FsLoc.Path.Abs.make({ segments: pathSegments }),
+        order: undefined,
+      }),
+      file: S.decodeSync(FsLoc.AbsFile.String)(absolutePath),
+    })
+
     return {
-      route: {
-        id: path.join('/'),
-        parentId: path.length > 1 ? path.slice(0, -1).join('/') : null,
-        logical: { path },
-        file: {
-          path: {
-            absolute: FsLoc.AbsFile.decodeSync(absolutePath),
-            relative: FsLoc.RelFile.decodeSync(relativePath),
-          },
-        },
-      },
-      metadata: { description: undefined, hidden },
+      route,
+      metadata: { hidden },
     }
   }
 

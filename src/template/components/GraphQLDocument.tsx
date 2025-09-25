@@ -41,7 +41,9 @@ export const GraphQLDocument: React.FC<GraphQLDocumentProps> = ({
   /// ━ VERSION MANAGEMENT
   const isControlled = controlledVersionCoverage !== undefined
   const [internalVersionCoverage, setInternalVersionCoverage] = React.useState<VersionCoverage.VersionCoverage | null>(
-    Op.getOrNull(Catalog.getLatestVersion(schemaCatalog)),
+    Op.map(Catalog.getLatestVersion(schemaCatalog), (version) => VersionCoverage.One.make({ version })).pipe(
+      Op.getOrNull,
+    ),
   )
   const selectedVersionCoverage = isControlled ? controlledVersionCoverage : internalVersionCoverage
   const internalOnVersionChange = (version: VersionCoverage.VersionCoverage) => {

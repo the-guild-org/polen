@@ -42,8 +42,8 @@ const FileOptionsSchema = S.Struct({
    */
   path: S.optional(S.Union(
     S.String,
-    FsLoc.AbsFile.AbsFile,
-    FsLoc.RelFile.RelFile,
+    FsLoc.AbsFile,
+    FsLoc.RelFile,
   )),
 }).annotations({
   identifier: 'FileOptions',
@@ -84,8 +84,8 @@ const DirectoryOptionsSchema = S.Struct({
    */
   path: S.optional(S.Union(
     S.String,
-    FsLoc.AbsDir.AbsDir,
-    FsLoc.RelDir.RelDir,
+    FsLoc.AbsDir,
+    FsLoc.RelDir,
   )),
 }).annotations({
   identifier: 'DirectoryOptions',
@@ -100,8 +100,8 @@ const VersionedDirectoryOptionsSchema = S.Struct({
    */
   path: S.optional(S.Union(
     S.String,
-    FsLoc.AbsDir.AbsDir,
-    FsLoc.RelDir.RelDir,
+    FsLoc.AbsDir,
+    FsLoc.RelDir,
   )),
 }).annotations({
   identifier: 'VersionedDirectoryOptions',
@@ -150,8 +150,8 @@ const IntrospectionFileOptionsSchema = S.Struct({
    */
   path: S.optional(S.Union(
     S.String,
-    FsLoc.AbsFile.AbsFile,
-    FsLoc.RelFile.RelFile,
+    FsLoc.AbsFile,
+    FsLoc.RelFile,
   )),
 }).annotations({
   identifier: 'IntrospectionFileOptions',

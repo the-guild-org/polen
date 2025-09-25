@@ -45,19 +45,19 @@ export interface Options {
    *
    * @default './schema.introspection.json'
    */
-  path?: string | FsLoc.AbsFile.AbsFile | FsLoc.RelFile.RelFile
+  path?: string | FsLoc.AbsFile | FsLoc.RelFile
 }
 
 export interface Config {
-  path: FsLoc.AbsFile.AbsFile
+  path: FsLoc.AbsFile
 }
 
-export const normalizeOptions = (options: Options, projectRoot: FsLoc.AbsDir.AbsDir): Config => {
+export const normalizeOptions = (options: Options, projectRoot: FsLoc.AbsDir): Config => {
   const config: Config = {
     path: normalizePathToAbs.file(
       options.path,
       projectRoot,
-      FsLoc.fromString(INTROSPECTION_FILE_NAME) as FsLoc.RelFile.RelFile,
+      FsLoc.fromString(INTROSPECTION_FILE_NAME) as FsLoc.RelFile,
     ),
   }
 
@@ -70,7 +70,7 @@ const INTROSPECTION_FILE_NAME = `schema.introspection.json`
 
 export const read = (
   options: Options,
-  projectRoot: FsLoc.AbsDir.AbsDir,
+  projectRoot: FsLoc.AbsDir,
 ): Ef.Effect<Catalog.Unversioned | null, InputSource.InputSourceError, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const config = normalizeOptions(options, projectRoot)

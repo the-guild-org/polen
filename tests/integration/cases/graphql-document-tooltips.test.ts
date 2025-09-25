@@ -6,14 +6,11 @@ import { Api } from '#api/$'
 import { Ef } from '#dep/effect'
 import { toViteUserConfig } from '#vite/config'
 import { NodeFileSystem } from '@effect/platform-node'
+import { Dir } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
-type FileTree = {
-  [path: string]: string | FileTree
-}
-
-const createTestFixture = (): FileTree => ({
+const createTestFixture = () => ({
   'pages/test.mdx': `
 import { GraphQLDocumentWithSchema } from 'polen/components'
 
@@ -183,7 +180,15 @@ export default defineConfig({
 
 // GraphQL Document Tooltips Integration Tests
 test.skip('should show tooltip on hover after delay', async ({ page, vite, project }) => {
-  await project.dir.set(createTestFixture())
+  const fixture = createTestFixture()
+  const spec = Dir.spec(project.dir.base)
+    .file('pages/test.mdx', fixture['pages/test.mdx'] as string)
+    .file('polen.config.ts', fixture['polen.config.ts'] as string)
+
+  await Ef.runPromise(
+    project.dir.merge(spec).commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const polenConfig = await Ef.runPromise(
     Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
       Ef.provide(NodeFileSystem.layer),

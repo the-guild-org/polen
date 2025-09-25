@@ -1,34 +1,35 @@
+import { S } from '#dep/effect'
 import { FsLoc } from '@wollybeard/kit'
 
 export interface PackagePaths {
   name: string
   isRunningFromSource: boolean
   static: {
-    source: FsLoc.AbsDir.AbsDir
-    build: FsLoc.AbsDir.AbsDir
+    source: FsLoc.AbsDir
+    build: FsLoc.AbsDir
   }
-  rootDir: FsLoc.AbsDir.AbsDir
+  rootDir: FsLoc.AbsDir
   sourceExtension: typeof sourceExt
-  sourceDir: FsLoc.AbsDir.AbsDir
+  sourceDir: FsLoc.AbsDir
   template: {
     absolute: {
-      rootDir: FsLoc.AbsDir.AbsDir
+      rootDir: FsLoc.AbsDir
       server: {
-        app: FsLoc.AbsFile.AbsFile
-        entrypoint: FsLoc.AbsFile.AbsFile
+        app: FsLoc.AbsFile
+        entrypoint: FsLoc.AbsFile
       }
       client: {
-        entrypoint: FsLoc.AbsFile.AbsFile
+        entrypoint: FsLoc.AbsFile
       }
     }
     relative: {
-      rootDir: FsLoc.RelDir.RelDir
+      rootDir: FsLoc.RelDir
       server: {
-        app: FsLoc.RelFile.RelFile
-        entrypoint: FsLoc.RelFile.RelFile
+        app: FsLoc.RelFile
+        entrypoint: FsLoc.RelFile
       }
       client: {
-        entrypoint: FsLoc.RelFile.RelFile
+        entrypoint: FsLoc.RelFile
       }
     }
   }
@@ -42,7 +43,7 @@ const buildDirRelativeExp = l(`build`)
 /**
  * Usually ./build but if running source then ./src
  */
-const sourceDir = FsLoc.AbsDir.decodeSync(import.meta.dirname)
+const sourceDir = S.decodeSync(FsLoc.AbsDir.String)(import.meta.dirname)
 const templateDir = FsLoc.join(sourceDir, l(`template`))
 const rootDir = FsLoc.up(sourceDir)
 
@@ -73,7 +74,7 @@ export const packagePaths: PackagePaths = {
       client: {
         entrypoint: j(
           templateDir,
-          FsLoc.RelFile.decodeSync(`entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
+          S.decodeSync(FsLoc.RelFile.String)(`entry.client${isRunningFromSource ? `.tsx` : `.js`}`),
         ),
       },
     },

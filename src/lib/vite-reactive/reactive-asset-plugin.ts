@@ -1,4 +1,4 @@
-import { Ef } from '#dep/effect'
+import { Ef, S } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import type { ViteVirtual } from '#lib/vite-virtual'
 import { debugPolen } from '#singletons/debug'
@@ -84,7 +84,7 @@ export interface ReactiveAssetPluginOptions<$Data, E = never, R = never> {
      * Relative path for the emitted asset (e.g., 'schemas/catalog.json')
      * Used for both dev assets and build assets with appropriate base paths
      */
-    path: FsLoc.RelFile.RelFile
+    path: FsLoc.RelFile
   }
   /**
    * Optional hooks for customization
@@ -182,7 +182,7 @@ export const ReactiveAssetPlugin = <T, E = never, R = never>(
             : yield* serializerResult
 
           // Write to dev assets directory (in Vite's cache dir)
-          const cacheDir = FsLoc.AbsDir.decodeSync(viteConfig.cacheDir)
+          const cacheDir = S.decodeSync(FsLoc.AbsDir.String)(viteConfig.cacheDir)
           const assetsDir = FsLoc.join(cacheDir, FsLoc.fromString('assets/'))
           const devAssetsPathLoc = FsLoc.join(assetsDir, options.emit!.path)
           yield* Fs.write(assetsDir, { recursive: true })

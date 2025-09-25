@@ -270,4 +270,6 @@ export const generate = (config: Config.Config): Ef.Effect<void, Error, FileSyst
       ),
       Ef.tap(() => Ef.logDebug(`All resources cleaned up`)),
     )
-  })
+    // TODO: Properly type all error cases - can return ParseError | Error | WorkerError
+    // FIXME: Remove cast when @effect/platform versions are aligned
+  }) as any

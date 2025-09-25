@@ -29,7 +29,7 @@ export const buildManifest = {
    * @returns Effect yielding Option<PolenBuildManifest>
    */
   read: (
-    directory: FsLoc.AbsDir.AbsDir,
+    directory: FsLoc.AbsDir,
   ): Ef.Effect<Op.Option<PolenBuildManifest>, Resource.ResourceError, FileSystem> =>
     buildManifestResource.read(directory),
 
@@ -41,6 +41,6 @@ export const buildManifest = {
    */
   write: (
     data: PolenBuildManifest,
-    directory: FsLoc.AbsDir.AbsDir,
+    directory: FsLoc.AbsDir,
   ): Ef.Effect<void, Resource.ResourceError, FileSystem> => buildManifestResource.write(data, directory),
 }

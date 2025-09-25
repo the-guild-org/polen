@@ -3,10 +3,10 @@
  * Manages Pollinations.ai image generation with caching
  */
 
-import { Op } from '#dep/effect'
+import { Op, S } from '#dep/effect'
 import { Ef } from '#dep/effect'
 import { FsLoc } from '@wollybeard/kit'
-import { Data, pipe } from 'effect'
+import { pipe } from 'effect'
 import type { GraphQLSchema } from 'graphql'
 import * as FS from 'node:fs/promises'
 import {
@@ -30,9 +30,9 @@ export interface GenerateOptions {
  * Main service for generating AI hero images
  */
 export class AiImageGenerationService {
-  private cacheDir: string
+  private cacheDir: FsLoc.RelDir
 
-  constructor(cacheDir: string = 'node_modules/.vite/polen-assets/ai-images') {
+  constructor(cacheDir: FsLoc.RelDir = FsLoc.fromString('node_modules/.vite/polen-assets/ai-images')) {
     this.cacheDir = cacheDir
   }
 
@@ -122,9 +122,8 @@ export class AiImageGenerationService {
     const self = this
     return Ef.gen(function*() {
       const cacheKey = self.getCacheKey(prompt)
-      const cacheDirLoc = FsLoc.decodeSync(self.cacheDir)
-      const cacheFileLoc = FsLoc.decodeSync(`${cacheKey}.json`)
-      const cachePath = FsLoc.encodeSync(FsLoc.join(cacheDirLoc, cacheFileLoc))
+      const cacheFileLoc = S.decodeSync(FsLoc.RelFile.String)(`${cacheKey}.json`)
+      const cachePath = FsLoc.encodeSync(FsLoc.join(self.cacheDir, cacheFileLoc))
 
       const exists = yield* Ef.tryPromise({
         try: () => FS.access(cachePath).then(() => true),
@@ -163,13 +162,12 @@ export class AiImageGenerationService {
     const self = this
     return Ef.gen(function*() {
       const cacheKey = self.getCacheKey(image.prompt)
-      const cacheDirLoc = FsLoc.decodeSync(self.cacheDir)
-      const cacheFileLoc = FsLoc.decodeSync(`${cacheKey}.json`)
-      const cachePath = FsLoc.encodeSync(FsLoc.join(cacheDirLoc, cacheFileLoc))
+      const cacheFileLoc = S.decodeSync(FsLoc.RelFile.String)(`${cacheKey}.json`)
+      const cachePath = FsLoc.encodeSync(FsLoc.join(self.cacheDir, cacheFileLoc))
 
       // Ensure cache directory exists
       yield* Ef.tryPromise({
-        try: () => FS.mkdir(self.cacheDir, { recursive: true }),
+        try: () => FS.mkdir(FsLoc.encodeSync(self.cacheDir), { recursive: true }),
         catch: () => undefined,
       })
 
@@ -207,7 +205,7 @@ export class AiImageGenerationService {
    */
   clearCache(): Ef.Effect<void, never, never> {
     return Ef.tryPromise({
-      try: () => FS.rm(this.cacheDir, { recursive: true, force: true }),
+      try: () => FS.rm(FsLoc.encodeSync(this.cacheDir), { recursive: true, force: true }),
       catch: (error) => {
         console.warn('Failed to clear cache:', error)
       },

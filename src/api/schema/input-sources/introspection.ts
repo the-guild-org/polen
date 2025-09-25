@@ -1,6 +1,6 @@
 import { InputSource } from '#api/schema/input-source/$'
 import { createSingleRevisionCatalog, mapToInputSourceError } from '#api/schema/input-source/helpers'
-import { Ef } from '#dep/effect'
+import { Ef, S } from '#dep/effect'
 import type { FileSystem } from '@effect/platform'
 import { PlatformError } from '@effect/platform/Error'
 import { Fs, FsLoc, Json } from '@wollybeard/kit'
@@ -69,16 +69,16 @@ const getCacheKey = (url: string): string => {
   return createHash('sha256').update(url).digest('hex')
 }
 
-const getCachePath = (url: string, projectRoot: FsLoc.AbsDir.AbsDir): FsLoc.AbsFile.AbsFile => {
+const getCachePath = (url: string, projectRoot: FsLoc.AbsDir): FsLoc.AbsFile => {
   const cacheKey = getCacheKey(url)
   return FsLoc.join(
     projectRoot,
-    FsLoc.RelFile.decodeSync(`.polen/cache/introspection/${cacheKey}.json`),
+    S.decodeSync(FsLoc.RelFile.String)(`.polen/cache/introspection/${cacheKey}.json`),
   )
 }
 
 const readCache = (
-  cachePath: FsLoc.AbsFile.AbsFile,
+  cachePath: FsLoc.AbsFile,
 ): Ef.Effect<CacheEntry | null, PlatformError, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const exists = yield* Fs.exists(cachePath)
@@ -106,7 +106,7 @@ const readCache = (
   })
 
 const writeCache = (
-  cachePath: FsLoc.AbsFile.AbsFile,
+  cachePath: FsLoc.AbsFile,
   entry: CacheEntry,
 ): Ef.Effect<void, Error, FileSystem.FileSystem> =>
   Ef.gen(function*() {

@@ -6,21 +6,22 @@ import {
   injectGlobalDataIntoHTML,
 } from './inject-global-data.js'
 
-type CreateGlobalDataScriptInput = { globalName: string; data: any }
-type CreateGlobalDataScriptOutput = { shouldThrow?: boolean; contains?: string[]; notContains?: string[] }
-
 // dprint-ignore
-Test.Table.suite<CreateGlobalDataScriptInput, CreateGlobalDataScriptOutput>('createGlobalDataScript', [
-  { n: 'creates a script tag with JSON data',         i: { globalName: '__TEST__', data: { foo: 'bar', num: 42 } },                                                         o: { contains: ['<script>globalThis.__TEST__ = {"foo":"bar","num":42};</script>'] } },
-  { n: 'handles nested data structures',              i: { globalName: '__APP__', data: { user: { id: 1, name: 'John' }, settings: { theme: 'dark', notifications: true } } }, o: { contains: ['globalThis.__APP__ =', JSON.stringify({ user: { id: 1, name: 'John' }, settings: { theme: 'dark', notifications: true } })] } },
-  { n: 'escapes special characters in data',          i: { globalName: '__SAFE__', data: { html: '</script><script>alert("xss")</script>' } },                               o: { notContains: ['</script><script>'], contains: ['<\\/script>'] } },
-  { n: 'throws on invalid global name (starts with number)', i: { globalName: '123invalid', data: {} },                                                                               o: { shouldThrow: true } },
-  { n: 'throws on invalid global name (with dash)',   i: { globalName: 'invalid-name', data: {} },                                                                              o: { shouldThrow: true } },
-  { n: 'throws on invalid global name (with dot)',    i: { globalName: 'invalid.name', data: {} },                                                                              o: { shouldThrow: true } },
-  { n: 'accepts valid global name (underscore)',      i: { globalName: '_valid', data: {} },                                                                                    o: { shouldThrow: false } },
-  { n: 'accepts valid global name (dollar)',          i: { globalName: '$valid', data: {} },                                                                                    o: { shouldThrow: false } },
-  { n: 'accepts valid global name (alphanumeric)',    i: { globalName: 'VALID_123', data: {} },                                                                                 o: { shouldThrow: false } },
-], ({ i, o }) => {
+Test.describe('createGlobalDataScript')
+  .i<{ globalName: string; data: any }>()
+  .o<{ shouldThrow?: boolean; contains?: string[]; notContains?: string[] }>()
+  .cases(
+    ['creates a script tag with JSON data',         [{ globalName: '__TEST__', data: { foo: 'bar', num: 42 } }],                                                         { contains: ['<script>globalThis.__TEST__ = {"foo":"bar","num":42};</script>'] }],
+    ['handles nested data structures',              [{ globalName: '__APP__', data: { user: { id: 1, name: 'John' }, settings: { theme: 'dark', notifications: true } } }], { contains: ['globalThis.__APP__ =', JSON.stringify({ user: { id: 1, name: 'John' }, settings: { theme: 'dark', notifications: true } })] }],
+    ['escapes special characters in data',          [{ globalName: '__SAFE__', data: { html: '</script><script>alert("xss")</script>' } }],                               { notContains: ['</script><script>'], contains: ['<\\/script>'] }],
+    ['throws on invalid global name (starts with number)', [{ globalName: '123invalid', data: {} }],                                                                               { shouldThrow: true }],
+    ['throws on invalid global name (with dash)',   [{ globalName: 'invalid-name', data: {} }],                                                                              { shouldThrow: true }],
+    ['throws on invalid global name (with dot)',    [{ globalName: 'invalid.name', data: {} }],                                                                              { shouldThrow: true }],
+    ['accepts valid global name (underscore)',      [{ globalName: '_valid', data: {} }],                                                                                    { shouldThrow: false }],
+    ['accepts valid global name (dollar)',          [{ globalName: '$valid', data: {} }],                                                                                    { shouldThrow: false }],
+    ['accepts valid global name (alphanumeric)',    [{ globalName: 'VALID_123', data: {} }],                                                                                 { shouldThrow: false }],
+  )
+  .test((i, o) => {
   if (o.shouldThrow) {
     expect(() => createGlobalDataScript(i.globalName, i.data)).toThrow('Invalid global variable name')
   } else {
@@ -47,16 +48,17 @@ Test.Table.suite<CreateGlobalDataScriptInput, CreateGlobalDataScriptOutput>('cre
       expect(result).toBeDefined()
     }
   }
-})
-
-type CreateGlobalDataScriptWithInitInput = { globalName: string; data: any; initCode?: string }
-type CreateGlobalDataScriptWithInitOutput = { contains?: string[]; exactMatch?: string }
+  })
 
 // dprint-ignore
-Test.Table.suite<CreateGlobalDataScriptWithInitInput, CreateGlobalDataScriptWithInitOutput>('createGlobalDataScriptWithInit', [
-  { n: 'creates script with data and init code',       i: { globalName: '__THEME__', data: { theme: 'dark' }, initCode: 'document.body.className = globalThis.__THEME__.theme;' }, o: { contains: ['globalThis.__THEME__ = {"theme":"dark"};', 'document.body.className = globalThis.__THEME__.theme;'] } },
-  { n: 'returns just data script when no init code',   i: { globalName: '__TEST__', data: { foo: 'bar' } },                                                                                        o: { exactMatch: '<script>globalThis.__TEST__ = {"foo":"bar"};</script>' } },
-], ({ i, o }) => {
+Test.describe('createGlobalDataScriptWithInit')
+  .i<{ globalName: string; data: any; initCode?: string }>()
+  .o<{ contains?: string[]; exactMatch?: string }>()
+  .cases(
+    ['creates script with data and init code',       [{ globalName: '__THEME__', data: { theme: 'dark' }, initCode: 'document.body.className = globalThis.__THEME__.theme;' }], { contains: ['globalThis.__THEME__ = {"theme":"dark"};', 'document.body.className = globalThis.__THEME__.theme;'] }],
+    ['returns just data script when no init code',   [{ globalName: '__TEST__', data: { foo: 'bar' } }],                                                                                        { exactMatch: '<script>globalThis.__TEST__ = {"foo":"bar"};</script>' }],
+  )
+  .test((i, o) => {
   const result = createGlobalDataScriptWithInit(i.globalName, i.data, i.initCode)
 
   if (o.exactMatch) {
@@ -67,7 +69,7 @@ Test.Table.suite<CreateGlobalDataScriptWithInitInput, CreateGlobalDataScriptWith
     })
     expect(result).toMatch(/<script>.*<\/script>/s)
   }
-})
+  })
 
 const sampleHTML = `
 <html>
@@ -79,17 +81,18 @@ const sampleHTML = `
   </body>
 </html>`
 
-type InjectGlobalDataIntoHTMLInput = { globalName: string; data: any; initCode?: string }
-type InjectGlobalDataIntoHTMLOutput = { contains: string[] }
-
 // dprint-ignore
-Test.Table.suite<InjectGlobalDataIntoHTMLInput, InjectGlobalDataIntoHTMLOutput>('injectGlobalDataIntoHTML', [
-  { n: 'injects script into head',                     i: { globalName: '__APP__', data: { version: '1.0' } },                                                              o: { contains: ['<head>\n<script>globalThis.__APP__ = {"version":"1.0"};</script>'] } },
-  { n: 'injects script with init code',                i: { globalName: '__CONFIG__', data: { apiUrl: '/api' }, initCode: 'console.log("Config loaded:", globalThis.__CONFIG__);' }, o: { contains: ['globalThis.__CONFIG__ = {"apiUrl":"/api"};', 'console.log("Config loaded:", globalThis.__CONFIG__);'] } },
-], ({ i, o }) => {
+Test.describe('injectGlobalDataIntoHTML')
+  .i<{ globalName: string; data: any; initCode?: string }>()
+  .o<{ contains: string[] }>()
+  .cases(
+    ['injects script into head',                     [{ globalName: '__APP__', data: { version: '1.0' } }],                                                              { contains: ['<head>\n<script>globalThis.__APP__ = {"version":"1.0"};</script>'] }],
+    ['injects script with init code',                [{ globalName: '__CONFIG__', data: { apiUrl: '/api' }, initCode: 'console.log("Config loaded:", globalThis.__CONFIG__);' }], { contains: ['globalThis.__CONFIG__ = {"apiUrl":"/api"};', 'console.log("Config loaded:", globalThis.__CONFIG__);'] }],
+  )
+  .test((i, o) => {
   const result = injectGlobalDataIntoHTML(sampleHTML, i.globalName, i.data, i.initCode)
 
   o.contains.forEach((exp: string) => {
     expect(result).toContain(exp)
   })
-})
+  })

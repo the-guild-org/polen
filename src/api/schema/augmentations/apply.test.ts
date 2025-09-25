@@ -7,15 +7,16 @@ import type { AugmentationConfig } from './config.js'
 const on = GraphQLSchemaPath.Nodes.Root.make()
 
 describe('with empty existing description', () => {
-  type PlacementInput = { placement: 'before' | 'after' | 'over' }
-  type PlacementOutput = { expected: string }
-
   // dprint-ignore
-  Test.Table.suite<PlacementInput, PlacementOutput>('placement without newlines', [
-      { n: 'before placement', i: { placement: 'before' as const }, o: { expected: 'New content' } },
-      { n: 'after placement',  i: { placement: 'after' as const },  o: { expected: 'New content' } },
-      { n: 'over placement',   i: { placement: 'over' as const },   o: { expected: 'New content' } },
-    ], ({ i, o }) => {
+  Test.describe('placement without newlines')
+    .i<{ placement: 'before' | 'after' | 'over' }>()
+    .o<string>()
+    .cases(
+      ['before placement', [{ placement: 'before' as const }], 'New content'],
+      ['after placement',  [{ placement: 'after' as const }],  'New content'],
+      ['over placement',   [{ placement: 'over' as const }],   'New content'],
+    )
+    .test((i, o) => {
       const type = { description: undefined } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on,
@@ -25,15 +26,19 @@ describe('with empty existing description', () => {
 
       mutateDescription(type, augmentation)
 
-      expect(type.description).toBe(o.expected)
+      expect(type.description).toBe(o)
     })
 
   // dprint-ignore
-  Test.Table.suite<PlacementInput, PlacementOutput>('empty string handling', [
-      { n: 'before placement', i: { placement: 'before' as const }, o: { expected: 'New content' } },
-      { n: 'after placement',  i: { placement: 'after' as const },  o: { expected: 'New content' } },
-      { n: 'over placement',   i: { placement: 'over' as const },   o: { expected: 'New content' } },
-    ], ({ i, o }) => {
+  Test.describe('empty string handling')
+    .i<{ placement: 'before' | 'after' | 'over' }>()
+    .o<string>()
+    .cases(
+      ['before placement', [{ placement: 'before' as const }], 'New content'],
+      ['after placement',  [{ placement: 'after' as const }],  'New content'],
+      ['over placement',   [{ placement: 'over' as const }],   'New content'],
+    )
+    .test((i, o) => {
       const type = { description: '' } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on,
@@ -43,20 +48,21 @@ describe('with empty existing description', () => {
 
       mutateDescription(type, augmentation)
 
-      expect(type.description).toBe(o.expected)
+      expect(type.description).toBe(o)
     })
 })
 
 describe('with existing description', () => {
-  type ContentInput = { placement: 'before' | 'after' | 'over' }
-  type ContentOutput = { expected: string }
-
   // dprint-ignore
-  Test.Table.suite<ContentInput, ContentOutput>('content combination', [
-      { n: 'before placement', i: { placement: 'before' as const }, o: { expected: 'New content\n\nExisting description' } },
-      { n: 'after placement',  i: { placement: 'after' as const },  o: { expected: 'Existing description\n\nNew content' } },
-      { n: 'over placement',   i: { placement: 'over' as const },   o: { expected: 'New content' } },
-    ], ({ i, o }) => {
+  Test.describe('content combination')
+    .i<{ placement: 'before' | 'after' | 'over' }>()
+    .o<string>()
+    .cases(
+      ['before placement', [{ placement: 'before' as const }], 'New content\n\nExisting description'],
+      ['after placement',  [{ placement: 'after' as const }],  'Existing description\n\nNew content'],
+      ['over placement',   [{ placement: 'over' as const }],   'New content'],
+    )
+    .test((i, o) => {
       const type = { description: 'Existing description' } as GrafaidOld.Groups.Describable
       const augmentation: AugmentationConfig = {
         on,
@@ -66,7 +72,7 @@ describe('with existing description', () => {
 
       mutateDescription(type, augmentation)
 
-      expect(type.description).toBe(o.expected)
+      expect(type.description).toBe(o)
     })
 })
 

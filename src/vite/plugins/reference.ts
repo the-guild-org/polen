@@ -1,7 +1,7 @@
 import type { Api } from '#api/$'
 import * as ReferenceModule from '#api/reference/$'
 import * as Catalog from '#api/reference/catalog'
-import { Ef } from '#dep/effect'
+import { Ef, S } from '#dep/effect'
 import { Diagnostic } from '#lib/diagnostic/$'
 import { ViteReactive } from '#lib/vite-reactive/$'
 import { type AssetReader, createAssetReader } from '#lib/vite-reactive/reactive-asset-plugin'
@@ -100,7 +100,7 @@ export const Reference = ({
 
             // Generate the module code with both catalog and component exports
             const s = Str.Builder()
-            s`import { Ef } from '#dep/effect'`
+            s`import { Ef, S } from '#dep/effect'`
             s`import * as Catalog from '#api/reference/catalog'`
 
             const indexFilePath = scanReferenceResult.catalog.index?.path
@@ -113,12 +113,12 @@ export const Reference = ({
             }
 
             // Encode the catalog to ensure proper serialization
-            const encodedCatalog = Catalog.encodeSync(scanReferenceResult.catalog)
+            const encodedCatalog = S.encodeSync(Catalog.Catalog)(scanReferenceResult.catalog)
 
             s``
             s`const catalogData = ${JSON.stringify(encodedCatalog)}`
             s``
-            s`export const referenceCatalog = Catalog.decodeSync(catalogData)`
+            s`export const referenceCatalog = S.decodeSync(Catalog.Catalog)(catalogData)`
 
             return s.render()
           },

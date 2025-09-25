@@ -1,5 +1,5 @@
 import type { SelfContainedModeHooksData } from '#cli/_/self-contained-mode'
-import { Ef, Op } from '#dep/effect'
+import { Ef, Op, S } from '#dep/effect'
 import { packagePaths } from '#package-paths'
 import { debugPolen } from '#singletons/debug'
 import { FileSystem } from '@effect/platform/FileSystem'
@@ -17,7 +17,7 @@ export const fileNameExtensions = [...fileNameExtensionsTypeScript, ...fileNameE
 export const fileNames = fileNameBases.flatMap(base => fileNameExtensions.map(ext => `${base}${ext}`))
 
 export interface LoadOptions {
-  dir: FsLoc.AbsDir.AbsDir
+  dir: FsLoc.AbsDir
 }
 
 let isSelfContainedModeRegistered = false
@@ -51,7 +51,7 @@ export const load = (options: LoadOptions): Ef.Effect<ConfigInput, Error, FileSy
     // ━━ Fetch the Config
     //
 
-    const fileRelPaths = fileNames.map(fileName => FsLoc.RelFile.decodeSync(fileName))
+    const fileRelPaths = fileNames.map(fileName => S.decodeSync(FsLoc.RelFile.String)(fileName))
     const filePathOption = yield* Fs.findFirstUnderDir(options.dir)(fileRelPaths)
 
     let configInput: ConfigInput

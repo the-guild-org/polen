@@ -1,5 +1,5 @@
 // TODO: Review and replace inline styles with Tailwind classes
-import { Catalog, CatalogStatistics } from 'graphql-kit'
+import { Catalog, CatalogStatistics, Schema, Version } from 'graphql-kit'
 import { Link } from 'react-router'
 import { schemasCatalog } from 'virtual:polen/project/schemas'
 import { Box, Card, Container, Flex, Grid, Heading, Text } from '../ui/index.js'
@@ -84,9 +84,10 @@ function getDefaultFeatures(): Feature[] {
 
       if (latestSchema && latestSchema.definition) {
         // Build stats from the schema definition
+        const version = Schema.getVersion(latestSchema) ?? Version.Custom.make({ value: 'current' })
         const versionStats = CatalogStatistics.analyzeSchema(
           latestSchema.definition,
-          latestSchema._tag === 'SchemaVersioned' ? latestSchema.version : undefined,
+          version,
         )
 
         features.push({

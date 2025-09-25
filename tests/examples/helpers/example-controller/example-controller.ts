@@ -6,14 +6,15 @@ import { Debug, FsLoc } from '@wollybeard/kit'
 import { Projector } from '@wollybeard/projector'
 import { stripAnsi } from 'consola/utils'
 import * as GetPortPlease from 'get-port-please'
+import { $ } from 'zx'
 import type { ProcessPromise } from 'zx'
 import { ExampleName } from '../example-name.js'
 
 const projectDir = FsLoc.join(
-  FsLoc.fromString(import.meta.dirname),
-  FsLoc.fromString(`../../../../`),
+  FsLoc.decodeSync(import.meta.dirname) as FsLoc.AbsDir,
+  FsLoc.decodeSync(`../../../../`) as FsLoc.RelDir,
 )
-const examplesDir = FsLoc.join(projectDir, FsLoc.fromString(`examples/`))
+const examplesDir = FsLoc.join(projectDir, FsLoc.decodeSync(`examples/`) as FsLoc.RelDir)
 
 export type ExampleController = Ef.Effect.Success<ReturnType<typeof create>>
 
@@ -41,136 +42,145 @@ export const create = (parameters: {
           },
         ],
       },
-      scaffold: FsLoc.encodeSync(FsLoc.join(examplesDir, parameters.exampleName + '/')),
+      scaffold: FsLoc.encodeSync(
+        FsLoc.join(examplesDir, FsLoc.decodeSync(parameters.exampleName + '/') as FsLoc.RelDir),
+      ),
 
       scripts: project => ({
-        build: async () => {
-          return await project.packageManager`run build --architecture ssr`
-        },
-        buildSsg: async () => {
-          return await project.packageManager`run build --architecture ssg`
-        },
-        start: async () => {
-          const port = await GetPortPlease.getRandomPort()
+        build: () =>
+          Ef.gen(function*() {
+            const result = yield* project.packageManager('run build --architecture ssr')
+            return result as any // Return as ProcessOutput compatible type
+          }).pipe(Ef.orDie),
+        buildSsg: () =>
+          Ef.gen(function*() {
+            const result = yield* project.packageManager('run build --architecture ssg')
+            return result as any // Return as ProcessOutput compatible type
+          }).pipe(Ef.orDie),
+        start: () =>
+          Ef.gen(function*() {
+            const port = yield* Ef.tryPromise(() => GetPortPlease.getRandomPort())
+            const url = `http://localhost:${port.toString()}`
+            const projectPath = FsLoc.encodeSync(project.dir.base)
 
-          const url = `http://localhost:${port.toString()}`
+            // Use zx directly for process management
+            $.env = { ...process.env, PORT: port.toString() }
+            const serverProcess = $`cd ${projectPath} && pnpm run start`.pipe(
+              process.stdout,
+            )
 
-          const serverProcess = project.packageManager({
-            env: { ...process.env, PORT: port.toString() },
-          })`run start`
+            // Wait for server to be ready
+            yield* Ef.tryPromise(() => new Promise(resolve => setTimeout(resolve, 1000)))
 
-          // todo: If we give some log output from server then we can use that to detect when the server is ready.
-          await project.shell`sleep 1`
-
-          return {
-            raw: serverProcess,
-            stop: async () => {
-              await stopServerProcess(serverProcess)
-            },
-            url,
-          }
-        },
-        serveSsg: async () => {
-          const port = await GetPortPlease.getRandomPort()
-          const url = `http://localhost:${port.toString()}`
-
-          // Use a simple static file server to serve the SSG build
-          // The build output is in the 'build' directory, not 'dist'
-          const serverProcess = project.shell({
-            env: { ...process.env },
-          })`npx serve build --listen ${port.toString()} --single --no-clipboard`
-
-          // Wait for server to be ready by checking if it's responding
-          const maxRetries = 30
-          let retries = 0
-          while (retries < maxRetries) {
-            try {
-              await fetch(url)
-              break
-            } catch (error) {
-              retries++
-              if (retries === maxRetries) {
-                throw new Error(`SSG server failed to start on ${url} after ${maxRetries} attempts`)
-              }
-              await project.shell`sleep 0.5`
+            return {
+              raw: serverProcess,
+              stop: async () => {
+                await stopServerProcess(serverProcess)
+              },
+              url,
             }
-          }
+          }),
+        serveSsg: () =>
+          Ef.gen(function*() {
+            const port = yield* Ef.tryPromise(() => GetPortPlease.getRandomPort())
+            const url = `http://localhost:${port.toString()}`
+            const projectPath = FsLoc.encodeSync(project.dir.base)
 
-          return {
-            raw: serverProcess,
-            stop: async () => {
-              await stopServerProcess(serverProcess)
-            },
-            url,
-          }
-        },
-        dev: async () => {
-          const serverProcess = project.packageManager`run dev`
+            // Use zx for the static server
+            const serverProcess =
+              $`cd ${projectPath} && npx serve build --listen ${port.toString()} --single --no-clipboard`.pipe(
+                process.stdout,
+              )
 
-          const logUrlPattern = /(https?:\/\/\S+)/
-
-          // Create a promise that resolves when we find the URL
-          const serverReady = new Promise<ServerProcess>((resolve, reject) => {
-            const processIterator = serverProcess[Symbol.asyncIterator]()
-
-            let urlFound = false
-            const serverErrors: string[] = []
-            const readLines = async () => {
+            // Wait for server to be ready
+            const maxRetries = 30
+            for (let retries = 0; retries < maxRetries; retries++) {
               try {
-                for await (const line of { [Symbol.asyncIterator]: () => processIterator }) {
-                  console.log(line)
+                yield* Ef.tryPromise(() => fetch(url))
+                break
+              } catch {
+                if (retries === maxRetries - 1) {
+                  throw new Error(`SSG server failed to start on ${url} after ${maxRetries} attempts`)
+                }
+                yield* Ef.tryPromise(() => new Promise(resolve => setTimeout(resolve, 500)))
+              }
+            }
 
-                  const linePlain = stripAnsi(line)
+            return {
+              raw: serverProcess,
+              stop: async () => {
+                await stopServerProcess(serverProcess)
+              },
+              url,
+            }
+          }),
+        dev: () =>
+          Ef.gen(function*() {
+            const projectPath = FsLoc.encodeSync(project.dir.base)
+            const serverProcess = $`cd ${projectPath} && pnpm run dev`.pipe(
+              process.stdout,
+            )
 
-                  const isError = line.toLowerCase().includes(`error`) || line.includes(`Error`)
+            const logUrlPattern = /(https?:\/\/\S+)/
 
-                  if (isError) {
-                    serverErrors.push(line)
-                    // If we haven't found URL yet and hit an error, reject immediately
+            // Wait for server to output URL
+            const serverReady = yield* Ef.tryPromise(() =>
+              new Promise<ServerProcess>((resolve, reject) => {
+                const processIterator = serverProcess[Symbol.asyncIterator]()
+                let urlFound = false
+                const serverErrors: string[] = []
+
+                const readLines = async () => {
+                  try {
+                    for await (const line of { [Symbol.asyncIterator]: () => processIterator }) {
+                      console.log(line)
+                      const linePlain = stripAnsi(line)
+                      const isError = line.toLowerCase().includes(`error`) || line.includes(`Error`)
+
+                      if (isError) {
+                        serverErrors.push(line)
+                        if (!urlFound) {
+                          reject(new Error(`Server failed to start: ${line}`))
+                          return
+                        }
+                      }
+
+                      const url = (logUrlPattern.exec(linePlain))?.[1]
+                      if (url && !urlFound) {
+                        urlFound = true
+                        resolve({
+                          raw: serverProcess,
+                          stop: async () => {
+                            await stopServerProcess(serverProcess)
+                          },
+                          url,
+                        })
+                      }
+                    }
+
                     if (!urlFound) {
-                      reject(new Error(`Server failed to start: ${line}`))
-                      return
+                      const errorDetails = serverErrors.length > 0
+                        ? `\nServer errors:\n${serverErrors.join(`\n`)}`
+                        : ``
+                      reject(new Error(`Server process did not output a URL${errorDetails}`))
+                    }
+                  } catch (error) {
+                    if (!urlFound) {
+                      reject(error)
                     }
                   }
-
-                  const url = (logUrlPattern.exec(linePlain))?.[1]
-                  if (url && !urlFound) {
-                    urlFound = true
-                    resolve({
-                      raw: serverProcess,
-                      stop: async () => {
-                        await stopServerProcess(serverProcess)
-                      },
-                      url,
-                    })
-                    // Continue consuming output to prevent EPIPE
-                    // Don't return here - keep the iterator alive
-                  }
                 }
-                if (!urlFound) {
-                  const errorDetails = serverErrors.length > 0
-                    ? `\nServer errors:\n${serverErrors.join(`\n`)}`
-                    : ``
-                  reject(new Error(`Server process did not output a URL${errorDetails}`))
-                }
-              } catch (error) {
-                // Log any errors that occur
 
-                if (!urlFound) {
-                  reject(error)
-                }
-              }
-            }
+                readLines()
+              })
+            )
 
-            readLines()
-          })
-
-          return await serverReady
-        },
+            return serverReady
+          }),
       }),
     })
 
-    const config = yield* Api.ConfigResolver.fromFile({ dir: project.dir }).pipe(
+    const config = yield* Api.ConfigResolver.fromFile({ dir: project.dir.base }).pipe(
       Ef.provide(NodeFileSystem.layer),
     )
     debug(`loaded configuration`)
@@ -201,7 +211,10 @@ export const stopServerProcess = async (processPromise: ProcessPromise) => {
 }
 
 export const polenDev = async (project: ExampleController) => {
-  const serverProcess = project.packageManager`polen dev`
+  const projectPath = FsLoc.encodeSync(project.dir.base)
+  const serverProcess = $`cd ${projectPath} && pnpm polen dev`.pipe(
+    process.stdout,
+  )
 
   const logUrlPattern = /(https?:\/\/\S+)/
   for await (const line of serverProcess) {

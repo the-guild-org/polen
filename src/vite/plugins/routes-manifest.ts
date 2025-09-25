@@ -85,7 +85,8 @@ export const RoutesManifest = (config: Api.Config.Config): Vite.Plugin => {
           config.paths.project.absolute.build.assets.root,
         ).pipe(
           Ef.provide(NodeFileSystem.layer),
-        ),
+          // FIXME: Remove cast when @effect/platform versions are aligned
+        ) as any,
       )
 
       consola.success(`Generated routes manifest with ${routes.length} routes`)

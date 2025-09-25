@@ -1,6 +1,6 @@
 import { HashMap, HashSet } from 'effect'
 import { buildSchema } from 'graphql'
-import { Catalog, Document, Schema, Version } from 'graphql-kit'
+import { Catalog, Document, Schema, Version, VersionCoverage } from 'graphql-kit'
 import { expect, test } from 'vitest'
 import { Example } from '../schemas/example/example.js'
 import { validateExamples } from './validator.js'
@@ -104,8 +104,11 @@ test.for([
       path: 'test.graphql',
       document: Document.Versioned.make({
         versionDocuments: HashMap.make(
-          [Version.fromString('v1'), 'query { user(id: "1") { id name } }'],
-          [Version.fromString('v2'), 'query { user(id: "1") { id name invalidField } }'],
+          [VersionCoverage.One.make({ version: Version.fromString('v1') }), 'query { user(id: "1") { id name } }'],
+          [
+            VersionCoverage.One.make({ version: Version.fromString('v2') }),
+            'query { user(id: "1") { id name invalidField } }',
+          ],
         ),
       }),
     })],
@@ -198,7 +201,7 @@ test('validates versioned catalog with multiple schemas', () => {
 
   const v1 = Version.fromString('1.0.0')
   const v2 = Version.fromString('2.0.0')
-  const defaultVersions = HashSet.make(v1)
+  const defaultVersions = VersionCoverage.Set.make({ versions: HashSet.make(v1) })
 
   const examples = [
     Example.make({
@@ -207,7 +210,7 @@ test('validates versioned catalog with multiple schemas', () => {
       document: Document.Versioned.make({
         versionDocuments: HashMap.make(
           [defaultVersions, 'query { user(id: "1") { id name } }'],
-          [v2, 'query { users { id name email } }'],
+          [VersionCoverage.One.make({ version: v2 }), 'query { users { id name email } }'],
         ),
       }),
     }),
@@ -235,7 +238,7 @@ test('validates examples against unversioned catalog', () => {
 test('validates examples with version sets', () => {
   const v1 = Version.fromString('v1')
   const v2 = Version.fromString('v2')
-  const versionSet = HashSet.make(v1, v2)
+  const versionSet = VersionCoverage.Set.make({ versions: HashSet.make(v1, v2) })
 
   const examples = [
     Example.make({
@@ -244,7 +247,10 @@ test('validates examples with version sets', () => {
       document: Document.Versioned.make({
         versionDocuments: HashMap.make(
           [versionSet, 'query { user(id: "1") { id name } }'],
-          [Version.fromString('v3'), 'query { user(id: "1") { id name invalidField } }'],
+          [
+            VersionCoverage.One.make({ version: Version.fromString('v3') }),
+            'query { user(id: "1") { id name invalidField } }',
+          ],
         ),
       }),
     }),
@@ -294,8 +300,8 @@ test('detects mismatch between versioned document and unversioned catalog', () =
 
   const versionedDocument = Document.Versioned.make({
     versionDocuments: HashMap.make(
-      [v1, 'query { user(id: "1") { id name } }'],
-      [v2, 'query { users { id name } }'],
+      [VersionCoverage.One.make({ version: v1 }), 'query { user(id: "1") { id name } }'],
+      [VersionCoverage.One.make({ version: v2 }), 'query { users { id name } }'],
     ),
   })
 

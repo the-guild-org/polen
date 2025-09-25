@@ -64,7 +64,7 @@ describe('convertDocument', () => {
         o: { expected: {
           query: {
             user: {
-              n: true,
+              name: true,
               posts: {
                 title: true,
                 comments: {
@@ -99,7 +99,7 @@ describe('convertDocument', () => {
           query: {
             user: {
               $: { id: '123' },
-              n: true,
+              name: true,
             },
           },
         } },
@@ -111,7 +111,7 @@ describe('convertDocument', () => {
           query: {
             users: {
               $: { first: 10, after: 'cursor123' },
-              n: true,
+              name: true,
             },
           },
         } },
@@ -135,7 +135,7 @@ describe('convertDocument', () => {
           query: {
             users: {
               $: { ids: ['1', '2', '3'] },
-              n: true,
+              name: true,
             },
           },
         } },
@@ -147,7 +147,7 @@ describe('convertDocument', () => {
           query: {
             users: {
               $: { role: 'ADMIN' },
-              n: true,
+              name: true,
             },
           },
         } },
@@ -229,14 +229,14 @@ describe('convertDocument', () => {
               'user',
               {
                 $: { role: 'ADMIN' },
-                n: true,
+                name: true,
               },
             ],
             regular: [
               'user',
               {
                 $: { role: 'USER' },
-                n: true,
+                name: true,
               },
             ],
           },
@@ -313,11 +313,11 @@ describe('convertDocument', () => {
           query: {
             profile: {
               ___on_User: {
-                n: true,
+                name: true,
                 email: true,
               },
               ___on_Organization: {
-                n: true,
+                name: true,
                 members: true,
               },
             },
@@ -365,7 +365,7 @@ describe('convertDocument', () => {
         o: { expected: {
           query: {
             user: {
-              n: true,
+              name: true,
               internalId: {
                 $skip: { if: true },
               },
@@ -379,7 +379,7 @@ describe('convertDocument', () => {
         o: { expected: {
           query: {
             user: {
-              n: {
+              name: {
                 $uppercase: true,
               },
               email: {
@@ -554,7 +554,7 @@ describe('graffleDocumentToString', () => {
       o: { expectedCode: `await client.document({
   query: {
     user: {
-      n: true
+      name: true
     }
   }
 }).run()` },
@@ -568,7 +568,7 @@ describe('graffleDocumentToString', () => {
       '$': {
         id: '123'
       },
-      n: true,
+      name: true,
       email: true
     }
   }
@@ -584,7 +584,7 @@ describe('graffleDocumentToString', () => {
         '$': {
           id: variables.id
         },
-        n: true
+        name: true
       }
     }
   }
@@ -601,7 +601,7 @@ describe('graffleDocumentToString', () => {
           n: variables.name
         },
         id: true,
-        n: true
+        name: true
       }
     }
   }
@@ -627,7 +627,7 @@ describe('graffleDocumentToString', () => {
       o: { expectedCode: `await client.document({
   query: {
     user: {
-      n: true,
+      name: true,
       email: {
         $include: {
           if: true

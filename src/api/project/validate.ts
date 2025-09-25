@@ -35,7 +35,7 @@ export interface ValidateProjectOptions {
  * @returns Effect yielding boolean indicating if directory is valid
  */
 export const validateProjectDirectory = (
-  dir: FsLoc.AbsDir.AbsDir,
+  dir: FsLoc.AbsDir,
   options: ValidateProjectOptions = {},
 ): Ef.Effect<boolean, ProjectValidationError, FileSystem> => {
   const { mustExist = true, mustBeEmpty = false, silent = false } = options

@@ -3,7 +3,8 @@ import { Ar, Op } from '#dep/effect'
 import { route } from '#lib/react-router-effect/route'
 import { useLoaderData } from '#lib/react-router-effect/use-loader-data'
 import { Str } from '@wollybeard/kit'
-import { Catalog, Version } from 'graphql-kit'
+import { Catalog, Version, VersionCoverage } from 'graphql-kit'
+import * as _ from 'graphql-kit'
 import { useSearchParams } from 'react-router'
 import * as ExamplesModule from 'virtual:polen/project/examples'
 import { examplesCatalog } from 'virtual:polen/project/examples'
@@ -45,8 +46,9 @@ const Component = () => {
 
   // Parse version from query parameter if present
   const versionParam = searchParams.get('version')
+  // todo: what if version is a coverage?
   const selectedVersion = versionParam
-    ? Version.decodeSync(versionParam)
+    ? VersionCoverage.One.make({ version: Version.decodeSync(versionParam) })
     : undefined
 
   const DescriptionComponent = (ExamplesModule as any)[`DescriptionComponent_${example.name.replace(/-/g, '_')}`]

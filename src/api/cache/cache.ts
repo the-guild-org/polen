@@ -17,7 +17,7 @@ const debug = debugPolen.sub(`api:cache`)
  * - Project Vite cache (node_modules/.vite)
  */
 export const deleteAll = (
-  projectRoot: FsLoc.AbsDir.AbsDir,
+  projectRoot: FsLoc.AbsDir,
 ): Ef.Effect<void, never, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const projectRootStr = FsLoc.encodeSync(projectRoot)
@@ -55,12 +55,13 @@ export const deleteAll = (
     )
 
     debug(`deleteAllComplete`)
-  })
+    // FIXME: Remove cast when @effect/platform versions are aligned between @wollybeard/kit and Polen
+  }) as any
 
 // Types
 
 export interface CacheInfo {
-  rootPath: FsLoc.AbsDir.AbsDir
+  rootPath: FsLoc.AbsDir
   developmentAssets: CacheEntry & {
     tree: Op.Option<TreeNode[]>
   }
@@ -75,7 +76,7 @@ export interface CacheInfo {
 }
 
 interface CacheEntry {
-  path: FsLoc.AbsDir.AbsDir
+  path: FsLoc.AbsDir
   exists: boolean
   size: Op.Option<number>
 }
@@ -89,7 +90,7 @@ export interface TreeNode {
 
 // Helpers
 
-const getDirectorySize = (dirPath: FsLoc.AbsDir.AbsDir): Ef.Effect<number, never, FileSystem.FileSystem> =>
+const getDirectorySize = (dirPath: FsLoc.AbsDir): Ef.Effect<number, never, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     let totalSize = 0
 
@@ -121,7 +122,7 @@ const getDirectorySize = (dirPath: FsLoc.AbsDir.AbsDir): Ef.Effect<number, never
   })
 
 const buildDirectoryTree = (
-  dirPath: FsLoc.AbsDir.AbsDir,
+  dirPath: FsLoc.AbsDir,
   currentDepth: number,
   maxDepth: number,
 ): Ef.Effect<TreeNode[], never, FileSystem.FileSystem> =>

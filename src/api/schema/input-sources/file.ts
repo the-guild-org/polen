@@ -34,14 +34,14 @@ export interface Options {
    * path: './src/graphql/schema.sdl'
    * ```
    */
-  path?: string | FsLoc.AbsFile.AbsFile | FsLoc.RelFile.RelFile
+  path?: string | FsLoc.AbsFile | FsLoc.RelFile
 }
 
 export interface Config {
-  path: FsLoc.AbsFile.AbsFile
+  path: FsLoc.AbsFile
 }
 
-export const normalizeConfig = (options: Options, projectRoot: FsLoc.AbsDir.AbsDir): Config => {
+export const normalizeConfig = (options: Options, projectRoot: FsLoc.AbsDir): Config => {
   const config: Config = {
     path: normalizePathToAbs.file(options.path, projectRoot, defaultPaths.schemaFile),
   }

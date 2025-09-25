@@ -2,11 +2,28 @@ import { Api } from '#api/$'
 import { Ef } from '#dep/effect'
 import { toViteUserConfig } from '#vite/config'
 import { NodeFileSystem } from '@effect/platform-node'
+import { Dir } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
 type FileTree = {
   [path: string]: string | FileTree
+}
+
+const buildSpecFromFileTree = (spec: any, tree: FileTree): any => {
+  for (const [path, content] of Object.entries(tree)) {
+    if (typeof content === 'string') {
+      spec = spec.file(path, content)
+    } else {
+      // For nested directories, flatten them
+      for (const [subPath, subContent] of Object.entries(content)) {
+        if (typeof subContent === 'string') {
+          spec = spec.file(`${path}/${subPath}`, subContent)
+        }
+      }
+    }
+  }
+  return spec
 }
 
 interface TestCase {
@@ -174,7 +191,11 @@ export const Demo = () => <span>MDX works</span>
 
 testCases.forEach(({ fixture, result, title, additionalChecks }) => {
   test(title ?? JSON.stringify(fixture), async ({ page, vite, project }) => {
-    await project.dir.set(fixture)
+    const spec = buildSpecFromFileTree(Dir.spec(project.dir.base), fixture)
+    await Ef.runPromise(
+      project.dir.merge(spec).commit()
+        .pipe(Ef.provide(NodeFileSystem.layer)),
+    )
     const polenConfig = await Ef.runPromise(
       Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
         Ef.provide(NodeFileSystem.layer),

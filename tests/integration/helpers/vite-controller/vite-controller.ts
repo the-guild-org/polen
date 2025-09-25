@@ -48,14 +48,14 @@ interface State {
   devLoggerStores: ViteMemoryLogger.Store[]
 }
 
-export const create = <cwd extends string | FsLoc.AbsDir.AbsDir>(
+export const create = <cwd extends string | FsLoc.AbsDir>(
   config?: {
-    cwd?: FsLoc.Inputs.AbsDir<cwd>
+    cwd?: FsLoc.Inputs.Input.AbsDir
     defaultConfigInput?: Api.Config.ConfigInput
     options?: TestOptions
   },
 ): ViteController => {
-  const cwd = config?.cwd ? FsLoc.Inputs.normalize.absDir(config.cwd) : undefined
+  const cwd = config?.cwd ? FsLoc.normalizeInput(config.cwd) as FsLoc.AbsDir : undefined
 
   const state: State = {
     viteDevServer: null,

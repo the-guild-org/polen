@@ -74,7 +74,7 @@ const HomeConfig = S.Struct({
         auto: 'auto',
       } as const,
     )),
-    heroImage: S.optional(FsLoc.RelFile.RelFile),
+    heroImage: S.optional(FsLoc.RelFile),
   }),
 
   /**
@@ -187,31 +187,31 @@ const PackagePaths = S.Struct({
   name: S.String,
   isRunningFromSource: S.Boolean,
   static: S.Struct({
-    source: FsLoc.AbsDir.AbsDir,
-    build: FsLoc.AbsDir.AbsDir,
+    source: FsLoc.AbsDir,
+    build: FsLoc.AbsDir,
   }),
-  rootDir: FsLoc.AbsDir.AbsDir,
+  rootDir: FsLoc.AbsDir,
   sourceExtension: S.Union(S.Literal('.js'), S.Literal('.ts')),
-  sourceDir: FsLoc.AbsDir.AbsDir,
+  sourceDir: FsLoc.AbsDir,
   template: S.Struct({
     absolute: S.Struct({
-      rootDir: FsLoc.AbsDir.AbsDir,
+      rootDir: FsLoc.AbsDir,
       server: S.Struct({
-        app: FsLoc.AbsFile.AbsFile,
-        entrypoint: FsLoc.AbsFile.AbsFile,
+        app: FsLoc.AbsFile,
+        entrypoint: FsLoc.AbsFile,
       }),
       client: S.Struct({
-        entrypoint: FsLoc.AbsFile.AbsFile,
+        entrypoint: FsLoc.AbsFile,
       }),
     }),
     relative: S.Struct({
-      rootDir: FsLoc.RelDir.RelDir,
+      rootDir: FsLoc.RelDir,
       server: S.Struct({
-        app: FsLoc.RelFile.RelFile,
-        entrypoint: FsLoc.RelFile.RelFile,
+        app: FsLoc.RelFile,
+        entrypoint: FsLoc.RelFile,
       }),
       client: S.Struct({
-        entrypoint: FsLoc.RelFile.RelFile,
+        entrypoint: FsLoc.RelFile,
       }),
     }),
   }),
@@ -225,39 +225,39 @@ const PackagePaths = S.Struct({
 // ============================================================================
 
 const ProjectPaths = S.Struct({
-  rootDir: FsLoc.AbsDir.AbsDir,
+  rootDir: FsLoc.AbsDir,
   relative: S.Struct({
     build: S.Struct({
-      root: FsLoc.RelDir.RelDir,
+      root: FsLoc.RelDir,
       relative: S.Struct({
         assets: S.Struct({
-          root: FsLoc.RelDir.RelDir,
+          root: FsLoc.RelDir,
           relative: S.Struct({
-            schemas: FsLoc.RelDir.RelDir,
+            schemas: FsLoc.RelDir,
           }),
         }),
-        serverEntrypoint: FsLoc.RelFile.RelFile,
+        serverEntrypoint: FsLoc.RelFile,
       }),
     }),
-    pages: FsLoc.RelDir.RelDir,
+    pages: FsLoc.RelDir,
     public: S.Struct({
-      root: FsLoc.RelDir.RelDir,
-      logo: FsLoc.RelFile.RelFile,
+      root: FsLoc.RelDir,
+      logo: FsLoc.RelFile,
     }),
   }),
   absolute: S.Struct({
     build: S.Struct({
-      root: FsLoc.AbsDir.AbsDir,
+      root: FsLoc.AbsDir,
       assets: S.Struct({
-        root: FsLoc.AbsDir.AbsDir,
-        schemas: FsLoc.AbsDir.AbsDir,
+        root: FsLoc.AbsDir,
+        schemas: FsLoc.AbsDir,
       }),
-      serverEntrypoint: FsLoc.AbsFile.AbsFile,
+      serverEntrypoint: FsLoc.AbsFile,
     }),
-    pages: FsLoc.AbsDir.AbsDir,
+    pages: FsLoc.AbsDir,
     public: S.Struct({
-      root: FsLoc.AbsDir.AbsDir,
-      logo: FsLoc.AbsFile.AbsFile,
+      root: FsLoc.AbsDir,
+      logo: FsLoc.AbsFile,
     }),
   }),
 }).annotations({
@@ -269,13 +269,13 @@ const FrameworkPaths = S.extend(
   PackagePaths,
   S.Struct({
     devAssets: S.Struct({
-      relative: FsLoc.RelDir.RelDir,
-      absolute: FsLoc.AbsDir.AbsDir,
-      schemas: FsLoc.AbsDir.AbsDir,
+      relative: FsLoc.RelDir,
+      absolute: FsLoc.AbsDir,
+      schemas: FsLoc.AbsDir,
     }),
     generatedTypes: S.Struct({
-      relative: FsLoc.RelDir.RelDir,
-      absolute: FsLoc.AbsDir.AbsDir,
+      relative: FsLoc.RelDir,
+      absolute: FsLoc.AbsDir,
     }),
   }),
 ).annotations({
@@ -427,14 +427,14 @@ export const validate = S.validate(Config)
 // -------------
 
 export interface ConfigAdvancedPathsInput {
-  devAssets?: string | FsLoc.AbsDir.AbsDir | FsLoc.RelDir.RelDir | undefined
+  devAssets?: string | FsLoc.AbsDir | FsLoc.RelDir | undefined
 }
 
 const l = FsLoc.fromString
 const j = FsLoc.join
 
 const buildPaths = (
-  rootDir: FsLoc.AbsDir.AbsDir,
+  rootDir: FsLoc.AbsDir,
   overrides?: ConfigAdvancedPathsInput | undefined,
 ): Config[`paths`] => {
   const buildDir = j(rootDir, l(`build`))
@@ -447,12 +447,20 @@ const buildPaths = (
   let devAssetsRelative = l('node_modules/.vite/assets/')
   let devAssetsAbsolute = j(rootDir, l(`node_modules/.vite/assets`))
   if (overrides?.devAssets) {
-    const normalized = FsLoc.Inputs.normalize.any(overrides.devAssets)
-    const devAssetsAbsDir = FsLoc.Groups.Abs.is(normalized)
-      ? (normalized._tag === 'LocAbsDir' ? normalized : FsLoc.AbsDir.decodeSync(FsLoc.encodeSync(normalized) + '/'))
-      : j(rootDir, normalized) as FsLoc.AbsDir.AbsDir
-    devAssetsRelative = FsLoc.toRel(devAssetsAbsDir, rootDir)
-    devAssetsAbsolute = devAssetsAbsDir
+    const normalized = FsLoc.normalizeInput(overrides.devAssets)
+    // Check if it's already absolute
+    if (FsLoc.Groups.Abs.is(normalized)) {
+      devAssetsAbsolute = FsLoc.Groups.Dir.is(normalized)
+        ? normalized as FsLoc.AbsDir
+        : FsLoc.dirOf(normalized as FsLoc.AbsFile)
+      devAssetsRelative = FsLoc.toRel(devAssetsAbsolute, rootDir) as FsLoc.RelDir
+    } else {
+      // It's relative, join with root
+      devAssetsRelative = FsLoc.Groups.Dir.is(normalized)
+        ? normalized as FsLoc.RelDir
+        : FsLoc.dirOf(normalized as FsLoc.RelFile)
+      devAssetsAbsolute = j(rootDir, devAssetsRelative)
+    }
   }
   const devAssetsSchemasDir = j(devAssetsAbsolute, l(`schemas`))
 
@@ -515,7 +523,7 @@ const buildPaths = (
   }
 }
 
-const getConfigInputDefaults = (baseRootDir: FsLoc.AbsDir.AbsDir): Config => ({
+const getConfigInputDefaults = (baseRootDir: FsLoc.AbsDir): Config => ({
   _input: {},
   name: `My Developer Portal`,
   description: `Explore and integrate with our GraphQL API`,
@@ -596,7 +604,7 @@ export const normalizeInput = (
    *
    * If this is omitted, then relative root paths will throw an error.
    */
-  baseRootDirFs: FsLoc.AbsDir.AbsDir,
+  baseRootDirFs: FsLoc.AbsDir,
 ): Ef.Effect<Config, Error, FileSystem.FileSystem> =>
   Ef.gen(function*() {
     const configInput_as_writeable = configInput as WritableDeep<ConfigInput> | undefined
@@ -794,13 +802,13 @@ export const normalizeInput = (
           if (homeInput.hero.heroImage) {
             if (typeof homeInput.hero.heroImage === 'string') {
               // Parse string to FilePath, validating against data URLs
-              heroImageValue = FsLoc.RelFile.decodeSync(homeInput.hero.heroImage)
+              heroImageValue = S.decodeSync(FsLoc.RelFile.String)(homeInput.hero.heroImage)
             } else if (
               typeof homeInput.hero.heroImage === 'object' && 'src' in homeInput.hero.heroImage
               && homeInput.hero.heroImage.src
             ) {
               // Parse src string to FilePath
-              heroImageValue = FsLoc.RelFile.decodeSync(homeInput.hero.heroImage.src)
+              heroImageValue = S.decodeSync(FsLoc.RelFile.String)(homeInput.hero.heroImage.src)
             }
             // If it's an object with AI config but no src, leave as undefined for now
             // (future: generate during build process)

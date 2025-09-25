@@ -26,7 +26,8 @@ export const Hooks = ({ config }: Options): Vite.Plugin => {
           Fs.findFirstUnderDir(config.paths.project.rootDir)([
             FsLoc.fromString('hooks.ts'),
             FsLoc.fromString('hooks.tsx'),
-          ]).pipe(Ef.provide(NodeFileSystem.layer)),
+            // FIXME: Remove cast when @effect/platform versions are aligned
+          ]).pipe(Ef.provide(NodeFileSystem.layer)) as Ef.Effect<Op.Option<FsLoc.AbsFile>, never, never>,
         )
 
         const hooksPath = Op.getOrUndefined(hooksPathOption)

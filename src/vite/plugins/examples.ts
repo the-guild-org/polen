@@ -57,7 +57,7 @@ export const Examples = ({
         : undefined
 
       const scanExamplesResult = yield* scan({
-        dir: FsLoc.encodeSync(examplesDir),
+        dir: examplesDir,
         ...(schemaCatalog ? { schemaCatalog } : {}),
       })
 
@@ -119,9 +119,9 @@ export const Examples = ({
       name: 'examples',
       reader,
       filePatterns: {
-        watch: [examplesDir],
+        watch: [FsLoc.encodeSync(examplesDir)],
         isRelevant: (file) => {
-          return file.includes(examplesDir) && (
+          return file.includes(FsLoc.encodeSync(examplesDir)) && (
             file.endsWith('.graphql')
             || file.endsWith('.gql')
             || file.endsWith('index.md')
@@ -184,7 +184,7 @@ export const Examples = ({
             const indexFilePath = scanExamplesResult.catalog.index?.path
             if (indexFilePath) {
               s``
-              s`export { default as IndexComponent } from '${FsLoc.encodeSync(indexFilePath)}'`
+              s`export { default as IndexComponent } from '${indexFilePath}'`
             } else {
               s``
               s`export const IndexComponent = null`

@@ -14,7 +14,7 @@ export const Catalog = S.Struct({
     /**
      * Path to the index.md or index.mdx file
      */
-    path: FsLoc.AbsFile.AbsFile,
+    path: FsLoc.AbsFile,
   })),
 }).annotations({
   identifier: 'ReferenceCatalog',

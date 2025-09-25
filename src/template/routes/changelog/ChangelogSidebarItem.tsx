@@ -4,7 +4,7 @@ import { Box, Flex, Text } from '../../components/ui/index.js'
 import { renderDate } from './utils.js'
 
 export const ChangelogSidebarItem: React.FC<{
-  revision: Revision.Revision
+  revision: Revision
   isActive: boolean
 }> = ({ revision, isActive }) => {
   const counts = calculateCounts(revision)
@@ -51,7 +51,7 @@ export const ChangelogSidebarItem: React.FC<{
   )
 }
 
-export const calculateCounts = (revision: Revision.Revision) => {
+export const calculateCounts = (revision: Revision) => {
   return {
     breaking: revision.changes.filter(Change.isBreaking).length,
     dangerous: revision.changes.filter(Change.isDangerous).length,

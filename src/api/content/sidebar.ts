@@ -118,7 +118,7 @@ export const buildSidebarIndex = (scanResult: ScanResult): SidebarIndex => {
   const pagesByTopLevelDir = new Map<string, Page[]>()
 
   for (const page of scanResult.list) {
-    const topLevelDir = page.route.logical.path[0]
+    const topLevelDir = page.route.logical.path.segments[0]
 
     // Skip pages that are not in a directory or are hidden
     if (!topLevelDir || page.metadata.hidden) continue
@@ -132,7 +132,7 @@ export const buildSidebarIndex = (scanResult: ScanResult): SidebarIndex => {
   // Build sidebar for each directory that has an index page
   for (const [topLevelDir, pages] of pagesByTopLevelDir) {
     const hasIndexPage = Ar.some(pages, page =>
-      page.route.logical.path.length === 1
+      page.route.logical.path.segments.length === 1
       && FileRouter.Route.isFromIndexFile(page.route))
 
     // Skip directories without index pages
@@ -160,12 +160,12 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
 
   for (const page of pages) {
     // Skip the index page at the top level directory
-    if (page.route.logical.path.length === 1 && FileRouter.Route.isFromIndexFile(page.route)) {
+    if (page.route.logical.path.segments.length === 1 && FileRouter.Route.isFromIndexFile(page.route)) {
       continue
     }
 
     // Get the immediate parent path (e.g., for ['guide', 'advanced', 'tips'], parent is ['guide', 'advanced'])
-    const parentPath = page.route.logical.path.slice(0, -1).join(`/`)
+    const parentPath = page.route.logical.path.segments.slice(0, -1).join(`/`)
 
     if (!pagesByParent.has(parentPath)) {
       pagesByParent.set(parentPath, [])
@@ -179,8 +179,8 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
   // Sort pages by their directory order (extracted from file path)
   const sortedTopLevelPages = [...topLevelPages].sort((a, b) => {
     // For sections, we need to look at the directory name in the file path
-    const pathA = FsLoc.encodeSync(a.route.file.path.relative)
-    const pathB = FsLoc.encodeSync(b.route.file.path.relative)
+    const pathA = FsLoc.encodeSync(a.route.file)
+    const pathB = FsLoc.encodeSync(b.route.file)
     const dirA = pathA.substring(0, pathA.lastIndexOf('/')).split(`/`).pop() ?? ``
     const dirB = pathB.substring(0, pathB.lastIndexOf('/')).split(`/`).pop() ?? ``
 
@@ -198,8 +198,8 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
   })
 
   for (const page of sortedTopLevelPages) {
-    const pageName = page.route.logical.path[page.route.logical.path.length - 1]!
-    const childPath = page.route.logical.path.join(`/`)
+    const pageName = page.route.logical.path.segments[page.route.logical.path.segments.length - 1]!
+    const childPath = page.route.logical.path.segments.join(`/`)
     const childPages = pagesByParent.get(childPath) ?? []
 
     if (childPages.length > 0 || FileRouter.Route.isFromIndexFile(page.route)) {
@@ -225,8 +225,10 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
         if (!FileRouter.Route.isFromIndexFile(childPage.route)) {
           section.links.push({
             type: `ItemLink`,
-            title: Str.titlizeSlug(childPage.route.logical.path[childPage.route.logical.path.length - 1]!),
-            pathExp: childPage.route.logical.path.join(`/`),
+            title: Str.titlizeSlug(
+              childPage.route.logical.path.segments[childPage.route.logical.path.segments.length - 1]!,
+            ),
+            pathExp: childPage.route.logical.path.segments.join(`/`),
           })
         }
       }
@@ -249,23 +251,23 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
         // Compare paths segment by segment, considering order at each level
         const pathA = a.route.logical.path
         const pathB = b.route.logical.path
-        const minLength = Math.min(pathA.length, pathB.length)
+        const minLength = Math.min(pathA.segments.length, pathB.segments.length)
 
         for (let i = 0; i < minLength; i++) {
-          const segmentCompare = pathA[i]!.localeCompare(pathB[i]!)
+          const segmentCompare = pathA.segments[i]!.localeCompare(pathB.segments[i]!)
           if (segmentCompare !== 0) return segmentCompare
         }
 
-        return pathA.length - pathB.length
+        return pathA.segments.length - pathB.segments.length
       })
 
       for (const descendantPage of allDescendants) {
         section.links.push({
           type: `ItemLink`,
           title: Str.titlizeSlug(
-            descendantPage.route.logical.path[descendantPage.route.logical.path.length - 1]!,
+            descendantPage.route.logical.path.segments[descendantPage.route.logical.path.segments.length - 1]!,
           ),
-          pathExp: descendantPage.route.logical.path.join(`/`),
+          pathExp: descendantPage.route.logical.path.segments.join(`/`),
         })
       }
 
@@ -277,7 +279,7 @@ const buildSidebarForDirectory = (topLevelDir: string, pages: Page[]): Sidebar =
       items.push({
         type: `ItemLink`,
         title: Str.titlizeSlug(pageName),
-        pathExp: page.route.logical.path.join(`/`),
+        pathExp: page.route.logical.path.segments.join(`/`),
       })
     }
   }

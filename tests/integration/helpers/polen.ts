@@ -11,7 +11,7 @@ export const defaultViteConfig: Vite.UserConfig = {
   // customLogger: Vite.createLogger(`silent`, {}),
 }
 
-export const pc = async (configInput?: Polen.ConfigInput, baseRootDirPath?: string | FsLoc.AbsDir.AbsDir) => {
+export const pc = async (configInput?: Polen.ConfigInput, baseRootDirPath?: string | FsLoc.AbsDir) => {
   // Convert FsLoc to string if needed
   const rootDirPath = typeof baseRootDirPath === 'string'
     ? baseRootDirPath
@@ -28,7 +28,7 @@ export const pc = async (configInput?: Polen.ConfigInput, baseRootDirPath?: stri
         },
       },
       ...configInput,
-    }, rootDirPath ? FsLoc.AbsDir.decodeSync(rootDirPath) : undefined).pipe(
+    }, rootDirPath ? FsLoc.decode(rootDirPath) as FsLoc.AbsDir : undefined).pipe(
       Ef.provide(NodeFileSystem.layer),
     ),
   )

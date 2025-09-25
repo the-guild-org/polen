@@ -1,5 +1,5 @@
 import { Api } from '#api/$'
-import { Op } from '#dep/effect'
+import { Op, S } from '#dep/effect'
 import { Ef } from '#dep/effect'
 import { Args, Command, Options } from '@effect/cli'
 import * as NodeCmdExecutor from '@effect/platform-node/NodeCommandExecutor'
@@ -44,9 +44,9 @@ const example = Options.choice('example', ['hive']).pipe(
   Options.withDescription('The example to use to scaffold your project.'),
 )
 
-const getProjectRoot = async (args: { name?: string; path?: string }): Promise<FsLoc.AbsDir.AbsDir> => {
+const getProjectRoot = async (args: { name?: string; path?: string }): Promise<FsLoc.AbsDir> => {
   if (args.path) {
-    const pathLoc = FsLoc.AbsDir.decodeSync(args.path)
+    const pathLoc = S.decodeSync(FsLoc.AbsDir.String)(args.path)
     const isValid = await Ef.runPromise(
       Api.Project.validateProjectDirectory(pathLoc, { mustExist: false, mustBeEmpty: true }).pipe(
         Ef.provide(NodeFileSystem.layer),
@@ -60,11 +60,11 @@ const getProjectRoot = async (args: { name?: string; path?: string }): Promise<F
 
   const name = Str.Case.kebab(args.name ?? Name.generate())
 
-  const findUsableName = async (isRetry?: true): Promise<FsLoc.AbsDir.AbsDir> => {
-    const cwd = FsLoc.AbsDir.decodeSync(process.cwd())
+  const findUsableName = async (isRetry?: true): Promise<FsLoc.AbsDir> => {
+    const cwd = S.decodeSync(FsLoc.AbsDir.String)(process.cwd())
     const projectRoot = FsLoc.join(
       cwd,
-      FsLoc.RelDir.decodeSync(name + (isRetry ? `-${Date.now().toString(36).substring(2, 8)}` : '')),
+      S.decodeSync(FsLoc.RelDir.String)(name + (isRetry ? `-${Date.now().toString(36).substring(2, 8)}` : '')),
     )
     const result = await Ef.runPromise(
       Ef.gen(function*() {
@@ -91,7 +91,7 @@ const copyGitRepositoryTemplate = (input: {
     url: URL
     templatePath: string
   }
-  destinationPath: FsLoc.AbsDir.AbsDir
+  destinationPath: FsLoc.AbsDir
   exampleName: string
 }): Ef.Effect<void, Error, CmdExecutor.CommandExecutor | FileSystem> =>
   Ef.scoped(
@@ -139,11 +139,7 @@ const copyGitRepositoryTemplate = (input: {
         ),
       )
 
-      const templateRelPath = FsLoc.RelDir.decodeSync(
-        input.repository.templatePath.endsWith('/')
-          ? input.repository.templatePath
-          : `${input.repository.templatePath}/`,
-      )
+      const templateRelPath = S.decodeSync(FsLoc.RelDir.String)(input.repository.templatePath)
       const templatePath = FsLoc.join(tmpDirPath, templateRelPath)
 
       // Verify the example exists
@@ -213,13 +209,14 @@ export const create = Command.make(
 
       yield* Ef.gen(function*() {
         const manifest = yield* Manifest.resource.readOrEmpty(projectRoot)
-        manifest.name = finalName
-        manifest.description = 'A new project'
-        manifest.packageManager = 'pnpm@10.11.0'
-        if (manifest.dependencies) {
-          delete manifest.dependencies['polen'] // Repo uses links, we will install polen next.
+        const mutable = manifest.toMutable()
+        mutable.name = finalName
+        mutable.description = 'A new project'
+        mutable.packageManager = 'pnpm@10.11.0'
+        if (mutable.dependencies) {
+          delete mutable.dependencies['polen'] // Repo uses links, we will install polen next.
         }
-        yield* Manifest.resource.write(manifest, projectRoot)
+        yield* Manifest.resource.write(Manifest.make(mutable), projectRoot)
       }).pipe(Ef.provide(NodeFileSystem.layer))
 
       if (link) {
@@ -262,7 +259,7 @@ export const create = Command.make(
 
       consola.success('Your project is ready! Get Started:')
       console.log('')
-      const cwdLoc = FsLoc.AbsDir.decodeSync(process.cwd())
+      const cwdLoc = S.decodeSync(FsLoc.AbsDir.String)(process.cwd())
       const relPath = FsLoc.toRel(cwdLoc, projectRoot)
       console.log(Ansis.magenta(`  cd ${FsLoc.encodeSync(relPath)} && pnpm dev`))
     }).pipe(

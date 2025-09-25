@@ -209,8 +209,8 @@ const BrandingConfig = S.Struct({
 const AdvancedPaths = S.Struct({
   devAssets: S.optional(S.Union(
     S.String,
-    FsLoc.AbsDir.AbsDir,
-    FsLoc.RelDir.RelDir,
+    FsLoc.AbsDir,
+    FsLoc.RelDir,
   )),
 })
 

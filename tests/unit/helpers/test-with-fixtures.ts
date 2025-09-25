@@ -39,9 +39,13 @@ export const ProjectorTag2 = ProjectorService2
 export { it }
 
 // Create test with project fixture for compatibility
+type TestServices = ProjectorService
 export const test = it.scoped('test with project', () =>
-  Ef.map(ProjectorService, (projector) => ({
-    project: {
-      dir: projector.dir,
-    },
-  }))).pipe(it.provide(ProjectorLive))
+  Ef.gen(function*() {
+    const projector = yield* ProjectorService
+    return {
+      project: {
+        dir: projector.dir,
+      },
+    }
+  })).pipe(it.provide(ProjectorLive))

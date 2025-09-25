@@ -1,3 +1,5 @@
+import { Ef } from '#dep/effect'
+import { NodeFileSystem } from '@effect/platform-node'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
@@ -21,9 +23,11 @@ test('no schema causes navbar without refernce link', async ({ page, vite }) => 
 })
 
 test('schema pressence causes navbar with reference link', async ({ page, vite, project }) => {
-  await project.dir.set({
-    'schema.graphql': schemaFixtures.minimal.v1,
-  })
+  await Ef.runPromise(
+    project.dir.file('schema.graphql', schemaFixtures.minimal.v1)
+      .commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const svr = await vite.devPolen()
   await page.goto(svr.url('/').href, { timeout: 1000_0 })
   // With the new home page, we have both navbar links and Hero CTA buttons
@@ -31,22 +35,25 @@ test('schema pressence causes navbar with reference link', async ({ page, vite, 
 })
 
 test('/reference loads unversioned schema without error', async ({ page, vite, project }) => {
-  await project.dir.set({
-    'schema.graphql': schemaFixtures.minimal.v1,
-  })
+  await Ef.runPromise(
+    project.dir.file('schema.graphql', schemaFixtures.minimal.v1)
+      .commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const svr = await vite.devPolen()
   await page.goto(svr.url('/reference').href, { timeout: 1000_0 })
   expect(svr.logs.errors).toEqual([])
 })
 
 test('/reference loads versioned schema without error', async ({ page, vite, project }) => {
-  await project.dir.set({
-    'schemas': {
-      '3.0.0': schemaFixtures.minimal.v1,
-      '2.0.0': schemaFixtures.minimal.v2,
-      '1.0.0': schemaFixtures.minimal.v3,
-    },
-  })
+  await Ef.runPromise(
+    project.dir
+      .file('schemas/3.0.0.graphql', schemaFixtures.minimal.v1)
+      .file('schemas/2.0.0.graphql', schemaFixtures.minimal.v2)
+      .file('schemas/1.0.0.graphql', schemaFixtures.minimal.v3)
+      .commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const svr = await vite.devPolen()
   await page.goto(svr.url('/reference').href, { timeout: 1000_0 })
   expect(svr.logs.errors).toEqual([])

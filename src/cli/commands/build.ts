@@ -1,5 +1,5 @@
 import { Api } from '#api/$'
-import { Op } from '#dep/effect'
+import { Op, S } from '#dep/effect'
 import { Ef } from '#dep/effect'
 import { Command, Options } from '@effect/cli'
 import { NodeFileSystem } from '@effect/platform-node'
@@ -43,8 +43,8 @@ export const build = Command.make(
   ({ debug, project, architecture, base, port, allowGlobal }) =>
     Ef.gen(function*() {
       const dir = Op.getOrElse(
-        Op.map(project, FsLoc.AbsDir.decodeSync),
-        () => FsLoc.AbsDir.decodeSync(process.cwd()),
+        Op.map(project, p => S.decodeSync(FsLoc.AbsDir.String)(p)),
+        () => S.decodeSync(FsLoc.AbsDir.String)(process.cwd()),
       )
 
       const isValidProject = yield* Api.Project.validateProjectDirectory(dir).pipe(

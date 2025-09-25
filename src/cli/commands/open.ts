@@ -1,5 +1,5 @@
 import { Api } from '#api/$'
-import { Op } from '#dep/effect'
+import { Op, S } from '#dep/effect'
 import { Ef } from '#dep/effect'
 import { Vite } from '#dep/vite/index'
 import { toViteUserConfig } from '#vite/config'
@@ -49,7 +49,7 @@ const cache = Options.boolean('cache').pipe(
 )
 
 // Cache implementation
-const homeDirLoc = FsLoc.AbsDir.decodeSync(homedir())
+const homeDirLoc = S.decodeSync(FsLoc.AbsDir.String)(homedir())
 const cachePathLoc = FsLoc.join(
   homeDirLoc,
   FsLoc.fromString('.polen/cache/cli/open'),
@@ -66,7 +66,7 @@ const cacheWrite = async (source: string, schema: Grafaid.Schema.Schema, useCach
 
   await Err.tryCatchIgnore(async () => {
     const fileName = base64Codec.encode(source)
-    const fileNameLoc = FsLoc.RelFile.decodeSync(fileName)
+    const fileNameLoc = S.decodeSync(FsLoc.RelFile.String)(fileName)
     const filePath = FsLoc.join(cachePathLoc, fileNameLoc)
     const sdl = Grafaid.Schema.print(schema)
     await Ef.runPromise(
@@ -84,7 +84,7 @@ const cacheRead = async (source: string, useCache: boolean) => {
 
   return Err.tryCatchIgnore(async () => {
     const fileName = base64Codec.encode(source)
-    const fileNameLoc = FsLoc.RelFile.decodeSync(fileName)
+    const fileNameLoc = S.decodeSync(FsLoc.RelFile.String)(fileName)
     const filePath = FsLoc.join(cachePathLoc, fileNameLoc)
     const sdl = await Ef.runPromise(
       Ef.gen(function*() {

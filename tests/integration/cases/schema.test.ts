@@ -1,3 +1,5 @@
+import { Ef } from '#dep/effect'
+import { NodeFileSystem } from '@effect/platform-node'
 import { expect } from 'playwright/test'
 import { configMemorySchema, pc } from '../helpers/polen.js'
 import { test } from '../helpers/test.js'
@@ -64,9 +66,11 @@ test('can loads schema from memory data source', async ({ page, vite, project })
 })
 
 test('can loads schema from schema data source', async ({ page, vite, project }) => {
-  await project.dir.set({
-    'schema.graphql': sdl,
-  })
+  await Ef.runPromise(
+    project.dir.file('schema.graphql', sdl)
+      .commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const viteUserConfig = await pc({}, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
@@ -76,9 +80,11 @@ test('can loads schema from schema data source', async ({ page, vite, project })
 })
 
 test('can loads schema from directory data source', async ({ page, vite, project }) => {
-  await project.dir.set({
-    'schema/2020-01-01.graphql': sdl,
-  })
+  await Ef.runPromise(
+    project.dir.file('schema/2020-01-01.graphql', sdl)
+      .commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const viteUserConfig = await pc({}, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
@@ -87,9 +93,11 @@ test('can loads schema from directory data source', async ({ page, vite, project
 })
 
 test('can loads schema from directory data source with single schema.graphql', async ({ page, vite, project }) => {
-  await project.dir.set({
-    'schema/schema.graphql': sdl,
-  })
+  await Ef.runPromise(
+    project.dir.file('schema/schema.graphql', sdl)
+      .commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const viteUserConfig = await pc({}, project.dir.base)
   const viteDevServer = await vite.startDevelopmentServer(viteUserConfig)
   await page.goto(viteDevServer.url('/').href)
@@ -121,7 +129,11 @@ test.skip('introspection loads when no other sources exist', async ({ page, vite
 })
 
 test('file source takes precedence over introspection by default', async ({ page, vite, project }) => {
-  await project.dir.set({ 'schema.graphql': sdl })
+  await Ef.runPromise(
+    project.dir.file('schema.graphql', sdl)
+      .commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const viteUserConfig = await pc({
     schema: {
       sources: { introspection: { url: 'https://api.graphql-hive.com/graphql' } },

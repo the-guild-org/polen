@@ -1,5 +1,5 @@
 import type { Config } from '#api/config/normalized'
-import { Ef } from '#dep/effect'
+import { Ef, S } from '#dep/effect'
 import { FileSystem } from '@effect/platform'
 import { Fs, FsLoc } from '@wollybeard/kit'
 
@@ -24,7 +24,7 @@ export interface WriterOptions {
    * The root directory where node_modules exists.
    * Usually the project root.
    */
-  projectRoot: FsLoc.AbsDir.AbsDir
+  projectRoot: FsLoc.AbsDir
 }
 
 export interface WriterOptionsWithConfig {
@@ -44,16 +44,16 @@ export const relativePathGeneratedTypesDir = FsLoc.fromString('node_modules/@typ
 /**
  * Get the output directory for generated type definitions.
  */
-export const getGeneratedTypesDir = (projectRoot: FsLoc.AbsDir.AbsDir): FsLoc.AbsDir.AbsDir => {
+export const getGeneratedTypesDir = (projectRoot: FsLoc.AbsDir): FsLoc.AbsDir => {
   return FsLoc.join(projectRoot, relativePathGeneratedTypesDir)
 }
 
 /**
  * Get the full path for a generated type definition file.
  */
-export const getGeneratedTypePath = (projectRoot: FsLoc.AbsDir.AbsDir, name: string): FsLoc.AbsFile.AbsFile => {
+export const getGeneratedTypePath = (projectRoot: FsLoc.AbsDir, name: string): FsLoc.AbsFile => {
   const dir = getGeneratedTypesDir(projectRoot)
-  return FsLoc.join(dir, FsLoc.RelFile.decodeSync(`${name}.d.ts`))
+  return FsLoc.join(dir, S.decodeSync(FsLoc.RelFile.String)(`${name}.d.ts`))
 }
 
 // ============================================================================

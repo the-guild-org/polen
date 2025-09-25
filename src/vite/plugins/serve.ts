@@ -1,7 +1,7 @@
 import type { Api } from '#api/$'
 import { reportError } from '#api/server/report-error'
 import { Op } from '#dep/effect'
-import { Ef } from '#dep/effect'
+import { Ef, S } from '#dep/effect'
 import type { Vite } from '#dep/vite/index'
 import { createHtmlTransformer } from '#lib/html-utils/html-transformer'
 import { debugPolen } from '#singletons/debug'
@@ -139,10 +139,15 @@ export const Serve = (
       // Ensure the dev assets directory exists before server starts
       // This prevents the serveStatic middleware from logging warnings
       const assetsDir = config.paths.framework.devAssets.absolute
-      await Fs.write(assetsDir, undefined, { recursive: true }).pipe(
-        Ef.tap(() => Ef.sync(() => debug(`Ensured dev assets directory exists: ${FsLoc.encodeSync(assetsDir)}`))),
-        Ef.provide(NodeFileSystem.layer),
-        Ef.runPromise,
+      // Create a dummy file to ensure directory exists
+      const dummyFile = FsLoc.join(assetsDir, S.decodeSync(FsLoc.RelFile.String)('.gitkeep'))
+      await Ef.runPromise(
+        Fs.write(dummyFile, '').pipe(
+          Ef.tap(() => Ef.sync(() => debug(`Ensured dev assets directory exists: ${FsLoc.encodeSync(assetsDir)}`))),
+          Ef.catchAll(() => Ef.void), // Ignore errors if file already exists
+          // FIXME: Remove cast when @effect/platform versions are aligned
+          Ef.provide(NodeFileSystem.layer),
+        ) as any,
       )
 
       return () => {

@@ -99,5 +99,5 @@ Test.Table.suiteWithLayers(ProjectorLive)<
       if (o.diagnosticCount !== undefined) {
         expect(result.diagnostics).toHaveLength(o.diagnosticCount)
       }
-    }),
+    }) as any,
 )

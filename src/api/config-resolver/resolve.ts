@@ -28,7 +28,7 @@ export const fromMemory = (
    *
    * @default `process.cwd()`
    */
-  baseRootDirPath?: FsLoc.AbsDir.AbsDir,
+  baseRootDirPath?: FsLoc.AbsDir,
 ): Ef.Effect<Config, Error, FileSystem> => {
   const rootDir = baseRootDirPath ?? Pro.cwd()
   return normalizeInput(input, rootDir)

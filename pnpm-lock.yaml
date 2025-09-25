@@ -78,11 +78,11 @@ importers:
         specifier: 0.0.0-30
         version: 0.0.0-30
       '@wollybeard/kit':
-        specifier: link:../../jasonkuhrt/kit
-        version: link:../../jasonkuhrt/kit
+        specifier: ^0.62.0
+        version: 0.62.0(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14)
       '@wollybeard/projector':
-        specifier: link:../../jasonkuhrt/projector
-        version: link:../../jasonkuhrt/projector
+        specifier: ^0.6.0
+        version: 0.6.0(@effect/platform-node@0.96.1(@effect/cluster@0.48.7(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/workflow@0.9.5(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14)
       ansis:
         specifier: ^4.1.0
         version: 4.1.0
@@ -2703,6 +2703,20 @@ packages:
     peerDependencies:
       '@effect/platform': ^0.90.10
       effect: ^3.17.13
+
+  '@wollybeard/kit@0.62.0':
+    resolution: {integrity: sha512-fut0uahO5w3eOw4M4dDc0Zbum8aHfet0nwDV3SYHc/hs8WmCNmj+dQNakVkv5GEVz/BohzPAoz6RUhIBjYgYdQ==}
+    hasBin: true
+    peerDependencies:
+      '@effect/platform': '>=0.90.0 <1.0.0'
+      effect: ^3.17.0
+
+  '@wollybeard/projector@0.6.0':
+    resolution: {integrity: sha512-0UidwGcSBMBG1XxqgLWGogsQvII8wCwzPII9ZL3A5dz8v4yXWqdD8WpuxVwuDTA3MNggB6z9g9SCAMDCWpIO7w==}
+    peerDependencies:
+      '@effect/platform': '>=0.90.0 <1.0.0'
+      '@effect/platform-node': '>=0.96.0 <1.0.0'
+      effect: ^3.17.0
 
   '@xterm/xterm@5.5.0':
     resolution: {integrity: sha512-hqJHYaQb5OptNunnyAnkHyM8aCjZ1MEIDTQu1iIbbTD/xops91NB5yq1ZK/dC2JDbVWtF23zUtl9JE2NqwT87A==}
@@ -7680,6 +7694,30 @@ snapshots:
       ts-morph: 27.0.0
       type-fest: 5.0.1
       typescript: 5.9.2
+
+  '@wollybeard/kit@0.62.0(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14)':
+    dependencies:
+      '@effect/platform': 0.90.10(effect@3.17.14)
+      '@types/node': 24.5.2
+      ansis: 4.1.0
+      consola: 3.4.2
+      effect: 3.17.14
+      es-toolkit: 1.39.10
+      fast-check: 4.3.0
+      jsonc-parser: 3.3.1
+      pathe: 2.0.3
+      tinyglobby: 0.2.15
+      ts-morph: 27.0.0
+      type-fest: 5.0.1
+      typescript: 5.9.2
+
+  '@wollybeard/projector@0.6.0(@effect/platform-node@0.96.1(@effect/cluster@0.48.7(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/workflow@0.9.5(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14)':
+    dependencies:
+      '@effect/platform': 0.90.10(effect@3.17.14)
+      '@effect/platform-node': 0.96.1(@effect/cluster@0.48.7(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/workflow@0.9.5(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(@effect/rpc@0.69.2(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/sql@0.44.2(@effect/experimental@0.54.6(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14))(effect@3.17.14)
+      '@types/node': 24.5.2
+      '@wollybeard/kit': 0.62.0(@effect/platform@0.90.10(effect@3.17.14))(effect@3.17.14)
+      effect: 3.17.14
 
   '@xterm/xterm@5.5.0':
     optional: true

@@ -6,34 +6,35 @@ import { Api } from '#api/$'
 import { Ef } from '#dep/effect'
 import { toViteUserConfig } from '#vite/config'
 import { NodeFileSystem } from '@effect/platform-node'
+import { Dir } from '@wollybeard/kit'
 import { expect } from 'playwright/test'
 import { test } from '../helpers/test.js'
 
-type FileTree = {
-  [path: string]: string | FileTree
-}
-
 test.skip('GraphQL documents render with syntax highlighting', async ({ page, vite, project }) => {
-  const fixture: FileTree = {
-    'pages/test.mdx': [
-      "import { GraphQLDocumentWithSchema } from 'polen/components'",
-      '',
-      '# Test Page',
-      '',
-      '<GraphQLDocumentWithSchema>',
-      'query GetOrganization {',
-      '  organization(reference: { slug: "example" }) {',
-      '    id',
-      '    name',
-      '    slug',
-      '    createdAt',
-      '  }',
-      '}',
-      '</GraphQLDocumentWithSchema>',
-    ].join('\n'),
-  }
+  const content = [
+    "import { GraphQLDocumentWithSchema } from 'polen/components'",
+    '',
+    '# Test Page',
+    '',
+    '<GraphQLDocumentWithSchema>',
+    'query GetOrganization {',
+    '  organization(reference: { slug: "example" }) {',
+    '    id',
+    '    name',
+    '    slug',
+    '    createdAt',
+    '  }',
+    '}',
+    '</GraphQLDocumentWithSchema>',
+  ].join('\n')
 
-  await project.dir.set(fixture)
+  const spec = Dir.spec(project.dir.base)
+    .file('pages/test.mdx', content)
+
+  await Ef.runPromise(
+    project.dir.merge(spec).commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const polenConfig = await Ef.runPromise(
     Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
       Ef.provide(NodeFileSystem.layer),
@@ -67,24 +68,28 @@ test.skip('GraphQL documents render with syntax highlighting', async ({ page, vi
 })
 
 test.skip('GraphQL documents handle schema-less rendering gracefully', async ({ page, vite, project }) => {
-  const fixture: FileTree = {
-    'pages/test.mdx': [
-      "import { GraphQLDocumentWithSchema } from 'polen/components'",
-      '',
-      '# Test Page Without Schema',
-      '',
-      '<GraphQLDocumentWithSchema>',
-      'query TestQuery {',
-      '  user {',
-      '    id',
-      '    name',
-      '  }',
-      '}',
-      '</GraphQLDocumentWithSchema>',
-    ].join('\n'),
-  }
+  const content = [
+    "import { GraphQLDocumentWithSchema } from 'polen/components'",
+    '',
+    '# Test Page Without Schema',
+    '',
+    '<GraphQLDocumentWithSchema>',
+    'query TestQuery {',
+    '  user {',
+    '    id',
+    '    name',
+    '  }',
+    '}',
+    '</GraphQLDocumentWithSchema>',
+  ].join('\n')
 
-  await project.dir.set(fixture)
+  const spec = Dir.spec(project.dir.base)
+    .file('pages/test.mdx', content)
+
+  await Ef.runPromise(
+    project.dir.merge(spec).commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const polenConfig = await Ef.runPromise(
     Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
       Ef.provide(NodeFileSystem.layer),
@@ -110,37 +115,41 @@ test.skip('GraphQL documents handle schema-less rendering gracefully', async ({ 
 })
 
 test.skip('Multiple GraphQL documents on same page work correctly', async ({ page, vite, project }) => {
-  const fixture: FileTree = {
-    'pages/test.mdx': [
-      "import { GraphQLDocumentWithSchema } from 'polen/components'",
-      '',
-      '# Multiple GraphQL Documents',
-      '',
-      '## Query Example',
-      '',
-      '<GraphQLDocumentWithSchema>',
-      'query GetUser {',
-      '  user(id: "123") {',
-      '    id',
-      '    name',
-      '  }',
-      '}',
-      '</GraphQLDocumentWithSchema>',
-      '',
-      '## Mutation Example',
-      '',
-      '<GraphQLDocumentWithSchema>',
-      'mutation CreateUser {',
-      '  createUser(input: { name: "John" }) {',
-      '    id',
-      '    name',
-      '  }',
-      '}',
-      '</GraphQLDocumentWithSchema>',
-    ].join('\n'),
-  }
+  const content = [
+    "import { GraphQLDocumentWithSchema } from 'polen/components'",
+    '',
+    '# Multiple GraphQL Documents',
+    '',
+    '## Query Example',
+    '',
+    '<GraphQLDocumentWithSchema>',
+    'query GetUser {',
+    '  user(id: "123") {',
+    '    id',
+    '    name',
+    '  }',
+    '}',
+    '</GraphQLDocumentWithSchema>',
+    '',
+    '## Mutation Example',
+    '',
+    '<GraphQLDocumentWithSchema>',
+    'mutation CreateUser {',
+    '  createUser(input: { name: "John" }) {',
+    '    id',
+    '    name',
+    '  }',
+    '}',
+    '</GraphQLDocumentWithSchema>',
+  ].join('\n')
 
-  await project.dir.set(fixture)
+  const spec = Dir.spec(project.dir.base)
+    .file('pages/test.mdx', content)
+
+  await Ef.runPromise(
+    project.dir.merge(spec).commit()
+      .pipe(Ef.provide(NodeFileSystem.layer)),
+  )
   const polenConfig = await Ef.runPromise(
     Api.ConfigResolver.fromMemory({}, project.dir.base).pipe(
       Ef.provide(NodeFileSystem.layer),

@@ -1,7 +1,7 @@
 import { Ef, Op } from '#dep/effect'
 import { HashMap, HashSet } from 'effect'
 import { getNamedType, type GraphQLSchema, isInterfaceType, isObjectType, isUnionType, Kind, visit } from 'graphql'
-import { Catalog, Document, Grafaid, Schema, Version } from 'graphql-kit'
+import { Catalog, Document, Grafaid, Schema, Version, VersionCoverage } from 'graphql-kit'
 import type { Example } from './schemas/example/example.js'
 import { ExampleReference, type TypeUsageIndex, UNVERSIONED_KEY, type VersionKey } from './schemas/type-usage-index.js'
 
@@ -216,8 +216,9 @@ export const createTypeUsageIndex = (
       const allVersions = Document.Versioned.getAllVersions(example.document)
 
       for (const version of allVersions) {
+        const verCov = VersionCoverage.One.make({ version })
         const schemaOption = Op.liftThrowable(
-          () => Catalog.resolveCatalogSchema(schemasCatalog, version),
+          () => Catalog.resolveCatalogSchema(schemasCatalog, verCov),
         )()
         if (Op.isNone(schemaOption)) continue
 

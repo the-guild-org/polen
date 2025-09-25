@@ -46,37 +46,38 @@ describe('Theme', () => {
     })
   })
 
-  type ReadCookieInput = { cookieString: string; cookieName?: string }
-  type ReadCookieOutput = { value: 'dark' | 'light' | null }
   // dprint-ignore
-  Test.Table.suite<ReadCookieInput, ReadCookieOutput>('readCookie', [
-      { n: 'reads dark theme from cookie',                i: { cookieString: 'theme=dark' },                                              o: { value: 'dark' } },
-      { n: 'reads light theme from cookie',               i: { cookieString: 'theme=light' },                                             o: { value: 'light' } },
-      { n: 'reads theme from middle of cookie string',    i: { cookieString: 'other=value; theme=dark; more=stuff' },                     o: { value: 'dark' } },
-      { n: 'returns null for invalid theme value',        i: { cookieString: 'theme=invalid' },                                           o: { value: null } },
-      { n: 'returns null for empty theme value',          i: { cookieString: 'theme=' },                                                  o: { value: null } },
-      { n: 'returns null when theme not in cookie',       i: { cookieString: 'other=value' },                                             o: { value: null } },
-      { n: 'returns null for empty cookie string',        i: { cookieString: '' },                                                        o: { value: null } },
-      { n: 'handles custom cookie name (found)',          i: { cookieString: 'my-theme=dark', cookieName: 'my-theme' },                   o: { value: 'dark' } },
-      { n: 'handles custom cookie name (not found)',      i: { cookieString: 'theme=dark', cookieName: 'my-theme' },                      o: { value: null } },
-    ], ({ i, o }) => {
-    const manager = i.cookieName ? createThemeManager({ cookieName: i.cookieName }) : createThemeManager()
-    expect(manager.readCookie(i.cookieString)).toBe(o.value)
-  })
+  Test.describe('readCookie')
+    .i<{ cookieString: string; cookieName?: string }>()
+    .o<'dark' | 'light' | null>()
+    .cases(
+      ['reads dark theme from cookie',                [{ cookieString: 'theme=dark' }],                                              'dark'],
+      ['reads light theme from cookie',               [{ cookieString: 'theme=light' }],                                             'light'],
+      ['reads theme from middle of cookie string',    [{ cookieString: 'other=value; theme=dark; more=stuff' }],                     'dark'],
+      ['returns null for invalid theme value',        [{ cookieString: 'theme=invalid' }],                                           null],
+      ['returns null for empty theme value',          [{ cookieString: 'theme=' }],                                                  null],
+      ['returns null when theme not in cookie',       [{ cookieString: 'other=value' }],                                             null],
+      ['returns null for empty cookie string',        [{ cookieString: '' }],                                                        null],
+      ['handles custom cookie name (found)',          [{ cookieString: 'my-theme=dark', cookieName: 'my-theme' }],                   'dark'],
+      ['handles custom cookie name (not found)',      [{ cookieString: 'theme=dark', cookieName: 'my-theme' }],                      null],
+    )
+    .test((i, o) => {
+      const manager = i.cookieName ? createThemeManager({ cookieName: i.cookieName }) : createThemeManager()
+      expect(manager.readCookie(i.cookieString)).toBe(o)
+    })
 
-  type WriteCookieInput = {
-    theme: 'dark' | 'light'
-    options?: { cookieName?: string; maxAge?: number; path?: string }
-  }
-  type WriteCookieOutput = { value: string }
   // dprint-ignore
-  Test.Table.suite<WriteCookieInput, WriteCookieOutput>('writeCookie', [
-      { n: 'returns properly formatted cookie string',     i: { theme: 'dark' },                                                            o: { value: 'theme=dark; Max-Age=31536000; Path=/; SameSite=Strict' } },
-      { n: 'uses custom options in cookie string',        i: { theme: 'light', options: { cookieName: 'app-theme', maxAge: 3600, path: '/app' } }, o: { value: 'app-theme=light; Max-Age=3600; Path=/app; SameSite=Strict' } },
-    ], ({ i, o }) => {
-    const manager = i.options ? createThemeManager(i.options) : createThemeManager()
-    expect(manager.writeCookie(i.theme)).toBe(o.value)
-  })
+  Test.describe('writeCookie')
+    .i<{ theme: 'dark' | 'light'; options?: { cookieName?: string; maxAge?: number; path?: string } }>()
+    .o<string>()
+    .cases(
+      ['returns properly formatted cookie string',     [{ theme: 'dark' }],                                                            'theme=dark; Max-Age=31536000; Path=/; SameSite=Strict'],
+      ['uses custom options in cookie string',        [{ theme: 'light', options: { cookieName: 'app-theme', maxAge: 3600, path: '/app' } }], 'app-theme=light; Max-Age=3600; Path=/app; SameSite=Strict'],
+    )
+    .test((i, o) => {
+      const manager = i.options ? createThemeManager(i.options) : createThemeManager()
+      expect(manager.writeCookie(i.theme)).toBe(o)
+    })
 
   describe('applyToDOM', () => {
     test('adds theme class and removes other theme class', () => {
@@ -116,21 +117,17 @@ describe('Theme', () => {
     })
   })
 
-  type GetCurrentFromDOMInput = {
-    mockClass?: string
-    classPrefix?: string
-  }
-  type GetCurrentFromDOMOutput = { value: 'dark' | 'light' | null }
   // dprint-ignore
-  Test.Table.suite<GetCurrentFromDOMInput, GetCurrentFromDOMOutput>(
-    'getCurrentFromDOM',
-    [
-        { n: 'returns dark theme based on DOM class',       i: { mockClass: 'dark' },                                        o: { value: 'dark' } },
-        { n: 'returns light theme based on DOM class',      i: { mockClass: 'light' },                                       o: { value: 'light' } },
-        { n: 'returns null when no theme class present',    i: {},                                                           o: { value: null } },
-        { n: 'handles custom class prefix',                 i: { mockClass: 'theme-dark', classPrefix: 'theme-' },           o: { value: 'dark' } },
-      ],
-    ({ i, o }) => {
+  Test.describe('getCurrentFromDOM')
+    .i<{ mockClass?: string; classPrefix?: string }>()
+    .o<'dark' | 'light' | null>()
+    .cases(
+      ['returns dark theme based on DOM class',       [{ mockClass: 'dark' }],                                        'dark'],
+      ['returns light theme based on DOM class',      [{ mockClass: 'light' }],                                       'light'],
+      ['returns null when no theme class present',    [{}],                                                           null],
+      ['handles custom class prefix',                 [{ mockClass: 'theme-dark', classPrefix: 'theme-' }],           'dark'],
+    )
+    .test((i, o) => {
       // @ts-expect-error - mocking document
       global.document = mockDocument
 
@@ -142,9 +139,8 @@ describe('Theme', () => {
         mockDocument.documentElement.classList.contains.mockReturnValue(false)
       }
 
-      expect(manager.getCurrentFromDOM()).toBe(o.value)
-    },
-  )
+      expect(manager.getCurrentFromDOM()).toBe(o)
+    })
 
   // Toggle behavior is tested via integration tests with Playwright
   // as requested by the user to avoid complex DOM unit testing

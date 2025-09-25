@@ -51,4 +51,6 @@ export const build = (input: BuildInput): Ef.Effect<void, Error, FileSystem> =>
       consola.info(`try it: node ${viteUserConfig._polen.paths.project.relative.build.root}/app.js`)
       consola.info(`Then visit http://localhost:${viteUserConfig._polen.server.port}`)
     }
-  })
+    // TODO: Properly type all error cases - can return Error | PlatformError
+    // FIXME: Remove cast when @effect/platform versions are aligned between @wollybeard/kit and Polen
+  }) as any
